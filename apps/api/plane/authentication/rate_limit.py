@@ -26,7 +26,7 @@ from plane.utils.path_validator import get_safe_redirect_url
 class AuthenticationThrottle(AnonRateThrottle):
     # Rate is configurable per-deployment via the AUTHENTICATION_RATE_LIMIT
     # env var (DRF format: "<num>/<period>" where period is second/minute/hour/day).
-    rate = os.environ.get("AUTHENTICATION_RATE_LIMIT", "10/minute")
+    rate = os.environ.get("AUTHENTICATION_RATE_LIMIT", "60/minute")
     scope = "authentication"
 
     def throttle_failure_view(self, request, *args, **kwargs):

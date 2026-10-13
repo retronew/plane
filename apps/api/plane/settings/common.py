@@ -139,8 +139,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
     "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.AnonRateThrottle",),
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "30/minute",
-        "asset_id": "5/minute",
+        # Unauthenticated requests are throttled per IP; behind a corporate NAT all users
+        # share one IP, so keep these generous and tune them per deployment.
+        "anon": os.environ.get("ANON_RATE_LIMIT", "300/minute"),
+        "asset_id": os.environ.get("ASSET_RATE_LIMIT", "60/minute"),
     },
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
@@ -151,7 +153,7 @@ REST_FRAMEWORK = {
 }
 
 # API key throttle rate (DRF SimpleRateThrottle format, e.g. "60/minute")
-API_KEY_RATE_LIMIT = os.environ.get("API_KEY_RATE_LIMIT", "60/minute")
+API_KEY_RATE_LIMIT = os.environ.get("API_KEY_RATE_LIMIT", "600/minute")
 
 # Django Auth Backend
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)  # default
