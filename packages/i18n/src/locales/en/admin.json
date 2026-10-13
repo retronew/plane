@@ -168,17 +168,13 @@
     },
     "general": {
       "title": "General settings",
-      "description": "Change the name of your instance and instance admin e-mail addresses. Enable or disable telemetry in your instance.",
+      "description": "Change the name of your instance and instance admin e-mail addresses.",
       "toast_updated": "Settings updated successfully",
       "instance_details": "Instance details",
       "instance_name": "Name of instance",
       "instance_name_placeholder": "Instance name",
       "admin_email": "Admin email",
-      "instance_id": "Instance ID",
-      "telemetry": "Telemetry",
-      "telemetry_title": "Let Plane collect anonymous usage data",
-      "telemetry_description": "No PII is collected. This anonymized data is used to understand how you use Plane and build new features in line with",
-      "telemetry_policy": "our Telemetry Policy."
+      "instance_id": "Instance ID"
     },
     "email": {
       "toast_disabled": {

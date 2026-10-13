@@ -168,17 +168,13 @@
     },
     "general": {
       "title": "常规设置",
-      "description": "修改实例名称和实例管理员邮箱地址，开启或关闭实例的遥测功能。",
+      "description": "修改实例名称和实例管理员邮箱地址。",
       "toast_updated": "设置已更新",
       "instance_details": "实例信息",
       "instance_name": "实例名称",
       "instance_name_placeholder": "实例名称",
       "admin_email": "管理员邮箱",
-      "instance_id": "实例 ID",
-      "telemetry": "遥测",
-      "telemetry_title": "允许 Plane 收集匿名使用数据",
-      "telemetry_description": "不会收集任何个人身份信息。这些匿名数据用于了解您如何使用 Plane，并据此开发新功能，详见",
-      "telemetry_policy": "我们的遥测政策。"
+      "instance_id": "实例 ID"
     },
     "email": {
       "toast_disabled": {
