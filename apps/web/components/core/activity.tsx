@@ -34,6 +34,7 @@ import { renderFormattedDate, generateWorkItemLink, capitalizeFirstLetter } from
 // helpers
 import { useLabel } from "@/hooks/store/use-label";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 // types
 
 export function IssueLink({ activity }: { activity: IIssueActivity }) {
@@ -51,7 +52,7 @@ export function IssueLink({ activity }: { activity: IIssueActivity }) {
 
   return (
     <Tooltip
-      label={activity?.issue_detail ? activity.issue_detail.name : "This work item has been deleted"}
+      label={activity?.issue_detail ? activity.issue_detail.name : translate("web.this_work_item_has_been_deleted")}
       layout="stacked"
       disabled={isMobile}
     >

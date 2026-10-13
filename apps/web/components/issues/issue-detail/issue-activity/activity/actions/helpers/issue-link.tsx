@@ -9,6 +9,7 @@ import { generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type TIssueLink = {
   activityId: string;
@@ -34,7 +35,7 @@ export function IssueLink(props: TIssueLink) {
   });
   return (
     <Tooltip
-      label={activity.issue_detail ? activity.issue_detail.name : "This work item has been deleted"}
+      label={activity.issue_detail ? activity.issue_detail.name : translate("web.this_work_item_has_been_deleted")}
       layout="stacked"
       disabled={isMobile}
     >

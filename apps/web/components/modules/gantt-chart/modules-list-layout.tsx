@@ -17,6 +17,7 @@ import { ModuleGanttBlock } from "@/components/modules";
 import { useModule } from "@/hooks/store/use-module";
 import { useModuleFilter } from "@/hooks/store/use-module-filter";
 import { useProject } from "@/hooks/store/use-project";
+import { translate } from "@plane/i18n";
 
 export const ModulesListGanttChartView = observer(function ModulesListGanttChartView() {
   // router
@@ -58,7 +59,7 @@ export const ModulesListGanttChartView = observer(function ModulesListGanttChart
   return (
     <TimeLineTypeContext.Provider value={GANTT_TIMELINE_TYPE.MODULE}>
       <GanttChartRoot
-        title="Modules"
+        title={translate("web.modules")}
         loaderTitle="Modules"
         blockIds={filteredModuleIds}
         sidebarToRender={(props) => <ModuleGanttSidebar {...props} />}

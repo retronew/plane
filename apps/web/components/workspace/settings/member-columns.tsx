@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 // plane imports
 import { ROLE, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { DeactivatedUserOutline, DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Badge } from "@makeplane/propel/components/badge";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -139,7 +139,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
     <>
       {isSuspended ? (
         <div className="flex w-32">
-          <Badge variant="neutral" size="sm" label="Suspended" />
+          <Badge variant="neutral" size="sm" label={translate("web.suspended")} />
         </div>
       ) : isRoleNonEditable ? (
         <div className="flex w-32">
@@ -164,7 +164,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
 
                     setToast({
                       type: "error",
-                      title: "Error!",
+                      title: translate("toast.error"),
                       message: errorString ?? "An error occurred while updating member role. Please try again.",
                     });
                   });

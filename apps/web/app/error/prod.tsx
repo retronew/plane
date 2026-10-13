@@ -12,6 +12,7 @@ import maintenanceModeDarkModeImage from "@/app/assets/instance/maintenance-mode
 import maintenanceModeLightModeImage from "@/app/assets/instance/maintenance-mode-light.svg?url";
 // layouts
 import DefaultLayout from "@/layouts/default-layout";
+import { translate } from "@plane/i18n";
 
 const linkMap = [
   {
@@ -80,7 +81,13 @@ export function ProdErrorComponent({ onGoHome }: ProdErrorComponentProps) {
           </div>
 
           <div className="flex items-center justify-start gap-6">
-            <Button variant="primary" size="md" stretch="auto" label="Go to home" onClick={onGoHome} />
+            <Button
+              variant="primary"
+              size="md"
+              stretch="auto"
+              label={translate("web.go_to_home_8419")}
+              onClick={onGoHome}
+            />
           </div>
         </div>
       </div>

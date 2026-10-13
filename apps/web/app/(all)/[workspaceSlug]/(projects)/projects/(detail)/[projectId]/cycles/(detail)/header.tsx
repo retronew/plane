@@ -139,7 +139,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
               <Breadcrumbs.Item
                 component={
                   <BreadcrumbLink
-                    label="Cycles"
+                    label={t("web.cycles")}
                     href={`/${workspaceSlug}/projects/${projectId}/cycles/`}
                     icon={<CyclesOutline className="h-4 w-4 text-tertiary" />}
                   />
@@ -231,7 +231,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
                     variant="secondary"
                     size="md"
                     stretch="auto"
-                    label="Analytics"
+                    label={t("web.analytics")}
                     onClick={() => setAnalyticsModal(true)}
                   />
                 </span>
@@ -240,7 +240,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
                     variant="secondary"
                     size="md"
                     icon={<Icon icon={BarOutline} />}
-                    aria-label="Analytics"
+                    aria-label={t("web.analytics")}
                     onClick={() => setAnalyticsModal(true)}
                   />
                 </span>
@@ -262,7 +262,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
               variant={isSidebarCollapsed ? "ghost" : "tertiary"}
               size="md"
               icon={<Icon icon={RightSidePaneOutline} />}
-              aria-label="Toggle sidebar"
+              aria-label={t("web.toggle_sidebar")}
               aria-pressed={!isSidebarCollapsed}
               onClick={toggleSidebar}
             />

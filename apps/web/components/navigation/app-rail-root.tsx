@@ -23,6 +23,7 @@ import { useAppRailPreferences } from "@/hooks/use-navigation-preferences";
 import { useAppRailVisibility } from "@/lib/app-rail/context";
 // local imports
 import { AppSidebarItemsRoot } from "./items-root";
+import { translate } from "@plane/i18n";
 
 export const AppRailRoot = observer(() => {
   // router
@@ -57,7 +58,7 @@ export const AppRailRoot = observer(() => {
               <div className="mx-2 border-t border-strong" />
               <AppSidebarItem
                 item={{
-                  label: "Settings",
+                  label: translate("web.settings"),
                   icon: <SettingsOutline className="size-5" />,
                   href: `/${workspaceSlug}/settings`,
                   isActive: isWorkspaceSettingsPath,
@@ -70,12 +71,12 @@ export const AppRailRoot = observer(() => {
         <ContextMenuContent>
           <ContextMenuItem
             onClick={() => updateDisplayMode("icon_only")}
-            label="Icon only"
+            label={translate("web.icon_only")}
             selected={preferences.displayMode === "icon_only"}
           />
           <ContextMenuItem
             onClick={() => updateDisplayMode("icon_with_label")}
-            label="Icon with name"
+            label={translate("web.icon_with_name")}
             selected={preferences.displayMode === "icon_with_label"}
           />
           <ContextMenuSeparator />

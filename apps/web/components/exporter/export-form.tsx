@@ -169,7 +169,7 @@ export const ExportForm = observer(function ExportForm(props: Props) {
                         logo_props: project.logo_props,
                       };
                     }}
-                    placeholder="All projects"
+                    placeholder={t("web.all_projects")}
                     className="w-full"
                   />
                 )}

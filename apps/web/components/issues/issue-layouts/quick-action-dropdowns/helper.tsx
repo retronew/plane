@@ -16,7 +16,7 @@ import {
   RestoreOutline,
 } from "@makeplane/propel/icons";
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { EIssuesStoreType, TIssue } from "@plane/types";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
@@ -81,7 +81,7 @@ export function handleOptionalAction<T>(
   } else {
     setToast({
       type: "error",
-      title: "Action not available",
+      title: translate("web.action_not_available"),
       message: `${actionName} action is not implemented.`,
     });
   }
@@ -136,8 +136,8 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
     copyUrlToClipboard(workItemLink).then(() =>
       setToast({
         type: "success",
-        title: "Link copied",
-        message: "Work item link copied to clipboard",
+        title: translate("web.link_copied_acf8"),
+        message: translate("web.work_item_link_copied_to_clipboard"),
       })
     );
 
@@ -153,15 +153,15 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
       .then(() => {
         setToast({
           type: "success",
-          title: "Restore success",
-          message: "Your work item can be found in project work items.",
+          title: translate("web.restore_success"),
+          message: translate("web.your_work_item_can_be_found_in_project_work_items"),
         });
       })
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Work item could not be restored. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.work_item_could_not_be_restored_please_try_again"),
         });
       });
   };
@@ -244,7 +244,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createRemoveFromCycleMenuItem = (): TContextMenuItem => ({
     key: "remove-from-cycle",
-    title: "Remove from cycle",
+    title: t("web.remove_from_cycle"),
     icon: CloseCircleOutline,
     action: () => handleOptionalAction(handleRemoveFromView, "Remove from cycle"),
     shouldRender: isEditingAllowed,
@@ -252,7 +252,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createRemoveFromModuleMenuItem = (): TContextMenuItem => ({
     key: "remove-from-module",
-    title: "Remove from module",
+    title: t("web.remove_from_module"),
     icon: CloseCircleOutline,
     action: () => handleOptionalAction(handleRemoveFromView, "Remove from module"),
     shouldRender: isEditingAllowed,
@@ -270,7 +270,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createRestoreMenuItem = (): TContextMenuItem => ({
     key: "restore",
-    title: "Restore",
+    title: t("web.restore"),
     icon: RestoreOutline,
     action: actionHandlers.handleIssueRestore,
     shouldRender: isRestoringAllowed,

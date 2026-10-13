@@ -27,6 +27,7 @@ import {
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type FormData = {
   projectName: string;
@@ -74,33 +75,34 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
           return leaveProject(workspaceSlug.toString(), project.id)
             .then(() => {
               handleClose();
+              return undefined;
             })
             .catch((_err) => {
               setToast({
                 type: "error",
-                title: "Error!",
-                message: "Something went wrong please try again later.",
+                title: translate("toast.error"),
+                message: translate("web.something_went_wrong_please_try_again_later"),
               });
             });
         } else {
           setToast({
             type: "error",
-            title: "Error!",
-            message: "Please confirm leaving the project by typing the 'Leave Project'.",
+            title: translate("toast.error"),
+            message: translate("web.please_confirm_leaving_the_project_by_typing_the_leave_proje"),
           });
         }
       } else {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Please enter the project name as shown in the description.",
+          title: translate("toast.error"),
+          message: translate("web.please_enter_the_project_name_as_shown_in_the_description"),
         });
       }
     } else {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Please fill all fields.",
+        title: translate("toast.error"),
+        message: translate("web.please_fill_all_fields"),
       });
     }
   };
@@ -121,7 +123,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                   <WarningTriangleOutline className="h-6 w-6 text-danger-primary" aria-hidden="true" />
                 </span>
                 <DialogHeading>
-                  <DialogTitle>Leave Project</DialogTitle>
+                  <DialogTitle>{translate("web.leave_project")}</DialogTitle>
                 </DialogHeading>
               </div>
             </DialogHeader>
@@ -154,7 +156,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Enter project name"
+                            placeholder={translate("web.enter_project_name")}
                           />
                         </InputGroup>
                       </Field>
@@ -163,7 +165,8 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                 </div>
                 <div className="text-secondary">
                   <p className="text-13">
-                    To confirm, type <span className="font-medium text-primary">Leave Project</span> below:
+                    To confirm, type <span className="font-medium text-primary">{translate("web.leave_project")}</span>{" "}
+                    below:
                   </p>
                   <Controller
                     control={control}
@@ -179,7 +182,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Enter 'leave project'"
+                            placeholder={translate("web.enter_leave_project")}
                           />
                         </InputGroup>
                       </Field>
@@ -190,7 +193,13 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={translate("web.cancel")}
+              onClick={handleClose}
+            />
             <Button
               variant="danger"
               size="md"

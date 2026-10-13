@@ -20,6 +20,7 @@ import { usePowerK } from "@/hooks/store/use-power-k";
 import { useUser } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { useExpandableSearch } from "@/hooks/use-expandable-search";
+import { translate } from "@plane/i18n";
 
 export const TopNavPowerK = observer(() => {
   // router
@@ -101,7 +102,7 @@ export const TopNavPowerK = observer(() => {
     return () => {
       setTopNavInputRef(null);
     };
-  }, [setTopNavInputRef]);
+  }, [inputRef, setTopNavInputRef]);
 
   const handleClear = () => {
     setSearchTerm("");
@@ -203,7 +204,8 @@ export const TopNavPowerK = observer(() => {
         return;
       }
     },
-    [searchTerm, activePage, context, shouldShowContextBasedActions, setActivePage, closePanel]
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- containerRef is a ref; reading .current at call time is intended
+    [searchTerm, activePage, context, shouldShowContextBasedActions, setActivePage, closePanel, isOpen]
   );
 
   return (
@@ -213,6 +215,7 @@ export const TopNavPowerK = observer(() => {
           "w-[554px]": isOpen,
         })}
       >
+        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
         <div
           className={cn(
             "flex h-7 w-full items-center rounded-lg border border-subtle-1 bg-layer-2 p-2 transition-colors duration-200",
@@ -220,8 +223,8 @@ export const TopNavPowerK = observer(() => {
               "bg-layer-1": isOpen,
             }
           )}
+          // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- clicking the wrapper only forwards focus to the input inside it
           onClick={() => inputRef.current?.focus()}
-          role="button"
         >
           <SearchOutline className="mr-2 size-3.5 shrink-0 text-placeholder" />
           <input
@@ -235,7 +238,7 @@ export const TopNavPowerK = observer(() => {
             onMouseDown={handleMouseDown}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
-            placeholder="Search commands..."
+            placeholder={translate("web.search_commands")}
             className="placeholder-text-placeholder min-w-0 flex-1 bg-transparent text-13 text-primary outline-none"
           />
           {searchTerm && (

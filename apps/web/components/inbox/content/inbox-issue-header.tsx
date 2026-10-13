@@ -167,6 +167,7 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
     if (!inboxIssue || !currentInboxIssueId) return;
     await deleteInboxIssue(workspaceSlug, projectId, currentInboxIssueId).then(() => {
       if (!isNotificationEmbed) router.push(`/${workspaceSlug}/projects/${projectId}/intake`);
+      return undefined;
     });
   };
 
@@ -223,7 +224,7 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
     else {
       setToast({
         type: "error",
-        title: "Permission denied",
+        title: t("web.permission_denied"),
         message: errorMessage,
       });
     }
@@ -324,14 +325,14 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
                 variant="secondary"
                 size="md"
                 icon={<Icon icon={ChevronUpOutline} />}
-                aria-label="Previous work item"
+                aria-label={t("web.previous_work_item")}
                 onClick={() => handleInboxIssueNavigation("prev")}
               />
               <IconButton
                 variant="secondary"
                 size="md"
                 icon={<Icon icon={ChevronDownOutline} />}
-                aria-label="Next work item"
+                aria-label={t("web.next_work_item")}
                 onClick={() => handleInboxIssueNavigation("next")}
               />
             </div>

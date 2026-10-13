@@ -28,6 +28,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 // wrappers
 import { AuthenticationWrapper } from "@/lib/wrappers/authentication-wrapper";
 import { WorkspaceService } from "@/services/workspace.service";
+import { translate } from "@plane/i18n";
 // services
 
 // service initialization
@@ -64,6 +65,7 @@ function WorkspaceInvitationPage() {
         } else {
           router.push("/");
         }
+        return undefined;
       })
       .catch((err: unknown) => console.error(err));
   };
@@ -77,6 +79,7 @@ function WorkspaceInvitationPage() {
       })
       .then(() => {
         router.push("/");
+        return undefined;
       })
       .catch((err: unknown) => console.error(err));
   };
@@ -92,35 +95,39 @@ function WorkspaceInvitationPage() {
           ) : (
             <EmptySpace
               title={`You have been invited to ${invitationDetail.workspace.name}`}
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
+              description={translate("web.your_workspace_is_where_you_ll_create_projects_collaborate_o")}
             >
-              <EmptySpaceItem Icon={TickOutline} title="Accept" action={handleAccept} />
-              <EmptySpaceItem Icon={CloseOutline} title="Ignore" action={handleReject} />
+              <EmptySpaceItem Icon={TickOutline} title={translate("web.accept")} action={handleAccept} />
+              <EmptySpaceItem Icon={CloseOutline} title={translate("web.ignore")} action={handleReject} />
             </EmptySpace>
           )
         ) : error || invitationDetail?.responded_at ? (
           invitationDetail?.accepted ? (
             <EmptySpace
               title={`You are already a member of ${invitationDetail.workspace.name}`}
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
+              description={translate("web.your_workspace_is_where_you_ll_create_projects_collaborate_o")}
             >
-              <EmptySpaceItem Icon={BoxesOutline} title="Continue to home" href="/" />
+              <EmptySpaceItem Icon={BoxesOutline} title={translate("web.continue_to_home")} href="/" />
             </EmptySpace>
           ) : (
             <EmptySpace
-              title="This invitation link is not active anymore."
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
-              link={{ text: "Or start from an empty project", href: "/" }}
+              title={translate("web.this_invitation_link_is_not_active_anymore")}
+              description={translate("web.your_workspace_is_where_you_ll_create_projects_collaborate_o")}
+              link={{ text: translate("web.or_start_from_an_empty_project"), href: "/" }}
             >
               {!currentUser ? (
-                <EmptySpaceItem Icon={UserOutline} title="Sign in to continue" href="/" />
+                <EmptySpaceItem Icon={UserOutline} title={translate("web.sign_in_to_continue")} href="/" />
               ) : (
-                <EmptySpaceItem Icon={BoxesOutline} title="Continue to home" href="/" />
+                <EmptySpaceItem Icon={BoxesOutline} title={translate("web.continue_to_home")} href="/" />
               )}
-              <EmptySpaceItem Icon={StarOutline} title="Star us on GitHub" href="https://github.com/makeplane" />
+              <EmptySpaceItem
+                Icon={StarOutline}
+                title={translate("web.star_us_on_github")}
+                href="https://github.com/makeplane"
+              />
               <EmptySpaceItem
                 Icon={ShareAltOutline}
-                title="Join our community of active creators"
+                title={translate("web.join_our_community_of_active_creators")}
                 href="https://forum.plane.so"
               />
             </EmptySpace>

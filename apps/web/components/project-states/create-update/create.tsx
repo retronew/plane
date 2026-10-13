@@ -11,6 +11,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState, TStateGroups, TStateOperationsCallbacks } from "@plane/types";
 // components
 import { StateForm } from "@/components/project-states";
+import { translate } from "@plane/i18n";
 
 type TStateCreate = {
   groupKey: TStateGroups;
@@ -37,8 +38,8 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
 
       setToast({
         type: "success",
-        title: "Success!",
-        message: "State created successfully.",
+        title: translate("toast.success"),
+        message: translate("web.state_created_successfully"),
       });
       handleClose();
       return { status: "success" };
@@ -47,14 +48,14 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
       if (errorStatus?.status === 400) {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State with that name already exists. Please try again with another name.",
+          title: translate("toast.error"),
+          message: translate("web.state_with_that_name_already_exists_please_try_again_with_an"),
         });
         return { status: "already_exists" };
       } else {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: errorStatus.data.error ?? "State could not be created. Please try again.",
         });
         return { status: "error" };

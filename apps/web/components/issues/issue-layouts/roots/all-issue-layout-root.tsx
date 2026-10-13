@@ -25,6 +25,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isDefaultView: boolean;
@@ -115,12 +116,12 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   if (!isLoading && !globalViewsLoading && !issuesLoading && !viewDetails && !isDefaultView) {
     return (
       <EmptyStateDetailed
-        title="View does not exist"
-        description="The view you are looking for does not exist or you don't have permission to view it."
+        title={translate("web.view_does_not_exist")}
+        description={translate("web.the_view_you_are_looking_for_does_not_exist_or_you_don_t_hav")}
         assetKey="view"
         actions={[
           {
-            label: "Go to All work items",
+            label: translate("web.go_to_all_work_items"),
             onClick: () => router.push(`/${workspaceSlug}/workspace-views/all-issues`),
             variant: "primary",
           },
@@ -135,7 +136,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
       <WorkspaceLevelWorkItemFiltersHOC
         enableSaveView
         saveViewOptions={{
-          label: "Save as",
+          label: translate("web.save_as"),
         }}
         enableUpdateView
         entityId={globalViewId}

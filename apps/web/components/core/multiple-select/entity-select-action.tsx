@@ -9,6 +9,7 @@ import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { cn } from "@plane/utils";
 // hooks
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
+import { translate } from "@plane/i18n";
 
 type Props = {
   className?: string;
@@ -30,7 +31,7 @@ export const MultipleSelectEntityAction = observer(function MultipleSelectEntity
       <Checkbox
         checked={isSelected}
         disabled={disabled}
-        aria-label="Select work item"
+        aria-label={translate("web.select_work_item")}
         onClick={(e) => {
           e.stopPropagation();
           selectionHelpers.handleEntityClick(e, id, groupId);

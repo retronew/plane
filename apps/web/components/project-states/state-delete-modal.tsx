@@ -13,6 +13,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState } from "@plane/types";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { translate } from "@plane/i18n";
 
 type TStateDeleteModal = {
   isOpen: boolean;
@@ -45,15 +46,15 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       if ((err as { status?: number })?.status === 400)
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message:
             "This state contains some work items within it, please move them to some other state to delete this state.",
         });
       else
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State could not be deleted. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.state_could_not_be_deleted_please_try_again"),
         });
     } finally {
       setIsDeleteLoading(false);
@@ -66,7 +67,7 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       handleSubmit={handleDeletion}
       isSubmitting={isDeleteLoading}
       isOpen={isOpen}
-      title="Delete State"
+      title={translate("web.delete_state")}
       content={
         <>
           Are you sure you want to delete state- <span className="font-medium text-primary">{data?.name}</span>? All of

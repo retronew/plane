@@ -18,6 +18,7 @@ import {
   DialogMain,
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -56,7 +57,7 @@ export function ConfirmIssueDiscard(props: Props) {
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Save this draft?</DialogTitle>
+              <DialogTitle>{translate("web.save_this_draft")}</DialogTitle>
               <DialogDescription>
                 You can save this work item to Drafts so you can come back to it later.
               </DialogDescription>
@@ -65,9 +66,9 @@ export function ConfirmIssueDiscard(props: Props) {
         </DialogMain>
         <DialogActions>
           <DialogInfo>
-            <Button variant="secondary" size="sm" stretch="auto" onClick={onDiscard} label="Discard" />
+            <Button variant="secondary" size="sm" stretch="auto" onClick={onDiscard} label={translate("web.discard")} />
           </DialogInfo>
-          <Button variant="secondary" size="sm" stretch="auto" onClick={onClose} label="Cancel" />
+          <Button variant="secondary" size="sm" stretch="auto" onClick={onClose} label={translate("web.cancel")} />
           <Button
             variant="primary"
             size="sm"

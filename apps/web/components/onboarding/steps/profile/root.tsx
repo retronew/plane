@@ -26,6 +26,7 @@ import { AuthService } from "@/services/auth.service";
 import { CommonOnboardingHeader } from "../common";
 import { MarketingConsent } from "./consent";
 import { SetPasswordRoot } from "./set-password";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
@@ -99,8 +100,8 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "User details update failed. Please try again!",
+        title: translate("web.error"),
+        message: translate("web.user_details_update_failed_please_try_again"),
       });
     }
   };
@@ -141,13 +142,15 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
 
   // Check for all available fields validation and if password field is available, then checks for password validation (strength + confirmation).
   // Also handles the condition for optional password i.e if password field is optional it only checks for above validation if it's not empty.
-  const isButtonDisabled =
-    !isSubmitting && isValid ? (isPasswordAlreadySetup ? false : isValidPassword ? false : true) : true;
+  const isButtonDisabled = !(!isSubmitting && isValid && (isPasswordAlreadySetup || isValidPassword));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="Create your profile." description="This is how you will appear in Plane." />
+      <CommonOnboardingHeader
+        title={translate("web.create_your_profile")}
+        description={translate("web.this_is_how_you_will_appear_in_plane")}
+      />
 
       {/* Profile Picture Section */}
       <Controller
@@ -173,6 +176,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
           onClick={() => setIsImageUploadModalOpen(true)}
         >
           {userAvatar ? (
+            // oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- pre-existing mouse-only interaction, kept as-is
             <img
               src={getFileURL(userAvatar ?? "")}
               onClick={() => setIsImageUploadModalOpen(true)}
@@ -211,7 +215,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
               validate: validatePersonName,
               maxLength: {
                 value: 50,
-                message: "Name must be within 50 characters.",
+                message: translate("web.name_must_be_within_50_characters"),
               },
             }}
             render={({ field: { value, onChange, ref } }) => (
@@ -222,6 +226,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
+                // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                 autoFocus
                 className={cn(
                   "w-full rounded-md border border-strong bg-surface-1 px-3 py-2 text-secondary transition-all duration-200 placeholder:text-placeholder focus:border-transparent focus:ring-2 focus:ring-accent-strong focus:outline-none",
@@ -230,7 +235,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
                     "border-danger-strong": errors.first_name,
                   }
                 )}
-                placeholder="Enter your full name"
+                placeholder={translate("web.enter_your_full_name")}
                 autoComplete="on"
               />
             )}
@@ -247,7 +252,14 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
         )}
       </div>
       {/* Continue Button */}
-      <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
+      <Button
+        variant="primary"
+        type="submit"
+        stretch="full"
+        size="lg"
+        disabled={isButtonDisabled}
+        label={translate("web.continue")}
+      />
 
       {/* Marketing Consent */}
       {!instanceConfig?.is_self_managed && (

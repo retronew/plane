@@ -24,6 +24,7 @@ import { useUser, useUserPermissions } from "@/hooks/store/user";
 // local imports
 import { WorkItemFiltersHOC } from "./base";
 import type { TEnableSaveViewProps, TEnableUpdateViewProps, TSharedWorkItemFiltersHOCProps } from "./shared";
+import { translate } from "@plane/i18n";
 
 type TWorkspaceLevelWorkItemFiltersHOCProps = TSharedWorkItemFiltersHOCProps & {
   workspaceSlug: string;
@@ -123,8 +124,8 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
       if (!viewDetails) {
         setToast({
           type: "error",
-          title: "We couldn't find the view",
-          message: "The view you're trying to update doesn't exist.",
+          title: translate("web.we_couldn_t_find_the_view"),
+          message: translate("web.the_view_you_re_trying_to_update_doesn_t_exist"),
         });
 
         return;
@@ -142,15 +143,16 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
         .then(() => {
           setToast({
             type: "success",
-            title: "Success!",
-            message: "Your view has been updated successfully.",
+            title: translate("toast.success"),
+            message: translate("web.your_view_has_been_updated_successfully"),
           });
+          return undefined;
         })
         .catch(() => {
           setToast({
             type: "error",
-            title: "Error!",
-            message: "Your view could not be updated. Please try again.",
+            title: translate("toast.error"),
+            message: translate("web.your_view_could_not_be_updated_please_try_again"),
           });
         });
     },

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { stringToEmoji } from "@plane/blocks/emoji-icon-picker";
 import { EmojiReactionGroup, EmojiReactionPicker } from "@plane/blocks/emoji-reaction";
@@ -17,6 +17,7 @@ import { cn } from "@plane/utils";
 // helpers
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
+import { translate } from "@plane/i18n";
 // types
 
 export type TIssueReaction = {
@@ -50,15 +51,15 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing fields");
           await createReaction(workspaceSlug, projectId, issueId, reaction);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction created successfully",
+            message: translate("web.reaction_created_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction creation failed",
+            message: translate("web.reaction_creation_failed"),
           });
         }
       },
@@ -67,15 +68,15 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
           if (!workspaceSlug || !projectId || !issueId || !currentUser?.id) throw new Error("Missing fields");
           await removeReaction(workspaceSlug, projectId, issueId, reaction, currentUser.id);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction removed successfully",
+            message: translate("web.reaction_removed_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction remove failed",
+            message: translate("web.reaction_remove_failed"),
           });
         }
       },
@@ -87,18 +88,21 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
     [workspaceSlug, projectId, issueId, currentUser, createReaction, removeReaction, userReactions]
   );
 
-  const getReactionUsers = (reaction: string): string[] => {
-    const reactionUsers = (reactionIds?.[reaction] || [])
-      .map((reactionId) => {
-        const reactionDetails = getReactionById(reactionId);
-        return reactionDetails
-          ? getUserDetails(reactionDetails?.actor)?.display_name || reactionDetails?.display_name
-          : null;
-      })
-      .filter((displayName): displayName is string => !!displayName);
+  const getReactionUsers = useCallback(
+    (reaction: string): string[] => {
+      const reactionUsers = (reactionIds?.[reaction] || [])
+        .map((reactionId) => {
+          const reactionDetails = getReactionById(reactionId);
+          return reactionDetails
+            ? getUserDetails(reactionDetails?.actor)?.display_name || reactionDetails?.display_name
+            : null;
+        })
+        .filter((displayName): displayName is string => !!displayName);
 
-    return reactionUsers;
-  };
+      return reactionUsers;
+    },
+    [reactionIds, getReactionById, getUserDetails]
+  );
 
   // Transform reactions data to Propel EmojiReactionType format
   const reactions: EmojiReactionType[] = useMemo(() => {
@@ -112,7 +116,7 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
         reacted: userReactions.includes(reaction),
         users: getReactionUsers(reaction),
       }));
-  }, [reactionIds, userReactions]);
+  }, [reactionIds, userReactions, getReactionUsers]);
 
   const handleReactionClick = (emoji: string) => {
     if (disabled) return;

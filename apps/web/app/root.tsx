@@ -27,10 +27,14 @@ import { isStaleAssetError, recoverFromStaleAsset } from "@/lib/stale-asset-erro
 // local
 import { CustomErrorComponent } from "./error";
 // fonts
+// oxlint-disable-next-line import/no-unassigned-import -- side-effect font stylesheet
 import "@fontsource-variable/inter";
 import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+// oxlint-disable-next-line import/no-unassigned-import -- side-effect font stylesheet
 import "@fontsource/material-symbols-rounded";
+// oxlint-disable-next-line import/no-unassigned-import -- side-effect font stylesheet
 import "@fontsource/ibm-plex-mono";
+import { translate } from "@plane/i18n";
 
 const APP_TITLE = "Plane | Simple, extensible, open-source project management tool.";
 
@@ -88,13 +92,13 @@ export const meta: Route.MetaFunction = () => [
   { property: "og:title", content: APP_TITLE },
   {
     property: "og:description",
-    content: "Open-source project management tool to manage work items, cycles, and product roadmaps easily",
+    content: translate("web.open_source_project_management_tool_to_manage_work_items_cyc"),
   },
   { property: "og:url", content: "https://app.plane.so/" },
   { property: "og:image", content: ogImage },
   { property: "og:image:width", content: "1200" },
   { property: "og:image:height", content: "630" },
-  { property: "og:image:alt", content: "Plane - Modern project management" },
+  { property: "og:image:alt", content: translate("web.plane_modern_project_management") },
   {
     name: "keywords",
     content:
@@ -105,7 +109,7 @@ export const meta: Route.MetaFunction = () => [
   { name: "twitter:image", content: ogImage },
   { name: "twitter:image:width", content: "1200" },
   { name: "twitter:image:height", content: "630" },
-  { name: "twitter:image:alt", content: "Plane - Modern project management" },
+  { name: "twitter:image:alt", content: translate("web.plane_modern_project_management") },
 ];
 
 // Root stays shell-thin: in SPA mode React Router server-builds only the root route, so

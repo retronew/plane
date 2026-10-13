@@ -6,9 +6,10 @@
 
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
+import { translate } from "@plane/i18n";
 
 export default function InvitationsLayout() {
   return <Outlet />;
 }
 
-export const meta: Route.MetaFunction = () => [{ title: "Invitations" }];
+export const meta: Route.MetaFunction = () => [{ title: translate("web.invitations") }];

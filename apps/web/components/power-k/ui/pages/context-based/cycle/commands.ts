@@ -45,10 +45,10 @@ export const usePowerKCycleContextBasedActions = (): TPowerKCommandConfig[] => {
     } catch {
       setToast({
         type: "error",
-        title: "Some error occurred",
+        title: t("web.some_error_occurred"),
       });
     }
-  }, [addCycleToFavorites, removeCycleFromFavorites, workspaceSlug, cycleDetails, isFavorite]);
+  }, [addCycleToFavorites, removeCycleFromFavorites, workspaceSlug, cycleDetails, isFavorite, t]);
 
   const copyCycleUrlToClipboard = useCallback(() => {
     const url = new URL(window.location.href);
@@ -58,6 +58,7 @@ export const usePowerKCycleContextBasedActions = (): TPowerKCommandConfig[] => {
           type: "success",
           title: t("power_k.contextual_actions.cycle.copy_url_toast_success"),
         });
+        return undefined;
       })
       .catch(() => {
         setToast({

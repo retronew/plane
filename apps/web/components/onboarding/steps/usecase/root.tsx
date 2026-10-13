@@ -19,6 +19,7 @@ import { useUserProfile } from "@/hooks/store/user";
 // local imports
 import { CommonOnboardingHeader } from "../common";
 import type { TProfileSetupFormValues } from "../profile/root";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
@@ -50,17 +51,17 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
       use_case: formData.use_case && formData.use_case.length > 0 ? formData.use_case.join(". ") : undefined,
     };
     try {
-      [await updateUserProfile(profileUpdatePayload)];
+      await updateUserProfile(profileUpdatePayload);
       setToast({
         type: "success",
-        title: "Success",
-        message: "Profile setup completed!",
+        title: translate("web.success"),
+        message: translate("web.profile_setup_completed"),
       });
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "Profile setup failed. Please try again!",
+        title: translate("web.error"),
+        message: translate("web.profile_setup_failed_please_try_again"),
       });
     }
   };
@@ -78,16 +79,19 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
   };
 
   // derived values
-  const isButtonDisabled = !isSubmitting && isValid ? false : true;
+  const isButtonDisabled = !(!isSubmitting && isValid);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="What brings you to Plane?" description="Tell us your goals and team size." />
+      <CommonOnboardingHeader
+        title={translate("web.what_brings_you_to_plane")}
+        description={translate("web.tell_us_your_goals_and_team_size")}
+      />
 
       {/* Use Case Selection */}
       <div className="flex flex-col gap-3">
-        <p className="text-body-sm-semibold text-placeholder">Select one or more</p>
+        <p className="text-body-sm-semibold text-placeholder">{translate("web.select_one_or_more")}</p>
 
         <Controller
           control={control}
@@ -147,8 +151,15 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
-        <Button variant="ghost" onClick={handleSkip} stretch="full" size="lg" label="Skip" />
+        <Button
+          variant="primary"
+          type="submit"
+          stretch="full"
+          size="lg"
+          disabled={isButtonDisabled}
+          label={translate("web.continue")}
+        />
+        <Button variant="ghost" onClick={handleSkip} stretch="full" size="lg" label={translate("web.skip")} />
       </div>
     </form>
   );

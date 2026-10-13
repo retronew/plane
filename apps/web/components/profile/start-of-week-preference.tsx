@@ -14,6 +14,7 @@ import type { EStartOfTheWeek } from "@plane/types";
 import { SettingsControlItem } from "@/components/settings/control-item";
 // hooks
 import { useUserProfile } from "@/hooks/store/user";
+import { translate } from "@plane/i18n";
 
 type TStartOfWeekOption = (typeof START_OF_THE_WEEK_OPTIONS)[number];
 
@@ -32,9 +33,17 @@ export const StartOfWeekPreference = observer(function StartOfWeekPreference(pro
   const handleStartOfWeekChange = async (val: number) => {
     try {
       await updateUserProfile({ start_of_the_week: val });
-      setToast({ type: "success", title: "Success", message: "First day of the week updated successfully" });
+      setToast({
+        type: "success",
+        title: translate("web.success"),
+        message: translate("web.first_day_of_the_week_updated_successfully"),
+      });
     } catch (_error) {
-      setToast({ type: "error", title: "Update failed", message: "Please try again later." });
+      setToast({
+        type: "error",
+        title: translate("web.update_failed"),
+        message: translate("web.please_try_again_later"),
+      });
     }
   };
 

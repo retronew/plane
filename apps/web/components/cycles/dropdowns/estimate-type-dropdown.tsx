@@ -13,6 +13,7 @@ import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useCycle } from "@/hooks/store/use-cycle";
 // local imports
 import { cycleEstimateOptions } from "../analytics-sidebar/issue-progress";
+import { translate } from "@plane/i18n";
 
 type TProps = {
   value: TCycleEstimateType;
@@ -38,7 +39,7 @@ export const EstimateTypeDropdown = observer(function EstimateTypeDropdown(props
         getOptionLabel={(option) => option.label}
         showSearch={false}
         pinSelected={false}
-        placeholder="None"
+        placeholder={translate("web.none")}
       >
         <Select.Trigger variant="select-md" className="rounded-sm border-none bg-surface-2 text-13 font-medium">
           <Select.Value />

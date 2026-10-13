@@ -33,6 +33,7 @@ import { IntakeWorkItemVersionService } from "@/services/inbox";
 import type { IInboxIssueStore } from "@/store/inbox/inbox-issue.store";
 // local imports
 import { InboxIssueContentProperties } from "./issue-properties";
+import { translate } from "@plane/i18n";
 // services init
 const intakeWorkItemVersionService = new IntakeWorkItemVersionService();
 
@@ -82,16 +83,16 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
         try {
           await removeIssue(workspaceSlug, projectId, _issueId);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Work item deleted successfully",
+            message: translate("web.work_item_deleted_successfully"),
           });
         } catch (error) {
           console.log("Error in deleting work item:", error);
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Work item delete failed",
+            message: translate("web.work_item_delete_failed"),
           });
         }
       },
@@ -100,9 +101,9 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
           await inboxIssue.updateIssue(data);
         } catch (_error) {
           setToast({
-            title: "Work item update failed",
+            title: translate("web.work_item_update_failed"),
             type: "error",
-            message: "Work item update failed",
+            message: translate("web.work_item_update_failed"),
           });
         }
       },

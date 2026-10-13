@@ -73,7 +73,9 @@ export const MemberListFiltersDropdown = observer(function MemberListFiltersDrop
       </div>
       <MenuContent side="bottom" align="start">
         <MenuGroup>
-          <MenuLabel meta={appliedFiltersCount > 0 ? String(appliedFiltersCount) : undefined}>Roles</MenuLabel>
+          <MenuLabel meta={appliedFiltersCount > 0 ? String(appliedFiltersCount) : undefined}>
+            {t("web.roles")}
+          </MenuLabel>
           {roleOptions.map((role) => (
             <MenuCheckboxItem
               key={`role-${role.value}`}

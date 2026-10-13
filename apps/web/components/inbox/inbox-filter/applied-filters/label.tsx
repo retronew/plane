@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import { CloseOutline } from "@makeplane/propel/icons";
 import { useLabel } from "@/hooks/store/use-label";
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
+import { translate } from "@plane/i18n";
 
 function LabelIcons({ color }: { color: string }) {
   return <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />;
@@ -30,7 +31,7 @@ export const InboxIssueAppliedFiltersLabel = observer(function InboxIssueApplied
   if (filteredValues.length === 0) return <></>;
   return (
     <div className="my-auto flex min-h-9 cursor-pointer flex-wrap items-center gap-1.5 rounded-md border border-subtle p-1.5 text-11 text-tertiary capitalize hover:text-secondary">
-      <div className="text-11 text-secondary">Label</div>
+      <div className="text-11 text-secondary">{translate("web.label")}</div>
       {filteredValues.map((value) => {
         const optionDetail = currentOptionDetail(value);
         if (!optionDetail) return <></>;
@@ -40,6 +41,7 @@ export const InboxIssueAppliedFiltersLabel = observer(function InboxIssueApplied
               <LabelIcons color={optionDetail.color} />
             </div>
             <div className="truncate text-11">{optionDetail?.name}</div>
+            {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
             <div
               className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
               onClick={() => handleInboxIssueFilters("labels", handleFilterValue(value))}
@@ -50,6 +52,7 @@ export const InboxIssueAppliedFiltersLabel = observer(function InboxIssueApplied
         );
       })}
 
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
       <div
         className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
         onClick={clearFilter}

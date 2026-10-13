@@ -11,6 +11,7 @@ import type { IIssueLabel } from "@plane/types";
 // components
 import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
+import { translate } from "@plane/i18n";
 
 // ui
 // types
@@ -68,7 +69,7 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
                 {sortedOptions.slice(0, itemsToRender).map((label) => (
                   <FilterOption
                     key={label?.id}
-                    isChecked={appliedFilters?.includes(label?.id) ? true : false}
+                    isChecked={Boolean(appliedFilters?.includes(label?.id))}
                     onClick={() => handleUpdate(label?.id)}
                     icon={<LabelIcons color={label.color} />}
                     title={label.name}
@@ -85,7 +86,7 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

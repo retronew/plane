@@ -21,6 +21,7 @@ import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
 import useLocalStorage from "@/hooks/use-local-storage";
 import type { Route } from "./+types/page";
+import { translate } from "@plane/i18n";
 
 function CycleDetailPage({ params }: Route.ComponentProps) {
   // router
@@ -39,7 +40,7 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
     cycleId,
   });
   // derived values
-  const isSidebarCollapsed = storedValue ? (storedValue === true ? true : false) : false;
+  const isSidebarCollapsed = storedValue === true;
   const cycle = getCycleById(cycleId);
   const project = getProjectById(projectId);
   const pageTitle = project?.name && cycle?.name ? `${project?.name} - ${cycle?.name}` : undefined;
@@ -56,10 +57,10 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
       {!cycle && !loader ? (
         <EmptyState
           image={emptyCycle}
-          title="Cycle does not exist"
-          description="The cycle you are looking for does not exist or has been deleted."
+          title={translate("web.cycle_does_not_exist")}
+          description={translate("web.the_cycle_you_are_looking_for_does_not_exist_or_has_been_del")}
           primaryButton={{
-            text: "View other cycles",
+            text: translate("web.view_other_cycles"),
             onClick: () => router.push(`/${workspaceSlug}/projects/${projectId}/cycles`),
           }}
         />

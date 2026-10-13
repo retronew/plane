@@ -12,6 +12,7 @@ import emptyIssue from "@/app/assets/empty-state/issue.svg?url";
 import { EmptyState } from "@/components/common/empty-state";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type TIssuePeekOverviewError = {
   removeRoutePeekId: () => void;
@@ -25,7 +26,7 @@ export function IssuePeekOverviewError(props: TIssuePeekOverviewError) {
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       <div className="flex flex-shrink-0 justify-start">
-        <Tooltip label="Close the peek view" disabled={isMobile}>
+        <Tooltip label={translate("web.close_the_peek_view")} disabled={isMobile}>
           <button onClick={removeRoutePeekId} className="m-5 h-5 w-5">
             <ArrowNarrowRightOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
           </button>
@@ -35,8 +36,8 @@ export function IssuePeekOverviewError(props: TIssuePeekOverviewError) {
       <div className="h-full w-full">
         <EmptyState
           image={emptyIssue ?? undefined}
-          title="Work item does not exist"
-          description="The work item you are looking for does not exist, has been archived, or has been deleted."
+          title={translate("web.work_item_does_not_exist")}
+          description={translate("web.the_work_item_you_are_looking_for_does_not_exist_has_been_ar")}
         />
       </div>
     </div>

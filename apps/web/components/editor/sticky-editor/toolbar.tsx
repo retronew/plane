@@ -18,6 +18,7 @@ import type { ToolbarMenuItem } from "@plane/editor";
 import { TOOLBAR_ITEMS } from "@plane/editor";
 // helpers
 import { ColorPalette } from "./color-palette";
+import { translate } from "@plane/i18n";
 
 type Props = {
   executeCommand: (item: ToolbarMenuItem) => void;
@@ -67,7 +68,7 @@ export function StickyEditorToolbar(props: Props) {
       <div className="my-auto flex gap-4" ref={colorPaletteRef}>
         {/* color palette */}
         {showColorPalette && <ColorPalette handleUpdate={handleColorChange} />}
-        <Tooltip label="Background color">
+        <Tooltip label={translate("web.background_color")}>
           <button type="button" onClick={() => setShowColorPalette(!showColorPalette)} className="flex text-primary/50">
             <PaletteOutline className="my-auto size-4" />
           </button>
@@ -103,7 +104,7 @@ export function StickyEditorToolbar(props: Props) {
         </div>
       </div>
       {/* delete action */}
-      <Tooltip label="Delete">
+      <Tooltip label={translate("web.delete")}>
         <button type="button" onClick={handleDelete} className="my-auto text-primary/50">
           <DeleteOutline className="size-4" />
         </button>

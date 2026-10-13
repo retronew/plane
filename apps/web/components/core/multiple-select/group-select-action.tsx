@@ -8,6 +8,7 @@ import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { cn } from "@plane/utils";
 // hooks
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
+import { translate } from "@plane/i18n";
 
 type Props = {
   className?: string;
@@ -29,7 +30,7 @@ export function MultipleSelectGroupAction(props: Props) {
         checked={groupSelectionStatus === "complete"}
         indeterminate={groupSelectionStatus === "partial"}
         disabled={disabled}
-        aria-label="Select all in group"
+        aria-label={translate("web.select_all_in_group")}
         onCheckedChange={() => selectionHelpers.handleGroupClick(groupID)}
       />
     </span>

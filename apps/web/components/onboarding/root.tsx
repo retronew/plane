@@ -17,6 +17,7 @@ import { useUser, useUserProfile } from "@/hooks/store/user";
 // local components
 import { OnboardingHeader } from "./header";
 import { OnboardingStepRoot } from "./steps";
+import { translate } from "@plane/i18n";
 
 type Props = {
   invitations?: IWorkspaceMemberInvitation[];
@@ -44,8 +45,8 @@ export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Failed",
-        message: "Failed to finish onboarding, Please try again later.",
+        title: translate("web.failed"),
+        message: translate("web.failed_to_finish_onboarding_please_try_again_later"),
       });
     }
   }, [user, finishUserOnboarding]);

@@ -18,6 +18,7 @@ import type { EPageStoreType } from "@/hooks/store";
 import { usePageStore } from "@/hooks/store";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { translate } from "@plane/i18n";
 
 type TConfirmPageDeletionProps = {
   isOpen: boolean;
@@ -52,8 +53,8 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
       handleClose();
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Page deleted successfully.",
+        title: translate("toast.success"),
+        message: translate("web.page_deleted_successfully"),
       });
 
       if (routePageId) {
@@ -62,8 +63,8 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
     } catch {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Page could not be deleted. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.page_could_not_be_deleted_please_try_again"),
       });
     } finally {
       setIsDeleting(false);
@@ -78,7 +79,7 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
       handleSubmit={handleDelete}
       isSubmitting={isDeleting}
       isOpen={isOpen}
-      title="Delete page"
+      title={translate("web.delete_page")}
       content={
         <>
           Are you sure you want to delete page-{" "}

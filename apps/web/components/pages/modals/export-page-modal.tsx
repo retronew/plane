@@ -29,6 +29,7 @@ import { setToast } from "@plane/blocks/toast";
 import { PDFDocument } from "@/components/editor/pdf";
 // hooks
 import { useParseEditorContent } from "@/hooks/use-parse-editor-content";
+import { translate } from "@plane/i18n";
 
 type Props = {
   editorRef: EditorRefApi | null;
@@ -114,6 +115,17 @@ const defaultValues: TFormValues = {
   content_variety: "everything",
 };
 
+const initiateDownload = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+};
+
 export function ExportPageModal(props: Props) {
   const { editorRef, isOpen, onClose, pageTitle } = props;
   // states
@@ -144,17 +156,6 @@ export function ExportPageModal(props: Props) {
     setTimeout(() => {
       reset();
     }, 300);
-  };
-
-  const initiateDownload = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1000);
   };
 
   // handle export as a PDF
@@ -199,16 +200,16 @@ export function ExportPageModal(props: Props) {
       }
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Page exported successfully.",
+        title: translate("toast.success"),
+        message: translate("web.page_exported_successfully"),
       });
       handleClose();
     } catch (error) {
       console.error("Error in exporting page:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Page could not be exported. Please try again later.",
+        title: translate("toast.error"),
+        message: translate("web.page_could_not_be_exported_please_try_again_later"),
       });
     } finally {
       setIsExporting(false);
@@ -226,13 +227,13 @@ export function ExportPageModal(props: Props) {
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Export page</DialogTitle>
+              <DialogTitle>{translate("web.export_page")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody>
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <h6 className="flex-shrink-0 text-13 text-secondary">Export format</h6>
+                <h6 className="flex-shrink-0 text-13 text-secondary">{translate("web.export_format")}</h6>
                 <Controller
                   control={control}
                   name="export_format"
@@ -246,7 +247,7 @@ export function ExportPageModal(props: Props) {
                 />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <h6 className="flex-shrink-0 text-13 text-secondary">Include content</h6>
+                <h6 className="flex-shrink-0 text-13 text-secondary">{translate("web.include_content")}</h6>
                 <Controller
                   control={control}
                   name="content_variety"
@@ -261,7 +262,7 @@ export function ExportPageModal(props: Props) {
               </div>
               {isPDFSelected && (
                 <div className="flex items-center justify-between gap-2">
-                  <h6 className="flex-shrink-0 text-13 text-secondary">Page format</h6>
+                  <h6 className="flex-shrink-0 text-13 text-secondary">{translate("web.page_format")}</h6>
                   <Controller
                     control={control}
                     name="page_format"
@@ -279,7 +280,7 @@ export function ExportPageModal(props: Props) {
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={translate("web.cancel")} onClick={handleClose} />
           <Button
             variant="primary"
             size="md"

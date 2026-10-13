@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { ThoughtsOutline } from "@makeplane/propel/icons";
 // images
 import latestFeatures from "@/app/assets/onboarding/onboarding-pages.webp?url";
+import { translate } from "@plane/i18n";
 
 export function LatestFeatureBlock() {
   const { resolvedTheme } = useTheme();
@@ -21,7 +22,7 @@ export function LatestFeatureBlock() {
         <p className="text-left text-13 text-primary">
           Pages gets a facelift! Write anything and use Galileo to help you start.{" "}
           <Link href="https://plane.so/changelog" target="_blank" rel="noopener noreferrer">
-            <span className="text-13 font-medium underline hover:cursor-pointer">Learn more</span>
+            <span className="text-13 font-medium underline hover:cursor-pointer">{translate("web.learn_more")}</span>
           </Link>
         </p>
       </div>

@@ -5,6 +5,7 @@
  */
 
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
+import { translate } from "@plane/i18n";
 
 type TProductUpdatesFallbackProps = {
   description: string;
@@ -27,7 +28,7 @@ export function ProductUpdatesFallback(props: TProductUpdatesFallbackProps) {
         align="center"
         actions={[
           {
-            label: "Go to changelog",
+            label: translate("web.go_to_changelog"),
             variant: "primary",
             onClick: () => window.open(changelogUrl, "_blank"),
           },

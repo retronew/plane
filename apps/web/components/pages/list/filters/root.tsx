@@ -13,6 +13,7 @@ import { FilterCreatedDate } from "@/components/common/filters/created-at";
 import { FilterCreatedBy } from "@/components/common/filters/created-by";
 import { FilterOption } from "@/components/issues/issue-layouts/filters";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   filters: TPageFilters;
@@ -65,7 +66,7 @@ export const PageFiltersSelection = observer(function PageFiltersSelection(props
             ref={inputRef}
             type="text"
             className="w-full outline-none placeholder:text-placeholder"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
           />
@@ -86,7 +87,7 @@ export const PageFiltersSelection = observer(function PageFiltersSelection(props
                 favorites: !filters.filters?.favorites,
               })
             }
-            title="Favorites"
+            title={translate("web.favorites")}
           />
         </div>
 

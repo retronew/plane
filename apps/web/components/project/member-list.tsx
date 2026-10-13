@@ -88,8 +88,9 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
             <SearchOutline className="h-3.5 w-3.5" />
             <input
               className="w-full max-w-[234px] border-none bg-transparent text-13 placeholder:text-placeholder focus:outline-none"
-              placeholder="Search"
+              placeholder={t("web.search")}
               value={searchQuery}
+              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
               autoFocus
               onChange={(e) => setSearchQuery(e.target.value)}
             />

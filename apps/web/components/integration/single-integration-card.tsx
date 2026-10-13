@@ -28,6 +28,7 @@ import useIntegrationPopup from "@/hooks/use-integration-popup";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // services
 import { IntegrationService } from "@/services/integrations";
+import { translate } from "@plane/i18n";
 
 type Props = {
   integration: IAppIntegration;
@@ -91,16 +92,17 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
 
         setToast({
           type: "success",
-          title: "Deleted successfully!",
+          title: translate("web.deleted_successfully"),
           message: `${integration.title} integration deleted successfully.`,
         });
+        return undefined;
       })
       .catch(() => {
         setDeletingIntegration(false);
 
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: `${integration.title} integration could not be deleted. Please try again.`,
         });
       });

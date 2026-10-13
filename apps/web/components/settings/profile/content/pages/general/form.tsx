@@ -11,7 +11,7 @@ import { UserOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 import { EFileAssetType } from "@plane/types";
@@ -100,8 +100,8 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Profile picture deleted successfully.",
+          title: t("toast.success"),
+          message: t("web.profile_picture_deleted_successfully"),
         });
         setValue("avatar_url", "");
         return;
@@ -109,8 +109,8 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "There was some error in deleting your profile picture. Please try again.",
+          title: t("toast.error"),
+          message: t("web.there_was_some_error_in_deleting_your_profile_picture_please"),
         });
       })
       .finally(() => {
@@ -142,7 +142,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       setToast({
         type: "error",
         title: t("toast.error"),
-        message: error instanceof Error ? error.message : "Failed to process cover image",
+        message: error instanceof Error ? error.message : t("web.failed_to_process_cover_image"),
       });
       setIsLoading(false);
       return;
@@ -178,13 +178,13 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       .finally(() => setIsLoading(false));
 
     setPromiseToast(updatePromise, {
-      loading: "Updating...",
+      loading: t("web.updating"),
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => `Profile updated successfully.`,
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => `There was some error in updating your profile. Please try again.`,
       },
     });
@@ -217,7 +217,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
             <CoverImage
               src={userCover}
               className="h-44 w-full rounded-lg"
-              alt={currentUser?.first_name ?? "Cover image"}
+              alt={currentUser?.first_name ?? translate("web.cover_image")}
             />
             <div className="absolute -bottom-6 left-6 flex items-end justify-between">
               <div className="flex gap-3">
@@ -232,9 +232,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                         <img
                           src={getFileURL(userAvatar)}
                           className="absolute top-0 left-0 h-full w-full rounded-lg object-cover"
-                          onClick={() => setIsImageUploadModalOpen(true)}
                           alt={currentUser?.display_name}
-                          role="button"
                         />
                       </div>
                     )}
@@ -291,7 +289,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                           value={value}
                           onChange={onChange}
                           ref={ref}
-                          placeholder="Enter your first name"
+                          placeholder={t("web.enter_your_first_name")}
                           maxLength={50}
                           autoComplete="on"
                         />
@@ -320,7 +318,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                           value={value}
                           onChange={onChange}
                           ref={ref}
-                          placeholder="Enter your last name"
+                          placeholder={t("web.enter_your_last_name")}
                           maxLength={50}
                           autoComplete="on"
                         />
@@ -353,7 +351,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                           value={value}
                           onChange={onChange}
                           ref={ref}
-                          placeholder="Enter your display name"
+                          placeholder={t("web.enter_your_display_name")}
                           maxLength={50}
                         />
                       </InputGroup>
@@ -385,7 +383,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                           type="email"
                           value={value}
                           ref={ref}
-                          placeholder="Enter your email"
+                          placeholder={t("web.enter_your_email")}
                           autoComplete="on"
                           disabled
                         />

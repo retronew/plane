@@ -25,6 +25,7 @@ import { useUserProfile } from "@/hooks/store/user";
 // local components
 import { CommonOnboardingHeader } from "../common";
 import type { TProfileSetupFormValues } from "../profile/root";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
@@ -66,17 +67,17 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
       role: formData.role,
     };
     try {
-      [await updateUserProfile(profileUpdatePayload)];
+      await updateUserProfile(profileUpdatePayload);
       setToast({
         type: "success",
-        title: "Success",
-        message: "Profile setup completed!",
+        title: translate("web.success"),
+        message: translate("web.profile_setup_completed"),
       });
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "Profile setup failed. Please try again!",
+        title: translate("web.error"),
+        message: translate("web.profile_setup_failed_please_try_again"),
       });
     }
   };
@@ -91,15 +92,18 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
     handleStepChange(EOnboardingSteps.ROLE_SETUP);
   };
 
-  const isButtonDisabled = !isSubmitting && isValid ? false : true;
+  const isButtonDisabled = !(!isSubmitting && isValid);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="What's your role?" description="Let's set up Plane for how you work." />
+      <CommonOnboardingHeader
+        title={translate("web.what_s_your_role")}
+        description={translate("web.let_s_set_up_plane_for_how_you_work")}
+      />
       {/* Role Selection */}
       <div className="flex flex-col gap-3">
-        <p className="text-body-sm-semibold text-placeholder">Select one</p>
+        <p className="text-body-sm-semibold text-placeholder">{translate("web.select_one")}</p>
         <Controller
           control={control}
           name="role"
@@ -149,14 +153,21 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
       </div>
       {/* Action Buttons */}
       <div className="space-y-3">
-        <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
+        <Button
+          variant="primary"
+          type="submit"
+          stretch="full"
+          size="lg"
+          disabled={isButtonDisabled}
+          label={translate("web.continue")}
+        />
         <Button
           variant="ghost"
           onClick={handleSkip}
           stretch="full"
           size="lg"
           render={<button type="button" className="text-tertiary" />}
-          label="Skip"
+          label={translate("web.skip")}
         />
       </div>
     </form>

@@ -73,14 +73,14 @@ export const CustomThemeImportConfigButton = observer(function CustomThemeImport
       setToast({
         type: "success",
         title: t("success"),
-        message: "Theme configuration imported successfully",
+        message: t("web.theme_configuration_imported_successfully"),
       });
     } catch (error) {
       console.error("Failed to upload config:", error);
       setToast({
         type: "error",
         title: t("error"),
-        message: error instanceof Error ? error.message : "Failed to import theme configuration",
+        message: error instanceof Error ? error.message : t("web.failed_to_import_theme_configuration"),
       });
     } finally {
       // Reset file input
@@ -98,7 +98,7 @@ export const CustomThemeImportConfigButton = observer(function CustomThemeImport
         size="md"
         stretch="auto"
         type="button"
-        label="Import config"
+        label={t("web.import_config")}
         onClick={() => fileInputRef.current?.click()}
       />
     </>

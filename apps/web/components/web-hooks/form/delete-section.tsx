@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
+import { translate } from "@plane/i18n";
 
 type Props = {
   openDeleteModal: () => void;
@@ -22,14 +23,20 @@ export function WebhookDeleteSection(props: Props) {
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
-        trigger={<span className="text-16 tracking-tight">Danger zone</span>}
+        trigger={<span className="text-16 tracking-tight">{translate("web.danger_zone")}</span>}
       >
         <div className="flex flex-col gap-8">
           <span className="text-13 tracking-tight">
             Once a webhook is deleted, it cannot be restored. Future events will no longer be delivered to this webhook.
           </span>
           <div>
-            <Button variant="danger" size="md" stretch="auto" label="Delete webhook" onClick={openDeleteModal} />
+            <Button
+              variant="danger"
+              size="md"
+              stretch="auto"
+              label={translate("web.delete_webhook")}
+              onClick={openDeleteModal}
+            />
           </div>
         </div>
       </Collapsible>

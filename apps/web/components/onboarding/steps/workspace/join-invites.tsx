@@ -22,6 +22,7 @@ import { useUserSettings } from "@/hooks/store/user";
 import { WorkspaceService } from "@/services/workspace.service";
 // local components
 import { CommonOnboardingHeader } from "../common";
+import { translate } from "@plane/i18n";
 
 type Props = {
   invitations: IWorkspaceMemberInvitation[];
@@ -50,7 +51,7 @@ export function WorkspaceJoinInvitesStep(props: Props) {
 
   // submit invitations
   const submitInvitations = async () => {
-    const invitation = invitations?.find((invitation) => invitation.id === invitationsRespond[0]);
+    const invitation = invitations?.find((item) => item.id === invitationsRespond[0]);
 
     if (invitationsRespond.length <= 0 && !invitation?.role) return;
 
@@ -69,7 +70,10 @@ export function WorkspaceJoinInvitesStep(props: Props) {
 
   return invitations && invitations.length > 0 ? (
     <div className="flex flex-col gap-10">
-      <CommonOnboardingHeader title="Join invites or create a workspace" description="All your work — unified." />
+      <CommonOnboardingHeader
+        title={translate("web.join_invites_or_create_a_workspace")}
+        description={translate("web.all_your_work_unified")}
+      />
       <div className="flex flex-col gap-3">
         {invitations &&
           invitations.length > 0 &&
@@ -77,6 +81,7 @@ export function WorkspaceJoinInvitesStep(props: Props) {
             const isSelected = invitationsRespond.includes(invitation.id);
             const invitedWorkspace = invitation.workspace;
             return (
+              // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
               <div
                 key={invitation.id}
                 className={`flex cursor-pointer items-center gap-2 rounded-lg border border-subtle px-3 py-2 hover:bg-surface-2`}
@@ -114,13 +119,13 @@ export function WorkspaceJoinInvitesStep(props: Props) {
           variant="ghost"
           size="lg"
           stretch="full"
-          label="Create new workspace"
+          label={translate("web.create_new_workspace")}
           onClick={handleCurrentViewChange}
           disabled={isJoiningWorkspaces}
         />
       </div>
     </div>
   ) : (
-    <div>No Invitations found</div>
+    <div>{translate("web.no_invitations_found")}</div>
   );
 }

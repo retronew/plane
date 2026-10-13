@@ -41,14 +41,14 @@ export const FilterStatus = observer(function FilterStatus(props: Props) {
             filteredOptions.map((status) => (
               <FilterOption
                 key={status.value}
-                isChecked={appliedFilters?.includes(status.value) ? true : false}
+                isChecked={Boolean(appliedFilters?.includes(status.value))}
                 onClick={() => handleUpdate(status.value)}
                 icon={<ModuleStatusIcon status={status.value} />}
                 title={t(status.i18n_label)}
               />
             ))
           ) : (
-            <p className="text-11 text-placeholder italic">No matches found</p>
+            <p className="text-11 text-placeholder italic">{t("web.no_matches_found")}</p>
           )}
         </div>
       )}

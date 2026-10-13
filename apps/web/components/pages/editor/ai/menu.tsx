@@ -25,6 +25,7 @@ import { AI_EDITOR_TASKS, LOADING_TEXTS } from "@plane/constants";
 import type { TTaskPayload } from "@/services/ai.service";
 import { AIService } from "@/services/ai.service";
 import { AskPiMenu } from "./ask-pi-menu";
+import { translate } from "@plane/i18n";
 const aiService = new AIService();
 
 type Props = {
@@ -238,7 +239,7 @@ export function EditorAIMenu(props: Props) {
                       >
                         Replace selection
                       </button>
-                      <Tooltip label="Add to next line">
+                      <Tooltip label={translate("web.add_to_next_line")}>
                         <button
                           type="button"
                           className="grid size-6 flex-shrink-0 place-items-center rounded-sm outline-none hover:bg-layer-1"
@@ -247,7 +248,7 @@ export function EditorAIMenu(props: Props) {
                           <CornerRightDownOutline className="size-4 text-tertiary" />
                         </button>
                       </Tooltip>
-                      <Tooltip label="Re-generate response">
+                      <Tooltip label={translate("web.re_generate_response")}>
                         <button
                           type="button"
                           className="grid size-6 flex-shrink-0 place-items-center rounded-sm outline-none hover:bg-layer-1"

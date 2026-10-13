@@ -52,15 +52,15 @@ export const ModuleEmptyState = observer(function ModuleEmptyState() {
       .then(() =>
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Work items added to the module successfully.",
+          title: t("toast.success"),
+          message: t("web.work_items_added_to_the_module_successfully"),
         })
       )
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Selected work items could not be added to the module. Please try again.",
+          title: t("toast.error"),
+          message: t("web.selected_work_items_could_not_be_added_to_the_module_please"),
         })
       );
   };
@@ -83,7 +83,7 @@ export const ModuleEmptyState = observer(function ModuleEmptyState() {
             description={t("common_empty_state.search.description")}
             actions={[
               {
-                label: "Clear filters",
+                label: t("web.clear_filters"),
                 onClick: moduleWorkItemFilter?.clearFilters,
                 disabled: !canPerformEmptyStateActions || !moduleWorkItemFilter,
                 variant: "secondary",

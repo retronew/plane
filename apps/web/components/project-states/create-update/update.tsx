@@ -10,6 +10,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState, TStateOperationsCallbacks } from "@plane/types";
 // components
 import { StateForm } from "@/components/project-states";
+import { translate } from "@plane/i18n";
 
 type TStateUpdate = {
   state: IState;
@@ -34,8 +35,8 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       await updateStateCallback(state.id, formData);
       setToast({
         type: "success",
-        title: "Success!",
-        message: "State updated successfully.",
+        title: translate("toast.success"),
+        message: translate("web.state_updated_successfully"),
       });
       handleClose();
       return { status: "success" };
@@ -44,15 +45,15 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       if (errorStatus?.status === 400) {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Another state exists with the same name. Please try again with another name.",
+          title: translate("toast.error"),
+          message: translate("web.another_state_exists_with_the_same_name_please_try_again_wit"),
         });
         return { status: "already_exists" };
       } else {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State could not be updated. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.state_could_not_be_updated_please_try_again"),
         });
         return { status: "error" };
       }

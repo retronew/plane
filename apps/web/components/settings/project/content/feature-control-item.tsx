@@ -13,6 +13,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
+import { translate } from "@plane/i18n";
 
 type Props = {
   description?: React.ReactNode;
@@ -41,13 +42,13 @@ export const ProjectSettingsFeatureControlItem = observer(function ProjectSettin
     const updateProjectPromise = updateProject(workspaceSlug, projectId, settingsPayload);
 
     setPromiseToast(updateProjectPromise, {
-      loading: "Updating project feature...",
+      loading: translate("web.updating_project_feature"),
       success: {
-        title: "Success!",
+        title: translate("toast.success"),
         message: () => "Project feature updated successfully.",
       },
       error: {
-        title: "Error!",
+        title: translate("toast.error"),
         message: () => "Something went wrong while updating project feature. Please try again.",
       },
     });
@@ -66,7 +67,7 @@ export const ProjectSettingsFeatureControlItem = observer(function ProjectSettin
           checked={value}
           onCheckedChange={handleSubmit}
           disabled={disabled}
-          aria-label={typeof title === "string" ? title : "Toggle project feature"}
+          aria-label={typeof title === "string" ? title : translate("web.toggle_project_feature")}
         />
       }
     />

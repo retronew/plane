@@ -17,6 +17,7 @@ import { renderFormattedDate, renderFormattedTime } from "@plane/utils";
 import type { EPageStoreType } from "@/hooks/store";
 // local imports
 import type { TVersionEditorProps } from "./editor";
+import { translate } from "@plane/i18n";
 
 type Props = {
   activeVersion: string | null;
@@ -60,14 +61,15 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
       .then(() => {
         setToast({
           type: "success",
-          title: "Page version restored.",
+          title: translate("web.page_version_restored"),
         });
         handleClose();
+        return undefined;
       })
       .catch(() =>
         setToast({
           type: "error",
-          title: "Failed to restore page version.",
+          title: translate("web.failed_to_restore_page_version"),
         })
       )
       .finally(() => setIsRestoring(false));
@@ -90,14 +92,16 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
               <WarningTriangleOutline className="size-10" />
             </span>
             <div>
-              <h6 className="text-16 font-semibold">Something went wrong!</h6>
-              <p className="text-13 text-tertiary">The version could not be loaded, please try again.</p>
+              <h6 className="text-16 font-semibold">{translate("web.something_went_wrong")}</h6>
+              <p className="text-13 text-tertiary">
+                {translate("web.the_version_could_not_be_loaded_please_try_again")}
+              </p>
             </div>
             <Button
               variant="ghost"
               size="sm"
               stretch="auto"
-              label="Try again"
+              label={translate("web.try_again")}
               onClick={() => void handleRetry()}
               loading={isRetrying}
             />

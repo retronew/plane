@@ -23,6 +23,7 @@ import { useUserPermissions } from "@/hooks/store/user";
 // local imports
 import type { Route } from "./+types/page";
 import { WebhookDetailsWorkspaceSettingsHeader } from "./header";
+import { translate } from "@plane/i18n";
 
 function WebhookDetailsPage({ params }: Route.ComponentProps) {
   // states
@@ -64,14 +65,14 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
       await updateWebhook(workspaceSlug, formData.id, payload);
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Webhook updated successfully.",
+        title: translate("toast.success"),
+        message: translate("web.webhook_updated_successfully"),
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setToast({
         type: "error",
-        title: "Error!",
+        title: translate("toast.error"),
         message: error?.error ?? "Something went wrong. Please try again.",
       });
     }
@@ -82,7 +83,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
       <>
         <PageHead title={pageTitle} />
         <div className="mt-10 flex h-full w-full justify-center p-4">
-          <p className="text-13 text-tertiary">You are not authorized to access this page.</p>
+          <p className="text-13 text-tertiary">{translate("web.you_are_not_authorized_to_access_this_page")}</p>
         </div>
       </>
     );

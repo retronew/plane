@@ -17,6 +17,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
+import { translate } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -75,7 +76,7 @@ export const FilterMembers = observer(function FilterMembers(props: Props) {
                   return (
                     <FilterOption
                       key={`member-${member.id}`}
-                      isChecked={appliedFilters?.includes(member.id) ? true : false}
+                      isChecked={Boolean(appliedFilters?.includes(member.id))}
                       onClick={() => handleUpdate(member.id)}
                       icon={
                         <Avatar
@@ -100,7 +101,7 @@ export const FilterMembers = observer(function FilterMembers(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

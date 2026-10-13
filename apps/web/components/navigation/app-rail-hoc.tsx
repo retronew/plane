@@ -11,6 +11,7 @@ import { useParams } from "next/navigation";
 import { Projects } from "@makeplane/propel/icons";
 import type { AppSidebarItemData } from "@/components/sidebar/sidebar-item";
 import { useWorkspacePaths } from "@/hooks/use-workspace-paths";
+import { translate } from "@plane/i18n";
 
 type WithDockItemsProps = {
   dockItems: (AppSidebarItemData & { shouldRender: boolean })[];
@@ -23,7 +24,7 @@ export function withDockItems<P extends WithDockItemsProps>(WrappedComponent: Re
 
     const dockItems: (AppSidebarItemData & { shouldRender: boolean })[] = [
       {
-        label: "Projects",
+        label: translate("web.projects"),
         icon: <Projects className="size-5" />,
         href: `/${workspaceSlug}/`,
         isActive: isProjectsPath && !isNotificationsPath,

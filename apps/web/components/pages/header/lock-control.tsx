@@ -13,6 +13,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { usePageOperations } from "@/hooks/use-page-operations";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { translate } from "@plane/i18n";
 
 // Define our lock display states, renaming "icon-only" to "neutral"
 type LockDisplayState = "neutral" | "locked" | "unlocked";
@@ -78,12 +79,12 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
   return (
     <>
       {displayState === "neutral" && (
-        <Tooltip label="Lock" side="bottom">
+        <Tooltip label={translate("web.lock")} side="bottom">
           <button
             type="button"
             onClick={toggleLock}
             className="grid size-6 flex-shrink-0 place-items-center rounded-sm text-secondary transition-colors hover:bg-layer-1 hover:text-primary"
-            aria-label="Lock"
+            aria-label={translate("web.lock")}
           >
             <LockedOutline className="size-3.5" />
           </button>
@@ -95,7 +96,7 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
           type="button"
           onClick={toggleLock}
           className="flex h-6 items-center gap-1 rounded-sm bg-accent-primary/20 px-2 text-accent-primary transition-colors hover:bg-accent-primary/30"
-          aria-label="Locked"
+          aria-label={translate("web.locked")}
         >
           <LockedOutline className="animate-lock-icon size-3.5 flex-shrink-0" />
           <span className="animate-text-slide-in overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">
@@ -107,7 +108,7 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
       {displayState === "unlocked" && (
         <div
           className="flex h-6 animate-fade-out items-center gap-1 rounded-sm px-2 text-secondary"
-          aria-label="Unlocked"
+          aria-label={translate("web.unlocked")}
         >
           <UnlockedOutline className="animate-unlock-icon size-3.5 flex-shrink-0" />
           <span className="animate-text-slide-in animate-text-fade-out overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">

@@ -15,6 +15,7 @@ import { ViewOrderByDropdown } from "@/components/views/filters/order-by";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useProjectView } from "@/hooks/store/use-project-view";
+import { translate } from "@plane/i18n";
 
 export const ViewMobileHeader = observer(function ViewMobileHeader() {
   // store hooks
@@ -40,7 +41,7 @@ export const ViewMobileHeader = observer(function ViewMobileHeader() {
         <div className="flex flex-grow items-center justify-center border-l border-subtle text-13 text-secondary">
           <FiltersDropdown
             icon={<FilterOutline className="h-3 w-3" />}
-            title="Filters"
+            title={translate("web.filters")}
             placement="bottom-end"
             isFiltersApplied={false}
             menuButton={

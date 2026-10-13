@@ -10,6 +10,7 @@ import { Button } from "@makeplane/propel/components/button";
 import type { IExportData } from "@plane/types";
 // helpers
 import { getDate, renderFormattedDate } from "@plane/utils";
+import { translate } from "@plane/i18n";
 // types
 
 type Props = {
@@ -82,7 +83,7 @@ export function SingleExport({ service, refreshing }: Props) {
           )}
         </>
       ) : (
-        <div className="text-11 text-danger-primary">Expired</div>
+        <div className="text-11 text-danger-primary">{translate("web.expired")}</div>
       )}
     </div>
   );

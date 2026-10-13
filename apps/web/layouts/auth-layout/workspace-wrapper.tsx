@@ -39,6 +39,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 interface IWorkspaceAuthWrapper {
   children: ReactNode;
@@ -130,8 +131,8 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
     await signOut().catch(() =>
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to sign out. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.failed_to_sign_out_please_try_again"),
       })
     );
   };
@@ -158,10 +159,10 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
             </div>
             <div className="relative flex items-center gap-2">
               <div className="text-13 font-medium">{currentUser?.email}</div>
-              <Tooltip label="Sign out" alignOffset={8} disabled={isMobile}>
+              <Tooltip label={translate("web.sign_out")} alignOffset={8} disabled={isMobile}>
                 <button
                   type="button"
-                  aria-label="Sign out"
+                  aria-label={translate("web.sign_out")}
                   className="relative flex h-6 w-6 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-sm hover:bg-layer-1"
                   onClick={() => void handleSignOut()}
                 >
@@ -174,7 +175,7 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
             <div className="relative flex-shrink-0">
               <img src={WorkSpaceNotAvailable} className="h-[220px] object-contain object-center" alt="Plane logo" />
             </div>
-            <h3 className="text-center text-16 font-semibold">Workspace not found</h3>
+            <h3 className="text-center text-16 font-semibold">{translate("web.workspace_not_found")}</h3>
             <p className="text-center text-13 text-secondary">
               No workspace found with the URL. It may not exist or you lack authorization to view it.
             </p>
@@ -215,7 +216,7 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
         <div className="grid h-full place-items-center p-4">
           <div className="space-y-8 text-center">
             <div className="space-y-2">
-              <h3 className="text-16 font-semibold">Not Authorized!</h3>
+              <h3 className="text-16 font-semibold">{translate("web.not_authorized")}</h3>
               <p className="mx-auto w-1/2 text-13 text-secondary">
                 You{"'"}re not a member of this workspace. Please contact the workspace admin to get an invitation or
                 check your pending invitations.

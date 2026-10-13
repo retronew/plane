@@ -18,6 +18,7 @@ import { IssueLinkCreateUpdateModal } from "../issue-detail/links/create-update-
 import { CreateUpdateIssueModal } from "../issue-modal/modal";
 import { useLinkOperations } from "./links/helper";
 import { useSubIssueOperations } from "./sub-issues/helper";
+import { translate } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -111,8 +112,8 @@ export const IssueDetailWidgetModals = observer(function IssueDetailWidgetModals
     if (data.length === 0) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select at least one work item.",
+        title: translate("toast.error"),
+        message: translate("web.please_select_at_least_one_work_item"),
       });
       return;
     }

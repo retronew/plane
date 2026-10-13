@@ -14,6 +14,7 @@ import { FilterItemCloseButton } from "./close-button";
 import { FilterItemContainer } from "./container";
 import { FilterItemProperty } from "./property";
 import type { IFilterItemProps } from "./root";
+import { translate } from "@plane/i18n";
 
 export const InvalidFilterItem = observer(function InvalidFilterItem<
   P extends TFilterProperty,
@@ -26,13 +27,13 @@ export const InvalidFilterItem = observer(function InvalidFilterItem<
       conditionValue={condition.value}
       showTransition={showTransition}
       variant="error"
-      tooltipContent="This filter condition is no longer valid. The property may have been deleted or your access to it may have changed."
+      tooltipContent={translate("web.this_filter_condition_is_no_longer_valid_the_property_may_ha")}
     >
       {/* Property section */}
       <FilterItemProperty
         conditionId={condition.id}
         icon={WarningCircleOutline}
-        label="Invalid filter"
+        label={translate("web.invalid_filter")}
         filter={filter}
         isDisabled={isDisabled}
       />

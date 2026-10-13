@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import type { TIssue } from "@plane/types";
 // components
 import { EstimateSelect } from "@/components/dropdowns/estimate/estimate-select";
+import { translate } from "@plane/i18n";
 
 type Props = {
   issue: TIssue;
@@ -27,7 +28,7 @@ export const SpreadsheetEstimateColumn = observer(function SpreadsheetEstimateCo
         onChange={(data) =>
           onChange(issue, { estimate_point: data }, { changed_property: "estimate_point", change_details: data })
         }
-        placeholder="Estimate"
+        placeholder={translate("web.estimate")}
         projectId={issue.project_id ?? undefined}
         disabled={disabled}
         onClose={onClose}

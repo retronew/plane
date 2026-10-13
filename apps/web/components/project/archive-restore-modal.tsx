@@ -21,6 +21,7 @@ import {
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -54,7 +55,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Archive success",
+          title: translate("web.archive_success"),
           message: `${projectDetails.name} has been archived successfully`,
         });
         onClose();
@@ -64,8 +65,8 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Project could not be archived. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.project_could_not_be_archived_please_try_again"),
         })
       )
       .finally(() => setIsLoading(false));
@@ -77,7 +78,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Restore success",
+          title: translate("web.restore_success"),
           message: `You can find ${projectDetails.name} in your projects.`,
         });
         onClose();
@@ -87,8 +88,8 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Project could not be restored. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.project_could_not_be_restored_please_try_again"),
         })
       )
       .finally(() => setIsLoading(false));
@@ -119,7 +120,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={onClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={translate("web.cancel")} onClick={onClose} />
           <Button
             variant="primary"
             size="md"

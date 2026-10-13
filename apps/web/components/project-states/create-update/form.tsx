@@ -56,7 +56,7 @@ export function StateForm(props: TStateForm) {
     const name = formData?.name || undefined;
     if (!formData || !name) {
       let currentErrors: Partial<Record<keyof IState, string>> = {};
-      if (!name) currentErrors = { ...currentErrors, name: "Name is required" };
+      if (!name) currentErrors = { ...currentErrors, name: t("web.name_is_required") };
       setErrors(currentErrors);
       return;
     }
@@ -99,10 +99,11 @@ export function StateForm(props: TStateForm) {
               id="name"
               type="text"
               name="name"
-              placeholder="Name"
+              placeholder={t("web.name")}
               value={formData?.name}
               onChange={(e) => handleFormData("name", e.target.value)}
               maxLength={100}
+              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
               autoFocus
             />
           </InputGroup>
@@ -118,7 +119,7 @@ export function StateForm(props: TStateForm) {
               maxRows={8}
               id="description"
               name="description"
-              placeholder="Describe this state for your members."
+              placeholder={t("web.describe_this_state_for_your_members")}
               value={formData?.description ?? ""}
               onChange={(e) => handleFormData("description", e.target.value)}
             />
@@ -139,7 +140,7 @@ export function StateForm(props: TStateForm) {
             variant="secondary"
             size="md"
             stretch="auto"
-            label="Cancel"
+            label={t("web.cancel")}
             disabled={buttonDisabled}
             onClick={onCancel}
           />

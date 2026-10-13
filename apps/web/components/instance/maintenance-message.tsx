@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
+import { translate } from "@plane/i18n";
 
 export function MaintenanceMessage() {
   const linkMap = [
     {
       key: "mail_to",
-      label: "Contact Support",
+      label: translate("web.contact_support"),
       value: "mailto:support@plane.so",
     },
   ];

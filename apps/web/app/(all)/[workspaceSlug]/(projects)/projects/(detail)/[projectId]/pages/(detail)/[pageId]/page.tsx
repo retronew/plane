@@ -32,6 +32,7 @@ import { WorkspaceService } from "@/services/workspace.service";
 // services
 import { ProjectPageService, ProjectPageVersionService } from "@/services/page";
 import type { Route } from "./+types/page";
+import { translate } from "@plane/i18n";
 const workspaceService = new WorkspaceService();
 const projectPageService = new ProjectPageService();
 const projectPageVersionService = new ProjectPageVersionService();
@@ -78,20 +79,20 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
   const pageRootHandlers: TPageRootHandlers = useMemo(
     () => ({
       create: createPage,
-      fetchAllVersions: async (pageId) =>
-        await projectPageVersionService.fetchAllVersions(workspaceSlug, projectId, pageId),
+      fetchAllVersions: async (versionPageId) =>
+        await projectPageVersionService.fetchAllVersions(workspaceSlug, projectId, versionPageId),
       fetchDescriptionBinary: async () => {
         if (!id) return;
         return await projectPageService.fetchDescriptionBinary(workspaceSlug, projectId, id);
       },
       fetchEntity: fetchEntityCallback,
-      fetchVersionDetails: async (pageId, versionId) =>
-        await projectPageVersionService.fetchVersionById(workspaceSlug, projectId, pageId, versionId),
-      restoreVersion: async (pageId, versionId) =>
-        await projectPageVersionService.restoreVersion(workspaceSlug, projectId, pageId, versionId),
-      getRedirectionLink: (pageId) => {
-        if (pageId) {
-          return `/${workspaceSlug}/projects/${projectId}/pages/${pageId}`;
+      fetchVersionDetails: async (versionPageId, versionId) =>
+        await projectPageVersionService.fetchVersionById(workspaceSlug, projectId, versionPageId, versionId),
+      restoreVersion: async (versionPageId, versionId) =>
+        await projectPageVersionService.restoreVersion(workspaceSlug, projectId, versionPageId, versionId),
+      getRedirectionLink: (redirectPageId) => {
+        if (redirectPageId) {
+          return `/${workspaceSlug}/projects/${projectId}/pages/${redirectPageId}`;
         } else {
           return `/${workspaceSlug}/projects/${projectId}/pages`;
         }
@@ -160,7 +161,7 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
   if (pageDetailsError || !canCurrentUserAccessPage)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
-        <h3 className="text-center text-16 font-semibold">Page not found</h3>
+        <h3 className="text-center text-16 font-semibold">{translate("web.page_not_found")}</h3>
         <p className="mt-3 text-center text-13 text-secondary">
           The page you are trying to access doesn{"'"}t exist or you don{"'"}t have permission to view it.
         </p>

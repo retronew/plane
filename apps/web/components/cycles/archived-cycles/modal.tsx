@@ -11,6 +11,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -43,8 +44,8 @@ export function ArchiveCycleModal(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Archive success",
-          message: "Your archives can be found in project archives.",
+          title: translate("web.archive_success"),
+          message: translate("web.your_archives_can_be_found_in_project_archives"),
         });
         onClose();
         router.push(`/${workspaceSlug}/projects/${projectId}/cycles`);
@@ -53,8 +54,8 @@ export function ArchiveCycleModal(props: Props) {
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Cycle could not be archived. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.cycle_could_not_be_archived_please_try_again"),
         });
       })
       .finally(() => setIsArchiving(false));
@@ -68,9 +69,9 @@ export function ArchiveCycleModal(props: Props) {
       isSubmitting={isArchiving}
       variant="primary"
       title={`Archive cycle ${cycleName ?? ""}`}
-      content="Are you sure you want to archive the cycle? All your archives can be restored later."
-      primaryButtonText={{ loading: "Archiving", default: "Archive" }}
-      secondaryButtonText="Cancel"
+      content={translate("web.are_you_sure_you_want_to_archive_the_cycle_all_your_archives")}
+      primaryButtonText={{ loading: translate("web.archiving"), default: "Archive" }}
+      secondaryButtonText={translate("web.cancel")}
     />
   );
 }

@@ -26,6 +26,7 @@ import {
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type DeleteProjectModal = {
   isOpen: boolean;
@@ -74,14 +75,14 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
       handleClose();
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Project deleted successfully.",
+        title: translate("toast.success"),
+        message: translate("web.project_deleted_successfully"),
       });
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Something went wrong. Please try again later.",
+        title: translate("toast.error"),
+        message: translate("web.something_went_wrong_please_try_again_later_05e0"),
       });
     }
   };
@@ -102,7 +103,7 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                   <WarningTriangleOutline className="h-6 w-6 text-danger-primary" aria-hidden="true" />
                 </span>
                 <DialogHeading>
-                  <DialogTitle>Delete project</DialogTitle>
+                  <DialogTitle>{translate("web.delete_project")}</DialogTitle>
                 </DialogHeading>
               </div>
             </DialogHeader>
@@ -132,7 +133,7 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Project name"
+                            placeholder={translate("web.project_name")}
                             autoComplete="off"
                           />
                         </InputGroup>
@@ -158,7 +159,7 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Enter 'delete my project'"
+                            placeholder={translate("web.enter_delete_my_project")}
                             autoComplete="off"
                           />
                         </InputGroup>
@@ -170,7 +171,13 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={translate("web.cancel")}
+              onClick={handleClose}
+            />
             <Button
               variant="danger"
               size="md"

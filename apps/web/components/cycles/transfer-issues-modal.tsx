@@ -60,16 +60,17 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
       .then(async () => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Work items have been transferred successfully",
+          title: t("toast.success"),
+          message: t("web.work_items_have_been_transferred_successfully"),
         });
         await getCycleDetails(payload.new_cycle_id);
+        return undefined;
       })
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Unable to transfer work items. Please try again.",
+          title: t("toast.error"),
+          message: t("web.unable_to_transfer_work_items_please_try_again"),
         });
       });
   };
@@ -83,7 +84,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
     await Promise.all(cyclesFetch).catch((error) => {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("web.error"),
         message: error.error || "Unable to fetch cycle details",
       });
     });
@@ -117,7 +118,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
             <div className="flex items-center gap-1">
               <TransferWorkItemOutline className="w-5 fill-primary" />
               <DialogHeading>
-                <DialogTitle>Transfer work items</DialogTitle>
+                <DialogTitle>{t("web.transfer_work_items")}</DialogTitle>
               </DialogHeading>
             </div>
           </DialogHeader>
@@ -125,7 +126,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
             <SearchOutline className="h-4 w-4 text-secondary" />
             <input
               className="text-13 outline-none"
-              placeholder="Search for a cycle..."
+              placeholder={t("web.search_for_a_cycle")}
               onChange={(e) => setQuery(e.target.value)}
               value={query}
             />
@@ -171,7 +172,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
                   </div>
                 )
               ) : (
-                <p className="text-center text-secondary">Loading...</p>
+                <p className="text-center text-secondary">{t("web.loading")}</p>
               )}
             </div>
           </DialogBody>

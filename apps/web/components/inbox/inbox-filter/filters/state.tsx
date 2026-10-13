@@ -14,6 +14,7 @@ import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
+import { translate } from "@plane/i18n";
 
 type Props = {
   states: IState[] | undefined;
@@ -59,7 +60,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((state) => (
                   <FilterOption
                     key={state?.id}
-                    isChecked={filterValue?.includes(state?.id) ? true : false}
+                    isChecked={Boolean(filterValue?.includes(state?.id))}
                     onClick={() => handleInboxIssueFilters("state", handleFilterValue(state.id))}
                     icon={
                       <StateGroupIcon
@@ -83,7 +84,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

@@ -79,14 +79,14 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
 
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Work items added to the cycle successfully.",
+        title: t("toast.success"),
+        message: t("web.work_items_added_to_the_cycle_successfully"),
       });
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Selected work items could not be added to the cycle. Please try again.",
+        title: t("toast.error"),
+        message: t("web.selected_work_items_could_not_be_added_to_the_cycle_please_t"),
       });
     }
   };
@@ -139,13 +139,13 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
               />
               <MenuContent side="bottom" align="start">
                 <MenuItem
-                  label="Create work item"
+                  label={t("web.create_work_item")}
                   onClick={() => {
                     setIsOpen(true);
                   }}
                 />
                 <MenuItem
-                  label="Add an existing work item"
+                  label={t("web.add_an_existing_work_item")}
                   onClick={() => {
                     setOpenExistingIssueListModal(true);
                   }}

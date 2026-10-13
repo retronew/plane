@@ -23,6 +23,7 @@ import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUserSettings } from "@/hooks/store/user";
 // services
 import { WorkspaceService } from "@/services/workspace.service";
+import { translate } from "@plane/i18n";
 
 type Props = {
   invitations: IWorkspaceMemberInvitation[];
@@ -49,7 +50,7 @@ export function Invitations(props: Props) {
   };
 
   const submitInvitations = async () => {
-    const invitation = invitations?.find((invitation) => invitation.id === invitationsRespond[0]);
+    const invitation = invitations?.find((item) => item.id === invitationsRespond[0]);
     if (invitationsRespond.length <= 0 && !invitation?.role) return;
     setIsJoiningWorkspaces(true);
     try {
@@ -66,8 +67,10 @@ export function Invitations(props: Props) {
   return invitations && invitations.length > 0 ? (
     <div className="space-y-4">
       <div className="mx-auto space-y-1 py-4 text-center">
-        <h3 className="text-24 font-bold text-primary">You are invited!</h3>
-        <p className="font-medium text-placeholder">Accept the invites to collaborate with your team.</p>
+        <h3 className="text-24 font-bold text-primary">{translate("web.you_are_invited")}</h3>
+        <p className="font-medium text-placeholder">
+          {translate("web.accept_the_invites_to_collaborate_with_your_team")}
+        </p>
       </div>
       <div>
         {invitations &&
@@ -76,6 +79,7 @@ export function Invitations(props: Props) {
             const isSelected = invitationsRespond.includes(invitation.id);
             const invitedWorkspace = invitation.workspace;
             return (
+              // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
               <div
                 key={invitation.id}
                 className={`flex cursor-pointer items-center gap-2 rounded-sm border border-subtle p-3.5 hover:bg-surface-2`}
@@ -121,10 +125,10 @@ export function Invitations(props: Props) {
         render={<button type="button" className="bg-surface-2 text-14" />}
         onClick={handleCurrentViewChange}
         disabled={isJoiningWorkspaces}
-        label="Create your own workspace"
+        label={translate("web.create_your_own_workspace")}
       />
     </div>
   ) : (
-    <div>No Invitations found</div>
+    <div>{translate("web.no_invitations_found")}</div>
   );
 }

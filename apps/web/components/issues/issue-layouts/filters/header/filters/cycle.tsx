@@ -14,6 +14,7 @@ import type { TCycleGroups } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 import { useCycle } from "@/hooks/store/use-cycle";
+import { translate } from "@plane/i18n";
 // ui
 // types
 
@@ -35,7 +36,7 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
   const cycleIds = projectId ? getProjectCycleIds(projectId.toString()) : undefined;
-  const cycles = cycleIds?.map((projectId) => getCycleById(projectId)!) ?? null;
+  const cycles = cycleIds?.map((cycleId) => getCycleById(cycleId)!) ?? null;
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
@@ -75,13 +76,13 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
                 {sortedOptions.slice(0, itemsToRender).map((cycle) => (
                   <FilterOption
                     key={cycle.id}
-                    isChecked={appliedFilters?.includes(cycle.id) ? true : false}
+                    isChecked={Boolean(appliedFilters?.includes(cycle.id))}
                     onClick={() => handleUpdate(cycle.id)}
                     icon={
                       <CycleGroupIcon cycleGroup={cycleStatus(cycle?.status)} className="h-3.5 w-3.5 flex-shrink-0" />
                     }
                     title={cycle.name}
-                    activePulse={cycleStatus(cycle?.status) === "current" ? true : false}
+                    activePulse={cycleStatus(cycle?.status) === "current"}
                   />
                 ))}
                 {sortedOptions.length > 5 && (
@@ -95,7 +96,7 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

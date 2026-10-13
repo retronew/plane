@@ -10,6 +10,7 @@ import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
 import { DEFAULT_TAB_KEY } from "./tab-navigation-utils";
 import type { TTabPreferences } from "./tab-navigation-utils";
+import { translate } from "@plane/i18n";
 
 export type TTabPreferencesHook = {
   tabPreferences: TTabPreferences;
@@ -41,7 +42,8 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
   // Get preferences from store
   const storePreferences = getProjectUserProperties(projectId);
   const defaultTab = storePreferences?.preferences?.navigation?.default_tab || DEFAULT_TAB_KEY;
-  const hideInMoreMenu = storePreferences?.preferences?.navigation?.hide_in_more_menu || [];
+  const storedHideInMoreMenu = storePreferences?.preferences?.navigation?.hide_in_more_menu;
+  const hideInMoreMenu = useMemo(() => storedHideInMoreMenu || [], [storedHideInMoreMenu]);
 
   // Convert store preferences to component format
   const tabPreferences: TTabPreferences = useMemo(() => {
@@ -79,16 +81,16 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Default tab updated successfully.",
+          title: translate("toast.success"),
+          message: translate("web.default_tab_updated_successfully"),
         });
         return;
       })
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Failed to update default tab. Please try again later.",
+          title: translate("toast.error"),
+          message: translate("web.failed_to_update_default_tab_please_try_again_later"),
         });
       });
   };
@@ -107,8 +109,8 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       console.error("Error hiding tab:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to hide tab. Please try again later.",
+        title: translate("toast.error"),
+        message: translate("web.failed_to_hide_tab_please_try_again_later"),
       });
     }
   };
@@ -127,8 +129,8 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       console.error("Error showing tab:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Something went wrong. Please try again later.",
+        title: translate("toast.error"),
+        message: translate("web.something_went_wrong_please_try_again_later_05e0"),
       });
     }
   };

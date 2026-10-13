@@ -20,6 +20,7 @@ import {
 } from "@makeplane/propel/components/dialog";
 import { InputField } from "@makeplane/propel/components/input-field";
 import type { IProject } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 // types
 type Props = {
@@ -72,10 +73,10 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           ref={ref}
           size="2xl"
           orientation="vertical"
-          placeholder="Enter Months"
+          placeholder={translate("web.enter_months")}
           min={1}
           max={12}
-          endIcon={<span className="text-13 text-secondary">Months</span>}
+          endIcon={<span className="text-13 text-secondary">{translate("web.months")}</span>}
           error={errors[name] ? "Select a month between 1 and 12." : undefined}
         />
       )}
@@ -94,7 +95,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>Customize time range</DialogTitle>
+                <DialogTitle>{translate("web.customize_time_range")}</DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody>
@@ -104,7 +105,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={onClose} />
+            <Button variant="secondary" size="md" stretch="auto" label={translate("web.cancel")} onClick={onClose} />
             <Button
               variant="primary"
               size="md"

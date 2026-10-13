@@ -23,6 +23,7 @@ import type { TPageInstance } from "@/store/pages/base-page";
 import { PageActions } from "../../dropdowns";
 import { ExportPageModal } from "../../modals/export-page-modal";
 import { PAGE_NAVIGATION_PANE_TABS_QUERY_PARAM } from "../../navigation-pane";
+import { translate } from "@plane/i18n";
 
 type Props = {
   page: TPageInstance;
@@ -52,7 +53,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
         {
           key: "full-screen",
           action: () => handleFullWidth(!isFullWidth),
-          title: "Full width",
+          title: translate("web.full_width"),
           // The row itself does the toggling; the switch is the state readout at the row's end.
           customContent: (
             <span className="pointer-events-none">
@@ -63,7 +64,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
         {
           key: "sticky-toolbar",
           action: () => handleStickyToolbar(!isStickyToolbarEnabled),
-          title: "Sticky toolbar",
+          title: translate("web.sticky_toolbar"),
           customContent: (
             <span className="pointer-events-none">
               <Switch size="sm" checked={isStickyToolbarEnabled} aria-hidden tabIndex={-1} />
@@ -78,11 +79,11 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
             editorRef.copyMarkdownToClipboard();
             setToast({
               type: "success",
-              title: "Success!",
-              message: "Markdown copied to clipboard.",
+              title: translate("toast.success"),
+              message: translate("web.markdown_copied_to_clipboard"),
             });
           },
-          title: "Copy markdown",
+          title: translate("web.copy_markdown"),
           icon: ClipboardOutline,
           shouldRender: true,
         },
@@ -97,14 +98,14 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
             });
             router.push(updatedRoute);
           },
-          title: "Version history",
+          title: translate("web.version_history"),
           icon: HistoryOutline,
           shouldRender: true,
         },
         {
           key: "export",
           action: () => setIsExportModalOpen(true),
-          title: "Export",
+          title: translate("web.export"),
           icon: ExportOutline,
           shouldRender: true,
         },

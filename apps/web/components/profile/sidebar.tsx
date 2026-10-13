@@ -83,6 +83,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
     window.addEventListener("resize", handleToggleProfileSidebar);
     handleToggleProfileSidebar();
     return () => window.removeEventListener("resize", handleToggleProfileSidebar);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- register the resize listener once
   }, []);
 
   return (
@@ -172,7 +173,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
                       trigger={<span className="truncate text-13 font-medium break-words">{projectDetails.name}</span>}
                       trailing={
                         project.assigned_issues > 0 ? (
-                          <Tooltip label="Completion percentage" side="left" disabled={isMobile}>
+                          <Tooltip label={t("web.completion_percentage")} side="left" disabled={isMobile}>
                             <div
                               className={`rounded-sm px-1 py-0.5 text-11 font-medium ${
                                 completedIssuePercentage <= 35

@@ -25,6 +25,7 @@ import { useProject } from "@/hooks/store/use-project";
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
 import { EPageStoreType, usePageStore } from "@/hooks/store";
+import { translate } from "@plane/i18n";
 
 export const PagesListHeader = observer(function PagesListHeader() {
   // states
@@ -55,7 +56,7 @@ export const PagesListHeader = observer(function PagesListHeader() {
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err?.data?.error || "Page could not be created. Please try again.",
         });
       })
@@ -74,7 +75,7 @@ export const PagesListHeader = observer(function PagesListHeader() {
           <Breadcrumbs.Item
             component={
               <BreadcrumbLink
-                label="Pages"
+                label={translate("web.pages")}
                 href={`/${workspaceSlug}/projects/${currentProjectDetails?.id}/pages/`}
                 icon={<PagesOutline className="h-4 w-4 text-tertiary" />}
                 isLast

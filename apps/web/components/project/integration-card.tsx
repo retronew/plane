@@ -18,6 +18,7 @@ import { SelectRepository } from "@/components/integration/github/select-reposit
 import { PROJECT_GITHUB_REPOSITORY } from "@plane/constants";
 // services
 import { ProjectService } from "@/services/project";
+import { translate } from "@plane/i18n";
 
 type Props = {
   integration: IWorkspaceIntegration;
@@ -68,16 +69,17 @@ export function IntegrationCard({ integration }: Props) {
 
         setToast({
           type: "success",
-          title: "Success!",
+          title: translate("toast.success"),
           message: `${login}/${name} repository synced with the project successfully.`,
         });
+        return undefined;
       })
       .catch((err) => {
         console.error(err);
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Repository could not be synced with the project. Please try again.",
+          title: translate("toast.error"),
+          message: translate("web.repository_could_not_be_synced_with_the_project_please_try_a"),
         });
       });
   };

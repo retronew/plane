@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { stringToEmoji } from "@plane/blocks/emoji-icon-picker";
 import { EmojiReactionGroup, EmojiReactionPicker } from "@plane/blocks/emoji-reaction";
@@ -14,6 +14,7 @@ import type { IUser } from "@plane/types";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
+import { translate } from "@plane/i18n";
 
 export type TIssueCommentReaction = {
   workspaceSlug: string;
@@ -45,15 +46,15 @@ export const IssueCommentReaction = observer(function IssueCommentReaction(props
           if (!workspaceSlug || !projectId || !commentId) throw new Error("Missing fields");
           await createCommentReaction(workspaceSlug, projectId, commentId, reaction);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction created successfully",
+            message: translate("web.reaction_created_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction creation failed",
+            message: translate("web.reaction_creation_failed"),
           });
         }
       },
@@ -62,15 +63,15 @@ export const IssueCommentReaction = observer(function IssueCommentReaction(props
           if (!workspaceSlug || !projectId || !commentId || !currentUser?.id) throw new Error("Missing fields");
           removeCommentReaction(workspaceSlug, projectId, commentId, reaction, currentUser.id);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction removed successfully",
+            message: translate("web.reaction_removed_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction remove failed",
+            message: translate("web.reaction_remove_failed"),
           });
         }
       },
@@ -82,17 +83,20 @@ export const IssueCommentReaction = observer(function IssueCommentReaction(props
     [workspaceSlug, projectId, commentId, currentUser, createCommentReaction, removeCommentReaction, userReactions]
   );
 
-  const getReactionUsers = (reaction: string): string[] => {
-    const reactionUsers = (reactionIds?.[reaction] || [])
-      .map((reactionId) => {
-        const reactionDetails = getCommentReactionById(reactionId);
-        return reactionDetails
-          ? getUserDetails(reactionDetails?.actor)?.display_name || reactionDetails?.display_name
-          : null;
-      })
-      .filter((displayName): displayName is string => !!displayName);
-    return reactionUsers;
-  };
+  const getReactionUsers = useCallback(
+    (reaction: string): string[] => {
+      const reactionUsers = (reactionIds?.[reaction] || [])
+        .map((reactionId) => {
+          const reactionDetails = getCommentReactionById(reactionId);
+          return reactionDetails
+            ? getUserDetails(reactionDetails?.actor)?.display_name || reactionDetails?.display_name
+            : null;
+        })
+        .filter((displayName): displayName is string => !!displayName);
+      return reactionUsers;
+    },
+    [reactionIds, getCommentReactionById, getUserDetails]
+  );
 
   // Transform reactions data to Propel EmojiReactionType format
   const reactions: EmojiReactionType[] = useMemo(() => {
@@ -106,7 +110,7 @@ export const IssueCommentReaction = observer(function IssueCommentReaction(props
         reacted: userReactions.includes(reaction),
         users: getReactionUsers(reaction),
       }));
-  }, [reactionIds, userReactions]);
+  }, [reactionIds, userReactions, getReactionUsers]);
 
   const handleReactionClick = (emoji: string) => {
     if (disabled) return;

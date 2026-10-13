@@ -35,14 +35,14 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
       try {
         await updateCurrentUser({ user_timezone: value });
         setToast({
-          title: "Success!",
-          message: "Timezone updated successfully",
+          title: t("toast.success"),
+          message: t("web.timezone_updated_successfully"),
           type: "success",
         });
       } catch (_error) {
         setToast({
-          title: "Error!",
-          message: "Failed to update timezone",
+          title: t("toast.error"),
+          message: t("web.failed_to_update_timezone"),
           type: "error",
         });
       }
@@ -52,14 +52,14 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
       try {
         await updateUserProfile({ language: value });
         setToast({
-          title: "Success!",
-          message: "Language updated successfully",
+          title: t("toast.success"),
+          message: t("web.language_updated_successfully"),
           type: "success",
         });
       } catch (_error) {
         setToast({
-          title: "Error!",
-          message: "Failed to update language",
+          title: t("toast.error"),
+          message: t("web.failed_to_update_language"),
           type: "error",
         });
       }
@@ -94,7 +94,7 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
               onChange={(value) => void handleLanguageChange(value)}
               getOptionValue={(option) => option.value}
               getOptionLabel={(option) => option.label}
-              placeholder="Select a language"
+              placeholder={t("web.select_a_language")}
               showSearch={false}
               pinSelected={false}
               contentSizing="anchor"
@@ -109,8 +109,8 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
         />
         <StartOfWeekPreference
           option={{
-            title: "First day of the week",
-            description: "This will change how all calendars in your app look.",
+            title: t("web.first_day_of_the_week"),
+            description: t("web.this_will_change_how_all_calendars_in_your_app_look"),
           }}
         />
       </div>

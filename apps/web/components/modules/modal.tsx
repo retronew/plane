@@ -64,14 +64,15 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
         handleClose();
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module created successfully.",
+          title: t("toast.success"),
+          message: t("web.module_created_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? err?.error ?? "Module could not be created. Please try again.",
         });
       });
@@ -87,14 +88,15 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
 
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module updated successfully.",
+          title: t("toast.success"),
+          message: t("web.module_updated_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? err?.error ?? "Module could not be updated. Please try again.",
         });
       });

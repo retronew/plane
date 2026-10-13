@@ -111,8 +111,8 @@ export function CreateApiTokenForm(props: Props) {
     if (!neverExpires && (!data.expired_at || (data.expired_at === "custom" && !customDate)))
       return setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select an expiration date.",
+        title: t("toast.error"),
+        message: t("web.please_select_an_expiration_date"),
       });
 
     const payload: Partial<IApiToken> = {
@@ -135,6 +135,7 @@ export function CreateApiTokenForm(props: Props) {
     await onSubmit(payload).then(() => {
       reset(defaultValues);
       setCustomDate(null);
+      return undefined;
     });
   };
 

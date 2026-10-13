@@ -21,6 +21,7 @@ import { FiltersDropdown } from "@/components/issues/issue-layouts/filters";
 import { useCycleFilter } from "@/hooks/store/use-cycle-filter";
 // local imports
 import { CycleFiltersSelection } from "../dropdowns";
+import { translate } from "@plane/i18n";
 
 export const ArchivedCyclesHeader = observer(function ArchivedCyclesHeader() {
   // router
@@ -31,7 +32,7 @@ export const ArchivedCyclesHeader = observer(function ArchivedCyclesHeader() {
   const { currentProjectArchivedFilters, archivedCyclesSearchQuery, updateFilters, updateArchivedCyclesSearchQuery } =
     useCycleFilter();
   // states
-  const [isSearchOpen, setIsSearchOpen] = useState(archivedCyclesSearchQuery !== "" ? true : false);
+  const [isSearchOpen, setIsSearchOpen] = useState(archivedCyclesSearchQuery !== "");
   // outside click detector hook
   useOutsideClickDetector(inputRef, () => {
     if (isSearchOpen && archivedCyclesSearchQuery.trim() === "") setIsSearchOpen(false);
@@ -100,7 +101,7 @@ export const ArchivedCyclesHeader = observer(function ArchivedCyclesHeader() {
           <input
             ref={inputRef}
             className="w-full max-w-[234px] border-none bg-transparent text-13 text-primary placeholder:text-placeholder focus:outline-none"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={archivedCyclesSearchQuery}
             onChange={(e) => updateArchivedCyclesSearchQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
@@ -120,7 +121,7 @@ export const ArchivedCyclesHeader = observer(function ArchivedCyclesHeader() {
         </div>
         <FiltersDropdown
           icon={<FilterOutline className="h-3 w-3" />}
-          title="Filters"
+          title={translate("web.filters")}
           placement="bottom-end"
           isFiltersApplied={isFiltersApplied}
         >

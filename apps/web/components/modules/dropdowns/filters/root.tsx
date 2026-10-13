@@ -15,6 +15,7 @@ import { FilterOption } from "@/components/issues/issue-layouts/filters";
 import { FilterLead, FilterMembers, FilterStartDate, FilterStatus, FilterTargetDate } from "@/components/modules";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   displayFilters: TModuleDisplayFilters;
@@ -47,9 +48,10 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(p
           <input
             type="text"
             className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
             autoFocus={!isMobile}
           />
           {filtersSearchQuery !== "" && (
@@ -69,7 +71,7 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(p
                   favorites: !displayFilters.favorites,
                 })
               }
-              title="Favorites"
+              title={translate("web.favorites")}
             />
           </div>
         )}

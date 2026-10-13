@@ -65,7 +65,7 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
             size="md"
             variant="brand"
             showValue={false}
-            aria-label="Cycle progress"
+            aria-label={t("web.cycle_progress")}
           />
         )}
       </div>
@@ -75,7 +75,8 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
           {Object.keys(groupedIssues).map((group, index) => (
             <>
               {groupedIssues[group] > 0 && (
-                <div key={index}>
+                <div key={group}>
+                  {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
                   <div
                     className="flex cursor-pointer items-center justify-between gap-2 text-13"
                     onClick={() => {

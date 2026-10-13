@@ -17,6 +17,7 @@ import { useProject } from "@/hooks/store/use-project";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { useAppRouter } from "@/hooks/use-app-router";
 import type { Route } from "./+types/page";
+import { translate } from "@plane/i18n";
 
 function ProjectViewIssuesPage({ params }: Route.ComponentProps) {
   // router
@@ -36,10 +37,10 @@ function ProjectViewIssuesPage({ params }: Route.ComponentProps) {
     return (
       <EmptyState
         image={emptyView}
-        title="View does not exist"
-        description="The view you are looking for does not exist or you don't have permission to view it."
+        title={translate("web.view_does_not_exist")}
+        description={translate("web.the_view_you_are_looking_for_does_not_exist_or_you_don_t_hav")}
         primaryButton={{
-          text: "View other views",
+          text: translate("web.view_other_views"),
           onClick: () => router.push(`/${workspaceSlug}/projects/${projectId}/views`),
         }}
       />

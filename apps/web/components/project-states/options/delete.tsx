@@ -35,7 +35,7 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
   const [isDeleteModal, setIsDeleteModal] = useState(false);
   const [isDelete, setIsDelete] = useState(false);
   // derived values
-  const isDeleteDisabled = state.default ? true : totalStates === 1 ? true : false;
+  const isDeleteDisabled = Boolean(state.default) || totalStates === 1;
 
   const handleDeleteState = async () => {
     if (isDeleteDisabled) return;
@@ -50,15 +50,15 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
       if (errorStatus.status === 400) {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message:
             "This state contains some work items within it, please move them to some other state to delete this state.",
         });
       } else {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State could not be deleted. Please try again.",
+          title: t("toast.error"),
+          message: t("web.state_could_not_be_deleted_please_try_again"),
         });
       }
       setIsDelete(false);
@@ -72,7 +72,7 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
         handleSubmit={handleDeleteState}
         isSubmitting={isDelete}
         isOpen={isDeleteModal}
-        title="Delete State"
+        title={t("web.delete_state")}
         content={
           <>
             Are you sure you want to delete state- <span className="font-medium text-primary">{state?.name}</span>? All

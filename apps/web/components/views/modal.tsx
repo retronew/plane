@@ -18,6 +18,7 @@ import { useWorkItemFilters } from "@/hooks/store/work-item-filters/use-work-ite
 import { useAppRouter } from "@/hooks/use-app-router";
 // local imports
 import { ProjectViewForm } from "./form";
+import { translate } from "@plane/i18n";
 
 type Props = {
   data?: IProjectView | null;
@@ -50,14 +51,14 @@ export const CreateUpdateProjectViewModal = observer(function CreateUpdateProjec
       router.push(`/${workspaceSlug}/projects/${projectId}/views/${res.id}`);
       setToast({
         type: "success",
-        title: "Success!",
-        message: "View created successfully.",
+        title: translate("toast.success"),
+        message: translate("web.view_created_successfully"),
       });
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to create view. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.failed_to_create_view_please_try_again"),
       });
     }
   };
@@ -71,8 +72,8 @@ export const CreateUpdateProjectViewModal = observer(function CreateUpdateProjec
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to update view. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.failed_to_update_view_please_try_again"),
       });
     }
   };

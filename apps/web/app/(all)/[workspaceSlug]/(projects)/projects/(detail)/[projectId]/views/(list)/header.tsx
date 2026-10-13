@@ -20,6 +20,7 @@ import { useProject } from "@/hooks/store/use-project";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
+import { translate } from "@plane/i18n";
 
 export const ProjectViewsHeader = observer(function ProjectViewsHeader() {
   const { workspaceSlug, projectId } = useParams();
@@ -41,7 +42,7 @@ export const ProjectViewsHeader = observer(function ProjectViewsHeader() {
             <Breadcrumbs.Item
               component={
                 <BreadcrumbLink
-                  label="Views"
+                  label={translate("web.views")}
                   href={`/${workspaceSlug}/projects/${projectId}/views/`}
                   icon={<ViewsOutline className="h-4 w-4 text-tertiary" />}
                   isLast
@@ -58,7 +59,7 @@ export const ProjectViewsHeader = observer(function ProjectViewsHeader() {
               variant="primary"
               size="md"
               stretch="auto"
-              label="Add view"
+              label={translate("web.add_view")}
               onClick={() => toggleCreateViewModal(true)}
             />
           </div>

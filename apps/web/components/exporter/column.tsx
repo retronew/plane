@@ -7,6 +7,7 @@
 import { DownloadOutline } from "@makeplane/propel/icons";
 import type { IExportData } from "@plane/types";
 import { getDate, getFileURL, renderFormattedDate } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 type RowData = IExportData;
 const checkExpiry = (inputDateString: string) => {
@@ -20,7 +21,7 @@ export const useExportColumns = () => {
   const columns = [
     {
       key: "Exported By",
-      content: "Exported By",
+      content: translate("web.exported_by"),
       tdRender: (rowData: RowData) => {
         const { avatar_url, display_name, email } = rowData.initiated_by_detail;
         return (
@@ -47,18 +48,18 @@ export const useExportColumns = () => {
     },
     {
       key: "Exported On",
-      content: "Exported On",
+      content: translate("web.exported_on"),
       tdRender: (rowData: RowData) => <span>{renderFormattedDate(rowData.created_at)}</span>,
     },
 
     {
       key: "Exported projects",
-      content: "Exported projects",
+      content: translate("web.exported_projects"),
       tdRender: (rowData: RowData) => <div className="text-13">{rowData.project.length} project(s)</div>,
     },
     {
       key: "Format",
-      content: "Format",
+      content: translate("web.format"),
       tdRender: (rowData: RowData) => (
         <span className="text-13">
           {rowData.provider === "csv"
@@ -73,7 +74,7 @@ export const useExportColumns = () => {
     },
     {
       key: "Status",
-      content: "Status",
+      content: translate("web.status"),
       tdRender: (rowData: RowData) => (
         <span
           className={`rounded-sm px-2 py-1 text-11 capitalize ${
@@ -94,7 +95,7 @@ export const useExportColumns = () => {
     },
     {
       key: "Download",
-      content: "Download",
+      content: translate("web.download"),
       tdRender: (rowData: RowData) =>
         checkExpiry(rowData.created_at) ? (
           <>
@@ -102,7 +103,7 @@ export const useExportColumns = () => {
               <a target="_blank" href={rowData?.url} rel="noopener noreferrer">
                 <button className="flex w-full items-center gap-1 font-medium text-accent-primary">
                   <DownloadOutline className="h-4 w-4" />
-                  <div>Download</div>
+                  <div>{translate("web.download")}</div>
                 </button>
               </a>
             ) : (
@@ -110,7 +111,7 @@ export const useExportColumns = () => {
             )}
           </>
         ) : (
-          <div className="text-11 text-danger-primary">Expired</div>
+          <div className="text-11 text-danger-primary">{translate("web.expired")}</div>
         ),
     },
   ];

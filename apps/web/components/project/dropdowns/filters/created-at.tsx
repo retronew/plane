@@ -12,6 +12,7 @@ import { PROJECT_CREATED_AT_FILTER_OPTIONS } from "@plane/constants";
 import { isInDateFormat } from "@plane/utils";
 import { DateFilterModal } from "@/components/core/filters/date-filter-modal";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
+import { translate } from "@plane/i18n";
 
 // helpers
 
@@ -34,7 +35,7 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
 
   const isCustomDateSelected = () => {
     const isValidDateSelected = appliedFilters?.filter((f) => isInDateFormat(f.split(";")[0])) || [];
-    return isValidDateSelected.length > 0 ? true : false;
+    return isValidDateSelected.length > 0;
   };
   const handleCustomDate = () => {
     if (isCustomDateSelected()) {
@@ -50,7 +51,7 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
           handleClose={() => setIsDateFilterModalOpen(false)}
           isOpen={isDateFilterModalOpen}
           onSelect={(val) => handleUpdate(val)}
-          title="Created date"
+          title={translate("web.created_date")}
         />
       )}
       <FilterHeader
@@ -65,7 +66,7 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
               {filteredOptions.map((option) => (
                 <FilterOption
                   key={option.value}
-                  isChecked={appliedFilters?.includes(option.value) ? true : false}
+                  isChecked={Boolean(appliedFilters?.includes(option.value))}
                   onClick={() => handleUpdate(option.value)}
                   title={option.name}
                   multiple={false}
@@ -74,12 +75,12 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
               <FilterOption
                 isChecked={isCustomDateSelected()}
                 onClick={handleCustomDate}
-                title="Custom"
+                title={translate("web.custom")}
                 multiple={false}
               />
             </>
           ) : (
-            <p className="text-11 text-placeholder italic">No matches found</p>
+            <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
           )}
         </div>
       )}

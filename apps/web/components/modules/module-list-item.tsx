@@ -20,6 +20,7 @@ import { ModuleListItemAction, ModuleQuickActions } from "@/components/modules";
 import { useModule } from "@/hooks/store/use-module";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   moduleId: string;
@@ -81,7 +82,7 @@ export const ModuleListItem = observer(function ModuleListItem(props: Props) {
               value={progress}
               size="md"
               variant={progress === 100 ? "success" : "brand"}
-              aria-label="Module progress"
+              aria-label={translate("web.module_progress")}
             />
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

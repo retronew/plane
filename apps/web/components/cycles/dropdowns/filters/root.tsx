@@ -15,6 +15,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { FilterEndDate } from "./end-date";
 import { FilterStartDate } from "./start-date";
 import { FilterStatus } from "./status";
+import { translate } from "@plane/i18n";
 
 type Props = {
   filters: TCycleFilters;
@@ -37,9 +38,10 @@ export const CycleFiltersSelection = observer(function CycleFiltersSelection(pro
           <input
             type="text"
             className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
             autoFocus={!isMobile}
           />
           {filtersSearchQuery !== "" && (

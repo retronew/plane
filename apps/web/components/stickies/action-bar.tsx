@@ -23,6 +23,7 @@ import { useSticky } from "@/hooks/use-stickies";
 import { STICKY_COLORS_LIST } from "../editor/sticky-editor/color-palette";
 import { AllStickiesModal } from "./modal";
 import { StickyNote } from "./sticky";
+import { translate } from "@plane/i18n";
 
 export const StickyActionBar = observer(function StickyActionBar() {
   // states
@@ -71,7 +72,7 @@ export const StickyActionBar = observer(function StickyActionBar() {
       <div
         className={`flex origin-bottom flex-col gap-2 transition-all duration-300 ease-in-out ${isExpanded ? "mb-2 scale-y-100 opacity-100 " : "h-0 scale-y-0 opacity-0"}`}
       >
-        <Tooltip label="All stickies" side="left">
+        <Tooltip label={translate("web.all_stickies")} side="left">
           <button
             className="btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1"
             onClick={() => toggleAllStickiesModal(true)}
@@ -102,7 +103,7 @@ export const StickyActionBar = observer(function StickyActionBar() {
               </PreviewCardContent>
             </PreviewCard>
           ))}
-        <Tooltip label="Add sticky" side="left">
+        <Tooltip label={translate("web.add_sticky")} side="left">
           <button
             className="btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1"
             onClick={() => {

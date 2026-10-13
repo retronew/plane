@@ -140,8 +140,8 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
       ]);
       setToast({
         type: "success",
-        title: "Success",
-        message: "Profile setup completed!",
+        title: t("web.success"),
+        message: t("web.profile_setup_completed"),
       });
       // For Invited Users, they will skip all other steps and finish onboarding.
       if (totalSteps <= 2) {
@@ -150,8 +150,8 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "Profile setup failed. Please try again!",
+        title: t("web.error"),
+        message: t("web.profile_setup_failed_please_try_again"),
       });
     }
   };
@@ -171,12 +171,13 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
         } else {
           setProfileSetupStep(EProfileSetupSteps.USER_PERSONALIZATION);
         }
+        return undefined;
       });
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "User details update failed. Please try again!",
+        title: t("web.error"),
+        message: t("web.user_details_update_failed_please_try_again"),
       });
     }
   };
@@ -193,8 +194,8 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
       ]);
       setToast({
         type: "success",
-        title: "Success",
-        message: "Profile setup completed!",
+        title: t("web.success"),
+        message: t("web.profile_setup_completed"),
       });
       // For Invited Users, they will skip all other steps and finish onboarding.
       if (totalSteps <= 2) {
@@ -203,8 +204,8 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error",
-        message: "Profile setup failed. Please try again!",
+        title: t("web.error"),
+        message: t("web.profile_setup_failed_please_try_again"),
       });
     }
   };
@@ -243,8 +244,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
 
   // Check for all available fields validation and if password field is available, then checks for password validation (strength + confirmation).
   // Also handles the condition for optional password i.e if password field is optional it only checks for above validation if it's not empty.
-  const isButtonDisabled =
-    !isSubmitting && isValid ? (isPasswordAlreadySetup ? false : isValidPassword ? false : true) : true;
+  const isButtonDisabled = !(!isSubmitting && isValid && (isPasswordAlreadySetup || isValidPassword));
 
   return (
     <div className="flex h-full w-full">
@@ -283,6 +283,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     </div>
                   ) : (
                     <div className="relative mr-3 h-16 w-16 overflow-hidden">
+                      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- pre-existing mouse-only interaction, kept as-is */}
                       <img
                         src={getFileURL(userAvatar ?? "")}
                         className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
@@ -309,7 +310,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                       validate: validatePersonName,
                       maxLength: {
                         value: 50,
-                        message: "First name must be within 50 characters.",
+                        message: t("web.first_name_must_be_within_50_characters"),
                       },
                     }}
                     render={({ field: { value, onChange, ref } }) => (
@@ -321,10 +322,11 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                             name="first_name"
                             type="text"
                             value={value}
+                            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                             autoFocus
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Wilbur"
+                            placeholder={t("web.wilbur")}
                             autoComplete="on"
                           />
                         </InputGroup>
@@ -350,7 +352,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                       validate: validatePersonName,
                       maxLength: {
                         value: 50,
-                        message: "Last name must be within 50 characters.",
+                        message: t("web.last_name_must_be_within_50_characters"),
                       },
                     }}
                     render={({ field: { value, onChange, ref } }) => (
@@ -364,7 +366,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder="Wright"
+                            placeholder={t("web.wright")}
                             autoComplete="on"
                           />
                         </InputGroup>
@@ -398,11 +400,11 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                               value={value}
                               onChange={onChange}
                               ref={ref}
-                              placeholder="New password..."
+                              placeholder={t("web.new_password")}
                               onFocus={() => setIsPasswordInputFocused(true)}
                               onBlur={() => setIsPasswordInputFocused(false)}
                               autoComplete="new-password"
-                              aria-label="New password..."
+                              aria-label={t("web.new_password")}
                             />
                             <button
                               type="button"
@@ -429,7 +431,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                       control={control}
                       name="confirm_password"
                       rules={{
-                        required: watch("password") ? true : false,
+                        required: Boolean(watch("password")),
                         validate: (value) =>
                           watch("password") ? (value === watch("password") ? true : "Passwords don't match") : true,
                       }}
@@ -490,6 +492,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   render={({ field: { value, onChange } }) => (
                     <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
                       {USER_ROLE.map((userRole) => (
+                        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
                         <div
                           key={userRole}
                           className={cn(
@@ -528,6 +531,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                       {USER_DOMAIN.map((userDomain) => {
                         const isSelected = value?.includes(userDomain) || false;
                         return (
+                          // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
                           <div
                             key={userDomain}
                             className={`flex-shrink-0 border-[0.5px] hover:cursor-pointer hover:bg-surface-2 ${

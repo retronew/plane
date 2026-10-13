@@ -46,6 +46,7 @@ import { CoverImage } from "@/components/common/cover-image";
 import { DeleteProjectModal } from "./delete-project-modal";
 import { JoinProjectModal } from "./join-project-modal";
 import { ArchiveRestoreProjectModal } from "./archive-restore-modal";
+import { translate } from "@plane/i18n";
 
 type Props = {
   project: IProject;
@@ -94,9 +95,9 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
 
     const addToFavoritePromise = addProjectToFavorites(workspaceSlug.toString(), project.id);
     setPromiseToast(addToFavoritePromise, {
-      loading: "Adding project to favorites...",
+      loading: translate("web.adding_project_to_favorites"),
       success: {
-        title: "Success!",
+        title: translate("toast.success"),
         message: () => "Project added to favorites.",
         // propel: the callback exists for its side effect; a toast action is data, and there is
         // none here, so it returns an empty list rather than an empty fragment.
@@ -106,7 +107,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         },
       },
       error: {
-        title: "Error!",
+        title: translate("toast.error"),
         message: () => "Couldn't add the project to favorites. Please try again.",
       },
     });
@@ -117,13 +118,13 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
 
     const removeFromFavoritePromise = removeProjectFromFavorites(workspaceSlug.toString(), project.id);
     setPromiseToast(removeFromFavoritePromise, {
-      loading: "Removing project from favorites...",
+      loading: translate("web.removing_project_from_favorites"),
       success: {
-        title: "Success!",
+        title: translate("toast.success"),
         message: () => "Project removed from favorites.",
       },
       error: {
-        title: "Error!",
+        title: translate("toast.error"),
         message: () => "Couldn't remove the project from favorites. Please try again.",
       },
     });
@@ -134,8 +135,8 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
     copyUrlToClipboard(projectLink).then(() =>
       setToast({
         type: "info",
-        title: "Link Copied!",
-        message: "Project link copied to clipboard.",
+        title: translate("web.link_copied"),
+        message: translate("web.project_link_copied_to_clipboard"),
       })
     );
   const handleOpenInNewTab = () => window.open(`/${projectLink}`, "_blank");
@@ -144,42 +145,42 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
     {
       key: "settings",
       action: () => router.push(`/${workspaceSlug}/settings/projects/${project.id}`),
-      title: "Settings",
+      title: translate("web.settings"),
       icon: SettingsOutline,
       shouldRender: !isArchived && (hasAdminRole || hasMemberRole),
     },
     {
       key: "join",
       action: () => setJoinProjectModal(true),
-      title: "Join",
+      title: translate("web.join"),
       icon: UserPlusOutline,
       shouldRender: !isMemberOfProject && !isArchived,
     },
     {
       key: "open-new-tab",
       action: handleOpenInNewTab,
-      title: "Open in new tab",
+      title: translate("web.open_in_new_tab"),
       icon: NewTabOutline,
       shouldRender: !isMemberOfProject && !isArchived,
     },
     {
       key: "copy-link",
       action: () => void handleCopyText(),
-      title: "Copy link",
+      title: translate("web.copy_link"),
       icon: LinkOutline,
       shouldRender: !isArchived,
     },
     {
       key: "restore",
       action: () => setRestoreProject(true),
-      title: "Restore",
+      title: translate("web.restore"),
       icon: RestoreOutline,
       shouldRender: isArchived && hasAdminRole,
     },
     {
       key: "delete",
       action: () => setDeleteProjectModal(true),
-      title: "Delete",
+      title: translate("web.delete"),
       icon: DeleteOutline,
       shouldRender: isArchived && hasAdminRole,
     },
@@ -256,7 +257,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
               <div data-prevent-progress className="flex h-full flex-shrink-0 items-center gap-2">
                 <button
                   type="button"
-                  aria-label="Copy link"
+                  aria-label={translate("web.copy_link")}
                   className="flex h-6 w-6 items-center justify-center rounded-sm bg-white/10"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -317,10 +318,10 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                     </AvatarGroup>
                   </div>
                 ) : (
-                  <span className="text-13 text-placeholder italic">No Member Yet</span>
+                  <span className="text-13 text-placeholder italic">{translate("web.no_member_yet")}</span>
                 )}
               </Tooltip>
-              {isArchived && <div className="text-11 font-medium text-placeholder">Archived</div>}
+              {isArchived && <div className="text-11 font-medium text-placeholder">{translate("web.archived")}</div>}
             </div>
             {isArchived ? (
               hasAdminRole && (
@@ -329,7 +330,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                     variant="ghost"
                     size="xs"
                     stretch="auto"
-                    label="Restore"
+                    label={translate("web.restore")}
                     icon={<Icon icon={RestoreOutline} />}
                     onClick={(e) => {
                       e.preventDefault();
@@ -340,7 +341,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                   <IconButton
                     variant="ghost"
                     size="xs"
-                    aria-label="Delete"
+                    aria-label={translate("web.delete")}
                     icon={<Icon icon={DeleteOutline} />}
                     onClick={(e) => {
                       e.preventDefault();
@@ -375,7 +376,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                       variant="ghost"
                       size="sm"
                       stretch="auto"
-                      label="Join"
+                      label={translate("web.join")}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

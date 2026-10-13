@@ -77,11 +77,11 @@ export const ResetPasswordForm = observer(function ResetPasswordForm() {
 
   const isButtonDisabled = useMemo(
     () =>
-      !!resetFormData.password &&
-      getPasswordStrength(resetFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
-      resetFormData.password === resetFormData.confirm_password
-        ? false
-        : true,
+      !(
+        !!resetFormData.password &&
+        getPasswordStrength(resetFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
+        resetFormData.password === resetFormData.confirm_password
+      ),
     [resetFormData]
   );
 
@@ -100,7 +100,7 @@ export const ResetPasswordForm = observer(function ResetPasswordForm() {
 
   return (
     <FormContainer>
-      <AuthFormHeader title="Reset password" description="Create a new password." />
+      <AuthFormHeader title={t("web.reset_password")} description={t("web.create_a_new_password")} />
 
       {errorInfo && errorInfo?.type === EErrorAlertType.BANNER_ALERT && (
         <Banner
@@ -152,6 +152,7 @@ export const ResetPasswordForm = observer(function ResetPasswordForm() {
               onFocus={() => setIsPasswordInputFocused(true)}
               onBlur={() => setIsPasswordInputFocused(false)}
               autoComplete="new-password"
+              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
               autoFocus
             />
             <button

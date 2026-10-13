@@ -14,6 +14,7 @@ import type { IIssueLabel } from "@plane/types";
 import { ConfirmDialog } from "@plane/blocks/dialog";
 // hooks
 import { useLabel } from "@/hooks/store/use-label";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export const DeleteLabelModal = observer(function DeleteLabelModal(props: Props)
           : "Label could not be deleted. Please try again.";
       setToast({
         type: "error",
-        title: "Error!",
+        title: translate("toast.error"),
         message: error,
       });
     }
@@ -63,7 +64,7 @@ export const DeleteLabelModal = observer(function DeleteLabelModal(props: Props)
       handleSubmit={handleDeletion}
       isSubmitting={isDeleteLoading}
       isOpen={isOpen}
-      title="Delete Label"
+      title={translate("web.delete_label")}
       content={
         <>
           Are you sure you want to delete <span className="font-medium text-primary">{data?.name}</span>? This will

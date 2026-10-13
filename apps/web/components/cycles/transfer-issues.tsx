@@ -8,6 +8,7 @@ import React from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { TransferWorkItemOutline, WarningCircleOutline } from "@makeplane/propel/icons";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleClick: () => void;
@@ -21,7 +22,7 @@ export function TransferIssues(props: Props) {
     <div className="-mt-2 mb-4 flex items-center justify-between px-4 pt-6">
       <div className="flex items-center gap-2 text-13 text-secondary">
         <WarningCircleOutline className="h-3.5 w-3.5 text-secondary" />
-        <span>Completed cycles are not editable.</span>
+        <span>{translate("web.completed_cycles_are_not_editable")}</span>
       </div>
 
       {canTransferIssues && (
@@ -34,7 +35,7 @@ export function TransferIssues(props: Props) {
             iconPosition="start"
             onClick={handleClick}
             disabled={disabled}
-            label="Transfer work items"
+            label={translate("web.transfer_work_items")}
           />
         </div>
       )}

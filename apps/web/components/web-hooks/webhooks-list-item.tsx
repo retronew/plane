@@ -11,6 +11,7 @@ import type { IWebhook } from "@plane/types";
 import { Switch } from "@makeplane/propel/components/switch";
 // hooks
 import { useWebhook } from "@/hooks/store/use-webhook";
+import { translate } from "@plane/i18n";
 
 interface IWebhookListItem {
   webhook: IWebhook;
@@ -50,7 +51,7 @@ export function WebhooksListItem(props: IWebhookListItem) {
             onCheckedChange={() => {
               void handleToggle();
             }}
-            aria-label="Toggle webhook"
+            aria-label={translate("web.toggle_webhook")}
           />
         </div>
       </Link>

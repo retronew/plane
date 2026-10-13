@@ -115,7 +115,9 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
               access to all your work data in this workspace without any way to restore it. Tread very carefully.
             </p>
             <div className="text-secondary">
-              <p className="text-body-xs-regular break-words">Type in this workspace&apos;s name to continue.</p>
+              <p className="text-body-xs-regular break-words">
+                {t("web.type_in_this_workspace_apos_s_name_to_continue")}
+              </p>
               <Controller
                 control={control}
                 name="workspaceName"

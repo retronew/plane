@@ -20,6 +20,7 @@ import type { RowData } from "@/components/projects/settings/useProjectColumns";
 import type { IProjectMemberDetails } from "@/store/member/project/base-project-member.store";
 // local imports
 import { ConfirmProjectMemberRemove } from "./confirm-project-member-remove";
+import { translate } from "@plane/i18n";
 
 type Props = {
   memberDetails: (IProjectMemberDetails | null)[];
@@ -55,7 +56,7 @@ export const ProjectMemberListItem = observer(function ProjectMemberListItem(pro
         .catch((err) => {
           setToast({
             type: "error",
-            title: "You can’t leave this project yet.",
+            title: translate("web.you_can_t_leave_this_project_yet"),
             message: err?.error || "Something went wrong. Please try again.",
           });
         });
@@ -63,7 +64,7 @@ export const ProjectMemberListItem = observer(function ProjectMemberListItem(pro
       await removeMemberFromProject(workspaceSlug.toString(), projectId.toString(), memberId).catch((err) =>
         setToast({
           type: "error",
-          title: "You can't remove the member from this project yet.",
+          title: translate("web.you_can_t_remove_the_member_from_this_project_yet"),
           message: err?.error || "Something went wrong. Please try again.",
         })
       );

@@ -16,6 +16,7 @@ import { AccountTypeColumn, NameColumn } from "@/components/project/settings/mem
 import { useMember } from "@/hooks/store/use-member";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 import type { IMemberFilters } from "@/store/member/utils";
+import { translate } from "@plane/i18n";
 
 export interface RowData extends Pick<TProjectMembership, "original_role"> {
   member: IWorkspaceMember;
@@ -59,7 +60,7 @@ export const useProjectColumns = (props: TUseProjectColumnsProps) => {
   const columns = [
     {
       key: "Full Name",
-      content: "Full name",
+      content: translate("web.full_name"),
       thClassName: "text-left",
       thRender: () => (
         <MemberHeaderColumn
@@ -80,7 +81,7 @@ export const useProjectColumns = (props: TUseProjectColumnsProps) => {
     },
     {
       key: "Display Name",
-      content: "Display name",
+      content: translate("web.display_name"),
       thRender: () => (
         <MemberHeaderColumn
           property="display_name"
@@ -92,7 +93,7 @@ export const useProjectColumns = (props: TUseProjectColumnsProps) => {
     },
     {
       key: "Email",
-      content: "Email",
+      content: translate("web.email"),
       thRender: () => (
         <MemberHeaderColumn
           property="email"
@@ -104,7 +105,7 @@ export const useProjectColumns = (props: TUseProjectColumnsProps) => {
     },
     {
       key: "Account Type",
-      content: "Account type",
+      content: translate("web.account_type"),
       thRender: () => (
         <MemberHeaderColumn
           property="role"
@@ -123,7 +124,7 @@ export const useProjectColumns = (props: TUseProjectColumnsProps) => {
     },
     {
       key: "Joining Date",
-      content: "Joining date",
+      content: translate("web.joining_date"),
       thRender: () => (
         <MemberHeaderColumn
           property="joining_date"

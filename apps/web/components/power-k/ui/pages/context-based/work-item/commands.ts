@@ -93,12 +93,12 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
       await updateEntity(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id, formData).catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: `${isEpic ? "Epic" : "Work item"} could not be updated. Please try again.`,
         });
       });
     },
-    [entityDetails, isEpic, updateEntity, workspaceSlug]
+    [entityDetails, isEpic, updateEntity, workspaceSlug, t]
   );
 
   const handleUpdateAssignee = useCallback(
@@ -152,6 +152,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           type: "success",
           title: t("power_k.contextual_actions.work_item.copy_id_toast_success"),
         });
+        return undefined;
       })
       .catch(() => {
         setToast({
@@ -169,6 +170,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           type: "success",
           title: t("power_k.contextual_actions.work_item.copy_title_toast_success"),
         });
+        return undefined;
       })
       .catch(() => {
         setToast({
@@ -187,6 +189,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           type: "success",
           title: t("power_k.contextual_actions.work_item.copy_url_toast_success"),
         });
+        return undefined;
       })
       .catch(() => {
         setToast({
@@ -323,7 +326,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         } catch {
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
           });
         }
@@ -355,7 +358,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         } catch {
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
           });
         }

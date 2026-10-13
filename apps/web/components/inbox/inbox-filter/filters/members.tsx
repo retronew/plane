@@ -20,6 +20,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 import { useMember } from "@/hooks/store/use-member";
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 import { useUser } from "@/hooks/store/user";
+import { translate } from "@plane/i18n";
 
 type Props = {
   filterKey: TInboxIssueFilterMemberKeys;
@@ -83,7 +84,7 @@ export const FilterMember = observer(function FilterMember(props: Props) {
                   return (
                     <FilterOption
                       key={`members-${member.id}`}
-                      isChecked={filterValue?.includes(member.id) ? true : false}
+                      isChecked={Boolean(filterValue?.includes(member.id))}
                       onClick={() => handleInboxIssueFilters(filterKey, handleFilterValue(member.id))}
                       icon={
                         <Avatar
@@ -108,7 +109,7 @@ export const FilterMember = observer(function FilterMember(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

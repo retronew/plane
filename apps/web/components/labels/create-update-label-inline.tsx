@@ -97,7 +97,7 @@ export const CreateUpdateLabelInline = observer(
       } catch (error) {
         const errorMessage = getErrorMessage(error, "create");
         setToast({
-          title: "Error!",
+          title: t("toast.error"),
           type: "error",
           message: errorMessage,
         });
@@ -115,7 +115,7 @@ export const CreateUpdateLabelInline = observer(
       } catch (error) {
         const errorMessage = getErrorMessage(error, "update");
         setToast({
-          title: "Oops!",
+          title: t("web.oops"),
           type: "error",
           message: errorMessage,
         });
@@ -202,7 +202,7 @@ export const CreateUpdateLabelInline = observer(
                   message: t("project_settings.labels.label_max_char"),
                 },
               }}
-              render={({ field: { value, onChange, ref } }) => (
+              render={({ field: { value, onChange, ref: fieldRef } }) => (
                 <Field name="name" invalid={Boolean(errors.name)}>
                   <InputGroup size="2xl">
                     <Input
@@ -210,10 +210,11 @@ export const CreateUpdateLabelInline = observer(
                       id="labelName"
                       name="name"
                       type="text"
+                      // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                       autoFocus
                       value={value}
                       onChange={onChange}
-                      ref={ref}
+                      ref={fieldRef}
                       placeholder={t("project_settings.labels.label_title")}
                     />
                   </InputGroup>

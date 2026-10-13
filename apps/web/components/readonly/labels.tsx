@@ -12,6 +12,7 @@ import { cn } from "@plane/utils";
 // hooks
 import { useLabel } from "@/hooks/store/use-label";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 export type TReadonlyLabelsProps = {
   className?: string;
@@ -35,7 +36,7 @@ export const ReadonlyLabels = observer(function ReadonlyLabels(props: TReadonlyL
     if (projectId) {
       fetchProjectLabels(workspaceSlug?.toString(), projectId);
     }
-  }, [projectId, workspaceSlug]);
+  }, [fetchProjectLabels, projectId, workspaceSlug]);
 
   return (
     <div className={cn("flex items-center gap-2 text-body-xs-regular", className)}>
@@ -49,7 +50,7 @@ export const ReadonlyLabels = observer(function ReadonlyLabels(props: TReadonlyL
             <div className="flex h-full items-center gap-1 rounded-sm py-1 text-body-xs-bold">
               <span className="h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary" />
               <span>{value.length}</span>
-              <span>Labels</span>
+              <span>{translate("web.labels")}</span>
             </div>
           </Tooltip>
         </>

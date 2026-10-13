@@ -42,14 +42,14 @@ export const FilterAccess = observer(function FilterAccess(props: Props) {
             filteredOptions.map((access) => (
               <FilterOption
                 key={access.key}
-                isChecked={appliedFilters?.includes(`${access.key}`) ? true : false}
+                isChecked={Boolean(appliedFilters?.includes(`${access.key}`))}
                 onClick={() => handleUpdate(`${access.key}`)}
                 icon={<ProjectNetworkIcon iconKey={access.iconKey} />}
                 title={t(access.i18n_label)}
               />
             ))
           ) : (
-            <p className="text-11 text-placeholder italic">No matches found</p>
+            <p className="text-11 text-placeholder italic">{t("web.no_matches_found")}</p>
           )}
         </div>
       )}

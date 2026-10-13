@@ -27,6 +27,7 @@ import { STATIC_COVER_IMAGES, getCoverImageDisplayURL } from "@/helpers/cover-im
 import { useInstance } from "@/hooks/store/use-instance";
 // services
 import { FileService } from "@/services/file.service";
+import { translate } from "@plane/i18n";
 
 type TTabOption = {
   key: string;
@@ -76,12 +77,12 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
       },
       {
         key: "images",
-        title: "Images",
+        title: translate("web.images"),
         isEnabled: true,
       },
       {
         key: "upload",
-        title: "Upload",
+        title: translate("web.upload"),
         isEnabled: true,
       },
     ],
@@ -143,7 +144,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           setToast({
             message: error?.error ?? "The image could not be uploaded",
             type: "error",
-            title: "Image not uploaded",
+            title: translate("web.image_not_uploaded"),
           });
         });
     } else {
@@ -164,7 +165,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           setToast({
             message: error?.error ?? "The image could not be uploaded",
             type: "error",
-            title: "Image not uploaded",
+            title: translate("web.image_not_uploaded"),
           });
         });
     }
@@ -220,7 +221,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                 <Controller
                                   control={control}
                                   name={"search" as FieldPath<TFieldValues>}
-                                  render={({ field: { value, ref } }) => (
+                                  render={({ field: { value: searchValue, ref } }) => (
                                     <InputGroup size="2xl">
                                       <Input
                                         size="2xl"
@@ -233,10 +234,10 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                             setSearchParams(formData.search);
                                           }
                                         }}
-                                        value={value}
+                                        value={searchValue}
                                         onChange={(e) => setFormData({ ...formData, search: e.target.value })}
                                         ref={ref}
-                                        placeholder="Search for images"
+                                        placeholder={translate("web.search_for_images")}
                                       />
                                     </InputGroup>
                                   )}
@@ -245,38 +246,42 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                   variant="primary"
                                   size="lg"
                                   stretch="auto"
-                                  label="Search"
+                                  label={translate("web.search")}
                                   onClick={() => setSearchParams(formData.search)}
                                 />
                               </div>
                               {unsplashImages ? (
                                 unsplashImages.length > 0 ? (
                                   <div className="grid grid-cols-4 gap-4">
-                                    {unsplashImages.map((image) => (
+                                    {unsplashImages.map((unsplashImage) => (
                                       <button
                                         type="button"
-                                        key={image.id}
+                                        key={unsplashImage.id}
                                         className="relative col-span-2 aspect-video md:col-span-1"
                                         aria-label={
-                                          image.alt_description
-                                            ? `Select image: ${image.alt_description}`
-                                            : "Select image"
+                                          unsplashImage.alt_description
+                                            ? translate("web.select_image_with_description", {
+                                                description: unsplashImage.alt_description,
+                                              })
+                                            : translate("web.select_image")
                                         }
                                         onClick={() => {
                                           setIsOpen(false);
-                                          onChange(image.urls.regular);
+                                          onChange(unsplashImage.urls.regular);
                                         }}
                                       >
                                         <img
-                                          src={image.urls.small}
-                                          alt={image.alt_description}
+                                          src={unsplashImage.urls.small}
+                                          alt={unsplashImage.alt_description}
                                           className="absolute top-0 left-0 h-full w-full cursor-pointer rounded-sm object-cover"
                                         />
                                       </button>
                                     ))}
                                   </div>
                                 ) : (
-                                  <p className="pt-7 text-center text-11 text-secondary">No images found.</p>
+                                  <p className="pt-7 text-center text-11 text-secondary">
+                                    {translate("web.no_images_found")}
+                                  </p>
                                 )
                               ) : (
                                 <Loader className="grid grid-cols-4 gap-4">
@@ -306,7 +311,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                             >
                               <img
                                 src={imageUrl}
-                                alt={`Cover image ${index + 1}`}
+                                alt={translate("web.cover_option", { index: index + 1 })}
                                 className="absolute top-0 left-0 h-full w-full cursor-pointer rounded-sm object-cover transition-opacity hover:opacity-80"
                               />
                             </button>
@@ -334,7 +339,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                 <>
                                   <img
                                     src={image ? URL.createObjectURL(image) : getCoverImageDisplayURL(value, "")}
-                                    alt="image"
+                                    alt={translate("web.uploaded_cover_preview")}
                                     className="h-full w-full rounded-lg object-cover"
                                   />
                                 </>
@@ -357,14 +362,16 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                             </p>
                           )}
 
-                          <p className="text-13 text-secondary">File formats supported- .jpeg, .jpg, .png, .webp</p>
+                          <p className="text-13 text-secondary">
+                            {translate("web.file_formats_supported_jpeg_jpg_png_webp")}
+                          </p>
 
                           <div className="flex h-12 items-start justify-end gap-2">
                             <Button
                               variant="secondary"
                               size="sm"
                               stretch="auto"
-                              label="Cancel"
+                              label={translate("web.cancel")}
                               onClick={() => {
                                 setIsOpen(false);
                                 setImage(null);

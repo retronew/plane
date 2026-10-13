@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Button } from "@makeplane/propel/components/button";
 // layouts
 import DefaultLayout from "@/layouts/default-layout";
+import { translate } from "@plane/i18n";
 
 export function NotAWorkspaceMember() {
   return (
@@ -16,7 +17,7 @@ export function NotAWorkspaceMember() {
       <div className="grid h-full place-items-center p-4">
         <div className="space-y-8 text-center">
           <div className="space-y-2">
-            <h3 className="text-16 font-semibold">Not Authorized!</h3>
+            <h3 className="text-16 font-semibold">{translate("web.not_authorized")}</h3>
             <p className="mx-auto w-1/2 text-13 text-secondary">
               You{"'"}re not a member of this workspace. Please contact the workspace admin to get an invitation or
               check your pending invitations.
@@ -27,7 +28,7 @@ export function NotAWorkspaceMember() {
               variant="secondary"
               size="sm"
               stretch="auto"
-              label="Check pending invites"
+              label={translate("web.check_pending_invites")}
               nativeButton={false}
               render={<Link href="/invitations" />}
             />
@@ -35,7 +36,7 @@ export function NotAWorkspaceMember() {
               variant="primary"
               size="sm"
               stretch="auto"
-              label="Create new workspace"
+              label={translate("web.create_new_workspace")}
               nativeButton={false}
               render={<Link href="/create-workspace" />}
             />

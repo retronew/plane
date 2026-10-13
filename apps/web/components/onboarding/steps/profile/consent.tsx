@@ -5,6 +5,7 @@
  */
 
 import { TickOutline } from "@makeplane/propel/icons";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isChecked: boolean;
@@ -23,7 +24,7 @@ export function MarketingConsent({ isChecked, handleChange }: Props) {
       >
         {isChecked && <TickOutline className="h-3 w-3 text-on-color" />}
       </button>
-      <span className="text-13 text-tertiary">I agree to Plane marketing communications</span>
+      <span className="text-13 text-tertiary">{translate("web.i_agree_to_plane_marketing_communications")}</span>
     </div>
   );
 }

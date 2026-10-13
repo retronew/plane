@@ -15,6 +15,7 @@ import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useCycleFilter } from "@/hooks/store/use-cycle-filter";
+import { translate } from "@plane/i18n";
 
 export interface IArchivedCyclesView {
   workspaceSlug: string;
@@ -40,7 +41,7 @@ export const ArchivedCyclesView = observer(function ArchivedCyclesView(props: IA
             className="mx-auto h-36 w-36 sm:h-48 sm:w-48"
             alt="No matching cycles"
           />
-          <h5 className="mt-7 mb-1 text-18 font-medium">No matching cycles</h5>
+          <h5 className="mt-7 mb-1 text-18 font-medium">{translate("web.no_matching_cycles")}</h5>
           <p className="text-14 text-placeholder">
             {archivedCyclesSearchQuery.trim() === ""
               ? "Remove the filters to see all cycles"

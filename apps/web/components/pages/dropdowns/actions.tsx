@@ -69,7 +69,7 @@ export const PageActions = observer(function PageActions(props: Props) {
   const { t } = useTranslation();
   // states
   const [deletePageModal, setDeletePageModal] = useState(false);
-  const [movePageModal, setMovePageModal] = useState(false);
+  const [, setMovePageModal] = useState(false);
   // params
   const { workspaceSlug } = useParams();
   // page flag
@@ -117,14 +117,14 @@ export const PageActions = observer(function PageActions(props: Props) {
         {
           key: "open-in-new-tab",
           action: pageOperations.openInNewTab,
-          title: "Open in new tab",
+          title: t("web.open_in_new_tab"),
           icon: NewTabOutline,
           shouldRender: true,
         },
         {
           key: "copy-link",
           action: pageOperations.copyLink,
-          title: "Copy link",
+          title: t("web.copy_link"),
           icon: LinkOutline,
           shouldRender: true,
         },
@@ -133,7 +133,7 @@ export const PageActions = observer(function PageActions(props: Props) {
           action: () => {
             pageOperations.duplicate();
           },
-          title: "Make a copy",
+          title: t("web.make_a_copy"),
           icon: CopyOutline,
           shouldRender: canCurrentUserDuplicatePage,
         },
@@ -151,14 +151,14 @@ export const PageActions = observer(function PageActions(props: Props) {
           action: () => {
             setDeletePageModal(true);
           },
-          title: "Delete",
+          title: t("web.delete"),
           icon: DeleteOutline,
           shouldRender: canCurrentUserDeletePage && !!archived_at,
         },
         {
           key: "move",
           action: () => setMovePageModal(true),
-          title: "Move",
+          title: t("web.move"),
           icon: ExportOutline,
           shouldRender: canCurrentUserMovePage && isMovePageEnabled,
         },
@@ -181,6 +181,7 @@ export const PageActions = observer(function PageActions(props: Props) {
       canCurrentUserMovePage,
       isMovePageEnabled,
       pageOperations,
+      t,
     ]
   );
   // arrange options

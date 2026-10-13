@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 // helpers
 import { usePlatformOS } from "@plane/hooks";
 import { cn } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 interface ResizableSidebarProps {
   showPeek?: boolean;
@@ -146,12 +147,14 @@ export function ResizableSidebar({
     if (!isAnySidebarDropdownOpen && isCollapsed && isHoveringTrigger) {
       handlePeekLeave();
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- react only to the dropdown closing
   }, [isAnySidebarDropdownOpen]);
 
   useEffect(() => {
     if (!isAnyExtendedSidebarExpanded && isCollapsed && isHoveringTrigger) {
       handlePeekLeave();
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- react only to the extended sidebar collapsing
   }, [isAnyExtendedSidebarExpanded]);
 
   // Reset peek when sidebar is expanded
@@ -192,7 +195,7 @@ export function ResizableSidebar({
           maxWidth: `${isCollapsed ? 0 : width}px`,
         }}
         role="complementary"
-        aria-label="Main sidebar"
+        aria-label={translate("web.main_sidebar")}
         data-prevent-outside-click={isMobile}
       >
         <aside
@@ -215,7 +218,7 @@ export function ResizableSidebar({
             onDoubleClick={() => toggleCollapsed()}
             onMouseDown={(e) => startResizing(e)}
             role="separator"
-            aria-label="Resize sidebar"
+            aria-label={translate("web.resize_sidebar")}
           />
         </aside>
       </div>
@@ -235,7 +238,7 @@ export function ResizableSidebar({
         onMouseEnter={handlePeekEnter}
         onMouseLeave={handlePeekLeave}
         role="complementary"
-        aria-label="Sidebar peek view"
+        aria-label={translate("web.sidebar_peek_view")}
       >
         <aside
           className={cn(
@@ -257,13 +260,13 @@ export function ResizableSidebar({
             onDoubleClick={() => toggleCollapsed()}
             onMouseDown={(e) => startResizing(e)}
             role="separator"
-            aria-label="Resize sidebar"
+            aria-label={translate("web.resize_sidebar")}
           />
         </aside>
       </div>
 
       {/* Extended Sidebar */}
-      {extendedSidebar && extendedSidebar}
+      {extendedSidebar}
     </>
   );
 }

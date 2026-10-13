@@ -18,6 +18,7 @@ import { getIconForLink, copyTextToClipboard, calculateTimeAgo } from "@plane/ut
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleDeleteLink: () => void;
@@ -41,8 +42,8 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
     copyTextToClipboard(text).then(() =>
       setToast({
         type: "success",
-        title: "Copied to clipboard",
-        message: "The URL has been successfully copied to your clipboard",
+        title: translate("web.copied_to_clipboard"),
+        message: translate("web.the_url_has_been_successfully_copied_to_your_clipboard"),
       })
     );
   };

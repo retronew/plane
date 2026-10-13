@@ -11,6 +11,7 @@ import { DocumentCollaborativeEvents, getServerEventName } from "@plane/editor/l
 import { setToast } from "@plane/blocks/toast";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { translate } from "@plane/i18n";
 
 export type CollaborativeAction = {
   execute: (shouldSync?: boolean, recursive?: boolean) => Promise<void>;
@@ -80,7 +81,7 @@ export const useCollaborativePageActions = (props: Props) => {
         if (actionDetails?.errorMessage) {
           setToast({
             type: "error",
-            title: "Error!",
+            title: translate("toast.error"),
             message: actionDetails.errorMessage,
           });
         }

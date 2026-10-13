@@ -17,6 +17,7 @@ import { API_TOKENS_LIST } from "@plane/constants";
 // local imports
 import { CreateApiTokenForm } from "./form";
 import { GeneratedTokenDetails } from "./generated-token-details";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -69,11 +70,12 @@ export function CreateApiTokenModal(props: Props) {
           },
           false
         );
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err.message || err.detail,
         });
 

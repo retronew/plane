@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
+import { translate } from "@plane/i18n";
 
 export function WebhookSettingsLoader() {
   return (
     <div className="h-full w-full overflow-hidden py-8 pr-9">
       <div className="flex h-full w-full flex-col">
         <div className="flex items-center justify-between gap-4 border-b border-subtle pb-3.5">
-          <div className="text-18 font-medium">Webhooks</div>
+          <div className="text-18 font-medium">{translate("web.webhooks")}</div>
           <span className="h-8 w-28 rounded-sm bg-layer-1" />
         </div>
         <div className="h-full w-full overflow-y-auto">

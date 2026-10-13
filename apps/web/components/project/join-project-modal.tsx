@@ -22,6 +22,7 @@ import {
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 // type
 type TJoinProjectModalProps = {
@@ -68,7 +69,7 @@ export function JoinProjectModal(props: TJoinProjectModalProps) {
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Join Project?</DialogTitle>
+              <DialogTitle>{translate("web.join_project")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody>
@@ -80,7 +81,7 @@ export function JoinProjectModal(props: TJoinProjectModalProps) {
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={translate("web.cancel")} onClick={handleClose} />
           <Button
             variant="primary"
             size="md"

@@ -14,6 +14,7 @@ import { useMember } from "@/hooks/store/use-member";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
 import type { TLinkOperationsModal } from "./create-update-link-modal";
+import { translate } from "@plane/i18n";
 
 export type TIssueLinkDetail = {
   linkId: string;
@@ -47,14 +48,15 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
   return (
     <div key={linkId}>
       <div className="relative flex flex-col rounded-md bg-surface-2 p-2.5">
+        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
         <div
           className="flex w-full cursor-pointer items-start justify-between gap-2"
           onClick={() => {
             copyTextToClipboard(linkDetail.url);
             setToast({
               type: "success",
-              title: "Link copied!",
-              message: "Link copied to clipboard",
+              title: translate("web.link_copied_2bb0"),
+              message: translate("web.link_copied_to_clipboard"),
             });
           }}
         >

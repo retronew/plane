@@ -13,6 +13,7 @@ import { ModuleOutline } from "@makeplane/propel/icons";
 import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 import { useModule } from "@/hooks/store/use-module";
+import { translate } from "@plane/i18n";
 // ui
 
 type Props = {
@@ -68,7 +69,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
                 {sortedOptions.slice(0, itemsToRender).map((cycle) => (
                   <FilterOption
                     key={cycle.id}
-                    isChecked={appliedFilters?.includes(cycle.id) ? true : false}
+                    isChecked={Boolean(appliedFilters?.includes(cycle.id))}
                     onClick={() => handleUpdate(cycle.id)}
                     icon={<ModuleOutline className="h-3 w-3 flex-shrink-0" />}
                     title={cycle.name}
@@ -85,7 +86,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

@@ -35,7 +35,7 @@ export const WorkspaceEditionBadge = observer(function WorkspaceEditionBadge() {
           variant="tertiary"
           size="md"
           stretch="auto"
-          label="Community"
+          label={t("web.community")}
           onClick={() => setIsPaidPlanPurchaseModalOpen(true)}
           aria-haspopup="dialog"
           aria-label={t("aria_labels.projects_sidebar.edition_badge")}

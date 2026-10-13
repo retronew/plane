@@ -18,6 +18,7 @@ import { FilterAccess } from "./access";
 import { FilterCreatedDate } from "./created-at";
 import { FilterLead } from "./lead";
 import { FilterMembers } from "./members";
+import { translate } from "@plane/i18n";
 
 type Props = {
   displayFilters: TProjectDisplayFilters;
@@ -42,9 +43,10 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
           <input
             type="text"
             className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
             autoFocus={!isMobile}
           />
           {filtersSearchQuery !== "" && (
@@ -63,7 +65,7 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
                 my_projects: !displayFilters.my_projects,
               })
             }
-            title="My projects"
+            title={translate("web.my_projects")}
           />
         </div>
 

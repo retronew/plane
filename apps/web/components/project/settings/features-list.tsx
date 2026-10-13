@@ -93,13 +93,13 @@ export const ProjectFeaturesList = observer(function ProjectFeaturesList(props: 
     const updateProjectPromise = updateProject(workspaceSlug, projectId, settingsPayload);
 
     setPromiseToast(updateProjectPromise, {
-      loading: "Updating project feature...",
+      loading: t("web.updating_project_feature"),
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Project feature updated successfully.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Something went wrong while updating project feature. Please try again.",
       },
     });
@@ -117,7 +117,7 @@ export const ProjectFeaturesList = observer(function ProjectFeaturesList(props: 
                   <span className="flex items-center gap-2">
                     {t(featureItem.key)}
                     {featureItem.isPro && (
-                      <Tooltip label="Pro feature">
+                      <Tooltip label={t("web.pro_feature")}>
                         <UpgradeBadge className="rounded-sm" />
                       </Tooltip>
                     )}

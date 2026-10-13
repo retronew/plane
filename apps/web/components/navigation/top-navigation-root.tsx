@@ -20,6 +20,7 @@ import useSWR from "swr";
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
 // local imports
 import { StarUsOnGitHubLink } from "@/app/(all)/[workspaceSlug]/(projects)/star-us-link";
+import { translate } from "@plane/i18n";
 
 export const TopNavigationRoot = observer(function TopNavigationRoot() {
   // router
@@ -60,7 +61,7 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
       </div>
       {/* Additional Actions */}
       <div className="flex flex-1 shrink-0 items-center justify-end gap-1">
-        <Tooltip label="Inbox" side="bottom">
+        <Tooltip label={translate("web.inbox")} side="bottom">
           <AppSidebarItem
             variant="link"
             item={{

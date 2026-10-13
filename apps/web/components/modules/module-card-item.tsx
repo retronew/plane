@@ -32,9 +32,15 @@ import { useModule } from "@/hooks/store/use-module";
 import { useUserPermissions, useUserProfile } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   moduleId: string;
+};
+
+const handleEventPropagation = (e: SyntheticEvent<HTMLDivElement>) => {
+  e.stopPropagation();
+  e.preventDefault();
 };
 
 export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
@@ -71,17 +77,18 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     const addToFavoritePromise = addModuleToFavorites(workspaceSlug.toString(), projectId.toString(), moduleId).then(
       () => {
         if (!storedValue) toggleFavoriteMenu(true);
+        return undefined;
       }
     );
 
     setPromiseToast(addToFavoritePromise, {
-      loading: "Adding module to favorites...",
+      loading: translate("web.adding_module_to_favorites"),
       success: {
-        title: "Success!",
+        title: translate("toast.success"),
         message: () => "Module added to favorites.",
       },
       error: {
-        title: "Error!",
+        title: translate("toast.error"),
         message: () => "Couldn't add the module to favorites. Please try again.",
       },
     });
@@ -99,21 +106,16 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     );
 
     setPromiseToast(removeFromFavoritePromise, {
-      loading: "Removing module from favorites...",
+      loading: translate("web.removing_module_from_favorites"),
       success: {
-        title: "Success!",
+        title: translate("toast.success"),
         message: () => "Module removed from favorites.",
       },
       error: {
-        title: "Error!",
+        title: translate("toast.error"),
         message: () => "Couldn't remove the module from favorites. Please try again.",
       },
     });
-  };
-
-  const handleEventPropagation = (e: SyntheticEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
   };
 
   const handleModuleDetailsChange = async (payload: Partial<IModule>) => {
@@ -123,14 +125,15 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module updated successfully.",
+          title: translate("toast.success"),
+          message: translate("web.module_updated_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err?.detail ?? "Module could not be updated. Please try again.",
         });
       });
@@ -214,7 +217,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
                   <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
                 </span>
               ) : (
-                <Tooltip label="No lead">
+                <Tooltip label={translate("web.no_lead")}>
                   <UserAltOutline className="mx-1 h-4 w-4 text-tertiary" />
                 </Tooltip>
               )}
@@ -224,7 +227,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
               size="md"
               variant="brand"
               showValue={false}
-              aria-label="Module progress"
+              aria-label={translate("web.module_progress")}
             />
             {/* Ruling 38: the whole card is a `Link`, so the trigger's click and keyboard
                 activation must not reach it. */}
@@ -249,7 +252,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
                     target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
                   });
                 }}
-                placeholder="Start date - End date"
+                placeholder={translate("web.start_date_end_date")}
                 weekStartsOn={userProfile?.start_of_the_week}
                 disabled={isDisabled}
                 icon={renderIcon ? undefined : <CalendarOutline aria-hidden="true" />}

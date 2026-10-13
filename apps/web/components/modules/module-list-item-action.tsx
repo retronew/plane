@@ -67,17 +67,18 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
       () => {
         // open favorites menu if closed
         if (!storedValue) toggleFavoriteMenu(true);
+        return undefined;
       }
     );
 
     setPromiseToast(addToFavoritePromise, {
-      loading: "Adding module to favorites...",
+      loading: t("web.adding_module_to_favorites"),
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module added to favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't add the module to favorites. Please try again.",
       },
     });
@@ -95,13 +96,13 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
     );
 
     setPromiseToast(removeFromFavoritePromise, {
-      loading: "Removing module from favorites...",
+      loading: t("web.removing_module_from_favorites"),
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module removed from favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't remove the module from favorites. Please try again.",
       },
     });
@@ -114,14 +115,15 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module updated successfully.",
+          title: t("toast.success"),
+          message: t("web.module_updated_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? "Module could not be updated. Please try again.",
         });
       });
@@ -166,7 +168,7 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
           <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
         </span>
       ) : (
-        <Tooltip label="No lead">
+        <Tooltip label={t("web.no_lead")}>
           <UserAltOutline className="h-4 w-4 text-tertiary" />
         </Tooltip>
       )}

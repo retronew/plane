@@ -11,6 +11,7 @@ import { useDropzone } from "react-dropzone";
 import { useFileSize } from "@/hooks/use-file-size";
 // types
 import type { TAttachmentOperations } from "../issue-detail-widgets/attachments/helper";
+import { translate } from "@plane/i18n";
 
 type TAttachmentOperationsModal = Pick<TAttachmentOperations, "create">;
 
@@ -58,13 +59,13 @@ export const IssueAttachmentUpload = observer(function IssueAttachmentUpload(pro
       <input {...getInputProps()} />
       <span className="flex items-center gap-2">
         {isDragActive ? (
-          <p>Drop here...</p>
+          <p>{translate("web.drop_here")}</p>
         ) : fileError ? (
           <p className="text-center text-danger-primary">{fileError}</p>
         ) : isLoading ? (
-          <p className="text-center">Uploading...</p>
+          <p className="text-center">{translate("web.uploading")}</p>
         ) : (
-          <p className="text-center">Click or drag a file here</p>
+          <p className="text-center">{translate("web.click_or_drag_a_file_here")}</p>
         )}
       </span>
     </div>

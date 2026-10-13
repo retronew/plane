@@ -22,6 +22,7 @@ import { cn } from "@plane/utils";
 import { RichTextEditor } from "@/components/editor/rich-text";
 // services
 import { AIService } from "@/services/ai.service";
+import { translate } from "@plane/i18n";
 const aiService = new AIService();
 
 type Props = {
@@ -95,7 +96,7 @@ export function GptAssistantPopover(props: Props) {
 
     setToast({
       type: "error",
-      title: "Error!",
+      title: translate("toast.error"),
       message: errorMessage,
     });
 
@@ -121,8 +122,8 @@ export function GptAssistantPopover(props: Props) {
   const handleInvalidTask = () => {
     setToast({
       type: "error",
-      title: "Error!",
-      message: "Please enter some task to get AI assistance.",
+      title: translate("toast.error"),
+      message: translate("web.please_enter_some_task_to_get_ai_assistance"),
     });
   };
 
@@ -174,7 +175,7 @@ export function GptAssistantPopover(props: Props) {
       variant="primary"
       size="sm"
       stretch="auto"
-      label="Use this response"
+      label={translate("web.use_this_response")}
       onClick={() => {
         onResponse(response);
         onClose();
@@ -270,6 +271,7 @@ export function GptAssistantPopover(props: Props) {
                         ? "Tell AI what action to perform on this content..."
                         : "Ask AI anything..."
                     }`}
+                    // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                     autoFocus
                   />
                 </InputGroup>
@@ -282,12 +284,12 @@ export function GptAssistantPopover(props: Props) {
                 <>
                   <div className="flex items-start justify-center gap-2 text-13 text-accent-primary">
                     <WarningCircleOutline className="h-4 w-4" />
-                    <p>By using this feature, you consent to sharing the message with a 3rd party service. </p>
+                    <p>{translate("web.by_using_this_feature_you_consent_to_sharing_the_message_wit")} </p>
                   </div>
                 </>
               )}
               <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" stretch="auto" label="Close" onClick={onClose} />
+                <Button variant="secondary" size="sm" stretch="auto" label={translate("web.close")} onClick={onClose} />
                 <Button
                   variant="primary"
                   size="sm"

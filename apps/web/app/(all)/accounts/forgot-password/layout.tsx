@@ -6,9 +6,10 @@
 
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
+import { translate } from "@plane/i18n";
 
 export default function ForgotPasswordLayout() {
   return <Outlet />;
 }
 
-export const meta: Route.MetaFunction = () => [{ title: "Forgot Password - Plane" }];
+export const meta: Route.MetaFunction = () => [{ title: translate("web.forgot_password_plane") }];

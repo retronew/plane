@@ -11,6 +11,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useModule } from "@/hooks/store/use-module";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -43,16 +44,16 @@ export function ArchiveModuleModal(props: Props) {
       await archiveModule(workspaceSlug, projectId, moduleId);
       setToast({
         type: "success",
-        title: "Archive success",
-        message: "Your archives can be found in project archives.",
+        title: translate("web.archive_success"),
+        message: translate("web.your_archives_can_be_found_in_project_archives"),
       });
       onClose();
       router.push(`/${workspaceSlug}/projects/${projectId}/modules`);
     } catch {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Module could not be archived. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.module_could_not_be_archived_please_try_again"),
       });
     } finally {
       setIsArchiving(false);
@@ -67,9 +68,9 @@ export function ArchiveModuleModal(props: Props) {
       isSubmitting={isArchiving}
       variant="primary"
       title={`Archive module ${moduleName}`}
-      content="Are you sure you want to archive the module? All your archives can be restored later."
-      primaryButtonText={{ loading: "Archiving", default: "Archive" }}
-      secondaryButtonText="Cancel"
+      content={translate("web.are_you_sure_you_want_to_archive_the_module_all_your_archive")}
+      primaryButtonText={{ loading: translate("web.archiving"), default: "Archive" }}
+      secondaryButtonText={translate("web.cancel")}
     />
   );
 }

@@ -14,6 +14,7 @@ import type { TSearchEntities, TSearchEntityRequestPayload, TSearchResponse, TUs
 import { getFileURL } from "@plane/utils";
 // plane web hooks
 import { useAdditionalEditorMention } from "@/hooks/use-additional-editor-mention";
+import { translate } from "@plane/i18n";
 
 type TArgs = {
   enableAdvancedMentions?: boolean;
@@ -59,7 +60,7 @@ export const useEditorMention = (args: TArgs) => {
             }));
             suggestionSections.push({
               key: "users",
-              title: "Users",
+              title: translate("web.users"),
               items,
             });
           }

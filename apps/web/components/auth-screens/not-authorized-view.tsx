@@ -13,6 +13,7 @@ import Unauthorized from "@/app/assets/auth/unauthorized.svg?url";
 import WorkspaceNotAuthorizedImg from "@/app/assets/auth/workspace-not-authorized.svg?url";
 // layouts
 import DefaultLayout from "@/layouts/default-layout";
+import { translate } from "@plane/i18n";
 
 type Props = {
   actionButton?: React.ReactNode;
@@ -34,7 +35,9 @@ export const NotAuthorizedView = observer(function NotAuthorizedView(props: Prop
         <div className="h-44 w-72">
           <img src={asset} className="h-[176px] w-[288px] object-contain" alt="ProjectSettingImg" />
         </div>
-        <h1 className="text-18 font-medium text-primary">Oops! You are not authorized to view this page</h1>
+        <h1 className="text-18 font-medium text-primary">
+          {translate("web.oops_you_are_not_authorized_to_view_this_page")}
+        </h1>
         {actionButton}
       </div>
     </DefaultLayout>

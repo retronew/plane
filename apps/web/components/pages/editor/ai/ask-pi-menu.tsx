@@ -15,6 +15,7 @@ import { RichTextEditor } from "@/components/editor/rich-text";
 // helpers
 // hooks
 import { useWorkspace } from "@/hooks/store/use-workspace";
+import { translate } from "@plane/i18n";
 
 type Props = {
   handleInsertText: (insertOnNextLine: boolean) => void;
@@ -65,7 +66,7 @@ export function AskPiMenu(props: Props) {
               >
                 Replace selection
               </button>
-              <Tooltip label="Add to next line">
+              <Tooltip label={translate("web.add_to_next_line")}>
                 <button
                   type="button"
                   className="grid size-6 flex-shrink-0 place-items-center rounded-sm outline-none hover:bg-layer-1"
@@ -74,7 +75,7 @@ export function AskPiMenu(props: Props) {
                   <CornerRightDownOutline className="size-4 text-tertiary" />
                 </button>
               </Tooltip>
-              <Tooltip label="Re-generate response">
+              <Tooltip label={translate("web.re_generate_response")}>
                 <button
                   type="button"
                   className="grid size-6 flex-shrink-0 place-items-center rounded-sm outline-none hover:bg-layer-1"
@@ -95,7 +96,7 @@ export function AskPiMenu(props: Props) {
             </div>
           </div>
         ) : (
-          <p className="text-13 text-secondary">AI is answering...</p>
+          <p className="text-13 text-secondary">{translate("web.ai_is_answering")}</p>
         )}
       </div>
       <div className="px-4 py-3">
@@ -108,7 +109,7 @@ export function AskPiMenu(props: Props) {
             className="w-full border-none bg-transparent text-13 outline-none placeholder:text-placeholder"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tell AI what to do..."
+            placeholder={translate("web.tell_ai_what_to_do")}
           />
           <span className="grid size-4 flex-shrink-0 place-items-center">
             <CircleArrowUp className="size-4 text-secondary" />

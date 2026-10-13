@@ -101,8 +101,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
     } else {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Editor is still processing changes. Please wait before proceeding.",
+        title: t("toast.error"),
+        message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
       });
       event.preventDefault(); // Prevent default action if editor is not ready to discard
     }
@@ -133,8 +133,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
     if (!descriptionEditorRef.current?.isEditorReadyToDiscard()) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Editor is still processing changes. Please wait before proceeding.",
+        title: t("toast.error"),
+        message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
       });
       return;
     }
@@ -169,7 +169,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         setToast({
           type: "success",
           title: `Success!`,
-          message: "Work item created successfully.",
+          message: t("web.work_item_created_successfully"),
         });
       })
       .catch((error) => {
@@ -177,7 +177,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         setToast({
           type: "error",
           title: `Error!`,
-          message: "Some error occurred. Please try again.",
+          message: t("web.some_error_occurred_please_try_again"),
         });
       });
     setFormSubmitting(false);
@@ -250,8 +250,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
                 } else {
                   setToast({
                     type: "error",
-                    title: "Error!",
-                    message: "Editor is still processing changes. Please wait before proceeding.",
+                    title: t("toast.error"),
+                    message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
                   });
                 }
               }}

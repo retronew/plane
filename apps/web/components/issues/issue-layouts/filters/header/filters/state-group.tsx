@@ -11,6 +11,7 @@ import { STATE_GROUPS } from "@plane/constants";
 import { StateGroupIcon } from "@plane/blocks/icons";
 // components
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
+import { translate } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -49,7 +50,7 @@ export const FilterStateGroup = observer(function FilterStateGroup(props: Props)
               {filteredOptions.slice(0, itemsToRender).map((stateGroup) => (
                 <FilterOption
                   key={stateGroup.key}
-                  isChecked={appliedFilters?.includes(stateGroup.key) ? true : false}
+                  isChecked={Boolean(appliedFilters?.includes(stateGroup.key))}
                   onClick={() => handleUpdate(stateGroup.key)}
                   icon={<StateGroupIcon stateGroup={stateGroup.key} />}
                   title={stateGroup.label}
@@ -66,7 +67,7 @@ export const FilterStateGroup = observer(function FilterStateGroup(props: Props)
               )}
             </>
           ) : (
-            <p className="text-11 text-placeholder italic">No matches found</p>
+            <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
           )}
         </div>
       )}

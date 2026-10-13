@@ -16,6 +16,7 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // local imports
 import { IssueLinkCreateUpdateModal } from "./create-update-link-modal";
 import { IssueLinkList } from "./links";
+import { translate } from "@plane/i18n";
 
 export type TLinkOperations = {
   create: (data: Partial<TIssueLink>) => Promise<void>;
@@ -52,16 +53,16 @@ export function IssueLinkRoot(props: TIssueLinkRoot) {
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
           await createLink(workspaceSlug, projectId, issueId, data);
           setToast({
-            message: "The link has been successfully created",
+            message: translate("web.the_link_has_been_successfully_created"),
             type: "success",
-            title: "Link created",
+            title: translate("web.link_created"),
           });
           toggleIssueLinkModal(false);
         } catch (error: any) {
           setToast({
             message: error?.data?.error ?? "The link could not be created",
             type: "error",
-            title: "Link not created",
+            title: translate("web.link_not_created"),
           });
           throw error;
         }
@@ -71,16 +72,16 @@ export function IssueLinkRoot(props: TIssueLinkRoot) {
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
           await updateLink(workspaceSlug, projectId, issueId, linkId, data);
           setToast({
-            message: "The link has been successfully updated",
+            message: translate("web.the_link_has_been_successfully_updated"),
             type: "success",
-            title: "Link updated",
+            title: translate("web.link_updated"),
           });
           toggleIssueLinkModal(false);
         } catch (error) {
           setToast({
-            message: "The link could not be updated",
+            message: translate("web.the_link_could_not_be_updated"),
             type: "error",
-            title: "Link not updated",
+            title: translate("web.link_not_updated"),
           });
           throw error;
         }
@@ -90,16 +91,16 @@ export function IssueLinkRoot(props: TIssueLinkRoot) {
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
           await removeLink(workspaceSlug, projectId, issueId, linkId);
           setToast({
-            message: "The link has been successfully removed",
+            message: translate("web.the_link_has_been_successfully_removed"),
             type: "success",
-            title: "Link removed",
+            title: translate("web.link_removed"),
           });
           toggleIssueLinkModal(false);
         } catch {
           setToast({
-            message: "The link could not be removed",
+            message: translate("web.the_link_could_not_be_removed"),
             type: "error",
-            title: "Link not removed",
+            title: translate("web.link_not_removed"),
           });
         }
       },
@@ -122,7 +123,7 @@ export function IssueLinkRoot(props: TIssueLinkRoot) {
 
       <div className="py-1 text-11">
         <div className="flex items-center justify-between gap-2">
-          <h4>Links</h4>
+          <h4>{translate("web.links")}</h4>
           {!disabled && (
             <button
               type="button"

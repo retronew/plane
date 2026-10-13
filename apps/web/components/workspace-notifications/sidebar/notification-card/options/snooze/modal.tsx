@@ -132,6 +132,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
 
     await handleSubmitSnooze(dateTime).then(() => {
       handleClose();
+      return undefined;
     });
   };
 
@@ -157,7 +158,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>Customize Snooze Time</DialogTitle>
+                <DialogTitle>{t("web.customize_snooze_time")}</DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody tabIndex={0}>
@@ -171,7 +172,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                     render={({ field: { value, onChange } }) => (
                       <DateSelect
                         value={value ?? null}
-                        placeholder="Select date"
+                        placeholder={t("web.select_date")}
                         onChange={(val) => {
                           setValue("time", undefined);
                           onChange(val ?? undefined);
@@ -242,7 +243,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                                 {value} {watch("period").toLowerCase()}
                               </span>
                             ) : (
-                              <span className="text-body-xs-medium text-placeholder">Select a time</span>
+                              <span className="text-body-xs-medium text-placeholder">{t("web.select_a_time")}</span>
                             )}
                           </span>
                         </Select.Trigger>
@@ -254,7 +255,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+            <Button variant="secondary" size="md" stretch="auto" label={t("web.cancel")} onClick={handleClose} />
             <Button
               variant="primary"
               size="md"

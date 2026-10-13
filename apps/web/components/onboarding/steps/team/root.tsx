@@ -21,7 +21,7 @@ import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import type { EUserPermissions } from "@plane/constants";
 import { ROLE, ROLE_DETAILS } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import { setToast } from "@plane/blocks/toast";
@@ -141,7 +141,7 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
             rules={{
               pattern: {
                 value: emailRegex,
-                message: "Invalid Email ID",
+                message: t("web.invalid_email_id"),
               },
             }}
             render={({ field: { value, onChange, ref } }) => (
@@ -264,15 +264,16 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
       .then(async () => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Invitations sent successfully.",
+          title: translate("toast.success"),
+          message: translate("web.invitations_sent_successfully"),
         });
         await nextStep();
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err?.error,
         });
       });
@@ -306,13 +307,13 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
       }}
     >
       <CommonOnboardingHeader
-        title="Invite your teammates"
-        description="Work in plane happens best with your team. Invite them now to use Plane to its potential."
+        title={translate("web.invite_your_teammates")}
+        description={translate("web.work_in_plane_happens_best_with_your_team_invite_them_now_to")}
       />
       <div className="w-full py-4 text-13">
         <div className="group relative mx-8 grid grid-cols-10 gap-4 py-2">
-          <div className="col-span-6 px-1 text-13 font-medium text-secondary">Email</div>
-          <div className="col-span-4 px-1 text-13 font-medium text-secondary">Role</div>
+          <div className="col-span-6 px-1 text-13 font-medium text-secondary">{translate("web.email")}</div>
+          <div className="col-span-4 px-1 text-13 font-medium text-secondary">{translate("web.role")}</div>
         </div>
         <div className="mb-3 space-y-3 sm:space-y-4">
           {fields.map((field, index) => (
@@ -351,7 +352,7 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
         >
           {isSubmitting ? <Spinner height="20px" width="20px" /> : "Continue"}
         </ButtonElement>
-        <Button variant="ghost" size="lg" stretch="full" onClick={nextStep} label="I’ll do it later" />
+        <Button variant="ghost" size="lg" stretch="full" onClick={nextStep} label={translate("web.i_ll_do_it_later")} />
       </div>
     </form>
   );

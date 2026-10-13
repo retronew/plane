@@ -22,6 +22,7 @@ import { ModuleFiltersSelection, ModuleOrderByDropdown } from "@/components/modu
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useModuleFilter } from "@/hooks/store/use-module-filter";
+import { translate } from "@plane/i18n";
 
 export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
   // router
@@ -41,7 +42,7 @@ export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
     workspace: { workspaceMemberIds },
   } = useMember();
   // states
-  const [isSearchOpen, setIsSearchOpen] = useState(archivedModulesSearchQuery !== "" ? true : false);
+  const [isSearchOpen, setIsSearchOpen] = useState(archivedModulesSearchQuery !== "");
   // outside click detector hook
   useOutsideClickDetector(inputRef, () => {
     if (isSearchOpen && archivedModulesSearchQuery.trim() === "") setIsSearchOpen(false);
@@ -110,7 +111,7 @@ export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
           <input
             ref={inputRef}
             className="w-full max-w-[234px] border-none bg-transparent text-13 text-primary placeholder:text-placeholder focus:outline-none"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={archivedModulesSearchQuery}
             onChange={(e) => updateArchivedModulesSearchQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
@@ -139,7 +140,7 @@ export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
         />
         <FiltersDropdown
           icon={<FilterOutline className="h-3 w-3" />}
-          title="Filters"
+          title={translate("web.filters")}
           placement="bottom-end"
           isFiltersApplied={isFiltersApplied}
         >

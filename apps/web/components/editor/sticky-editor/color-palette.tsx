@@ -5,6 +5,7 @@
  */
 
 import type { TSticky } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const STICKY_COLORS_LIST: {
   key: string;
@@ -61,7 +62,7 @@ export function ColorPalette(props: TProps) {
   const { handleUpdate } = props;
   return (
     <div className="shadow absolute bottom-5 left-0 z-10 mb-2 w-56 rounded-md bg-surface-1 p-2">
-      <div className="mb-2 text-13 font-semibold text-placeholder">Background colors</div>
+      <div className="mb-2 text-13 font-semibold text-placeholder">{translate("web.background_colors")}</div>
       <div className="flex flex-wrap gap-2">
         {STICKY_COLORS_LIST.map((color) => (
           <button

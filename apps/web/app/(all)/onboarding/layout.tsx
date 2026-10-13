@@ -6,9 +6,10 @@
 
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
+import { translate } from "@plane/i18n";
 
 export default function OnboardingLayout() {
   return <Outlet />;
 }
 
-export const meta: Route.MetaFunction = () => [{ title: "Onboarding" }];
+export const meta: Route.MetaFunction = () => [{ title: translate("web.onboarding") }];

@@ -17,6 +17,7 @@ import { cn } from "@plane/utils";
 // plane web components
 import { SelectXAxis } from "./select-x-axis";
 import { SelectYAxis } from "./select-y-axis";
+import { translate } from "@plane/i18n";
 
 type Props = {
   control: Control<IAnalyticsParams, unknown>;
@@ -97,7 +98,7 @@ export const AnalyticsSelectParams = observer(function AnalyticsSelectParams(pro
                 </div>
               }
               options={groupByOptions}
-              placeholder="Group By"
+              placeholder={translate("web.group_by")}
               allowNoValue
             />
           )}

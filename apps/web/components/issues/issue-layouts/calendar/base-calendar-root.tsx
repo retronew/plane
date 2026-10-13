@@ -23,6 +23,7 @@ import { useIssuesActions } from "@/hooks/use-issues-actions";
 import type { IQuickActionProps } from "../list/list-view-types";
 import { CalendarChart } from "./calendar";
 import { handleDragDrop } from "./utils";
+import { translate } from "@plane/i18n";
 
 export type CalendarStoreType =
   | EIssuesStoreType.PROJECT
@@ -121,7 +122,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
       updateIssue
     ).catch((err) => {
       setToast({
-        title: "Error!",
+        title: translate("toast.error"),
         type: "error",
         message: err?.detail ?? "Failed to perform this action",
       });
@@ -137,12 +138,12 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
 
   const getPaginationData = useCallback(
     (groupId: string | undefined) => issues?.getPaginationData(groupId, undefined),
-    [issues?.getPaginationData]
+    [issues]
   );
 
   const getGroupIssueCount = useCallback(
     (groupId: string | undefined) => issues?.getGroupIssueCount(groupId, undefined, false),
-    [issues?.getGroupIssueCount]
+    [issues]
   );
 
   const canEditProperties = useCallback(

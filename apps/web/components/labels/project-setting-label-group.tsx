@@ -20,6 +20,7 @@ import type { ICustomMenuItem } from "./label-block/label-item-block";
 import { LabelItemBlock } from "./label-block/label-item-block";
 import { LabelDndHOC } from "./label-drag-n-drop-HOC";
 import { ProjectSettingLabelItem } from "./project-setting-label-item";
+import { translate } from "@plane/i18n";
 
 type Props = {
   label: IIssueLabel;
@@ -63,7 +64,7 @@ export const ProjectSettingLabelGroup = observer(function ProjectSettingLabelGro
         setIsUpdating(true);
       },
       isVisible: true,
-      text: "Edit label",
+      text: translate("web.edit_label"),
       key: "edit_label",
     },
     {
@@ -72,7 +73,7 @@ export const ProjectSettingLabelGroup = observer(function ProjectSettingLabelGro
         handleLabelDelete(label);
       },
       isVisible: true,
-      text: "Delete label",
+      text: translate("web.delete_label_3edc"),
       key: "delete_label",
     },
   ];

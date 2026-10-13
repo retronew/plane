@@ -10,20 +10,21 @@ import { Controller } from "react-hook-form";
 // plane imports
 import type { IUserTheme } from "@plane/types";
 import { InputColorPicker } from "./input-color-picker";
+import { translate } from "@plane/i18n";
 
 type Props = {
   control: Control<IUserTheme>;
 };
 
+const handleValueChange = (val: string | undefined, onChange: (...args: unknown[]) => void) => {
+  let hex = val;
+  // prepend a hashtag if it doesn't exist
+  if (val && val[0] !== "#") hex = `#${val}`;
+  onChange(hex);
+};
+
 export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(props: Props) {
   const { control } = props;
-
-  const handleValueChange = (val: string | undefined, onChange: (...args: unknown[]) => void) => {
-    let hex = val;
-    // prepend a hashtag if it doesn't exist
-    if (val && val[0] !== "#") hex = `#${val}`;
-    onChange(hex);
-  };
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -40,7 +41,7 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
               required: "Neutral color is required",
               pattern: {
                 value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-                message: "Enter a valid hex code",
+                message: translate("web.enter_a_valid_hex_code"),
               },
             }}
             render={({ field: { value, onChange } }) => (
@@ -73,7 +74,7 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
               required: "Brand color is required",
               pattern: {
                 value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-                message: "Enter a valid hex code",
+                message: translate("web.enter_a_valid_hex_code"),
               },
             }}
             render={({ field: { value, onChange } }) => (

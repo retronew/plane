@@ -26,6 +26,7 @@ import type { IProjectIssuesFilter } from "@/store/issue/project";
 import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { CalendarIssueBlocks } from "./issue-blocks";
+import { translate } from "@plane/i18n";
 
 type Props = {
   issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
@@ -93,8 +94,8 @@ export const CalendarDayTile = observer(function CalendarDayTile(props: Props) {
       if (diffInDays < 0) {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Due date cannot be before the start date of the work item.",
+          title: translate("toast.error"),
+          message: translate("web.due_date_cannot_be_before_the_start_date_of_the_work_item"),
         });
         return false;
       }

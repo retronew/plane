@@ -13,6 +13,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useUser } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -46,8 +47,8 @@ export function SwitchAccountModal(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to sign out. Please try again.",
+        title: translate("toast.error"),
+        message: translate("web.failed_to_sign_out_please_try_again"),
       });
     } finally {
       setSwitchingAccount(false);
@@ -61,7 +62,7 @@ export function SwitchAccountModal(props: Props) {
       handleSubmit={handleSwitchAccount}
       isSubmitting={switchingAccount}
       variant="primary"
-      title="Switch account"
+      title={translate("web.switch_account")}
       content={
         userData?.email ? (
           <>
@@ -70,7 +71,7 @@ export function SwitchAccountModal(props: Props) {
           </>
         ) : null
       }
-      primaryButtonText={{ loading: "Switching...", default: "Switch account" }}
+      primaryButtonText={{ loading: translate("web.switching"), default: "Switch account" }}
     />
   );
 }

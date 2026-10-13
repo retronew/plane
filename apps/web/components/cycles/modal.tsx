@@ -21,6 +21,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { CycleService } from "@/services/cycle.service";
 // local imports
 import { CycleForm } from "./form";
+import { translate } from "@plane/i18n";
 
 type CycleModalProps = {
   isOpen: boolean;
@@ -62,14 +63,15 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
 
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Cycle created successfully.",
+          title: translate("toast.success"),
+          message: translate("web.cycle_created_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err?.detail ?? "Error in creating cycle. Please try again.",
         });
       });
@@ -83,24 +85,26 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
       .then((_res) => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Cycle updated successfully.",
+          title: translate("toast.success"),
+          message: translate("web.cycle_updated_successfully"),
         });
+        return undefined;
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: translate("toast.error"),
           message: err?.detail ?? "Error in updating cycle. Please try again.",
         });
       });
   };
 
-  const dateChecker = async (projectId: string, payload: CycleDateCheckData) => {
+  const dateChecker = async (cycleProjectId: string, payload: CycleDateCheckData) => {
     let status = false;
 
-    await cycleService.cycleDateCheck(workspaceSlug, projectId, payload).then((res) => {
+    await cycleService.cycleDateCheck(workspaceSlug, cycleProjectId, payload).then((res) => {
       status = res.status;
+      return undefined;
     });
 
     return status;
@@ -145,14 +149,15 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
       else {
         await handleCreateCycle(payload).then(() => {
           setCycleTab("all");
+          return undefined;
         });
       }
       handleClose();
     } else
       setToast({
         type: "error",
-        title: "Error!",
-        message: "You already have a cycle on the given dates, if you want to create a draft cycle, remove the dates.",
+        title: translate("toast.error"),
+        message: translate("web.you_already_have_a_cycle_on_the_given_dates_if_you_want_to_c"),
       });
   };
 

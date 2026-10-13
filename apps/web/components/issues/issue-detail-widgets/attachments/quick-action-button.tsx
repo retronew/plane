@@ -18,6 +18,7 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useFileSize } from "@/hooks/use-file-size";
 // local imports
 import { useAttachmentOperations } from "./helper";
+import { translate } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -62,8 +63,8 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
           .catch(() => {
             setToast({
               type: "error",
-              title: "Error!",
-              message: "File could not be attached. Try uploading again.",
+              title: translate("toast.error"),
+              message: translate("web.file_could_not_be_attached_try_uploading_again"),
             });
           })
           .finally(() => {
@@ -76,7 +77,7 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
 
       setToast({
         type: "error",
-        title: "Error!",
+        title: translate("toast.error"),
         message:
           totalAttachedFiles > 1
             ? "Only one file can be uploaded at a time."
@@ -95,6 +96,7 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
   });
 
   return (
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
     <div
       onClick={(e) => {
         // TODO: Remove extra div and move event propagation to button

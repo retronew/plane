@@ -18,6 +18,7 @@ import { CreateUpdateLabelInline } from "./create-update-label-inline";
 import type { ICustomMenuItem } from "./label-block/label-item-block";
 import { LabelItemBlock } from "./label-block/label-item-block";
 import { LabelDndHOC } from "./label-drag-n-drop-HOC";
+import { translate } from "@plane/i18n";
 
 type Props = {
   label: IIssueLabel;
@@ -55,10 +56,10 @@ export function ProjectSettingLabelItem(props: Props) {
   // store hooks
   const { updateLabel } = useLabel();
 
-  const removeFromGroup = (label: IIssueLabel) => {
+  const removeFromGroup = (labelToRemove: IIssueLabel) => {
     if (!workspaceSlug || !projectId) return;
 
-    updateLabel(workspaceSlug.toString(), projectId.toString(), label.id, {
+    updateLabel(workspaceSlug.toString(), projectId.toString(), labelToRemove.id, {
       parent: null,
     });
   };
@@ -68,7 +69,7 @@ export function ProjectSettingLabelItem(props: Props) {
       CustomIcon: CloseOutline,
       onClick: removeFromGroup,
       isVisible: !!label.parent,
-      text: "Remove from group",
+      text: translate("web.remove_from_group"),
       key: "remove_from_group",
     },
     {
@@ -78,7 +79,7 @@ export function ProjectSettingLabelItem(props: Props) {
         setIsUpdating(true);
       },
       isVisible: true,
-      text: "Edit label",
+      text: translate("web.edit_label"),
       key: "edit_label",
     },
   ];

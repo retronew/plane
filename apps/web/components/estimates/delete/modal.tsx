@@ -23,6 +23,7 @@ import {
 import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useEstimate } from "@/hooks/store/estimates/use-estimate";
 import { useProject } from "@/hooks/store/use-project";
+import { translate } from "@plane/i18n";
 
 type TDeleteEstimateModal = {
   workspaceSlug: string;
@@ -53,16 +54,16 @@ export const DeleteEstimateModal = observer(function DeleteEstimateModal(props: 
       setButtonLoader(false);
       setToast({
         type: "success",
-        title: "Estimate deleted",
-        message: "Estimate has been removed from your project.",
+        title: translate("web.estimate_deleted"),
+        message: translate("web.estimate_has_been_removed_from_your_project"),
       });
       handleClose();
     } catch (_error) {
       setButtonLoader(false);
       setToast({
         type: "error",
-        title: "Estimate creation failed",
-        message: "We were unable to delete the estimate, please try again.",
+        title: translate("web.estimate_creation_failed"),
+        message: translate("web.we_were_unable_to_delete_the_estimate_please_try_again"),
       });
     }
   };
@@ -83,7 +84,7 @@ export const DeleteEstimateModal = observer(function DeleteEstimateModal(props: 
           {/* heading */}
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Delete Estimate System</DialogTitle>
+              <DialogTitle>{translate("web.delete_estimate_system")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
 
@@ -104,7 +105,7 @@ export const DeleteEstimateModal = observer(function DeleteEstimateModal(props: 
             onClick={handleClose}
             disabled={buttonLoader}
             stretch="auto"
-            label="Cancel"
+            label={translate("web.cancel")}
           />
           <Button
             variant="danger"
