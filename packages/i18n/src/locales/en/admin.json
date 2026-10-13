@@ -248,6 +248,9 @@
         },
         "gitea": {
           "description": "Allow members to log in or sign up to plane with their Gitea accounts."
+        },
+        "oidc": {
+          "description": "Allow members to log in or sign up to Plane with any OpenID Connect provider, such as Casdoor, Keycloak or Authentik."
         }
       },
       "edit": "Edit",
@@ -300,6 +303,14 @@
         "google_console_credentials": "Google Cloud Console OAuth client credentials",
         "gitea_host": "Gitea Host",
         "gitea_host_description": "Use the URL of your Gitea instance. For the official Gitea instance, use \"https://gitea.com\".",
+        "oidc_provider_name": "Button label",
+        "oidc_provider_name_description": "Shown on the login button, e.g. \"Log in with Casdoor\".",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_description": "The OIDC issuer URL of your identity provider. Plane reads <issuer>/.well-known/openid-configuration to find the endpoints.",
+        "oidc_client_description": "You will get this from the OAuth/OIDC application in your identity provider.",
+        "oidc_redirect_uri_suffix": "field of the OAuth/OIDC application in your identity provider.",
+        "oidc_trust_email": "Trust emails from this provider",
+        "oidc_trust_email_description": "Accept emails even when the provider does not mark them as verified. Only enable this if you fully control the identity provider; otherwise anyone who can set an email there could take over an existing Plane account.",
         "refresh_attributes": "Refresh user attributes from {provider} during sign in"
       },
       "session": {

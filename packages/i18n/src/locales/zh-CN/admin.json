@@ -248,6 +248,9 @@
         },
         "gitea": {
           "description": "允许成员使用 Gitea 账号登录或注册 Plane。"
+        },
+        "oidc": {
+          "description": "允许成员使用任意 OpenID Connect 身份提供商（如 Casdoor、Keycloak 或 Authentik）登录或注册 Plane。"
         }
       },
       "edit": "编辑",
@@ -300,6 +303,14 @@
         "google_console_credentials": "Google Cloud 控制台 OAuth 客户端凭据",
         "gitea_host": "Gitea 主机",
         "gitea_host_description": "填写您的 Gitea 实例 URL。如使用官方 Gitea，请填写“https://gitea.com”。",
+        "oidc_provider_name": "按钮名称",
+        "oidc_provider_name_description": "显示在登录按钮上，例如“使用 Casdoor 登录”。",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_description": "身份提供商的 OIDC Issuer 地址。Plane 会读取 <issuer>/.well-known/openid-configuration 自动获取各接口地址。",
+        "oidc_client_description": "可在身份提供商的 OAuth/OIDC 应用中获取。",
+        "oidc_redirect_uri_suffix": "字段（位于身份提供商的 OAuth/OIDC 应用中）。",
+        "oidc_trust_email": "信任此提供商返回的邮箱",
+        "oidc_trust_email_description": "即使提供商未将邮箱标记为已验证也予以接受。仅在您完全掌控该身份提供商时启用，否则任何能在其中设置邮箱的人都可能接管已有的 Plane 账号。",
         "refresh_attributes": "登录时从 {provider} 同步用户属性"
       },
       "session": {

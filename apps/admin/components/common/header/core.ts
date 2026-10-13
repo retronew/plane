@@ -15,6 +15,7 @@ export const CORE_HEADER_SEGMENT_LABELS: Record<string, string> = {
   github: "GitHub",
   gitlab: "GitLab",
   gitea: "Gitea",
+  oidc: "OIDC",
   workspace: "admin.header.workspace",
   create: "admin.header.create",
 };
