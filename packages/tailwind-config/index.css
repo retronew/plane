@@ -239,3 +239,22 @@ body {
     @apply text-placeholder;
   }
 }
+
+/* ---------- Propel panel motion ----------
+ * Propel's overlay panels (dialog, alert dialog, popover, preview card, menu, select, drawer)
+ * animate with Tailwind v4's native transform longhands — `scale-95` sets `scale`, the drawer
+ * sets `translate-x-full` — while their transition lists only name the legacy `transform`
+ * property (`transition-[opacity,transform]`, `transition-[transform,opacity]`). The longhands
+ * snap instead of animating: a closing dialog jumps straight to 95% and then fades, instead of
+ * scaling down and fading together. app.plane.so ships the same defect, so this is ours to fix.
+ *
+ * Restating the property list repairs every such surface at once. Deliberately inside
+ * `no-preference`: these rules are unlayered, so they would otherwise out-rank propel's
+ * `motion-reduce:transition-none` in the utilities layer and strip that escape hatch.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-\[opacity\,transform\],
+  .transition-\[transform\,opacity\] {
+    transition-property: opacity, transform, translate, rotate, scale;
+  }
+}
