@@ -12,6 +12,7 @@ import { ControllerInput } from "@/components/common/controller-input";
 import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 type IInstanceImageConfigForm = {
   config: IFormattedInstanceConfiguration;
@@ -21,6 +22,7 @@ type ImageConfigFormValues = Record<TInstanceImageConfigurationKeys, string>;
 
 export function InstanceImageConfigForm(props: IInstanceImageConfigForm) {
   const { config } = props;
+  const { t } = useTranslation();
   // store hooks
   const { updateInstanceConfigurations } = useInstance();
   // form data
@@ -41,8 +43,8 @@ export function InstanceImageConfigForm(props: IInstanceImageConfigForm) {
       .then(() =>
         setToast({
           type: "success",
-          title: "Success",
-          message: "Image Configuration Settings updated successfully",
+          title: t("admin.common.success"),
+          message: t("admin.image.toast_updated"),
         })
       )
       .catch((err) => console.error(err));
@@ -55,18 +57,18 @@ export function InstanceImageConfigForm(props: IInstanceImageConfigForm) {
           control={control}
           type="password"
           name="UNSPLASH_ACCESS_KEY"
-          label="Access key from your Unsplash account"
+          label={t("admin.image.access_key")}
           description={
             <>
-              You will find your access key in your Unsplash developer console.&nbsp;
+              {t("admin.image.access_key_description")}&nbsp;
               <a
                 href="https://unsplash.com/documentation#creating-a-developer-account"
                 target="_blank"
                 className="text-accent-primary hover:underline"
                 rel="noreferrer"
-                aria-label="Unsplash developer account documentation"
+                aria-label={t("admin.image.docs")}
               >
-                Learn more.
+                {t("admin.common.learn_more")}
               </a>
             </>
           }
@@ -83,7 +85,7 @@ export function InstanceImageConfigForm(props: IInstanceImageConfigForm) {
           stretch="auto"
           onClick={handleSubmit(onSubmit)}
           loading={isSubmitting}
-          label={isSubmitting ? "Saving" : "Save changes"}
+          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
         />
       </div>
     </div>

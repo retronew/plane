@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/common/skeleton";
 import { setPromiseToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { translate, useTranslation } from "@plane/i18n";
 // types
 import type { Route } from "./+types/page";
 // local
@@ -25,6 +26,7 @@ import { InstanceGoogleConfigForm } from "./form";
 const InstanceGoogleAuthenticationPage = observer(function InstanceGoogleAuthenticationPage(
   _props: Route.ComponentProps
 ) {
+  const { t } = useTranslation();
   // store
   const { fetchInstanceConfigurations, formattedConfig, updateInstanceConfigurations } = useInstance();
   // state
@@ -44,20 +46,24 @@ const InstanceGoogleAuthenticationPage = observer(function InstanceGoogleAuthent
     const updateConfigPromise = updateInstanceConfigurations(payload);
 
     setPromiseToast(updateConfigPromise, {
-      loading: "Saving Configuration",
+      loading: t("admin.authentication.saving_configuration"),
       success: {
-        title: "Configuration saved",
-        message: () => `Google authentication is now ${value === "1" ? "active" : "disabled"}.`,
+        title: t("admin.authentication.provider.configuration_saved"),
+        message: () =>
+          value === "1"
+            ? t("admin.authentication.provider.now_active", { provider: "Google" })
+            : t("admin.authentication.provider.now_disabled", { provider: "Google" }),
       },
       error: {
-        title: "Error",
-        message: () => "Failed to save configuration",
+        title: t("admin.common.error"),
+        message: () => t("admin.authentication.configuration_save_failed"),
       },
     });
 
     await updateConfigPromise
       .then(() => {
         setIsSubmitting(false);
+        return undefined;
       })
       .catch((err) => {
         console.error(err);
@@ -69,12 +75,11 @@ const InstanceGoogleAuthenticationPage = observer(function InstanceGoogleAuthent
       customHeader={
         <AuthenticationMethodCard
           name="Google"
-          description="Allow members to login or sign up to plane with their Google
-            accounts."
+          description={t("admin.authentication.modes.google.description")}
           icon={<img src={GoogleLogo} height={24} width={24} alt="Google Logo" />}
           config={
             <Switch
-              aria-label="Enable Google authentication"
+              aria-label={t("admin.authentication.enable_provider", { provider: "Google" })}
               checked={Boolean(parseInt(enableGoogleConfig))}
               onCheckedChange={() => {
                 if (Boolean(parseInt(enableGoogleConfig)) === true) {
@@ -107,6 +112,8 @@ const InstanceGoogleAuthenticationPage = observer(function InstanceGoogleAuthent
   );
 });
 
-export const meta: Route.MetaFunction = () => [{ title: "Google Authentication - God Mode" }];
+export const meta: Route.MetaFunction = () => [
+  { title: translate("admin.meta.provider_authentication", { provider: "Google" }) },
+];
 
 export default InstanceGoogleAuthenticationPage;

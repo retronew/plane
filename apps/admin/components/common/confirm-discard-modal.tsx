@@ -7,6 +7,7 @@
 import { useRouter } from "next/navigation";
 // plane imports
 import { ConfirmDialog } from "@plane/blocks/dialog";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -16,6 +17,7 @@ type Props = {
 
 export function ConfirmDiscardModal(props: Props) {
   const { isOpen, handleClose, onDiscardHref } = props;
+  const { t } = useTranslation();
   // router
   const router = useRouter();
 
@@ -37,10 +39,10 @@ export function ConfirmDiscardModal(props: Props) {
       isSubmitting={false}
       variant="primary"
       hideIcon
-      title="You have unsaved changes"
-      content="Changes you made will be lost if you go back. Do you wish to go back?"
-      primaryButtonText={{ default: "Go back" }}
-      secondaryButtonText="Keep editing"
+      title={t("admin.discard.title")}
+      content={t("admin.discard.content")}
+      primaryButtonText={{ default: t("admin.common.go_back") }}
+      secondaryButtonText={t("admin.discard.keep_editing")}
     />
   );
 }

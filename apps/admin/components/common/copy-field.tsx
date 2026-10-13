@@ -10,6 +10,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { CopyOutline } from "@makeplane/propel/icons";
 // components
 import { setToast } from "@plane/blocks/toast";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   label: string;
@@ -26,6 +27,7 @@ export type TCopyField = {
 
 export function CopyField(props: Props) {
   const { label, url, description } = props;
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-1">
@@ -41,8 +43,8 @@ export function CopyField(props: Props) {
           navigator.clipboard.writeText(url);
           setToast({
             type: "info",
-            title: "Copied to clipboard",
-            message: `The ${label} has been successfully copied to your clipboard`,
+            title: t("admin.copy.title"),
+            message: t("admin.copy.message", { label }),
           });
         }}
       />

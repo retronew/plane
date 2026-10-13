@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/common/skeleton";
 import { setPromiseToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { translate, useTranslation } from "@plane/i18n";
 // types
 import type { Route } from "./+types/page";
 // local
@@ -29,6 +30,7 @@ import { InstanceGithubConfigForm } from "./form";
 const InstanceGithubAuthenticationPage = observer(function InstanceGithubAuthenticationPage(
   _props: Route.ComponentProps
 ) {
+  const { t } = useTranslation();
   // store
   const { fetchInstanceConfigurations, formattedConfig, updateInstanceConfigurations } = useInstance();
   // state
@@ -50,20 +52,24 @@ const InstanceGithubAuthenticationPage = observer(function InstanceGithubAuthent
     const updateConfigPromise = updateInstanceConfigurations(payload);
 
     setPromiseToast(updateConfigPromise, {
-      loading: "Saving Configuration",
+      loading: t("admin.authentication.saving_configuration"),
       success: {
-        title: "Configuration saved",
-        message: () => `GitHub authentication is now ${value === "1" ? "active" : "disabled"}.`,
+        title: t("admin.authentication.provider.configuration_saved"),
+        message: () =>
+          value === "1"
+            ? t("admin.authentication.provider.now_active", { provider: "GitHub" })
+            : t("admin.authentication.provider.now_disabled", { provider: "GitHub" }),
       },
       error: {
-        title: "Error",
-        message: () => "Failed to save configuration",
+        title: t("admin.common.error"),
+        message: () => t("admin.authentication.configuration_save_failed"),
       },
     });
 
     await updateConfigPromise
       .then(() => {
         setIsSubmitting(false);
+        return undefined;
       })
       .catch((err) => {
         console.error(err);
@@ -78,7 +84,7 @@ const InstanceGithubAuthenticationPage = observer(function InstanceGithubAuthent
       customHeader={
         <AuthenticationMethodCard
           name="GitHub"
-          description="Allow members to login or sign up to plane with their GitHub accounts."
+          description={t("admin.authentication.modes.github.description")}
           icon={
             <img
               src={resolveGeneralTheme(resolvedTheme) === "dark" ? githubDarkModeImage : githubLightModeImage}
@@ -89,7 +95,7 @@ const InstanceGithubAuthenticationPage = observer(function InstanceGithubAuthent
           }
           config={
             <Switch
-              aria-label="Enable GitHub authentication"
+              aria-label={t("admin.authentication.enable_provider", { provider: "GitHub" })}
               checked={isGithubEnabled}
               onCheckedChange={() => {
                 updateConfig("IS_GITHUB_ENABLED", isGithubEnabled ? "0" : "1");
@@ -118,6 +124,8 @@ const InstanceGithubAuthenticationPage = observer(function InstanceGithubAuthent
   );
 });
 
-export const meta: Route.MetaFunction = () => [{ title: "GitHub Authentication - God Mode" }];
+export const meta: Route.MetaFunction = () => [
+  { title: translate("admin.meta.provider_authentication", { provider: "GitHub" }) },
+];
 
 export default InstanceGithubAuthenticationPage;

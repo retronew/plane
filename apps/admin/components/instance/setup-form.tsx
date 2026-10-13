@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { API_BASE_URL, E_PASSWORD_STRENGTH } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { AuthService } from "@plane/services";
@@ -36,17 +37,14 @@ type TError = {
   message: string | undefined;
 };
 
-// backend returns numeric codes (see AUTHENTICATION_ERROR_CODES in apps/api/plane/authentication/adapter/error.py)
+// backend returns numeric codes; messages are translation keys (see AUTHENTICATION_ERROR_CODES in apps/api/plane/authentication/adapter/error.py)
 const ERROR_CODE_MAP: Record<string, { type: EErrorCodes; message: string }> = {
-  "5000": { type: EErrorCodes.INSTANCE_NOT_CONFIGURED, message: "Instance is not configured. Please try again." },
-  "5021": {
-    type: EErrorCodes.INVALID_PASSWORD,
-    message: "Password is too weak. Make sure it meets all the criteria below.",
-  },
-  "5150": { type: EErrorCodes.BANNER, message: "Admin already exists. Please sign in instead." },
-  "5155": { type: EErrorCodes.BANNER, message: "Email, password and first name are required." },
-  "5160": { type: EErrorCodes.INVALID_EMAIL, message: "Please enter a valid email address." },
-  "5180": { type: EErrorCodes.BANNER, message: "An admin user with this email already exists." },
+  "5000": { type: EErrorCodes.INSTANCE_NOT_CONFIGURED, message: "admin.setup.errors.instance_not_configured" },
+  "5021": { type: EErrorCodes.INVALID_PASSWORD, message: "admin.setup.errors.password_too_weak" },
+  "5150": { type: EErrorCodes.BANNER, message: "admin.setup.errors.admin_already_exist" },
+  "5155": { type: EErrorCodes.BANNER, message: "admin.setup.errors.required_fields" },
+  "5160": { type: EErrorCodes.INVALID_EMAIL, message: "admin.setup.errors.invalid_email" },
+  "5180": { type: EErrorCodes.BANNER, message: "admin.setup.errors.admin_user_already_exist" },
 };
 
 // form data
@@ -70,6 +68,7 @@ const defaultFromData: TFormData = {
 };
 
 export function InstanceSetupForm() {
+  const { t } = useTranslation();
   // search params
   const searchParams = useSearchParams();
   const firstNameParam = searchParams?.get("first_name") || undefined;
@@ -110,13 +109,15 @@ export function InstanceSetupForm() {
   // derived values
   const errorData: TError = useMemo(() => {
     if (!errorCode) return { type: undefined, message: undefined };
-    return (
-      ERROR_CODE_MAP[errorCode] ?? {
-        type: EErrorCodes.BANNER,
-        message: errorMessage ? `Something went wrong (${errorMessage}). Please try again.` : "Something went wrong.",
-      }
-    );
-  }, [errorCode, errorMessage]);
+    const known = ERROR_CODE_MAP[errorCode];
+    if (known) return { type: known.type, message: t(known.message) };
+    return {
+      type: EErrorCodes.BANNER,
+      message: errorMessage
+        ? t("admin.setup.errors.unknown_with_detail", { detail: errorMessage })
+        : t("admin.common.something_went_wrong"),
+    };
+  }, [errorCode, errorMessage, t]);
 
   const isButtonDisabled = useMemo(
     () =>
@@ -140,10 +141,7 @@ export function InstanceSetupForm() {
       <AuthHeader />
       <div className="mt-10 flex w-full flex-grow flex-col items-center justify-center py-6">
         <div className="relative flex w-full max-w-[22.5rem] flex-col gap-6">
-          <FormHeader
-            heading="Setup your Plane Instance"
-            subHeading="Post setup you will be able to manage this Plane instance."
-          />
+          <FormHeader heading={t("admin.setup.heading")} subHeading={t("admin.setup.sub_heading")} />
           {errorData.type &&
             errorData?.message &&
             ![EErrorCodes.INVALID_EMAIL, EErrorCodes.INVALID_PASSWORD].includes(errorData.type) && (
@@ -162,7 +160,7 @@ export function InstanceSetupForm() {
             <div className="flex flex-col items-center gap-4 sm:flex-row">
               <div className="w-full min-w-0 space-y-1">
                 <label className="text-13 font-medium text-tertiary" htmlFor="first_name">
-                  First name <span className="text-danger-primary">*</span>
+                  {t("admin.setup.first_name")} <span className="text-danger-primary">*</span>
                 </label>
                 <InputGroup size="lg">
                   <Input
@@ -170,7 +168,7 @@ export function InstanceSetupForm() {
                     id="first_name"
                     name="first_name"
                     type="text"
-                    placeholder="Wilber"
+                    placeholder={t("admin.setup.first_name_placeholder")}
                     value={formData.first_name}
                     onChange={(e) => {
                       const validation = validatePersonName(e.target.value);
@@ -187,7 +185,7 @@ export function InstanceSetupForm() {
               </div>
               <div className="w-full min-w-0 space-y-1">
                 <label className="text-13 font-medium text-tertiary" htmlFor="last_name">
-                  Last name <span className="text-danger-primary">*</span>
+                  {t("admin.setup.last_name")} <span className="text-danger-primary">*</span>
                 </label>
                 <InputGroup size="lg">
                   <Input
@@ -195,7 +193,7 @@ export function InstanceSetupForm() {
                     id="last_name"
                     name="last_name"
                     type="text"
-                    placeholder="Wright"
+                    placeholder={t("admin.setup.last_name_placeholder")}
                     value={formData.last_name}
                     onChange={(e) => {
                       const validation = validatePersonName(e.target.value);
@@ -212,7 +210,7 @@ export function InstanceSetupForm() {
 
             <div className="w-full space-y-1">
               <label className="text-13 font-medium text-tertiary" htmlFor="email">
-                Email <span className="text-danger-primary">*</span>
+                {t("admin.common.email")} <span className="text-danger-primary">*</span>
               </label>
               <InputGroup size="lg">
                 <Input
@@ -234,7 +232,7 @@ export function InstanceSetupForm() {
 
             <div className="w-full space-y-1">
               <label className="text-13 font-medium text-tertiary" htmlFor="company_name">
-                Company name <span className="text-danger-primary">*</span>
+                {t("admin.setup.company_name")} <span className="text-danger-primary">*</span>
               </label>
               <InputGroup size="lg">
                 <Input
@@ -242,7 +240,7 @@ export function InstanceSetupForm() {
                   id="company_name"
                   name="company_name"
                   type="text"
-                  placeholder="Company name"
+                  placeholder={t("admin.setup.company_name")}
                   value={formData.company_name}
                   onChange={(e) => {
                     const validation = validateCompanyName(e.target.value, false);
@@ -257,7 +255,7 @@ export function InstanceSetupForm() {
 
             <div className="w-full space-y-1">
               <label className="text-13 font-medium text-tertiary" htmlFor="password">
-                Set a password <span className="text-danger-primary">*</span>
+                {t("admin.setup.set_password")} <span className="text-danger-primary">*</span>
               </label>
               <InputGroup size="lg">
                 <Input
@@ -265,7 +263,7 @@ export function InstanceSetupForm() {
                   id="password"
                   name="password"
                   type={showPassword.password ? "text" : "password"}
-                  placeholder="New password"
+                  placeholder={t("admin.setup.new_password")}
                   value={formData.password}
                   onChange={(e) => handleFormChange("password", e.target.value)}
                   aria-invalid={errorData.type === EErrorCodes.INVALID_PASSWORD}
@@ -276,7 +274,7 @@ export function InstanceSetupForm() {
                 {showPassword.password ? (
                   <button
                     type="button"
-                    aria-label="Hide password"
+                    aria-label={t("admin.common.hide_password")}
                     className="flex items-center justify-center text-placeholder"
                     onClick={() => handleShowPassword("password")}
                   >
@@ -285,7 +283,7 @@ export function InstanceSetupForm() {
                 ) : (
                   <button
                     type="button"
-                    aria-label="Show password"
+                    aria-label={t("admin.common.show_password")}
                     className="flex items-center justify-center text-placeholder"
                     onClick={() => handleShowPassword("password")}
                   >
@@ -301,7 +299,7 @@ export function InstanceSetupForm() {
 
             <div className="w-full space-y-1">
               <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
-                Confirm password <span className="text-danger-primary">*</span>
+                {t("admin.setup.confirm_password")} <span className="text-danger-primary">*</span>
               </label>
               <InputGroup size="lg">
                 <Input
@@ -311,7 +309,7 @@ export function InstanceSetupForm() {
                   name="confirm_password"
                   value={formData.confirm_password}
                   onChange={(e) => handleFormChange("confirm_password", e.target.value)}
-                  placeholder="Confirm password"
+                  placeholder={t("admin.setup.confirm_password")}
                   onFocus={() => setIsRetryPasswordInputFocused(true)}
                   onBlur={() => setIsRetryPasswordInputFocused(false)}
                   autoComplete="new-password"
@@ -319,7 +317,7 @@ export function InstanceSetupForm() {
                 {showPassword.retypePassword ? (
                   <button
                     type="button"
-                    aria-label="Hide password"
+                    aria-label={t("admin.common.hide_password")}
                     className="flex items-center justify-center text-placeholder"
                     onClick={() => handleShowPassword("retypePassword")}
                   >
@@ -328,7 +326,7 @@ export function InstanceSetupForm() {
                 ) : (
                   <button
                     type="button"
-                    aria-label="Show password"
+                    aria-label={t("admin.common.show_password")}
                     className="flex items-center justify-center text-placeholder"
                     onClick={() => handleShowPassword("retypePassword")}
                   >
@@ -339,7 +337,7 @@ export function InstanceSetupForm() {
               {!!formData.confirm_password &&
                 formData.password !== formData.confirm_password &&
                 renderPasswordMatchError && (
-                  <span className="text-13 text-danger-primary">Passwords don{"'"}t match</span>
+                  <span className="text-13 text-danger-primary">{t("admin.setup.passwords_dont_match")}</span>
                 )}
             </div>
 
@@ -351,7 +349,7 @@ export function InstanceSetupForm() {
                 stretch="full"
                 disabled={isButtonDisabled}
                 loading={isSubmitting}
-                label="Continue"
+                label={t("admin.setup.continue")}
               />
             </div>
           </form>

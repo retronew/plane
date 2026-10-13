@@ -7,9 +7,11 @@
 import { TickCircleOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { E_PASSWORD_STRENGTH } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import { cn, getPasswordCriteria, getPasswordStrength } from "@plane/utils";
 
 interface StrengthInfo {
+  // translation key
   message: string;
   textColor: string;
   activeFragments: number;
@@ -22,31 +24,31 @@ const getStrengthInfo = (strength: E_PASSWORD_STRENGTH): StrengthInfo => {
   switch (strength) {
     case E_PASSWORD_STRENGTH.EMPTY:
       return {
-        message: "Please enter your password",
+        message: "admin.password_strength.empty",
         textColor: "text-primary",
         activeFragments: 0,
       };
     case E_PASSWORD_STRENGTH.LENGTH_NOT_VALID:
       return {
-        message: "Password is too short",
+        message: "admin.password_strength.too_short",
         textColor: "text-danger-primary",
         activeFragments: 1,
       };
     case E_PASSWORD_STRENGTH.STRENGTH_NOT_VALID:
       return {
-        message: "Password is weak",
+        message: "admin.password_strength.weak",
         textColor: "text-orange-500",
         activeFragments: 2,
       };
     case E_PASSWORD_STRENGTH.STRENGTH_VALID:
       return {
-        message: "Password is strong",
+        message: "admin.password_strength.strong",
         textColor: "text-success-primary",
         activeFragments: 3,
       };
     default:
       return {
-        message: "Please enter your password",
+        message: "admin.password_strength.empty",
         textColor: "text-primary",
         activeFragments: 0,
       };
@@ -84,11 +86,12 @@ export function PasswordStrengthIndicator({
   showCriteria = true,
   isFocused = false,
 }: PasswordStrengthIndicatorProps) {
+  const { t } = useTranslation();
   const strength = getPasswordStrength(password);
   const criteria = getPasswordCriteria(password);
   const strengthInfo = getStrengthInfo(strength);
 
-  const isPasswordMeterVisible = isFocused ? true : strength === E_PASSWORD_STRENGTH.STRENGTH_VALID ? false : true;
+  const isPasswordMeterVisible = isFocused || strength !== E_PASSWORD_STRENGTH.STRENGTH_VALID;
 
   if ((!password && !showCriteria) || !isPasswordMeterVisible) {
     return null;
@@ -111,7 +114,7 @@ export function PasswordStrengthIndicator({
         </div>
 
         {/* Strength Message */}
-        {password && <p className={cn("!text-13 font-medium", strengthInfo.textColor)}>{strengthInfo.message}</p>}
+        {password && <p className={cn("!text-13 font-medium", strengthInfo.textColor)}>{t(strengthInfo.message)}</p>}
       </div>
 
       {/* Criteria list */}
@@ -133,7 +136,7 @@ export function PasswordStrengthIndicator({
                   "text-primary": !criterion.isValid,
                 })}
               >
-                {criterion.label}
+                {t(`admin.password_strength.criteria.${criterion.key}`)}
               </span>
             </div>
           ))}

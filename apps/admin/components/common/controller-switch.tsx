@@ -9,6 +9,7 @@ import type { Control, FieldPath, FieldValues } from "react-hook-form";
 import { Controller } from "react-hook-form";
 // plane internal packages
 import { Switch } from "@makeplane/propel/components/switch";
+import { useTranslation } from "@plane/i18n";
 
 type Props<T extends FieldValues = FieldValues> = {
   control: Control<T>;
@@ -26,11 +27,12 @@ export function ControllerSwitch<T extends FieldValues>(props: Props<T>) {
     field: { name, label },
   } = props;
   const labelId = useId();
+  const { t } = useTranslation();
 
   return (
     <div className="flex items-center justify-between gap-1">
       <h4 id={labelId} className="text-sm text-custom-text-300">
-        Refresh user attributes from {label} during sign in
+        {t("admin.authentication.oauth.refresh_attributes", { provider: label })}
       </h4>
       <div className="relative">
         <Controller

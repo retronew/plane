@@ -21,21 +21,22 @@ import {
 import { cn } from "@plane/utils";
 // hooks
 import { useInstance, useTheme } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 // assets
 
 const helpOptions = [
   {
-    name: "Documentation",
+    name: "admin.help.documentation",
     href: "https://docs.plane.so/",
     Icon: PagesOutline,
   },
   {
-    name: "Join our Forum",
+    name: "admin.help.forum",
     href: "https://forum.plane.so",
     Icon: ChatOutline,
   },
   {
-    name: "Report a bug",
+    name: "admin.help.report_bug",
     href: "https://github.com/makeplane/plane/issues/new/choose",
     Icon: Github,
   },
@@ -44,6 +45,7 @@ const helpOptions = [
 export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection() {
   // states
   const [isNeedHelpOpen, setIsNeedHelpOpen] = useState(false);
+  const { t } = useTranslation();
   // store
   const { instance } = useInstance();
   const { isSidebarCollapsed, toggleSidebar } = useTheme();
@@ -69,24 +71,24 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
               className={`relative flex items-center gap-1 rounded-sm bg-layer-1 px-2 py-1 text-body-xs-medium whitespace-nowrap text-secondary`}
             >
               <NewTabOutline width={14} height={14} />
-              {!isSidebarCollapsed && "Redirect to Plane"}
+              {!isSidebarCollapsed && t("admin.help.redirect_to_plane")}
             </a>
           </>
         ) : (
-          <Tooltip label="Redirect to Plane" side="right">
+          <Tooltip label={t("admin.help.redirect_to_plane")} side="right">
             <a
               href={redirectionLink}
               className={`relative flex items-center gap-1 rounded-sm bg-layer-1 px-2 py-1 text-body-xs-medium whitespace-nowrap text-secondary`}
             >
               <NewTabOutline width={14} height={14} />
-              {!isSidebarCollapsed && "Redirect to Plane"}
+              {!isSidebarCollapsed && t("admin.help.redirect_to_plane")}
             </a>
           </Tooltip>
         )}
-        <Tooltip label="Help" side={isSidebarCollapsed ? "right" : "top"}>
+        <Tooltip label={t("admin.help.help")} side={isSidebarCollapsed ? "right" : "top"}>
           <button
             type="button"
-            aria-label="Help"
+            aria-label={t("admin.help.help")}
             className={`ml-auto grid place-items-center rounded-md p-1.5 text-secondary outline-none hover:bg-layer-1-hover hover:text-primary ${
               isSidebarCollapsed ? "w-full" : ""
             }`}
@@ -95,10 +97,10 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
             <HelpOutline className="size-4" />
           </button>
         </Tooltip>
-        <Tooltip label="Toggle sidebar" side={isSidebarCollapsed ? "right" : "top"}>
+        <Tooltip label={t("admin.header.toggle_sidebar")} side={isSidebarCollapsed ? "right" : "top"}>
           <button
             type="button"
-            aria-label="Toggle sidebar"
+            aria-label={t("admin.header.toggle_sidebar")}
             className={`grid place-items-center rounded-md p-1.5 text-secondary outline-none hover:bg-layer-1-hover hover:text-primary ${
               isSidebarCollapsed ? "w-full" : ""
             }`}
@@ -127,7 +129,7 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
                         <div className="grid flex-shrink-0 place-items-center">
                           <Icon className="h-3.5 w-3.5 text-secondary" />
                         </div>
-                        <span className="text-11">{name}</span>
+                        <span className="text-11">{t(name)}</span>
                       </div>
                     </Link>
                   );
@@ -141,12 +143,14 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
                       <div className="grid flex-shrink-0 place-items-center">
                         <Icon className="h-3.5 w-3.5 text-secondary" />
                       </div>
-                      <span className="text-11">{name}</span>
+                      <span className="text-11">{t(name)}</span>
                     </button>
                   );
               })}
             </div>
-            <div className="px-2 pt-2 pb-1 text-10">Version: v{instance?.current_version}</div>
+            <div className="px-2 pt-2 pb-1 text-10">
+              {t("admin.help.version", { version: instance?.current_version })}
+            </div>
           </div>
         )}
       </div>

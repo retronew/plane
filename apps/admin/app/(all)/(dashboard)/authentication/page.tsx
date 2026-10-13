@@ -24,10 +24,12 @@ import { useAuthenticationModes } from "@/hooks/oauth";
 import { useInstance } from "@/hooks/store";
 // types
 import type { Route } from "./+types/page";
+import { translate, useTranslation } from "@plane/i18n";
 
 const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(_props: Route.ComponentProps) {
   // theme
   const { resolvedTheme: resolvedThemeAdmin } = useTheme();
+  const { t } = useTranslation();
   const resolvedTheme = resolveGeneralTheme(resolvedThemeAdmin);
   // Ref to store authentication modes for validation (avoids circular dependency)
   const authenticationModesRef = useRef<TInstanceAuthenticationModes[]>([]);
@@ -56,9 +58,8 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
           if (!canDisable) {
             setToast({
               type: "error",
-              title: "Cannot disable authentication",
-              message:
-                "At least one authentication method must remain enabled. Please enable another method before disabling this one.",
+              title: t("admin.authentication.cannot_disable.title"),
+              message: t("admin.authentication.cannot_disable.message"),
             });
             return;
           }
@@ -75,14 +76,14 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
       const updateConfigPromise = updateInstanceConfigurations(payload);
 
       setPromiseToast(updateConfigPromise, {
-        loading: "Saving configuration",
+        loading: t("admin.authentication.saving_configuration"),
         success: {
-          title: "Success",
-          message: () => "Configuration saved successfully",
+          title: t("admin.common.success"),
+          message: () => t("admin.authentication.configuration_saved"),
         },
         error: {
-          title: "Error",
-          message: () => "Failed to save configuration",
+          title: t("admin.common.error"),
+          message: () => t("admin.authentication.configuration_save_failed"),
         },
       });
 
@@ -96,7 +97,7 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
           setIsSubmitting(false);
         });
     },
-    [formattedConfig, updateInstanceConfigurations]
+    [formattedConfig, updateInstanceConfigurations, t]
   );
 
   // Get authentication modes - this will use updateConfig which includes validation
@@ -114,8 +115,8 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
   return (
     <PageWrapper
       header={{
-        title: "Manage authentication modes for your instance",
-        description: "Configure authentication modes for your team and restrict sign-ups to be invite only.",
+        title: t("admin.authentication.title"),
+        description: t("admin.authentication.description"),
       }}
     >
       {formattedConfig ? (
@@ -123,16 +124,16 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
           <div className={cn("flex w-full items-center gap-14 rounded-sm")}>
             <div className="flex grow items-center gap-4">
               <div className="grow">
-                <div className="pb-1 text-16 font-medium">Allow anyone to sign up even without an invite</div>
+                <div className="pb-1 text-16 font-medium">{t("admin.authentication.allow_signup")}</div>
                 <div className={cn("text-11 leading-5 font-regular text-tertiary")}>
-                  Toggling this off will only let users sign up when they are invited.
+                  {t("admin.authentication.allow_signup_description")}
                 </div>
               </div>
             </div>
             <div className={`shrink-0 pr-4 ${isSubmitting && "opacity-70"}`}>
               <div className="flex items-center gap-4">
                 <Switch
-                  aria-label="Allow anyone to sign up even without an invite"
+                  aria-label={t("admin.authentication.allow_signup")}
                   checked={Boolean(parseInt(enableSignUpConfig))}
                   onCheckedChange={() => {
                     if (Boolean(parseInt(enableSignUpConfig)) === true) {
@@ -147,12 +148,12 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
               </div>
             </div>
           </div>
-          <div className="text-lg pt-6 font-medium">Available authentication modes</div>
+          <div className="text-lg pt-6 font-medium">{t("admin.authentication.available_modes")}</div>
           {authenticationModes.map((method) => (
             <AuthenticationMethodCard
               key={method.key}
-              name={method.name}
-              description={method.description}
+              name={t(method.name)}
+              description={t(method.description)}
               icon={method.icon}
               config={method.config}
               disabled={isSubmitting}
@@ -173,6 +174,6 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
   );
 });
 
-export const meta: Route.MetaFunction = () => [{ title: "Authentication Settings - Plane Web" }];
+export const meta: Route.MetaFunction = () => [{ title: translate("admin.meta.authentication") }];
 
 export default InstanceAuthenticationPage;

@@ -20,12 +20,14 @@ import { validateSlug, validateWorkspaceName } from "@plane/utils";
 import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useWorkspace } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 const instanceWorkspaceService = new InstanceWorkspaceService();
 
 export function WorkspaceCreateForm() {
   // router
   const router = useRouter();
+  const { t } = useTranslation();
   // states
   const [slugError, setSlugError] = useState(false);
   const [invalidSlug, setInvalidSlug] = useState(false);
@@ -63,25 +65,27 @@ export function WorkspaceCreateForm() {
             .then(async () => {
               setToast({
                 type: "success",
-                title: "Success!",
-                message: "Workspace created successfully.",
+                title: t("admin.common.success_exclamation"),
+                message: t("admin.workspace.create_page.toast_created"),
               });
               router.push(`/workspace`);
+              return undefined;
             })
             .catch(() => {
               setToast({
                 type: "error",
-                title: "Error!",
-                message: "Workspace could not be created. Please try again.",
+                title: t("admin.common.error_exclamation"),
+                message: t("admin.workspace.create_page.toast_create_failed"),
               });
             });
         } else setSlugError(true);
+        return undefined;
       })
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Some error occurred while creating workspace. Please try again.",
+          title: t("admin.common.error_exclamation"),
+          message: t("admin.workspace.create_page.toast_create_error"),
         });
       });
   };
@@ -98,7 +102,7 @@ export function WorkspaceCreateForm() {
     <div className="space-y-8">
       <div className="grid-col grid w-full max-w-4xl grid-cols-1 items-start justify-between gap-x-10 gap-y-6 lg:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <h4 className="text-13 text-tertiary">Name your workspace</h4>
+          <h4 className="text-13 text-tertiary">{t("admin.workspace.create_page.name")}</h4>
           <div className="flex flex-col gap-1">
             <Controller
               control={control}
@@ -123,7 +127,7 @@ export function WorkspaceCreateForm() {
                     ref={ref}
                     aria-invalid={Boolean(errors.name)}
                     data-invalid={errors.name ? true : undefined}
-                    placeholder="Something familiar and recognizable is always best."
+                    placeholder={t("admin.workspace.create_page.name_placeholder")}
                   />
                 </InputGroup>
               )}
@@ -132,7 +136,7 @@ export function WorkspaceCreateForm() {
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <h4 className="text-13 text-tertiary">Set your workspace&apos;s URL</h4>
+          <h4 className="text-13 text-tertiary">{t("admin.workspace.create_page.url")}</h4>
           <Controller
             control={control}
             name="slug"
@@ -160,22 +164,20 @@ export function WorkspaceCreateForm() {
               </InputGroup>
             )}
           />
-          {slugError && <p className="text-13 text-danger-primary">This URL is taken. Try something else.</p>}
-          {invalidSlug && (
-            <p className="text-13 text-danger-primary">{`URLs can contain only ( - ), ( _ ) and alphanumeric characters.`}</p>
-          )}
+          {slugError && <p className="text-13 text-danger-primary">{t("admin.workspace.create_page.url_taken")}</p>}
+          {invalidSlug && <p className="text-13 text-danger-primary">{t("admin.workspace.create_page.url_invalid")}</p>}
           {errors.slug && <span className="text-11 text-danger-primary">{errors.slug.message}</span>}
         </div>
         <div className="flex flex-col gap-1">
-          <h4 className="text-13 text-tertiary">How many people will use this workspace?</h4>
+          <h4 className="text-13 text-tertiary">{t("admin.workspace.create_page.org_size")}</h4>
           <div className="w-full">
             <Controller
               name="organization_size"
               control={control}
-              rules={{ required: "This is a required field." }}
+              rules={{ required: t("admin.workspace.create_page.required") }}
               render={({ field: { value, onChange } }) => (
                 <Select value={value} onValueChange={onChange}>
-                  <SelectTrigger size="lg" placeholder="Select a range" />
+                  <SelectTrigger size="lg" placeholder={t("admin.workspace.create_page.select_range")} />
                   <SelectContent>
                     <SelectList>
                       {ORGANIZATION_SIZE.map((item) => (
@@ -200,7 +202,7 @@ export function WorkspaceCreateForm() {
           onClick={handleSubmit(handleCreateWorkspace)}
           disabled={!isValid}
           loading={isSubmitting}
-          label={isSubmitting ? "Creating workspace" : "Create workspace"}
+          label={isSubmitting ? t("admin.workspace.create_page.creating") : t("admin.workspace.create")}
         />
         <Button
           variant="secondary"
@@ -208,7 +210,7 @@ export function WorkspaceCreateForm() {
           stretch="auto"
           nativeButton={false}
           render={<Link href="/workspace" />}
-          label="Go back"
+          label={t("admin.common.go_back")}
         />
       </div>
     </div>

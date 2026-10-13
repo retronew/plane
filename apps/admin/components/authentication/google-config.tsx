@@ -15,6 +15,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import type { TInstanceAuthenticationMethodKeys } from "@plane/types";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   disabled: boolean;
@@ -23,6 +24,7 @@ type Props = {
 
 export const GoogleConfiguration = observer(function GoogleConfiguration(props: Props) {
   const { disabled, updateConfig } = props;
+  const { t } = useTranslation();
   // store
   const { formattedConfig } = useInstance();
   // derived values
@@ -33,7 +35,12 @@ export const GoogleConfiguration = observer(function GoogleConfiguration(props: 
     <>
       {isGoogleConfigured ? (
         <div className="flex items-center gap-4">
-          <AnchorButton variant="primary" size="sm" render={<Link href="/authentication/google" />} label="Edit" />
+          <AnchorButton
+            variant="primary"
+            size="sm"
+            render={<Link href="/authentication/google" />}
+            label={t("admin.authentication.edit")}
+          />
           <Switch
             checked={Boolean(parseInt(enableGoogleConfig))}
             onCheckedChange={() => {
@@ -41,7 +48,7 @@ export const GoogleConfiguration = observer(function GoogleConfiguration(props: 
               updateConfig("IS_GOOGLE_ENABLED", newEnableGoogleConfig);
             }}
             size="sm"
-            aria-label="Enable Google"
+            aria-label={t("admin.authentication.enable_provider", { provider: "Google" })}
             disabled={disabled}
           />
         </div>
@@ -53,7 +60,7 @@ export const GoogleConfiguration = observer(function GoogleConfiguration(props: 
           nativeButton={false}
           render={<Link href="/authentication/google" />}
           icon={<SettingsOutline className="h-4 w-4 p-0.5 text-tertiary" />}
-          label="Configure"
+          label={t("admin.authentication.configure")}
         />
       )}
     </>

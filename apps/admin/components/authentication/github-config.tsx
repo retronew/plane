@@ -15,6 +15,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import type { TInstanceAuthenticationMethodKeys } from "@plane/types";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   disabled: boolean;
@@ -23,6 +24,7 @@ type Props = {
 
 export const GithubConfiguration = observer(function GithubConfiguration(props: Props) {
   const { disabled, updateConfig } = props;
+  const { t } = useTranslation();
   // store
   const { formattedConfig } = useInstance();
   // derived values
@@ -33,7 +35,12 @@ export const GithubConfiguration = observer(function GithubConfiguration(props: 
     <>
       {isGithubConfigured ? (
         <div className="flex items-center gap-4">
-          <AnchorButton variant="primary" size="sm" render={<Link href="/authentication/github" />} label="Edit" />
+          <AnchorButton
+            variant="primary"
+            size="sm"
+            render={<Link href="/authentication/github" />}
+            label={t("admin.authentication.edit")}
+          />
           <Switch
             checked={Boolean(parseInt(enableGithubConfig))}
             onCheckedChange={() => {
@@ -41,7 +48,7 @@ export const GithubConfiguration = observer(function GithubConfiguration(props: 
               updateConfig("IS_GITHUB_ENABLED", newEnableGithubConfig);
             }}
             size="sm"
-            aria-label="Enable GitHub"
+            aria-label={t("admin.authentication.enable_provider", { provider: "GitHub" })}
             disabled={disabled}
           />
         </div>
@@ -53,7 +60,7 @@ export const GithubConfiguration = observer(function GithubConfiguration(props: 
           nativeButton={false}
           render={<Link href="/authentication/github" />}
           icon={<SettingsOutline className="h-4 w-4 p-0.5 text-tertiary" />}
-          label="Configure"
+          label={t("admin.authentication.configure")}
         />
       )}
     </>

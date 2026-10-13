@@ -26,13 +26,15 @@ import { useTheme } from "@/hooks/store";
 // local imports
 import { CORE_HEADER_SEGMENT_LABELS } from "./core";
 import { EXTENDED_HEADER_SEGMENT_LABELS } from "./extended";
+import { useTranslation } from "@plane/i18n";
 
 export const HamburgerToggle = observer(function HamburgerToggle() {
   const { isSidebarCollapsed, toggleSidebar } = useTheme();
+  const { t } = useTranslation();
   return (
     <button
       type="button"
-      aria-label="Toggle sidebar"
+      aria-label={t("admin.header.toggle_sidebar")}
       className="group flex size-7 cursor-pointer items-center justify-center rounded-sm bg-layer-1 transition-all hover:bg-layer-1-hover md:hidden"
       onClick={() => toggleSidebar(!isSidebarCollapsed)}
     >
@@ -64,6 +66,7 @@ const generateBreadcrumbItems = (pathname: string) => {
 
 export const AdminHeader = observer(function AdminHeader() {
   const pathName = usePathname();
+  const { t } = useTranslation();
 
   const breadcrumbItems = generateBreadcrumbItems(pathName || "").filter((item) => item.title);
 
@@ -72,11 +75,11 @@ export const AdminHeader = observer(function AdminHeader() {
       <div className="flex w-full flex-grow items-center gap-2 overflow-ellipsis whitespace-nowrap">
         <HamburgerToggle />
         <div>
-          <Breadcrumb aria-label="Breadcrumb">
+          <Breadcrumb aria-label={t("admin.header.breadcrumb")}>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink
-                  label="Settings"
+                  label={t("admin.header.settings")}
                   icon={<Icon icon={SettingsOutline} tint="tertiary" />}
                   render={<Link href="/general/" />}
                 />
@@ -86,9 +89,9 @@ export const AdminHeader = observer(function AdminHeader() {
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     {index === breadcrumbItems.length - 1 ? (
-                      <BreadcrumbPage label={item.title} />
+                      <BreadcrumbPage label={t(item.title)} />
                     ) : (
-                      <BreadcrumbLink label={item.title} render={<Link href={item.href} />} />
+                      <BreadcrumbLink label={t(item.title)} render={<Link href={item.href} />} />
                     )}
                   </BreadcrumbItem>
                 </Fragment>

@@ -4,16 +4,17 @@
  * See the LICENSE file for details.
  */
 
+// values are translation keys; brand names are passed through as-is
 export const CORE_HEADER_SEGMENT_LABELS: Record<string, string> = {
-  general: "General",
-  ai: "Artificial Intelligence",
-  email: "Email",
-  authentication: "Authentication",
-  image: "Image",
+  general: "admin.header.general",
+  ai: "admin.header.ai",
+  email: "admin.header.email",
+  authentication: "admin.header.authentication",
+  image: "admin.header.image",
   google: "Google",
   github: "GitHub",
   gitlab: "GitLab",
   gitea: "Gitea",
-  workspace: "Workspace",
-  create: "Create",
+  workspace: "admin.header.workspace",
+  create: "admin.header.create",
 };

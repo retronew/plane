@@ -25,6 +25,7 @@ import { AuthService } from "@plane/services";
 import { getFileURL, cn } from "@plane/utils";
 // hooks
 import { useTheme, useUser } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 // service initialization
 const authService = new AuthService();
@@ -32,6 +33,7 @@ const authService = new AuthService();
 export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
   // store hooks
   const { isSidebarCollapsed } = useTheme();
+  const { t } = useTranslation();
   const { currentUser, signOut } = useUser();
   // hooks
   const { resolvedTheme, setTheme } = useNextTheme();
@@ -58,13 +60,13 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
       <MenuSeparator />
       <MenuItem
         icon={<Icon icon={PaletteOutline} />}
-        label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+        label={resolvedTheme === "dark" ? t("admin.sidebar.switch_to_light") : t("admin.sidebar.switch_to_dark")}
         onClick={handleThemeSwitch}
       />
       <MenuSeparator />
       <MenuItem
         icon={<Icon icon={LogOutOutline} />}
-        label="Sign out"
+        label={t("admin.sidebar.sign_out")}
         onClick={() => signOutFormRef.current?.requestSubmit()}
       />
     </MenuContent>
@@ -97,7 +99,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
               render={
                 <button
                   type="button"
-                  aria-label="Instance admin menu"
+                  aria-label={t("admin.sidebar.instance_admin_menu")}
                   className={cn("grid flex-shrink-0 place-items-center outline-none", {
                     "cursor-default": !isSidebarCollapsed,
                   })}
@@ -113,7 +115,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
 
           {!isSidebarCollapsed && (
             <div className="flex w-full gap-2">
-              <h4 className="grow truncate text-body-md-medium text-primary">Instance admin</h4>
+              <h4 className="grow truncate text-body-md-medium text-primary">{t("admin.sidebar.instance_admin")}</h4>
             </div>
           )}
         </div>
@@ -125,11 +127,11 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
             render={
               <button
                 type="button"
-                aria-label="Account menu"
+                aria-label={t("admin.sidebar.account_menu")}
                 className="grid flex-shrink-0 place-items-center outline-none"
               >
                 <WorkspaceAvatar
-                  alt={currentUser.display_name ?? "Admin user"}
+                  alt={currentUser.display_name ?? t("admin.sidebar.admin_user")}
                   fallback={currentUser.display_name?.[0]?.toUpperCase()}
                   src={getFileURL(currentUser.avatar_url)}
                   size="sm"

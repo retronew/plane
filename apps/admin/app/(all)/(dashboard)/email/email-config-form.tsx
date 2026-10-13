@@ -18,6 +18,7 @@ import { setToast } from "@plane/blocks/toast";
 import { useInstance } from "@/hooks/store";
 // local components
 import { SendTestEmailModal } from "./test-email-modal";
+import { useTranslation } from "@plane/i18n";
 
 type IInstanceEmailForm = {
   config: IFormattedInstanceConfiguration;
@@ -27,14 +28,16 @@ type EmailFormValues = Record<TInstanceEmailConfigurationKeys, string>;
 
 type TEmailSecurityKeys = "EMAIL_USE_TLS" | "EMAIL_USE_SSL" | "NONE";
 
+// values are translation keys; TLS and SSL are passed through as-is
 const EMAIL_SECURITY_OPTIONS: { [key in TEmailSecurityKeys]: string } = {
   EMAIL_USE_TLS: "TLS",
   EMAIL_USE_SSL: "SSL",
-  NONE: "No email security",
+  NONE: "admin.email.form.no_security",
 };
 
 export function InstanceEmailForm(props: IInstanceEmailForm) {
   const { config } = props;
+  const { t } = useTranslation();
   // states
   const [isSendTestEmailModalOpen, setIsSendTestEmailModalOpen] = useState(false);
   // store hooks
@@ -58,11 +61,14 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
       ENABLE_SMTP: config["ENABLE_SMTP"],
     },
   });
+  const securityOptions = Object.fromEntries(
+    Object.entries(EMAIL_SECURITY_OPTIONS).map(([key, value]) => [key, t(value)])
+  ) as typeof EMAIL_SECURITY_OPTIONS;
   const emailFormFields: TControllerInputFormField<EmailFormValues>[] = [
     {
       key: "EMAIL_HOST",
       type: "text",
-      label: "Host",
+      label: t("admin.email.form.host"),
       placeholder: "email.google.com",
       error: Boolean(errors.EMAIL_HOST),
       required: true,
@@ -70,7 +76,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_PORT",
       type: "text",
-      label: "Port",
+      label: t("admin.email.form.port"),
       placeholder: "8080",
       error: Boolean(errors.EMAIL_PORT),
       required: true,
@@ -78,9 +84,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_FROM",
       type: "text",
-      label: "Sender's email address",
-      description:
-        "This is the email address your users will see when getting emails from this instance. You will need to verify this address.",
+      label: t("admin.email.form.sender"),
+      description: t("admin.email.form.sender_description"),
       placeholder: "no-reply@projectplane.so",
       error: Boolean(errors.EMAIL_FROM),
       required: true,
@@ -91,7 +96,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_HOST_USER",
       type: "text",
-      label: "Username",
+      label: t("admin.email.form.username"),
       placeholder: "getitdone@projectplane.so",
       error: Boolean(errors.EMAIL_HOST_USER),
       required: false,
@@ -99,8 +104,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_HOST_PASSWORD",
       type: "password",
-      label: "Password",
-      placeholder: "Password",
+      label: t("admin.common.password"),
+      placeholder: t("admin.common.password"),
       error: Boolean(errors.EMAIL_HOST_PASSWORD),
       required: false,
     },
@@ -113,8 +118,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
       .then(() =>
         setToast({
           type: "success",
-          title: "Success",
-          message: "Email Settings updated successfully",
+          title: t("admin.common.success"),
+          message: t("admin.email.form.toast_updated"),
         })
       )
       .catch((err) => console.error(err));
@@ -162,16 +167,16 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
             />
           ))}
           <div className="flex flex-col gap-1">
-            <h4 className="text-13 text-tertiary">Email security</h4>
+            <h4 className="text-13 text-tertiary">{t("admin.email.form.security")}</h4>
             <Select
-              items={EMAIL_SECURITY_OPTIONS}
+              items={securityOptions}
               value={emailSecurityKey}
               onValueChange={(value) => handleEmailSecurityChange(value as TEmailSecurityKeys)}
             >
-              <SelectTrigger size="lg" placeholder="Select email security" />
+              <SelectTrigger size="lg" placeholder={t("admin.email.form.select_security")} />
               <SelectContent>
                 <SelectList>
-                  {Object.entries(EMAIL_SECURITY_OPTIONS).map(([key, value]) => (
+                  {Object.entries(securityOptions).map(([key, value]) => (
                     <SelectItem key={key} value={key} label={value} size="lg" />
                   ))}
                 </SelectList>
@@ -183,9 +188,9 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           <div className="flex w-full max-w-xl flex-col gap-y-10 px-1">
             <div className="mr-8 flex items-center gap-10 pt-4">
               <div className="grow">
-                <div className="text-13 font-medium text-primary">Authentication</div>
+                <div className="text-13 font-medium text-primary">{t("admin.email.form.authentication")}</div>
                 <div className="text-11 font-regular text-tertiary">
-                  This is optional, but we recommend setting up a username and a password for your SMTP server.
+                  {t("admin.email.form.authentication_description")}
                 </div>
               </div>
             </div>
@@ -215,7 +220,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           onClick={handleSubmit(onSubmit)}
           loading={isSubmitting}
           disabled={!isValid || !isDirty}
-          label={isSubmitting ? "Saving" : "Save changes"}
+          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
         />
         <Button
           variant="secondary"
@@ -224,7 +229,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           onClick={() => setIsSendTestEmailModalOpen(true)}
           loading={isSubmitting}
           disabled={!isValid}
-          label="Send test email"
+          label={t("admin.email.form.send_test_email")}
         />
       </div>
     </div>

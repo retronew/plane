@@ -10,6 +10,7 @@ import { observer } from "mobx-react";
 import { Switch } from "@makeplane/propel/components/switch";
 import type { TInstanceAuthenticationMethodKeys } from "@plane/types";
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 // ui
 // types
 
@@ -20,6 +21,7 @@ type Props = {
 
 export const EmailCodesConfiguration = observer(function EmailCodesConfiguration(props: Props) {
   const { disabled, updateConfig } = props;
+  const { t } = useTranslation();
   // store
   const { formattedConfig } = useInstance();
   // derived values
@@ -33,7 +35,7 @@ export const EmailCodesConfiguration = observer(function EmailCodesConfiguration
         updateConfig("ENABLE_MAGIC_LINK_LOGIN", newEnableMagicLogin);
       }}
       size="sm"
-      aria-label="Enable login with email codes"
+      aria-label={t("admin.authentication.enable_email_codes")}
       disabled={disabled}
     />
   );

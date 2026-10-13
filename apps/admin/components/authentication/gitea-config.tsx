@@ -15,6 +15,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import type { TInstanceAuthenticationMethodKeys } from "@plane/types";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   disabled: boolean;
@@ -23,6 +24,7 @@ type Props = {
 
 export const GiteaConfiguration = observer(function GiteaConfiguration(props: Props) {
   const { disabled, updateConfig } = props;
+  const { t } = useTranslation();
   // store
   const { formattedConfig } = useInstance();
   // derived values
@@ -34,16 +36,19 @@ export const GiteaConfiguration = observer(function GiteaConfiguration(props: Pr
     <>
       {GiteaConfigured ? (
         <div className="flex items-center gap-4">
-          <AnchorButton variant="primary" size="sm" render={<Link href="/authentication/gitea" />} label="Edit" />
+          <AnchorButton
+            variant="primary"
+            size="sm"
+            render={<Link href="/authentication/gitea" />}
+            label={t("admin.authentication.edit")}
+          />
           <Switch
             checked={Boolean(parseInt(GiteaConfig))}
             onCheckedChange={() => {
-              Boolean(parseInt(GiteaConfig)) === true
-                ? updateConfig("IS_GITEA_ENABLED", "0")
-                : updateConfig("IS_GITEA_ENABLED", "1");
+              updateConfig("IS_GITEA_ENABLED", parseInt(GiteaConfig) ? "0" : "1");
             }}
             size="sm"
-            aria-label="Enable Gitea"
+            aria-label={t("admin.authentication.enable_provider", { provider: "Gitea" })}
             disabled={disabled}
           />
         </div>
@@ -55,7 +60,7 @@ export const GiteaConfiguration = observer(function GiteaConfiguration(props: Pr
           nativeButton={false}
           render={<Link href="/authentication/gitea" />}
           icon={<SettingsOutline className="h-4 w-4 p-0.5 text-tertiary" />}
-          label="Configure"
+          label={t("admin.authentication.configure")}
         />
       )}
     </>

@@ -10,6 +10,7 @@ import { observer } from "mobx-react";
 import { Switch } from "@makeplane/propel/components/switch";
 import type { TInstanceAuthenticationMethodKeys } from "@plane/types";
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 // ui
 // types
 
@@ -20,6 +21,7 @@ type Props = {
 
 export const PasswordLoginConfiguration = observer(function PasswordLoginConfiguration(props: Props) {
   const { disabled, updateConfig } = props;
+  const { t } = useTranslation();
   // store
   const { formattedConfig } = useInstance();
   // derived values
@@ -33,7 +35,7 @@ export const PasswordLoginConfiguration = observer(function PasswordLoginConfigu
         updateConfig("ENABLE_EMAIL_PASSWORD", newEnableEmailPassword);
       }}
       size="sm"
-      aria-label="Enable login with passwords"
+      aria-label={t("admin.authentication.enable_passwords")}
       disabled={disabled}
     />
   );

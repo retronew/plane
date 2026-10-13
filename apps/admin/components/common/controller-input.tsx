@@ -11,6 +11,7 @@ import { Controller } from "react-hook-form";
 import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { Input, InputGroup } from "@makeplane/propel/components/input";
+import { useTranslation } from "@plane/i18n";
 
 // Generic over the form's values because react-hook-form's Control is invariant: its
 // `_options.validate` narrows `name` to a keyof union, so `Control<any>` no longer
@@ -38,6 +39,7 @@ export type TControllerInputFormField<TFieldValues extends FieldValues = FieldVa
 
 export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(props: Props<TFieldValues>) {
   const { name, control, type, label, description, placeholder, error, required } = props;
+  const { t } = useTranslation();
   // states
   const [showPassword, setShowPassword] = useState(false);
   const descriptionId = description ? `${name}-description` : undefined;
@@ -71,7 +73,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
           (showPassword ? (
             <button
               type="button"
-              aria-label="Hide password"
+              aria-label={t("admin.common.hide_password")}
               className="flex items-center justify-center text-placeholder"
               onClick={() => setShowPassword(false)}
             >
@@ -80,7 +82,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
           ) : (
             <button
               type="button"
-              aria-label="Show password"
+              aria-label={t("admin.common.show_password")}
               className="flex items-center justify-center text-placeholder"
               onClick={() => setShowPassword(true)}
             >

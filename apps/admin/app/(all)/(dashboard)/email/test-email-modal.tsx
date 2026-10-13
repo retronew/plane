@@ -19,6 +19,7 @@ import {
 } from "@makeplane/propel/components/dialog";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { InstanceService } from "@plane/services";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const instanceService = new InstanceService();
 
 export function SendTestEmailModal(props: Props) {
   const { isOpen, handleClose } = props;
+  const { t } = useTranslation();
 
   // state
   const [receiverEmail, setReceiverEmail] = useState("");
@@ -61,7 +63,7 @@ export function SendTestEmailModal(props: Props) {
         return;
       })
       .catch((err) => {
-        setError(err?.error || "Failed to send email");
+        setError(err?.error || t("admin.email.test.failed_to_send"));
         setSendEmailStep(ESendEmailSteps.FAILED);
       })
       .finally(() => {
@@ -87,10 +89,10 @@ export function SendTestEmailModal(props: Props) {
             <DialogHeading>
               <DialogTitle>
                 {sendEmailStep === ESendEmailSteps.SEND_EMAIL
-                  ? "Send test email"
+                  ? t("admin.email.form.send_test_email")
                   : sendEmailStep === ESendEmailSteps.SUCCESS
-                    ? "Email send"
-                    : "Failed"}
+                    ? t("admin.email.test.sent")
+                    : t("admin.email.test.failed")}
               </DialogTitle>
             </DialogHeading>
           </DialogHeader>
@@ -103,18 +105,16 @@ export function SendTestEmailModal(props: Props) {
                   size="lg"
                   value={receiverEmail}
                   onChange={(e) => setReceiverEmail(e.target.value)}
-                  placeholder="Receiver email"
-                  aria-label="Receiver email"
+                  placeholder={t("admin.email.test.receiver_email")}
+                  aria-label={t("admin.email.test.receiver_email")}
                   tabIndex={0}
                 />
               </InputGroup>
             )}
             {sendEmailStep === ESendEmailSteps.SUCCESS && (
               <div className="flex flex-col gap-y-4 text-13">
-                <p>
-                  We have sent the test email to {receiverEmail}. Please check your spam folder if you cannot find it.
-                </p>
-                <p>If you still cannot find it, recheck your SMTP configuration and trigger a new test email.</p>
+                <p>{t("admin.email.test.sent_description", { email: receiverEmail })}</p>
+                <p>{t("admin.email.test.recheck")}</p>
               </div>
             )}
             {sendEmailStep === ESendEmailSteps.FAILED && <div className="text-13">{error}</div>}
@@ -127,7 +127,7 @@ export function SendTestEmailModal(props: Props) {
             stretch="auto"
             onClick={handleClose}
             tabIndex={0}
-            label={sendEmailStep === ESendEmailSteps.SEND_EMAIL ? "Cancel" : "Close"}
+            label={sendEmailStep === ESendEmailSteps.SEND_EMAIL ? t("admin.common.cancel") : t("admin.common.close")}
           />
           {sendEmailStep === ESendEmailSteps.SEND_EMAIL && (
             <Button
@@ -137,7 +137,7 @@ export function SendTestEmailModal(props: Props) {
               loading={isLoading}
               onClick={handleSubmit}
               tabIndex={0}
-              label={isLoading ? "Sending email" : "Send email"}
+              label={isLoading ? t("admin.email.test.sending") : t("admin.email.test.send")}
             />
           )}
         </DialogActions>

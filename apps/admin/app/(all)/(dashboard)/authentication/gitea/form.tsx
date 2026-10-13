@@ -24,6 +24,7 @@ import type { TCopyField } from "@/components/common/copy-field";
 import { CopyField } from "@/components/common/copy-field";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   config: IFormattedInstanceConfiguration;
@@ -38,6 +39,7 @@ const GITEA_FORM_SWITCH_FIELD: TControllerSwitchFormField<GiteaConfigFormValues>
 
 export function InstanceGiteaConfigForm(props: Props) {
   const { config } = props;
+  const { t } = useTranslation();
   // states
   const [isDiscardChangesModalOpen, setIsDiscardChangesModalOpen] = useState(false);
   // store hooks
@@ -63,10 +65,8 @@ export function InstanceGiteaConfigForm(props: Props) {
     {
       key: "GITEA_HOST",
       type: "text",
-      label: "Gitea Host",
-      description: (
-        <>Use the URL of your Gitea instance. For the official Gitea instance, use &quot;https://gitea.com&quot;.</>
-      ),
+      label: t("admin.authentication.oauth.gitea_host"),
+      description: <>{t("admin.authentication.oauth.gitea_host_description")}</>,
       placeholder: "https://gitea.com",
       error: Boolean(errors.GITEA_HOST),
       required: true,
@@ -74,17 +74,17 @@ export function InstanceGiteaConfigForm(props: Props) {
     {
       key: "GITEA_CLIENT_ID",
       type: "text",
-      label: "Client ID",
+      label: t("admin.authentication.oauth.client_id"),
       description: (
         <>
-          You will get this from your{" "}
+          {t("admin.authentication.oauth.get_from_your")}{" "}
           <a
             href="https://gitea.com/user/settings/applications"
             target="_blank"
             className="text-accent-primary hover:underline"
             rel="noreferrer"
           >
-            Gitea OAuth application settings.
+            {t("admin.authentication.oauth.app_settings", { provider: "Gitea" })}
           </a>
         </>
       ),
@@ -95,17 +95,17 @@ export function InstanceGiteaConfigForm(props: Props) {
     {
       key: "GITEA_CLIENT_SECRET",
       type: "password",
-      label: "Client secret",
+      label: t("admin.authentication.oauth.client_secret"),
       description: (
         <>
-          Your client secret is also found in your{" "}
+          {t("admin.authentication.oauth.secret_also_in_your")}{" "}
           <a
             href="https://gitea.com/user/settings/applications"
             target="_blank"
             className="text-accent-primary hover:underline"
             rel="noreferrer"
           >
-            Gitea OAuth application settings.
+            {t("admin.authentication.oauth.app_settings", { provider: "Gitea" })}
           </a>
         </>
       ),
@@ -118,20 +118,21 @@ export function InstanceGiteaConfigForm(props: Props) {
   const GITEA_SERVICE_FIELD: TCopyField[] = [
     {
       key: "Callback_URI",
-      label: "Callback URI",
+      label: t("admin.authentication.oauth.callback_uri"),
       url: `${originURL}/auth/gitea/callback/`,
       description: (
         <>
-          We will auto-generate this. Paste this into your <CodeBlock darkerShade>Authorized Callback URI</CodeBlock>{" "}
-          field{" "}
+          {t("admin.authentication.oauth.auto_generated_paste_into")}{" "}
+          <CodeBlock darkerShade>{t("admin.authentication.oauth.authorized_callback_uri")}</CodeBlock>{" "}
+          {t("admin.authentication.oauth.field")}{" "}
           <a
             href={`${control._formValues.GITEA_HOST || "https://gitea.com"}/user/settings/applications`}
             target="_blank"
             className="text-accent-primary hover:underline"
             rel="noreferrer"
-            aria-label="Gitea OAuth application settings"
+            aria-label={t("admin.authentication.oauth.app_settings", { provider: "Gitea" })}
           >
-            here.
+            {t("admin.authentication.oauth.here")}
           </a>
         </>
       ),
@@ -145,8 +146,8 @@ export function InstanceGiteaConfigForm(props: Props) {
       const response = await updateInstanceConfigurations(payload);
       setToast({
         type: "success",
-        title: "Done!",
-        message: "Your Gitea authentication is configured. You should test it now.",
+        title: t("admin.authentication.oauth.done"),
+        message: t("admin.authentication.oauth.configured", { provider: "Gitea" }),
       });
       reset({
         GITEA_HOST: response.find((item) => item.key === "GITEA_HOST")?.value,
@@ -176,7 +177,9 @@ export function InstanceGiteaConfigForm(props: Props) {
       <div className="flex flex-col gap-8">
         <div className="grid w-full grid-cols-2 gap-x-12 gap-y-8">
           <div className="col-span-2 flex flex-col gap-y-4 pt-1 md:col-span-1">
-            <div className="pt-2.5 text-18 font-medium">Gitea-provided details for Plane</div>
+            <div className="pt-2.5 text-18 font-medium">
+              {t("admin.authentication.oauth.provider_details_for_plane", { provider: "Gitea" })}
+            </div>
             {GITEA_FORM_FIELDS.map((field) => (
               <ControllerInput
                 key={field.key}
@@ -200,7 +203,7 @@ export function InstanceGiteaConfigForm(props: Props) {
                   onClick={(e) => void handleSubmit(onSubmit)(e)}
                   loading={isSubmitting}
                   disabled={!isDirty}
-                  label={isSubmitting ? "Saving" : "Save changes"}
+                  label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
                 />
                 <Button
                   variant="secondary"
@@ -208,14 +211,16 @@ export function InstanceGiteaConfigForm(props: Props) {
                   stretch="auto"
                   nativeButton={false}
                   render={<Link href="/authentication" onClick={handleGoBack} />}
-                  label="Go back"
+                  label={t("admin.common.go_back")}
                 />
               </div>
             </div>
           </div>
           <div className="col-span-2 md:col-span-1">
             <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 pt-1.5 pb-4">
-              <div className="pt-2 text-18 font-medium">Plane-provided details for Gitea</div>
+              <div className="pt-2 text-18 font-medium">
+                {t("admin.authentication.oauth.plane_details_for_provider", { provider: "Gitea" })}
+              </div>
               {GITEA_SERVICE_FIELD.map((field) => (
                 <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
               ))}

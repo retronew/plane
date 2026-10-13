@@ -18,12 +18,14 @@ import { Skeleton } from "@/components/common/skeleton";
 import { setPromiseToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { translate, useTranslation } from "@plane/i18n";
 // types
 import type { Route } from "./+types/page";
 // local
 import { InstanceGiteaConfigForm } from "./form";
 
 const InstanceGiteaAuthenticationPage = observer(function InstanceGiteaAuthenticationPage() {
+  const { t } = useTranslation();
   // store
   const { fetchInstanceConfigurations, formattedConfig, updateInstanceConfigurations } = useInstance();
   // state
@@ -42,20 +44,24 @@ const InstanceGiteaAuthenticationPage = observer(function InstanceGiteaAuthentic
     const updateConfigPromise = updateInstanceConfigurations(payload);
 
     setPromiseToast(updateConfigPromise, {
-      loading: "Saving Configuration",
+      loading: t("admin.authentication.saving_configuration"),
       success: {
-        title: "Configuration saved",
-        message: () => `Gitea authentication is now ${value === "1" ? "active" : "disabled"}.`,
+        title: t("admin.authentication.provider.configuration_saved"),
+        message: () =>
+          value === "1"
+            ? t("admin.authentication.provider.now_active", { provider: "Gitea" })
+            : t("admin.authentication.provider.now_disabled", { provider: "Gitea" }),
       },
       error: {
-        title: "Error",
-        message: () => "Failed to save configuration",
+        title: t("admin.common.error"),
+        message: () => t("admin.authentication.configuration_save_failed"),
       },
     });
 
     await updateConfigPromise
       .then(() => {
         setIsSubmitting(false);
+        return undefined;
       })
       .catch((err) => {
         console.error(err);
@@ -70,11 +76,11 @@ const InstanceGiteaAuthenticationPage = observer(function InstanceGiteaAuthentic
       customHeader={
         <AuthenticationMethodCard
           name="Gitea"
-          description="Allow members to login or sign up to plane with their Gitea accounts."
+          description={t("admin.authentication.modes.gitea.description")}
           icon={<img src={giteaLogo} height={24} width={24} alt="Gitea Logo" />}
           config={
             <Switch
-              aria-label="Enable Gitea authentication"
+              aria-label={t("admin.authentication.enable_provider", { provider: "Gitea" })}
               checked={isGiteaEnabled}
               onCheckedChange={() => {
                 updateConfig("IS_GITEA_ENABLED", isGiteaEnabled ? "0" : "1");
@@ -102,6 +108,8 @@ const InstanceGiteaAuthenticationPage = observer(function InstanceGiteaAuthentic
     </PageWrapper>
   );
 });
-export const meta: Route.MetaFunction = () => [{ title: "Gitea Authentication - God Mode" }];
+export const meta: Route.MetaFunction = () => [
+  { title: translate("admin.meta.provider_authentication", { provider: "Gitea" }) },
+];
 
 export default InstanceGiteaAuthenticationPage;

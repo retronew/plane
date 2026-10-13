@@ -12,6 +12,7 @@ import { InstanceSetupForm } from "@/components/instance/setup-form";
 // hooks
 import { useInstance } from "@/hooks/store";
 // components
+import { translate } from "@plane/i18n";
 import type { Route } from "./+types/page";
 import { InstanceSignInForm } from "./sign-in-form";
 
@@ -45,6 +46,6 @@ function HomePage() {
 export default observer(HomePage);
 
 export const meta: Route.MetaFunction = () => [
-  { title: "Admin – Instance Setup & Sign-In" },
-  { name: "description", content: "Configure your Plane instance or sign in to the admin portal." },
+  { title: translate("admin.meta.home") },
+  { name: "description", content: translate("admin.meta.home_description") },
 ];

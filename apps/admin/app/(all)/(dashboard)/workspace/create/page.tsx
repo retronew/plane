@@ -11,13 +11,15 @@ import { PageWrapper } from "@/components/common/page-wrapper";
 import type { Route } from "./+types/page";
 // local
 import { WorkspaceCreateForm } from "./form";
+import { translate, useTranslation } from "@plane/i18n";
 
 const WorkspaceCreatePage = observer(function WorkspaceCreatePage(_props: Route.ComponentProps) {
+  const { t } = useTranslation();
   return (
     <PageWrapper
       header={{
-        title: "Create a new workspace on this instance.",
-        description: "You will need to invite users from Workspace Settings after you create this workspace.",
+        title: t("admin.workspace.create_page.title"),
+        description: t("admin.workspace.create_page.description"),
       }}
     >
       <WorkspaceCreateForm />
@@ -25,6 +27,6 @@ const WorkspaceCreatePage = observer(function WorkspaceCreatePage(_props: Route.
   );
 });
 
-export const meta: Route.MetaFunction = () => [{ title: "Create Workspace - God Mode" }];
+export const meta: Route.MetaFunction = () => [{ title: translate("admin.meta.create_workspace") }];
 
 export default WorkspaceCreatePage;

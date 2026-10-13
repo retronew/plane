@@ -1,0 +1,393 @@
+{
+  "admin": {
+    "common": {
+      "error": "Error",
+      "error_exclamation": "Error!",
+      "success": "Success",
+      "success_exclamation": "Success!",
+      "something_went_wrong": "Something went wrong. Please try again.",
+      "email": "Email",
+      "password": "Password",
+      "show_password": "Show password",
+      "hide_password": "Hide password",
+      "dismiss_banner": "Dismiss banner",
+      "save_changes": "Save changes",
+      "saving": "Saving",
+      "cancel": "Cancel",
+      "go_back": "Go back",
+      "learn_more": "Learn more",
+      "close": "Close"
+    },
+    "auth_errors": {
+      "sign_in": "Sign In",
+      "now": "now.",
+      "administrator": "administrator",
+      "admin_already_exist": {
+        "title": "Admin already exists",
+        "message": "Admin already exists. Please try again."
+      },
+      "required_email_password_first_name": {
+        "title": "Email, password and first name required",
+        "message": "Email, password and first name required. Please try again."
+      },
+      "invalid_admin_email": {
+        "title": "Invalid admin email",
+        "message": "Invalid admin email. Please try again."
+      },
+      "invalid_admin_password": {
+        "title": "Invalid admin password",
+        "message": "Invalid admin password. Please try again."
+      },
+      "required_email_password": {
+        "title": "Email and password required",
+        "message": "Email and password required. Please try again."
+      },
+      "authentication_failed": {
+        "title": "Authentication failed",
+        "message": "Authentication failed. Please try again."
+      },
+      "admin_user_already_exist": {
+        "title": "Admin user already exists",
+        "message": "Admin user already exists."
+      },
+      "admin_user_does_not_exist": {
+        "title": "Admin user does not exist",
+        "message": "Admin user does not exist."
+      },
+      "admin_user_deactivated": {
+        "title": "User account deactivated",
+        "message": "User account deactivated. Please contact {contact}."
+      }
+    },
+    "sign_in": {
+      "heading": "Manage your Plane instance",
+      "sub_heading": "Configure instance-wide settings to secure your instance",
+      "password_placeholder": "Enter your password",
+      "submit": "Sign in"
+    },
+    "setup": {
+      "heading": "Setup your Plane Instance",
+      "sub_heading": "Post setup you will be able to manage this Plane instance.",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "first_name_placeholder": "Wilber",
+      "last_name_placeholder": "Wright",
+      "company_name": "Company name",
+      "set_password": "Set a password",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "passwords_dont_match": "Passwords don't match",
+      "continue": "Continue",
+      "errors": {
+        "instance_not_configured": "Instance is not configured. Please try again.",
+        "password_too_weak": "Password is too weak. Make sure it meets all the criteria below.",
+        "admin_already_exist": "Admin already exists. Please sign in instead.",
+        "required_fields": "Email, password and first name are required.",
+        "invalid_email": "Please enter a valid email address.",
+        "admin_user_already_exist": "An admin user with this email already exists.",
+        "unknown_with_detail": "Something went wrong ({detail}). Please try again."
+      }
+    },
+    "password_strength": {
+      "empty": "Please enter your password",
+      "too_short": "Password is too short",
+      "weak": "Password is weak",
+      "strong": "Password is strong",
+      "criteria": {
+        "length": "Min 8 characters",
+        "uppercase": "Min 1 upper-case letter",
+        "lowercase": "Min 1 lower-case letter",
+        "number": "Min 1 number",
+        "special": "Min 1 special character"
+      }
+    },
+    "instance_failure": {
+      "image_alt": "Instance failure illustration",
+      "title": "Unable to fetch instance details.",
+      "description": "We were unable to fetch the details of the instance. Fret not, it might just be a connectivity issue.",
+      "retry": "Retry"
+    },
+    "not_found": {
+      "image_alt": "404 - Page not found",
+      "title": "Oops! Something went wrong.",
+      "description": "Sorry, the page you are looking for cannot be found. It may have been removed, had its name changed, or is temporarily unavailable.",
+      "go_to_general": "Go to general settings"
+    },
+    "header": {
+      "general": "General",
+      "ai": "Artificial Intelligence",
+      "email": "Email",
+      "authentication": "Authentication",
+      "image": "Image",
+      "workspace": "Workspace",
+      "create": "Create",
+      "settings": "Settings",
+      "toggle_sidebar": "Toggle sidebar",
+      "breadcrumb": "Breadcrumb"
+    },
+    "sidebar": {
+      "general": {
+        "name": "General",
+        "description": "Identify your instances and get key details."
+      },
+      "email": {
+        "name": "Email",
+        "description": "Configure your SMTP controls."
+      },
+      "workspace": {
+        "name": "Workspaces",
+        "description": "Manage all workspaces on this instance."
+      },
+      "authentication": {
+        "name": "Authentication",
+        "description": "Configure authentication modes."
+      },
+      "ai": {
+        "name": "Artificial intelligence",
+        "description": "Configure your OpenAI creds."
+      },
+      "image": {
+        "name": "Images in Plane",
+        "description": "Allow third-party image libraries."
+      },
+      "switch_to_light": "Switch to light mode",
+      "switch_to_dark": "Switch to dark mode",
+      "sign_out": "Sign out",
+      "instance_admin_menu": "Instance admin menu",
+      "instance_admin": "Instance admin",
+      "account_menu": "Account menu",
+      "admin_user": "Admin user"
+    },
+    "help": {
+      "documentation": "Documentation",
+      "forum": "Join our Forum",
+      "report_bug": "Report a bug",
+      "redirect_to_plane": "Redirect to Plane",
+      "help": "Help",
+      "version": "Version: v{version}"
+    },
+    "general": {
+      "title": "General settings",
+      "description": "Change the name of your instance and instance admin e-mail addresses. Enable or disable telemetry in your instance.",
+      "toast_updated": "Settings updated successfully",
+      "instance_details": "Instance details",
+      "instance_name": "Name of instance",
+      "instance_name_placeholder": "Instance name",
+      "admin_email": "Admin email",
+      "instance_id": "Instance ID",
+      "telemetry": "Telemetry",
+      "telemetry_title": "Let Plane collect anonymous usage data",
+      "telemetry_description": "No PII is collected. This anonymized data is used to understand how you use Plane and build new features in line with",
+      "telemetry_policy": "our Telemetry Policy."
+    },
+    "email": {
+      "toast_disabled": {
+        "title": "Email feature disabled",
+        "message": "Email feature has been disabled"
+      },
+      "toast_disable_error": {
+        "title": "Error disabling email",
+        "message": "Failed to disable email feature. Please try again."
+      },
+      "title": "Secure emails from your own instance",
+      "description": "Plane can send useful emails to you and your users from your own instance without talking to the Internet.",
+      "test_before_save": "Set it up below and please test your settings before you save them.",
+      "misconfig_warning": "Misconfigs can lead to email bounces and errors.",
+      "enable_smtp": "Enable SMTP email",
+      "form": {
+        "no_security": "No email security",
+        "host": "Host",
+        "port": "Port",
+        "sender": "Sender's email address",
+        "sender_description": "This is the email address your users will see when getting emails from this instance. You will need to verify this address.",
+        "username": "Username",
+        "toast_updated": "Email Settings updated successfully",
+        "security": "Email security",
+        "select_security": "Select email security",
+        "authentication": "Authentication",
+        "authentication_description": "This is optional, but we recommend setting up a username and a password for your SMTP server.",
+        "send_test_email": "Send test email"
+      },
+      "test": {
+        "failed_to_send": "Failed to send email",
+        "sent": "Email send",
+        "failed": "Failed",
+        "receiver_email": "Receiver email",
+        "sent_description": "We have sent the test email to {email}. Please check your spam folder if you cannot find it.",
+        "recheck": "If you still cannot find it, recheck your SMTP configuration and trigger a new test email.",
+        "sending": "Sending email",
+        "send": "Send email"
+      }
+    },
+    "authentication": {
+      "cannot_disable": {
+        "title": "Cannot disable authentication",
+        "message": "At least one authentication method must remain enabled. Please enable another method before disabling this one."
+      },
+      "saving_configuration": "Saving configuration",
+      "configuration_saved": "Configuration saved successfully",
+      "configuration_save_failed": "Failed to save configuration",
+      "title": "Manage authentication modes for your instance",
+      "description": "Configure authentication modes for your team and restrict sign-ups to be invite only.",
+      "allow_signup": "Allow anyone to sign up even without an invite",
+      "allow_signup_description": "Toggling this off will only let users sign up when they are invited.",
+      "available_modes": "Available authentication modes",
+      "modes": {
+        "unique_codes": {
+          "name": "Unique codes",
+          "description": "Log in or sign up for Plane using codes sent via email. You need to have set up SMTP to use this method."
+        },
+        "passwords": {
+          "name": "Passwords",
+          "description": "Allow members to create accounts with passwords and use it with their email addresses to sign in."
+        },
+        "google": {
+          "description": "Allow members to log in or sign up for Plane with their Google accounts."
+        },
+        "github": {
+          "description": "Allow members to log in or sign up for Plane with their GitHub accounts."
+        },
+        "gitlab": {
+          "description": "Allow members to log in or sign up to plane with their GitLab accounts."
+        },
+        "gitea": {
+          "description": "Allow members to log in or sign up to plane with their Gitea accounts."
+        }
+      },
+      "edit": "Edit",
+      "configure": "Configure",
+      "enable_provider": "Enable {provider}",
+      "enable_passwords": "Enable login with passwords",
+      "enable_email_codes": "Enable login with email codes",
+      "provider": {
+        "configuration_saved": "Configuration saved",
+        "now_active": "{provider} authentication is now active.",
+        "now_disabled": "{provider} authentication is now disabled."
+      },
+      "oauth": {
+        "client_id": "Client ID",
+        "client_secret": "Client secret",
+        "get_from_your": "You will get this from your",
+        "secret_also_in_your": "Your client secret is also found in your",
+        "app_settings": "{provider} OAuth application settings.",
+        "organization_id": "Organization ID",
+        "organization_id_description": "The organization github ID.",
+        "origin_url": "Origin URL",
+        "callback_uri": "Callback URI",
+        "callback_url": "Callback URL",
+        "auto_generated_paste_into": "We will auto-generate this. Paste this into the",
+        "authorized_origin_url": "Authorized origin URL",
+        "authorized_callback_uri": "Authorized Callback URI",
+        "field": "field",
+        "here": "here.",
+        "done": "Done!",
+        "configured": "Your {provider} authentication is configured. You should test it now.",
+        "provider_details_for_plane": "{provider}-provided details for Plane",
+        "plane_details_for_provider": "Plane-provided details for {provider}",
+        "web": "Web",
+        "learn_more": "Learn more",
+        "gitlab_host_prefix": "This is either https://gitlab.com or the",
+        "gitlab_host_suffix": "where you host GitLab.",
+        "application_id": "Application ID",
+        "secret": "Secret",
+        "redirect_uri": "Redirect URI",
+        "field_of_your": "field of your",
+        "oauth_application": "{provider} OAuth application",
+        "app_settings_no_period": "{provider} OAuth application settings",
+        "google_client_id_description": "Your client ID lives in your Google API Console.",
+        "google_client_secret_description": "Your client secret should also be in your Google API Console.",
+        "google_client_id_docs": "Google OAuth client ID documentation",
+        "google_client_secret_docs": "Google OAuth client secret documentation",
+        "authorized_js_origins": "Authorized JavaScript origins",
+        "authorized_redirect_uri": "Authorized Redirect URI",
+        "field_for_this_client": "field. For this OAuth client",
+        "google_console_credentials": "Google Cloud Console OAuth client credentials",
+        "gitea_host": "Gitea Host",
+        "gitea_host_description": "Use the URL of your Gitea instance. For the official Gitea instance, use \"https://gitea.com\".",
+        "refresh_attributes": "Refresh user attributes from {provider} during sign in"
+      }
+    },
+    "meta": {
+      "provider_authentication": "{provider} Authentication - God Mode",
+      "create_workspace": "Create Workspace - God Mode",
+      "general": "General Settings - God Mode",
+      "authentication": "Authentication Settings - God Mode",
+      "workspace": "Workspace Management - God Mode",
+      "image": "Images Settings - God Mode",
+      "ai": "Artificial Intelligence Settings - God Mode",
+      "email": "Email Settings - God Mode",
+      "home": "Admin – Instance Setup & Sign-In",
+      "home_description": "Configure your Plane instance or sign in to the admin portal.",
+      "app_title": "Plane | Simple, extensible, open-source project management tool.",
+      "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind."
+    },
+    "ai": {
+      "title": "AI features for all your workspaces",
+      "description": "Configure your AI API credentials so Plane AI features are turned on for all your workspaces.",
+      "llm_model": "LLM Model",
+      "llm_model_description": "Choose an OpenAI engine.",
+      "models_docs": "OpenAI models documentation",
+      "api_key": "API key",
+      "api_key_description": "You will find your API key",
+      "api_keys_page": "OpenAI API keys page",
+      "toast_updated": "AI Settings updated successfully",
+      "openai_description": "If you use ChatGPT, this is for you.",
+      "vendor_prefix": "If you have a preferred AI models vendor, please get in",
+      "vendor_link": "touch with us."
+    },
+    "image": {
+      "title": "Third-party image libraries",
+      "description": "Let your users search and choose images from third-party libraries",
+      "toast_updated": "Image Configuration Settings updated successfully",
+      "access_key": "Access key from your Unsplash account",
+      "access_key_description": "You will find your access key in your Unsplash developer console.",
+      "docs": "Unsplash developer account documentation"
+    },
+    "workspace": {
+      "title": "Workspaces on this instance",
+      "description": "See all workspaces and control who can create them.",
+      "restrict_creation": "Prevent anyone else from creating a workspace.",
+      "restrict_creation_description": "Toggling this on will let only you create workspaces. You will have to invite users to new workspaces.",
+      "all_workspaces": "All workspaces on this instance",
+      "list_note": "You can't yet delete workspaces and you can only go to the workspace if you are an Admin or a Member.",
+      "create": "Create workspace",
+      "load_more": "Load more",
+      "create_page": {
+        "title": "Create a new workspace on this instance.",
+        "description": "You will need to invite users from Workspace Settings after you create this workspace.",
+        "toast_created": "Workspace created successfully.",
+        "toast_create_failed": "Workspace could not be created. Please try again.",
+        "toast_create_error": "Some error occurred while creating workspace. Please try again.",
+        "name": "Name your workspace",
+        "name_placeholder": "Something familiar and recognizable is always best.",
+        "url": "Set your workspace's URL",
+        "url_taken": "This URL is taken. Try something else.",
+        "url_invalid": "URLs can contain only ( - ), ( _ ) and alphanumeric characters.",
+        "org_size": "How many people will use this workspace?",
+        "required": "This is a required field.",
+        "select_range": "Select a range",
+        "creating": "Creating workspace"
+      },
+      "item": {
+        "logo": "Workspace Logo",
+        "unique_url": "The unique URL of your workspace",
+        "owned_by": "Owned by:",
+        "total_projects": "Total projects:",
+        "total_members": "Total members:"
+      }
+    },
+    "discard": {
+      "title": "You have unsaved changes",
+      "content": "Changes you made will be lost if you go back. Do you wish to go back?",
+      "keep_editing": "Keep editing"
+    },
+    "copy": {
+      "title": "Copied to clipboard",
+      "message": "The {label} has been successfully copied to your clipboard"
+    },
+    "new_user": {
+      "description": "Instance setup done! Welcome to Plane instance portal. Start your journey by creating your first workspace.",
+      "plane_icon": "Plane icon"
+    }
+  }
+}
