@@ -19,16 +19,16 @@ import type { TIssueLayout } from "./layout";
 export type TIssueFilterKeys = "priority" | "state" | "labels";
 
 export enum EServerGroupByToFilterOptions {
-  "state_id" = "state",
-  "priority" = "priority",
-  "labels__id" = "labels",
-  "state__group" = "state_group",
-  "assignees__id" = "assignees",
-  "cycle_id" = "cycle",
-  "issue_module__module_id" = "module",
-  "target_date" = "target_date",
-  "project_id" = "project",
-  "created_by" = "created_by",
+  state_id = "state",
+  priority = "priority",
+  labels__id = "labels",
+  state__group = "state_group",
+  assignees__id = "assignees",
+  cycle_id = "cycle",
+  issue_module__module_id = "module",
+  target_date = "target_date",
+  project_id = "project",
+  created_by = "created_by",
 }
 
 export enum EIssueFilterType {
@@ -353,9 +353,9 @@ export const filterActivityOnSelectedFilters = (
   activity: TIssueActivityComment[],
   filters: TActivityFilters[]
 ): TIssueActivityComment[] =>
-  activity.filter((activity) => {
-    if (activity.activity_type === EActivityFilterType.DEFAULT) return true;
-    return filters.includes(activity.activity_type as TActivityFilters);
+  activity.filter((item) => {
+    if (item.activity_type === EActivityFilterType.DEFAULT) return true;
+    return filters.includes(item.activity_type as TActivityFilters);
   });
 
 export const ENABLE_ISSUE_DEPENDENCIES = false;
