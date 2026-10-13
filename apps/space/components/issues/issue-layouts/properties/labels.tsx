@@ -10,6 +10,7 @@ import { LabelsOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 // hooks
 import { useLabel } from "@/hooks/store/use-label";
+import { translate } from "@plane/i18n";
 
 type Props = {
   labelIds: string[];
@@ -25,12 +26,12 @@ export const IssueBlockLabels = observer(function IssueBlockLabels({ labelIds, s
 
   if (labels.length <= 0)
     return (
-      <Tooltip side="top" label="Labels: None">
+      <Tooltip side="top" label={translate("web.labels_none")}>
         <div
           className={`flex h-full items-center justify-center gap-2 rounded-sm border-[0.5px] border-strong px-2.5 py-1 text-11`}
         >
           <LabelsOutline className="h-3.5 w-3.5" />
-          {shouldShowLabel && <span>No Labels</span>}
+          {shouldShowLabel && <span>{translate("web.no_labels")}</span>}
         </div>
       </Tooltip>
     );

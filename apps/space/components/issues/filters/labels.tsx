@@ -12,6 +12,7 @@ import type { IIssueLabel } from "@/types/issue";
 // local imports
 import { FilterHeader } from "./helpers/filter-header";
 import { FilterOption } from "./helpers/filter-option";
+import { translate } from "@plane/i18n";
 
 function LabelIcons({ color }: { color: string }) {
   return <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />;
@@ -56,7 +57,7 @@ export function FilterLabels(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((label) => (
                   <FilterOption
                     key={label?.id}
-                    isChecked={appliedFilters?.includes(label?.id) ? true : false}
+                    isChecked={Boolean(appliedFilters?.includes(label?.id))}
                     onClick={() => handleUpdate(label?.id)}
                     icon={<LabelIcons color={label.color} />}
                     title={label.name}
@@ -73,7 +74,7 @@ export function FilterLabels(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

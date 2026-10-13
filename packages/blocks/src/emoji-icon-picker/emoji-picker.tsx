@@ -108,7 +108,7 @@ export function EmojiPicker(props: EmojiPickerProps) {
         showEmojiTab
           ? {
               key: "emoji",
-              label: "Emoji",
+              label: t("web.emoji"),
               content: (
                 <EmojiRoot
                   onChange={handleEmojiChange}
@@ -122,7 +122,7 @@ export function EmojiPicker(props: EmojiPickerProps) {
           : null,
         {
           key: "icon",
-          label: "Icon",
+          label: t("web.icon"),
           content: (
             <IconRoot
               defaultColor={defaultIconColor}
@@ -137,6 +137,7 @@ export function EmojiPicker(props: EmojiPickerProps) {
         },
       ].filter((tab): tab is NonNullable<typeof tab> => !!tab),
     [
+      t,
       defaultIconColor,
       searchDisabled,
       resolvedSearchPlaceholder,

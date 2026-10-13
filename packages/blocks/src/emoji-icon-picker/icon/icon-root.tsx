@@ -106,6 +106,7 @@ export function IconRoot(props: IconRootProps) {
                   if (/^[0-9A-Fa-f]{6}$/.test(value)) setActiveColor(adjustColorForContrast(`#${value}`));
                 }}
                 className="block flex-grow rounded-sm border-[0.5px] border-none border-subtle bg-transparent px-3 py-2 pl-0 text-caption-sm-regular text-secondary placeholder-(--text-color-placeholder) ring-0 focus:outline-none"
+                // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                 autoFocus
               />
             </div>
@@ -146,7 +147,7 @@ export function IconRoot(props: IconRootProps) {
         </div>
         <div className="flex h-6 w-full items-center gap-2 py-1 pr-3 pl-4">
           <InfoOutline className="h-3 w-3" />
-          <p className="text-caption-sm-regular"> Colors will be adjusted to ensure sufficient contrast.</p>
+          <p className="text-caption-sm-regular">{t("web.icon_colors_contrast_note")}</p>
         </div>
       </div>
       <div className="mt-2 grid grid-cols-8 justify-items-center gap-1 px-2.5">

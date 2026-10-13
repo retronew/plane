@@ -15,6 +15,7 @@ import { Input } from "@makeplane/propel/components/input";
 import useTimer from "@/hooks/use-timer";
 // types
 import { EAuthModes } from "@/types/auth";
+import { translate } from "@plane/i18n";
 
 // services
 const authService = new AuthService();
@@ -52,10 +53,10 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
   const handleFormChange = (key: keyof TUniqueCodeFormValues, value: string) =>
     setUniqueCodeFormData((prev) => ({ ...prev, [key]: value }));
 
-  const generateNewCode = async (email: string) => {
+  const generateNewCode = async (codeEmail: string) => {
     try {
       setIsRequestingNewCode(true);
-      const uniqueCode = await generateEmailUniqueCode(email);
+      const uniqueCode = await generateEmailUniqueCode(codeEmail);
       setResendCodeTimer(defaultResetTimerValue);
       handleFormChange("code", uniqueCode?.code || "");
       setIsRequestingNewCode(false);
@@ -104,7 +105,7 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
           {uniqueCodeFormData.email.length > 0 && (
             <button
               type="button"
-              aria-label="Clear email"
+              aria-label={translate("web.clear_email")}
               className="absolute right-3 hover:cursor-pointer"
               onClick={handleEmailClear}
               tabIndex={-1}

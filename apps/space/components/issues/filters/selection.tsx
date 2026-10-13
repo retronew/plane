@@ -12,6 +12,7 @@ import type { IIssueFilterOptions, TIssueFilterKeys } from "@/types/issue";
 // local imports
 import { FilterPriority } from "./priority";
 import { FilterState } from "./state";
+import { translate } from "@plane/i18n";
 
 type Props = {
   filters: IIssueFilterOptions;
@@ -34,9 +35,10 @@ export const FilterSelection = observer(function FilterSelection(props: Props) {
           <input
             type="text"
             className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder="Search"
+            placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
             autoFocus
           />
           {filtersSearchQuery !== "" && (

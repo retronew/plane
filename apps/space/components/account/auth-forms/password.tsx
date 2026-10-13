@@ -16,6 +16,7 @@ import { PasswordStrengthIndicator } from "@plane/blocks/auth";
 import { getPasswordStrength } from "@plane/utils";
 // types
 import { EAuthModes, EAuthSteps } from "@/types/auth";
+import { translate } from "@plane/i18n";
 
 type Props = {
   email: string;
@@ -80,14 +81,13 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
 
   const isButtonDisabled = useMemo(
     () =>
-      !isSubmitting &&
-      !!passwordFormData.password &&
-      (mode === EAuthModes.SIGN_UP
-        ? getPasswordStrength(passwordFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
-          passwordFormData.password === passwordFormData.confirm_password
-        : true)
-        ? false
-        : true,
+      !(
+        !isSubmitting &&
+        !!passwordFormData.password &&
+        (mode !== EAuthModes.SIGN_UP ||
+          (getPasswordStrength(passwordFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
+            passwordFormData.password === passwordFormData.confirm_password))
+      ),
     [isSubmitting, mode, passwordFormData.confirm_password, passwordFormData.password]
   );
 
@@ -140,7 +140,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
           {passwordFormData.email.length > 0 && (
             <button
               type="button"
-              aria-label="Clear email"
+              aria-label={translate("web.clear_email")}
               className="absolute right-3 hover:cursor-pointer"
               onClick={handleEmailClear}
               tabIndex={-1}
@@ -163,7 +163,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             size="xl"
             value={passwordFormData.password}
             onChange={(e) => handleFormChange("password", e.target.value)}
-            placeholder="Enter password"
+            placeholder={translate("web.enter_password")}
             onFocus={() => setIsPasswordInputFocused(true)}
             onBlur={() => setIsPasswordInputFocused(false)}
             autoComplete="off"
@@ -173,7 +173,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
           {showPassword?.password ? (
             <button
               type="button"
-              aria-label="Hide password"
+              aria-label={translate("aria_labels.auth_forms.hide_password")}
               className="absolute right-3 hover:cursor-pointer"
               onClick={() => handleShowPassword("password")}
             >
@@ -182,7 +182,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
           ) : (
             <button
               type="button"
-              aria-label="Show password"
+              aria-label={translate("aria_labels.auth_forms.show_password")}
               className="absolute right-3 hover:cursor-pointer"
               onClick={() => handleShowPassword("password")}
             >
@@ -206,7 +206,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
               size="xl"
               value={passwordFormData.confirm_password}
               onChange={(e) => handleFormChange("confirm_password", e.target.value)}
-              placeholder="Confirm password"
+              placeholder={translate("web.confirm_password")}
               onFocus={() => setIsRetryPasswordInputFocused(true)}
               onBlur={() => setIsRetryPasswordInputFocused(false)}
               autoComplete="off"
@@ -214,7 +214,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             {showPassword?.retypePassword ? (
               <button
                 type="button"
-                aria-label="Hide password"
+                aria-label={translate("aria_labels.auth_forms.hide_password")}
                 className="absolute right-3 hover:cursor-pointer"
                 onClick={() => handleShowPassword("retypePassword")}
               >
@@ -223,7 +223,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             ) : (
               <button
                 type="button"
-                aria-label="Show password"
+                aria-label={translate("aria_labels.auth_forms.show_password")}
                 className="absolute right-3 hover:cursor-pointer"
                 onClick={() => handleShowPassword("retypePassword")}
               >
@@ -255,7 +255,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
                 variant="secondary"
                 size="lg"
                 stretch="full"
-                label="Sign in with unique code"
+                label={translate("web.sign_in_with_unique_code")}
                 onClick={redirectToUniqueCodeSignIn}
               />
             )}
@@ -268,7 +268,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             stretch="full"
             disabled={isButtonDisabled}
             loading={isSubmitting}
-            label="Create account"
+            label={translate("web.create_account")}
           />
         )}
       </div>

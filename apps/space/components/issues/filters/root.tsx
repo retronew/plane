@@ -19,6 +19,7 @@ import { queryParamGenerator } from "@/helpers/query-param-generator";
 import { useIssueFilter } from "@/hooks/store/use-issue-filter";
 // types
 import type { TIssueQueryFilters } from "@/types/issue";
+import { translate } from "@plane/i18n";
 
 type IssueFiltersDropdownProps = {
   anchor: string;
@@ -63,7 +64,7 @@ export const IssueFiltersDropdown = observer(function IssueFiltersDropdown(props
 
   return (
     <div className="relative">
-      <FiltersDropdown title="Filters" placement="bottom-end">
+      <FiltersDropdown title={translate("web.filters")} placement="bottom-end">
         <FilterSelection
           filters={issueFilters?.filters ?? {}}
           handleFilters={handleFilters as any}

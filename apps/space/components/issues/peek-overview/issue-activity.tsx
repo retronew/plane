@@ -20,6 +20,7 @@ import { useUser } from "@/hooks/store/use-user";
 import useIsInIframe from "@/hooks/use-is-in-iframe";
 // types
 import type { IIssue } from "@/types/issue";
+import { translate } from "@plane/i18n";
 
 type Props = {
   anchor: string;
@@ -40,7 +41,7 @@ export const PeekOverviewIssueActivity = observer(function PeekOverviewIssueActi
 
   return (
     <div className="pb-10">
-      <h4 className="font-medium">Comments</h4>
+      <h4 className="font-medium">{translate("web.comments")}</h4>
       <div className="mt-4">
         <div className="space-y-4">
           {comments.map((comment) => (
@@ -68,7 +69,7 @@ export const PeekOverviewIssueActivity = observer(function PeekOverviewIssueActi
                 stretch="auto"
                 nativeButton={false}
                 render={<Link to={`/?next_path=${pathname}`} />}
-                label="Sign in"
+                label={translate("web.sign_in")}
               />
             </div>
           ))}

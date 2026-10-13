@@ -16,7 +16,7 @@ import {
 // plane imports
 import { Select } from "@plane/blocks/select";
 import { setToast } from "@plane/blocks/toast";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { cn } from "@plane/utils";
 // helpers
 import { copyTextToClipboard } from "@/helpers/string.helper";
@@ -38,16 +38,26 @@ type TPeekModeOption = {
 };
 
 const PEEK_MODES: TPeekModeOption[] = [
-  { key: "side", icon: SidePeekOutline, label: "Side Peek" },
+  {
+    key: "side",
+    icon: SidePeekOutline,
+    get label() {
+      return translate("web.side_peek");
+    },
+  },
   {
     key: "modal",
     icon: ModalPeekOutline,
-    label: "Modal",
+    get label() {
+      return translate("web.modal");
+    },
   },
   {
     key: "full",
     icon: FullScreenPeekOutline,
-    label: "Full Screen",
+    get label() {
+      return translate("web.full_screen");
+    },
   },
 ];
 
@@ -65,9 +75,10 @@ export const PeekOverviewHeader = observer(function PeekOverviewHeader(props: Pr
     copyTextToClipboard(urlToCopy).then(() => {
       setToast({
         type: "success",
-        title: "Link copied!",
-        message: "Work item link copied to clipboard.",
+        title: t("web.link_copied_2bb0"),
+        message: t("web.work_item_link_copied_to_clipboard_space"),
       });
+      return undefined;
     });
   };
 

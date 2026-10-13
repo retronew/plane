@@ -11,6 +11,7 @@ import type { ToolbarMenuItem, EditorRefApi } from "@plane/editor";
 import { Button } from "@makeplane/propel/components/button";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 type Props = {
   executeCommand: (item: ToolbarMenuItem) => void;
@@ -103,7 +104,7 @@ export function IssueCommentToolbar(props: Props) {
               variant="primary"
               size="sm"
               stretch="auto"
-              label="Comment"
+              label={translate("web.comment")}
               onClick={handleSubmit}
               disabled={isCommentEmpty}
               loading={isSubmitting}

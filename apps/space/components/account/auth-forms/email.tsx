@@ -17,6 +17,7 @@ import { Input } from "@makeplane/propel/components/input";
 // helpers
 import { cn } from "@plane/utils";
 import { checkEmailValidity } from "@/helpers/string.helper";
+import { translate } from "@plane/i18n";
 
 type TAuthEmailForm = {
   defaultEmail: string;
@@ -83,7 +84,7 @@ export const AuthEmailForm = observer(function AuthEmailForm(props: TAuthEmailFo
           {email.length > 0 && (
             <button
               type="button"
-              aria-label="Clear email"
+              aria-label={translate("web.clear_email")}
               onClick={() => {
                 setEmail("");
                 inputRef.current?.focus();
@@ -108,7 +109,7 @@ export const AuthEmailForm = observer(function AuthEmailForm(props: TAuthEmailFo
         stretch="full"
         disabled={isButtonDisabled}
         loading={isSubmitting}
-        label="Continue"
+        label={translate("web.continue")}
       />
     </form>
   );

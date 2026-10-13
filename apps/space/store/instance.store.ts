@@ -11,6 +11,7 @@ import { InstanceService } from "@plane/services";
 import type { IInstance, IInstanceConfig } from "@plane/types";
 // store
 import type { RootStore } from "@/store/root.store";
+import { translate } from "@plane/i18n";
 
 type TError = {
   status: string;
@@ -75,7 +76,7 @@ export class InstanceStore implements IInstanceStore {
         this.isLoading = false;
         this.error = {
           status: "error",
-          message: "Failed to fetch instance info",
+          message: translate("web.failed_to_fetch_instance_info"),
         };
       });
     }

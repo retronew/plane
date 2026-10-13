@@ -5,6 +5,7 @@
  */
 
 import { E_PASSWORD_STRENGTH } from "@plane/constants";
+import { translate } from "@plane/i18n";
 
 export interface StrengthInfo {
   message: string;
@@ -19,31 +20,31 @@ export const getStrengthInfo = (strength: E_PASSWORD_STRENGTH): StrengthInfo => 
   switch (strength) {
     case E_PASSWORD_STRENGTH.EMPTY:
       return {
-        message: "Please enter your password",
+        message: translate("auth.common.password.errors.empty"),
         textColor: "text-primary",
         activeFragments: 0,
       };
     case E_PASSWORD_STRENGTH.LENGTH_NOT_VALID:
       return {
-        message: "Password is too short",
+        message: translate("auth.common.password.errors.length"),
         textColor: "text-danger-primary",
         activeFragments: 1,
       };
     case E_PASSWORD_STRENGTH.STRENGTH_NOT_VALID:
       return {
-        message: "Password is weak",
+        message: translate("auth.common.password.errors.strength.weak"),
         textColor: "text-orange-500",
         activeFragments: 2,
       };
     case E_PASSWORD_STRENGTH.STRENGTH_VALID:
       return {
-        message: "Password is strong",
+        message: translate("auth.common.password.errors.strength.strong"),
         textColor: "text-success-primary",
         activeFragments: 3,
       };
     default:
       return {
-        message: "Please enter your password",
+        message: translate("auth.common.password.errors.empty"),
         textColor: "text-primary",
         activeFragments: 0,
       };

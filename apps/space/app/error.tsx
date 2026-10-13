@@ -6,32 +6,32 @@
 
 // ui
 import { Button } from "@makeplane/propel/components/button";
+import { translate } from "@plane/i18n";
+
+const handleRetry = () => {
+  window.location.reload();
+};
 
 function ErrorPage() {
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
   return (
     <div className="grid h-screen place-items-center bg-surface-1 p-4">
       <div className="space-y-8 text-center">
         <div className="space-y-2">
-          <h3 className="text-16 font-semibold">Yikes! That doesn{"'"}t look good.</h3>
+          <h3 className="text-16 font-semibold">{translate("web.space_error_title")}</h3>
           <p className="mx-auto text-13 text-secondary md:w-1/2">
-            That crashed Plane, pun intended. No worries, though. Our engineers have been notified. If you have more
-            details, please write to{" "}
+            {translate("web.space_error_description")}{" "}
             <a href="mailto:support@plane.so" className="text-accent-primary">
               support@plane.so
             </a>{" "}
-            or on our{" "}
+            {translate("web.space_error_or_on_our")}{" "}
             <a href="https://forum.plane.so" target="_blank" className="text-accent-primary" rel="noopener noreferrer">
-              Forum
+              {translate("web.forum")}
             </a>
             .
           </p>
         </div>
         <div className="flex items-center justify-center gap-2">
-          <Button variant="primary" size="md" stretch="auto" label="Refresh" onClick={handleRetry} />
+          <Button variant="primary" size="md" stretch="auto" label={translate("web.refresh")} onClick={handleRetry} />
           {/* <Button variant="secondary" size="lg" onClick={() => {}}>
             Sign out
           </Button> */}

@@ -21,6 +21,7 @@ import { getFileURL } from "@plane/utils";
 import { queryParamGenerator } from "@/helpers/query-param-generator";
 // hooks
 import { useUser } from "@/hooks/store/use-user";
+import { translate } from "@plane/i18n";
 
 const authService = new AuthService();
 
@@ -97,7 +98,7 @@ export const UserAvatar = observer(function UserAvatar() {
               {csrfToken && (
                 <MenuItem
                   icon={<Icon icon={LogOutOutline} tint="danger" />}
-                  label="Sign out"
+                  label={translate("web.sign_out")}
                   onClick={() => signOutFormRef.current?.requestSubmit()}
                 />
               )}
@@ -112,7 +113,7 @@ export const UserAvatar = observer(function UserAvatar() {
             stretch="auto"
             nativeButton={false}
             render={<Link to={`/?next_path=${pathName}?${queryParam}`} />}
-            label="Sign in"
+            label={translate("web.sign_in")}
           />
         </div>
       )}

@@ -6,6 +6,7 @@
 
 // assets
 import SomethingWentWrongImage from "@/app/assets/something-went-wrong.svg?url";
+import { translate } from "@plane/i18n";
 
 export function SomethingWentWrongError() {
   return (
@@ -20,8 +21,8 @@ export function SomethingWentWrongError() {
             />
           </div>
         </div>
-        <h1 className="mt-12 text-24 font-semibold">Oops! Something went wrong.</h1>
-        <p className="mt-4 text-tertiary">The public board does not exist. Please check the URL.</p>
+        <h1 className="mt-12 text-24 font-semibold">{translate("web.oops_something_went_wrong")}</h1>
+        <p className="mt-4 text-tertiary">{translate("web.the_public_board_does_not_exist_please_check_the_url")}</p>
       </div>
     </div>
   );

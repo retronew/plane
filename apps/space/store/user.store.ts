@@ -15,6 +15,7 @@ import type { IProfileStore } from "@/store/profile.store";
 import { ProfileStore } from "@/store/profile.store";
 // store
 import type { RootStore } from "@/store/root.store";
+import { translate } from "@plane/i18n";
 
 type TUserErrorStatus = {
   status: string;
@@ -118,7 +119,7 @@ export class UserStore implements IUserStore {
         this.isAuthenticated = false;
         this.error = {
           status: "user-fetch-error",
-          message: "Failed to fetch current user",
+          message: translate("web.failed_to_fetch_current_user"),
         };
         if (error instanceof AxiosError && error.status === 401) {
           this.data = undefined;
@@ -154,7 +155,7 @@ export class UserStore implements IUserStore {
       runInAction(() => {
         this.error = {
           status: "user-update-error",
-          message: "Failed to update current user",
+          message: translate("web.failed_to_update_current_user"),
         };
       });
       throw error;

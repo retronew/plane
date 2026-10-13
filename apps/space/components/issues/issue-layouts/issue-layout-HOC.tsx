@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import type { TLoader } from "@plane/types";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
+import { translate } from "@plane/i18n";
 
 interface Props {
   children: string | React.ReactNode | React.ReactNode[];
@@ -34,7 +35,9 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   }
 
   if (getGroupIssueCount(undefined, undefined, false) === 0) {
-    return <div className="grid size-full place-items-center text-secondary">No work items found</div>;
+    return (
+      <div className="grid size-full place-items-center text-secondary">{translate("web.no_work_items_found")}</div>
+    );
   }
 
   return <>{props.children}</>;

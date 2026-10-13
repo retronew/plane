@@ -15,6 +15,7 @@ import { useStates } from "@/hooks/store/use-state";
 // local imports
 import { FilterHeader } from "./helpers/filter-header";
 import { FilterOption } from "./helpers/filter-option";
+import { translate } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -56,7 +57,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((state) => (
                   <FilterOption
                     key={state.id}
-                    isChecked={appliedFilters?.includes(state.id) ? true : false}
+                    isChecked={Boolean(appliedFilters?.includes(state.id))}
                     onClick={() => handleUpdate(state.id)}
                     icon={<StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.MD} />}
                     title={state.name}
@@ -73,7 +74,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                 )}
               </>
             ) : (
-              <p className="text-11 text-placeholder italic">No matches found</p>
+              <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
             )
           ) : (
             <Loader className="space-y-2">

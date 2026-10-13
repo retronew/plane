@@ -12,6 +12,7 @@ import type { TUserProfile } from "@plane/types";
 import { EStartOfTheWeek } from "@plane/types";
 // store
 import type { RootStore } from "@/store/root.store";
+import { translate } from "@plane/i18n";
 
 type TError = {
   status: string;
@@ -100,7 +101,7 @@ export class ProfileStore implements IProfileStore {
         this.isLoading = false;
         this.error = {
           status: "user-profile-fetch-error",
-          message: "Failed to fetch user profile",
+          message: translate("web.failed_to_fetch_user_profile"),
         };
       });
     }
@@ -132,7 +133,7 @@ export class ProfileStore implements IProfileStore {
       runInAction(() => {
         this.error = {
           status: "user-profile-update-error",
-          message: "Failed to update user profile",
+          message: translate("web.failed_to_update_user_profile"),
         };
       });
     }
