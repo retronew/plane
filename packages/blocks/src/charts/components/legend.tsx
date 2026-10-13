@@ -5,14 +5,24 @@
  */
 
 import React from "react";
-import type { LegendProps } from "recharts";
+import type { DefaultLegendContentProps, LegendPayload, LegendProps } from "recharts";
 // plane imports
 import type { TChartLegend } from "@plane/types";
 import { cn } from "@plane/utils";
 
-export const getLegendProps = (args: TChartLegend): LegendProps => {
+/**
+ * @param order the series keys in the order the chart declares them. recharts 3 sorts legend items
+ * alphabetically by default (v2 kept render order), so the legend is pinned back to this order.
+ * @param getItemKey reads an item's key; series charts key by `dataKey`, the pie by its slice key.
+ */
+export const getLegendProps = (
+  args: TChartLegend,
+  order: readonly string[],
+  getItemKey: (item: LegendPayload) => string | undefined = (item) => `${item.dataKey}`
+): LegendProps => {
   const { align, layout, verticalAlign } = args;
   return {
+    itemSorter: (item) => order.indexOf(getItemKey(item) ?? ""),
     layout,
     align,
     verticalAlign,
@@ -39,7 +49,7 @@ export const getLegendProps = (args: TChartLegend): LegendProps => {
 
 const CustomLegend = React.forwardRef(function CustomLegend(
   props: React.ComponentProps<"div"> &
-    Pick<LegendProps, "payload" | "formatter" | "onClick" | "onMouseEnter" | "onMouseLeave"> &
+    Pick<DefaultLegendContentProps, "payload" | "formatter" | "onClick" | "onMouseEnter" | "onMouseLeave"> &
     TChartLegend,
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
@@ -55,6 +65,9 @@ const CustomLegend = React.forwardRef(function CustomLegend(
       })}
     >
       {payload.map((item, index) => (
+        // Pointer-only highlighting that mirrors the chart; recharts' accessibilityLayer gives keyboard
+        // users the data itself.
+        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
           key={item.value}
           className={cn("flex items-center gap-1.5 text-13 font-medium whitespace-nowrap text-tertiary", {
@@ -74,8 +87,7 @@ const CustomLegend = React.forwardRef(function CustomLegend(
               backgroundColor: item.color,
             }}
           />
-          {/* @ts-expect-error recharts types are not up to date */}
-          {formatter?.(item.value, { value: item.value }, index) ?? item.payload?.name}
+          {formatter?.(item.value, item, index) ?? (item.payload as { name?: string } | undefined)?.name}
         </div>
       ))}
     </div>

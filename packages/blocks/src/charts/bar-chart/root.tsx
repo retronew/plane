@@ -6,16 +6,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  BarChart as CoreBarChart,
-  Bar,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Legend,
-  CartesianGrid,
-} from "recharts";
+import { BarChart as CoreBarChart, Bar, Tooltip, XAxis, YAxis, Legend, CartesianGrid } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
 import type { TBarChartProps } from "@plane/types";
@@ -62,7 +54,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
 
   // get bar color dynamically based on payload
   const getBarColor = useCallback(
-    (payload: Record<string, string>[], barKey: string) => {
+    (payload: readonly Record<string, string>[], barKey: string) => {
       const bar = bars.find((b) => b.key === barKey);
       if (!bar) return DEFAULT_BAR_FILL_COLOR;
 
@@ -87,7 +79,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
 
   // get all bar colors
   const getAllBarColors = useCallback(
-    (payload: any[]) => {
+    (payload: readonly any[]) => {
       const colors: Record<string, string> = {};
       for (const bar of bars) {
         colors[bar.key] = getBarColor(payload, bar.key);
@@ -121,7 +113,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
 
   return (
     <div className={className}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <CoreBarChart
           data={data}
           margin={{
@@ -136,9 +128,9 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
           <XAxis
             dataKey={xAxis.key}
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickLine={false}
             axisLine={false}
@@ -161,20 +153,19 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
               dx: yAxis.dx ?? -16,
               className: AXIS_LABEL_CLASSNAME,
             }}
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.y || CustomYAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickCount={tickCount.y}
             allowDecimals={!!yAxis.allowDecimals}
           />
           {legend && (
-            // @ts-expect-error recharts types are not up to date
             <Legend
-              onMouseEnter={(payload) => setActiveLegend(payload.value)}
+              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
               onMouseLeave={() => setActiveLegend(null)}
               formatter={(value) => stackLabels[value]}
-              {...getLegendProps(legend)}
+              {...getLegendProps(legend, stackKeys)}
             />
           )}
           {showTooltip && (
@@ -204,7 +195,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           )}
           {renderBars}
         </CoreBarChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 });

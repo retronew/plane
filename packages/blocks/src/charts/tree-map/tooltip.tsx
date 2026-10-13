@@ -5,12 +5,13 @@
  */
 
 import React from "react";
+import type { TooltipPayload } from "recharts";
 // plane imports
 import { Card } from "../../card/card";
 
 interface TreeMapTooltipProps {
   active: boolean | undefined;
-  payload: any[] | undefined;
+  payload: TooltipPayload | undefined;
 }
 
 export const TreeMapTooltip = React.memo(function TreeMapTooltip({ active, payload }: TreeMapTooltipProps) {

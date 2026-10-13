@@ -55,6 +55,17 @@
       "rules": {
         "unicorn/consistent-function-scoping": "off"
       }
+    },
+    {
+      "files": ["packages/blocks/src/charts/**"],
+      "rules": {
+        "react/no-unstable-nested-components": [
+          "warn",
+          {
+            "allowAsProps": true
+          }
+        ]
+      }
     }
   ]
 }

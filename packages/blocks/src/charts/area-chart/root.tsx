@@ -5,7 +5,8 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { Area, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, ComposedChart, CartesianGrid } from "recharts";
+import { Area, Legend, Tooltip, XAxis, YAxis, Line, ComposedChart, CartesianGrid } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
 import type { TAreaChartProps } from "@plane/types";
@@ -108,7 +109,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
   }, [data, xAxis.key, yAxis.key]);
   return (
     <div className={className}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <ComposedChart
           data={data}
           margin={{
@@ -121,9 +122,9 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
           <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
           <XAxis
             dataKey={xAxis.key}
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickLine={false}
             axisLine={false}
@@ -150,20 +151,19 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
                 className: AXIS_LABEL_CLASSNAME,
               }
             }
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.y || CustomYAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickCount={tickCount.y}
             allowDecimals={!!yAxis.allowDecimals}
           />
           {legend && (
-            // @ts-expect-error recharts types are not up to date
             <Legend
               formatter={(value) => itemLabels[value]}
-              onMouseEnter={(payload) => setActiveLegend(payload.value)}
+              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
               onMouseLeave={() => setActiveLegend(null)}
-              {...getLegendProps(legend)}
+              {...getLegendProps(legend, itemKeys)}
             />
           )}
           {showTooltip && (
@@ -204,7 +204,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
             />
           )}
         </ComposedChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 });

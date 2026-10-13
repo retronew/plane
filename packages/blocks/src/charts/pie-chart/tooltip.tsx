@@ -5,14 +5,14 @@
  */
 
 import React from "react";
-import type { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import type { TooltipPayload } from "recharts";
 // plane imports
 import { Card } from "../../card/card";
 
 type Props = {
   dotColor?: string;
   label: string;
-  payload: Payload<ValueType, NameType>[];
+  payload: TooltipPayload;
 };
 
 export const CustomPieChartTooltip = React.memo(function CustomPieChartTooltip(props: Props) {
@@ -22,7 +22,7 @@ export const CustomPieChartTooltip = React.memo(function CustomPieChartTooltip(p
     <Card className="vertical-scrollbar scrollbar-sm flex max-h-[40vh] w-[12rem] flex-col overflow-y-auto" spacing="sm">
       <p className="flex-shrink-0 truncate border-b border-subtle pb-2 text-11 font-medium text-primary">{label}</p>
       {payload?.map((item) => (
-        <div key={item?.dataKey} className="flex items-center gap-2 text-11 capitalize">
+        <div key={`${item?.dataKey}`} className="flex items-center gap-2 text-11 capitalize">
           <div className="flex items-center gap-2 truncate">
             <div
               className="size-2 flex-shrink-0 rounded-xs"

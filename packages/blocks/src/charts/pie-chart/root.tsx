@@ -5,7 +5,8 @@
  */
 
 import React, { useMemo, useState } from "react";
-import { Cell, PieChart as CorePieChart, Label, Legend, Pie, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, PieChart as CorePieChart, Label, Legend, Pie, Tooltip } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import type { TPieChartProps } from "@plane/types";
 // local components
@@ -32,12 +33,11 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
     tooltipLabel,
   } = props;
   // states
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
 
   const renderCells = useMemo(
     () =>
-      cells.map((cell, index) => (
+      cells.map((cell) => (
         <Cell
           key={cell.key}
           className="transition-opacity duration-200"
@@ -46,8 +46,6 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
           style={{
             outline: "none",
           }}
-          onMouseEnter={() => setActiveIndex(index)}
-          onMouseLeave={() => setActiveIndex(null)}
         />
       )),
     [activeLegend, cells]
@@ -55,7 +53,7 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
 
   return (
     <div className={className}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <CorePieChart
           data={data}
           margin={{
@@ -66,13 +64,11 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
           }}
         >
           <Pie
-            activeIndex={activeIndex === null ? undefined : activeIndex}
-            onMouseLeave={() => setActiveIndex(null)}
             data={data}
             dataKey={dataKey}
             cx="50%"
             cy="50%"
-            blendStroke
+            stroke="none"
             activeShape={<CustomActiveShape />}
             innerRadius={innerRadius}
             outerRadius={outerRadius}
@@ -81,15 +77,15 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
             labelLine={false}
             label={
               showLabel
-                ? ({ payload, ...props }) => (
+                ? ({ payload, ...labelProps }) => (
                     <text
                       className="text-sm font-medium transition-opacity duration-200"
-                      cx={props.cx}
-                      cy={props.cy}
-                      x={props.x}
-                      y={props.y}
-                      textAnchor={props.textAnchor}
-                      dominantBaseline={props.dominantBaseline}
+                      cx={labelProps.cx}
+                      cy={labelProps.cy}
+                      x={labelProps.x}
+                      y={labelProps.y}
+                      textAnchor={labelProps.textAnchor}
+                      dominantBaseline={labelProps.dominantBaseline}
                       fill="var(--text-color-secondary)"
                       opacity={!!activeLegend && activeLegend !== payload.key ? 0.1 : 1}
                     >
@@ -112,20 +108,23 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
             )}
           </Pie>
           {legend && (
-            // @ts-expect-error recharts types are not up to date
             <Legend
               onMouseEnter={(payload) => {
-                // @ts-expect-error recharts types are not up to date
-                const key: string | undefined = payload.payload?.key;
+                const key = (payload.payload as { key?: string } | undefined)?.key;
                 if (!key) return;
                 setActiveLegend(key);
-                setActiveIndex(null);
               }}
               onMouseLeave={() => setActiveLegend(null)}
-              {...getLegendProps(legend)}
+              {...getLegendProps(
+                legend,
+                cells.map((cell) => cell.key),
+                (item) => (item.payload as { key?: string } | undefined)?.key
+              )}
             />
           )}
-          {showTooltip && (
+          {/* The active sector follows the tooltip's active index (recharts 3 dropped `activeIndex`), so
+              the tooltip stays mounted and only renders nothing when it is turned off. */}
+          {showTooltip ? (
             <Tooltip
               cursor={{
                 fill: "currentColor",
@@ -146,9 +145,11 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
                 return <CustomPieChartTooltip dotColor={cellData.fill} label={label} payload={payload} />;
               }}
             />
+          ) : (
+            <Tooltip content={() => null} cursor={false} />
           )}
         </CorePieChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 });
