@@ -12,16 +12,7 @@ import { convertHTMLDocumentToAllFormats } from "@plane/editor";
 // logger
 import { logger } from "@plane/logger";
 import type { TConvertDocumentRequestBody } from "@/types";
-
-// Define the schema with more robust validation
-const convertDocumentSchema = z.object({
-  description_html: z
-    .string()
-    .min(1, "HTML content cannot be empty")
-    .refine((html) => html.trim().length > 0, "HTML content cannot be just whitespace")
-    .refine((html) => html.includes("<") && html.includes(">"), "Content must be valid HTML"),
-  variant: z.enum(["rich", "document"]),
-});
+import { convertDocumentSchema, formatValidationErrors } from "./document.schema";
 
 @Controller("/convert-document")
 export class DocumentController {
@@ -45,10 +36,7 @@ export class DocumentController {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const validationErrors = error.errors.map((err) => ({
-          path: err.path.join("."),
-          message: err.message,
-        }));
+        const validationErrors = formatValidationErrors(error);
         logger.error("DOCUMENT_CONTROLLER: Validation error", {
           validationErrors,
         });
