@@ -32,13 +32,55 @@ type Props = {
 };
 
 const ROLES = [
-  { id: "product-manager", label: "Product Manager", icon: CubeOutline },
-  { id: "engineering-manager", label: "Engineering Manager", icon: ViewsOutline },
-  { id: "designer", label: "Designer", icon: PenTool },
-  { id: "developer", label: "Developer", icon: MonitorOutline },
-  { id: "founder-executive", label: "Founder/Executive", icon: RocketOutline },
-  { id: "operations-manager", label: "Operations Manager", icon: RefreshOutline },
-  { id: "others", label: "Others", icon: CubeOutline },
+  {
+    id: "product-manager",
+    get label() {
+      return translate("web.product_manager");
+    },
+    icon: CubeOutline,
+  },
+  {
+    id: "engineering-manager",
+    get label() {
+      return translate("web.engineering_manager");
+    },
+    icon: ViewsOutline,
+  },
+  {
+    id: "designer",
+    get label() {
+      return translate("web.designer");
+    },
+    icon: PenTool,
+  },
+  {
+    id: "developer",
+    get label() {
+      return translate("web.developer");
+    },
+    icon: MonitorOutline,
+  },
+  {
+    id: "founder-executive",
+    get label() {
+      return translate("web.founder_executive");
+    },
+    icon: RocketOutline,
+  },
+  {
+    id: "operations-manager",
+    get label() {
+      return translate("web.operations_manager");
+    },
+    icon: RefreshOutline,
+  },
+  {
+    id: "others",
+    get label() {
+      return translate("web.others");
+    },
+    icon: CubeOutline,
+  },
 ];
 
 const defaultValues = {

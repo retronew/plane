@@ -11,7 +11,7 @@ import { useSearchParams } from "next/navigation";
 // plane imports
 import { Collapsible } from "@base-ui/react/collapsible";
 import { ChevronDownOutline, ChevronUpOutline } from "@makeplane/propel/icons";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { ICycle, TCyclePlotType, TProgressSnapshot } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 import { getDate } from "@plane/utils";
@@ -34,12 +34,32 @@ type Options = {
 };
 
 export const cycleEstimateOptions: Options[] = [
-  { value: "issues", label: "Work items" },
-  { value: "points", label: "Estimates" },
+  {
+    value: "issues",
+    get label() {
+      return translate("web.work_items_af8f");
+    },
+  },
+  {
+    value: "points",
+    get label() {
+      return translate("web.title_estimates");
+    },
+  },
 ];
 export const cycleChartOptions: Options[] = [
-  { value: "burndown", label: "Burn-down" },
-  { value: "burnup", label: "Burn-up" },
+  {
+    value: "burndown",
+    get label() {
+      return translate("web.burn_down");
+    },
+  },
+  {
+    value: "burnup",
+    get label() {
+      return translate("web.burn_up");
+    },
+  },
 ];
 
 export const validateCycleSnapshot = (cycleDetails: ICycle | null): ICycle | null => {

@@ -14,42 +14,58 @@ export const STICKY_COLORS_LIST: {
 }[] = [
   {
     key: "gray",
-    label: "Gray",
+    get label() {
+      return translate("web.gray");
+    },
     backgroundColor: "var(--editor-colors-gray-background)",
   },
   {
     key: "peach",
-    label: "Peach",
+    get label() {
+      return translate("web.peach");
+    },
     backgroundColor: "var(--editor-colors-peach-background)",
   },
   {
     key: "pink",
-    label: "Pink",
+    get label() {
+      return translate("web.pink");
+    },
     backgroundColor: "var(--editor-colors-pink-background)",
   },
   {
     key: "orange",
-    label: "Orange",
+    get label() {
+      return translate("web.orange");
+    },
     backgroundColor: "var(--editor-colors-orange-background)",
   },
   {
     key: "green",
-    label: "Green",
+    get label() {
+      return translate("web.green");
+    },
     backgroundColor: "var(--editor-colors-green-background)",
   },
   {
     key: "light-blue",
-    label: "Light blue",
+    get label() {
+      return translate("web.light_blue");
+    },
     backgroundColor: "var(--editor-colors-light-blue-background)",
   },
   {
     key: "dark-blue",
-    label: "Dark blue",
+    get label() {
+      return translate("web.dark_blue");
+    },
     backgroundColor: "var(--editor-colors-dark-blue-background)",
   },
   {
     key: "purple",
-    label: "Purple",
+    get label() {
+      return translate("web.purple");
+    },
     backgroundColor: "var(--editor-colors-purple-background)",
   },
 ];

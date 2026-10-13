@@ -60,8 +60,18 @@ type TViewOption = {
 };
 
 const VIEW_OPTIONS: TViewOption[] = [
-  { key: "list", label: "List" },
-  { key: "kanban", label: "Kanban" },
+  {
+    key: "list",
+    get label() {
+      return translate("web.list");
+    },
+  },
+  {
+    key: "kanban",
+    get label() {
+      return translate("web.kanban");
+    },
+  },
 ];
 
 export const PublishProjectModal = observer(function PublishProjectModal(props: Props) {

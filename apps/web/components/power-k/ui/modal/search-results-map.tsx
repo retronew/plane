@@ -24,6 +24,7 @@ import { generateWorkItemLink } from "@plane/utils";
 // components
 import type { TPowerKSearchResultsKeys } from "@/components/power-k/core/types";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { translate } from "@plane/i18n";
 
 export type TPowerKSearchResultGroupDetails = {
   icon?: React.ComponentType<{ className?: string }>;
@@ -42,7 +43,9 @@ export const POWER_K_SEARCH_RESULTS_GROUPS_MAP: Record<TPowerKSearchResultsKeys,
     ),
     path: (cycle: IWorkspaceDefaultSearchResult) =>
       `/${cycle?.workspace__slug}/projects/${cycle?.project_id}/cycles/${cycle?.id}`,
-    title: "Cycles",
+    get title() {
+      return translate("web.cycles");
+    },
   },
   issue: {
     itemName: (workItem: IWorkspaceIssueSearchResult) => (
@@ -65,7 +68,9 @@ export const POWER_K_SEARCH_RESULTS_GROUPS_MAP: Record<TPowerKSearchResultsKeys,
         projectIdentifier: workItem.project__identifier,
         sequenceId: workItem?.sequence_id,
       }),
-    title: "Work items",
+    get title() {
+      return translate("web.work_items_af8f");
+    },
   },
   issue_view: {
     icon: WorkItemsOutline,
@@ -76,7 +81,9 @@ export const POWER_K_SEARCH_RESULTS_GROUPS_MAP: Record<TPowerKSearchResultsKeys,
     ),
     path: (view: IWorkspaceDefaultSearchResult) =>
       `/${view?.workspace__slug}/projects/${view?.project_id}/views/${view?.id}`,
-    title: "Views",
+    get title() {
+      return translate("web.title_views");
+    },
   },
   module: {
     icon: ModuleOutline,
@@ -87,7 +94,9 @@ export const POWER_K_SEARCH_RESULTS_GROUPS_MAP: Record<TPowerKSearchResultsKeys,
     ),
     path: (module: IWorkspaceDefaultSearchResult) =>
       `/${module?.workspace__slug}/projects/${module?.project_id}/modules/${module?.id}`,
-    title: "Modules",
+    get title() {
+      return translate("web.title_modules");
+    },
   },
   page: {
     icon: DocumentationOutline,
@@ -103,18 +112,24 @@ export const POWER_K_SEARCH_RESULTS_GROUPS_MAP: Record<TPowerKSearchResultsKeys,
         ? `/${page?.workspace__slug}/projects/${redirectProjectId}/pages/${page?.id}`
         : `/${page?.workspace__slug}/wiki/${page?.id}`;
     },
-    title: "Pages",
+    get title() {
+      return translate("web.title_pages");
+    },
   },
   project: {
     icon: ProjectsOutline,
     itemName: (project: IWorkspaceProjectSearchResult) => project?.name,
     path: (project: IWorkspaceProjectSearchResult) => `/${project?.workspace__slug}/projects/${project?.id}/issues/`,
-    title: "Projects",
+    get title() {
+      return translate("web.projects");
+    },
   },
   workspace: {
     icon: GridOutline,
     itemName: (workspace: IWorkspaceSearchResult) => workspace?.name,
     path: (workspace: IWorkspaceSearchResult) => `/${workspace?.slug}/`,
-    title: "Workspaces",
+    get title() {
+      return translate("web.workspaces");
+    },
   },
 };

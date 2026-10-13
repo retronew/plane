@@ -27,11 +27,15 @@ type Props = {
 const integrationDetails: { [key: string]: any } = {
   github: {
     logo: GithubLogo,
-    description: "Select GitHub repository to enable sync.",
+    get description() {
+      return translate("web.select_github_repository_to_enable_sync");
+    },
   },
   slack: {
     logo: SlackLogo,
-    description: "Get regular updates and control which notification you want to receive.",
+    get description() {
+      return translate("web.get_regular_updates_and_control_which_notification_you_want");
+    },
   },
 };
 

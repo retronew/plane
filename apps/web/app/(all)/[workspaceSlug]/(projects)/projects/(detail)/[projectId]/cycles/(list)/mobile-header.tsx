@@ -26,17 +26,23 @@ const CYCLE_VIEW_LAYOUTS: {
   {
     key: "list",
     icon: ListOutline,
-    title: "List layout",
+    get title() {
+      return translate("web.list_layout");
+    },
   },
   {
     key: "board",
     icon: GridOutline,
-    title: "Gallery layout",
+    get title() {
+      return translate("web.gallery_layout");
+    },
   },
   {
     key: "gantt",
     icon: TimelineOutline,
-    title: "Timeline layout",
+    get title() {
+      return translate("web.timeline_layout");
+    },
   },
 ];
 

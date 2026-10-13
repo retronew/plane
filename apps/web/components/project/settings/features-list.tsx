@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setPromiseToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IProject } from "@plane/types";
@@ -31,8 +31,12 @@ const PROJECT_FEATURES_LIST = {
   cycles: {
     key: "cycles",
     property: "cycle_view",
-    title: "Cycles",
-    description: "Timebox work as you see fit per project and change frequency from one period to the next.",
+    get title() {
+      return translate("web.cycles");
+    },
+    get description() {
+      return translate("web.timebox_work_as_you_see_fit_per_project_and_change_frequency");
+    },
     icon: <CyclesOutline className="h-5 w-5 flex-shrink-0 rotate-180 text-tertiary" />,
     isPro: false,
     isEnabled: true,
@@ -40,8 +44,12 @@ const PROJECT_FEATURES_LIST = {
   modules: {
     key: "modules",
     property: "module_view",
-    title: "Modules",
-    description: "Group work into sub-project-like set-ups with their own leads and assignees.",
+    get title() {
+      return translate("web.title_modules");
+    },
+    get description() {
+      return translate("web.group_work_into_sub_project_like_set_ups_with_their_own_lead");
+    },
     icon: <ModuleOutline width={20} height={20} className="flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
@@ -49,8 +57,12 @@ const PROJECT_FEATURES_LIST = {
   views: {
     key: "views",
     property: "issue_views_view",
-    title: "Views",
-    description: "Save sorts, filters, and display options for later or share them.",
+    get title() {
+      return translate("web.title_views");
+    },
+    get description() {
+      return translate("web.save_sorts_filters_and_display_options_for_later_or_share_th");
+    },
     icon: <ViewsOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
@@ -58,8 +70,12 @@ const PROJECT_FEATURES_LIST = {
   pages: {
     key: "pages",
     property: "page_view",
-    title: "Pages",
-    description: "Write anything like you write anything.",
+    get title() {
+      return translate("web.title_pages");
+    },
+    get description() {
+      return translate("web.write_anything_like_you_write_anything");
+    },
     icon: <PagesOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
@@ -68,7 +84,9 @@ const PROJECT_FEATURES_LIST = {
     key: "intake",
     property: "inbox_view",
     title: "Intake",
-    description: "Consider and discuss work items before you add them to your project.",
+    get description() {
+      return translate("web.consider_and_discuss_work_items_before_you_add_them_to_your");
+    },
     icon: <IntakeOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,

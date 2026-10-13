@@ -11,6 +11,7 @@ import { useParams, usePathname } from "next/navigation";
 import type { IProject } from "@plane/types";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
+import { translate } from "@plane/i18n";
 
 const ARCHIVES_TAB_LIST: {
   key: string;
@@ -19,17 +20,23 @@ const ARCHIVES_TAB_LIST: {
 }[] = [
   {
     key: "issues",
-    label: "Work items",
+    get label() {
+      return translate("web.work_items_af8f");
+    },
     shouldRender: () => true,
   },
   {
     key: "cycles",
-    label: "Cycles",
+    get label() {
+      return translate("web.cycles");
+    },
     shouldRender: (projectDetails) => projectDetails.cycle_view,
   },
   {
     key: "modules",
-    label: "Modules",
+    get label() {
+      return translate("web.title_modules");
+    },
     shouldRender: (projectDetails) => projectDetails.module_view,
   },
 ];

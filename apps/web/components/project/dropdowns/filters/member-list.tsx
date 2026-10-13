@@ -17,7 +17,7 @@ import {
   MenuTrigger,
 } from "@makeplane/propel/components/menu";
 import { ChevronDownOutline } from "@makeplane/propel/icons";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { EUserProjectRoles, EUserWorkspaceRoles } from "@plane/types";
 
 interface IRoleOption {
@@ -32,16 +32,51 @@ type Props = {
 };
 
 const PROJECT_ROLE_OPTIONS: IRoleOption[] = [
-  { value: String(EUserProjectRoles.ADMIN), label: "Admin" },
-  { value: String(EUserProjectRoles.MEMBER), label: "Member" },
-  { value: String(EUserProjectRoles.GUEST), label: "Guest" },
+  {
+    value: String(EUserProjectRoles.ADMIN),
+    get label() {
+      return translate("web.admin");
+    },
+  },
+  {
+    value: String(EUserProjectRoles.MEMBER),
+    get label() {
+      return translate("web.member");
+    },
+  },
+  {
+    value: String(EUserProjectRoles.GUEST),
+    get label() {
+      return translate("web.guest");
+    },
+  },
 ];
 
 const WORKSPACE_ROLE_OPTIONS: IRoleOption[] = [
-  { value: String(EUserWorkspaceRoles.ADMIN), label: "Admin" },
-  { value: String(EUserWorkspaceRoles.MEMBER), label: "Member" },
-  { value: String(EUserWorkspaceRoles.GUEST), label: "Guest" },
-  { value: "suspended", label: "Suspended" },
+  {
+    value: String(EUserWorkspaceRoles.ADMIN),
+    get label() {
+      return translate("web.admin");
+    },
+  },
+  {
+    value: String(EUserWorkspaceRoles.MEMBER),
+    get label() {
+      return translate("web.member");
+    },
+  },
+  {
+    value: String(EUserWorkspaceRoles.GUEST),
+    get label() {
+      return translate("web.guest");
+    },
+  },
+  {
+    value: "suspended",
+    get label() {
+      return translate("web.suspended");
+    },
+  },
 ];
 
 // Dropdown component for member list filters

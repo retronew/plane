@@ -6,21 +6,28 @@
 
 import { BoardOutline, ListOutline, TimelineOutline } from "@makeplane/propel/icons";
 import type { IBaseLayoutConfig } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const BASE_LAYOUTS: IBaseLayoutConfig[] = [
   {
     key: "list",
     icon: ListOutline,
-    label: "List Layout",
+    get label() {
+      return translate("web.list_layout_c");
+    },
   },
   {
     key: "kanban",
     icon: BoardOutline,
-    label: "Board Layout",
+    get label() {
+      return translate("web.board_layout");
+    },
   },
   {
     key: "gantt",
     icon: TimelineOutline,
-    label: "Gantt Layout",
+    get label() {
+      return translate("web.gantt_layout");
+    },
   },
 ];

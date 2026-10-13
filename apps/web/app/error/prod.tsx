@@ -17,12 +17,16 @@ import { translate } from "@plane/i18n";
 const linkMap = [
   {
     key: "mail_to",
-    label: "Contact Support",
+    get label() {
+      return translate("web.contact_support");
+    },
     value: "mailto:support@plane.so",
   },
   {
     key: "status",
-    label: "Status Page",
+    get label() {
+      return translate("web.status_page");
+    },
     value: "https://status.plane.so/",
   },
   {

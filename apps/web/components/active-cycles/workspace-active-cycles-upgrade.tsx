@@ -9,7 +9,7 @@ import { CircleDashed, Microscope } from "lucide-react";
 import { AlertOctagonOutline, BarOutline, FolderOutline, SearchOutline } from "@makeplane/propel/icons";
 // plane imports
 import { MARKETING_PRICING_PAGE_LINK } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { ContentWrapper } from "@plane/blocks/layout";
 import { cn } from "@plane/utils";
@@ -35,33 +35,47 @@ export const WORKSPACE_ACTIVE_CYCLES_DETAILS = [
   },
   {
     key: "get_snapshot_of_each_active_cycle",
-    title: "Get a snapshot of each active cycle.",
+    get title() {
+      return translate("web.get_a_snapshot_of_each_active_cycle");
+    },
     description:
       "Track high-level metrics for all active cycles, see their state of progress, and get a sense of scope against deadlines.",
     icon: CircleDashed,
   },
   {
     key: "compare_burndowns",
-    title: "Compare burndowns.",
-    description: "Monitor how each of your teams are performing with a peek into each cycle’s burndown report.",
+    get title() {
+      return translate("web.compare_burndowns");
+    },
+    get description() {
+      return translate("web.monitor_how_each_of_your_teams_are_performing_with_a_peek_in");
+    },
     icon: BarOutline,
   },
   {
     key: "quickly_see_make_or_break_issues",
-    title: "Quickly see make-or-break work items. ",
+    get title() {
+      return translate("web.quickly_see_make_or_break_work_items");
+    },
     description:
       "Preview high-priority work items for each cycle against due dates. See all of them per cycle in one click.",
     icon: AlertOctagonOutline,
   },
   {
     key: "zoom_into_cycles_that_need_attention",
-    title: "Zoom into cycles that need attention. ",
-    description: "Investigate the state of any cycle that doesn’t conform to expectations in one click.",
+    get title() {
+      return translate("web.zoom_into_cycles_that_need_attention");
+    },
+    get description() {
+      return translate("web.investigate_the_state_of_any_cycle_that_doesn_t_conform_to_e");
+    },
     icon: SearchOutline,
   },
   {
     key: "stay_ahead_of_blockers",
-    title: "Stay ahead of blockers.",
+    get title() {
+      return translate("web.stay_ahead_of_blockers");
+    },
     description:
       "Spot challenges from one project to another and see inter-cycle dependencies that aren’t obvious from any other view.",
     icon: Microscope,

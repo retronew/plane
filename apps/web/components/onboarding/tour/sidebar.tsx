@@ -18,27 +18,37 @@ const sidebarOptions: {
 }[] = [
   {
     key: "work-items",
-    label: "Work items",
+    get label() {
+      return translate("web.work_items_af8f");
+    },
     Icon: WorkItemsOutline,
   },
   {
     key: "cycles",
-    label: "Cycles",
+    get label() {
+      return translate("web.cycles");
+    },
     Icon: CyclesOutline,
   },
   {
     key: "modules",
-    label: "Modules",
+    get label() {
+      return translate("web.title_modules");
+    },
     Icon: ModuleOutline,
   },
   {
     key: "views",
-    label: "Views",
+    get label() {
+      return translate("web.title_views");
+    },
     Icon: ViewsOutline,
   },
   {
     key: "pages",
-    label: "Pages",
+    get label() {
+      return translate("web.title_pages");
+    },
     Icon: PagesOutline,
   },
 ];

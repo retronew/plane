@@ -9,6 +9,7 @@ import Link from "next/link";
 import type { TPageNavigationTabs } from "@plane/types";
 // helpers
 import { cn } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 type TPageTabNavigation = {
   workspaceSlug: string;
@@ -20,15 +21,21 @@ type TPageTabNavigation = {
 const pageTabs: { key: TPageNavigationTabs; label: string }[] = [
   {
     key: "public",
-    label: "Public",
+    get label() {
+      return translate("web.public");
+    },
   },
   {
     key: "private",
-    label: "Private",
+    get label() {
+      return translate("web.private");
+    },
   },
   {
     key: "archived",
-    label: "Archived",
+    get label() {
+      return translate("web.archived");
+    },
   },
 ];
 

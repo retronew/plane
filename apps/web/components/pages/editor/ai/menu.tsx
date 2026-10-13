@@ -44,14 +44,18 @@ const MENU_ITEMS: {
   {
     key: AI_EDITOR_TASKS.ASK_ANYTHING,
     icon: AiStar1Outline,
-    label: "Ask Pi",
+    get label() {
+      return translate("web.ask_pi");
+    },
   },
 ];
 
 const TONES_LIST = [
   {
     key: "default",
-    label: "Default",
+    get label() {
+      return translate("web.default");
+    },
     casual_score: 5,
     formal_score: 5,
   },

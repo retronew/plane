@@ -24,7 +24,7 @@ import { CalendarOutline } from "@makeplane/propel/icons";
 import { DateSelect } from "@plane/blocks/property-select";
 import { Select } from "@plane/blocks/select";
 import { setToast } from "@plane/blocks/toast";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { IApiToken } from "@plane/types";
 import { renderFormattedDate, renderFormattedTime } from "@plane/utils";
 // hooks
@@ -65,7 +65,12 @@ type TExpiryOption = { key: string; label: string };
 
 const EXPIRY_SELECT_OPTIONS: TExpiryOption[] = [
   ...EXPIRY_DATE_OPTIONS.map(({ key, label }) => ({ key, label })),
-  { key: "custom", label: "Custom" },
+  {
+    key: "custom",
+    get label() {
+      return translate("web.custom");
+    },
+  },
 ];
 
 const defaultValues: Partial<IApiToken> = {

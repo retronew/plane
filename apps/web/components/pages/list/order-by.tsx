@@ -5,7 +5,7 @@
  */
 
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 // types
@@ -22,9 +22,24 @@ const PAGE_SORTING_KEY_OPTIONS: {
   key: TPageFiltersSortKey;
   label: string;
 }[] = [
-  { key: "name", label: "Name" },
-  { key: "created_at", label: "Date created" },
-  { key: "updated_at", label: "Date modified" },
+  {
+    key: "name",
+    get label() {
+      return translate("web.name");
+    },
+  },
+  {
+    key: "created_at",
+    get label() {
+      return translate("web.date_created");
+    },
+  },
+  {
+    key: "updated_at",
+    get label() {
+      return translate("web.date_modified");
+    },
+  },
 ];
 
 export function PageOrderByDropdown(props: Props) {

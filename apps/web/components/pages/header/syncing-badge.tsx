@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { CloudOff, Dot } from "lucide-react";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Badge } from "@makeplane/propel/components/badge";
+import { translate } from "@plane/i18n";
 
 type Props = {
   syncStatus: "syncing" | "synced" | "error";
@@ -15,11 +16,15 @@ type Props = {
 
 const BADGE_CONTENT = {
   syncing: {
-    label: "Syncing...",
+    get label() {
+      return translate("web.syncing");
+    },
     tooltipLabel: "Syncing... Your changes are being synced with the server. You can continue making changes.",
   },
   error: {
-    label: "Connection lost",
+    get label() {
+      return translate("web.connection_lost");
+    },
     tooltipLabel:
       "Connection lost. We're having trouble connecting to the websocket server. Your changes will be synced and saved every 10 seconds.",
   },

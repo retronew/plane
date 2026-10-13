@@ -39,7 +39,9 @@ const TOUR_STEPS: {
 }[] = [
   {
     key: "work-items",
-    title: "Plan with work items",
+    get title() {
+      return translate("web.plan_with_work_items");
+    },
     description:
       "The work item is the building block of the Plane. Most concepts in Plane are either associated with work items and their properties.",
     image: IssuesTour,
@@ -47,7 +49,9 @@ const TOUR_STEPS: {
   },
   {
     key: "cycles",
-    title: "Move with cycles",
+    get title() {
+      return translate("web.move_with_cycles");
+    },
     description:
       "Cycles help you and your team to progress faster, similar to the sprints commonly used in agile development.",
     image: CyclesTour,
@@ -56,15 +60,21 @@ const TOUR_STEPS: {
   },
   {
     key: "modules",
-    title: "Break into modules",
-    description: "Modules break your big thing into Projects or Features, to help you organize better.",
+    get title() {
+      return translate("web.break_into_modules");
+    },
+    get description() {
+      return translate("web.modules_break_your_big_thing_into_projects_or_features_to_he");
+    },
     image: ModulesTour,
     prevStep: "cycles",
     nextStep: "views",
   },
   {
     key: "views",
-    title: "Views",
+    get title() {
+      return translate("web.title_views");
+    },
     description:
       "Create custom filters to display only the work items that matter to you. Save and share your filters in just a few clicks.",
     image: ViewsTour,
@@ -73,8 +83,12 @@ const TOUR_STEPS: {
   },
   {
     key: "pages",
-    title: "Document with pages",
-    description: "Use Pages to quickly jot down work items when you're in a meeting or starting a day.",
+    get title() {
+      return translate("web.document_with_pages");
+    },
+    get description() {
+      return translate("web.use_pages_to_quickly_jot_down_work_items_when_you_re_in_a_me");
+    },
     image: PagesTour,
     prevStep: "views",
   },

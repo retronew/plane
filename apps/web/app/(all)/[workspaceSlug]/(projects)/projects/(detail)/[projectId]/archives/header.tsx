@@ -35,17 +35,23 @@ const PROJECT_ARCHIVES_BREADCRUMB_LIST: {
   };
 } = {
   issues: {
-    label: "Work items",
+    get label() {
+      return translate("web.work_items_af8f");
+    },
     href: "/issues",
     icon: WorkItemsOutline,
   },
   cycles: {
-    label: "Cycles",
+    get label() {
+      return translate("web.cycles");
+    },
     href: "/cycles",
     icon: CyclesOutline,
   },
   modules: {
-    label: "Modules",
+    get label() {
+      return translate("web.title_modules");
+    },
     href: "/modules",
     icon: ModuleOutline,
   },

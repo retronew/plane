@@ -8,6 +8,7 @@ import type { Control } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { CheckboxField } from "@makeplane/propel/components/checkbox-field";
 import type { IWebhook } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const INDIVIDUAL_WEBHOOK_OPTIONS: {
   key: keyof IWebhook;
@@ -16,28 +17,48 @@ export const INDIVIDUAL_WEBHOOK_OPTIONS: {
 }[] = [
   {
     key: "project",
-    label: "Projects",
-    description: "Project created, updated, or deleted",
+    get label() {
+      return translate("web.projects");
+    },
+    get description() {
+      return translate("web.project_created_updated_or_deleted");
+    },
   },
   {
     key: "cycle",
-    label: "Cycles",
-    description: "Cycle created, updated, or deleted",
+    get label() {
+      return translate("web.cycles");
+    },
+    get description() {
+      return translate("web.cycle_created_updated_or_deleted");
+    },
   },
   {
     key: "issue",
-    label: "Work items",
-    description: "Work item created, updated, deleted, added to a cycle or module",
+    get label() {
+      return translate("web.work_items_af8f");
+    },
+    get description() {
+      return translate("web.work_item_created_updated_deleted_added_to_a_cycle_or_module");
+    },
   },
   {
     key: "module",
-    label: "Modules",
-    description: "Module created, updated, or deleted",
+    get label() {
+      return translate("web.title_modules");
+    },
+    get description() {
+      return translate("web.module_created_updated_or_deleted");
+    },
   },
   {
     key: "issue_comment",
-    label: "Work item comments",
-    description: "Comment posted, updated, or deleted",
+    get label() {
+      return translate("web.work_item_comments");
+    },
+    get description() {
+      return translate("web.comment_posted_updated_or_deleted");
+    },
   },
 ];
 

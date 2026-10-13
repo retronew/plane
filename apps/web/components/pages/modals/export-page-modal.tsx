@@ -80,15 +80,21 @@ const PAGE_FORMATS: {
   },
   {
     key: "LETTER",
-    label: "Letter",
+    get label() {
+      return translate("web.letter");
+    },
   },
   {
     key: "LEGAL",
-    label: "Legal",
+    get label() {
+      return translate("web.legal");
+    },
   },
   {
     key: "TABLOID",
-    label: "Tabloid",
+    get label() {
+      return translate("web.tabloid");
+    },
   },
 ];
 
@@ -98,11 +104,15 @@ const CONTENT_VARIETY: {
 }[] = [
   {
     key: "everything",
-    label: "Everything",
+    get label() {
+      return translate("web.everything");
+    },
   },
   {
     key: "no-assets",
-    label: "No images",
+    get label() {
+      return translate("web.no_images");
+    },
   },
 ];
 
