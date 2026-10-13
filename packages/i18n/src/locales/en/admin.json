@@ -325,10 +325,10 @@
         "minutes": "{count, plural, one {# minute} other {# minutes}}",
         "hours": "{count, plural, one {# hour} other {# hours}}",
         "days": "{count, plural, one {# day} other {# days}}"
-      }
+      },
+      "configure_provider": "Configure {provider}"
     },
     "meta": {
-      "provider_authentication": "{provider} Authentication - God Mode",
       "create_workspace": "Create Workspace - God Mode",
       "general": "General Settings - God Mode",
       "authentication": "Authentication Settings - God Mode",
@@ -398,8 +398,9 @@
     },
     "discard": {
       "title": "You have unsaved changes",
-      "content": "Changes you made will be lost if you go back. Do you wish to go back?",
-      "keep_editing": "Keep editing"
+      "keep_editing": "Keep editing",
+      "close_content": "Changes you made will be lost if you close this window.",
+      "discard": "Discard"
     },
     "copy": {
       "title": "Copied to clipboard",

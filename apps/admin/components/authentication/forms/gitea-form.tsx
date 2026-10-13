@@ -4,18 +4,25 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { isEmpty } from "lodash-es";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
+import {
+  DialogActions,
+  DialogBody,
+  DialogHeader,
+  DialogHeading,
+  DialogMain,
+  DialogTitle,
+} from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
-import type { IFormattedInstanceConfiguration, TInstanceGiteaAuthenticationConfigurationKeys } from "@plane/types";
+import type { TInstanceGiteaAuthenticationConfigurationKeys } from "@plane/types";
 // components
+import type { TProviderConfigFormProps } from "@/components/authentication/provider-config-modal";
 import { CodeBlock } from "@/components/common/code-block";
-import { ConfirmDiscardModal } from "@/components/common/confirm-discard-modal";
 import type { TControllerInputFormField } from "@/components/common/controller-input";
 import { ControllerInput } from "@/components/common/controller-input";
 import type { TControllerSwitchFormField } from "@/components/common/controller-switch";
@@ -26,9 +33,7 @@ import { CopyField } from "@/components/common/copy-field";
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
 
-type Props = {
-  config: IFormattedInstanceConfiguration;
-};
+type Props = TProviderConfigFormProps;
 
 type GiteaConfigFormValues = Record<TInstanceGiteaAuthenticationConfigurationKeys, string>;
 
@@ -38,10 +43,8 @@ const GITEA_FORM_SWITCH_FIELD: TControllerSwitchFormField<GiteaConfigFormValues>
 };
 
 export function InstanceGiteaConfigForm(props: Props) {
-  const { config } = props;
+  const { config, handleClose, onDirtyChange } = props;
   const { t } = useTranslation();
-  // states
-  const [isDiscardChangesModalOpen, setIsDiscardChangesModalOpen] = useState(false);
   // store hooks
   const { updateInstanceConfigurations } = useInstance();
   // form data
@@ -58,6 +61,10 @@ export function InstanceGiteaConfigForm(props: Props) {
       ENABLE_GITEA_SYNC: config["ENABLE_GITEA_SYNC"] || "0",
     },
   });
+
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const originURL = !isEmpty(API_BASE_URL) ? API_BASE_URL : typeof window !== "undefined" ? window.location.origin : "";
 
@@ -155,79 +162,72 @@ export function InstanceGiteaConfigForm(props: Props) {
         GITEA_CLIENT_SECRET: response.find((item) => item.key === "GITEA_CLIENT_SECRET")?.value,
         ENABLE_GITEA_SYNC: response.find((item) => item.key === "ENABLE_GITEA_SYNC")?.value,
       });
+      handleClose(true);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleGoBack = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    if (isDirty) {
-      e.preventDefault();
-      setIsDiscardChangesModalOpen(true);
-    }
-  };
-
   return (
     <>
-      <ConfirmDiscardModal
-        isOpen={isDiscardChangesModalOpen}
-        onDiscardHref="/authentication"
-        handleClose={() => setIsDiscardChangesModalOpen(false)}
-      />
-      <div className="flex flex-col gap-8">
-        <div className="grid w-full grid-cols-2 gap-x-12 gap-y-8">
-          <div className="col-span-2 flex flex-col gap-y-4 pt-1 md:col-span-1">
-            <div className="pt-2.5 text-18 font-medium">
-              {t("admin.authentication.oauth.provider_details_for_plane", { provider: "Gitea" })}
-            </div>
-            {GITEA_FORM_FIELDS.map((field) => (
-              <ControllerInput
-                key={field.key}
-                control={control}
-                type={field.type}
-                name={field.key}
-                label={field.label}
-                description={field.description}
-                placeholder={field.placeholder}
-                error={field.error}
-                required={field.required}
-              />
-            ))}
-            <ControllerSwitch control={control} field={GITEA_FORM_SWITCH_FIELD} />
-            <div className="flex flex-col gap-1 pt-4">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="primary"
-                  size="md"
-                  stretch="auto"
-                  onClick={(e) => void handleSubmit(onSubmit)(e)}
-                  loading={isSubmitting}
-                  disabled={!isDirty}
-                  label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
-                />
-                <Button
-                  variant="secondary"
-                  size="md"
-                  stretch="auto"
-                  nativeButton={false}
-                  render={<Link href="/authentication" onClick={handleGoBack} />}
-                  label={t("admin.common.go_back")}
-                />
+      <DialogMain>
+        <DialogHeader>
+          <DialogHeading>
+            <DialogTitle>{t("admin.authentication.configure_provider", { provider: "Gitea" })}</DialogTitle>
+          </DialogHeading>
+        </DialogHeader>
+        <DialogBody>
+          <div className="grid w-full grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
+            <div className="flex flex-col gap-y-4">
+              <div className="text-14 font-medium">
+                {t("admin.authentication.oauth.provider_details_for_plane", { provider: "Gitea" })}
               </div>
-            </div>
-          </div>
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 pt-1.5 pb-4">
-              <div className="pt-2 text-18 font-medium">
-                {t("admin.authentication.oauth.plane_details_for_provider", { provider: "Gitea" })}
-              </div>
-              {GITEA_SERVICE_FIELD.map((field) => (
-                <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
+              {GITEA_FORM_FIELDS.map((field) => (
+                <ControllerInput
+                  key={field.key}
+                  control={control}
+                  type={field.type}
+                  name={field.key}
+                  label={field.label}
+                  description={field.description}
+                  placeholder={field.placeholder}
+                  error={field.error}
+                  required={field.required}
+                />
               ))}
+              <ControllerSwitch control={control} field={GITEA_FORM_SWITCH_FIELD} />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 pt-1.5 pb-4">
+                <div className="text-14 font-medium">
+                  {t("admin.authentication.oauth.plane_details_for_provider", { provider: "Gitea" })}
+                </div>
+                {GITEA_SERVICE_FIELD.map((field) => (
+                  <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </DialogBody>
+      </DialogMain>
+      <DialogActions>
+        <Button
+          variant="secondary"
+          size="md"
+          stretch="auto"
+          onClick={() => handleClose()}
+          label={t("admin.common.cancel")}
+        />
+        <Button
+          variant="primary"
+          size="md"
+          stretch="auto"
+          onClick={(e) => void handleSubmit(onSubmit)(e)}
+          loading={isSubmitting}
+          disabled={!isDirty}
+          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
+        />
+      </DialogActions>
     </>
   );
 }

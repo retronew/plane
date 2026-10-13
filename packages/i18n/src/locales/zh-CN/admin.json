@@ -325,10 +325,10 @@
         "minutes": "{count, plural, one {# 分钟} other {# 分钟}}",
         "hours": "{count, plural, one {# 小时} other {# 小时}}",
         "days": "{count, plural, one {# 天} other {# 天}}"
-      }
+      },
+      "configure_provider": "配置 {provider}"
     },
     "meta": {
-      "provider_authentication": "{provider} 登录认证 - God Mode",
       "create_workspace": "创建工作区 - God Mode",
       "general": "常规设置 - God Mode",
       "authentication": "认证设置 - God Mode",
@@ -398,8 +398,9 @@
     },
     "discard": {
       "title": "您有未保存的更改",
-      "content": "返回后，您所做的更改将会丢失。确定要返回吗？",
-      "keep_editing": "继续编辑"
+      "keep_editing": "继续编辑",
+      "close_content": "关闭窗口后，您所做的修改将会丢失。",
+      "discard": "放弃修改"
     },
     "copy": {
       "title": "已复制到剪贴板",
