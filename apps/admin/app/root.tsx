@@ -63,7 +63,9 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export const meta: Route.MetaFunction = () => [
-  { title: translate("admin.meta.app_title") },
+  // Brand-only default: the prerendered shell is built without a language, so a translated
+  // default would flash English, then the localized default, before each page sets its title.
+  { title: "Plane" },
   { name: "description", content: translate("admin.meta.app_description") },
   { property: "og:title", content: APP_TITLE },
   { property: "og:description", content: APP_DESCRIPTION },

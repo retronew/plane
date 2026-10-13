@@ -9,6 +9,8 @@ import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
 
 export const meta: Route.MetaFunction = () => [
+  // Child route meta replaces the root's, so restate the default title or the tab falls back to the URL.
+  { title: "Plane" },
   { name: "robots", content: "index, nofollow" },
   { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" },
 ];
