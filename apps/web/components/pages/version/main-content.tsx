@@ -132,7 +132,7 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
               />
             )}
           </div>
-          <div className="vertical-scrollbar scrollbar-sm h-full overflow-y-scroll pt-8">
+          <div className="vertical-scrollbar scrollbar-sm h-full overflow-y-auto pt-8">
             <VersionEditor activeVersion={activeVersion} storeType={storeType} versionDetails={versionDetails} />
           </div>
         </>

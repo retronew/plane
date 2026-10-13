@@ -77,7 +77,7 @@ export const RecentActivityWidget = observer(function RecentActivityWidget(props
 
   if (!isLoading && recents?.length === 0)
     return (
-      <div ref={ref} className="max-h-[500px] overflow-y-scroll">
+      <div ref={ref} className="max-h-[500px] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <div className="text-14 font-semibold text-tertiary">{t("home.recents.title")}</div>
           {showFilterSelect && <FiltersDropdown filters={filters} activeFilter={filter} setActiveFilter={setFilter} />}

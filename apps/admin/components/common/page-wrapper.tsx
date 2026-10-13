@@ -42,7 +42,7 @@ export const PageWrapper = (props: TPageWrapperProps) => {
           </div>
         )
       )}
-      <div className="vertical-scrollbar scrollbar-sm flex-grow overflow-hidden overflow-y-scroll px-4 pb-4">
+      <div className="vertical-scrollbar scrollbar-sm flex-grow overflow-hidden overflow-y-auto px-4 pb-4">
         {children}
       </div>
     </div>

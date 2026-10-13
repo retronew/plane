@@ -19,10 +19,7 @@ export const CustomPieChartTooltip = React.memo(function CustomPieChartTooltip(p
   const { dotColor, label, payload } = props;
 
   return (
-    <Card
-      className="vertical-scrollbar scrollbar-sm flex max-h-[40vh] w-[12rem] flex-col overflow-y-scroll"
-      spacing="sm"
-    >
+    <Card className="vertical-scrollbar scrollbar-sm flex max-h-[40vh] w-[12rem] flex-col overflow-y-auto" spacing="sm">
       <p className="flex-shrink-0 truncate border-b border-subtle pb-2 text-11 font-medium text-primary">{label}</p>
       {payload?.map((item) => (
         <div key={item?.dataKey} className="flex items-center gap-2 text-11 capitalize">

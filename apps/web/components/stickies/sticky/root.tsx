@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { debounce } from "lodash-es";
 import { observer } from "mobx-react";
 import { ArrowCollapseOutline } from "@makeplane/propel/icons";
@@ -56,14 +56,16 @@ export const StickyNote = observer(function StickyNote(props: TProps) {
         });
       }
     },
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- stickyData is rebuilt (with a random color) every render for new stickies; depending on it would recreate the save handler on each keystroke
     [stickyId, stickyOperations]
   );
 
-  const debouncedFormSave = useCallback(
-    debounce(async (payload: Partial<TSticky>) => {
-      await handleChange(payload);
-    }, 500),
-    [stickyOperations, stickyData, handleChange]
+  const debouncedFormSave = useMemo(
+    () =>
+      debounce(async (payload: Partial<TSticky>) => {
+        await handleChange(payload);
+      }, 500),
+    [handleChange]
   );
 
   const handleDelete = async () => {
@@ -80,7 +82,7 @@ export const StickyNote = observer(function StickyNote(props: TProps) {
         handleClose={() => setIsDeleteModalOpen(false)}
       />
       <div
-        className={cn("group/sticky flex h-fit w-full flex-col overflow-y-scroll rounded-sm", className)}
+        className={cn("group/sticky flex h-fit w-full flex-col overflow-y-auto rounded-sm", className)}
         style={{
           backgroundColor,
         }}

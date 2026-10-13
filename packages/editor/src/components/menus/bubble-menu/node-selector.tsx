@@ -55,6 +55,7 @@ export function BubbleMenuNodeSelector(props: Props) {
     CodeItem(editor),
   ] as EditorMenuItem<TEditorCommands>[];
 
+  // oxlint-disable-next-line unicorn/prefer-array-find -- needs the last active item; findLast is ES2023 and consumers target ES2022
   const activeItem = items.filter((item) => item.isActive()).pop() ?? {
     name: "Multiple",
   };
@@ -80,7 +81,7 @@ export function BubbleMenuNodeSelector(props: Props) {
       getFloatingProps={getFloatingProps}
       getReferenceProps={getReferenceProps}
     >
-      <section className="mt-1 flex max-h-[90vh] w-48 flex-col overflow-y-scroll rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200">
+      <section className="mt-1 flex max-h-[90vh] w-48 flex-col overflow-y-auto rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200">
         {items.map((item) => (
           <button
             key={item.name}
