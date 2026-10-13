@@ -130,9 +130,9 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
             <DialogBody>
               <div className="flex flex-col gap-6">
                 <p className="text-13 leading-7 text-secondary">
-                  Are you sure you want to leave the project -
-                  <span className="font-medium text-primary">{` "${project?.name}" `}</span>? All of the work items
-                  associated with you will become inaccessible.
+                  {translate("web.leave_project_confirm_prefix")}
+                  <span className="font-medium text-primary">{` "${project?.name}" `}</span>
+                  {translate("web.leave_project_confirm_suffix")}
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">

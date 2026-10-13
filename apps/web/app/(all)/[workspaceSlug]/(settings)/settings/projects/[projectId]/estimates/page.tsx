@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 // components
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -25,7 +26,9 @@ function EstimatesSettingsPage({ params }: Route.ComponentProps) {
   const { workspaceUserInfo, allowPermissions } = useUserPermissions();
 
   // derived values
-  const pageTitle = currentProjectDetails?.name ? `${currentProjectDetails?.name} - Estimates` : undefined;
+  const pageTitle = currentProjectDetails?.name
+    ? `${currentProjectDetails?.name} - ${translate("web.title_estimates")}`
+    : undefined;
   const canPerformProjectAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT);
 
   if (workspaceUserInfo && !canPerformProjectAdminActions) {

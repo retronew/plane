@@ -162,16 +162,14 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
         <h3 className="text-center text-16 font-semibold">{translate("web.page_not_found")}</h3>
-        <p className="mt-3 text-center text-13 text-secondary">
-          The page you are trying to access doesn{"'"}t exist or you don{"'"}t have permission to view it.
-        </p>
+        <p className="mt-3 text-center text-13 text-secondary">{translate("web.page_access_denied_description")}</p>
         <Button
           variant="secondary"
           size="sm"
           stretch="auto"
           render={<Link href={`/${workspaceSlug}/projects/${projectId}/pages`} className="mt-5" />}
         >
-          View other Pages
+          {translate("web.view_other_pages")}
         </Button>
       </div>
     );

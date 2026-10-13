@@ -21,6 +21,7 @@ import { ProjectPageService } from "@/services/page";
 import type { CoreRootStore } from "../root.store";
 import type { TProjectPage } from "./project-page";
 import { ProjectPage } from "./project-page";
+import { translate } from "@plane/i18n";
 
 type TLoader = "init-loader" | "mutation-loader" | undefined;
 
@@ -239,8 +240,8 @@ export class ProjectPageStore implements IProjectPageStore {
       runInAction(() => {
         this.loader = undefined;
         this.error = {
-          title: "Failed",
-          description: "Failed to fetch the pages, Please try again later.",
+          title: translate("web.failed"),
+          description: translate("web.failed_to_fetch_the_pages_please_try_again_later"),
         };
       });
       throw error;
@@ -282,8 +283,8 @@ export class ProjectPageStore implements IProjectPageStore {
       runInAction(() => {
         this.loader = undefined;
         this.error = {
-          title: "Failed",
-          description: "Failed to fetch the page, Please try again later.",
+          title: translate("web.failed"),
+          description: translate("web.failed_to_fetch_the_page_please_try_again_later"),
         };
       });
       throw error;
@@ -315,8 +316,8 @@ export class ProjectPageStore implements IProjectPageStore {
       runInAction(() => {
         this.loader = undefined;
         this.error = {
-          title: "Failed",
-          description: "Failed to create a page, Please try again later.",
+          title: translate("web.failed"),
+          description: translate("web.failed_to_create_a_page_please_try_again_later"),
         };
       });
       throw error;
@@ -341,8 +342,8 @@ export class ProjectPageStore implements IProjectPageStore {
       runInAction(() => {
         this.loader = undefined;
         this.error = {
-          title: "Failed",
-          description: "Failed to delete a page, Please try again later.",
+          title: translate("web.failed"),
+          description: translate("web.failed_to_delete_a_page_please_try_again_later"),
         };
       });
       throw error;

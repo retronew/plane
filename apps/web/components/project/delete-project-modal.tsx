@@ -110,9 +110,9 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
             <DialogBody>
               <div className="flex flex-col gap-6">
                 <p className="text-13 leading-7 text-secondary">
-                  Are you sure you want to delete project{" "}
-                  <span className="font-semibold break-words">{project?.name}</span>? All of the data related to the
-                  project will be permanently removed. This action cannot be undone
+                  {translate("web.delete_project_confirm_prefix")}{" "}
+                  <span className="font-semibold break-words">{project?.name}</span>
+                  {translate("web.delete_project_confirm_suffix")}
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">

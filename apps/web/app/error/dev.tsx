@@ -110,10 +110,7 @@ export function DevErrorComponent({ error, onGoHome, onReload }: DevErrorCompone
               <InfoFilled className="mt-0.5 size-5 flex-shrink-0 text-tertiary" />
               <div className="space-y-1">
                 <p className="text-13 font-medium text-secondary">{translate("web.development_mode")}</p>
-                <p className="text-11 text-tertiary">
-                  This detailed error view is only visible in development. In production, users will see a friendly
-                  error page.
-                </p>
+                <p className="text-11 text-tertiary">{translate("web.dev_error_notice")}</p>
               </div>
             </div>
           </Card>
@@ -135,9 +132,7 @@ export function DevErrorComponent({ error, onGoHome, onReload }: DevErrorCompone
             </div>
 
             <div className="rounded-md bg-layer-1 p-4">
-              <p className="text-13 text-secondary">
-                An unknown error occurred. Please try refreshing the page or contact support if the problem persists.
-              </p>
+              <p className="text-13 text-secondary">{translate("web.unknown_error_description")}</p>
             </div>
 
             <ErrorActions onGoHome={onGoHome} onReload={onReload} />

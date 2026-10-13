@@ -12,6 +12,7 @@ import { EIssueServiceType } from "@plane/types";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // types
 import type { TAttachmentUploadStatus } from "@/store/issue/issue-details/attachment.store";
+import { translate } from "@plane/i18n";
 
 export type TAttachmentOperations = {
   create: (file: File) => Promise<void>;
@@ -43,13 +44,13 @@ export const useAttachmentOperations = (
         if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
         const attachmentUploadPromise = createAttachment(workspaceSlug, projectId, issueId, file);
         setPromiseToast(attachmentUploadPromise, {
-          loading: "Uploading attachment...",
+          loading: translate("web.uploading_attachment"),
           success: {
-            title: "Attachment uploaded",
+            title: translate("web.attachment_uploaded"),
             message: () => "The attachment has been successfully uploaded",
           },
           error: {
-            title: "Attachment not uploaded",
+            title: translate("web.attachment_not_uploaded"),
             message: () => "The attachment could not be uploaded",
           },
         });
@@ -61,15 +62,15 @@ export const useAttachmentOperations = (
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
           await removeAttachment(workspaceSlug, projectId, issueId, attachmentId);
           setToast({
-            message: "The attachment has been successfully removed",
+            message: translate("web.the_attachment_has_been_successfully_removed"),
             type: "success",
-            title: "Attachment removed",
+            title: translate("web.attachment_removed"),
           });
         } catch (_error) {
           setToast({
-            message: "The Attachment could not be removed",
+            message: translate("web.the_attachment_could_not_be_removed"),
             type: "error",
-            title: "Attachment not removed",
+            title: translate("web.attachment_not_removed"),
           });
         }
       },

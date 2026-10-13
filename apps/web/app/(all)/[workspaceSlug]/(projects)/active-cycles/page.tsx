@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 // components
 import { PageHead } from "@/components/core/page-title";
@@ -15,7 +16,9 @@ import { WorkspaceActiveCyclesUpgrade } from "@/components/active-cycles/workspa
 function WorkspaceActiveCyclesPage() {
   const { currentWorkspace } = useWorkspace();
   // derived values
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace?.name} - Active Cycles` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? `${currentWorkspace?.name} - ${translate("web.title_active_cycles")}`
+    : undefined;
 
   return (
     <>

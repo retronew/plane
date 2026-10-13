@@ -16,6 +16,7 @@ import type { IEstimate } from "@/store/estimates/estimate";
 import { Estimate } from "@/store/estimates/estimate";
 // store
 import type { CoreRootStore } from "../root.store";
+import { translate } from "@plane/i18n";
 
 type TEstimateLoader = "init-loader" | "mutation-loader" | undefined;
 type TErrorCodes = {
@@ -205,7 +206,7 @@ export class ProjectEstimateStore implements IProjectEstimateStore {
       this.loader = undefined;
       this.error = {
         status: "error",
-        message: "Error fetching estimates",
+        message: translate("web.error_fetching_estimates"),
       };
       throw error;
     }
@@ -245,7 +246,7 @@ export class ProjectEstimateStore implements IProjectEstimateStore {
       this.loader = undefined;
       this.error = {
         status: "error",
-        message: "Error fetching estimates",
+        message: translate("web.error_fetching_estimates"),
       };
       throw error;
     }
@@ -292,7 +293,7 @@ export class ProjectEstimateStore implements IProjectEstimateStore {
     } catch (error) {
       this.error = {
         status: "error",
-        message: "Error creating estimate",
+        message: translate("web.error_creating_estimate"),
       };
       throw error;
     }
@@ -311,7 +312,7 @@ export class ProjectEstimateStore implements IProjectEstimateStore {
     } catch (error) {
       this.error = {
         status: "error",
-        message: "Error deleting estimate",
+        message: translate("web.error_deleting_estimate"),
       };
       throw error;
     }

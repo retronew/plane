@@ -24,33 +24,34 @@ type TAuthHeader = {
   currentAuthStep: EAuthSteps;
 };
 
+// values are translation keys
 const Titles = {
   [EAuthModes.SIGN_IN]: {
     [EAuthSteps.EMAIL]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_welcome_back",
     },
     [EAuthSteps.PASSWORD]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_welcome_back",
     },
     [EAuthSteps.UNIQUE_CODE]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_welcome_back",
     },
   },
   [EAuthModes.SIGN_UP]: {
     [EAuthSteps.EMAIL]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_create_account",
     },
     [EAuthSteps.PASSWORD]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_create_account",
     },
     [EAuthSteps.UNIQUE_CODE]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: "web.auth_header_work_in_all_dimensions",
+      subHeader: "web.auth_header_create_account",
     },
   },
 };
@@ -74,11 +75,11 @@ export const AuthHeader = observer(function AuthHeader(props: TAuthHeader) {
   const getHeaderSubHeader = (
     step: EAuthSteps,
     mode: EAuthModes,
-    invitation: IWorkspaceMemberInvitation | undefined,
+    invitationDetails: IWorkspaceMemberInvitation | undefined,
     email: string | undefined
   ) => {
-    if (invitation && email && invitation.email === email && invitation.workspace) {
-      const workspace = invitation.workspace;
+    if (invitationDetails && email && invitationDetails.email === email && invitationDetails.workspace) {
+      const workspace = invitationDetails.workspace;
       return {
         header: (
           <div className="relative inline-flex items-center gap-2">
@@ -88,13 +89,12 @@ export const AuthHeader = observer(function AuthHeader(props: TAuthHeader) {
           </div>
         ),
         subHeader:
-          mode == EAuthModes.SIGN_UP
-            ? "Create an account to start managing work with your team."
-            : "Log in to start managing work with your team.",
+          mode == EAuthModes.SIGN_UP ? t("web.auth_header_invite_sign_up") : t("web.auth_header_invite_sign_in"),
       };
     }
 
-    return Titles[mode][step];
+    const titles = Titles[mode][step];
+    return { header: t(titles.header), subHeader: t(titles.subHeader) };
   };
 
   const { header, subHeader } = getHeaderSubHeader(currentAuthStep, authMode, invitation || undefined, invitationEmail);

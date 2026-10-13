@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
 import { PROJECT_ERROR_MESSAGES } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { IModule } from "@plane/types";
 // ui
@@ -80,9 +80,9 @@ export const DeleteModuleModal = observer(function DeleteModuleModal(props: Prop
       title={t("web.delete_module")}
       content={
         <>
-          Are you sure you want to delete module-{" "}
-          <span className="font-medium break-all text-primary">{data?.name}</span>? All of the data related to the
-          module will be permanently removed. This action cannot be undone.
+          {translate("web.delete_module_confirm_prefix")}{" "}
+          <span className="font-medium break-all text-primary">{data?.name}</span>
+          {translate("web.delete_module_confirm_suffix")}
         </>
       }
     />

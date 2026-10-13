@@ -12,7 +12,7 @@ import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { ORGANIZATION_SIZE, RESTRICTED_URLS } from "@plane/constants";
 // types
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/elements/button";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, IWorkspace, TOnboardingSteps } from "@plane/types";
@@ -114,7 +114,7 @@ export const CreateWorkspace = observer(function CreateWorkspace(props: Props) {
             onClick={handleCurrentViewChange}
             render={<button type="button" className="flex items-center gap-2 bg-surface-2 text-14" />}
           >
-            I want to join invited workspaces{" "}
+            {translate("web.join_invited_workspaces")}{" "}
             <span className="flex h-4 w-4 items-center justify-center rounded-xs bg-accent-primary/80 text-11 font-medium text-on-color">
               {invitedWorkspaces}
             </span>
@@ -168,6 +168,7 @@ export const CreateWorkspace = observer(function CreateWorkspace(props: Props) {
                       }}
                       placeholder={t("workspace_creation.form.name.placeholder")}
                       ref={ref}
+                      // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
                       autoFocus
                     />
                   </InputGroup>

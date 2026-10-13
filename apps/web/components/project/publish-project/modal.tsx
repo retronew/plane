@@ -260,7 +260,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                             className="h-8 rounded-sm bg-layer-3 px-3 py-2 text-11 font-medium hover:bg-layer-3-hover"
                             onClick={() => void handleCopyLink()}
                           >
-                            Copy link
+                            {translate("web.copy_link")}
                           </button>
                         </div>
                       </div>
@@ -269,7 +269,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                           <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent-primary opacity-75" />
                           <span className="relative inline-flex size-1.5 rounded-full bg-accent-primary" />
                         </span>
-                        This project is now live on web
+                        {translate("web.project_live_on_web")}
                       </p>
                     </>
                   )}
@@ -370,7 +370,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
               <DialogInfoIcon>
                 <GlobeOutline />
               </DialogInfoIcon>
-              Anyone with the link can access
+              {translate("web.anyone_with_link_can_access")}
             </DialogInfo>
             {!fetchSettingsLoader && (
               <div className="relative flex items-center gap-2">

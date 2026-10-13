@@ -8,7 +8,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 // types
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { SearchOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
@@ -90,7 +90,7 @@ const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsP
   };
 
   // derived values
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace.name} - Members` : undefined;
+  const pageTitle = currentWorkspace?.name ? `${currentWorkspace.name} - ${translate("web.title_members")}` : undefined;
   const appliedRoleFilters = filtersStore.filters?.roles || [];
 
   // if user is not authorized to view this page

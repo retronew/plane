@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 // plane-i18n
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // types
 import type { TIssueServiceType } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
@@ -72,10 +72,9 @@ export const IssueAttachmentDeleteModal = observer(function IssueAttachmentDelet
       title={t("attachment.delete")}
       content={
         <>
-          {/* TODO: Translate here */}
-          Are you sure you want to delete attachment-{" "}
-          <span className="font-bold">{getFileName(attachment.attributes.name)}</span>? This attachment will be
-          permanently removed. This action cannot be undone.
+          {translate("web.delete_attachment_confirm_prefix")}{" "}
+          <span className="font-bold">{getFileName(attachment.attributes.name)}</span>
+          {translate("web.delete_attachment_confirm_suffix")}
         </>
       }
     />

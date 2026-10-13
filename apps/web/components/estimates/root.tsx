@@ -8,7 +8,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // components
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 import { SettingsHeading } from "@/components/settings/heading";
@@ -107,8 +107,7 @@ export const EstimateRoot = observer(function EstimateRoot(props: TEstimateRoot)
                 title={t("web.archived_estimates")}
                 description={
                   <>
-                    Estimates have gone through a change, these are the estimates you had in your older versions which
-                    were not in use. Read more about them&nbsp;
+                    {translate("web.archived_estimates_description")}&nbsp;
                     <a
                       href={"https://docs.plane.so/core-concepts/projects/run-project#estimate"}
                       target="_blank"

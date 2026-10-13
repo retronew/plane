@@ -82,9 +82,9 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
       title={translate("web.delete_page")}
       content={
         <>
-          Are you sure you want to delete page-{" "}
-          <span className="font-medium break-words break-all text-primary">{getPageName(name)}</span> ? The Page will be
-          deleted permanently. This action cannot be undone.
+          {translate("web.delete_page_confirm_prefix")}{" "}
+          <span className="font-medium break-words break-all text-primary">{getPageName(name)}</span>
+          {translate("web.delete_page_confirm_suffix")}
         </>
       }
     />

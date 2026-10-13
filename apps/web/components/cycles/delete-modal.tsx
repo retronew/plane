@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useParams, useSearchParams } from "next/navigation";
 // types
 import { PROJECT_ERROR_MESSAGES } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { ICycle } from "@plane/types";
 // ui
@@ -86,9 +86,9 @@ export const CycleDeleteModal = observer(function CycleDeleteModal(props: ICycle
       title={t("web.delete_cycle")}
       content={
         <>
-          Are you sure you want to delete cycle{' "'}
+          {translate("web.delete_cycle_confirm_prefix")}
           <span className="font-medium break-words text-primary">{cycle?.name}</span>
-          {'"'}? All of the data related to the cycle will be permanently removed. This action cannot be undone.
+          {translate("web.delete_cycle_confirm_suffix")}
         </>
       }
     />

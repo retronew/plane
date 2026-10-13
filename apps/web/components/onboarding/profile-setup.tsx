@@ -12,7 +12,7 @@ import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { E_PASSWORD_STRENGTH } from "@plane/constants";
 // types
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/elements/button";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, TUserProfile, TOnboardingSteps } from "@plane/types";
@@ -278,7 +278,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                         </div>
                       </div>
                       <div className="pt-1 text-13 font-medium text-accent-secondary hover:text-tertiary">
-                        Choose image
+                        {translate("web.choose_image")}
                       </div>
                     </div>
                   ) : (
@@ -300,7 +300,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                     htmlFor="first_name"
                   >
-                    First name
+                    {translate("web.first_name")}
                   </label>
                   <Controller
                     control={control}
@@ -342,7 +342,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                     htmlFor="last_name"
                   >
-                    Last name
+                    {translate("web.last_name")}
                   </label>
                   <Controller
                     control={control}
@@ -382,7 +382,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                 <>
                   <div className="space-y-1">
                     <label className="text-13 font-medium text-tertiary" htmlFor="password">
-                      Set a password ({t("common.optional")})
+                      {translate("web.set_a_password")} ({t("common.optional")})
                     </label>
                     <Controller
                       control={control}
@@ -481,7 +481,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                   htmlFor="role"
                 >
-                  What role are you working on? Choose one.
+                  {translate("web.what_role_choose_one")}
                 </label>
                 <Controller
                   control={control}
@@ -517,7 +517,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                   htmlFor="use_case"
                 >
-                  What is your domain expertise? Choose one or more.
+                  {translate("web.domain_expertise_choose")}
                 </label>
                 <Controller
                   control={control}

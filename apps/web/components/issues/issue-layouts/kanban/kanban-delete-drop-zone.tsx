@@ -12,6 +12,7 @@ import { observer } from "mobx-react";
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
 // helpers
 import { getSourceFromDropPayload } from "../utils";
+import { translate } from "@plane/i18n";
 
 type Props = {
   onRequestDelete: (workItemId: string | undefined) => void;
@@ -60,7 +61,7 @@ export const KanbanDeleteDropZone = observer(function KanbanDeleteDropZone({ onR
           isDragOverDelete ? "bg-danger-primary blur-2xl" : ""
         } transition duration-300`}
       >
-        Drop here to delete the work item.
+        {translate("web.drop_here_to_delete")}
       </div>
     </div>
   );

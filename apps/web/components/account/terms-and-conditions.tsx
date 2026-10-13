@@ -20,8 +20,8 @@ const LEGAL_LINKS = {
 } as const;
 
 const MESSAGES = {
-  [EAuthModes.SIGN_UP]: "By creating an account",
-  [EAuthModes.SIGN_IN]: "By signing in",
+  [EAuthModes.SIGN_UP]: "web.terms_by_creating_account",
+  [EAuthModes.SIGN_IN]: "web.terms_by_signing_in",
 } as const;
 
 // Reusable link component to reduce duplication
@@ -37,9 +37,10 @@ export function TermsAndConditions({ authType = EAuthModes.SIGN_IN }: TermsAndCo
   return (
     <div className="flex items-center justify-center">
       <p className="text-center text-13 whitespace-pre-line text-tertiary">
-        {`${MESSAGES[authType]}, you understand and agree to \n our `}
-        <LegalLink href={LEGAL_LINKS.termsOfService}>{translate("web.terms_of_service")}</LegalLink> and{" "}
-        <LegalLink href={LEGAL_LINKS.privacyPolicy}>{translate("web.privacy_policy")}</LegalLink>.
+        {translate(MESSAGES[authType])}
+        <LegalLink href={LEGAL_LINKS.termsOfService}>{translate("web.terms_of_service")}</LegalLink>{" "}
+        {translate("web.and")} <LegalLink href={LEGAL_LINKS.privacyPolicy}>{translate("web.privacy_policy")}</LegalLink>
+        {translate("web.terms_end")}
       </p>
     </div>
   );

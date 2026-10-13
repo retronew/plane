@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useTheme } from "next-themes";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { TModuleFilters } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 import { calculateTotalFilters } from "@plane/utils";
@@ -47,7 +47,7 @@ function ProjectModulesPage({ params }: Route.ComponentProps) {
   const { allowPermissions } = useUserPermissions();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - Modules` : undefined;
+  const pageTitle = project?.name ? `${project?.name} - ${translate("web.title_modules")}` : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const resolvedPath = resolvedTheme === "light" ? lightModulesAsset : darkModulesAsset;
 

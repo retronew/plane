@@ -14,6 +14,7 @@ import { ISSUE_FILTER_DEFAULT_DATA } from "@/store/issue/helpers/base-issues.sto
 import { useIssueDetail } from "./store/use-issue-detail";
 import { useIssues } from "./store/use-issues";
 import { useIssuesActions } from "./use-issues-actions";
+import { translate } from "@plane/i18n";
 
 type DNDStoreType =
   | EIssuesStoreType.PROJECT
@@ -64,8 +65,8 @@ export const useGroupIssuesDragNDrop = (
   ) => {
     const errorToastProps: SetToastProps = {
       type: "error",
-      title: "Error!",
-      message: "Error while updating work item",
+      title: translate("toast.error"),
+      message: translate("web.error_while_updating_work_item"),
     };
     const moduleKey = ISSUE_FILTER_DEFAULT_DATA["module"];
     const cycleKey = ISSUE_FILTER_DEFAULT_DATA["cycle"];
@@ -95,7 +96,7 @@ export const useGroupIssuesDragNDrop = (
       delete data[moduleKey];
     }
 
-    updateIssue && updateIssue(projectId, issueId, data).catch(() => setToast(errorToastProps));
+    if (updateIssue) updateIssue(projectId, issueId, data).catch(() => setToast(errorToastProps));
   };
 
   const handleOnDrop = async (source: GroupDropLocation, destination: GroupDropLocation) => {
@@ -118,7 +119,7 @@ export const useGroupIssuesDragNDrop = (
       orderBy !== "sort_order"
     ).catch((err) => {
       setToast({
-        title: "Error!",
+        title: translate("toast.error"),
         type: "error",
         message: err?.detail ?? "Failed to perform this action",
       });

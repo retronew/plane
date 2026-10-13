@@ -5,13 +5,14 @@
  */
 
 // components
+import { translate } from "@plane/i18n";
 import { PageHead } from "@/components/core/page-title";
 import { WorkspaceDraftIssuesRoot } from "@/components/issues/workspace-draft";
 import type { Route } from "./+types/page";
 
 function WorkspaceDraftPage({ params }: Route.ComponentProps) {
   const { workspaceSlug } = params;
-  const pageTitle = "Workspace Draft";
+  const pageTitle = translate("web.title_workspace_draft");
 
   return (
     <>

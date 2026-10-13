@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 // component
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -23,7 +24,9 @@ function BillingSettingsPage() {
   const { currentWorkspace } = useWorkspace();
   // derived values
   const canPerformWorkspaceAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace.name} - Billing & Plans` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? `${currentWorkspace.name} - ${translate("web.title_billing_plans")}`
+    : undefined;
 
   if (workspaceUserInfo && !canPerformWorkspaceAdminActions) {
     return <NotAuthorizedView section="settings" className="h-auto" />;

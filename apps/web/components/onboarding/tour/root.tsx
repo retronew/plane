@@ -101,12 +101,11 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
             </div>
             <div className="flex flex-col overflow-y-auto p-6">
               <h3 className="font-semibold sm:text-18">
-                Welcome to Plane, {currentUser?.first_name} {currentUser?.last_name}
+                {translate("web.welcome_to_plane_name", {
+                  name: `${currentUser?.first_name ?? ""} ${currentUser?.last_name ?? ""}`.trim(),
+                })}
               </h3>
-              <p className="mt-3 text-13 text-secondary">
-                We{"'"}re glad that you decided to try out Plane. You can now manage your projects with ease. Get
-                started by creating a project.
-              </p>
+              <p className="mt-3 text-13 text-secondary">{translate("web.tour_welcome_description")}</p>
               <div className="flex h-full items-end">
                 <div className="mt-12 flex items-center gap-6">
                   <Button
@@ -125,7 +124,7 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
                       onComplete();
                     }}
                   >
-                    No thanks, I will explore it myself
+                    {translate("web.explore_myself")}
                   </button>
                 </div>
               </div>

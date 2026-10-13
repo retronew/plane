@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // components
 import { NotAuthorizedView } from "@/components/auth-screens/not-authorized-view";
 import { PageHead } from "@/components/core/page-title";
@@ -29,7 +29,9 @@ function StatesSettingsPage({ params }: Route.ComponentProps) {
   const { t } = useTranslation();
 
   // derived values
-  const pageTitle = currentProjectDetails?.name ? `${currentProjectDetails?.name} - States` : undefined;
+  const pageTitle = currentProjectDetails?.name
+    ? `${currentProjectDetails?.name} - ${translate("web.title_states")}`
+    : undefined;
   // derived values
   const canPerformProjectMemberActions = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],

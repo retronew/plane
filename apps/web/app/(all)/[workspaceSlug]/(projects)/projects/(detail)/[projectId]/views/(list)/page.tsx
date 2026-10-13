@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useTheme } from "next-themes";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { EViewAccess, TViewFilterProps } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
@@ -43,7 +43,7 @@ function ProjectViewsPage({ params }: Route.ComponentProps) {
   const { allowPermissions } = useUserPermissions();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - Views` : undefined;
+  const pageTitle = project?.name ? `${project?.name} - ${translate("web.title_views")}` : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const resolvedPath = resolvedTheme === "light" ? lightViewsAsset : darkViewsAsset;
 

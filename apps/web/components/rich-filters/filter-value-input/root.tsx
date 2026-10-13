@@ -25,6 +25,7 @@ import { DateRangeFilterValueInput } from "./date/range";
 import { SingleDateFilterValueInput } from "./date/single";
 import { MultiSelectFilterValueInput } from "./select/multi";
 import { SingleSelectFilterValueInput } from "./select/single";
+import { translate } from "@plane/i18n";
 
 export const FilterValueInput = observer(function FilterValueInput<P extends TFilterProperty, V extends TFilterValue>(
   props: TFilterValueInputProps<P, V>
@@ -89,7 +90,7 @@ export const AdditionalFilterValueInput = observer(function AdditionalFilterValu
   return (
     // Fallback
     <div className="flex h-full cursor-not-allowed items-center px-4 text-11 text-placeholder transition-opacity duration-200">
-      Filter type not supported
+      {translate("web.filter_type_not_supported")}
     </div>
   );
 });

@@ -9,6 +9,7 @@ import { action, makeObservable, observable, runInAction } from "mobx";
 import type { IUserSettings } from "@plane/types";
 // services
 import { UserService } from "@/services/user.service";
+import { translate } from "@plane/i18n";
 
 type TError = {
   status: string;
@@ -98,7 +99,7 @@ export class UserSettingsStore implements IUserSettingsStore {
         this.isLoading = false;
         this.error = {
           status: "error",
-          message: "Failed to fetch user settings",
+          message: translate("web.failed_to_fetch_user_settings"),
         };
       });
       throw error;

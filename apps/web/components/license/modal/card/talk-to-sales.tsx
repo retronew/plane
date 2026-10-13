@@ -80,7 +80,7 @@ export const TalkToSalesCard = observer(function TalkToSalesCard(props: TalkToSa
               nativeButton={false}
               render={
                 <a href={href} target="_blank" rel="noreferrer">
-                  Talk to Sales
+                  {translate("web.talk_to_sales")}
                 </a>
               }
               label={translate("web.talk_to_sales")}

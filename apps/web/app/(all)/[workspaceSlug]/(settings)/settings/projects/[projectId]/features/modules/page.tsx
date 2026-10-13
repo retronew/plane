@@ -30,7 +30,7 @@ function FeaturesModulesSettingsPage({ params }: Route.ComponentProps) {
   const { t } = useTranslation();
   // derived values
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} settings - ${t("project_settings.features.modules.short_title")}`
+    ? `${currentProjectDetails?.name} ${t("web.settings_suffix")} - ${t("project_settings.features.modules.short_title")}`
     : undefined;
   const canPerformProjectAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT);
 

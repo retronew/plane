@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import { EIssuesStoreType } from "@plane/types";
 import { useCycle } from "@/hooks/store/use-cycle";
@@ -166,9 +166,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
                 ) : (
                   <div className="flex w-full items-center justify-center gap-4 p-5 text-13">
                     <WarningCircleOutline className="h-3.5 w-3.5 text-secondary" />
-                    <span className="text-center text-secondary">
-                      You don’t have any current cycle. Please create one to transfer the work items.
-                    </span>
+                    <span className="text-center text-secondary">{translate("web.no_current_cycle_to_transfer")}</span>
                   </div>
                 )
               ) : (

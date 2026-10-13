@@ -14,13 +14,14 @@ import useSize from "@/hooks/use-window-size";
 // local imports
 import { InboxIssueFilterSelection } from "./filters/filter-selection";
 import { InboxIssueOrderByDropdown } from "./sorting/order-by";
+import { translate } from "@plane/i18n";
 
 const smallButton = <FilterOutline className="size-3" />;
 
 const largeButton = (
   <Button variant="secondary" size="sm" stretch="auto" render={<span />}>
     <FilterOutline className="size-3" />
-    <span>Filters</span>
+    <span>{translate("web.filters")}</span>
     <ChevronDownOutline className="size-3" />
   </Button>
 );

@@ -26,9 +26,7 @@ export function WebhookDeleteSection(props: Props) {
         trigger={<span className="text-16 tracking-tight">{translate("web.danger_zone")}</span>}
       >
         <div className="flex flex-col gap-8">
-          <span className="text-13 tracking-tight">
-            Once a webhook is deleted, it cannot be restored. Future events will no longer be delivered to this webhook.
-          </span>
+          <span className="text-13 tracking-tight">{translate("web.delete_webhook_section_description")}</span>
           <div>
             <Button
               variant="danger"

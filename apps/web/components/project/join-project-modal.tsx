@@ -74,9 +74,9 @@ export function JoinProjectModal(props: TJoinProjectModalProps) {
           </DialogHeader>
           <DialogBody>
             <p>
-              Are you sure you want to join the project{" "}
-              <span className="font-semibold break-words">{project?.name}</span>? Please click the &apos;Join
-              Project&apos; button below to continue.
+              {translate("web.join_project_confirm_prefix")}{" "}
+              <span className="font-semibold break-words">{project?.name}</span>
+              {translate("web.join_project_confirm_suffix")}
             </p>
           </DialogBody>
         </DialogMain>

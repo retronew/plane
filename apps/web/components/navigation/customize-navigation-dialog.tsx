@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 import { CloseOutline, DragDropOutline } from "@makeplane/propel/icons";
 // plane imports
 import { WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS_LINKS, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import {
   Dialog,
@@ -218,10 +218,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
           <DialogHeader>
             <DialogHeading>
               <DialogTitle>{t("customize_navigation")}</DialogTitle>
-              <DialogDescription>
-                Selected items will always stay visible in your sidebar. You can still find the others anytime from the
-                More menu. These changes are personal to you and won&apos;t affect anyone else on your workspace.
-              </DialogDescription>
+              <DialogDescription>{translate("web.customize_navigation_description")}</DialogDescription>
             </DialogHeading>
           </DialogHeader>
 
@@ -309,7 +306,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                         <div className="flex-1">
                           <div className="text-13 text-primary">{t("accordion_navigation_control")}</div>
                           <div className="text-11 text-secondary">
-                            Feature tabs will appear as nested items under project and acts as accordion.
+                            {translate("web.accordion_navigation_description")}
                           </div>
                         </div>
                       </label>
@@ -327,7 +324,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                         <div className="flex-1">
                           <div className="text-13 text-primary">{t("horizontal_navigation_bar")}</div>
                           <div className="text-11 text-secondary">
-                            Feature tabs will appear as horizontal tabs inside a project.
+                            {translate("web.horizontal_navigation_description")}
                           </div>
                         </div>
                       </label>

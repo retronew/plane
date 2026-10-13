@@ -14,7 +14,7 @@ import type { Route } from "./+types/not-found";
 import { translate } from "@plane/i18n";
 
 export const meta: Route.MetaFunction = () => [
-  { title: "404 - Page Not Found" },
+  { title: translate("web.page_not_found_title") },
   { name: "robots", content: "noindex, nofollow" },
 ];
 
@@ -28,10 +28,7 @@ function PageNotFound() {
           </div>
           <div className="space-y-2">
             <h3 className="text-16 font-semibold">{translate("web.oops_something_went_wrong")}</h3>
-            <p className="text-13 text-secondary">
-              Sorry, the page you are looking for cannot be found. It may have been removed, had its name changed, or is
-              temporarily unavailable.
-            </p>
+            <p className="text-13 text-secondary">{translate("web.page_not_found_description")}</p>
           </div>
           <div className="flex justify-center">
             <Button

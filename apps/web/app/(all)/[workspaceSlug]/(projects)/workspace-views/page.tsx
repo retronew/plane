@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 // plane imports
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { DEFAULT_GLOBAL_VIEWS_LIST } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { SearchOutline } from "@makeplane/propel/icons";
 
 // components
@@ -25,7 +25,9 @@ function WorkspaceViewsPage() {
   const { currentWorkspace } = useWorkspace();
   const { t } = useTranslation();
   // derived values
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace?.name} - All Views` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? `${currentWorkspace?.name} - ${translate("web.title_all_views")}`
+    : undefined;
 
   return (
     <>

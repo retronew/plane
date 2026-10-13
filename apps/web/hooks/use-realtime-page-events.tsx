@@ -19,6 +19,7 @@ import type { EPageStoreType } from "@/hooks/store";
 import { usePageStore } from "@/hooks/store";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { translate } from "@plane/i18n";
 
 // Type for page update handlers with proper typing for action data
 export type PageUpdateHandler<T extends keyof EventToPayloadMap = keyof EventToPayloadMap> = (params: {
@@ -119,7 +120,7 @@ export const useRealtimePageEvents = ({
               if (page.id === pageId && data?.user_id !== currentUser?.id) {
                 setToast({
                   type: "error",
-                  title: "Page deleted",
+                  title: translate("web.page_deleted"),
                   message: `Page deleted${getUserDisplayText(data.user_id)}`,
                 });
                 router.push(handlers.getRedirectionLink());

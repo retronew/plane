@@ -237,7 +237,7 @@ export function EditorAIMenu(props: Props) {
                         className="rounded-sm p-1 text-13 font-medium text-tertiary outline-none hover:bg-layer-1"
                         onClick={() => handleInsertText(false)}
                       >
-                        Replace selection
+                        {translate("web.replace_selection")}
                       </button>
                       <Tooltip label={translate("web.add_to_next_line")}>
                         <button

@@ -7,7 +7,7 @@
 import { observer } from "mobx-react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { IProject } from "@plane/types";
 import { NotAuthorizedView } from "@/components/auth-screens/not-authorized-view";
@@ -49,7 +49,9 @@ function AutomationSettingsPage({ params }: Route.ComponentProps) {
   };
 
   // derived values
-  const pageTitle = projectDetails?.name ? `${projectDetails?.name} - Automations` : undefined;
+  const pageTitle = projectDetails?.name
+    ? `${projectDetails?.name} - ${translate("web.title_automations")}`
+    : undefined;
 
   if (workspaceUserInfo && !canPerformProjectAdminActions) {
     return <NotAuthorizedView section="settings" isProjectView className="h-auto" />;

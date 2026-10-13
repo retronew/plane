@@ -16,7 +16,7 @@ import {
 } from "@makeplane/propel/components/dialog";
 import { CloseOutline, RocketOutline } from "@makeplane/propel/icons";
 // i18n
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // types
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
@@ -246,7 +246,7 @@ export function ExistingIssuesListModal(props: Props) {
               {/* TODO: Translate here */}
               {searchTerm !== "" && (
                 <h5 className="text-13 text-secondary">
-                  Search results for{" "}
+                  {translate("web.search_results_for")}{" "}
                   <span className="text-primary">
                     {'"'}
                     {searchTerm}

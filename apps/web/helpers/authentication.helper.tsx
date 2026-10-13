@@ -8,6 +8,21 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 // plane imports
 import { SUPPORT_EMAIL } from "@plane/constants";
+import { translate } from "@plane/i18n";
+
+// Look up a translation keyed by the English text; fall back to the English text when none exists.
+const localizeAuthText = (text: string): string => {
+  if (!text) return text;
+  const key = `web.auth_errors.${text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")}`;
+  const value = translate(key);
+  return value === key ? text : value;
+};
+
+const localizeMessage = (message: ReactNode): ReactNode =>
+  typeof message === "string" ? localizeAuthText(message) : message;
 
 export enum EPageTypes {
   PUBLIC = "PUBLIC",
@@ -140,7 +155,10 @@ const errorCodeMessages: {
   },
   [EAuthenticationErrorCodes.USER_ACCOUNT_DEACTIVATED]: {
     title: `User account deactivated`,
-    message: () => `User account deactivated. Please contact ${SUPPORT_EMAIL ? SUPPORT_EMAIL : "administrator"}.`,
+    message: () =>
+      translate("web.auth_errors.user_account_deactivated_contact", {
+        contact: SUPPORT_EMAIL ? SUPPORT_EMAIL : localizeAuthText("administrator"),
+      }),
   },
   [EAuthenticationErrorCodes.BOT_USER_LOGIN_FORBIDDEN]: {
     title: `Sign in not allowed`,
@@ -164,14 +182,14 @@ const errorCodeMessages: {
     title: `User already exists`,
     message: (email = undefined) => (
       <div>
-        Your account is already registered.&nbsp;
+        {localizeAuthText("Your account is already registered.")}&nbsp;
         <Link
           className="font-medium underline underline-offset-4 transition-all hover:font-bold"
           href={`/sign-in${email ? `?email=${encodeURIComponent(email)}` : ``}`}
         >
-          Sign In
+          {localizeAuthText("Sign In")}
         </Link>
-        &nbsp;now.
+        &nbsp;{localizeAuthText("now.")}
       </div>
     ),
   },
@@ -200,14 +218,14 @@ const errorCodeMessages: {
     title: `User does not exist`,
     message: (email = undefined) => (
       <div>
-        No account found.&nbsp;
+        {localizeAuthText("No account found.")}&nbsp;
         <Link
           className="font-medium underline underline-offset-4 transition-all hover:font-bold"
           href={`/${email ? `?email=${encodeURIComponent(email)}` : ``}`}
         >
-          Create one
+          {localizeAuthText("Create one")}
         </Link>
-        &nbsp;to get started.
+        &nbsp;{localizeAuthText("to get started.")}
       </div>
     ),
   },
@@ -347,11 +365,11 @@ const errorCodeMessages: {
     title: `Admin user already exists`,
     message: () => (
       <div>
-        Admin user already exists.&nbsp;
+        {localizeAuthText("Admin user already exists.")}&nbsp;
         <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
-          Sign In
+          {localizeAuthText("Sign In")}
         </Link>
-        &nbsp;now.
+        &nbsp;{localizeAuthText("now.")}
       </div>
     ),
   },
@@ -359,17 +377,17 @@ const errorCodeMessages: {
     title: `Admin user does not exist`,
     message: () => (
       <div>
-        Admin user does not exist.&nbsp;
+        {localizeAuthText("Admin user does not exist.")}&nbsp;
         <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
-          Sign In
+          {localizeAuthText("Sign In")}
         </Link>
-        &nbsp;now.
+        &nbsp;{localizeAuthText("now.")}
       </div>
     ),
   },
   [EAuthenticationErrorCodes.ADMIN_USER_DEACTIVATED]: {
     title: `Admin user deactivated`,
-    message: () => <div>Your account is deactivated</div>,
+    message: () => <div>{localizeAuthText("Your account is deactivated")}</div>,
   },
   [EAuthenticationErrorCodes.RATE_LIMIT_EXCEEDED]: {
     title: "",
@@ -437,8 +455,10 @@ export const authErrorHandler = (errorCode: EAuthenticationErrorCodes, email?: s
     return {
       type: EErrorAlertType.BANNER_ALERT,
       code: errorCode,
-      title: errorCodeMessages[errorCode]?.title || "Error",
-      message: errorCodeMessages[errorCode]?.message(email) || "Something went wrong. Please try again.",
+      title: localizeAuthText(errorCodeMessages[errorCode]?.title || "Error"),
+      message: localizeMessage(
+        errorCodeMessages[errorCode]?.message(email) || "Something went wrong. Please try again."
+      ),
     };
 
   return undefined;

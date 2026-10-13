@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from "react";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import { EFileAssetType } from "@plane/types";
 import type { TCommentsOperations } from "@plane/types";
@@ -61,6 +61,7 @@ export const useWorkItemCommentOperations = (
               type: "success",
               message: t("issue.comments.copy_link.success"),
             });
+            return undefined;
           });
         } catch (error) {
           console.error("Error in copying comment link:", error);
@@ -162,15 +163,15 @@ export const useWorkItemCommentOperations = (
           if (!workspaceSlug || !projectId || !commentId) throw new Error("Missing fields");
           await createCommentReaction(workspaceSlug, projectId, commentId, reaction);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction created successfully",
+            message: translate("web.reaction_created_successfully"),
           });
         } catch {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction creation failed",
+            message: translate("web.reaction_creation_failed"),
           });
         }
       },
@@ -179,15 +180,15 @@ export const useWorkItemCommentOperations = (
           if (!workspaceSlug || !projectId || !commentId || !currentUser?.id) throw new Error("Missing fields");
           removeCommentReaction(workspaceSlug, projectId, commentId, reaction, currentUser.id);
           setToast({
-            title: "Success!",
+            title: translate("toast.success"),
             type: "success",
-            message: "Reaction removed successfully",
+            message: translate("web.reaction_removed_successfully"),
           });
         } catch {
           setToast({
-            title: "Error!",
+            title: translate("toast.error"),
             type: "error",
-            message: "Reaction remove failed",
+            message: translate("web.reaction_remove_failed"),
           });
         }
       },
@@ -210,6 +211,7 @@ export const useWorkItemCommentOperations = (
       },
     };
     return ops;
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- pre-existing: recreating operations on every store change is not wanted
   }, [workspaceSlug, projectId, issueId, createComment, updateComment, uploadEditorAsset, removeComment]);
 
   return operations;

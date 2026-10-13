@@ -87,7 +87,7 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export const meta: Route.MetaFunction = () => [
-  { title: APP_TITLE },
+  { title: translate("web.app_title") },
   { name: "description", content: SITE_DESCRIPTION },
   { property: "og:title", content: APP_TITLE },
   {

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
@@ -25,7 +26,9 @@ function GlobalViewIssuesPage({ params }: Route.ComponentProps) {
 
   // derived values
   const defaultView = DEFAULT_GLOBAL_VIEWS_LIST.find((view) => view.key === globalViewId);
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace?.name} - All Views` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? `${currentWorkspace?.name} - ${translate("web.title_all_views")}`
+    : undefined;
 
   // handlers
   const toggleLoading = (value: boolean) => setIsLoading(value);

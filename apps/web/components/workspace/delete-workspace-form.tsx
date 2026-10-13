@@ -10,7 +10,7 @@ import { WarningTriangleOutline } from "@makeplane/propel/icons";
 // Plane Imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import {
   DialogActions,
@@ -110,9 +110,9 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
         <DialogBody tabIndex={0}>
           <div className="space-y-4">
             <p className="text-body-xs-regular text-secondary">
-              You are about to delete the workspace{" "}
-              <span className="text-body-xs-semibold break-words">{data?.name}</span>. If you confirm, you will lose
-              access to all your work data in this workspace without any way to restore it. Tread very carefully.
+              {translate("web.delete_workspace_prefix")}{" "}
+              <span className="text-body-xs-semibold break-words">{data?.name}</span>
+              {translate("web.delete_workspace_suffix")}
             </p>
             <div className="text-secondary">
               <p className="text-body-xs-regular break-words">
@@ -142,9 +142,9 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
             </div>
             <div className="text-secondary">
               <p className="text-body-xs-regular">
-                For final confirmation, type{" "}
+                {translate("web.final_confirmation_type")}{" "}
                 <span className="text-body-xs-medium text-primary">delete my workspace </span>
-                below.
+                {translate("web.below")}
               </p>
               <Controller
                 control={control}

@@ -9,6 +9,7 @@ import { CyclesOutline, ModuleOutline, PagesOutline, ViewsOutline, WorkItemsOutl
 import type { ISvgIcons } from "@plane/blocks/icons";
 // types
 import type { TTourSteps } from "./root";
+import { translate } from "@plane/i18n";
 
 const sidebarOptions: {
   key: TTourSteps;
@@ -51,9 +52,9 @@ export function TourSidebar({ step, setStep }: Props) {
   return (
     <div className="col-span-3 hidden bg-surface-2 p-8 lg:block">
       <h3 className="text-16 font-medium">
-        Let{"'"}s get started!
+        {translate("web.lets_get_started")}
         <br />
-        Get more out of Plane.
+        {translate("web.get_more_out_of_plane")}
       </h3>
       <div className="mt-8 space-y-5">
         {sidebarOptions.map((option) => (

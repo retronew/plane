@@ -9,7 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { TPageNavigationTabs } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // assets
@@ -49,7 +49,7 @@ function ProjectPagesPage({ params }: Route.ComponentProps) {
   const { allowPermissions } = useUserPermissions();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - Pages` : undefined;
+  const pageTitle = project?.name ? `${project?.name} - ${translate("web.title_pages")}` : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const resolvedPath = resolvedTheme === "light" ? lightPagesAsset : darkPagesAsset;
   const pageType = getPageType(type);

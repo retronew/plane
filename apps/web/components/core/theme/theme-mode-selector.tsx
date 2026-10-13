@@ -9,6 +9,7 @@ import type { Control } from "react-hook-form";
 import { Controller } from "react-hook-form";
 // plane imports
 import type { IUserTheme } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 type Props = {
   control: Control<IUserTheme>;
@@ -36,7 +37,7 @@ export const CustomThemeModeSelector = observer(function CustomThemeModeSelector
                 onChange={() => onChange(false)}
                 className="cursor-pointer"
               />
-              Light mode
+              {translate("web.light_mode")}
             </label>
             <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-subtle-1 bg-layer-2 px-3 py-2 text-body-sm-regular transition-colors hover:bg-layer-2-hover">
               <input
@@ -47,7 +48,7 @@ export const CustomThemeModeSelector = observer(function CustomThemeModeSelector
                 onChange={() => onChange(true)}
                 className="cursor-pointer"
               />
-              Dark mode
+              {translate("web.dark_mode")}
             </label>
           </div>
         )}

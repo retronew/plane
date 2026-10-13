@@ -26,6 +26,7 @@ import { InboxIssueService } from "@/services/inbox";
 import type { IInboxIssueStore } from "@/store/inbox/inbox-issue.store";
 import { InboxIssueStore } from "@/store/inbox/inbox-issue.store";
 import type { CoreRootStore } from "../root.store";
+import { translate } from "@plane/i18n";
 
 type TLoader =
   | "init-loading"
@@ -145,11 +146,10 @@ export class ProjectInboxStore implements IProjectInboxStore {
 
   get getAppliedFiltersCount() {
     let count = 0;
-    this.inboxFilters != undefined &&
+    if (this.inboxFilters != undefined)
       Object.keys(this.inboxFilters).forEach((key) => {
         const filterKey = key as keyof TInboxIssueFilter;
-        if (this.inboxFilters[filterKey] && this.inboxFilters?.[filterKey])
-          count = count + (this.inboxFilters?.[filterKey]?.length ?? 0);
+        if (this.inboxFilters?.[filterKey]) count = count + (this.inboxFilters?.[filterKey]?.length ?? 0);
       });
     return count;
   }
@@ -194,7 +194,7 @@ export class ProjectInboxStore implements IProjectInboxStore {
     paginationCursor: string
   ) => {
     const filters: Partial<Record<keyof TInboxIssueFilter, string>> = {};
-    !isEmpty(inboxFilters) &&
+    if (!isEmpty(inboxFilters))
       Object.keys(inboxFilters).forEach((key) => {
         const filterKey = key as keyof TInboxIssueFilter;
         if (inboxFilters[filterKey] && inboxFilters[filterKey]?.length) {
@@ -364,7 +364,7 @@ export class ProjectInboxStore implements IProjectInboxStore {
       console.error("Error fetching the intake issues", error);
       this.loader = undefined;
       this.error = {
-        message: "Error fetching the intake work items please try again later.",
+        message: translate("web.error_fetching_the_intake_work_items_please_try_again_later"),
         status: "init-error",
       };
       throw error;
@@ -404,7 +404,7 @@ export class ProjectInboxStore implements IProjectInboxStore {
     } catch (error) {
       console.error("Error fetching the intake issues", error);
       this.error = {
-        message: "Error fetching the paginated intake work items please try again later.",
+        message: translate("web.error_fetching_the_paginated_intake_work_items_please_try_ag"),
         status: "pagination-error",
       };
       throw error;
@@ -516,6 +516,7 @@ export class ProjectInboxStore implements IProjectInboxStore {
             set(this.store.projectRoot.project.projectMap, [projectId, "intake_count"], Math.max(0, currentCount - 1));
           }
         });
+        return undefined;
       });
     } catch (error) {
       console.error("Error removing the intake issue");

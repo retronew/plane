@@ -25,12 +25,9 @@ function ProjectSettingsPage() {
   const resolvedPath = resolvedTheme === "dark" ? ProjectDarkEmptyState : ProjectLightEmptyState;
   return (
     <div className="mx-auto flex h-full max-w-[480px] flex-col items-center justify-center gap-4">
-      <img src={resolvedPath} alt="No projects yet" />
+      <img src={resolvedPath} alt={translate("web.no_projects_yet")} />
       <div className="text-16 font-semibold text-tertiary">{translate("web.no_projects_yet")}</div>
-      <div className="text-center text-13 text-tertiary">
-        Projects act as the foundation for goal-driven work. They let you manage your teams, tasks, and everything you
-        need to get things done.
-      </div>
+      <div className="text-center text-13 text-tertiary">{translate("web.projects_foundation_description")}</div>
       <div className="flex gap-2">
         <ButtonElement
           variant="secondary"
@@ -38,7 +35,7 @@ function ProjectSettingsPage() {
           stretch="auto"
           render={<Link href="https://plane.so/" target="_blank" />}
         >
-          Learn more about projects
+          {translate("web.learn_more_about_projects")}
         </ButtonElement>
         <Button
           variant="primary"

@@ -9,6 +9,7 @@ import { observable, action, makeObservable, runInAction } from "mobx";
 import type { IInstance, IInstanceConfig } from "@plane/types";
 // services
 import { InstanceService } from "@/services/instance.service";
+import { translate } from "@plane/i18n";
 
 type TError = {
   status: string;
@@ -69,7 +70,7 @@ export class InstanceStore implements IInstanceStore {
         this.isLoading = false;
         this.error = {
           status: "error",
-          message: "Failed to fetch instance info",
+          message: translate("web.failed_to_fetch_instance_info"),
         };
       });
       throw error;

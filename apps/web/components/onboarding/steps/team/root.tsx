@@ -339,7 +339,7 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
           onClick={appendField}
         >
           <AddOutline className="h-4 w-4" />
-          Add another
+          {translate("web.add_another")}
         </button>
       </div>
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-4 px-8 sm:px-2">

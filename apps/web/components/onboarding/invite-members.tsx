@@ -305,7 +305,7 @@ export function InviteMembers(props: Props) {
           <div className="mx-auto w-4/5 space-y-1 py-4 text-center">
             <h3 className="text-24 font-bold text-primary">{translate("web.invite_your_teammates")}</h3>
             <p className="font-medium text-placeholder">
-              Work in plane happens best with your team. Invite them now to use Plane to its potential.
+              {translate("web.work_in_plane_happens_best_with_your_team_invite_them_now")}
             </p>
           </div>
           <form
@@ -344,7 +344,7 @@ export function InviteMembers(props: Props) {
                 onClick={appendField}
               >
                 <AddOutline className="h-4 w-4" />
-                Add another
+                {translate("web.add_another")}
               </button>
             </div>
             <div className="mx-auto flex w-full max-w-96 flex-col items-center justify-center gap-4 px-8 sm:px-2">
