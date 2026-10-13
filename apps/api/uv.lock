@@ -1085,7 +1085,6 @@ dependencies = [
     { name = "urllib3" },
     { name = "uvicorn" },
     { name = "whitenoise" },
-    { name = "zxcvbn" },
 ]
 
 [package.dev-dependencies]
@@ -1151,7 +1150,6 @@ requires-dist = [
     { name = "urllib3", specifier = ">=2.8.0" },
     { name = "uvicorn", specifier = "==0.29.0" },
     { name = "whitenoise", specifier = "==6.12.0" },
-    { name = "zxcvbn", specifier = "==4.4.28" },
 ]
 
 [package.metadata.requires-dev]
@@ -1777,9 +1775,3 @@ sdist = { url = "https://files.pythonhosted.org/packages/dc/23/655a1802fe8041302
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/98/df615823cd9419131ce19fba00de53a663794369e198aade064a244b385d/zipp-4.1.1-py3-none-any.whl", hash = "sha256:8979f52d874162f485ff2981e3891f3a3317b7a3dd43ff1e1775b9304f307a9c", size = 10582, upload-time = "2026-10-03T17:03:02.506Z" },
 ]
-
-[[package]]
-name = "zxcvbn"
-version = "4.4.28"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/54/67/c6712608c99e7720598e769b8fb09ebd202119785adad0bbce25d330243c/zxcvbn-4.4.28.tar.gz", hash = "sha256:151bd816817e645e9064c354b13544f85137ea3320ca3be1fb6873ea75ef7dc1", size = 407871, upload-time = "2019-05-29T03:13:49.231Z" }

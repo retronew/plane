@@ -61,7 +61,6 @@ dependencies = [
     # >=2.32 for the get_connection_with_tls_context adapter hook (SSRF IP pinning)
     "requests==2.33.0",
     # password validator
-    "zxcvbn==4.4.28",
     # timezone
     "pytz==2024.1",
     # jwt

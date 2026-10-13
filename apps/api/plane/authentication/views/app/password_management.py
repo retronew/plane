@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zxcvbn import zxcvbn
 
 # Django imports
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -23,6 +22,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views import View
 
 # Module imports
+from plane.utils.password import is_password_strong
 from plane.bgtasks.forgot_password_task import forgot_password
 from plane.license.models import Instance
 from plane.db.models import User
@@ -142,8 +142,7 @@ class ResetPasswordEndpoint(View):
                 return HttpResponseRedirect(url)
 
             # Check the password complexity
-            results = zxcvbn(password)
-            if results["score"] < 3:
+            if not is_password_strong(password):
                 exc = AuthenticationException(
                     error_code=AUTHENTICATION_ERROR_CODES["PASSWORD_TOO_WEAK"],
                     error_message="PASSWORD_TOO_WEAK",
