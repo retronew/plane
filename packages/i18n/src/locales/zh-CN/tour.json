@@ -14,8 +14,8 @@
         "description": "使用筛选条件快速缩小列表范围，可以按状态、优先级或团队成员筛选。"
       },
       "step_three": {
-        "title": "按需查看、分组和排序工作项。",
-        "description": "查看所需属性，并按需对工作项进行分组或排序。"
+        "title": "按需查看、分组和排序",
+        "description": "选择要显示的属性，并按需对工作项分组或排序。"
       },
       "step_four": {
         "title": "自由选择展示方式",
@@ -47,11 +47,11 @@
     "module": {
       "step_zero": {
         "title": "将项目分解为模块",
-        "description": "模块是更小、更聚焦的子项目，帮助用户在特定时间范围内对工作项进行分组和组织。"
+        "description": "模块是更小、更聚焦的子项目，便于在特定时间段内归类和管理工作项。"
       },
       "step_one": {
         "title": "创建模块",
-        "description": "模块是更小、更聚焦的子项目，帮助用户在特定时间范围内对工作项进行分组和组织。"
+        "description": "模块是更小、更聚焦的子项目，便于在特定时间段内归类和管理工作项。"
       },
       "step_two": {
         "title": "点击“+”",
@@ -68,7 +68,7 @@
     },
     "page": {
       "step_zero": {
-        "title": "用 AI 驱动的页面撰写文档",
+        "title": "用 AI 页面撰写文档",
         "description": "Plane 的页面让您记录、整理项目信息并协同编辑，无需借助外部工具。"
       },
       "step_one": {
@@ -106,13 +106,13 @@
         "description": "接受后可以编辑工作项并将其移入项目；拒绝则会将其标记为“已取消”。"
       },
       "step_three": {
-        "title": "暂时延后",
-        "description": "可以延后工作项，稍后再审核。它会被移到未处理请求列表的底部。"
+        "title": "稍后处理",
+        "description": "可以先将工作项设为稍后提醒，之后再审核。它会移到未处理列表的底部。"
       }
     },
     "mcp_connectors": {
       "step_zero": {
-        "title": "无需来回切换标签页，一处连接所有工具。",
+        "title": "告别来回切换，所有工具一处连接。",
         "description": "连接 GitHub、Slack，直接在 Plane AI 中跟踪 PR、总结聊天内容。"
       }
     },
@@ -153,11 +153,11 @@
     }
   },
   "get_started": {
-    "title": "{name}，您好，欢迎加入！",
-    "description": "开启 Plane 之旅所需的一切都在这里。",
+    "title": "{name}，欢迎加入！",
+    "description": "上手 Plane 所需的一切都在这里。",
     "checklist_section": {
       "title": "快速上手",
-      "description": "开始设置，让您的想法更快落地。",
+      "description": "完成以下设置，让想法更快落地。",
       "checklist_items": {
         "item_1": {
           "title": "创建项目"
@@ -180,11 +180,11 @@
       }
     },
     "team_section": {
-      "title": "邀请您的团队",
+      "title": "邀请团队成员",
       "description": "邀请同事，一起开始协作。"
     },
     "integrations_section": {
-      "title": "为工作区增添更多能力",
+      "title": "为工作区添加更多能力",
       "more_integrations": "浏览更多集成"
     },
     "switch_to_plane_section": {

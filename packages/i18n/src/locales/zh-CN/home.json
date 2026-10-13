@@ -1,41 +1,41 @@
 {
   "home": {
     "empty": {
-      "quickstart_guide": "快速入门指南",
-      "not_right_now": "暂不",
+      "quickstart_guide": "快速上手",
+      "not_right_now": "以后再说",
       "create_project": {
         "title": "创建项目",
-        "description": "在 Plane 中，大多数事情都从项目开始。",
-        "cta": "开始使用"
+        "description": "在 Plane 里，一切工作都从项目开始。",
+        "cta": "立即创建"
       },
       "invite_team": {
-        "title": "邀请您的团队",
-        "description": "与同事一起构建、发布和管理。",
-        "cta": "邀请成员"
+        "title": "邀请团队成员",
+        "description": "和同事一起规划、推进和交付工作。",
+        "cta": "去邀请"
       },
       "configure_workspace": {
-        "title": "设置您的工作区。",
-        "description": "开启或关闭功能，或进行更多配置。",
-        "cta": "配置此工作区"
+        "title": "配置工作区",
+        "description": "按需开启或关闭功能，打造适合团队的工作区。",
+        "cta": "去配置"
       },
       "personalize_account": {
-        "title": "打造属于您的 Plane。",
-        "description": "选择您的头像、颜色等。",
-        "cta": "立即个性化"
+        "title": "个性化设置",
+        "description": "设置头像、主题配色等，让 Plane 更顺手。",
+        "cta": "去设置"
       },
       "widgets": {
-        "title": "没有小组件有点冷清，开启它们吧",
-        "description": "您的所有小组件似乎都已关闭。立即启用\n以获得更好的体验！",
+        "title": "小组件都关掉了",
+        "description": "您关闭了所有小组件。开启后，首页能展示更多有用的信息。",
         "primary_button": {
           "text": "管理小组件"
         }
       }
     },
     "quick_links": {
-      "empty": "保存常用的工作链接，方便随时访问。",
-      "add": "添加快速链接",
-      "title": "快速链接",
-      "title_plural": "快速链接"
+      "empty": "把常用的工作链接放在这里，随时一键打开。",
+      "add": "添加快捷链接",
+      "title": "快捷链接",
+      "title_plural": "快捷链接"
     },
     "recents": {
       "title": "最近访问",

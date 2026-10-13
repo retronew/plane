@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "搜索键盘快捷键",
       "no_results": "未找到“{query}”的键盘快捷键",
-      "sequence_separator": "然后"
+      "sequence_separator": "再按"
     },
     "group_titles": {
       "actions": "操作",

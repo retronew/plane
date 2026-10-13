@@ -42,8 +42,22 @@ export const useExpandableSearch = (options?: UseExpandableSearchOptions) => {
     }
   }, [isOpen, handleClose]);
 
-  // Outside click detection
-  useOutsideClickDetector(containerRef, handleOutsideClick);
+  // Outside click detection. Capture phase so a mousedown handler that stops propagation
+  // elsewhere on the page cannot keep the panel open.
+  useOutsideClickDetector(containerRef, handleOutsideClick, true);
+
+  // Escape closes the panel wherever focus is (e.g. after arrowing into the result list,
+  // focus leaves the input and its own onKeyDown no longer fires).
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      handleClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, handleClose]);
 
   // Track keyboard shortcuts that trigger focus (Cmd+F / Ctrl+F)
   useEffect(() => {
