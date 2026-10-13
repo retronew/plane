@@ -64,16 +64,14 @@ export const ThemeSwitcher = observer(function ThemeSwitcher(props: {
           loading: t("web.updating_theme"),
           success: {
             title: t("web.theme_updated"),
-            message: () => "Reloading to apply changes...",
+            message: () => "",
           },
           error: {
             title: t("toast.error"),
             message: () => "Failed to update theme. Please try again.",
           },
         });
-        // Wait for the promise to resolve, then reload after showing toast
         await updatePromise;
-        window.location.reload();
       } catch (error) {
         console.error("Error updating theme:", error);
       }

@@ -82,26 +82,29 @@ function StoreWrapper(props: TStoreWrapper) {
    * This effect applies or clears custom theme CSS variables whenever
    * the theme changes. It runs independently of the initial sync effect.
    */
+  // Depend on the individual fields: the profile store mutates `theme` in place,
+  // so the object reference does not change when the user switches themes.
+  const themeName = userProfile?.theme?.theme;
+  const themePrimary = userProfile?.theme?.primary;
+  const themeBackground = userProfile?.theme?.background;
+  const themeDarkPalette = userProfile?.theme?.darkPalette;
   useEffect(() => {
-    if (!userProfile?.theme?.theme) return;
+    if (!themeName) return;
 
-    const currentTheme = userProfile?.theme?.theme;
     const previousTheme = previousThemeRef.current;
-    const themeData = userProfile?.theme;
 
     // Apply custom theme if current theme is custom
-    if (currentTheme === "custom" && themeData.primary && themeData.background && themeData.darkPalette !== undefined) {
-      applyCustomTheme(themeData.primary, themeData.background, themeData.darkPalette ? "dark" : "light");
+    if (themeName === "custom" && themePrimary && themeBackground && themeDarkPalette !== undefined) {
+      applyCustomTheme(themePrimary, themeBackground, themeDarkPalette ? "dark" : "light");
     }
     // Clear custom theme CSS when switching away from custom
-    else if (previousTheme === "custom" && currentTheme !== "custom") {
+    else if (previousTheme === "custom" && themeName !== "custom") {
       clearCustomTheme();
-      // No reload needed - let CSS cascade handle it naturally
     }
 
     // Update previous theme for next comparison
-    previousThemeRef.current = currentTheme;
-  }, [userProfile?.theme]);
+    previousThemeRef.current = themeName;
+  }, [themeName, themePrimary, themeBackground, themeDarkPalette]);
 
   useEffect(() => {
     if (!params) return;
