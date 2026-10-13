@@ -22,6 +22,7 @@
     "clean": "rm -rf .turbo && rm -rf .next && rm -rf node_modules && rm -rf dist"
   },
   "dependencies": {
+    "@plane/i18n": "workspace:*",
     "@plane/types": "workspace:*"
   },
   "devDependencies": {

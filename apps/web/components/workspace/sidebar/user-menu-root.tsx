@@ -7,14 +7,22 @@
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useRouter } from "next/navigation";
-import { LogOutOutline, SettingsOutline } from "@makeplane/propel/icons";
+import {
+  KeyOutline,
+  LockOutline,
+  LogOutOutline,
+  SettingsOutline,
+  SubscribeOutline,
+  UserOutline,
+} from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { GOD_MODE_URL } from "@plane/constants";
+import { GOD_MODE_URL, PROFILE_SETTINGS, PROFILE_SETTINGS_TABS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
+import type { TProfileSettingsTabs } from "@plane/types";
 import { getFileURL } from "@plane/utils";
 // components
 import { CoverImage } from "@/components/common/cover-image";
@@ -23,6 +31,18 @@ import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useUser } from "@/hooks/store/user";
+
+// Mirrors the icons used by the profile settings sidebar.
+const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutline> = {
+  general: UserOutline,
+  preferences: SettingsOutline,
+  notifications: SubscribeOutline,
+  security: LockOutline,
+  "api-tokens": KeyOutline,
+};
+
+// Same order as the settings sidebar.
+const MENU_TABS: TProfileSettingsTabs[] = ["general", "preferences", "notifications", "security", "api-tokens"];
 
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states
@@ -112,26 +132,14 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
               </div>
             </div>
             <div>
-              <MenuItem
-                icon={<Icon icon={SettingsOutline} />}
-                label={t("settings")}
-                onClick={() =>
-                  toggleProfileSettingsModal({
-                    activeTab: "general",
-                    isOpen: true,
-                  })
-                }
-              />
-              <MenuItem
-                icon={<Icon icon={SettingsOutline} />}
-                label={t("preferences")}
-                onClick={() =>
-                  toggleProfileSettingsModal({
-                    activeTab: "preferences",
-                    isOpen: true,
-                  })
-                }
-              />
+              {MENU_TABS.filter((tab) => PROFILE_SETTINGS_TABS.includes(tab)).map((tab) => (
+                <MenuItem
+                  key={tab}
+                  icon={<Icon icon={PROFILE_SETTINGS_ICONS[tab]} />}
+                  label={t(PROFILE_SETTINGS[tab].i18n_label)}
+                  onClick={() => toggleProfileSettingsModal({ activeTab: tab, isOpen: true })}
+                />
+              ))}
             </div>
             <div>
               <MenuItem icon={<Icon icon={LogOutOutline} />} label={t("sign_out")} onClick={handleSignOut} />
