@@ -2,37 +2,37 @@
   "workflows": {
     "workflow_states": {
       "work_item_creation": "允许新工作项",
-      "work_item_creation_disable_tooltip": "工作项创建在此状态中被禁用",
-      "default_state": "默认状态允许所有成员创建新工作项。不能更改",
-      "state_change_count": "{count, plural, one {1 个允许的状态更改} other {{count} 个允许的状态更改}}",
-      "movers_count": "{count, plural, one {1 个列出的评审人} other {{count} 个列出的评审人}}",
+      "work_item_creation_disable_tooltip": "此状态下不允许创建工作项",
+      "default_state": "默认状态允许所有成员创建新工作项，此设置不可更改",
+      "state_change_count": "{count, plural, one {1 个允许的状态变更} other {{count} 个允许的状态变更}}",
+      "movers_count": "{count, plural, one {1 位指定评审人} other {{count} 位指定评审人}}",
       "state_changes": {
         "label": {
-          "default": "添加允许的状态更改",
-          "loading": "正在添加允许的状态更改"
+          "default": "添加允许的状态变更",
+          "loading": "正在添加允许的状态变更"
         },
-        "move_to": "移动到",
+        "move_to": "将状态变更为",
         "movers": {
-          "label": "当被",
-          "tooltip": "评审人是允许从一个状态移动到另一个状态的工作项的人。",
+          "label": "评审人",
+          "tooltip": "评审人是有权将工作项从一个状态移动到另一个状态的成员。",
           "add": "添加评审人"
         }
       }
     },
     "workflow_disabled": {
-      "title": "您不能在这里移动这个工作项。"
+      "title": "您不能将此工作项移动到这里。"
     },
     "workflow_enabled": {
-      "label": "状态更改"
+      "label": "状态变更"
     },
     "workflow_tree": {
-      "label": "对于在",
+      "label": "处于以下状态的工作项",
       "state_change_label": "可以移动到"
     },
     "empty_state": {
       "upgrade": {
-        "title": "使用工作流控制更改和审查的混乱。",
-        "description": "使用 Plane 中的工作流定义您工作的移动规则，包括谁、何时。"
+        "title": "用工作流让状态变更和评审井然有序。",
+        "description": "使用 Plane 工作流，规定工作项可以流转到哪里、由谁流转、何时流转。"
       }
     },
     "quick_actions": {
@@ -41,12 +41,12 @@
     },
     "confirmation_modals": {
       "reset_workflow": {
-        "title": "您确定要重置这个工作流吗？",
-        "description": "如果您重置这个工作流，您所有的状态更改规则将被删除，您将需要为这个项目重新创建它们。"
+        "title": "确定要重置此工作流吗？",
+        "description": "重置后，此工作流的所有状态变更规则都将被删除，您需要重新创建才能在此项目中生效。"
       },
       "delete_state_change": {
-        "title": "您确定要删除这个状态更改规则吗？",
-        "description": "一旦删除，您不能撤销这个更改，您将需要为这个项目重新设置规则。"
+        "title": "确定要删除此状态变更规则吗？",
+        "description": "删除后无法撤销；如需在此项目中继续使用，需要重新设置该规则。"
       }
     },
     "toasts": {
@@ -58,7 +58,7 @@
         },
         "error": {
           "title": "错误",
-          "message": "工作流不能被 {action}。请重试。"
+          "message": "无法{action}工作流，请重试。"
         }
       },
       "reset": {
@@ -67,32 +67,32 @@
           "message": "工作流重置成功"
         },
         "error": {
-          "title": "重置工作流错误",
-          "message": "工作流不能被重置。请重试。"
+          "title": "重置工作流失败",
+          "message": "无法重置工作流，请重试。"
         }
       },
       "add_state_change_rule": {
         "error": {
-          "title": "添加状态更改规则错误",
-          "message": "状态更改规则不能被添加。请重试。"
+          "title": "添加状态变更规则失败",
+          "message": "无法添加状态变更规则，请重试。"
         }
       },
       "modify_state_change_rule": {
         "error": {
-          "title": "修改状态更改规则错误",
-          "message": "状态更改规则不能被修改。请重试。"
+          "title": "修改状态变更规则失败",
+          "message": "无法修改状态变更规则，请重试。"
         }
       },
       "remove_state_change_rule": {
         "error": {
-          "title": "删除状态更改规则错误",
-          "message": "状态更改规则不能被删除。请重试。"
+          "title": "删除状态变更规则失败",
+          "message": "无法删除状态变更规则，请重试。"
         }
       },
       "modify_state_change_rule_movers": {
         "error": {
-          "title": "修改状态更改规则移交人错误",
-          "message": "状态更改规则移交人不能被修改。请重试。"
+          "title": "修改评审人失败",
+          "message": "无法修改状态变更规则的评审人，请重试。"
         }
       }
     }

@@ -874,5 +874,10 @@
       "short_description": "Exporteren als json"
     }
   },
-  "labels_count": "{count, plural, one {# label} other {# labels}}"
+  "labels_count": "{count, plural, one {# label} other {# labels}}",
+  "instance_not_ready": {
+    "title": "Welkom bij Plane",
+    "description": "Stel uw instantie in en maak uw eerste werkruimte aan om projecten en werk te beheren.",
+    "get_started": "Aan de slag"
+  }
 }

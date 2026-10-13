@@ -1,7 +1,7 @@
 {
   "attachmentComponent": {
     "uploader": {
-      "drag_and_drop": "拖拽上传外部文件"
+      "drag_and_drop": "将文件拖放到此处，或点击上传"
     },
     "errors": {
       "file_too_large": {
@@ -14,11 +14,11 @@
       },
       "default": {
         "title": "上传失败。",
-        "description": "出现错误。请重试。"
+        "description": "出了点问题，请重试。"
       }
     },
     "upgrade": {
-      "description": "升级您的计划以查看此附件。"
+      "description": "升级套餐以查看此附件。"
     },
     "aria": {
       "click_to_upload": "点击上传附件"
@@ -28,10 +28,10 @@
     "block_menu": {
       "convert_to_embed": "转换为嵌入内容",
       "convert_to_link": "转换为链接",
-      "convert_to_richcard": "转换为富卡片"
+      "convert_to_richcard": "转换为富媒体卡片"
     },
     "placeholder": {
-      "insert_embed": "在此插入您喜欢的嵌入链接，如 YouTube 视频、Figma 设计等",
+      "insert_embed": "在此插入要嵌入的链接，如 YouTube 视频、Figma 设计稿等",
       "link": "输入或粘贴链接"
     },
     "input_modal": {
@@ -50,15 +50,15 @@
     "block_types": {
       "placeholder": "选择块类型",
       "summarize_page": "总结页面",
-      "custom_prompt": "自定义提示"
+      "custom_prompt": "自定义提示词"
     },
     "actions": {
       "discard": "放弃",
       "generate": "生成",
-      "generating": "生成中",
-      "rewriting": "重写中",
+      "generating": "正在生成",
+      "rewriting": "正在重写",
       "rewrite": "重写",
-      "use_this": "使用此",
+      "use_this": "使用此结果",
       "refine": "优化"
     }
   }

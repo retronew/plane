@@ -874,5 +874,10 @@
       "short_description": "Als JSON exportieren"
     }
   },
-  "labels_count": "{count, plural, one {# Label} other {# Labels}}"
+  "labels_count": "{count, plural, one {# Label} other {# Labels}}",
+  "instance_not_ready": {
+    "title": "Willkommen bei Plane",
+    "description": "Richten Sie Ihre Instanz ein und erstellen Sie Ihren ersten Workspace, um mit der Verwaltung von Projekten und Arbeit zu beginnen.",
+    "get_started": "Loslegen"
+  }
 }

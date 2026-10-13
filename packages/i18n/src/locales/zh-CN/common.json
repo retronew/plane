@@ -93,7 +93,7 @@
   "sidebar_background_color": "侧边栏背景颜色",
   "sidebar_text_color": "侧边栏文字颜色",
   "set_theme": "设置主题",
-  "enter_a_valid_hex_code_of_6_characters": "输入有效的6位十六进制代码",
+  "enter_a_valid_hex_code_of_6_characters": "输入有效的 6 位十六进制代码",
   "background_color_is_required": "背景颜色为必填项",
   "text_color_is_required": "文字颜色为必填项",
   "primary_color_is_required": "主要颜色为必填项",
@@ -174,18 +174,18 @@
   "project_identifier_already_taken": "项目标识符已被使用。",
   "project_cover_image_alt": "项目封面图片",
   "name_is_required": "名称为必填项",
-  "title_should_be_less_than_255_characters": "标题应少于255个字符",
+  "title_should_be_less_than_255_characters": "标题应少于 255 个字符",
   "project_name": "项目名称",
-  "project_id_must_be_at_least_1_character": "项目ID至少需要1个字符",
-  "project_id_must_be_at_most_5_characters": "项目ID最多只能有5个字符",
-  "project_id": "项目ID",
-  "project_id_tooltip_content": "帮助您唯一标识项目中的工作项。最多50个字符。",
+  "project_id_must_be_at_least_1_character": "项目 ID 至少需要 1 个字符",
+  "project_id_must_be_at_most_5_characters": "项目 ID 最多只能有 5 个字符",
+  "project_id": "项目 ID",
+  "project_id_tooltip_content": "帮助您唯一标识项目中的工作项。最多 50 个字符。",
   "description_placeholder": "描述",
   "only_alphanumeric_non_latin_characters_allowed": "仅允许字母数字和非拉丁字符。",
-  "project_id_is_required": "项目ID为必填项",
+  "project_id_is_required": "项目 ID 为必填项",
   "project_id_allowed_char": "仅允许字母数字和非拉丁字符。",
-  "project_id_min_char": "项目ID至少需要1个字符",
-  "project_id_max_char": "项目ID最多只能有{max}个字符",
+  "project_id_min_char": "项目 ID 至少需要 1 个字符",
+  "project_id_max_char": "项目 ID 最多只能有 {max} 个字符",
   "project_description_placeholder": "输入项目描述",
   "select_network": "选择网络",
   "lead": "负责人",
@@ -245,7 +245,7 @@
   "full_changelog": "完整更新日志",
   "support": "支持",
   "forum": "Forum",
-  "powered_by_plane_pages": "由Plane Pages提供支持",
+  "powered_by_plane_pages": "由 Plane Pages 提供支持",
   "please_select_at_least_one_invitation": "请至少选择一个邀请。",
   "please_select_at_least_one_invitation_description": "请至少选择一个加入工作区的邀请。",
   "we_see_that_someone_has_invited_you_to_join_a_workspace": "我们看到有人邀请您加入工作区",
@@ -410,8 +410,8 @@
     "modal": {
       "url": {
         "text": "URL",
-        "required": "URL无效",
-        "placeholder": "输入或粘贴URL"
+        "required": "URL 无效",
+        "placeholder": "输入或粘贴 URL"
       },
       "title": {
         "text": "显示标题",
@@ -486,7 +486,7 @@
     "features": "功能",
     "automation": "自动化",
     "project_name": "项目名称",
-    "project_id": "项目ID",
+    "project_id": "项目 ID",
     "project_timezone": "项目时区",
     "created_on": "创建于",
     "updated_on": "更新于",
@@ -560,15 +560,15 @@
         "message": "发生错误。请重试。"
       },
       "required": "此字段为必填项",
-      "entity_required": "{entity}为必填项",
-      "restricted_entity": "{entity}已被限制"
+      "entity_required": "{entity} 为必填项",
+      "restricted_entity": "{entity} 已被限制"
     },
     "update_link": "更新链接",
     "attach": "附加",
     "create_new": "创建新的",
     "add_existing": "添加现有",
-    "type_or_paste_a_url": "输入或粘贴URL",
-    "url_is_invalid": "URL无效",
+    "type_or_paste_a_url": "输入或粘贴 URL",
+    "url_is_invalid": "URL 无效",
     "display_title": "显示标题",
     "link_title_placeholder": "您希望如何显示此链接",
     "url": "URL",
@@ -623,7 +623,7 @@
       "show_weekends": "显示周末",
       "enable": "启用",
       "disable": "禁用",
-      "copy_markdown": "复制Markdown",
+      "copy_markdown": "复制 Markdown",
       "reply": "回复",
       "add_reaction": "添加表情回应"
     },
@@ -686,7 +686,7 @@
     "coming_soon": "即将推出",
     "member": "成员",
     "members": "成员",
-    "you": "你",
+    "you": "您",
     "upgrade_cta": {
       "higher_subscription": "升级到更高订阅",
       "talk_to_sales": "联系销售"
@@ -715,7 +715,7 @@
     "members_and_teamspaces": "成员和团队空间",
     "recurring_work_items": "重复工作项",
     "milestones": "里程碑",
-    "open_in_full_screen": "在全屏中打开{page}",
+    "open_in_full_screen": "在全屏中打开 {page}",
     "details": "详情",
     "project_structure": "项目结构",
     "custom_properties": "自定义属性",
@@ -726,8 +726,8 @@
     "administration": "Administration"
   },
   "chart": {
-    "x_axis": "X轴",
-    "y_axis": "Y轴",
+    "x_axis": "X 轴",
+    "y_axis": "Y 轴",
     "metric": "指标"
   },
   "form": {
@@ -737,30 +737,30 @@
     }
   },
   "entity": {
-    "grouping_title": "{entity}分组",
-    "priority": "{entity}优先级",
-    "all": "所有{entity}",
-    "drop_here_to_move": "拖放到此处以移动{entity}",
+    "grouping_title": "{entity} 分组",
+    "priority": "{entity} 优先级",
+    "all": "所有 {entity}",
+    "drop_here_to_move": "拖放到此处以移动 {entity}",
     "delete": {
-      "label": "删除{entity}",
-      "success": "{entity}删除成功",
-      "failed": "{entity}删除失败"
+      "label": "删除 {entity}",
+      "success": "{entity} 删除成功",
+      "failed": "{entity} 删除失败"
     },
     "update": {
-      "failed": "{entity}更新失败",
-      "success": "{entity}更新成功"
+      "failed": "{entity} 更新失败",
+      "success": "{entity} 更新成功"
     },
-    "link_copied_to_clipboard": "{entity}链接已复制到剪贴板",
+    "link_copied_to_clipboard": "{entity} 链接已复制到剪贴板",
     "fetch": {
-      "failed": "获取{entity}时出错"
+      "failed": "获取 {entity} 时出错"
     },
     "add": {
-      "success": "{entity}添加成功",
-      "failed": "添加{entity}时出错"
+      "success": "{entity} 添加成功",
+      "failed": "添加 {entity} 时出错"
     },
     "remove": {
-      "success": "{entity}删除成功",
-      "failed": "删除{entity}时出错"
+      "success": "{entity} 删除成功",
+      "failed": "删除 {entity} 时出错"
     }
   },
   "attachment": {
@@ -874,5 +874,10 @@
       "short_description": "导出为 JSON"
     }
   },
-  "labels_count": "{count, plural, one {# 个标签} other {# 个标签}}"
+  "labels_count": "{count, plural, one {# 个标签} other {# 个标签}}",
+  "instance_not_ready": {
+    "title": "欢迎使用 Plane",
+    "description": "完成实例设置并创建您的第一个工作区，即可开始管理项目和工作。",
+    "get_started": "开始使用"
+  }
 }

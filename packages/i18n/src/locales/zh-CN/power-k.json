@@ -11,7 +11,7 @@
         "change_priority": "更改优先级",
         "change_assignees": "分配给",
         "assign_to_me": "分配给我",
-        "unassign_from_me": "从我处取消分配",
+        "unassign_from_me": "取消分配给我",
         "change_estimate": "更改估算",
         "add_to_cycle": "添加到周期",
         "add_to_modules": "添加到模块",
@@ -21,13 +21,13 @@
         "delete": "删除",
         "copy_id": "复制 ID",
         "copy_id_toast_success": "工作项 ID 已复制到剪贴板。",
-        "copy_id_toast_error": "复制工作项 ID 到剪贴板时出错。",
+        "copy_id_toast_error": "复制工作项 ID 时出错。",
         "copy_title": "复制标题",
         "copy_title_toast_success": "工作项标题已复制到剪贴板。",
-        "copy_title_toast_error": "复制工作项标题到剪贴板时出错。",
+        "copy_title_toast_error": "复制工作项标题时出错。",
         "copy_url": "复制 URL",
         "copy_url_toast_success": "工作项 URL 已复制到剪贴板。",
-        "copy_url_toast_error": "复制工作项 URL 到剪贴板时出错。"
+        "copy_url_toast_error": "复制工作项 URL 时出错。"
       },
       "cycle": {
         "title": "周期操作",
@@ -36,7 +36,7 @@
         "remove_from_favorites": "从收藏中移除",
         "copy_url": "复制 URL",
         "copy_url_toast_success": "周期 URL 已复制到剪贴板。",
-        "copy_url_toast_error": "复制周期 URL 到剪贴板时出错。"
+        "copy_url_toast_error": "复制周期 URL 时出错。"
       },
       "module": {
         "title": "模块操作",
@@ -47,7 +47,7 @@
         "remove_from_favorites": "从收藏中移除",
         "copy_url": "复制 URL",
         "copy_url_toast_success": "模块 URL 已复制到剪贴板。",
-        "copy_url_toast_error": "复制模块 URL 到剪贴板时出错。"
+        "copy_url_toast_error": "复制模块 URL 时出错。"
       },
       "page": {
         "title": "页面操作",
@@ -62,7 +62,7 @@
         "remove_from_favorites": "从收藏中移除",
         "copy_url": "复制 URL",
         "copy_url_toast_success": "页面 URL 已复制到剪贴板。",
-        "copy_url_toast_error": "复制页面 URL 到剪贴板时出错。"
+        "copy_url_toast_error": "复制页面 URL 时出错。"
       }
     },
     "creation_actions": {
@@ -77,16 +77,16 @@
     },
     "navigation_actions": {
       "open_workspace": "打开工作区",
-      "nav_home": "转到主页",
+      "nav_home": "转到首页",
       "nav_inbox": "转到收件箱",
       "nav_your_work": "转到我的工作",
       "nav_account_settings": "转到账号设置",
       "open_project": "打开项目",
       "nav_projects_list": "转到项目列表",
       "nav_all_workspace_work_items": "转到所有工作项",
-      "nav_assigned_workspace_work_items": "转到已分配工作项",
-      "nav_created_workspace_work_items": "转到已创建工作项",
-      "nav_subscribed_workspace_work_items": "转到已订阅工作项",
+      "nav_assigned_workspace_work_items": "转到分配给我的工作项",
+      "nav_created_workspace_work_items": "转到我创建的工作项",
+      "nav_subscribed_workspace_work_items": "转到我订阅的工作项",
       "nav_workspace_analytics": "转到工作区分析",
       "nav_workspace_drafts": "转到工作区草稿",
       "nav_workspace_archives": "转到工作区归档",
@@ -100,11 +100,11 @@
       "open_project_view": "打开项目视图",
       "nav_project_views": "转到项目视图",
       "nav_project_pages": "转到页面",
-      "nav_project_intake": "转到收集",
+      "nav_project_intake": "转到 Intake",
       "nav_project_archives": "转到项目归档",
       "open_project_setting": "打开项目设置",
       "nav_project_settings": "转到项目设置",
-      "nav_workspace_active_cycle": "转到所有活动周期",
+      "nav_workspace_active_cycle": "转到 Active Cycles",
       "nav_project_overview": "转到项目概览"
     },
     "account_actions": {
@@ -115,8 +115,8 @@
       "toggle_app_sidebar": "切换应用侧边栏",
       "copy_current_page_url": "复制当前页面 URL",
       "copy_current_page_url_toast_success": "当前页面 URL 已复制到剪贴板。",
-      "copy_current_page_url_toast_error": "复制当前页面 URL 到剪贴板时出错。",
-      "focus_top_nav_search": "聚焦搜索输入框"
+      "copy_current_page_url_toast_error": "复制当前页面 URL 时出错。",
+      "focus_top_nav_search": "聚焦到搜索框"
     },
     "preferences_actions": {
       "update_theme": "更改界面主题",
@@ -126,24 +126,24 @@
       "toast": {
         "theme": {
           "success": "主题更新成功。",
-          "error": "主题更新失败。请重试。"
+          "error": "主题更新失败，请重试。"
         },
         "timezone": {
           "success": "时区更新成功。",
-          "error": "时区更新失败。请重试。"
+          "error": "时区更新失败，请重试。"
         },
         "generic": {
           "success": "偏好设置更新成功。",
-          "error": "偏好设置更新失败。请重试。"
+          "error": "偏好设置更新失败，请重试。"
         }
       }
     },
     "help_actions": {
-      "open_keyboard_shortcuts": "打开键盘快捷键",
+      "open_keyboard_shortcuts": "查看键盘快捷键",
       "open_plane_documentation": "打开 Plane 文档",
       "join_forum": "加入我们的论坛",
       "report_bug": "报告 Bug",
-      "chat_with_us": "与我们聊天"
+      "chat_with_us": "联系我们"
     },
     "page_placeholders": {
       "default": "输入命令或搜索",
@@ -183,7 +183,7 @@
     },
     "group_titles": {
       "actions": "操作",
-      "contextual": "上下文",
+      "contextual": "当前上下文",
       "navigation": "导航",
       "create": "创建",
       "general": "常规",

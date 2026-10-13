@@ -874,5 +874,10 @@
       "short_description": "JSON으로 내보내기"
     }
   },
-  "labels_count": "{count, plural, one {레이블 #개} other {레이블 #개}}"
+  "labels_count": "{count, plural, one {레이블 #개} other {레이블 #개}}",
+  "instance_not_ready": {
+    "title": "Plane에 오신 것을 환영합니다",
+    "description": "인스턴스를 설정하고 첫 번째 워크스페이스를 만들어 프로젝트와 작업 관리를 시작하세요.",
+    "get_started": "시작하기"
+  }
 }

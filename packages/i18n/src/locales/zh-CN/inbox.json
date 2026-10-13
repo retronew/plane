@@ -10,8 +10,8 @@
         "description": "已拒绝"
       },
       "snoozed": {
-        "title": "已暂停",
-        "description": "还剩{days, plural, one{# 天} other{# 天}}"
+        "title": "已延后",
+        "description": "还剩 {days, plural, one{# 天} other{# 天}}"
       },
       "accepted": {
         "title": "已接受",
@@ -34,15 +34,15 @@
       }
     },
     "errors": {
-      "snooze_permission": "只有项目管理员可以暂停/取消暂停工作项",
+      "snooze_permission": "只有项目管理员可以延后或取消延后工作项",
       "accept_permission": "只有项目管理员可以接受工作项",
       "decline_permission": "只有项目管理员可以拒绝工作项"
     },
     "actions": {
       "accept": "接受",
       "decline": "拒绝",
-      "snooze": "暂停",
-      "unsnooze": "取消暂停",
+      "snooze": "延后",
+      "unsnooze": "取消延后",
       "copy": "复制工作项链接",
       "delete": "删除",
       "open": "打开工作项",
@@ -57,10 +57,10 @@
       "updated_at": "更新时间",
       "id": "ID"
     },
-    "label": "收集",
-    "page_label": "{workspace} - 收集",
+    "label": "Intake",
+    "page_label": "{workspace} - Intake",
     "modal": {
-      "title": "创建收集工作项"
+      "title": "创建 Intake 工作项"
     },
     "tabs": {
       "open": "未处理",
@@ -69,15 +69,15 @@
     "empty_state": {
       "sidebar_open_tab": {
         "title": "没有未处理的工作项",
-        "description": "在此处查找未处理的工作项。创建新工作项。"
+        "description": "未处理的工作项会显示在这里。您也可以创建新工作项。"
       },
       "sidebar_closed_tab": {
         "title": "没有已处理的工作项",
-        "description": "所有已接受或已拒绝的工作项都可以在这里找到。"
+        "description": "所有已接受或已拒绝的工作项都会显示在这里。"
       },
       "sidebar_filter": {
         "title": "没有匹配的工作项",
-        "description": "收集中没有符合筛选条件的工作项。创建新工作项。"
+        "description": "Intake 中没有符合当前筛选条件的工作项。您可以创建新工作项。"
       },
       "detail": {
         "title": "选择一个工作项以查看其详细信息。"

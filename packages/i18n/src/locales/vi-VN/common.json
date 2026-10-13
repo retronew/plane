@@ -874,5 +874,10 @@
       "short_description": "Xuất sang JSON"
     }
   },
-  "labels_count": "{count, plural, one {# nhãn} other {# nhãn}}"
+  "labels_count": "{count, plural, one {# nhãn} other {# nhãn}}",
+  "instance_not_ready": {
+    "title": "Chào mừng bạn đến với Plane",
+    "description": "Thiết lập phiên bản của bạn và tạo không gian làm việc đầu tiên để bắt đầu quản lý dự án và công việc.",
+    "get_started": "Bắt đầu"
+  }
 }

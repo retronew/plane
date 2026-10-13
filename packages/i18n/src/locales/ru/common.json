@@ -874,5 +874,10 @@
       "short_description": "Экспорт в json"
     }
   },
-  "labels_count": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}"
+  "labels_count": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}",
+  "instance_not_ready": {
+    "title": "Добро пожаловать в Plane",
+    "description": "Настройте экземпляр и создайте первое рабочее пространство, чтобы начать управлять проектами и работой.",
+    "get_started": "Начать"
+  }
 }

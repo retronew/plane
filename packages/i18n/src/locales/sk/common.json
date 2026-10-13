@@ -874,5 +874,10 @@
       "short_description": "Exportovať ako JSON"
     }
   },
-  "labels_count": "{count, plural, one {# štítok} few {# štítky} many {# štítku} other {# štítkov}}"
+  "labels_count": "{count, plural, one {# štítok} few {# štítky} many {# štítku} other {# štítkov}}",
+  "instance_not_ready": {
+    "title": "Vitajte v Plane",
+    "description": "Nastavte svoju inštanciu a vytvorte prvý pracovný priestor, aby ste mohli začať spravovať projekty a prácu.",
+    "get_started": "Začať"
+  }
 }

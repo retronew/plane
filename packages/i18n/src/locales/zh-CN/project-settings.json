@@ -50,7 +50,7 @@
       "description": "创建自定义标签以分类和组织您的工作项",
       "label_title": "标签标题",
       "label_title_is_required": "标签标题为必填项",
-      "label_max_char": "标签名称不应超过255个字符",
+      "label_max_char": "标签名称不应超过 255 个字符",
       "toast": {
         "error": "更新标签时出错"
       }
@@ -131,7 +131,7 @@
         }
       },
       "validation": {
-        "min_length": "估算需要大于0。",
+        "min_length": "估算需要大于 0。",
         "unable_to_process": "我们无法处理您的请求，请重试。",
         "numeric": "估算需要是数值。",
         "character": "估算需要是字符值。",
@@ -152,7 +152,7 @@
         },
         "categories": {
           "label": "类别",
-          "t_shirt_sizes": "T恤尺码",
+          "t_shirt_sizes": "T 恤尺码",
           "easy_to_hard": "简单到困难",
           "custom": "自定义"
         },
@@ -451,7 +451,7 @@
             "tooltip": "标题将为后续周期添加编号。例如：设计 - 1/2/3",
             "validation": {
               "required": "周期标题为必填项",
-              "max_length": "标题不得超过255个字符"
+              "max_length": "标题不得超过 255 个字符"
             }
           },
           "cycle_duration": {
@@ -459,8 +459,8 @@
             "unit": "周",
             "validation": {
               "required": "周期持续时间为必填项",
-              "min": "周期持续时间必须至少为1周",
-              "max": "周期持续时间不得超过30周",
+              "min": "周期持续时间必须至少为 1 周",
+              "max": "周期持续时间不得超过 30 周",
               "positive": "周期持续时间必须为正数"
             }
           },
@@ -484,8 +484,8 @@
             "label": "未来周期数",
             "validation": {
               "required": "周期数为必填项",
-              "min": "至少需要1个周期",
-              "max": "无法安排超过3个周期"
+              "min": "至少需要 1 个周期",
+              "max": "无法安排超过 3 个周期"
             }
           },
           "auto_rollover": {

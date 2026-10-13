@@ -874,5 +874,10 @@
       "short_description": "Exportar como json"
     }
   },
-  "labels_count": "{count, plural, one {# etiqueta} other {# etiquetas}}"
+  "labels_count": "{count, plural, one {# etiqueta} other {# etiquetas}}",
+  "instance_not_ready": {
+    "title": "Bienvenido a Plane",
+    "description": "Configure su instancia y cree su primer espacio de trabajo para empezar a gestionar proyectos y trabajo.",
+    "get_started": "Comenzar"
+  }
 }

@@ -874,5 +874,10 @@
       "short_description": "Esporta come JSON"
     }
   },
-  "labels_count": "{count, plural, one {# etichetta} many {# etichette} other {# etichette}}"
+  "labels_count": "{count, plural, one {# etichetta} many {# etichette} other {# etichette}}",
+  "instance_not_ready": {
+    "title": "Benvenuto in Plane",
+    "description": "Configuri la Sua istanza e crei il Suo primo spazio di lavoro per iniziare a gestire progetti e attività.",
+    "get_started": "Inizia"
+  }
 }

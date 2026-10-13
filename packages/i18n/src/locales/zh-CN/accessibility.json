@@ -1,10 +1,10 @@
 {
   "aria_labels": {
     "projects_sidebar": {
-      "workspace_logo": "工作空间徽标",
-      "open_workspace_switcher": "打开工作空间切换器",
+      "workspace_logo": "工作区徽标",
+      "open_workspace_switcher": "打开工作区切换器",
       "open_user_menu": "打开用户菜单",
-      "open_command_palette": "打开命令面板",
+      "open_command_palette": "打开 Power K",
       "open_extended_sidebar": "打开扩展侧边栏",
       "close_extended_sidebar": "关闭扩展侧边栏",
       "create_favorites_folder": "创建收藏夹文件夹",
@@ -21,14 +21,14 @@
       "close_project_menu": "关闭项目菜单",
       "collapse_sidebar": "折叠侧边栏",
       "expand_sidebar": "展开侧边栏",
-      "edition_badge": "打开付费计划模态框"
+      "edition_badge": "打开付费套餐弹窗"
     },
     "auth_forms": {
       "clear_email": "清除邮箱",
       "show_password": "显示密码",
       "hide_password": "隐藏密码",
-      "close_alert": "关闭警告",
-      "close_popover": "关闭弹出框"
+      "close_alert": "关闭提示",
+      "close_popover": "关闭弹出层"
     },
     "breadcrumb": {
       "trail": "面包屑导航",

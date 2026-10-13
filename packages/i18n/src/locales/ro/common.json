@@ -874,5 +874,10 @@
       "short_description": "Exportă ca JSON"
     }
   },
-  "labels_count": "{count, plural, one {# etichetă} few {# etichete} other {# de etichete}}"
+  "labels_count": "{count, plural, one {# etichetă} few {# etichete} other {# de etichete}}",
+  "instance_not_ready": {
+    "title": "Bun venit în Plane",
+    "description": "Configurați instanța și creați primul spațiu de lucru pentru a începe să gestionați proiectele și munca.",
+    "get_started": "Începeți"
+  }
 }

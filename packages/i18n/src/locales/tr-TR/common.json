@@ -874,5 +874,10 @@
       "short_description": "JSON olarak aktar"
     }
   },
-  "labels_count": "{count, plural, one {# etiket} other {# etiket}}"
+  "labels_count": "{count, plural, one {# etiket} other {# etiket}}",
+  "instance_not_ready": {
+    "title": "Plane'e hoş geldiniz",
+    "description": "Projeleri ve işleri yönetmeye başlamak için örneğinizi kurun ve ilk çalışma alanınızı oluşturun.",
+    "get_started": "Başlayın"
+  }
 }

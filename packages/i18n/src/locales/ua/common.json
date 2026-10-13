@@ -874,5 +874,10 @@
       "short_description": "Експортувати як JSON"
     }
   },
-  "labels_count": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}"
+  "labels_count": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}",
+  "instance_not_ready": {
+    "title": "Ласкаво просимо до Plane",
+    "description": "Налаштуйте екземпляр і створіть перший робочий простір, щоб почати керувати проєктами та роботою.",
+    "get_started": "Почати"
+  }
 }

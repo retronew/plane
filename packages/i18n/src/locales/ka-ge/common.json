@@ -874,5 +874,10 @@
       "short_description": "ექსპორტი json-ად"
     }
   },
-  "labels_count": "{count, plural, one {# იარლიყი} other {# იარლიყი}}"
+  "labels_count": "{count, plural, one {# იარლიყი} other {# იარლიყი}}",
+  "instance_not_ready": {
+    "title": "კეთილი იყოს თქვენი მობრძანება Plane-ში",
+    "description": "დააყენეთ ინსტანცია და შექმენით პირველი სამუშაო სივრცე, რათა დაიწყოთ პროექტებისა და სამუშაოს მართვა.",
+    "get_started": "დაწყება"
+  }
 }

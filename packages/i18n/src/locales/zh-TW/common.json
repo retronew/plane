@@ -874,5 +874,10 @@
       "short_description": "匯出為 JSON"
     }
   },
-  "labels_count": "{count, plural, one {# 個標籤} other {# 個標籤}}"
+  "labels_count": "{count, plural, one {# 個標籤} other {# 個標籤}}",
+  "instance_not_ready": {
+    "title": "歡迎使用 Plane",
+    "description": "完成執行個體設定並建立您的第一個工作區，即可開始管理專案和工作。",
+    "get_started": "開始使用"
+  }
 }

@@ -874,5 +874,10 @@
       "short_description": "Eksportuj jako JSON"
     }
   },
-  "labels_count": "{count, plural, one {# etykieta} few {# etykiety} many {# etykiet} other {# etykiety}}"
+  "labels_count": "{count, plural, one {# etykieta} few {# etykiety} many {# etykiet} other {# etykiety}}",
+  "instance_not_ready": {
+    "title": "Witamy w Plane",
+    "description": "Skonfiguruj instancję i utwórz pierwszy obszar roboczy, aby zacząć zarządzać projektami i pracą.",
+    "get_started": "Rozpocznij"
+  }
 }

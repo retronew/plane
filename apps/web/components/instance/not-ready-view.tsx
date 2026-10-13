@@ -5,6 +5,7 @@
  */
 
 import { GOD_MODE_URL } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 // assets
 import GradientLogo from "@/app/assets/auth/gradient-logo.webp?url";
 import GradientBgLogo from "@/app/assets/auth/gradient-bg-logo.webp?url";
@@ -13,6 +14,7 @@ import { PlaneLockup } from "@plane/blocks/icons";
 import { Button } from "@makeplane/propel/components/button";
 
 export function InstanceNotReady() {
+  const { t } = useTranslation();
   return (
     <DefaultLayout>
       <div className="relative z-10 flex h-screen w-screen overflow-hidden">
@@ -38,10 +40,8 @@ export function InstanceNotReady() {
             <div className="flex flex-col items-center gap-11">
               <img src={GradientLogo} className="h-24 w-40 object-contain" alt="Plane Logo" />
               <div className="flex max-w-124 flex-col items-center gap-3">
-                <h1 className="text-h2-semibold text-primary">Welcome to Plane</h1>
-                <p className="text-center text-body-md-regular text-secondary">
-                  Set up your instance and create your first workspace to begin managing projects and work.
-                </p>
+                <h1 className="text-h2-semibold text-primary">{t("instance_not_ready.title")}</h1>
+                <p className="text-center text-body-md-regular text-secondary">{t("instance_not_ready.description")}</p>
               </div>
             </div>
             <div className="w-72">
@@ -50,8 +50,8 @@ export function InstanceNotReady() {
                 size="lg"
                 stretch="full"
                 nativeButton={false}
-                render={<a href={GOD_MODE_URL}>Get started</a>}
-                label="Get started"
+                render={<a href={GOD_MODE_URL}>{t("instance_not_ready.get_started")}</a>}
+                label={t("instance_not_ready.get_started")}
               />
             </div>
           </div>

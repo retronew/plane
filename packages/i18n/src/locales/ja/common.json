@@ -874,5 +874,10 @@
       "short_description": "JSONとしてエクスポート"
     }
   },
-  "labels_count": "{count, plural, one {#件のラベル} other {#件のラベル}}"
+  "labels_count": "{count, plural, one {#件のラベル} other {#件のラベル}}",
+  "instance_not_ready": {
+    "title": "Plane へようこそ",
+    "description": "インスタンスをセットアップし、最初のワークスペースを作成して、プロジェクトと作業の管理を始めましょう。",
+    "get_started": "はじめる"
+  }
 }

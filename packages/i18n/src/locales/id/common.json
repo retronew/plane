@@ -874,5 +874,10 @@
       "short_description": "Ekspor sebagai json"
     }
   },
-  "labels_count": "{count, plural, one {# label} other {# label}}"
+  "labels_count": "{count, plural, one {# label} other {# label}}",
+  "instance_not_ready": {
+    "title": "Selamat datang di Plane",
+    "description": "Siapkan instans Anda dan buat ruang kerja pertama untuk mulai mengelola proyek dan pekerjaan.",
+    "get_started": "Mulai"
+  }
 }

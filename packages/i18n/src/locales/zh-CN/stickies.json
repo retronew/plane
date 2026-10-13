@@ -1,58 +1,58 @@
 {
   "stickies": {
-    "title": "您的便签",
+    "title": "您的 Sticky",
     "placeholder": "点击此处输入",
-    "all": "所有便签",
-    "no-data": "记下一个想法，捕捉一个灵感，或记录一个突发奇想。添加便签开始使用。",
-    "add": "添加便签",
+    "all": "所有 Sticky",
+    "no-data": "记下一个想法、一次灵光乍现或一个点子。添加 Sticky 即可开始。",
+    "add": "添加 Sticky",
     "search_placeholder": "按标题搜索",
-    "delete": "删除便签",
-    "delete_confirmation": "您确定要删除此便签吗？",
+    "delete": "删除 Sticky",
+    "delete_confirmation": "您确定要删除此 Sticky 吗？",
     "empty_state": {
-      "simple": "记下一个想法，捕捉一个灵感，或记录一个突发奇想。添加便签开始使用。",
+      "simple": "记下一个想法、一次灵光乍现或一个点子。添加 Sticky 即可开始。",
       "general": {
-        "title": "便签是您随手记下的快速笔记和待办事项。",
-        "description": "通过创建随时随地都可以访问的便签，轻松捕捉您的想法和创意。",
+        "title": "Sticky 是您随手记下的快速笔记和待办事项。",
+        "description": "通过创建随时随地都可以访问的 Sticky，轻松捕捉您的想法和创意。",
         "primary_button": {
-          "text": "添加便签"
+          "text": "添加 Sticky"
         }
       },
       "search": {
-        "title": "这与您的任何便签都不匹配。",
-        "description": "尝试使用不同的术语，或如果您确定\n搜索是正确的，请告诉我们。",
+        "title": "没有匹配的 Sticky。",
+        "description": "换个关键词试试；如果您确定搜索\n没有问题，请告诉我们。",
         "primary_button": {
-          "text": "添加便签"
+          "text": "添加 Sticky"
         }
       }
     },
     "toasts": {
       "errors": {
-        "wrong_name": "便签名称不能超过100个字符。",
-        "already_exists": "已存在一个没有描述的便签"
+        "wrong_name": "Sticky 名称不能超过 100 个字符。",
+        "already_exists": "已存在一个没有描述的 Sticky"
       },
       "created": {
-        "title": "便签已创建",
-        "message": "便签已成功创建"
+        "title": "Sticky 已创建",
+        "message": "Sticky 已成功创建"
       },
       "not_created": {
-        "title": "便签未创建",
-        "message": "无法创建便签"
+        "title": "Sticky 未创建",
+        "message": "无法创建 Sticky"
       },
       "updated": {
-        "title": "便签已更新",
-        "message": "便签已成功更新"
+        "title": "Sticky 已更新",
+        "message": "Sticky 已成功更新"
       },
       "not_updated": {
-        "title": "便签未更新",
-        "message": "无法更新便签"
+        "title": "Sticky 未更新",
+        "message": "无法更新 Sticky"
       },
       "removed": {
-        "title": "便签已移除",
-        "message": "便签已成功移除"
+        "title": "Sticky 已移除",
+        "message": "Sticky 已成功移除"
       },
       "not_removed": {
-        "title": "便签未移除",
-        "message": "无法移除便签"
+        "title": "Sticky 未移除",
+        "message": "无法移除 Sticky"
       }
     }
   }

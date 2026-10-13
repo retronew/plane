@@ -2,31 +2,31 @@
   "common_empty_state": {
     "progress": {
       "title": "暂无进度指标可显示。",
-      "description": "开始在工作项中设置属性值以在此查看进度指标。"
+      "description": "在工作项中设置属性值后，即可在此查看进度指标。"
     },
     "updates": {
-      "title": "暂无更新。",
-      "description": "项目成员添加更新后将显示在此处"
+      "title": "暂无进展。",
+      "description": "项目成员发布进展后会显示在这里"
     },
     "search": {
       "title": "未找到匹配结果。",
-      "description": "未找到结果。请尝试调整搜索条件。"
+      "description": "未找到结果，请尝试调整搜索关键词。"
     },
     "not_found": {
-      "title": "糟糕!似乎出了点问题",
-      "description": "我们目前无法获取您的 Plane 账户。这可能是网络错误。",
-      "cta_primary": "尝试重新加载"
+      "title": "糟糕！似乎出了点问题",
+      "description": "暂时无法获取您的 Plane 账号，可能是网络错误。",
+      "cta_primary": "重新加载"
     },
     "server_error": {
       "title": "服务器错误",
-      "description": "我们无法连接并从服务器获取数据。请放心,我们正在处理。",
-      "cta_primary": "尝试重新加载"
+      "description": "暂时无法连接服务器获取数据。请放心，我们正在处理。",
+      "cta_primary": "重新加载"
     }
   },
   "project_empty_state": {
     "no_access": {
       "title": "您似乎无权访问该项目",
-      "restricted_description": "请联系管理员申请访问权限，通过后您可以在此继续。",
+      "restricted_description": "请联系管理员申请访问权限，获批后即可继续。",
       "join_description": "点击下方按钮加入该项目。",
       "cta_primary": "加入项目",
       "cta_loading": "正在加入项目"
@@ -36,102 +36,102 @@
       "description": "您查找的项目不存在。"
     },
     "work_items": {
-      "title": "从您的第一个工作项开始。",
-      "description": "工作项是项目的构建块 — 分配负责人、设置优先级并轻松跟踪进度。",
+      "title": "从创建第一个工作项开始。",
+      "description": "工作项是项目的基本单元：分配负责人、设置优先级，轻松跟踪进度。",
       "cta_primary": "创建您的第一个工作项"
     },
     "cycles": {
-      "title": "在周期中分组和限时您的工作。",
-      "description": "将工作分解为限时块,从项目截止日期倒推设置日期,并作为团队取得实质性进展。",
-      "cta_primary": "设置您的第一个周期"
+      "title": "用周期对工作进行分组和时间盒管理。",
+      "description": "按固定时间段拆分工作，从项目截止日期倒推安排日期，让团队取得切实进展。",
+      "cta_primary": "创建第一个周期"
     },
     "cycle_work_items": {
       "title": "此周期中没有要显示的工作项",
-      "description": "创建工作项以开始监控团队在此周期中的进度并按时实现目标。",
+      "description": "创建工作项，开始跟踪团队在本周期的进度，按时达成目标。",
       "cta_primary": "创建工作项",
       "cta_secondary": "添加现有工作项"
     },
     "modules": {
-      "title": "将项目目标映射到模块并轻松跟踪。",
-      "description": "模块由相互关联的工作项组成。它们有助于监控项目阶段的进度,每个阶段都有特定的截止日期和分析,以指示您离实现这些阶段有多近。",
-      "cta_primary": "设置您的第一个模块"
+      "title": "将项目目标拆分为模块，轻松跟踪。",
+      "description": "模块由相互关联的工作项组成，帮助您跟踪项目各阶段的进度。每个模块都有各自的截止日期和分析数据，让您清楚离目标还有多远。",
+      "cta_primary": "创建第一个模块"
     },
     "module_work_items": {
       "title": "此模块中没有要显示的工作项",
-      "description": "创建工作项以开始监控此模块。",
+      "description": "创建工作项，开始跟踪此模块的进度。",
       "cta_primary": "创建工作项",
       "cta_secondary": "添加现有工作项"
     },
     "views": {
       "title": "为项目保存自定义视图",
-      "description": "视图是保存的过滤器,可帮助您快速访问最常用的信息。团队成员可以轻松协作,共享视图并根据特定需求进行调整。",
+      "description": "视图是保存下来的筛选条件，帮助您快速访问最常用的信息。团队成员可以共享视图，并按各自需求调整，协作更轻松。",
       "cta_primary": "创建视图"
     },
     "no_work_items_in_project": {
       "title": "项目中暂无工作项",
-      "description": "将工作项添加到项目中,并使用视图将工作切分为可跟踪的部分。",
+      "description": "向项目添加工作项，并通过视图将工作拆分为便于跟踪的部分。",
       "cta_primary": "添加工作项"
     },
     "work_item_filter": {
       "title": "未找到工作项",
-      "description": "您当前的过滤器未返回任何结果。请尝试更改过滤器。",
+      "description": "当前筛选条件没有匹配结果，请尝试更改筛选条件。",
       "cta_primary": "添加工作项"
     },
     "pages": {
-      "title": "记录一切 — 从笔记到 PRD",
-      "description": "页面让您在一个地方捕获和组织信息。编写会议笔记、项目文档和 PRD,嵌入工作项,并使用现成的组件进行结构化。",
-      "cta_primary": "创建您的第一个页面"
+      "title": "记录一切，从笔记到 PRD",
+      "description": "页面让您在一个地方记录和整理信息：撰写会议纪要、项目文档和 PRD，嵌入工作项，并使用现成组件组织内容。",
+      "cta_primary": "创建第一个页面"
     },
     "archive_pages": {
       "title": "暂无已归档页面",
-      "description": "归档不在您关注范围内的页面。需要时在此处访问它们。"
+      "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
     },
     "intake_sidebar": {
-      "title": "记录接收请求",
-      "description": "提交新请求以在项目工作流程中进行审查、优先排序和跟踪。",
-      "cta_primary": "创建接收请求"
+      "title": "记录 Intake 请求",
+      "description": "提交新请求，在项目工作流中进行审核、排定优先级和跟踪。",
+      "cta_primary": "创建 Intake 请求"
     },
     "intake_main": {
-      "title": "选择一个接收工作项以查看其详细信息"
+      "title": "选择一个 Intake 工作项以查看详情"
     },
     "epics": {
-      "title": "将复杂项目转化为结构化史诗。",
-      "description": "史诗帮助您将大目标组织成更小的可跟踪任务。",
+      "title": "用史诗把复杂项目变得井然有序。",
+      "description": "史诗帮助您把大目标拆分为更小、可跟踪的任务。",
       "cta_primary": "创建史诗",
       "cta_secondary": "文档"
     },
     "epic_work_items": {
       "title": "您尚未向此史诗添加工作项。",
-      "description": "开始向此史诗添加一些工作项并在此处跟踪它们。",
+      "description": "向此史诗添加工作项，即可在这里跟踪它们。",
       "cta_secondary": "添加工作项"
     }
   },
   "workspace_empty_state": {
     "archive_epics": {
       "title": "暂无已归档史诗",
-      "description": "您可以归档已完成或已取消的史诗。归档后在此处查找它们。"
+      "description": "您可以归档已完成或已取消的史诗，归档后可在这里找到。"
     },
     "archive_work_items": {
       "title": "暂无已归档工作项",
-      "description": "通过手动或自动化,您可以归档已完成或已取消的工作项。归档后在此处查找它们。",
+      "description": "您可以手动或通过自动化归档已完成或已取消的工作项，归档后可在这里找到。",
       "cta_primary": "设置自动化"
     },
     "archive_cycles": {
       "title": "暂无已归档周期",
-      "description": "为了整理项目,请归档已完成的周期。归档后在此处查找它们。"
+      "description": "归档已完成的周期，让项目保持整洁。归档后可在这里找到。"
     },
     "archive_modules": {
       "title": "暂无已归档模块",
-      "description": "为了整理项目,请归档已完成或已取消的模块。归档后在此处查找它们。"
+      "description": "归档已完成或已取消的模块，让项目保持整洁。归档后可在这里找到。"
     },
     "home_widget_quick_links": {
-      "title": "为您的工作保留重要的参考、资源或文档"
+      "title": "把重要的参考资料、资源或文档放在手边"
     },
     "inbox_sidebar_all": {
-      "title": "您订阅的工作项的更新将显示在此处"
+      "title": "您订阅的工作项的更新会显示在这里"
     },
     "inbox_sidebar_mentions": {
-      "title": "您的工作项的提及将显示在此处"
+      "title": "与您的工作项相关的提及会显示在这里"
     },
     "your_work_by_priority": {
       "title": "尚未分配工作项"
@@ -141,125 +141,125 @@
     },
     "views": {
       "title": "暂无视图",
-      "description": "将工作项添加到项目中并使用视图轻松过滤、排序和监控进度。",
+      "description": "向项目添加工作项，并使用视图轻松筛选、排序和跟踪进度。",
       "cta_primary": "添加工作项"
     },
     "drafts": {
-      "title": "半成品工作项",
-      "description": "要试用此功能,请开始添加工作项并在中途离开,或在下方创建您的第一个草稿。😉",
+      "title": "未完成的工作项",
+      "description": "试试看：开始创建工作项后中途离开，或在下方创建您的第一个草稿。😉",
       "cta_primary": "创建草稿工作项"
     },
     "projects_archived": {
       "title": "没有已归档项目",
-      "description": "看起来您的所有项目仍然活跃 — 做得好!"
+      "description": "您的所有项目都还在进行中，干得漂亮！"
     },
     "analytics_projects": {
-      "title": "创建项目以在此处可视化项目指标。"
+      "title": "创建项目后，即可在此查看项目指标。"
     },
     "analytics_work_items": {
-      "title": "创建包含工作项和受理人的项目,以开始在此处跟踪绩效、进度和团队影响。"
+      "title": "创建包含工作项和负责人的项目，即可在此跟踪绩效、进度和团队贡献。"
     },
     "analytics_no_cycle": {
-      "title": "创建周期以将工作组织成有时限的阶段并跟踪冲刺进度。"
+      "title": "创建周期，将工作划分为有时限的阶段，并跟踪各迭代的进度。"
     },
     "analytics_no_module": {
-      "title": "创建模块以组织工作并跟踪不同阶段的进度。"
+      "title": "创建模块来组织工作，并跟踪各阶段的进度。"
     },
     "analytics_no_intake": {
-      "title": "设置接收以管理传入请求并跟踪它们的接受和拒绝情况"
+      "title": "设置 Intake 来管理外部请求，并跟踪请求的接受和拒绝情况"
     },
     "home_widget_stickies": {
-      "title": "记下想法、捕捉灵光一现或记录思维火花。添加便签开始。"
+      "title": "记下一个想法、一次灵光乍现或一个点子。添加 Sticky 即可开始。"
     },
     "stickies": {
       "title": "即时捕捉想法",
-      "description": "创建便签记录快速笔记和待办事项,并随身携带它们无论您走到哪里。",
-      "cta_primary": "创建第一个便签",
+      "description": "用 Sticky 快速记录笔记和待办事项，随时随地都能查看。",
+      "cta_primary": "创建第一个 Sticky",
       "cta_secondary": "文档"
     },
     "active_cycles": {
-      "title": "无活跃周期",
-      "description": "您目前没有任何正在进行的周期。包含今天日期的活跃周期将显示在此处。"
+      "title": "没有进行中的周期",
+      "description": "您目前没有进行中的周期。日期范围包含今天的周期会显示在这里。"
     },
     "dashboard": {
-      "title": "使用仪表板可视化您的进度",
-      "description": "构建可自定义的仪表板以跟踪指标、衡量成果并有效呈现见解。",
+      "title": "用仪表板直观展示进度",
+      "description": "构建可自定义的仪表板，跟踪指标、衡量成果，并清晰呈现洞察。",
       "cta_primary": "创建新仪表板"
     },
     "wiki": {
       "title": "编写笔记、文档或完整的知识库。",
-      "description": "页面是 Plane 中的思想捕捉空间。记录会议笔记,轻松格式化,嵌入工作项,使用组件库进行布局,并将它们全部保留在项目上下文中。",
-      "cta_primary": "创建您的页面"
+      "description": "页面是您在 Plane 中记录想法的地方：记录会议纪要、轻松排版、嵌入工作项、用组件库布局，并让它们都与项目保持关联。",
+      "cta_primary": "创建页面"
     },
     "project_overview_state_sidebar": {
       "title": "启用项目状态",
-      "description": "启用项目状态以查看和管理状态、优先级、截止日期等属性。"
+      "description": "启用项目状态后，即可查看和管理状态、优先级、截止日期等属性。"
     }
   },
   "settings_empty_state": {
     "estimates": {
       "title": "暂无估算",
-      "description": "定义团队如何衡量工作量,并在所有工作项中一致地跟踪它。",
+      "description": "定义团队衡量工作量的方式，并在所有工作项中统一跟踪。",
       "cta_primary": "添加估算系统"
     },
     "labels": {
       "title": "暂无标签",
-      "description": "创建个性化标签以有效分类和管理工作项。",
-      "cta_primary": "创建您的第一个标签"
+      "description": "创建自定义标签，更好地分类和管理工作项。",
+      "cta_primary": "创建第一个标签"
     },
     "exports": {
       "title": "暂无导出",
-      "description": "您目前没有任何导出记录。导出数据后,所有记录将显示在此处。"
+      "description": "目前还没有导出记录。导出数据后，记录会显示在这里。"
     },
     "tokens": {
-      "title": "暂无个人令牌",
-      "description": "生成安全的 API 令牌以将工作空间与外部系统和应用程序连接。",
-      "cta_primary": "添加 API 令牌"
+      "title": "暂无个人访问令牌",
+      "description": "生成安全的 API 令牌，将工作区与外部系统和应用连接。",
+      "cta_primary": "添加访问令牌"
     },
     "workspace_tokens": {
       "title": "暂无访问令牌",
-      "description": "生成安全的 API 令牌以将工作空间与外部系统和应用程序连接。",
+      "description": "生成安全的 API 令牌，将工作区与外部系统和应用连接。",
       "cta_primary": "添加访问令牌"
     },
     "webhooks": {
       "title": "尚未添加 Webhook",
-      "description": "在项目事件发生时自动向外部服务发送通知。",
-      "cta_primary": "添加 webhook"
+      "description": "在项目事件发生时，自动通知外部服务。",
+      "cta_primary": "添加 Webhook"
     },
     "work_item_types": {
       "title": "创建和自定义工作项类型",
-      "description": "为项目定义独特的工作项类型。每种类型都可以有自己的属性、工作流程和字段 — 根据项目和团队需求量身定制。",
+      "description": "为项目定义专属的工作项类型。每种类型都可以拥有自己的属性、工作流和字段，满足项目和团队的需求。",
       "cta_primary": "启用"
     },
     "work_item_type_properties": {
-      "title": "定义要为此工作项类型捕获的属性和详细信息。自定义它以匹配项目的工作流程。",
+      "title": "定义此工作项类型需要记录的属性和详细信息，并按项目工作流进行定制。",
       "cta_secondary": "添加属性"
     },
     "templates": {
       "title": "暂无模板",
-      "description": "通过为工作项和页面创建模板来减少设置时间 — 并在几秒钟内开始新工作。",
-      "cta_primary": "创建您的第一个模板"
+      "description": "为工作项和页面创建模板，减少重复设置，几秒钟即可开始新工作。",
+      "cta_primary": "创建第一个模板"
     },
     "recurring_work_items": {
-      "title": "暂无循环工作项",
-      "description": "设置循环工作项以自动化重复任务并轻松保持计划进度。",
-      "cta_primary": "创建循环工作项"
+      "title": "暂无重复工作项",
+      "description": "设置重复工作项，自动处理周期性任务，轻松按计划推进。",
+      "cta_primary": "创建重复工作项"
     },
     "worklogs": {
-      "title": "跟踪所有成员的工时表",
-      "description": "在工作项上记录时间以查看跨项目任何团队成员的详细工时表。"
+      "title": "跟踪所有成员的工时",
+      "description": "在工作项上记录工时，即可查看任意成员跨项目的详细工时表。"
     },
     "group_syncing": {
-      "title": "暂无组映射"
+      "title": "暂无用户组映射"
     },
     "template_setting": {
       "title": "暂无模板",
-      "description": "通过为项目、工作项和页面创建模板来减少设置时间 — 并在几秒钟内开始新工作。",
+      "description": "为项目、工作项和页面创建模板，减少重复设置，几秒钟即可开始新工作。",
       "cta_primary": "创建模板"
     },
     "workflows": {
       "title": "暂无工作流",
-      "description": "创建工作流以管理工作项的进度。",
+      "description": "创建工作流，管理工作项的推进过程。",
       "cta_primary": "添加新工作流",
       "states": {
         "title": "添加状态",

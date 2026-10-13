@@ -5,29 +5,29 @@
     "form": {
       "name": {
         "label": "为您的工作区命名",
-        "placeholder": "熟悉且易于识别的名称总是最好的。"
+        "placeholder": "最好使用熟悉、易于识别的名称。"
       },
       "url": {
         "label": "设置您的工作区 URL",
         "placeholder": "输入或粘贴 URL",
-        "edit_slug": "您只能编辑 URL 的标识符部分"
+        "edit_slug": "您只能编辑 URL 的路径部分"
       },
       "organization_size": {
-        "label": "有多少人将使用这个工作区？",
+        "label": "有多少人会使用此工作区？",
         "placeholder": "选择一个范围"
       }
     },
     "errors": {
       "creation_disabled": {
         "title": "只有您的实例管理员可以创建工作区",
-        "description": "如果您知道实例管理员的电子邮件地址，请点击下方按钮与他们联系。",
-        "request_button": "请求实例管理员"
+        "description": "如果您知道实例管理员的邮箱地址，请点击下方按钮与其联系。",
+        "request_button": "联系实例管理员"
       },
       "validation": {
-        "name_alphanumeric": "工作区名称只能包含 (' '), ('-'), ('_') 和字母数字字符。",
-        "name_length": "名称限制在 80 个字符以内。",
-        "url_alphanumeric": "URL 只能包含 ('-') 和字母数字字符。",
-        "url_length": "URL 限制在 48 个字符以内。",
+        "name_alphanumeric": "工作区名称只能包含空格、“-”、“_”和字母数字字符。",
+        "name_length": "名称不能超过 80 个字符。",
+        "url_alphanumeric": "URL 只能包含“-”和字母数字字符。",
+        "url_length": "URL 不能超过 48 个字符。",
         "url_already_taken": "工作区 URL 已被占用！"
       }
     },
@@ -42,11 +42,11 @@
     "toast": {
       "success": {
         "title": "成功",
-        "message": "工作区创建成功"
+        "message": "工作区已创建"
       },
       "error": {
         "title": "错误",
-        "message": "工作区创建失败。请重试。"
+        "message": "创建工作区失败，请重试。"
       }
     }
   },
@@ -54,12 +54,12 @@
     "empty_state": {
       "general": {
         "title": "项目、活动和指标概览",
-        "description": "欢迎使用 Plane，我们很高兴您能来到这里。创建您的第一个项目并跟踪您的工作项，这个页面将转变为帮助您进展的空间。管理员还将看到帮助团队进展的项目。",
+        "description": "欢迎使用 Plane！创建第一个项目并跟踪工作项后，此页面会成为帮助您推进工作的空间。管理员还会看到有助于团队推进的内容。",
         "primary_button": {
-          "text": "构建您的第一个项目",
+          "text": "创建第一个项目",
           "comic": {
-            "title": "在 Plane 中一切都从项目开始",
-            "description": "项目可以是产品路线图、营销活动或新车发布。"
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
           }
         }
       }
@@ -68,35 +68,35 @@
   "workspace_analytics": {
     "label": "分析",
     "page_label": "{workspace} - 分析",
-    "open_tasks": "总开放任务",
-    "error": "获取数据时出现错误。",
-    "work_items_closed_in": "已关闭的工作项",
+    "open_tasks": "未完成任务总数",
+    "error": "获取数据时出错。",
+    "work_items_closed_in": "已关闭工作项的时间范围",
     "selected_projects": "已选择的项目",
-    "total_members": "总成员数",
-    "total_cycles": "总周期数",
-    "total_modules": "总模块数",
+    "total_members": "成员总数",
+    "total_cycles": "周期总数",
+    "total_modules": "模块总数",
     "pending_work_items": {
       "title": "待处理工作项",
-      "empty_state": "同事的待处理工作项分析将显示在这里。"
+      "empty_state": "成员待处理工作项的分析会显示在这里。"
     },
     "work_items_closed_in_a_year": {
-      "title": "一年内关闭的工作项",
-      "empty_state": "关闭工作项以查看以图表形式显示的分析。"
+      "title": "近一年关闭的工作项",
+      "empty_state": "关闭工作项后，即可在图表中查看相关分析。"
     },
     "most_work_items_created": {
-      "title": "创建最多工作项",
-      "empty_state": "同事及其创建的工作项数量将显示在这里。"
+      "title": "创建工作项最多的成员",
+      "empty_state": "成员及其创建的工作项数量会显示在这里。"
     },
     "most_work_items_closed": {
-      "title": "关闭最多工作项",
-      "empty_state": "同事及其关闭的工作项数量将显示在这里。"
+      "title": "关闭工作项最多的成员",
+      "empty_state": "成员及其关闭的工作项数量会显示在这里。"
     },
     "tabs": {
-      "scope_and_demand": "范围和需求",
+      "scope_and_demand": "范围与需求",
       "custom": "自定义分析"
     },
     "total": "{entity}总数",
-    "started_work_items": "已开始的{entity}",
+    "started_work_items": "进行中的{entity}",
     "backlog_work_items": "待办的{entity}",
     "un_started_work_items": "未开始的{entity}",
     "completed_work_items": "已完成的{entity}",
@@ -106,49 +106,49 @@
     "trend_on_charts": "图表趋势",
     "active_projects": "活跃项目",
     "customized_insights": "自定义洞察",
-    "created_vs_resolved": "已创建 vs 已解决",
+    "created_vs_resolved": "创建与解决对比",
     "empty_state": {
       "project_insights": {
         "title": "暂无数据",
-        "description": "分配给您的工作项将按状态分类显示在此处。"
+        "description": "分配给您的工作项会按状态分类显示在这里。"
       },
       "created_vs_resolved": {
         "title": "暂无数据",
-        "description": "随着时间推移创建和解决的工作项将显示在此处。"
+        "description": "工作项随时间的创建和解决情况会显示在这里。"
       },
       "customized_insights": {
         "title": "暂无数据",
-        "description": "分配给您的工作项将按状态分类显示在此处。"
+        "description": "分配给您的工作项会按状态分类显示在这里。"
       },
       "general": {
-        "title": "跟踪进度、工作量和分配。发现趋势，消除障碍，加速工作进展",
-        "description": "查看范围与需求、估算和范围蔓延。获取团队成员和团队的性能，确保您的项目按时运行。",
+        "title": "跟踪进度、工作量和任务分配。发现趋势、消除阻碍，让工作推进得更快",
+        "description": "查看范围与需求、估算和范围蔓延情况，了解成员和团队的表现，确保项目按时推进。",
         "primary_button": {
-          "text": "开始您的第一个项目",
+          "text": "创建第一个项目",
           "comic": {
-            "title": "分析功能在周期 + 模块中效果最佳",
-            "description": "首先，将您的问题在周期中进行时间限制，如果可能的话，将跨越多个周期的问题分组到模块中。在左侧导航中查看这两个功能。"
+            "title": "分析功能搭配周期和模块效果最佳",
+            "description": "首先把工作项放入周期进行时间盒管理；如有跨越多个周期的工作项，再将它们归入模块。两者都可以在左侧导航中找到。"
           }
         }
       },
       "cycle_progress": {
-        "title": "尚无数据",
-        "description": "周期进度分析将显示在此处。将工作项添加到周期中以开始跟踪进度。"
+        "title": "暂无数据",
+        "description": "周期进度分析会显示在这里。将工作项添加到周期即可开始跟踪进度。"
       },
       "module_progress": {
-        "title": "尚无数据",
-        "description": "模块进度分析将显示在此处。将工作项添加到模块中以开始跟踪进度。"
+        "title": "暂无数据",
+        "description": "模块进度分析会显示在这里。将工作项添加到模块即可开始跟踪进度。"
       },
       "intake_trends": {
-        "title": "尚无数据",
-        "description": "引入趋势分析将显示在此处。将工作项添加到引入中以开始跟踪趋势。"
+        "title": "暂无数据",
+        "description": "Intake 趋势分析会显示在这里。向 Intake 添加工作项即可开始跟踪趋势。"
       }
     },
     "upgrade_to_plan": "升级到 {plan} 以解锁 {tab}",
-    "workitem_resolved_vs_pending": "已解决 vs 待处理的工作项",
+    "workitem_resolved_vs_pending": "已解决与待处理工作项对比",
     "projects_by_status": "按状态分类的项目",
     "active_users": "活跃用户",
-    "intake_trends": "入学趋势"
+    "intake_trends": "Intake 趋势"
   },
   "workspace_projects": {
     "label": "{count, plural, one {项目} other {项目}}",
@@ -195,33 +195,33 @@
     },
     "empty_state": {
       "general": {
-        "title": "没有活动项目",
-        "description": "将每个项目视为目标导向工作的父级。项目是工作项、周期和模块所在的地方，与您的同事一起帮助您实现目标。创建新项目或筛选已归档的项目。",
+        "title": "没有进行中的项目",
+        "description": "每个项目都是一组目标导向工作的上级。工作项、周期和模块都位于项目中，与同事一起帮助您达成目标。您可以创建新项目，或筛选查看已归档的项目。",
         "primary_button": {
-          "text": "开始您的第一个项目",
+          "text": "创建第一个项目",
           "comic": {
-            "title": "在 Plane 中一切都从项目开始",
-            "description": "项目可以是产品路线图、营销活动或新车发布。"
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
           }
         }
       },
       "no_projects": {
-        "title": "没有项目",
-        "description": "要创建工作项或管理您的工作，您需要创建一个项目或成为项目的一部分。",
+        "title": "暂无项目",
+        "description": "要创建工作项或管理工作，您需要创建一个项目或加入一个项目。",
         "primary_button": {
-          "text": "开始您的第一个项目",
+          "text": "创建第一个项目",
           "comic": {
-            "title": "在 Plane 中一切都从项目开始",
-            "description": "项目可以是产品路线图、营销活动或新车发布。"
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
           }
         }
       },
       "filter": {
         "title": "没有匹配的项目",
-        "description": "未检测到符合匹配条件的项目。\n创建一个新项目。"
+        "description": "没有符合条件的项目。\n您可以创建一个新项目。"
       },
       "search": {
-        "description": "未检测到符合匹配条件的项目。\n创建一个新项目"
+        "description": "没有符合条件的项目。\n您可以创建一个新项目"
       }
     }
   },
@@ -230,56 +230,56 @@
     "empty_state": {
       "all-issues": {
         "title": "项目中没有工作项",
-        "description": "第一个项目完成！现在，将您的工作分解成可跟踪的工作项。让我们开始吧！",
+        "description": "第一个项目已创建！现在，用工作项把工作拆分为可跟踪的部分吧。",
         "primary_button": {
           "text": "创建新工作项"
         }
       },
       "assigned": {
-        "title": "还没有工作项",
-        "description": "可以在这里跟踪分配给您的工作项。",
+        "title": "暂无工作项",
+        "description": "分配给您的工作项可以在这里跟踪。",
         "primary_button": {
           "text": "创建新工作项"
         }
       },
       "created": {
-        "title": "还没有工作项",
-        "description": "您创建的所有工作项都会出现在这里，直接在这里跟踪它们。",
+        "title": "暂无工作项",
+        "description": "您创建的所有工作项都会显示在这里，可直接跟踪。",
         "primary_button": {
           "text": "创建新工作项"
         }
       },
       "subscribed": {
-        "title": "还没有工作项",
-        "description": "订阅您感兴趣的工作项，在这里跟踪所有这些工作项。"
+        "title": "暂无工作项",
+        "description": "订阅您关注的工作项，即可在这里统一跟踪。"
       },
       "custom-view": {
-        "title": "还没有工作项",
-        "description": "符合筛选条件的工作项，在这里跟踪所有这些工作项。"
+        "title": "暂无工作项",
+        "description": "符合筛选条件的工作项会显示在这里，可统一跟踪。"
       }
     },
     "delete_view": {
-      "title": "您确定要删除此视图吗？",
-      "content": "如果您确认，您为此视图选择的所有排序、筛选和显示选项 + 布局将被永久删除，无法恢复。"
+      "title": "确定要删除此视图吗？",
+      "content": "确认后，您为此视图设置的所有排序、筛选、显示选项和布局都将被永久删除，且无法恢复。"
     }
   },
   "workspace_draft_issues": {
     "draft_an_issue": "起草工作项",
     "empty_state": {
-      "title": "半写的工作项，以及即将推出的评论将在这里显示。",
-      "description": "要试用此功能，请开始添加工作项并中途离开，或在下方创建您的第一个草稿。😉",
+      "title": "未写完的工作项（以及即将支持的评论）会显示在这里。",
+      "description": "试试看：开始创建工作项后中途离开，或在下方创建您的第一个草稿。😉",
       "primary_button": {
-        "text": "创建您的第一个草稿"
+        "text": "创建第一个草稿"
       }
     },
     "delete_modal": {
       "title": "删除草稿",
-      "description": "您确定要删除此草稿吗？此操作无法撤消。"
+      "description": "确定要删除此草稿吗？此操作无法撤销。"
     },
     "toasts": {
       "created": {
         "success": "草稿已创建",
-        "error": "无法创建工作项。请重试。"
+        "error": "无法创建工作项，请重试。"
       },
       "deleted": {
         "success": "草稿已删除"
@@ -289,52 +289,52 @@
   "workspace_pages": {
     "empty_state": {
       "general": {
-        "title": "写笔记、文档或完整的知识库。让 Galileo，Plane 的 AI 助手，帮助您开始",
-        "description": "页面是 Plane 中的思考空间。记录会议笔记，轻松格式化，嵌入工作项，使用组件库布局，并将它们全部保存在项目的上下文中。要快速完成任何文档，使用快捷键或点击按钮调用 Plane 的 AI Galileo。",
+        "title": "写笔记、写文档，甚至搭建完整的知识库。让 Plane 的 AI 助手 Galileo 帮您起步",
+        "description": "页面是您在 Plane 中记录想法的地方：记录会议纪要、轻松排版、嵌入工作项、用组件库布局，并让它们都与项目保持关联。通过快捷键或按钮唤起 Plane 的 AI 助手 Galileo，快速完成任何文档。",
         "primary_button": {
-          "text": "创建您的第一个页面"
+          "text": "创建第一个页面"
         }
       },
       "private": {
-        "title": "还没有私人页面",
-        "description": "在这里保存您的私人想法。当您准备好分享时，团队就在一键之遥。",
+        "title": "暂无私有页面",
+        "description": "在这里记录您的私人想法。准备好分享时，一键即可与团队共享。",
         "primary_button": {
-          "text": "创建您的第一个页面"
+          "text": "创建第一个页面"
         }
       },
       "public": {
-        "title": "还没有工作空间页面",
-        "description": "在这里查看与工作空间中所有人共享的页面。",
+        "title": "暂无工作区页面",
+        "description": "与工作区所有成员共享的页面会显示在这里。",
         "primary_button": {
-          "text": "创建您的第一个页面"
+          "text": "创建第一个页面"
         }
       },
       "archived": {
-        "title": "还没有已归档的页面",
-        "description": "归档不在您关注范围内的页面。需要时可以在这里访问它们。"
+        "title": "暂无已归档的页面",
+        "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
       },
       "shared": {
         "title": "尚无共享页面",
-        "description": "其他人与您共享的页面将显示在此处。"
+        "description": "其他人与您共享的页面会显示在这里。"
       }
     }
   },
   "workspace_cycles": {
     "empty_state": {
       "active": {
-        "title": "没有活动的周期",
-        "description": "您的项目中包含当前日期在其范围内的任何时期的周期。在这里查看所有活动周期的进度和详细信息。"
+        "title": "没有进行中的周期",
+        "description": "日期范围包含今天的项目周期会显示在这里，您可以查看所有进行中周期的进度和详情。"
       }
     }
   },
   "workspace": {
     "members_import": {
-      "title": "从CSV导入成员",
-      "description": "上传包含以下列的CSV：Email, Display Name, First Name, Last Name, Role（5、15或20）",
+      "title": "从 CSV 导入成员",
+      "description": "上传包含以下列的 CSV：Email、Display Name、First Name、Last Name、Role（5、15 或 20）",
       "dropzone": {
-        "active": "将CSV文件放在这里",
+        "active": "将 CSV 文件拖放到此处",
         "inactive": "拖放或点击上传",
-        "file_type": "仅支持.csv文件"
+        "file_type": "仅支持 .csv 文件"
       },
       "buttons": {
         "cancel": "取消",
@@ -344,8 +344,8 @@
         "done": "完成"
       },
       "progress": {
-        "uploading": "上传中...",
-        "importing": "导入中..."
+        "uploading": "正在上传…",
+        "importing": "正在导入…"
       },
       "summary": {
         "title": {
@@ -354,23 +354,23 @@
         },
         "message": {
           "seat_limit": "由于席位限制，无法导入成员。",
-          "success": "成功将{count}名成员添加到工作区。",
-          "no_imports": "未从CSV文件导入任何成员。"
+          "success": "成功将 {count} 名成员添加到工作区。",
+          "no_imports": "CSV 文件中没有导入任何成员。"
         },
         "stats": {
           "successful": "成功",
           "failed": "失败"
         },
-        "download_errors": "下载错误"
+        "download_errors": "下载错误明细"
       },
       "toast": {
         "invalid_file": {
           "title": "无效文件",
-          "message": "仅支持CSV文件。"
+          "message": "仅支持 CSV 文件。"
         },
         "import_failed": {
           "title": "导入失败",
-          "message": "出了些问题。"
+          "message": "出了点问题。"
         }
       }
     }
