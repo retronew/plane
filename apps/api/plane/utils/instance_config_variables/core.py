@@ -26,6 +26,27 @@ authentication_config_variables = [
     },
 ]
 
+session_config_variables = [
+    {
+        "key": "SESSION_COOKIE_AGE",
+        "value": os.environ.get("SESSION_COOKIE_AGE", "2592000"),
+        "category": "SESSION",
+        "is_encrypted": False,
+    },
+    {
+        "key": "ADMIN_SESSION_COOKIE_AGE",
+        "value": os.environ.get("ADMIN_SESSION_COOKIE_AGE", "28800"),
+        "category": "SESSION",
+        "is_encrypted": False,
+    },
+    {
+        "key": "SESSION_SAVE_EVERY_REQUEST",
+        "value": os.environ.get("SESSION_SAVE_EVERY_REQUEST", "1"),
+        "category": "SESSION",
+        "is_encrypted": False,
+    },
+]
+
 workspace_management_config_variables = [
     {
         "key": "DISABLE_WORKSPACE_CREATION",
@@ -252,6 +273,7 @@ unsplash_config_variables = [
 
 core_config_variables = [
     *authentication_config_variables,
+    *session_config_variables,
     *workspace_management_config_variables,
     *google_config_variables,
     *github_config_variables,

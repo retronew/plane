@@ -15,6 +15,7 @@ import { cn, resolveGeneralTheme } from "@plane/utils";
 // components
 import { PageWrapper } from "@/components/common/page-wrapper";
 import { AuthenticationMethodCard } from "@/components/authentication/authentication-method-card";
+import { SessionConfiguration } from "@/components/authentication/session-config";
 import { Skeleton } from "@/components/common/skeleton";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 // helpers
@@ -147,6 +148,9 @@ const InstanceAuthenticationPage = observer(function InstanceAuthenticationPage(
                 />
               </div>
             </div>
+          </div>
+          <div className="pt-6">
+            <SessionConfiguration config={formattedConfig} disabled={isSubmitting} updateConfig={updateConfig} />
           </div>
           <div className="text-lg pt-6 font-medium">{t("admin.authentication.available_modes")}</div>
           {authenticationModes.map((method) => (

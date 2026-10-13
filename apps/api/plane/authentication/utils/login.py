@@ -4,9 +4,9 @@
 
 # Django imports
 from django.contrib.auth import login
-from django.conf import settings
 
 # Module imports
+from plane.authentication.utils.session import get_session_config
 from plane.utils.host import base_host
 from plane.utils.ip_address import get_client_ip
 
@@ -14,9 +14,9 @@ from plane.utils.ip_address import get_client_ip
 def user_login(request, user, is_app=False, is_admin=False, is_space=False):
     login(request=request, user=user)
 
-    # If is admin cookie set the custom age
-    if is_admin:
-        request.session.set_expiry(settings.ADMIN_SESSION_COOKIE_AGE)
+    # Session lifetime is configurable from the instance admin
+    user_age, admin_age, _ = get_session_config()
+    request.session.set_expiry(admin_age if is_admin else user_age)
 
     device_info = {
         "user_agent": request.META.get("HTTP_USER_AGENT", ""),

@@ -301,6 +301,19 @@
         "gitea_host": "Gitea Host",
         "gitea_host_description": "Use the URL of your Gitea instance. For the official Gitea instance, use \"https://gitea.com\".",
         "refresh_attributes": "Refresh user attributes from {provider} during sign in"
+      },
+      "session": {
+        "title": "Session",
+        "description": "Control how long users stay signed in before they need to log in again.",
+        "user_session": "Member session duration",
+        "user_session_description": "How long a member stays signed in to the web app.",
+        "admin_session": "God mode session duration",
+        "admin_session_description": "How long an instance admin stays signed in to God mode.",
+        "extend_on_activity": "Extend sessions on activity",
+        "extend_on_activity_description": "Restart the session timer on every request so active users are not signed out. Turn off to sign users out at a fixed time after login.",
+        "minutes": "{count, plural, one {# minute} other {# minutes}}",
+        "hours": "{count, plural, one {# hour} other {# hours}}",
+        "days": "{count, plural, one {# day} other {# days}}"
       }
     },
     "meta": {

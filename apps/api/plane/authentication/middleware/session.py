@@ -12,6 +12,9 @@ from django.utils.cache import patch_vary_headers
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.http import http_date
 
+# Module imports
+from plane.authentication.utils.session import get_session_config
+
 
 class SessionMiddleware(MiddlewareMixin):
     def __init__(self, get_response):
@@ -54,16 +57,15 @@ class SessionMiddleware(MiddlewareMixin):
         else:
             if accessed:
                 patch_vary_headers(response, ("Cookie",))
-            if (modified or settings.SESSION_SAVE_EVERY_REQUEST) and not empty:
+            # When enabled, every authenticated request extends the session (sliding expiry)
+            _, _, save_every_request = get_session_config()
+            if (modified or save_every_request) and not empty:
                 if request.session.get_expire_at_browser_close():
                     max_age = None
                     expires = None
                 else:
-                    # Use different max_age based on whether it's an admin cookie
-                    if is_admin_path:
-                        max_age = settings.ADMIN_SESSION_COOKIE_AGE
-                    else:
-                        max_age = request.session.get_expiry_age()
+                    # Admin and user sessions get their own expiry on login
+                    max_age = request.session.get_expiry_age()
 
                     expires_time = time.time() + max_age
                     expires = http_date(expires_time)

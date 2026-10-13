@@ -301,6 +301,19 @@
         "gitea_host": "Gitea 主机",
         "gitea_host_description": "填写您的 Gitea 实例 URL。如使用官方 Gitea，请填写“https://gitea.com”。",
         "refresh_attributes": "登录时从 {provider} 同步用户属性"
+      },
+      "session": {
+        "title": "会话",
+        "description": "控制用户需要重新登录前保持登录状态的时长。",
+        "user_session": "成员会话时长",
+        "user_session_description": "成员在 Web 应用中保持登录的时长。",
+        "admin_session": "God mode 会话时长",
+        "admin_session_description": "实例管理员在 God mode 中保持登录的时长。",
+        "extend_on_activity": "活动时延长会话",
+        "extend_on_activity_description": "每次请求都会重新计时，活跃用户不会被登出。关闭后，用户将在登录后的固定时间被登出。",
+        "minutes": "{count, plural, one {# 分钟} other {# 分钟}}",
+        "hours": "{count, plural, one {# 小时} other {# 小时}}",
+        "days": "{count, plural, one {# 天} other {# 天}}"
       }
     },
     "meta": {

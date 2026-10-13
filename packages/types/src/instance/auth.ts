@@ -62,7 +62,15 @@ export type TInstanceAuthenticationConfigurationKeys =
   | TInstanceGitlabAuthenticationConfigurationKeys
   | TInstanceGiteaAuthenticationConfigurationKeys;
 
-export type TInstanceAuthenticationKeys = TInstanceAuthenticationMethodKeys | TInstanceAuthenticationConfigurationKeys;
+export type TInstanceSessionConfigurationKeys =
+  | "SESSION_COOKIE_AGE"
+  | "ADMIN_SESSION_COOKIE_AGE"
+  | "SESSION_SAVE_EVERY_REQUEST";
+
+export type TInstanceAuthenticationKeys =
+  | TInstanceAuthenticationMethodKeys
+  | TInstanceAuthenticationConfigurationKeys
+  | TInstanceSessionConfigurationKeys;
 
 export type TGetBaseAuthenticationModeProps = {
   disabled: boolean;
