@@ -11,7 +11,6 @@ import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { API_BASE_URL, E_PASSWORD_STRENGTH } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
-import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { AuthService } from "@plane/services";
 import { getPasswordStrength, validatePersonName, validateCompanyName } from "@plane/utils";
@@ -27,16 +26,27 @@ const authService = new AuthService();
 // error codes
 enum EErrorCodes {
   INSTANCE_NOT_CONFIGURED = "INSTANCE_NOT_CONFIGURED",
-  ADMIN_ALREADY_EXIST = "ADMIN_ALREADY_EXIST",
-  REQUIRED_EMAIL_PASSWORD_FIRST_NAME = "REQUIRED_EMAIL_PASSWORD_FIRST_NAME",
   INVALID_EMAIL = "INVALID_EMAIL",
   INVALID_PASSWORD = "INVALID_PASSWORD",
-  USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS",
+  BANNER = "BANNER",
 }
 
 type TError = {
   type: EErrorCodes | undefined;
   message: string | undefined;
+};
+
+// backend returns numeric codes (see AUTHENTICATION_ERROR_CODES in apps/api/plane/authentication/adapter/error.py)
+const ERROR_CODE_MAP: Record<string, { type: EErrorCodes; message: string }> = {
+  "5000": { type: EErrorCodes.INSTANCE_NOT_CONFIGURED, message: "Instance is not configured. Please try again." },
+  "5021": {
+    type: EErrorCodes.INVALID_PASSWORD,
+    message: "Password is too weak. Make sure it meets all the criteria below.",
+  },
+  "5150": { type: EErrorCodes.BANNER, message: "Admin already exists. Please sign in instead." },
+  "5155": { type: EErrorCodes.BANNER, message: "Email, password and first name are required." },
+  "5160": { type: EErrorCodes.INVALID_EMAIL, message: "Please enter a valid email address." },
+  "5180": { type: EErrorCodes.BANNER, message: "An admin user with this email already exists." },
 };
 
 // form data
@@ -56,7 +66,7 @@ const defaultFromData: TFormData = {
   email: "",
   company_name: "",
   password: "",
-  is_telemetry_enabled: true,
+  is_telemetry_enabled: false,
 };
 
 export function InstanceSetupForm() {
@@ -66,7 +76,6 @@ export function InstanceSetupForm() {
   const lastNameParam = searchParams?.get("last_name") || undefined;
   const companyParam = searchParams?.get("company") || undefined;
   const emailParam = searchParams?.get("email") || undefined;
-  const isTelemetryEnabledParam = (searchParams?.get("is_telemetry_enabled") === "True" ? true : false) || true;
   const errorCode = searchParams?.get("error_code") || undefined;
   const errorMessage = searchParams?.get("error_message") || undefined;
   // state
@@ -96,41 +105,29 @@ export function InstanceSetupForm() {
     if (lastNameParam) setFormData((prev) => ({ ...prev, last_name: lastNameParam }));
     if (companyParam) setFormData((prev) => ({ ...prev, company_name: companyParam }));
     if (emailParam) setFormData((prev) => ({ ...prev, email: emailParam }));
-    if (isTelemetryEnabledParam) setFormData((prev) => ({ ...prev, is_telemetry_enabled: isTelemetryEnabledParam }));
-  }, [firstNameParam, lastNameParam, companyParam, emailParam, isTelemetryEnabledParam]);
+  }, [firstNameParam, lastNameParam, companyParam, emailParam]);
 
   // derived values
   const errorData: TError = useMemo(() => {
-    if (errorCode && errorMessage) {
-      switch (errorCode) {
-        case EErrorCodes.INSTANCE_NOT_CONFIGURED:
-          return { type: EErrorCodes.INSTANCE_NOT_CONFIGURED, message: errorMessage };
-        case EErrorCodes.ADMIN_ALREADY_EXIST:
-          return { type: EErrorCodes.ADMIN_ALREADY_EXIST, message: errorMessage };
-        case EErrorCodes.REQUIRED_EMAIL_PASSWORD_FIRST_NAME:
-          return { type: EErrorCodes.REQUIRED_EMAIL_PASSWORD_FIRST_NAME, message: errorMessage };
-        case EErrorCodes.INVALID_EMAIL:
-          return { type: EErrorCodes.INVALID_EMAIL, message: errorMessage };
-        case EErrorCodes.INVALID_PASSWORD:
-          return { type: EErrorCodes.INVALID_PASSWORD, message: errorMessage };
-        case EErrorCodes.USER_ALREADY_EXISTS:
-          return { type: EErrorCodes.USER_ALREADY_EXISTS, message: errorMessage };
-        default:
-          return { type: undefined, message: undefined };
+    if (!errorCode) return { type: undefined, message: undefined };
+    return (
+      ERROR_CODE_MAP[errorCode] ?? {
+        type: EErrorCodes.BANNER,
+        message: errorMessage ? `Something went wrong (${errorMessage}). Please try again.` : "Something went wrong.",
       }
-    } else return { type: undefined, message: undefined };
+    );
   }, [errorCode, errorMessage]);
 
   const isButtonDisabled = useMemo(
     () =>
-      !isSubmitting &&
-      formData.first_name &&
-      formData.email &&
-      formData.password &&
-      getPasswordStrength(formData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
-      formData.password === formData.confirm_password
-        ? false
-        : true,
+      !(
+        !isSubmitting &&
+        formData.first_name &&
+        formData.email &&
+        formData.password &&
+        getPasswordStrength(formData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
+        formData.password === formData.confirm_password
+      ),
     [formData.confirm_password, formData.email, formData.first_name, formData.password, isSubmitting]
   );
 
@@ -163,7 +160,7 @@ export function InstanceSetupForm() {
             <input type="hidden" name="is_telemetry_enabled" value={formData.is_telemetry_enabled ? "True" : "False"} />
 
             <div className="flex flex-col items-center gap-4 sm:flex-row">
-              <div className="w-full space-y-1">
+              <div className="w-full min-w-0 space-y-1">
                 <label className="text-13 font-medium text-tertiary" htmlFor="first_name">
                   First name <span className="text-danger-primary">*</span>
                 </label>
@@ -182,12 +179,13 @@ export function InstanceSetupForm() {
                       }
                     }}
                     autoComplete="off"
+                    // oxlint-disable-next-line jsx-a11y/no-autofocus -- first field of the setup form
                     autoFocus
                     maxLength={50}
                   />
                 </InputGroup>
               </div>
-              <div className="w-full space-y-1">
+              <div className="w-full min-w-0 space-y-1">
                 <label className="text-13 font-medium text-tertiary" htmlFor="last_name">
                   Last name <span className="text-danger-primary">*</span>
                 </label>
@@ -225,7 +223,7 @@ export function InstanceSetupForm() {
                   placeholder="name@company.com"
                   value={formData.email}
                   onChange={(e) => handleFormChange("email", e.target.value)}
-                  aria-invalid={errorData.type && errorData.type === EErrorCodes.INVALID_EMAIL ? true : false}
+                  aria-invalid={errorData.type === EErrorCodes.INVALID_EMAIL}
                   autoComplete="off"
                 />
               </InputGroup>
@@ -270,7 +268,7 @@ export function InstanceSetupForm() {
                   placeholder="New password"
                   value={formData.password}
                   onChange={(e) => handleFormChange("password", e.target.value)}
-                  aria-invalid={errorData.type && errorData.type === EErrorCodes.INVALID_PASSWORD ? true : false}
+                  aria-invalid={errorData.type === EErrorCodes.INVALID_PASSWORD}
                   onFocus={() => setIsPasswordInputFocused(true)}
                   onBlur={() => setIsPasswordInputFocused(false)}
                   autoComplete="new-password"
@@ -343,28 +341,6 @@ export function InstanceSetupForm() {
                 renderPasswordMatchError && (
                   <span className="text-13 text-danger-primary">Passwords don{"'"}t match</span>
                 )}
-            </div>
-
-            <div className="relative flex gap-2">
-              <div>
-                <Checkbox
-                  id="is_telemetry_enabled"
-                  aria-label="Allow Plane to anonymously collect usage events"
-                  onCheckedChange={(checked) => handleFormChange("is_telemetry_enabled", checked)}
-                  checked={formData.is_telemetry_enabled}
-                />
-              </div>
-              <label className="cursor-pointer text-13 font-medium text-tertiary" htmlFor="is_telemetry_enabled">
-                Allow Plane to anonymously collect usage events.{" "}
-                <a
-                  href="https://developers.plane.so/self-hosting/telemetry"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 flex-shrink-0 text-13 font-medium"
-                >
-                  See More
-                </a>
-              </label>
             </div>
 
             <div className="py-2">
