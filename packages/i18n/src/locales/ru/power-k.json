@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Найти горячие клавиши",
       "no_results": "Не найдено горячих клавиш для «{query}»",
-      "sequence_separator": "затем"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Действия",

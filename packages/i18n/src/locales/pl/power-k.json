@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Szukaj skrótów klawiaturowych",
       "no_results": "Nie znaleziono skrótów klawiaturowych dla „{query}”",
-      "sequence_separator": "potem"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Akcje",

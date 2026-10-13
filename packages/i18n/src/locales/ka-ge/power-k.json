@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "კლავიატურის მალსახმობების ძებნა",
       "no_results": "კლავიატურის მალსახმობები \"{query}\"-ისთვის ვერ მოიძებნა",
-      "sequence_separator": "შემდეგ"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Actions",

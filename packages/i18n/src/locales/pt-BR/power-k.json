@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Pesquisar atalhos do teclado",
       "no_results": "Nenhum atalho do teclado encontrado para \"{query}\"",
-      "sequence_separator": "depois"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Ações",

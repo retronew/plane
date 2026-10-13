@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Знайти гарячі клавіші",
       "no_results": "Не знайдено гарячих клавіш для «{query}»",
-      "sequence_separator": "потім"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Дії",

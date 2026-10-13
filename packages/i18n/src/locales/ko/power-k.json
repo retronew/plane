@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "키보드 단축키 검색",
       "no_results": "\"{query}\"에 대한 키보드 단축키를 찾을 수 없습니다",
-      "sequence_separator": "다음"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "액션",

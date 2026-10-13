@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Hledat klávesové zkratky",
       "no_results": "Nenalezeny žádné klávesové zkratky pro „{query}“",
-      "sequence_separator": "pak"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Akce",

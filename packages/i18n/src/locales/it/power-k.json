@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Cerca scorciatoie da tastiera",
       "no_results": "Nessuna scorciatoia da tastiera trovata per «{query}»",
-      "sequence_separator": "poi"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Azioni",

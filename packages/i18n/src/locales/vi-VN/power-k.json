@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Tìm phím tắt",
       "no_results": "Không tìm thấy phím tắt cho \"{query}\"",
-      "sequence_separator": "rồi"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Hành động",

@@ -179,7 +179,7 @@
     "shortcuts_modal": {
       "search_placeholder": "Rechercher des raccourcis clavier",
       "no_results": "Aucun raccourci clavier trouvé pour « {query} »",
-      "sequence_separator": "puis"
+      "sequence_separator": "→"
     },
     "group_titles": {
       "actions": "Actions",
