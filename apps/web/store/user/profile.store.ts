@@ -7,7 +7,7 @@
 import { cloneDeep, set } from "lodash-es";
 import { action, makeObservable, observable, runInAction } from "mobx";
 // plane imports
-import { setLanguage } from "@plane/i18n";
+import { detectBrowserLanguage, FALLBACK_LANGUAGE, setLanguage } from "@plane/i18n";
 import type { TLanguage } from "@plane/i18n";
 // types
 import type { IUserTheme, TUserProfile } from "@plane/types";
@@ -111,7 +111,15 @@ export class ProfileStore implements IUserProfileStore {
         this.isLoading = false;
         this.data = userProfile;
       });
-      if (userProfile.language) {
+      // new users get the default language from the server; follow the browser instead
+      const browserLanguage = detectBrowserLanguage();
+      if (
+        !userProfile.is_onboarded &&
+        userProfile.language === FALLBACK_LANGUAGE &&
+        browserLanguage !== FALLBACK_LANGUAGE
+      ) {
+        void this.updateUserProfile({ language: browserLanguage });
+      } else if (userProfile.language) {
         void setLanguage(userProfile.language as TLanguage);
       }
       return userProfile;
