@@ -571,6 +571,7 @@
     "duration": "기간",
     "today": "오늘",
     "week": "주",
+    "week_of_month": "{month} {week}주차",
     "month": "월",
     "quarter": "분기",
     "press_for_commands": "명령어를 위해 '/'를 누르세요",

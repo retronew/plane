@@ -571,6 +571,7 @@
     "duration": "Süre",
     "today": "Bugün",
     "week": "Hafta",
+    "week_of_month": "{month}, {week}. hafta",
     "month": "Ay",
     "quarter": "Çeyrek",
     "press_for_commands": "Komutlar için '/' tuşuna basın",

@@ -20,7 +20,7 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { CloseOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
-import { renderFormattedPayloadDate, renderFormattedDate, getDate } from "@plane/utils";
+import { renderFormattedPayloadDate, renderFormattedDate, getDate, getCalendarFormatters } from "@plane/utils";
 import { DateFilterSelect } from "./date-filter-select";
 type Props = {
   title: string;
@@ -102,6 +102,7 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                       const date2Value = getDate(watch("date2"));
                       return (
                         <Calendar
+                          formatters={getCalendarFormatters()}
                           selected={dateValue}
                           defaultMonth={dateValue}
                           onSelect={(date: Date | undefined) => {
@@ -124,6 +125,7 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                         const date1Value = getDate(watch("date1"));
                         return (
                           <Calendar
+                            formatters={getCalendarFormatters()}
                             selected={dateValue}
                             defaultMonth={dateValue}
                             onSelect={(date: Date | undefined) => {

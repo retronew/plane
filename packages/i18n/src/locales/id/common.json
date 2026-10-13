@@ -571,6 +571,7 @@
     "duration": "Durasi",
     "today": "Hari ini",
     "week": "Minggu",
+    "week_of_month": "{month}, minggu ke-{week}",
     "month": "Bulan",
     "quarter": "Kuartal",
     "press_for_commands": "Tekan '/' untuk perintah",

@@ -571,6 +571,7 @@
     "duration": "Duración",
     "today": "Hoy",
     "week": "Semana",
+    "week_of_month": "{month}, semana {week}",
     "month": "Mes",
     "quarter": "Trimestre",
     "press_for_commands": "Presiona '/' para comandos",

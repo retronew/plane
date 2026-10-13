@@ -571,6 +571,7 @@
     "duration": "Duration",
     "today": "Today",
     "week": "Week",
+    "week_of_month": "{month}, Week {week}",
     "month": "Month",
     "quarter": "Quarter",
     "press_for_commands": "Press '/' for commands",

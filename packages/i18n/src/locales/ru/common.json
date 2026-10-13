@@ -571,6 +571,7 @@
     "duration": "Продолжительность",
     "today": "Сегодня",
     "week": "Неделя",
+    "week_of_month": "{month}, неделя {week}",
     "month": "Месяц",
     "quarter": "Квартал",
     "press_for_commands": "Нажмите '/' для команд",

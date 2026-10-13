@@ -571,6 +571,7 @@
     "duration": "Тривалість",
     "today": "Сьогодні",
     "week": "Тиждень",
+    "week_of_month": "{month}, тиждень {week}",
     "month": "Місяць",
     "quarter": "Квартал",
     "press_for_commands": "Натисніть '/' для команд",

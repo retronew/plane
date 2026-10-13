@@ -571,6 +571,7 @@
     "duration": "Durată",
     "today": "Astăzi",
     "week": "Săptămână",
+    "week_of_month": "{month}, săptămâna {week}",
     "month": "Lună",
     "quarter": "Trimestru",
     "press_for_commands": "Apasă '/' pentru comenzi",

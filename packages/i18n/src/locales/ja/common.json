@@ -571,6 +571,7 @@
     "duration": "期間",
     "today": "今日",
     "week": "週",
+    "week_of_month": "{month} 第{week}週",
     "month": "月",
     "quarter": "四半期",
     "press_for_commands": "コマンドは「/」を押してください",

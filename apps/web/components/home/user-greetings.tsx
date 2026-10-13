@@ -6,6 +6,7 @@
 
 // plane types
 import { useTranslation } from "@plane/i18n";
+import { getDateLocale } from "@plane/utils";
 import type { IUser } from "@plane/types";
 // plane ui
 // hooks
@@ -27,18 +28,19 @@ export function UserGreetingsView(props: IUserGreetingsView) {
     hour: "numeric",
   }).format(currentTime);
 
-  const date = new Intl.DateTimeFormat("en-US", {
+  const locale = getDateLocale();
+
+  // e.g. "Wednesday, Oct 14" (en) / "10月14日星期三" (zh-CN)
+  const dateString = new Intl.DateTimeFormat(locale, {
+    timeZone: user?.user_timezone,
+    weekday: "long",
     month: "short",
     day: "numeric",
   }).format(currentTime);
 
-  const weekDay = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-  }).format(currentTime);
-
-  const timeString = new Intl.DateTimeFormat("en-US", {
+  const timeString = new Intl.DateTimeFormat(locale, {
     timeZone: user?.user_timezone,
-    hour12: false, // Use 24-hour format
+    hourCycle: "h23", // Use 24-hour format
     hour: "2-digit",
     minute: "2-digit",
   }).format(currentTime);
@@ -53,7 +55,7 @@ export function UserGreetingsView(props: IUserGreetingsView) {
       <h5 className="flex items-center gap-2 font-medium text-placeholder">
         <div>{greeting === "morning" ? "🌤️" : greeting === "afternoon" ? "🌥️" : "🌙️"}</div>
         <div>
-          {weekDay}, {date} {timeString}
+          {dateString} {timeString}
         </div>
       </h5>
     </div>

@@ -571,6 +571,7 @@
     "duration": "时长",
     "today": "今天",
     "week": "周",
+    "week_of_month": "{month}第 {week} 周",
     "month": "月",
     "quarter": "季度",
     "press_for_commands": "输入“/”使用命令",

@@ -571,6 +571,7 @@
     "duration": "Czas trwania",
     "today": "Dziś",
     "week": "Tydzień",
+    "week_of_month": "{month}, tydzień {week}",
     "month": "Miesiąc",
     "quarter": "Kwartał",
     "press_for_commands": "Naciśnij '/' aby wywołać polecenia",

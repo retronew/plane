@@ -6,6 +6,112 @@
 
 import { differenceInDays, format, formatDistanceToNow, isAfter, isEqual, isValid, parseISO } from "date-fns";
 import { isNumber } from "lodash-es";
+import { getCurrentLanguage } from "@plane/i18n";
+
+// Locale Helpers
+// Plane language codes that are not valid BCP 47 tags for `Intl`
+const INTL_LOCALE_OVERRIDES: Record<string, string> = {
+  en: "en-US",
+  ua: "uk-UA",
+  "ka-ge": "ka-GE",
+};
+
+/**
+ * @returns {string} the BCP 47 locale matching the active Plane language, for use with `Intl`
+ */
+export const getDateLocale = (): string => {
+  const language = getCurrentLanguage();
+  return INTL_LOCALE_OVERRIDES[language] ?? language;
+};
+
+export const isEnglishDateLocale = (): boolean => getDateLocale().startsWith("en");
+const isEnglishLocale = isEnglishDateLocale;
+
+// date-fns tokens shown to users, and the `Intl` options that render the same parts in other languages
+// (zero-padded days are an English-ism, so days stay numeric: "2026年10月4日", not "10月04日")
+const LOCALIZED_FORMAT_OPTIONS: Record<string, Intl.DateTimeFormatOptions> = {
+  "MMM dd, yyyy": { year: "numeric", month: "short", day: "numeric" },
+  "MMM d, yyyy": { year: "numeric", month: "short", day: "numeric" },
+  "MMM dd": { month: "short", day: "numeric" },
+  "MMM d": { month: "short", day: "numeric" },
+  "MMM, yyyy": { year: "numeric", month: "short" },
+  "MMM yyyy": { year: "numeric", month: "short" },
+  "MMMM yyyy": { year: "numeric", month: "long" },
+  MMM: { month: "short" },
+  MMMM: { month: "long" },
+  EEEE: { weekday: "long" },
+  "EEEE, MMM d": { weekday: "long", month: "short", day: "numeric" },
+  "HH:mm": { hour: "2-digit", minute: "2-digit", hourCycle: "h23" },
+  "hh:mm a": { hour: "2-digit", minute: "2-digit", hour12: true },
+};
+
+const dateTimeFormatCache = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * @returns {Intl.DateTimeFormat} a cached formatter for the active language
+ * @param {Intl.DateTimeFormatOptions} options
+ */
+export const getDateTimeFormatter = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat => {
+  const locale = getDateLocale();
+  const key = `${locale}|${JSON.stringify(options)}`;
+  let formatter = dateTimeFormatCache.get(key);
+  if (!formatter) {
+    try {
+      formatter = new Intl.DateTimeFormat(locale, options);
+    } catch (_e) {
+      formatter = new Intl.DateTimeFormat("en-US", options);
+    }
+    dateTimeFormatCache.set(key, formatter);
+  }
+  return formatter;
+};
+
+/**
+ * @returns {string} the date formatted for the active language
+ * @description Display tokens (month / weekday names, times) go through `Intl` so they follow the user's
+ * language; English and machine tokens (e.g. yyyy-MM-dd) keep the exact date-fns output.
+ * @param {Date} date
+ * @param {string} formatToken date-fns format token
+ * @example formatLocalizedDate(new Date("2024-01-01"), "MMM dd, yyyy") // "Jan 01, 2024" (en), "2024年1月1日" (zh-CN)
+ */
+export const formatLocalizedDate = (date: Date, formatToken: string): string => {
+  const options = LOCALIZED_FORMAT_OPTIONS[formatToken];
+  if (!options || isEnglishLocale()) return format(date, formatToken);
+  return getDateTimeFormatter(options).format(date);
+};
+
+const NUMERIC_RANGE_LOCALES = ["zh", "ja"];
+
+/**
+ * @returns {string | undefined} the range merged by `Intl` for the active language ("10.–24. Juni 2025"),
+ * or undefined when the token has no localized form
+ * @param {Date} startDate
+ * @param {Date} endDate
+ * @param {string} formatToken date-fns format token
+ */
+export const formatLocalizedDateRange = (startDate: Date, endDate: Date, formatToken: string): string | undefined => {
+  const options = LOCALIZED_FORMAT_OPTIONS[formatToken];
+  if (!options || startDate.getTime() > endDate.getTime()) return;
+  const formatter = getDateTimeFormatter(options);
+  // CLDR collapses zh / ja ranges to all-numeric dates ("2025/6/10 – 2025/6/24"); keep both ends whole there
+  if (NUMERIC_RANGE_LOCALES.some((prefix) => getDateLocale().startsWith(prefix)))
+    return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
+  return formatter.formatRange(startDate, endDate);
+};
+
+/**
+ * @returns react-day-picker `formatters` that render the month caption and weekday header in the active
+ * language, or undefined for English (keeps the picker's own defaults)
+ */
+export const getCalendarFormatters = ():
+  | { formatCaption: (month: Date) => string; formatWeekdayName: (weekday: Date) => string }
+  | undefined => {
+  if (isEnglishLocale()) return;
+  return {
+    formatCaption: (month) => getDateTimeFormatter({ year: "numeric", month: "long" }).format(month),
+    formatWeekdayName: (weekday) => getDateTimeFormatter({ weekday: "short" }).format(weekday),
+  };
+};
 
 // Format Date Helpers
 /**
@@ -29,10 +135,10 @@ export const renderFormattedDate = (
   let formattedDate;
   try {
     // Format the date in the format provided or default format (MMM dd, yyyy)
-    formattedDate = format(parsedDate, formatToken);
+    formattedDate = formatLocalizedDate(parsedDate, formatToken);
   } catch (_e) {
     // Format the date in format (MMM dd, yyyy) in case of any error
-    formattedDate = format(parsedDate, "MMM dd, yyyy");
+    formattedDate = formatLocalizedDate(parsedDate, "MMM dd, yyyy");
   }
   return formattedDate;
 };
@@ -51,7 +157,7 @@ export const renderFormattedDateWithoutYear = (date: string | Date): string => {
   // Check if the parsed date is valid before formatting
   if (!isValid(parsedDate)) return ""; // Return empty string for invalid dates
   // Format the date in short format (MMM dd)
-  const formattedDate = format(parsedDate, "MMM dd");
+  const formattedDate = formatLocalizedDate(parsedDate, "MMM dd");
   return formattedDate;
 };
 
@@ -91,11 +197,11 @@ export const renderFormattedTime = (date: string | Date, timeFormat: "12-hour" |
   if (!isValid(parsedDate)) return ""; // Return empty string for invalid dates
   // Format the date in 12 hour format if in12HourFormat is true
   if (timeFormat === "12-hour") {
-    const formattedTime = format(parsedDate, "hh:mm a");
+    const formattedTime = formatLocalizedDate(parsedDate, "hh:mm a");
     return formattedTime;
   }
   // Format the date in 24 hour format
-  const formattedTime = format(parsedDate, "HH:mm");
+  const formattedTime = formatLocalizedDate(parsedDate, "HH:mm");
   return formattedTime;
 };
 
@@ -174,17 +280,66 @@ export const calculateTimeAgo = (time: string | number | Date | null): string =>
   const parsedTime = typeof time === "string" || typeof time === "number" ? parseISO(String(time)) : time;
   // return if undefined
   if (!parsedTime) return ""; // Return empty string for invalid dates
+  if (!isValid(parsedTime)) return "";
   // Format the time in the form of amount of time passed since the event happened
-  const distance = formatDistanceToNow(parsedTime, { addSuffix: true });
-  return distance;
+  if (isEnglishLocale()) return formatDistanceToNow(parsedTime, { addSuffix: true });
+  return formatRelativeTime(parsedTime);
 };
 
+// thresholds (in seconds) below which a distance is expressed in the given unit
+const RELATIVE_TIME_UNITS: { unit: Intl.RelativeTimeFormatUnit; seconds: number; limit: number }[] = [
+  { unit: "second", seconds: 1, limit: 60 },
+  { unit: "minute", seconds: 60, limit: 60 * 60 },
+  { unit: "hour", seconds: 60 * 60, limit: 60 * 60 * 24 },
+  { unit: "day", seconds: 60 * 60 * 24, limit: 60 * 60 * 24 * 30 },
+  { unit: "month", seconds: 60 * 60 * 24 * 30, limit: 60 * 60 * 24 * 365 },
+  { unit: "year", seconds: 60 * 60 * 24 * 365, limit: Infinity },
+];
+
+const relativeTimeFormatCache = new Map<string, Intl.RelativeTimeFormat>();
+
+/**
+ * @returns {string} localized distance between the date and now, e.g. "3 小时前" / "in 2 days"
+ * @param {Date} date
+ * @param {Intl.RelativeTimeFormatStyle} style "narrow" for compact labels
+ */
+export const formatRelativeTime = (date: Date, style: Intl.RelativeTimeFormatStyle = "long"): string => {
+  const locale = getDateLocale();
+  const key = `${locale}|${style}`;
+  let formatter = relativeTimeFormatCache.get(key);
+  if (!formatter) {
+    try {
+      formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style });
+    } catch (_e) {
+      formatter = new Intl.RelativeTimeFormat("en-US", { numeric: "auto", style });
+    }
+    relativeTimeFormatCache.set(key, formatter);
+  }
+  const diffInSeconds = (date.getTime() - Date.now()) / 1000;
+  const absDiff = Math.abs(diffInSeconds);
+  const { unit, seconds } =
+    RELATIVE_TIME_UNITS.find((item) => absDiff < item.limit) ?? RELATIVE_TIME_UNITS[RELATIVE_TIME_UNITS.length - 1];
+  // anything under a minute reads as "now"
+  const value = unit === "second" ? 0 : Math.round(diffInSeconds / seconds);
+  return formatter.format(value, unit);
+};
+
+/**
+ * @returns {string} compact time passed since the date, e.g. "5m ago" (en) / "5分钟前" (zh-CN)
+ * @param {string | number | Date | null} date
+ */
 export function calculateTimeAgoShort(date: string | number | Date | null): string {
   if (!date) {
     return "";
   }
 
   const parsedDate = typeof date === "string" ? parseISO(date) : new Date(date);
+  if (!isValid(parsedDate)) return "";
+  if (!isEnglishLocale()) return formatRelativeTime(parsedDate, "narrow");
+  return `${calculateDurationShort(parsedDate)} ago`;
+}
+
+const calculateDurationShort = (parsedDate: Date): string => {
   const now = new Date();
   const diffInSeconds = (now.getTime() - parsedDate.getTime()) / 1000;
 
@@ -214,7 +369,7 @@ export function calculateTimeAgoShort(date: string | number | Date | null): stri
 
   const diffInYears = diffInMonths / 12;
   return `${Math.floor(diffInYears)}y`;
-}
+};
 
 // Date Validation Helpers
 /**
@@ -284,7 +439,7 @@ export const getDate = (date: string | Date | undefined | null): Date | undefine
   try {
     if (!date || date === "") return;
 
-    if (typeof date !== "string" && !(date instanceof String)) return date;
+    if (typeof date !== "string") return date;
 
     const [yearString, monthString, dayString] = date.substring(0, 10).split("-");
     const year = parseInt(yearString);
@@ -400,7 +555,7 @@ export const generateDateArray = (startDate: string | Date, endDate: string | Da
   const dateArray = [];
 
   // Use a while loop to generate dates between the range
-  while (start <= end) {
+  while (start.getTime() <= end.getTime()) {
     // Push the current date (converted to ISO string for consistency)
     dateArray.push({
       date: new Date(start).toISOString().split("T")[0],
@@ -500,16 +655,23 @@ export const formatDateRange = (
 
   // If only start date is provided
   if (parsedStartDate && !parsedEndDate) {
-    return format(parsedStartDate, "MMM dd, yyyy");
+    return formatLocalizedDate(parsedStartDate, "MMM dd, yyyy");
   }
 
   // If only end date is provided
   if (!parsedStartDate && parsedEndDate) {
-    return format(parsedEndDate, "MMM dd, yyyy");
+    return formatLocalizedDate(parsedEndDate, "MMM dd, yyyy");
   }
 
   // If both dates are provided
   if (parsedStartDate && parsedEndDate) {
+    // Non-English languages: let Intl merge the shared parts in the locale's own order
+    if (!isEnglishLocale()) {
+      return (
+        formatLocalizedDateRange(parsedStartDate, parsedEndDate, "MMM dd, yyyy") ??
+        `${formatLocalizedDate(parsedStartDate, "MMM dd, yyyy")} - ${formatLocalizedDate(parsedEndDate, "MMM dd, yyyy")}`
+      );
+    }
     const startYear = parsedStartDate.getFullYear();
     const startMonth = parsedStartDate.getMonth();
     const endYear = parsedEndDate.getFullYear();

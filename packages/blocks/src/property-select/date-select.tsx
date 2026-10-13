@@ -5,8 +5,8 @@
  */
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { Calendar } from "@makeplane/propel/components/calendar";
+import { formatLocalizedDate, getCalendarFormatters } from "@plane/utils";
 import type { DateSelectCommonProps } from "./date-select-shell";
 import { DateSelectShell } from "./date-select-shell";
 import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN } from "./date-select.utils";
@@ -39,7 +39,7 @@ export function DateSelect(props: DateSelectProps) {
   // states
   const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false);
   // derived values
-  const formatted = value ? format(value, formatToken) : "";
+  const formatted = value ? formatLocalizedDate(value, formatToken) : "";
   const disabledMatchers = buildDisabledMatchers(minDate, maxDate);
 
   const handleOpenChange = (open: boolean) => {
@@ -62,6 +62,7 @@ export function DateSelect(props: DateSelectProps) {
       }}
     >
       <Calendar
+        formatters={getCalendarFormatters()}
         mode="single"
         selected={value ?? undefined}
         defaultMonth={value ?? defaultMonth}

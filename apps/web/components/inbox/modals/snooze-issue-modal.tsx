@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Calendar } from "@makeplane/propel/components/calendar";
+import { getCalendarFormatters } from "@plane/utils";
 import { Dialog, DialogActions, DialogBody, DialogContent, DialogMain } from "@makeplane/propel/components/dialog";
 
 export type InboxIssueSnoozeModalProps = {
@@ -36,11 +37,12 @@ export function InboxIssueSnoozeModal(props: InboxIssueSnoozeModalProps) {
         <DialogMain>
           <DialogBody>
             <Calendar
+              formatters={getCalendarFormatters()}
               selected={date ? new Date(date) : undefined}
               defaultMonth={date ? new Date(date) : undefined}
-              onSelect={(date: Date | undefined) => {
-                if (!date) return;
-                setDate(date);
+              onSelect={(selectedDate: Date | undefined) => {
+                if (!selectedDate) return;
+                setDate(selectedDate);
               }}
               mode="single"
               showOutsideDays

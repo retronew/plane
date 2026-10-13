@@ -571,6 +571,7 @@
     "duration": "ხანგრძლივობა",
     "today": "დღეს",
     "week": "კვირა",
+    "week_of_month": "{month}, კვირა {week}",
     "month": "თვე",
     "quarter": "კვარტალი",
     "press_for_commands": "დააჭირეთ '/' ბრძანებებისთვის",

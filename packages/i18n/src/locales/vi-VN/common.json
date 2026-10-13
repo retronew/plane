@@ -571,6 +571,7 @@
     "duration": "Thời lượng",
     "today": "Hôm nay",
     "week": "Tuần",
+    "week_of_month": "{month}, tuần {week}",
     "month": "Tháng",
     "quarter": "Quý",
     "press_for_commands": "Nhấn '/' để sử dụng lệnh",

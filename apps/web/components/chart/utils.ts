@@ -5,6 +5,7 @@
  */
 
 import { getWeekOfMonth, isValid } from "date-fns";
+import { translate } from "@plane/i18n";
 import { CHART_X_AXIS_DATE_PROPERTIES, ChartXAxisDateGrouping, TO_CAPITALIZE_PROPERTIES } from "@plane/constants";
 import type { ChartXAxisProperty, TChart, TChartDatum } from "@plane/types";
 import {
@@ -17,7 +18,7 @@ import {
 //
 
 const getDateGroupingName = (date: string, dateGrouping: ChartXAxisDateGrouping): string => {
-  if (!date || ["none", "null"].includes(date.toLowerCase())) return "None";
+  if (!date || ["none", "null"].includes(date.toLowerCase())) return translate("common.none");
 
   const formattedData = new Date(date);
   const isValidDate = isValid(formattedData);
@@ -38,7 +39,7 @@ const getDateGroupingName = (date: string, dateGrouping: ChartXAxisDateGrouping)
       break;
     case ChartXAxisDateGrouping.WEEK: {
       const month = renderFormattedDate(formattedData, "MMM");
-      parsedName = `${month}, Week ${getWeekOfMonth(formattedData)}`;
+      parsedName = translate("common.week_of_month", { month, week: getWeekOfMonth(formattedData) });
       break;
     }
     case ChartXAxisDateGrouping.MONTH:
@@ -87,10 +88,7 @@ export const parseChartData = (
       }
     }
 
-    return {
-      ...datum,
-      ...missingValues,
-    };
+    return Object.assign({}, datum, missingValues);
   });
 
   // capitalize first letter if groupByProperty is in TO_CAPITALIZE_PROPERTIES
@@ -131,6 +129,7 @@ export const generateExtendedColors = (baseColorSet: string[], targetCount: numb
   const avgLight = baseHSL.reduce((sum, hsl) => sum + hsl.l, 0) / baseHSL.length;
 
   // Sort base colors by hue for better distribution
+  // oxlint-disable-next-line unicorn/no-array-sort -- sorts a fresh copy; toSorted is above the web lib target
   const sortedBaseHSL = [...baseHSL].sort((a, b) => a.h - b.h);
 
   // Generate additional colors for each base color

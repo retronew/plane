@@ -4,23 +4,9 @@
  * See the LICENSE file for details.
  */
 
-import { format, isValid } from "date-fns";
+import { isValid } from "date-fns";
 import { isNumber } from "lodash-es";
-
-export const timeAgo = (time: any) => {
-  switch (typeof time) {
-    case "number":
-      break;
-    case "string":
-      time = +new Date(time);
-      break;
-    case "object":
-      if (time.constructor === Date) time = time.getTime();
-      break;
-    default:
-      time = +new Date();
-  }
-};
+import { formatLocalizedDate } from "@plane/utils";
 
 /**
  * This method returns a date from string of type yyyy-mm-dd
@@ -32,7 +18,7 @@ export const getDate = (date: string | Date | undefined | null): Date | undefine
   try {
     if (!date || date === "") return;
 
-    if (typeof date !== "string" && !(date instanceof String)) return date;
+    if (typeof date !== "string") return date;
 
     const [yearString, monthString, dayString] = date.substring(0, 10).split("-");
     const year = parseInt(yearString);
@@ -60,6 +46,6 @@ export const renderFormattedDate = (date: string | Date | undefined | null): str
   // Check if the parsed date is valid before formatting
   if (!isValid(parsedDate)) return null; // Return null for invalid dates
   // Format the date in format (MMM dd, yyyy)
-  const formattedDate = format(parsedDate, "MMM dd, yyyy");
+  const formattedDate = formatLocalizedDate(parsedDate, "MMM dd, yyyy");
   return formattedDate;
 };

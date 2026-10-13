@@ -571,6 +571,7 @@
     "duration": "Duur",
     "today": "Vandaag",
     "week": "Week",
+    "week_of_month": "{month}, week {week}",
     "month": "Maand",
     "quarter": "Kwartaal",
     "press_for_commands": "Druk op '/' voor commando's",

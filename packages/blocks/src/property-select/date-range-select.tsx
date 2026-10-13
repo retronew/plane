@@ -5,8 +5,13 @@
  */
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { Calendar } from "@makeplane/propel/components/calendar";
+import {
+  formatLocalizedDate,
+  formatLocalizedDateRange,
+  getCalendarFormatters,
+  isEnglishDateLocale,
+} from "@plane/utils";
 import type { DateSelectCommonProps } from "./date-select-shell";
 import { DateSelectShell } from "./date-select-shell";
 import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN } from "./date-select.utils";
@@ -77,10 +82,15 @@ function mergeRangeLabel(range: DateRangeValue, from: string, to: string, format
   const joined = from && to ? `${from} - ${to}` : from || to;
   if (!range.from || !range.to || !from || !to) return joined;
   if (range.from.getFullYear() !== range.to.getFullYear()) return joined;
+  // Non-English languages: `Intl` merges the shared parts in the locale's own order
+  if (!isEnglishDateLocale()) {
+    const localized = formatLocalizedDateRange(range.from, range.to, formatToken);
+    if (localized) return localized;
+  }
   const tokens = MERGE_TOKENS[formatToken];
   if (!tokens) return joined;
   const pair = range.from.getMonth() === range.to.getMonth() ? tokens.sameMonth : tokens.sameYear;
-  return `${format(range.from, pair.from)} - ${format(range.to, pair.to)}`;
+  return `${formatLocalizedDate(range.from, pair.from)} - ${formatLocalizedDate(range.to, pair.to)}`;
 }
 
 /**
@@ -110,8 +120,8 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
   // sees a range it did not ask for.
   const [draft, setDraft] = useState<DateRangeValue | null>(null);
   // derived values
-  const from = value.from ? format(value.from, formatToken) : "";
-  const to = value.to ? format(value.to, formatToken) : "";
+  const from = value.from ? formatLocalizedDate(value.from, formatToken) : "";
+  const to = value.to ? formatLocalizedDate(value.to, formatToken) : "";
   const joined = from && to ? `${from} - ${to}` : from || to;
   const formatted = props.formatLabel
     ? props.formatLabel(value, { from, to })
@@ -144,6 +154,7 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
       }}
     >
       <Calendar
+        formatters={getCalendarFormatters()}
         mode="range"
         selected={shown.from ? { from: shown.from, to: shown.to ?? undefined } : undefined}
         defaultMonth={value.from ?? defaultMonth}

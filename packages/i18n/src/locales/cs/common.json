@@ -571,6 +571,7 @@
     "duration": "Trvání",
     "today": "Dnes",
     "week": "Týden",
+    "week_of_month": "{month}, {week}. týden",
     "month": "Měsíc",
     "quarter": "Čtvrtletí",
     "press_for_commands": "Stiskněte '/' pro příkazy",
