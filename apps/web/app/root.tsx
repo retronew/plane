@@ -21,7 +21,7 @@ import ogImage from "@/app/assets/og-image.png?url";
 import globalStyles from "@/styles/globals.css?url";
 import type { Route } from "./+types/root";
 // components
-import { LogoSpinner } from "@/components/common/logo-spinner";
+import { BootLoader, finishBoot } from "@/components/common/app-loader";
 // lib
 import { isStaleAssetError, recoverFromStaleAsset } from "@/lib/stale-asset-error";
 // local
@@ -79,6 +79,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div id="editor-portal" />
         <ThemeProvider themes={["light", "dark", "light-contrast", "dark-contrast", "custom"]} defaultTheme="system">
           {children}
+          <BootLoader />
         </ThemeProvider>
         <Scripts />
       </body>
@@ -121,12 +122,9 @@ export default function Root() {
   return <Outlet />;
 }
 
+// The Layout's boot loader already covers the screen until the app is ready.
 export function HydrateFallback() {
-  return (
-    <div className="relative flex h-screen w-full items-center justify-center bg-canvas">
-      <LogoSpinner />
-    </div>
-  );
+  return null;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -134,6 +132,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   // (the failed dynamic import itself never reaches a window event) — recover
   // the same way entry.client.tsx does instead of just showing the error page.
   if (import.meta.env.PROD && isStaleAssetError(error)) recoverFromStaleAsset();
+
+  // Don't leave the boot loader covering the error page.
+  if (typeof document !== "undefined") finishBoot();
 
   return <CustomErrorComponent error={error} />;
 }

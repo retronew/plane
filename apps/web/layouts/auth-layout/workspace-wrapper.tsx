@@ -19,7 +19,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 // assets
 import WorkSpaceNotAvailable from "@/app/assets/workspace/workspace-not-available.png?url";
 // components
-import { LogoSpinner } from "@/components/common/logo-spinner";
+import { AppLoader } from "@/components/common/app-loader";
 // constants
 import {
   WORKSPACE_MEMBERS,
@@ -139,13 +139,7 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
 
   // if list of workspaces are not there then we have to render the spinner
   if (isParentLoading || allWorkspaces === undefined || loader) {
-    return (
-      <div className="grid h-full place-items-center rounded-lg border border-subtle p-4">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <LogoSpinner />
-        </div>
-      </div>
-    );
+    return <AppLoader className="grid h-full place-items-center rounded-lg border border-subtle p-4" />;
   }
 
   // if workspaces are there and we are trying to access the workspace that we are not part of then show the existing workspaces

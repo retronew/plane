@@ -4,9 +4,12 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { Outlet, redirect } from "react-router";
 // plane imports
 import { cn } from "@plane/utils";
+// components
+import { scheduleBootFinish } from "@/components/common/app-loader";
 // local
 import { ensureTrailingSlash } from "./compat/next/helper";
 import { AppProvider } from "./provider";
@@ -26,6 +29,11 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [trailingSlash
 // layer, and app chrome live here instead of root.tsx so they stay out of the SPA-mode
 // server build — see the note in app/root.tsx.
 export default function AppShellLayout() {
+  // Child effects run first, so any loading gate has registered by now; if none did, this hides the boot loader.
+  useEffect(() => {
+    scheduleBootFinish();
+  }, []);
+
   return (
     <AppProvider>
       <div className={cn("relative flex h-screen w-full flex-col overflow-hidden bg-canvas", "desktop-app-container")}>
