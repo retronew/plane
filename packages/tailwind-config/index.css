@@ -239,3 +239,18 @@ body {
     @apply text-placeholder;
   }
 }
+
+/*
+ * propel uses the logical `inset-s-*` / `inset-e-*` utilities, which only exist from Tailwind 4.2.
+ * On 4.1 they emit nothing, so e.g. the dialog close button (`inset-e-4`) loses its right-hand
+ * offset. Define them here until Tailwind is upgraded.
+ */
+@utility inset-s-* {
+  inset-inline-start: --spacing(--value(number));
+  inset-inline-start: --value([length], [percentage]);
+}
+
+@utility inset-e-* {
+  inset-inline-end: --spacing(--value(number));
+  inset-inline-end: --value([length], [percentage]);
+}
