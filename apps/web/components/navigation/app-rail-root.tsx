@@ -18,6 +18,7 @@ import {
 import { cn } from "@plane/utils";
 // components
 import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
+import { StickyActionBar } from "@/components/stickies/action-bar";
 // hooks
 import { useAppRailPreferences } from "@/hooks/use-navigation-preferences";
 import { useAppRailVisibility } from "@/lib/app-rail/context";
@@ -65,6 +66,9 @@ export const AppRailRoot = observer(() => {
                   showLabel,
                 }}
               />
+            </div>
+            <div className="flex justify-center">
+              <StickyActionBar />
             </div>
           </div>
         </ContextMenuTrigger>

@@ -7,12 +7,10 @@
 import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import useSWR from "swr";
 // plane hooks
 import { useOutsideClickDetector } from "@plane/hooks";
 // plane ui
 import { AddOutline, CloseOutline, MultipleStickyOutline, StickyNoteOutline } from "@makeplane/propel/icons";
-import { PreviewCard, PreviewCardContent, PreviewCardTrigger } from "@makeplane/propel/components/preview-card";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 // plane utils
 import { cn } from "@plane/utils";
@@ -20,106 +18,79 @@ import { cn } from "@plane/utils";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useSticky } from "@/hooks/use-stickies";
 // components
-import { STICKY_COLORS_LIST } from "../editor/sticky-editor/color-palette";
 import { AllStickiesModal } from "./modal";
 import { StickyNote } from "./sticky";
 import { translate } from "@plane/i18n";
+
+const railButton =
+  "flex size-8 items-center justify-center rounded-full text-tertiary hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none";
 
 export const StickyActionBar = observer(function StickyActionBar() {
   // states
   const [isExpanded, setIsExpanded] = useState(false);
   const [newSticky, setNewSticky] = useState(false);
-  const [showRecentSticky, setShowRecentSticky] = useState(false);
   // navigation
   const { workspaceSlug } = useParams();
   // refs
   const ref = useRef(null);
   // store hooks
-  const { stickies, activeStickyId, recentStickyId, updateActiveStickyId, fetchRecentSticky, toggleShowNewSticky } =
-    useSticky();
+  const { activeStickyId, updateActiveStickyId, toggleShowNewSticky } = useSticky();
   const { toggleAllStickiesModal, allStickiesModal } = useCommandPalette();
-  // derived values
-  const recentStickyBackgroundColor = recentStickyId
-    ? STICKY_COLORS_LIST.find((c) => c.key === stickies[recentStickyId].background_color)?.backgroundColor
-    : STICKY_COLORS_LIST[0].backgroundColor;
-
-  useSWR(
-    workspaceSlug ? `WORKSPACE_STICKIES_RECENT_${workspaceSlug}` : null,
-    workspaceSlug ? () => fetchRecentSticky(workspaceSlug.toString()) : null
-  );
 
   useOutsideClickDetector(ref, () => {
     setNewSticky(false);
-    setShowRecentSticky(false);
     setIsExpanded(false);
   });
 
-  const recentStickyButton = (
-    <button
-      className="btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1"
-      onClick={() => setShowRecentSticky(true)}
-      style={{ color: recentStickyBackgroundColor }}
-    >
-      <StickyNoteOutline className={cn("size-5 rotate-90")} color={recentStickyBackgroundColor} />
-    </button>
-  );
-
   return (
-    <div
-      ref={ref}
-      className="sticky-action-bar__item flex flex-col overflow-hidden rounded-full border-2 border-accent-strong/10 bg-surface-2 p-[2px]"
-    >
+    <div ref={ref} className="relative flex flex-col items-center rounded-full border border-subtle bg-surface-1 p-1">
       <div
-        className={`flex origin-bottom flex-col gap-2 transition-all duration-300 ease-in-out ${isExpanded ? "mb-2 scale-y-100 opacity-100 " : "h-0 scale-y-0 opacity-0"}`}
+        className={cn(
+          "grid transition-[grid-template-rows] duration-[180ms] ease-out motion-reduce:transition-none",
+          isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        )}
       >
-        <Tooltip label={translate("web.all_stickies")} side="left">
-          <button
-            className="btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1"
-            onClick={() => toggleAllStickiesModal(true)}
-          >
-            <MultipleStickyOutline className="size-5 rotate-90 text-tertiary" />
-          </button>
-        </Tooltip>
-        {recentStickyId &&
-          (showRecentSticky ? (
-            recentStickyButton
-          ) : (
-            <PreviewCard>
-              <PreviewCardTrigger render={recentStickyButton} />
-              <PreviewCardContent side="left">
-                <div className="relative max-h-[150px] overflow-hidden rounded-lg">
-                  <StickyNote
-                    className="w-full"
-                    workspaceSlug={workspaceSlug.toString()}
-                    stickyId={newSticky ? activeStickyId : recentStickyId}
-                  />
-                  <div
-                    className="absolute top-0 right-0 h-full w-full"
-                    style={{
-                      background: `linear-gradient(to top, ${recentStickyBackgroundColor}, transparent)`,
-                    }}
-                  />
-                </div>
-              </PreviewCardContent>
-            </PreviewCard>
+        <div className="flex min-h-0 flex-col items-center gap-1 overflow-hidden">
+          {[
+            <Tooltip key="all" label={translate("web.all_stickies")} side="right">
+              <button className={railButton} onClick={() => toggleAllStickiesModal(true)}>
+                <MultipleStickyOutline className="size-5 rotate-90 text-tertiary" />
+              </button>
+            </Tooltip>,
+            <Tooltip key="add" label={translate("web.add_sticky")} side="right">
+              <button
+                className={railButton}
+                onClick={() => {
+                  updateActiveStickyId("");
+                  toggleShowNewSticky(true);
+                  setNewSticky(true);
+                }}
+              >
+                <AddOutline className="size-5 text-tertiary" />
+              </button>
+            </Tooltip>,
+          ].map((item, index, items) => (
+            // Items fade and rise in one after another as the column unfurls.
+            <span
+              key={item.key}
+              className={cn(
+                "transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
+                { "pb-1": index === items.length - 1 },
+                isExpanded ? "translate-y-0 scale-100 opacity-100" : "translate-y-1 scale-[0.85] opacity-0"
+              )}
+              style={{ transitionDelay: isExpanded ? `${20 + 40 * (items.length - index)}ms` : "0ms" }}
+            >
+              {item}
+            </span>
           ))}
-        <Tooltip label={translate("web.add_sticky")} side="left">
-          <button
-            className="btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1"
-            onClick={() => {
-              updateActiveStickyId("");
-              toggleShowNewSticky(true);
-              setNewSticky(true);
-            }}
-          >
-            <AddOutline className="size-5 rotate-90 text-tertiary" />
-          </button>
-        </Tooltip>
+        </div>
       </div>
 
       <button
-        className={`btn btn--icon shadow-sm flex h-10 w-10 items-center justify-center rounded-full bg-surface-1 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
+        className={railButton}
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-label={isExpanded ? translate("web.close") : translate("web.your_stickies")}
+        aria-expanded={isExpanded}
       >
         {isExpanded ? (
           <CloseOutline className="size-5 text-tertiary" />
@@ -130,17 +101,17 @@ export const StickyActionBar = observer(function StickyActionBar() {
 
       <div
         className={cn(
-          "absolute right-0 bottom-16 z-[20]",
+          "absolute bottom-0 left-full z-[20] ml-3",
           "transform transition-all duration-300 ease-in-out",
-          newSticky || showRecentSticky ? "min-h-[300px] translate-y-[0%]" : "h-0 translate-y-[100%]"
+          newSticky ? "min-h-[300px] translate-x-0 opacity-100" : "h-0 -translate-x-2 opacity-0"
         )}
       >
-        {(newSticky || (showRecentSticky && recentStickyId)) && (
+        {newSticky && (
           <StickyNote
             className={"w-[290px]"}
-            onClose={() => (newSticky ? setNewSticky(false) : setShowRecentSticky(false))}
+            onClose={() => setNewSticky(false)}
             workspaceSlug={workspaceSlug.toString()}
-            stickyId={newSticky ? activeStickyId : recentStickyId}
+            stickyId={activeStickyId}
           />
         )}
       </div>
