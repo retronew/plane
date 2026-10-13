@@ -11,6 +11,6 @@ import { i18nInstance } from "./instance";
  * functions that build the document title. Falls back to the key when the value is not a string.
  */
 export const translate = (key: string, params?: Record<string, unknown>): string => {
-  const value: unknown = i18nInstance.t(key, params);
+  const value: unknown = params ? i18nInstance.t(key, params) : i18nInstance.t(key);
   return typeof value === "string" ? value : key;
 };
