@@ -57,7 +57,6 @@ type TFormData = {
   company_name: string;
   password: string;
   confirm_password?: string;
-  is_telemetry_enabled: boolean;
 };
 
 const defaultFromData: TFormData = {
@@ -66,7 +65,6 @@ const defaultFromData: TFormData = {
   email: "",
   company_name: "",
   password: "",
-  is_telemetry_enabled: false,
 };
 
 export function InstanceSetupForm() {
@@ -157,7 +155,6 @@ export function InstanceSetupForm() {
             onError={() => setIsSubmitting(false)}
           >
             <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
-            <input type="hidden" name="is_telemetry_enabled" value={formData.is_telemetry_enabled ? "True" : "False"} />
 
             <div className="flex flex-col items-center gap-4 sm:flex-row">
               <div className="w-full min-w-0 space-y-1">

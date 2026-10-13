@@ -71,7 +71,6 @@ class Command(BaseCommand):
                 last_checked_at=timezone.now(),
                 is_test=os.environ.get("IS_TEST", "0") == "1",
                 edition=InstanceEdition.PLANE_COMMUNITY.value,
-                is_telemetry_enabled=False,
             )
 
             self.stdout.write(self.style.SUCCESS("Instance registered"))
@@ -84,7 +83,6 @@ class Command(BaseCommand):
             instance.latest_version = latest_version
             instance.is_test = os.environ.get("IS_TEST", "0") == "1"
             instance.edition = InstanceEdition.PLANE_COMMUNITY.value
-            instance.is_telemetry_enabled = False
             instance.save()
 
         return
