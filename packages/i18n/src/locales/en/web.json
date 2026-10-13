@@ -904,6 +904,9 @@
     "space_error_or_on_our": "or on our",
     "instance_failure_illustration": "Instance failure illustration",
     "instance_failure_line_1": "We were unable to fetch the details of the instance.",
-    "instance_failure_line_2": "Fret not, it might just be a connectivity issue."
+    "instance_failure_line_2": "Fret not, it might just be a connectivity issue.",
+    "greeting_morning": "Good morning, {name}",
+    "greeting_afternoon": "Good afternoon, {name}",
+    "greeting_evening": "Good evening, {name}"
   }
 }

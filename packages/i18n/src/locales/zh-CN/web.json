@@ -904,6 +904,9 @@
     "space_error_or_on_our": "或在我们的",
     "instance_failure_illustration": "实例加载失败插图",
     "instance_failure_line_1": "暂时无法获取实例信息。",
-    "instance_failure_line_2": "别担心，可能只是网络连接问题。"
+    "instance_failure_line_2": "别担心，可能只是网络连接问题。",
+    "greeting_morning": "早上好，{name}",
+    "greeting_afternoon": "下午好，{name}",
+    "greeting_evening": "晚上好，{name}"
   }
 }

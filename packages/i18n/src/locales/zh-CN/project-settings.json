@@ -5,51 +5,51 @@
       "please_select_a_timezone": "请选择时区",
       "archive_project": {
         "title": "归档项目",
-        "description": "归档项目将从您的侧边导航中取消列出您的项目，但您仍然可以从项目页面访问它。您可以随时恢复或删除项目。",
+        "description": "归档后，项目将不再显示在侧边导航中，但仍可在项目页面中访问。您可以随时恢复或删除该项目。",
         "button": "归档项目"
       },
       "delete_project": {
         "title": "删除项目",
-        "description": "删除项目时，该项目内的所有数据和资源将被永久删除且无法恢复。",
+        "description": "删除项目后，项目中的所有数据和资源都将被永久删除，且无法恢复。",
         "button": "删除我的项目"
       },
       "toast": {
-        "success": "项目更新成功",
-        "error": "项目无法更新。请重试。"
+        "success": "项目已更新",
+        "error": "无法更新项目，请重试。"
       }
     },
     "members": {
       "label": "成员",
       "project_lead": "项目负责人",
-      "project_lead_description": "请选择该项目的项目负责人。",
-      "default_assignee": "默认受理人",
-      "default_assignee_description": "请选择该项目的默认指派人。",
+      "project_lead_description": "选择项目负责人。",
+      "default_assignee": "默认负责人",
+      "default_assignee_description": "选择项目的默认负责人。",
       "project_subscribers": "项目订阅者",
-      "project_subscribers_description": "请选择将接收该项目通知的成员。",
+      "project_subscribers_description": "选择接收此项目通知的成员。",
       "guest_super_permissions": {
-        "title": "为访客用户授予查看所有工作项的权限：",
-        "sub_heading": "这将允许访客查看所有项目工作项。"
+        "title": "允许访客查看所有工作项：",
+        "sub_heading": "开启后，访客可以查看项目中的所有工作项。"
       },
       "invite_members": {
         "title": "邀请成员",
-        "sub_heading": "邀请成员参与您的项目。",
+        "sub_heading": "邀请成员加入您的项目。",
         "select_co_worker": "选择同事"
       }
     },
     "states": {
       "heading": "状态",
-      "description": "定义和自定义工作流状态以跟踪工作项的进度。",
-      "describe_this_state_for_your_members": "为您的成员描述此状态。",
+      "description": "定义并自定义工作流状态，跟踪工作项的进度。",
+      "describe_this_state_for_your_members": "为成员描述此状态。",
       "empty_state": {
-        "title": "{groupKey} 组中没有状态",
+        "title": "{groupKey} 分组中暂无状态",
         "description": "请创建一个新状态"
       }
     },
     "labels": {
       "heading": "标签",
-      "description": "创建自定义标签以分类和组织您的工作项",
-      "label_title": "标签标题",
-      "label_title_is_required": "标签标题为必填项",
+      "description": "创建自定义标签，对工作项进行分类和整理",
+      "label_title": "标签名称",
+      "label_title_is_required": "请输入标签名称",
       "label_max_char": "标签名称不应超过 255 个字符",
       "toast": {
         "error": "更新标签时出错"
@@ -57,89 +57,89 @@
     },
     "estimates": {
       "heading": "估算",
-      "description": "设置估算系统以跟踪和传达每个工作项所需的工作量。",
+      "description": "设置估算体系，跟踪并沟通每个工作项所需的工作量。",
       "label": "估算",
-      "title": "为我的项目启用估算",
-      "enable_description": "它们有助于您传达团队的复杂性和工作量。",
+      "title": "为项目启用估算",
+      "enable_description": "估算可以帮助团队沟通工作的复杂度和工作量。",
       "no_estimate": "无估算",
-      "new": "新估算系统",
+      "new": "新建估算体系",
       "create": {
         "custom": "自定义",
-        "start_from_scratch": "从头开始",
+        "start_from_scratch": "从零开始",
         "choose_template": "选择模板",
-        "choose_estimate_system": "选择估算系统",
-        "enter_estimate_point": "输入估算点数",
-        "step": "步骤 {step} 共 {total}",
+        "choose_estimate_system": "选择估算体系",
+        "enter_estimate_point": "输入估算值",
+        "step": "第 {step} 步，共 {total} 步",
         "label": "创建估算"
       },
       "toasts": {
         "created": {
           "success": {
-            "title": "已创建估算点数",
-            "message": "估算点数创建成功"
+            "title": "估算已创建",
+            "message": "估算已成功创建"
           },
           "error": {
-            "title": "无法创建估算点数",
-            "message": "无法创建新的估算点数，请重试"
+            "title": "创建估算失败",
+            "message": "无法创建新估算，请重试。"
           }
         },
         "updated": {
           "success": {
-            "title": "已更新估算",
-            "message": "您项目中的估算点数已更新"
+            "title": "估算已更新",
+            "message": "项目中的估算已更新。"
           },
           "error": {
-            "title": "无法更新估算",
-            "message": "无法更新估算，请重试"
+            "title": "更新估算失败",
+            "message": "无法更新估算，请重试。"
           }
         },
         "enabled": {
           "success": {
             "title": "成功！",
-            "message": "已启用估算"
+            "message": "估算已启用。"
           }
         },
         "disabled": {
           "success": {
             "title": "成功！",
-            "message": "已禁用估算"
+            "message": "估算已停用。"
           },
           "error": {
             "title": "错误！",
-            "message": "无法禁用估算。请重试"
+            "message": "无法停用估算，请重试。"
           }
         },
         "reorder": {
           "success": {
             "title": "估算已重新排序",
-            "message": "估算已在您的项目中重新排序。"
+            "message": "项目中的估算已重新排序。"
           },
           "error": {
             "title": "估算重新排序失败",
-            "message": "我们无法重新排序估算，请重试"
+            "message": "无法重新排序估算，请重试。"
           }
         },
         "switch": {
           "success": {
-            "title": "估算系统已创建",
-            "message": "创建并启用成功"
+            "title": "估算体系已创建",
+            "message": "已创建并启用"
           },
           "error": {
             "title": "错误",
-            "message": "出现错误"
+            "message": "出了点问题"
           }
         }
       },
       "validation": {
-        "min_length": "估算需要大于 0。",
-        "unable_to_process": "我们无法处理您的请求，请重试。",
-        "numeric": "估算需要是数值。",
-        "character": "估算需要是字符值。",
+        "min_length": "估算值必须大于 0。",
+        "unable_to_process": "暂时无法处理您的请求，请重试。",
+        "numeric": "估算值必须是数字。",
+        "character": "估算值必须是文本。",
         "empty": "估算值不能为空。",
         "already_exists": "估算值已存在。",
-        "unsaved_changes": "您有未保存的更改，请在点击完成前保存。",
-        "remove_empty": "估算不能为空。请在每个字段中输入值或删除没有值的字段。",
-        "fill": "请填写此估算字段",
+        "unsaved_changes": "您有未保存的更改，请先保存再点击完成。",
+        "remove_empty": "估算值不能为空。请为每个字段填写值，或删除没有值的字段。",
+        "fill": "请填写此估算值",
         "repeat": "估算值不能重复"
       },
       "systems": {
@@ -147,13 +147,13 @@
           "label": "点数",
           "fibonacci": "斐波那契",
           "linear": "线性",
-          "squares": "平方",
+          "squares": "平方数",
           "custom": "自定义"
         },
         "categories": {
           "label": "类别",
           "t_shirt_sizes": "T 恤尺码",
-          "easy_to_hard": "简单到困难",
+          "easy_to_hard": "从易到难",
           "custom": "自定义"
         },
         "time": {
@@ -162,54 +162,54 @@
         }
       },
       "edit": {
-        "title": "编辑估算系统",
+        "title": "编辑估算体系",
         "add_or_update": {
           "title": "添加、更新或删除估算",
-          "description": "通过添加、更新或删除点数或类别来管理当前系统。"
+          "description": "通过添加、更新或删除点数或类别来管理当前体系。"
         },
         "switch": {
           "title": "更改估算类型",
-          "description": "将点数系统转换为类别系统，反之亦然。"
+          "description": "在点数体系和类别体系之间相互转换。"
         }
       },
-      "switch": "切换估算系统",
-      "current": "当前估算系统",
-      "select": "选择估算系统"
+      "switch": "切换估算体系",
+      "current": "当前估算体系",
+      "select": "选择估算体系"
     },
     "automations": {
       "label": "自动化",
       "heading": "自动化",
-      "description": "配置自动化操作以简化项目管理工作流并减少手动任务。",
+      "description": "配置自动化操作，简化项目管理流程，减少手动操作。",
       "auto-archive": {
         "title": "自动归档已关闭的工作项",
         "description": "Plane 将自动归档已完成或已取消的工作项。",
-        "duration": "自动归档已关闭"
+        "duration": "自动归档已关闭超过以下时长的工作项"
       },
       "auto-close": {
         "title": "自动关闭工作项",
-        "description": "Plane 将自动关闭尚未完成或取消的工作项。",
-        "duration": "自动关闭不活跃",
+        "description": "Plane 会自动关闭长期未完成也未取消的工作项。",
+        "duration": "自动关闭不活跃超过以下时长的工作项",
         "auto_close_status": "自动关闭状态"
       },
       "auto-remind": {
         "title": "自动提醒",
-        "description": "Plane 将自动通过电子邮件和应用程序通知来提醒您的团队保持进度。",
-        "duration": "提前提醒"
+        "description": "Plane 会通过邮件和应用内通知自动发送提醒，帮助团队按时完成工作。",
+        "duration": "提前提醒时间"
       }
     },
     "empty_state": {
       "labels": {
-        "title": "尚无标签",
-        "description": "创建标签以帮助组织和筛选项目中的工作项。"
+        "title": "暂无标签",
+        "description": "创建标签，帮助整理和筛选项目中的工作项。"
       },
       "estimates": {
-        "title": "尚无估算系统",
-        "description": "创建一组估算以传达每个工作项的工作量。",
-        "primary_button": "添加估算系统"
+        "title": "暂无估算体系",
+        "description": "创建一组估算值，用于沟通每个工作项的工作量。",
+        "primary_button": "添加估算体系"
       },
       "integrations": {
         "title": "未配置集成",
-        "description": "配置 GitHub 和其他集成以同步您的项目工作项。"
+        "description": "配置 GitHub 等集成，同步项目工作项。"
       }
     },
     "workflows": {
@@ -226,16 +226,16 @@
           },
           "success": {
             "title": "成功！",
-            "message": "工作流已成功启用。"
+            "message": "工作流已启用。"
           },
           "error": {
             "title": "错误！",
-            "message": "启用工作流失败。请重试。"
+            "message": "启用工作流失败，请重试。"
           }
         }
       },
       "heading": "工作流",
-      "description": "自动化工作项流转，并设置规则来控制任务如何在项目流程中推进。",
+      "description": "自动处理工作项流转，并设置规则控制任务在项目中的推进方式。",
       "add_button": "添加新工作流",
       "search": "搜索工作流",
       "detail": {
@@ -243,20 +243,20 @@
         "add_states": "添加状态",
         "unmapped_states": {
           "title": "检测到未映射的状态",
-          "description": "所选类型的一些工作项当前处于该工作流中不存在的状态。",
-          "note": "如果启用该工作流，这些工作项将自动移动到该工作流的初始状态。",
+          "description": "所选类型的部分工作项当前处于此工作流中不存在的状态。",
+          "note": "启用此工作流后，这些工作项会自动移到此工作流的初始状态。",
           "label": "缺失的状态",
-          "tooltip": "一些工作项处于未映射到该工作流的状态。打开工作流进行查看。"
+          "tooltip": "部分工作项处于未映射到此工作流的状态，请打开工作流查看。"
         }
       },
       "select_states": {
         "empty_state": {
           "title": "所有状态均已在使用中",
-          "description": "为该项目定义的所有状态都已存在于当前工作流中。"
+          "description": "此项目定义的所有状态都已在当前工作流中。"
         }
       },
       "default_footer": {
-        "fallback_message": "该工作流适用于未分配给任何工作流的任何工作项类型。"
+        "fallback_message": "此工作流适用于所有未分配工作流的工作项类型。"
       },
       "create": {
         "heading": "创建新工作流",
@@ -264,7 +264,7 @@
           "placeholder": "添加唯一名称",
           "validation": {
             "max_length": "名称必须少于 255 个字符",
-            "required": "名称为必填项",
+            "required": "请输入名称",
             "invalid": "名称只能包含字母、数字、空格、连字符和撇号"
           }
         },
@@ -279,227 +279,227 @@
         },
         "success": {
           "title": "成功！",
-          "message": "工作流创建成功。"
+          "message": "工作流已创建。"
         },
         "error": {
           "title": "错误！",
-          "message": "创建工作流失败。请重试。"
+          "message": "创建工作流失败，请重试。"
         }
       },
       "update": {
         "success": {
           "title": "成功！",
-          "message": "工作流更新成功。"
+          "message": "工作流已更新。"
         },
         "error": {
           "title": "错误！",
-          "message": "更新工作流失败。请重试。"
+          "message": "更新工作流失败，请重试。"
         }
       },
       "delete": {
         "loading": "正在删除工作流",
         "success": {
           "title": "成功！",
-          "message": "工作流删除成功。"
+          "message": "工作流已删除。"
         },
         "error": {
           "title": "错误！",
-          "message": "删除工作流失败。请重试。"
+          "message": "删除工作流失败，请重试。"
         }
       },
       "add_states": {
         "success": {
           "title": "成功！",
-          "message": "状态添加成功。"
+          "message": "状态已添加。"
         },
         "error": {
           "title": "错误！",
-          "message": "添加状态失败。请重试。"
+          "message": "添加状态失败，请重试。"
         }
       }
     },
     "work_item_types": {
       "heading": "工作项类型",
-      "description": "创建和自定义具有独特属性的不同类型工作项"
+      "description": "创建并自定义具有独特属性的工作项类型"
     },
     "features": {
       "cycles": {
         "title": "周期",
         "short_title": "周期",
-        "description": "在灵活的时间段内安排工作，以适应该项目独特的节奏和步调。",
+        "description": "按适合本项目节奏的灵活时间段安排工作。",
         "toggle_title": "启用周期",
-        "toggle_description": "在集中的时间段内规划工作。"
+        "toggle_description": "在固定的时间段内规划工作。"
       },
       "modules": {
         "title": "模块",
         "short_title": "模块",
-        "description": "将工作组织成具有专门负责人和受让人的子项目。",
+        "description": "将工作组织为子项目，并指定专门的负责人和成员。",
         "toggle_title": "启用模块",
-        "toggle_description": "项目成员将能够创建和编辑模块。"
+        "toggle_description": "项目成员可以创建和编辑模块。"
       },
       "views": {
         "title": "视图",
         "short_title": "视图",
-        "description": "保存自定义排序、过滤器和显示选项，或与团队共享。",
+        "description": "保存自定义的排序、筛选和显示选项，或与团队共享。",
         "toggle_title": "启用视图",
-        "toggle_description": "项目成员将能够创建和编辑视图。"
+        "toggle_description": "项目成员可以创建和编辑视图。"
       },
       "pages": {
         "title": "页面",
         "short_title": "页面",
-        "description": "创建和编辑自由格式的内容：笔记、文档、任何内容。",
+        "description": "创建和编辑自由格式的内容：笔记、文档，任何内容都可以。",
         "toggle_title": "启用页面",
-        "toggle_description": "项目成员将能够创建和编辑页面。"
+        "toggle_description": "项目成员可以创建和编辑页面。"
       },
       "intake": {
-        "intake_responsibility": "接收责任",
-        "intake_sources": "接收来源",
-        "title": "接收",
-        "short_title": "接收",
-        "description": "让非成员分享错误、反馈和建议；而不会中断您的工作流程。",
-        "toggle_title": "启用接收",
-        "toggle_description": "允许项目成员在应用中创建接收请求。",
-        "toggle_tooltip_on": "请项目管理员代为开启。",
-        "toggle_tooltip_off": "请项目管理员代为关闭。",
+        "intake_responsibility": "Intake 负责人",
+        "intake_sources": "Intake 来源",
+        "title": "Intake",
+        "short_title": "Intake",
+        "description": "让非成员提交缺陷、反馈和建议，而不打扰您的工作流程。",
+        "toggle_title": "启用 Intake",
+        "toggle_description": "允许项目成员在应用内创建 Intake 请求。",
+        "toggle_tooltip_on": "请联系项目管理员开启此功能。",
+        "toggle_tooltip_off": "请联系项目管理员关闭此功能。",
         "notify_assignee": {
           "title": "通知负责人",
-          "description": "对于新的接收请求，默认负责人将通过通知收到提醒"
+          "description": "收到新的 Intake 请求时，会通知默认负责人"
         },
         "in_app": {
           "title": "应用内",
-          "description": "从工作区成员和访客获取新的工作项，不影响现有工作项。"
+          "description": "接收工作区成员和访客提交的新工作项，不影响现有工作项。"
         },
         "email": {
-          "title": "电子邮件",
-          "description": "从任何向 Plane 邮箱地址发送邮件的人收集新的工作项。",
-          "fieldName": "电子邮件 ID"
+          "title": "邮件",
+          "description": "收集任何人发送到 Plane 邮箱地址的邮件，并创建为新的工作项。",
+          "fieldName": "邮箱地址"
         },
         "form": {
           "title": "表单",
-          "description": "让工作区外的人通过专用安全表单为您创建潜在的新工作项。",
+          "description": "通过专用的安全表单，让工作区以外的人为您提交潜在的新工作项。",
           "fieldName": "默认表单 URL",
           "create_forms": "使用工作项类型创建表单",
           "manage_forms": "管理表单",
-          "manage_forms_tooltip": "请工作区管理员代为管理。",
+          "manage_forms_tooltip": "请联系工作区管理员管理此项。",
           "create_form": "创建表单",
           "edit_form": "编辑表单详情",
           "form_title": "表单标题",
-          "form_title_required": "表单标题为必填",
+          "form_title_required": "请输入表单标题",
           "work_item_type": "工作项类型",
           "remove_property": "移除属性",
           "select_properties": "选择属性",
           "search_placeholder": "搜索属性",
           "toasts": {
-            "success_create": "接收表单已成功创建",
-            "success_update": "接收表单已成功更新",
-            "error_create": "无法创建接收表单",
-            "error_update": "无法更新接收表单"
+            "success_create": "Intake 表单已创建",
+            "success_update": "Intake 表单已更新",
+            "error_create": "创建 Intake 表单失败",
+            "error_update": "更新 Intake 表单失败"
           }
         },
         "toasts": {
           "set": {
-            "loading": "正在设置负责人...",
+            "loading": "正在设置负责人…",
             "success": {
               "title": "成功！",
-              "message": "负责人设置成功。"
+              "message": "负责人已设置。"
             },
             "error": {
               "title": "错误！",
-              "message": "设置负责人时出现问题。请重试。"
+              "message": "设置负责人时出错，请重试。"
             }
           }
         }
       },
       "time_tracking": {
-        "title": "时间跟踪",
-        "short_title": "时间跟踪",
+        "title": "工时记录",
+        "short_title": "工时记录",
         "description": "记录在工作项和项目上花费的时间。",
-        "toggle_title": "启用时间跟踪",
-        "toggle_description": "项目成员将能够记录工作时间。"
+        "toggle_title": "启用工时记录",
+        "toggle_description": "项目成员可以记录工作时间。"
       },
       "milestones": {
         "title": "里程碑",
         "short_title": "里程碑",
-        "description": "里程碑提供了一个层，用于将工作项对齐到共享的完成日期。",
+        "description": "里程碑帮助您将工作项对齐到共同的完成日期。",
         "toggle_title": "启用里程碑",
         "toggle_description": "按里程碑截止日期组织工作项。"
       },
       "toasts": {
-        "loading": "正在更新项目功能...",
-        "success": "项目功能更新成功。",
-        "error": "更新项目功能时出现错误。请重试。"
+        "loading": "正在更新项目功能…",
+        "success": "项目功能已更新。",
+        "error": "更新项目功能时出错，请重试。"
       }
     },
     "project_updates": {
-      "heading": "项目更新",
-      "description": "为此项目提供综合跟踪和进度监控"
+      "heading": "项目进展",
+      "description": "集中跟踪和监控此项目的进展"
     },
     "templates": {
       "heading": "模板",
-      "description": "使用模板可节省 80% 创建项目、工作项和页面的时间。"
+      "description": "使用模板，创建项目、工作项和页面的时间可节省 80%。"
     },
     "cycles": {
       "auto_schedule": {
         "heading": "自动安排周期",
-        "description": "无需手动设置即可保持周期运行。",
-        "tooltip": "根据您选择的计划自动创建新周期。",
+        "description": "无需手动设置，周期自动持续推进。",
+        "tooltip": "按您设定的计划自动创建新周期。",
         "edit_button": "编辑",
         "form": {
           "cycle_title": {
-            "label": "周期标题",
+            "label": "周期名称",
             "placeholder": "标题",
-            "tooltip": "标题将为后续周期添加编号。例如：设计 - 1/2/3",
+            "tooltip": "后续周期会在名称后自动追加编号，例如：设计 - 1/2/3",
             "validation": {
-              "required": "周期标题为必填项",
+              "required": "请输入周期名称",
               "max_length": "标题不得超过 255 个字符"
             }
           },
           "cycle_duration": {
-            "label": "周期持续时间",
+            "label": "周期时长",
             "unit": "周",
             "validation": {
-              "required": "周期持续时间为必填项",
-              "min": "周期持续时间必须至少为 1 周",
-              "max": "周期持续时间不得超过 30 周",
-              "positive": "周期持续时间必须为正数"
+              "required": "请输入周期时长",
+              "min": "周期时长至少为 1 周",
+              "max": "周期时长不能超过 30 周",
+              "positive": "周期时长必须为正数"
             }
           },
           "cooldown_period": {
-            "label": "冷却期",
+            "label": "间隔期",
             "unit": "天",
-            "tooltip": "下一个周期开始前的周期间隔暂停期。",
+            "tooltip": "上一个周期结束到下一个周期开始之间的间隔。",
             "validation": {
-              "required": "冷却期为必填项",
-              "negative": "冷却期不能为负数"
+              "required": "请输入间隔期",
+              "negative": "间隔期不能为负数"
             }
           },
           "start_date": {
-            "label": "周期开始日",
+            "label": "周期开始日期",
             "validation": {
-              "required": "开始日期为必填项",
-              "past": "开始日期不能是过去的日期"
+              "required": "请选择开始日期",
+              "past": "开始日期不能早于今天"
             }
           },
           "number_of_cycles": {
-            "label": "未来周期数",
+            "label": "预先创建的周期数",
             "validation": {
-              "required": "周期数为必填项",
+              "required": "请输入周期数",
               "min": "至少需要 1 个周期",
-              "max": "无法安排超过 3 个周期"
+              "max": "最多只能预先安排 3 个周期"
             }
           },
           "auto_rollover": {
-            "label": "工作项自动结转",
-            "tooltip": "在周期完成的当天，将所有未完成的工作项移至下一个周期。"
+            "label": "自动结转工作项",
+            "tooltip": "周期结束当天，自动将所有未完成的工作项移到下一个周期。"
           }
         },
         "toast": {
           "toggle": {
             "loading_enable": "正在启用自动安排周期",
-            "loading_disable": "正在禁用自动安排周期",
+            "loading_disable": "正在停用自动安排周期",
             "success": {
               "title": "成功！",
-              "message": "自动安排周期已成功切换。"
+              "message": "已切换自动安排周期。"
             },
             "error": {
               "title": "错误！",
@@ -510,8 +510,8 @@
             "loading": "正在保存自动安排周期配置",
             "success": {
               "title": "成功！",
-              "message_create": "自动安排周期配置已成功保存。",
-              "message_update": "自动安排周期配置已成功更新。"
+              "message_create": "自动安排周期配置已保存。",
+              "message_update": "自动安排周期配置已更新。"
             },
             "error": {
               "title": "错误！",
