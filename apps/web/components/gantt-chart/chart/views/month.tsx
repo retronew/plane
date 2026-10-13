@@ -14,6 +14,7 @@ import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 // types
 import type { IMonthView } from "../../views";
 import { getNumberOfDaysBetweenTwoDates } from "../../views/helpers";
+import { translate } from "@plane/i18n";
 
 export const MonthChartView = observer(function MonthChartView(_props: any) {
   // chart hook
@@ -57,7 +58,7 @@ export const MonthChartView = observer(function MonthChartView(_props: any) {
                     {monthBlock?.title}
                     {monthBlock.today && (
                       <span className={cn("ml-2 rounded-sm bg-accent-primary px-1 text-9 font-medium text-on-color")}>
-                        Current
+                        {translate("web.current")}
                       </span>
                     )}
                   </div>

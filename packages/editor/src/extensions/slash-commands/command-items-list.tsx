@@ -46,6 +46,7 @@ import { coreEditorAdditionalSlashCommandOptions } from "@/extensions/additional
 import type { CommandProps, ISlashCommandItem, TSlashCommandSectionKeys } from "@/types";
 // local types
 import type { TExtensionProps, TSlashCommandAdditionalOption } from "./root";
+import { translate } from "@plane/i18n";
 
 export type TSlashCommandSection = {
   key: TSlashCommandSectionKeys;
@@ -64,8 +65,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "text",
             key: "text",
-            title: "Text",
-            description: "Just start typing with plain text.",
+            title: translate("web.text"),
+            description: translate("web.just_start_typing_with_plain_text"),
             searchTerms: ["p", "paragraph"],
             icon: <TextOutline className="size-3.5" />,
             command: ({ editor, range }) => setText(editor, range),
@@ -73,8 +74,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h1",
             key: "h1",
-            title: "Heading 1",
-            description: "Big section heading.",
+            title: translate("web.heading_1"),
+            description: translate("web.big_section_heading"),
             searchTerms: ["title", "big", "large"],
             icon: <H1Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 1, range),
@@ -82,8 +83,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h2",
             key: "h2",
-            title: "Heading 2",
-            description: "Medium section heading.",
+            title: translate("web.heading_2"),
+            description: translate("web.medium_section_heading"),
             searchTerms: ["subtitle", "medium"],
             icon: <H2Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 2, range),
@@ -91,8 +92,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h3",
             key: "h3",
-            title: "Heading 3",
-            description: "Small section heading.",
+            title: translate("web.heading_3"),
+            description: translate("web.small_section_heading"),
             searchTerms: ["subtitle", "small"],
             icon: <H3Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 3, range),
@@ -100,8 +101,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h4",
             key: "h4",
-            title: "Heading 4",
-            description: "Small section heading.",
+            title: translate("web.heading_4"),
+            description: translate("web.small_section_heading"),
             searchTerms: ["subtitle", "small"],
             icon: <H4Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 4, range),
@@ -109,8 +110,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h5",
             key: "h5",
-            title: "Heading 5",
-            description: "Small section heading.",
+            title: translate("web.heading_5"),
+            description: translate("web.small_section_heading"),
             searchTerms: ["subtitle", "small"],
             icon: <H5Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 5, range),
@@ -118,8 +119,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "h6",
             key: "h6",
-            title: "Heading 6",
-            description: "Small section heading.",
+            title: translate("web.heading_6"),
+            description: translate("web.small_section_heading"),
             searchTerms: ["subtitle", "small"],
             icon: <H6Outline className="size-3.5" />,
             command: ({ editor, range }) => toggleHeading(editor, 6, range),
@@ -128,8 +129,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "numbered-list",
             key: "numbered-list",
-            title: "Numbered list",
-            description: "Create a numbered list.",
+            title: translate("web.numbered_list"),
+            description: translate("web.create_a_numbered_list"),
             searchTerms: ["ordered"],
             icon: <NumberedListOutline className="size-3.5" />,
             command: ({ editor, range }) => toggleOrderedList(editor, range),
@@ -137,8 +138,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "bulleted-list",
             key: "bulleted-list",
-            title: "Bulleted list",
-            description: "Create a bulleted list.",
+            title: translate("web.bulleted_list"),
+            description: translate("web.create_a_bulleted_list"),
             searchTerms: ["unordered", "point"],
             icon: <ListOutline className="size-3.5" />,
             command: ({ editor, range }) => toggleBulletList(editor, range),
@@ -146,8 +147,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "to-do-list",
             key: "to-do-list",
-            title: "To-do list",
-            description: "Create a to-do list.",
+            title: translate("web.to_do_list"),
+            description: translate("web.create_a_to_do_list"),
             searchTerms: ["todo", "task", "list", "check", "checkbox"],
             icon: <ToDoOutline className="size-3.5" />,
             command: ({ editor, range }) => toggleTaskList(editor, range),
@@ -155,8 +156,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "table",
             key: "table",
-            title: "Table",
-            description: "Create a table",
+            title: translate("web.table"),
+            description: translate("web.create_a_table"),
             searchTerms: ["table", "cell", "db", "data", "tabular"],
             icon: <TableEditorOutline className="size-3.5" />,
             command: ({ editor, range }) => insertTableCommand(editor, range),
@@ -164,8 +165,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "quote",
             key: "quote",
-            title: "Quote",
-            description: "Capture a quote.",
+            title: translate("web.quote"),
+            description: translate("web.capture_a_quote"),
             searchTerms: ["blockquote"],
             icon: <QuoteOutline className="size-3.5" />,
             command: ({ editor, range }) => toggleBlockquote(editor, range),
@@ -173,8 +174,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "code",
             key: "code",
-            title: "Code",
-            description: "Capture a code snippet.",
+            title: translate("web.code"),
+            description: translate("web.capture_a_code_snippet"),
             searchTerms: ["codeblock"],
             icon: <CodeOutline className="size-3.5" />,
             command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
@@ -182,17 +183,17 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "callout",
             key: "callout",
-            title: "Callout",
+            title: translate("web.callout"),
             icon: <ChatOutline className="size-3.5" />,
-            description: "Insert callout",
+            description: translate("web.insert_callout"),
             searchTerms: ["callout", "comment", "message", "info", "alert"],
             command: ({ editor, range }: CommandProps) => insertCallout(editor, range),
           },
           {
             commandKey: "divider",
             key: "divider",
-            title: "Divider",
-            description: "Visually divide blocks.",
+            title: translate("web.divider"),
+            description: translate("web.visually_divide_blocks"),
             searchTerms: ["line", "divider", "horizontal", "rule", "separate"],
             icon: <MinusSquareOutline className="size-3.5" />,
             command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
@@ -200,8 +201,8 @@ export const getSlashCommandFilteredSections =
           {
             commandKey: "emoji",
             key: "emoji",
-            title: "Emoji",
-            description: "Insert an emoji",
+            title: translate("web.emoji"),
+            description: translate("web.insert_an_emoji"),
             searchTerms: ["emoji", "icons", "reaction", "emoticon", "emotags"],
             icon: <Smile className="size-3.5" />,
             command: ({ editor, range }) => {
@@ -212,13 +213,13 @@ export const getSlashCommandFilteredSections =
       },
       {
         key: "text-colors",
-        title: "Colors",
+        title: translate("web.colors"),
         items: [
           {
             commandKey: "text-color",
             key: "text-color-default",
-            title: "Default",
-            description: "Change text color",
+            title: translate("web.default"),
+            description: translate("web.change_text_color"),
             searchTerms: ["color", "text", "default"],
             icon: <TextOutline className="size-3.5 text-primary" />,
             command: ({ editor, range }) => toggleTextColor(undefined, editor, range),
@@ -229,7 +230,7 @@ export const getSlashCommandFilteredSections =
                 commandKey: "text-color",
                 key: `text-color-${color.key}`,
                 title: color.label,
-                description: "Change text color",
+                description: translate("web.change_text_color"),
                 searchTerms: ["color", "text", color.label],
 
                 icon: (
@@ -248,13 +249,13 @@ export const getSlashCommandFilteredSections =
       },
       {
         key: "background-colors",
-        title: "Background colors",
+        title: translate("web.background_colors"),
         items: [
           {
             commandKey: "background-color",
             key: "background-color-default",
-            title: "Default background",
-            description: "Change background color",
+            title: translate("web.default_background"),
+            description: translate("web.change_background_color"),
             searchTerms: ["color", "bg", "background", "default"],
             icon: <TextOutline className="size-3.5" />,
             iconContainerStyle: {
@@ -270,7 +271,7 @@ export const getSlashCommandFilteredSections =
                 commandKey: "background-color",
                 key: `background-color-${color.key}`,
                 title: color.label,
-                description: "Change background color",
+                description: translate("web.change_background_color"),
                 searchTerms: ["color", "bg", "background", color.label],
                 icon: <TextOutline className="size-3.5" />,
 
@@ -291,9 +292,9 @@ export const getSlashCommandFilteredSections =
       internalAdditionalOptions.push({
         commandKey: "image",
         key: "image",
-        title: "Image",
+        title: translate("web.image"),
         icon: <ImageOutline className="size-3.5" />,
-        description: "Insert an image",
+        description: translate("web.insert_an_image"),
         searchTerms: ["img", "photo", "picture", "media", "upload"],
         command: ({ editor, range }: CommandProps) => insertImage({ editor, event: "insert", range }),
         section: "general",
@@ -318,6 +319,7 @@ export const getSlashCommandFilteredSections =
       }
     });
 
+    // oxlint-disable-next-line no-map-spread -- small static list built once per query
     const filteredSlashSections = SLASH_COMMAND_SECTIONS.map((section) => ({
       ...section,
       items: section.items.filter((item) => {

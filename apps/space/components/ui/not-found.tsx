@@ -18,10 +18,7 @@ export function PageNotFound() {
           </div>
           <div className="space-y-2">
             <h3 className="text-16 font-semibold">{translate("web.oops_something_went_wrong")}</h3>
-            <p className="text-13 text-secondary">
-              Sorry, the page you are looking for cannot be found. It may have been removed, had its name changed, or is
-              temporarily unavailable.
-            </p>
+            <p className="text-13 text-secondary">{translate("web.page_not_found_description")}</p>
           </div>
         </div>
       </div>

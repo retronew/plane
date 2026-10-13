@@ -30,6 +30,7 @@ import {
 } from "@makeplane/propel/icons";
 import { MonospaceIcon, SansSerifIcon, SerifIcon } from "@plane/blocks/icons";
 import type { TCommandExtraProps, TEditorCommands, TEditorFontStyle } from "@/types";
+import { translate } from "@plane/i18n";
 
 export type TEditorTypes = "lite" | "document" | "sticky";
 
@@ -201,49 +202,65 @@ export const COLORS_LIST: {
 }[] = [
   {
     key: "gray",
-    label: "Gray",
+    get label() {
+      return translate("web.gray");
+    },
     textColor: "var(--editor-colors-gray-text)",
     backgroundColor: "var(--editor-colors-gray-background)",
   },
   {
     key: "peach",
-    label: "Peach",
+    get label() {
+      return translate("web.peach");
+    },
     textColor: "var(--editor-colors-peach-text)",
     backgroundColor: "var(--editor-colors-peach-background)",
   },
   {
     key: "pink",
-    label: "Pink",
+    get label() {
+      return translate("web.pink");
+    },
     textColor: "var(--editor-colors-pink-text)",
     backgroundColor: "var(--editor-colors-pink-background)",
   },
   {
     key: "orange",
-    label: "Orange",
+    get label() {
+      return translate("web.orange");
+    },
     textColor: "var(--editor-colors-orange-text)",
     backgroundColor: "var(--editor-colors-orange-background)",
   },
   {
     key: "green",
-    label: "Green",
+    get label() {
+      return translate("web.green");
+    },
     textColor: "var(--editor-colors-green-text)",
     backgroundColor: "var(--editor-colors-green-background)",
   },
   {
     key: "light-blue",
-    label: "Light blue",
+    get label() {
+      return translate("web.light_blue");
+    },
     textColor: "var(--editor-colors-light-blue-text)",
     backgroundColor: "var(--editor-colors-light-blue-background)",
   },
   {
     key: "dark-blue",
-    label: "Dark blue",
+    get label() {
+      return translate("web.dark_blue");
+    },
     textColor: "var(--editor-colors-dark-blue-text)",
     backgroundColor: "var(--editor-colors-dark-blue-background)",
   },
   {
     key: "purple",
-    label: "Purple",
+    get label() {
+      return translate("web.purple");
+    },
     textColor: "var(--editor-colors-purple-text)",
     backgroundColor: "var(--editor-colors-purple-background)",
   },
@@ -260,7 +277,25 @@ export const EDITOR_FONT_STYLES: {
   label: string;
   icon: React.FC;
 }[] = [
-  { key: "sans-serif", label: "Sans serif", icon: SansSerifIcon },
-  { key: "serif", label: "Serif", icon: SerifIcon },
-  { key: "monospace", label: "Mono", icon: MonospaceIcon },
+  {
+    key: "sans-serif",
+    get label() {
+      return translate("web.sans_serif");
+    },
+    icon: SansSerifIcon,
+  },
+  {
+    key: "serif",
+    get label() {
+      return translate("web.serif");
+    },
+    icon: SerifIcon,
+  },
+  {
+    key: "monospace",
+    get label() {
+      return translate("web.mono");
+    },
+    icon: MonospaceIcon,
+  },
 ];

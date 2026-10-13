@@ -91,7 +91,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
       setToast({
         type: "error",
         title: translate("web.error"),
-        message: error.error || "Something went wrong",
+        message: error.error || translate("web.something_went_wrong_2"),
       });
     } finally {
       setIsImageUploading(false);
@@ -149,7 +149,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                           type="button"
                           className="absolute top-0 right-0 z-40 translate-x-1/2 -translate-y-1/2 rounded-sm bg-surface-2 px-2 py-0.5 text-11 font-medium text-secondary"
                         >
-                          Edit
+                          {translate("web.edit")}
                         </button>
                         <img
                           src={image ? URL.createObjectURL(image) : value ? getFileURL(value) : ""}
@@ -161,7 +161,9 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                       <div>
                         <UserOutline className="mx-auto h-16 w-16 text-secondary" />
                         <span className="mt-2 block text-13 font-medium text-secondary">
-                          {isDragActive ? "Drop image here to upload" : "Drag & drop image here"}
+                          {isDragActive
+                            ? translate("web.drop_image_here_to_upload")
+                            : translate("web.drag_drop_image_here")}
                         </span>
                       </div>
                     )}
@@ -172,8 +174,8 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                 {fileRejections.length > 0 && (
                   <p className="text-13 text-danger-primary">
                     {fileRejections[0].errors[0].code === "file-too-large"
-                      ? "The image size cannot exceed 5 MB."
-                      : "Please upload a file in a valid format."}
+                      ? translate("web.the_image_size_cannot_exceed_5_mb")
+                      : translate("web.please_upload_a_file_in_a_valid_format")}
                   </p>
                 )}
               </div>
@@ -187,7 +189,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
               variant="danger"
               size="md"
               stretch="auto"
-              label={isRemoving ? "Removing" : "Remove"}
+              label={isRemoving ? translate("web.removing") : translate("web.remove")}
               onClick={handleImageRemove}
               disabled={!value}
               loading={isRemoving}
@@ -198,7 +200,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
             variant="primary"
             size="md"
             stretch="auto"
-            label={isImageUploading ? "Uploading" : "Upload & Save"}
+            label={isImageUploading ? translate("web.uploading_2") : translate("web.upload_save")}
             onClick={handleSubmit}
             disabled={!image}
             loading={isImageUploading}

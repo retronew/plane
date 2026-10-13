@@ -97,7 +97,10 @@ export function Invitations(props: Props) {
                   <p className="text-11 text-secondary">{ROLE[invitation.role]}</p>
                 </div>
                 <span className="pointer-events-none flex-shrink-0">
-                  <Checkbox checked={isSelected} aria-label={invitedWorkspace?.name ?? "Select workspace invitation"} />
+                  <Checkbox
+                    checked={isSelected}
+                    aria-label={invitedWorkspace?.name ?? translate("web.select_workspace_invitation")}
+                  />
                 </span>
               </div>
             );
@@ -111,7 +114,7 @@ export function Invitations(props: Props) {
         onClick={submitInvitations}
         disabled={isJoiningWorkspaces || !invitationsRespond.length}
       >
-        {isJoiningWorkspaces ? <Spinner height="20px" width="20px" /> : "Continue to workspace"}
+        {isJoiningWorkspaces ? <Spinner height="20px" width="20px" /> : translate("web.continue_to_workspace")}
       </ButtonElement>
       <div className="mx-auto mt-4 flex items-center sm:w-96">
         <hr className="w-full border-strong" />

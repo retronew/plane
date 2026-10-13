@@ -66,7 +66,7 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       onSubmit={onSubmit}
       onCancel={onCancel}
       buttonDisabled={loader}
-      buttonTitle={loader ? `Updating` : `Update`}
+      buttonTitle={loader ? translate("web.updating_2") : translate("web.update")}
     />
   );
 });

@@ -10,6 +10,7 @@ import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { cn } from "@plane/utils";
 // constants
 import { COLORS_LIST } from "@/constants/common";
+import { translate } from "@plane/i18n";
 
 type Props = {
   disabled: boolean;
@@ -49,7 +50,7 @@ export function CalloutBlockColorSelector(props: Props) {
           )}
           disabled={disabled}
         >
-          <span className="text-12">Color</span>
+          <span className="text-12">{translate("web.color")}</span>
           <ChevronDownOutline className="size-3 flex-shrink-0" />
         </button>
         {isOpen && (

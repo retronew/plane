@@ -13,6 +13,7 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { usePageOperations } from "@/hooks/use-page-operations";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { translate } from "@plane/i18n";
 
 type Props = {
   page: TPageInstance;
@@ -36,7 +37,7 @@ export const PageFavoriteControl = observer(function PageFavoriteControl({ page 
       onClick={() => {
         pageOperations.toggleFavorite();
       }}
-      aria-label={is_favorite ? "Remove favorite" : "Add to favorites"}
+      aria-label={is_favorite ? translate("web.remove_favorite") : translate("web.add_to_favorites")}
       render={
         <button
           type="button"

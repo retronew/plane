@@ -225,7 +225,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                     variant="danger"
                     size="md"
                     stretch="auto"
-                    label={isUnPublishing ? "Unpublishing" : "Unpublish"}
+                    label={isUnPublishing ? translate("web.unpublishing") : translate("web.unpublish")}
                     onClick={() => void handleUnPublishProject(watch("id") ?? "")}
                     loading={isUnPublishing}
                   />
@@ -398,7 +398,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                       size="md"
                       stretch="auto"
                       type="submit"
-                      label={isSubmitting ? "Updating" : "Update settings"}
+                      label={isSubmitting ? translate("web.updating_2") : translate("web.update_settings")}
                       loading={isSubmitting}
                     />
                   )
@@ -408,7 +408,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                     size="md"
                     stretch="auto"
                     type="submit"
-                    label={isSubmitting ? "Publishing" : "Publish"}
+                    label={isSubmitting ? translate("web.publishing") : translate("web.publish")}
                     loading={isSubmitting}
                   />
                 )}

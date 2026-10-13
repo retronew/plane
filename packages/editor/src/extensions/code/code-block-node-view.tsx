@@ -17,6 +17,7 @@ import { cn } from "@plane/utils";
 // types
 import type { TCodeBlockAttributes } from "./types";
 import { ECodeBlockAttributeNames } from "./types";
+import { translate } from "@plane/i18n";
 
 // we just have ts support for now
 const lowlight = createLowlight(common);
@@ -45,7 +46,7 @@ export function CodeBlockComponent({ node }: Props) {
 
   return (
     <NodeViewWrapper key={attrs[ECodeBlockAttributeNames.ID]} className="code-block group/code relative">
-      <Tooltip label="Copy code">
+      <Tooltip label={translate("web.copy_code")}>
         <button
           type="button"
           className={cn(

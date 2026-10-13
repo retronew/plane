@@ -17,6 +17,7 @@ import { queryParamGenerator } from "@/helpers/query-param-generator";
 import { useIssueDetails } from "@/hooks/store/use-issue-details";
 import { useUser } from "@/hooks/store/use-user";
 import useIsInIframe from "@/hooks/use-is-in-iframe";
+import { translate } from "@plane/i18n";
 
 type TIssueVotes = {
   anchor: string;
@@ -86,8 +87,11 @@ export const IssueVotes = observer(function IssueVotes(props: TIssueVotes) {
             ? allUpVotes
                 .map((r) => r.actor_details?.display_name)
                 .slice(0, VOTES_LIMIT)
-                .join(", ") + (allUpVotes.length > VOTES_LIMIT ? ` and ${allUpVotes.length - VOTES_LIMIT} more` : "")
-            : "No upvotes yet"
+                .join(", ") +
+              (allUpVotes.length > VOTES_LIMIT
+                ? ` ${translate("web.and_n_more", { count: allUpVotes.length - VOTES_LIMIT })}`
+                : "")
+            : translate("web.no_upvotes_yet")
         }
       >
         <button
@@ -121,8 +125,10 @@ export const IssueVotes = observer(function IssueVotes(props: TIssueVotes) {
                 .map((r) => r.actor_details.display_name)
                 .slice(0, VOTES_LIMIT)
                 .join(", ") +
-              (allDownVotes.length > VOTES_LIMIT ? ` and ${allDownVotes.length - VOTES_LIMIT} more` : "")
-            : "No downvotes yet"
+              (allDownVotes.length > VOTES_LIMIT
+                ? ` ${translate("web.and_n_more", { count: allDownVotes.length - VOTES_LIMIT })}`
+                : "")
+            : translate("web.no_downvotes_yet")
         }
       >
         <button

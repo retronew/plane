@@ -13,6 +13,7 @@ import { renderFormattedDate } from "@/helpers/date-time.helper";
 import { shouldHighlightIssueDueDate } from "@/helpers/issue.helper";
 // hooks
 import { useStates } from "@/hooks/store/use-state";
+import { translate } from "@plane/i18n";
 
 type Props = {
   due_date: string | undefined;
@@ -38,7 +39,7 @@ export const IssueBlockDate = observer(function IssueBlockDate(props: Props) {
         })}
       >
         <DueDateOutline className="size-3 flex-shrink-0" />
-        {formattedDate ? formattedDate : "No Date"}
+        {formattedDate ? formattedDate : translate("web.no_date")}
       </div>
     </Tooltip>
   );

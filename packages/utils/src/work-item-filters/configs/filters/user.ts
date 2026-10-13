@@ -10,6 +10,7 @@ import { EQUALITY_OPERATOR, COLLECTION_OPERATOR } from "@plane/types";
 // local imports
 import type { TCreateFilterConfig, TCreateUserFilterParams } from "../../../rich-filters";
 import { createFilterConfig, createOperatorConfigEntry, getMemberMultiSelectConfig } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 // ------------ Assignee filter ------------
 
@@ -29,7 +30,7 @@ export const getAssigneeFilterConfig =
   (params: TCreateAssigneeFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Assignees",
+      label: translate("web.assignees"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([
@@ -57,7 +58,7 @@ export const getMentionFilterConfig =
   (params: TCreateMentionFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Mentions",
+      label: translate("web.mentions"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([
@@ -85,7 +86,7 @@ export const getCreatedByFilterConfig =
   (params: TCreateCreatedByFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Created by",
+      label: translate("web.created_by_2"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([
@@ -113,7 +114,7 @@ export const getSubscriberFilterConfig =
   (params: TCreateSubscriberFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Subscriber",
+      label: translate("web.subscriber"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

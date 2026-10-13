@@ -91,7 +91,7 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
       >
         <div className="flex items-center gap-1 text-tertiary">
           <LockOutline className="size-3" />
-          <span className="font-medium">Set a password</span>
+          <span className="font-medium">{translate("web.set_a_password")}</span>
           <span>{`(Optional)`}</span>
         </div>
         <div className="flex items-center gap-2 text-placeholder">
@@ -107,7 +107,7 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
             label={translate("web.password")}
             value={passwordState.password}
             onChange={(value) => handlePasswordChange("password", value)}
-            placeholder="Set a password"
+            placeholder={translate("web.set_a_password")}
             className="transition-all duration-200"
           />
           {passwordState.password.length > 0 && <PasswordStrengthIndicator password={passwordState.password} />}

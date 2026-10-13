@@ -121,7 +121,7 @@ export const CustomThemeSelector = observer(function CustomThemeSelector() {
           size="md"
           stretch="auto"
           type="submit"
-          label={isSubmitting ? t("common.saving") : isLoadingPalette ? "Generating" : t("set_theme")}
+          label={isSubmitting ? t("common.saving") : isLoadingPalette ? t("web.generating") : t("set_theme")}
           loading={isSubmitting || isLoadingPalette}
         />
         {/* Import/Export Section */}

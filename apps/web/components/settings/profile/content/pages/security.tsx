@@ -162,7 +162,7 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                         type="button"
                         className="grid size-5 place-items-center"
                         onClick={() => handleShowPassword("oldPassword")}
-                        aria-label={showPassword?.oldPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword?.oldPassword ? t("web.hide_password") : t("web.show_password")}
                       >
                         {showPassword?.oldPassword ? (
                           <HideOutline className="size-5 text-placeholder" />
@@ -206,7 +206,7 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                         type="button"
                         className="grid size-5 place-items-center"
                         onClick={() => handleShowPassword("password")}
-                        aria-label={showPassword?.password ? "Hide password" : "Show password"}
+                        aria-label={showPassword?.password ? t("web.hide_password") : t("web.show_password")}
                       >
                         {showPassword?.password ? (
                           <HideOutline className="size-5 text-placeholder" />
@@ -254,7 +254,7 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                         type="button"
                         className="grid size-5 place-items-center"
                         onClick={() => handleShowPassword("confirmPassword")}
-                        aria-label={showPassword?.confirmPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword?.confirmPassword ? t("web.hide_password") : t("web.show_password")}
                       >
                         {showPassword?.confirmPassword ? (
                           <HideOutline className="size-5 text-placeholder" />

@@ -12,6 +12,7 @@ import { EQUALITY_OPERATOR, COLLECTION_OPERATOR } from "@plane/types";
 // local imports
 import type { TCreateFilterConfigParams, IFilterIconConfig, TCreateFilterConfig } from "../../../rich-filters";
 import { createFilterConfig, getMultiSelectConfig, createOperatorConfigEntry } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 // ------------ Priority filter ------------
 
@@ -57,7 +58,7 @@ export const getPriorityFilterConfig =
   (params: TCreatePriorityFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Priority",
+      label: translate("web.priority"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

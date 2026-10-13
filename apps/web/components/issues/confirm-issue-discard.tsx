@@ -73,7 +73,7 @@ export function ConfirmIssueDiscard(props: Props) {
             stretch="auto"
             onClick={() => void handleDeletion()}
             loading={isLoading}
-            label={isLoading ? "Saving" : "Save to Drafts"}
+            label={isLoading ? translate("web.saving") : translate("web.save_to_drafts")}
           />
         </DialogActions>
       </DialogContent>

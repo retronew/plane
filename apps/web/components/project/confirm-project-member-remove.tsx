@@ -78,7 +78,9 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <DialogHeading>
-                  <DialogTitle>{isCurrentUser ? "Leave project?" : `Remove ${data?.display_name}?`}</DialogTitle>
+                  <DialogTitle>
+                    {isCurrentUser ? translate("web.leave_project_2") : `Remove ${data?.display_name}?`}
+                  </DialogTitle>
                 </DialogHeading>
               </div>
             </div>
@@ -87,13 +89,15 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
             <p className="text-13 text-secondary">
               {isCurrentUser ? (
                 <>
-                  Are you sure you want to leave the <span className="font-bold">{currentProjectDetails?.name}</span>{" "}
-                  project? You will be able to join the project if invited again or if it{"'"}s public.
+                  {translate("web.are_you_sure_you_want_to_leave_the")}{" "}
+                  <span className="font-bold">{currentProjectDetails?.name}</span> project? You will be able to join the
+                  project if invited again or if it{"'"}s public.
                 </>
               ) : (
                 <>
-                  Are you sure you want to remove member- <span className="font-bold">{data?.display_name}</span>? They
-                  will no longer have access to this project. This action cannot be undone.
+                  {translate("web.are_you_sure_you_want_to_remove_member")}{" "}
+                  <span className="font-bold">{data?.display_name}</span>? They will no longer have access to this
+                  project. This action cannot be undone.
                 </>
               )}
             </p>
@@ -106,7 +110,13 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
             size="md"
             stretch="auto"
             label={
-              isCurrentUser ? (isDeleteLoading ? "Leaving..." : "Leave") : isDeleteLoading ? "Removing..." : "Remove"
+              isCurrentUser
+                ? isDeleteLoading
+                  ? translate("web.leaving")
+                  : translate("web.leave")
+                : isDeleteLoading
+                  ? translate("web.removing_2")
+                  : translate("web.remove")
             }
             onClick={handleDeletion}
             loading={isDeleteLoading}

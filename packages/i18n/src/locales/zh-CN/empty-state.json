@@ -169,12 +169,12 @@
       "title": "设置 Intake 来管理外部请求，并跟踪请求的接受和拒绝情况"
     },
     "home_widget_stickies": {
-      "title": "记下一个想法、一次灵光乍现或一个点子。添加 Sticky 即可开始。"
+      "title": "记下一个想法、一次灵光乍现或一个点子。添加便签即可开始。"
     },
     "stickies": {
       "title": "即时捕捉想法",
-      "description": "用 Sticky 快速记录笔记和待办事项，随时随地都能查看。",
-      "cta_primary": "创建第一个 Sticky",
+      "description": "用便签快速记录笔记和待办事项，随时随地都能查看。",
+      "cta_primary": "创建第一个便签",
       "cta_secondary": "文档"
     },
     "active_cycles": {

@@ -47,8 +47,7 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message:
-            "This state contains some work items within it, please move them to some other state to delete this state.",
+          message: translate("web.this_state_contains_some_work_items_within_it_please_move_th"),
         });
       else
         setToast({
@@ -70,8 +69,9 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       title={translate("web.delete_state")}
       content={
         <>
-          Are you sure you want to delete state- <span className="font-medium text-primary">{data?.name}</span>? All of
-          the data related to the state will be permanently removed. This action cannot be undone.
+          {translate("web.are_you_sure_you_want_to_delete_state")}{" "}
+          <span className="font-medium text-primary">{data?.name}</span>? All of the data related to the state will be
+          permanently removed. This action cannot be undone.
         </>
       }
     />

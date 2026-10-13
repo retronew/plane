@@ -142,14 +142,15 @@ export const useRealtimePageEvents = ({
 
         error: ({ pageIds, data }: { pageIds: string[]; data: EventToPayloadMap["error"] }) => {
           const errorType = data.error_type;
-          const errorMessage = data.error_message || "An error occurred";
+          const errorMessage = data.error_message || translate("web.an_error_occurred");
           const errorCode = data.error_code;
 
           if (page.id && pageIds.includes(page.id)) {
             // Show toast notification
             setToast({
               type: "error",
-              title: errorType === "fetch" ? "Failed to load page" : "Failed to save page",
+              title:
+                errorType === "fetch" ? translate("web.failed_to_load_page") : translate("web.failed_to_save_page"),
               message: errorMessage,
             });
 

@@ -81,7 +81,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
                     className="ml-8 text-11 font-medium text-accent-primary"
                     onClick={handleViewToggle}
                   >
-                    {itemsToRender === sortedOptions.length ? "View less" : "View all"}
+                    {itemsToRender === sortedOptions.length ? translate("web.view_less") : translate("web.view_all")}
                   </button>
                 )}
               </>

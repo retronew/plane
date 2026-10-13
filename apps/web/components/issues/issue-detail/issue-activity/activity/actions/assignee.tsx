@@ -11,6 +11,7 @@ import { MembersOutline } from "@makeplane/propel/icons";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
+import { translate } from "@plane/i18n";
 
 type TIssueAssigneeActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
@@ -31,7 +32,7 @@ export const IssueAssigneeActivity = observer(function IssueAssigneeActivity(pro
       ends={ends}
     >
       <>
-        {activity.old_value === "" ? `added a new assignee ` : `removed the assignee `}
+        {activity.old_value === "" ? translate("web.added_a_new_assignee") : translate("web.removed_the_assignee")}
         <a
           href={`/${activity.workspace_detail?.slug}/profile/${activity.new_identifier ?? activity.old_identifier}`}
           target="_blank"

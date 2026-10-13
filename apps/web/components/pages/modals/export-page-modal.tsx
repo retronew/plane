@@ -295,7 +295,7 @@ export function ExportPageModal(props: Props) {
             variant="primary"
             size="md"
             stretch="auto"
-            label={isExporting ? "Exporting" : "Export"}
+            label={isExporting ? translate("web.exporting") : translate("web.export")}
             loading={isExporting}
             onClick={handleExport}
           />

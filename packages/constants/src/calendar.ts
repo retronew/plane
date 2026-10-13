@@ -6,6 +6,7 @@
 
 import type { TCalendarLayouts } from "@plane/types";
 import { EStartOfTheWeek } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const MONTHS_LIST: {
   [monthNumber: number]: {
@@ -15,51 +16,75 @@ export const MONTHS_LIST: {
 } = {
   1: {
     shortTitle: "Jan",
-    title: "January",
+    get title() {
+      return translate("web.january");
+    },
   },
   2: {
     shortTitle: "Feb",
-    title: "February",
+    get title() {
+      return translate("web.february");
+    },
   },
   3: {
     shortTitle: "Mar",
-    title: "March",
+    get title() {
+      return translate("web.march");
+    },
   },
   4: {
     shortTitle: "Apr",
-    title: "April",
+    get title() {
+      return translate("web.april");
+    },
   },
   5: {
     shortTitle: "May",
-    title: "May",
+    get title() {
+      return translate("web.may");
+    },
   },
   6: {
     shortTitle: "Jun",
-    title: "June",
+    get title() {
+      return translate("web.june");
+    },
   },
   7: {
     shortTitle: "Jul",
-    title: "July",
+    get title() {
+      return translate("web.july");
+    },
   },
   8: {
     shortTitle: "Aug",
-    title: "August",
+    get title() {
+      return translate("web.august");
+    },
   },
   9: {
     shortTitle: "Sep",
-    title: "September",
+    get title() {
+      return translate("web.september");
+    },
   },
   10: {
     shortTitle: "Oct",
-    title: "October",
+    get title() {
+      return translate("web.october");
+    },
   },
   11: {
     shortTitle: "Nov",
-    title: "November",
+    get title() {
+      return translate("web.november");
+    },
   },
   12: {
     shortTitle: "Dec",
-    title: "December",
+    get title() {
+      return translate("web.december");
+    },
   },
 };
 
@@ -72,37 +97,51 @@ export const DAYS_LIST: {
 } = {
   1: {
     shortTitle: "Sun",
-    title: "Sunday",
+    get title() {
+      return translate("web.sunday");
+    },
     value: EStartOfTheWeek.SUNDAY,
   },
   2: {
     shortTitle: "Mon",
-    title: "Monday",
+    get title() {
+      return translate("web.monday");
+    },
     value: EStartOfTheWeek.MONDAY,
   },
   3: {
     shortTitle: "Tue",
-    title: "Tuesday",
+    get title() {
+      return translate("web.tuesday");
+    },
     value: EStartOfTheWeek.TUESDAY,
   },
   4: {
     shortTitle: "Wed",
-    title: "Wednesday",
+    get title() {
+      return translate("web.wednesday");
+    },
     value: EStartOfTheWeek.WEDNESDAY,
   },
   5: {
     shortTitle: "Thu",
-    title: "Thursday",
+    get title() {
+      return translate("web.thursday");
+    },
     value: EStartOfTheWeek.THURSDAY,
   },
   6: {
     shortTitle: "Fri",
-    title: "Friday",
+    get title() {
+      return translate("web.friday");
+    },
     value: EStartOfTheWeek.FRIDAY,
   },
   7: {
     shortTitle: "Sat",
-    title: "Saturday",
+    get title() {
+      return translate("web.saturday");
+    },
     value: EStartOfTheWeek.SATURDAY,
   },
 };
@@ -115,10 +154,14 @@ export const CALENDAR_LAYOUTS: {
 } = {
   month: {
     key: "month",
-    title: "Month layout",
+    get title() {
+      return translate("web.month_layout");
+    },
   },
   week: {
     key: "week",
-    title: "Week layout",
+    get title() {
+      return translate("web.week_layout");
+    },
   },
 };

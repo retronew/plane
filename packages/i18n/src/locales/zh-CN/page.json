@@ -44,32 +44,32 @@
     },
     "toasts": {
       "errors": {
-        "wrong_name": "Sticky 名称不能超过 100 个字符。",
-        "already_exists": "已存在一个没有描述的 Sticky"
+        "wrong_name": "便签名称不能超过 100 个字符。",
+        "already_exists": "已存在一个没有描述的便签"
       },
       "created": {
-        "title": "Sticky 已创建",
-        "message": "Sticky 已成功创建"
+        "title": "便签已创建",
+        "message": "便签已成功创建"
       },
       "not_created": {
-        "title": "Sticky 未创建",
-        "message": "无法创建 Sticky"
+        "title": "便签未创建",
+        "message": "无法创建便签"
       },
       "updated": {
-        "title": "Sticky 已更新",
-        "message": "Sticky 已成功更新"
+        "title": "便签已更新",
+        "message": "便签已成功更新"
       },
       "not_updated": {
-        "title": "Sticky 未更新",
-        "message": "无法更新 Sticky"
+        "title": "便签未更新",
+        "message": "无法更新便签"
       },
       "removed": {
-        "title": "Sticky 已移除",
-        "message": "Sticky 已成功移除"
+        "title": "便签已移除",
+        "message": "便签已成功移除"
       },
       "not_removed": {
-        "title": "Sticky 未移除",
-        "message": "无法移除 Sticky"
+        "title": "便签未移除",
+        "message": "无法移除便签"
       }
     },
     "open_button": "打开导航面板",

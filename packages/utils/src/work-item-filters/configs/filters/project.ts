@@ -10,6 +10,7 @@ import { EQUALITY_OPERATOR, COLLECTION_OPERATOR } from "@plane/types";
 // local imports
 import type { TCreateFilterConfig, TCreateProjectFilterParams } from "../../../rich-filters";
 import { createFilterConfig, createOperatorConfigEntry, getProjectMultiSelectConfig } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 // ------------ Project filter ------------
 
@@ -24,7 +25,7 @@ export const getProjectFilterConfig =
   (params: TCreateProjectFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Projects",
+      label: translate("web.projects"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

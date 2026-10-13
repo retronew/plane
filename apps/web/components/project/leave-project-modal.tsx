@@ -136,14 +136,14 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">
-                    Enter the project name <span className="font-medium text-primary">{project?.name}</span> to
-                    continue:
+                    {translate("web.enter_the_project_name")}{" "}
+                    <span className="font-medium text-primary">{project?.name}</span> to continue:
                   </p>
                   <Controller
                     control={control}
                     name="projectName"
                     rules={{
-                      required: "Label title is required",
+                      required: translate("web.label_title_is_required"),
                     }}
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="projectName" invalid={Boolean(errors.projectName)}>
@@ -165,8 +165,8 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                 </div>
                 <div className="text-secondary">
                   <p className="text-13">
-                    To confirm, type <span className="font-medium text-primary">{translate("web.leave_project")}</span>{" "}
-                    below:
+                    {translate("web.to_confirm_type")}{" "}
+                    <span className="font-medium text-primary">{translate("web.leave_project")}</span> below:
                   </p>
                   <Controller
                     control={control}
@@ -205,7 +205,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
               size="md"
               stretch="auto"
               type="submit"
-              label={isSubmitting ? "Leaving..." : "Leave Project"}
+              label={isSubmitting ? translate("web.leaving") : translate("web.leave_project")}
               loading={isSubmitting}
             />
           </DialogActions>

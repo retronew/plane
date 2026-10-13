@@ -59,7 +59,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
       control={control}
       name={name}
       rules={{
-        required: "Select a month between 1 and 12.",
+        required: translate("web.select_a_month_between_1_and_12"),
         min: 1,
         max: 12,
       }}
@@ -77,7 +77,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           min={1}
           max={12}
           endIcon={<span className="text-13 text-secondary">{translate("web.months")}</span>}
-          error={errors[name] ? "Select a month between 1 and 12." : undefined}
+          error={errors[name] ? translate("web.select_a_month_between_1_and_12") : undefined}
         />
       )}
     />
@@ -111,7 +111,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
               size="md"
               stretch="auto"
               type="submit"
-              label={isSubmitting ? "Submitting..." : "Submit"}
+              label={isSubmitting ? translate("web.submitting") : translate("web.submit")}
               loading={isSubmitting}
             />
           </DialogActions>

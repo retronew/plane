@@ -86,7 +86,7 @@ export function JoinProjectModal(props: TJoinProjectModalProps) {
             variant="primary"
             size="md"
             stretch="auto"
-            label={isJoiningLoading ? "Joining..." : "Join Project"}
+            label={isJoiningLoading ? translate("web.joining") : translate("web.join_project_2")}
             onClick={handleJoin}
             loading={isJoiningLoading}
           />

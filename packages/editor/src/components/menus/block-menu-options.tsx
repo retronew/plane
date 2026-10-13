@@ -12,6 +12,7 @@ import { DragDropOutline } from "@makeplane/propel/icons";
 import { CORE_EXTENSIONS } from "@/constants/extension";
 // types
 import type { BlockMenuOption } from "./block-menu";
+import { translate } from "@plane/i18n";
 
 const findSelectedTable = (editor: Editor): { tableNode: ProseMirrorNode | null; tablePos: number } => {
   const { state } = editor;
@@ -86,7 +87,7 @@ export const getNodeOptions = (editor: Editor): BlockMenuOption[] => [
   {
     icon: DragDropOutline,
     key: "table-full-width",
-    label: "Fit to width",
+    label: translate("web.fit_to_width"),
     isDisabled: !editor.isActive(CORE_EXTENSIONS.TABLE),
     onClick: () => setTableToFullWidth(editor),
   },

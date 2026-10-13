@@ -20,6 +20,7 @@ import type { EPageStoreType } from "@/hooks/store";
 import type { TPageInstance } from "@/store/pages/base-page";
 // local imports
 import { PageActions } from "../dropdowns";
+import { translate } from "@plane/i18n";
 
 type Props = {
   page: TPageInstance;
@@ -53,7 +54,7 @@ export const BlockItemAction = observer(function BlockItemAction(props: Props) {
         </Tooltip>
       </div>
       <div className="cursor-default text-tertiary">
-        <Tooltip label={access === 0 ? "Public" : "Private"}>
+        <Tooltip label={access === 0 ? translate("web.public") : translate("web.private")}>
           {access === 0 ? <GlobeOutline className="h-4 w-4" /> : <LockOutline className="h-4 w-4" />}
         </Tooltip>
       </div>

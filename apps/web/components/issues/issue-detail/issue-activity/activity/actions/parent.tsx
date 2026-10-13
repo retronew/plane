@@ -10,6 +10,7 @@ import { ParentOutline } from "@makeplane/propel/icons";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
+import { translate } from "@plane/i18n";
 
 type TIssueParentActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
@@ -30,7 +31,7 @@ export const IssueParentActivity = observer(function IssueParentActivity(props: 
       ends={ends}
     >
       <>
-        {activity.new_value ? `set the parent to ` : `removed the parent `}
+        {activity.new_value ? translate("web.set_the_parent_to") : translate("web.removed_the_parent")}
         {activity.new_value ? (
           <span className="font-medium text-primary">{activity.new_value}</span>
         ) : (

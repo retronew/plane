@@ -39,13 +39,13 @@ export const ArchivedCyclesView = observer(function ArchivedCyclesView(props: IA
           <img
             src={archivedCyclesSearchQuery.trim() === "" ? AllFiltersImage : NameFilterImage}
             className="mx-auto h-36 w-36 sm:h-48 sm:w-48"
-            alt="No matching cycles"
+            alt={translate("web.no_matching_cycles")}
           />
           <h5 className="mt-7 mb-1 text-18 font-medium">{translate("web.no_matching_cycles")}</h5>
           <p className="text-14 text-placeholder">
             {archivedCyclesSearchQuery.trim() === ""
-              ? "Remove the filters to see all cycles"
-              : "Remove the search criteria to see all cycles"}
+              ? translate("web.remove_the_filters_to_see_all_cycles")
+              : translate("web.remove_the_search_criteria_to_see_all_cycles")}
           </p>
         </div>
       </div>

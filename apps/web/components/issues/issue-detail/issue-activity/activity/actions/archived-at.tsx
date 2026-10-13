@@ -10,6 +10,7 @@ import { ArchiveOutline, RefreshOutline } from "@makeplane/propel/icons";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent } from "./";
+import { translate } from "@plane/i18n";
 // ui
 
 type TIssueArchivedAtActivity = { activityId: string; ends: "top" | "bottom" | undefined };
@@ -38,7 +39,10 @@ export const IssueArchivedAtActivity = observer(function IssueArchivedAtActivity
       ends={ends}
       customUserName={activity.new_value === "archive" ? "Plane" : undefined}
     >
-      {activity.new_value === "restore" ? "restored the work item" : "archived the work item"}.
+      {activity.new_value === "restore"
+        ? translate("web.restored_the_work_item")
+        : translate("web.archived_the_work_item")}
+      .
     </IssueActivityBlockComponent>
   );
 });

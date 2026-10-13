@@ -17,6 +17,7 @@ import { cn } from "@plane/utils";
 import { useMember } from "@/hooks/store/use-member";
 //
 import type { TPublicMember } from "@/types/member";
+import { translate } from "@plane/i18n";
 
 type Props = {
   memberIds: string[];
@@ -87,7 +88,7 @@ export const IssueBlockMembers = observer(function IssueBlockMembers({ memberIds
         <div className="flex items-center gap-1.5 text-secondary">
           <ButtonAvatars members={members} showTooltip={false} />
           {!shouldShowBorder && members.length <= 1 && (
-            <span>{members?.[0]?.member__display_name ?? "No Assignees"}</span>
+            <span>{members?.[0]?.member__display_name ?? translate("web.no_assignees")}</span>
           )}
         </div>
       </div>

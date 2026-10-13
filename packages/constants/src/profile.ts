@@ -6,6 +6,7 @@
 
 // plane imports
 import { EStartOfTheWeek } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const PROFILE_VIEWER_TAB = [
   {
@@ -63,30 +64,44 @@ export const PREFERENCE_OPTIONS: {
 export const START_OF_THE_WEEK_OPTIONS = [
   {
     value: EStartOfTheWeek.SUNDAY,
-    label: "Sunday",
+    get label() {
+      return translate("web.sunday");
+    },
   },
   {
     value: EStartOfTheWeek.MONDAY,
-    label: "Monday",
+    get label() {
+      return translate("web.monday");
+    },
   },
   {
     value: EStartOfTheWeek.TUESDAY,
-    label: "Tuesday",
+    get label() {
+      return translate("web.tuesday");
+    },
   },
   {
     value: EStartOfTheWeek.WEDNESDAY,
-    label: "Wednesday",
+    get label() {
+      return translate("web.wednesday");
+    },
   },
   {
     value: EStartOfTheWeek.THURSDAY,
-    label: "Thursday",
+    get label() {
+      return translate("web.thursday");
+    },
   },
   {
     value: EStartOfTheWeek.FRIDAY,
-    label: "Friday",
+    get label() {
+      return translate("web.friday");
+    },
   },
   {
     value: EStartOfTheWeek.SATURDAY,
-    label: "Saturday",
+    get label() {
+      return translate("web.saturday");
+    },
   },
 ];

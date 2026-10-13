@@ -51,8 +51,7 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
         setToast({
           type: "error",
           title: t("toast.error"),
-          message:
-            "This state contains some work items within it, please move them to some other state to delete this state.",
+          message: t("web.this_state_contains_some_work_items_within_it_please_move_th"),
         });
       } else {
         setToast({
@@ -75,15 +74,20 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
         title={t("web.delete_state")}
         content={
           <>
-            Are you sure you want to delete state- <span className="font-medium text-primary">{state?.name}</span>? All
-            of the data related to the state will be permanently removed. This action cannot be undone.
+            {t("web.are_you_sure_you_want_to_delete_state")}{" "}
+            <span className="font-medium text-primary">{state?.name}</span>? All of the data related to the state will
+            be permanently removed. This action cannot be undone.
           </>
         }
       />
 
       <Tooltip
         label={
-          state.default ? "Cannot delete the default state." : totalStates === 1 ? `Cannot have an empty group.` : ``
+          state.default
+            ? t("web.cannot_delete_the_default_state")
+            : totalStates === 1
+              ? t("web.cannot_have_an_empty_group")
+              : ``
         }
         layout="stacked"
         disabled={!isDeleteDisabled || isMobile}

@@ -56,7 +56,7 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: errorStatus.data.error ?? "State could not be created. Please try again.",
+          message: errorStatus.data.error ?? translate("web.state_could_not_be_created_please_try_again"),
         });
         return { status: "error" };
       }
@@ -69,7 +69,7 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
       onSubmit={onSubmit}
       onCancel={onCancel}
       buttonDisabled={loader}
-      buttonTitle={loader ? `Creating` : `Create`}
+      buttonTitle={loader ? translate("web.creating") : translate("web.create")}
     />
   );
 });

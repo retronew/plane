@@ -124,7 +124,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
       setToast({
         title: translate("toast.error"),
         type: "error",
-        message: err?.detail ?? "Failed to perform this action",
+        message: err?.detail ?? translate("web.failed_to_perform_this_action"),
       });
     });
   };

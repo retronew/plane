@@ -226,7 +226,9 @@ export function CreateApiTokenForm(props: Props) {
                           the longest label here ("Set expiration date"). */}
                         <Select.Trigger variant="select-md" className="w-auto" prependIcon={<CalendarOutline />}>
                           <span className="min-w-0 grow truncate text-left">
-                            {value === "custom" ? "Custom date" : (selectedOption?.label ?? "Set expiration date")}
+                            {value === "custom"
+                              ? t("web.custom_date")
+                              : (selectedOption?.label ?? t("web.set_expiration_date"))}
                           </span>
                         </Select.Trigger>
                       </Select>
@@ -239,7 +241,7 @@ export function CreateApiTokenForm(props: Props) {
                     onChange={(date) => setCustomDate(date)}
                     minDate={tomorrow}
                     icon={<CalendarOutline />}
-                    placeholder="Set date"
+                    placeholder={t("web.set_date")}
                     disabled={neverExpires}
                     clearable
                     weekStartsOn={userProfile?.start_of_the_week}

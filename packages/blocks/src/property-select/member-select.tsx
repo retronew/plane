@@ -15,6 +15,7 @@ import { Select } from "../select/select";
 import type { SelectPaginationParams, SelectTooltip, SelectTriggerSize, SelectVariant } from "../select/types";
 import { splitSelectVariant } from "../select/utils";
 import { cn, getAvatarName } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 /** Minimal member shape the dropdown needs — the client maps its richer record down to this. */
 export type MemberOption = {
@@ -180,7 +181,8 @@ export function MemberSelect(props: MemberSelectProps) {
   const isSearchInput = kind === "search-input";
   // `search-input`'s box IS the trigger (no separate label), so `placeholder` doubles as its empty
   // text unless the caller sets a distinct `searchPlaceholder`.
-  const searchPlaceholder = searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? "Search members...";
+  const searchPlaceholder =
+    searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? translate("web.search_members");
 
   // Only `avatar-group-*` maps its size onto the face — every other variant keeps the `xs` trigger face it
   // always had, so this fix doesn't reflow `pill-lg`/`select-lg`'s existing chrome. It's also not a Select
@@ -206,7 +208,9 @@ export function MemberSelect(props: MemberSelectProps) {
   const selectedList = props.multiple ? props.value : props.value ? [props.value] : [];
   const selectedIds = new Set(selectedList.map((member) => member.id));
 
-  const clearLabel = !props.multiple ? (props.clearLabel ?? (placeholder || "No assignee")) : "No assignee";
+  const clearLabel = !props.multiple
+    ? (props.clearLabel ?? (placeholder || translate("web.no_assignee")))
+    : translate("web.no_assignee");
   const clearOption = useMemo<MemberOption>(
     () => ({ id: CLEAR_OPTION_ID, display_name: clearLabel, avatar_url: null }),
     [clearLabel]

@@ -107,15 +107,15 @@ export function ArchiveRestoreProjectModal(props: Props) {
           <DialogHeader>
             <DialogHeading>
               <DialogTitle>
-                {archive ? "Archive" : "Restore"} {projectDetails.name}
+                {archive ? translate("web.archive") : translate("web.restore")} {projectDetails.name}
               </DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody>
             <p className="text-13 text-secondary">
               {archive
-                ? "This project and its work items, cycles, modules, and pages will be archived. Its work items won't appear in search. Only project admins can restore the project."
-                : "Restoring a project will activate it and make it visible to all members of the project. Are you sure you want to continue?"}
+                ? translate("web.this_project_and_its_work_items_cycles_modules_and_pages_wil")
+                : translate("web.restoring_a_project_will_activate_it_and_make_it_visible_to")}
             </p>
           </DialogBody>
         </DialogMain>
@@ -125,7 +125,15 @@ export function ArchiveRestoreProjectModal(props: Props) {
             variant="primary"
             size="md"
             stretch="auto"
-            label={archive ? (isLoading ? "Archiving" : "Archive") : isLoading ? "Restoring" : "Restore"}
+            label={
+              archive
+                ? isLoading
+                  ? translate("web.archiving")
+                  : translate("web.archive")
+                : isLoading
+                  ? translate("web.restoring")
+                  : translate("web.restore")
+            }
             onClick={archive ? handleArchiveProject : handleRestoreProject}
             loading={isLoading}
           />

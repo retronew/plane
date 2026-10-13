@@ -67,8 +67,9 @@ export const DeleteLabelModal = observer(function DeleteLabelModal(props: Props)
       title={translate("web.delete_label")}
       content={
         <>
-          Are you sure you want to delete <span className="font-medium text-primary">{data?.name}</span>? This will
-          remove the label from all the work item and from any views where the label is being filtered upon.
+          {translate("web.are_you_sure_you_want_to_delete")}{" "}
+          <span className="font-medium text-primary">{data?.name}</span>? This will remove the label from all the work
+          item and from any views where the label is being filtered upon.
         </>
       }
     />

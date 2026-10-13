@@ -10,6 +10,7 @@ import { EQUALITY_OPERATOR, COLLECTION_OPERATOR } from "@plane/types";
 // local imports
 import type { TCreateFilterConfigParams, IFilterIconConfig, TCreateFilterConfig } from "../../../rich-filters";
 import { createFilterConfig, getMultiSelectConfig, createOperatorConfigEntry } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 /**
  * Module filter specific params
@@ -53,7 +54,7 @@ export const getModuleFilterConfig =
   (params: TCreateModuleFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Module",
+      label: translate("web.module"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

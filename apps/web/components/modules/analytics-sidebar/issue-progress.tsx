@@ -139,7 +139,7 @@ export const ModuleAnalyticsProgress = observer(function ModuleAnalyticsProgress
               <ProgressChart
                 distribution={completionChartDistributionData}
                 totalIssues={totalIssues}
-                plotTitle={"work items"}
+                plotTitle={t("web.work_items_2")}
               />
             )}
           </Fragment>

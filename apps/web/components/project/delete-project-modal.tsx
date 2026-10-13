@@ -116,8 +116,8 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">
-                    Enter the project name <span className="font-medium text-primary">{project?.name}</span> to
-                    continue:
+                    {translate("web.enter_the_project_name")}{" "}
+                    <span className="font-medium text-primary">{project?.name}</span> to continue:
                   </p>
                   <Controller
                     control={control}
@@ -143,7 +143,8 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                 </div>
                 <div className="text-secondary">
                   <p className="text-13">
-                    To confirm, type <span className="font-medium text-primary">delete my project</span> below:
+                    {translate("web.to_confirm_type")}{" "}
+                    <span className="font-medium text-primary">delete my project</span> below:
                   </p>
                   <Controller
                     control={control}
@@ -183,7 +184,7 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
               size="md"
               stretch="auto"
               type="submit"
-              label={isSubmitting ? "Deleting" : "Delete project"}
+              label={isSubmitting ? translate("web.deleting_2") : translate("web.delete_project")}
               disabled={!canDelete}
               loading={isSubmitting}
             />

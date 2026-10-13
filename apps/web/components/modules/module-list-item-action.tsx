@@ -124,7 +124,7 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
         setToast({
           type: "error",
           title: t("toast.error"),
-          message: err?.detail ?? "Module could not be updated. Please try again.",
+          message: err?.detail ?? t("web.module_could_not_be_updated_please_try_again"),
         });
       });
   };

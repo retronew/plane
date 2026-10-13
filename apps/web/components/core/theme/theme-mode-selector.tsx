@@ -21,7 +21,8 @@ export const CustomThemeModeSelector = observer(function CustomThemeModeSelector
   return (
     <div>
       <h6 className="text-h6-medium">
-        Choose color mode<span className="text-danger-primary">*</span>
+        {translate("web.choose_color_mode")}
+        <span className="text-danger-primary">*</span>
       </h6>
       <Controller
         control={control}

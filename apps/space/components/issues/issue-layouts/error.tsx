@@ -16,7 +16,7 @@ export function SomethingWentWrongError() {
           <div className="grid h-32 w-32 place-items-center">
             <img
               src={SomethingWentWrongImage}
-              alt="Oops! Something went wrong"
+              alt={translate("web.oops_something_went_wrong_2")}
               className="h-full w-full object-contain"
             />
           </div>

@@ -39,6 +39,7 @@ import {
 
 import { store } from "@/lib/store-context";
 import type { TProjectActivity } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 type ActivityIconMap = {
   [key: string]: FC<{ className?: string }>;
@@ -101,7 +102,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       };
     case "archived_at":
       return {
-        message: newValue === "restore" ? "restored the project" : "archived the project",
+        message: newValue === "restore" ? translate("web.restored_the_project") : translate("web.archived_the_project"),
         customUserName: newValue === "archive" ? "Plane" : undefined,
       };
     case "name":
@@ -114,7 +115,9 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       };
     case "description":
       return {
-        message: newValue ? "updated the project description" : "removed the project description",
+        message: newValue
+          ? translate("web.updated_the_project_description")
+          : translate("web.removed_the_project_description"),
       };
     case "start_date":
       return {
@@ -125,7 +128,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
                 set the start date to <span className="font-medium text-primary">{newValue}</span>
               </>
             ) : (
-              "removed the start date"
+              translate("web.removed_the_start_date")
             )}
           </>
         ),
@@ -139,7 +142,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
                 set the target date to <span className="font-medium text-primary">{newValue}</span>
               </>
             ) : (
-              "removed the target date"
+              translate("web.removed_the_target_date")
             )}
           </>
         ),
@@ -191,7 +194,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
                 {activity.new_value}
               </a>
             ) : (
-              <span className="font-medium text-primary">{activity.old_value || "Unknown cycle"}</span>
+              <span className="font-medium text-primary">{activity.old_value || translate("web.unknown_cycle")}</span>
             )}
           </>
         ),
@@ -204,7 +207,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
               {verb} this project {verb === "removed" ? "from" : "to"} the module{" "}
             </span>
             <span className="font-medium text-primary">
-              {verb === "removed" ? oldValue : newValue || "Unknown module"}
+              {verb === "removed" ? oldValue : newValue || translate("web.unknown_module")}
             </span>
           </>
         ),
@@ -214,7 +217,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
         message: (
           <>
             {verb} the label{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || "Untitled label"}</span>
+            <span className="font-medium text-primary">{newValue || oldValue || translate("web.untitled_label")}</span>
           </>
         ),
       };
@@ -227,7 +230,7 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
         message: (
           <>
             {newValue ? "created" : "removed"} the project page{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || "Untitled page"}</span>
+            <span className="font-medium text-primary">{newValue || oldValue || translate("web.untitled_page")}</span>
           </>
         ),
       };

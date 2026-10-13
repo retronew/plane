@@ -72,7 +72,7 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: err?.detail ?? "Error in creating cycle. Please try again.",
+          message: err?.detail ?? translate("web.error_in_creating_cycle_please_try_again"),
         });
       });
   };
@@ -94,7 +94,7 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: err?.detail ?? "Error in updating cycle. Please try again.",
+          message: err?.detail ?? translate("web.error_in_updating_cycle_please_try_again"),
         });
       });
   };

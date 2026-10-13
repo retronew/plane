@@ -60,7 +60,7 @@ export function IssueLinkRoot(props: TIssueLinkRoot) {
           toggleIssueLinkModal(false);
         } catch (error: any) {
           setToast({
-            message: error?.data?.error ?? "The link could not be created",
+            message: error?.data?.error ?? translate("web.the_link_could_not_be_created"),
             type: "error",
             title: translate("web.link_not_created"),
           });

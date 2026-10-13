@@ -32,13 +32,17 @@ export const UserLoggedIn = observer(function UserLoggedIn() {
         <div className="text-center">
           <div className="mx-auto grid size-32 place-items-center rounded-full bg-layer-1 md:size-52">
             <div className="grid size-16 place-items-center md:size-32">
-              <img src={UserLoggedInImage} alt="User already logged in" className="h-full w-full object-cover" />
+              <img
+                src={UserLoggedInImage}
+                alt={translate("web.user_already_logged_in")}
+                className="h-full w-full object-cover"
+              />
             </div>
           </div>
           <h1 className="mt-8 text-18 font-semibold md:mt-12 md:text-24">{translate("web.nice_just_one_more_step")}</h1>
           <p className="mt-2 text-13 md:mt-4 md:text-14">
-            Enter the public-share URL or link of the view or Page you are trying to see in the browser{"'"}s address
-            bar.
+            {translate("web.enter_the_public_share_url_or_link_of_the_view_or_page_you_a")}
+            {"'"}s address bar.
           </p>
         </div>
       </div>

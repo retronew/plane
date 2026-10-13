@@ -6,6 +6,7 @@
 
 // helpers
 import { EAuthModes } from "@/types/auth";
+import { translate } from "@plane/i18n";
 
 type TAuthHeader = {
   authMode: EAuthModes;
@@ -22,11 +23,15 @@ type TAuthHeaderDetails = {
 
 const Titles: TAuthHeaderDetails = {
   [EAuthModes.SIGN_IN]: {
-    header: "Sign in to upvote or comment",
+    get header() {
+      return translate("web.sign_in_to_upvote_or_comment");
+    },
     subHeader: "Contribute in nudging the features you want to get built.",
   },
   [EAuthModes.SIGN_UP]: {
-    header: "View, comment, and do more",
+    get header() {
+      return translate("web.view_comment_and_do_more");
+    },
     subHeader: "Sign up or log in to work with Plane work items and Pages.",
   },
 };
@@ -40,7 +45,7 @@ export function AuthHeader(props: TAuthHeader) {
     }
 
     return {
-      header: "Comment or react to work items",
+      header: translate("web.comment_or_react_to_work_items"),
       subHeader: "Use plane to add your valuable inputs to features.",
     };
   };

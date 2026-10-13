@@ -168,7 +168,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         }
         setToast({
           type: "success",
-          title: `Success!`,
+          title: t("web.success_2"),
           message: t("web.work_item_created_successfully"),
         });
       })
@@ -176,7 +176,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         console.error(error);
         setToast({
           type: "error",
-          title: `Error!`,
+          title: t("web.error_2"),
           message: t("web.some_error_occurred_please_try_again"),
         });
       });

@@ -10,6 +10,7 @@ import { AttachOutline } from "@makeplane/propel/icons";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
+import { translate } from "@plane/i18n";
 
 type TIssueAttachmentActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
@@ -30,7 +31,9 @@ export const IssueAttachmentActivity = observer(function IssueAttachmentActivity
       ends={ends}
     >
       <>
-        {activity.verb === "created" ? `uploaded a new attachment` : `removed an attachment`}
+        {activity.verb === "created"
+          ? translate("web.uploaded_a_new_attachment")
+          : translate("web.removed_an_attachment")}
         {showIssue && (activity.verb === "created" ? ` to ` : ` from `)}
         {showIssue && <IssueLink activityId={activityId} />}.
       </>

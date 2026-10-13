@@ -14,6 +14,7 @@ import type { ChartYAxisMetric } from "@plane/types";
 import { Select } from "@plane/blocks/select";
 // hooks
 import { useProjectEstimates } from "@/hooks/store/estimates";
+import { translate } from "@plane/i18n";
 // plane web constants
 type YAxisOption = { value: ChartYAxisMetric; label: string };
 
@@ -67,7 +68,7 @@ export const SelectYAxis = observer(function SelectYAxis({ value, onChange, hidd
       <Select.Trigger variant="select-md" className="w-auto">
         <div className="flex items-center gap-2">
           <ProjectsOutline className="h-3 w-3" />
-          <span>{selected?.label ?? "Add Metric"}</span>
+          <span>{selected?.label ?? translate("web.add_metric")}</span>
         </div>
       </Select.Trigger>
     </Select>

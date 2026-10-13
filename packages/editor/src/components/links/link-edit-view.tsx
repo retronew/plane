@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { LinkViewProps, LinkViews } from "@/components/links";
 // helpers
 import { isValidHttpUrl } from "@/helpers/common";
+import { translate } from "@plane/i18n";
 
 type InputViewProps = {
   label: string;
@@ -30,6 +31,7 @@ function InputView({ label, value, placeholder, onChange, autoFocus }: InputView
         className="w-[280px] rounded-md border border-strong bg-layer-1 p-2 text-13 text-primary outline-none"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the input as soon as the link editor opens
         autoFocus={autoFocus}
       />
     </div>
@@ -136,6 +138,7 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
   );
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc
     <div
       onKeyDown={handleKeyDown}
       className="shadow-md animate-in fade-in flex translate-y-1 flex-col gap-3 rounded-sm border-2 border-subtle bg-layer-1 p-2"
@@ -144,13 +147,25 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
       }}
       tabIndex={0}
     >
-      <InputView label="URL" placeholder="Enter or paste URL" value={localUrl} onChange={setLocalUrl} autoFocus />
-      <InputView label="Text" placeholder="Enter Text to display" value={localText} onChange={handleTextChange} />
+      <InputView
+        label="URL"
+        placeholder={translate("web.enter_or_paste_url")}
+        value={localUrl}
+        onChange={setLocalUrl}
+        // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the input as soon as the link editor opens
+        autoFocus
+      />
+      <InputView
+        label={translate("web.text")}
+        placeholder={translate("web.enter_text_to_display")}
+        value={localText}
+        onChange={handleTextChange}
+      />
       <div className="bg-strong mb-1 h-[1px] w-full gap-2" />
       <div className="flex items-center gap-2 text-13 text-secondary">
         <UnlinkOutline width={14} height={14} className="inline-block" />
         <button onClick={removeLink} className="cursor-pointer transition-colors hover:text-placeholder">
-          Remove Link
+          {translate("web.remove_link")}
         </button>
       </div>
     </div>

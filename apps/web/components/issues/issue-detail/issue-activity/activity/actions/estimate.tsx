@@ -10,6 +10,7 @@ import { EstimateOutline } from "@makeplane/propel/icons";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
+import { translate } from "@plane/i18n";
 
 type TIssueEstimateActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
@@ -31,7 +32,7 @@ export const IssueEstimateActivity = observer(function IssueEstimateActivity(pro
       ends={ends}
     >
       <>
-        {activity.new_value ? `set the estimate point to ` : `removed the estimate point`}
+        {activity.new_value ? translate("web.set_the_estimate_point_to") : translate("web.removed_the_estimate_point")}
         {activity.new_value ? activity.new_value : activity?.old_value}
         {showIssue && (activity.new_value ? ` to ` : ` from `)}
         {showIssue && <IssueLink activityId={activityId} />}.

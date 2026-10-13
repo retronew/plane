@@ -17,6 +17,7 @@ import { isValidHttpUrl } from "@/helpers/common";
 import { setLinkEditor, unsetLinkEditor } from "@/helpers/editor-commands";
 import { FloatingMenuRoot } from "../floating-menu/root";
 import { useFloatingMenu } from "../floating-menu/use-floating-menu";
+import { translate } from "@plane/i18n";
 
 type Props = {
   editor: Editor;
@@ -63,7 +64,7 @@ export function BubbleMenuLinkSelector(props: Props) {
       getReferenceProps={getReferenceProps}
       menuButton={
         <>
-          Link
+          {translate("web.link")}
           <LinkOutline className="size-3 shrink-0" />
         </>
       }
@@ -78,7 +79,7 @@ export function BubbleMenuLinkSelector(props: Props) {
           <input
             ref={inputRef}
             type="url"
-            placeholder="Enter or paste a link"
+            placeholder={translate("web.enter_or_paste_a_link")}
             onClick={(e) => e.stopPropagation()}
             className="flex-1 rounded-sm border-r-[0.5px] border-strong bg-surface-1 px-1.5 py-2 text-11 outline-none placeholder:text-placeholder"
             defaultValue={editor.getAttributes("link").href || ""}
@@ -90,6 +91,7 @@ export function BubbleMenuLinkSelector(props: Props) {
               }
             }}
             onFocus={() => setError(false)}
+            // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the input as soon as the link editor opens
             autoFocus
           />
           {editor.getAttributes("link").href ? (
@@ -119,7 +121,7 @@ export function BubbleMenuLinkSelector(props: Props) {
         </div>
         {error && (
           <p className="animate-in fade-in slide-in-from-top-0 pointer-events-none my-1 px-2 text-11 text-danger-primary">
-            Please enter a valid URL
+            {translate("web.please_enter_a_valid_url")}
           </p>
         )}
       </div>

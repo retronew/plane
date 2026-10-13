@@ -468,7 +468,7 @@
           "projects": "访问项目及所有项目相关实体",
           "wiki": "访问 Wiki 及所有 Wiki 相关实体",
           "workspaces": "访问工作区及所有工作区相关实体",
-          "stickies": "访问 Sticky 及所有 Sticky 相关实体",
+          "stickies": "访问便签及所有便签相关实体",
           "profile": "访问用户资料信息",
           "agents": "访问智能体及所有智能体相关实体",
           "assets": "访问资源文件及所有资源相关实体"

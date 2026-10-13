@@ -13,6 +13,7 @@ import { DragHandle } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { translate } from "@plane/i18n";
 
 type Props = {
   sort_order: number | null;
@@ -26,7 +27,7 @@ export const FavoriteItemDragHandle = observer(function FavoriteItemDragHandle(p
 
   return (
     <Tooltip
-      label={sort_order === null ? "Join the project to rearrange" : "Drag to rearrange"}
+      label={sort_order === null ? translate("web.join_the_project_to_rearrange") : translate("web.drag_to_rearrange")}
       align="end"
       disabled={isDragging || isMobile}
     >

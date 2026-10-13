@@ -52,7 +52,8 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
     ? availableConfigs.filter((config) => config.label.toLowerCase().includes(normalizedQuery))
     : availableConfigs;
   // Every filter already applied reads differently from a search that matched nothing.
-  const emptyLabel = availableConfigs.length === 0 ? "All filters applied" : t("common.search.no_matching_results");
+  const emptyLabel =
+    availableConfigs.length === 0 ? t("web.all_filters_applied") : t("common.search.no_matching_results");
 
   const handleFilterSelect = (property: P) => {
     const config = filter.configManager.getConfigByProperty(property);

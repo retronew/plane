@@ -86,7 +86,7 @@ export const FilterMembers = observer(function FilterMembers(props: Props) {
                           size="xs"
                         />
                       }
-                      title={currentUser?.id === member.id ? "You" : member?.display_name}
+                      title={currentUser?.id === member.id ? translate("web.you") : member?.display_name}
                     />
                   );
                 })}
@@ -96,7 +96,7 @@ export const FilterMembers = observer(function FilterMembers(props: Props) {
                     className="ml-8 text-11 font-medium text-accent-primary"
                     onClick={handleViewToggle}
                   >
-                    {itemsToRender === sortedOptions.length ? "View less" : "View all"}
+                    {itemsToRender === sortedOptions.length ? translate("web.view_less") : translate("web.view_all")}
                   </button>
                 )}
               </>

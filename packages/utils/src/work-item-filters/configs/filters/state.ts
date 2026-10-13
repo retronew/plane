@@ -11,6 +11,7 @@ import { COLLECTION_OPERATOR, EQUALITY_OPERATOR } from "@plane/types";
 // local imports
 import type { IFilterIconConfig, TCreateFilterConfig, TCreateFilterConfigParams } from "../../../rich-filters";
 import { createFilterConfig, getMultiSelectConfig, createOperatorConfigEntry } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 // ------------ State group filter ------------
 
@@ -56,7 +57,7 @@ export const getStateGroupFilterConfig =
   (params: TCreateStateGroupFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "State Group",
+      label: translate("web.state_group_2"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([
@@ -110,7 +111,7 @@ export const getStateFilterConfig =
   (params: TCreateStateFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "State",
+      label: translate("web.state"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

@@ -12,6 +12,7 @@ import type {
   TIssue,
   EIssuesStoreType,
 } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export const ALL_ISSUES = "All Issues";
 
@@ -33,9 +34,9 @@ export enum EIssueGroupByToServerOptions {
   "cycle" = "cycle_id",
   "module" = "issue_module__module_id",
   "target_date" = "target_date",
+  // oxlint-disable-next-line typescript/no-duplicate-enum-values -- team_project intentionally aliases the project_id group key
   "project" = "project_id",
   "created_by" = "created_by",
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   "team_project" = "project_id",
 }
 
@@ -70,23 +71,33 @@ export const ISSUE_PRIORITIES: {
 }[] = [
   {
     key: "urgent",
-    title: "Urgent",
+    get title() {
+      return translate("web.urgent");
+    },
   },
   {
     key: "high",
-    title: "High",
+    get title() {
+      return translate("web.high");
+    },
   },
   {
     key: "medium",
-    title: "Medium",
+    get title() {
+      return translate("web.medium");
+    },
   },
   {
     key: "low",
-    title: "Low",
+    get title() {
+      return translate("web.low");
+    },
   },
   {
     key: "none",
-    title: "None",
+    get title() {
+      return translate("web.none");
+    },
   },
 ];
 

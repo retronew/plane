@@ -68,13 +68,12 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
   const hasMoreProjects =
     projectPreferences.showLimitedProjects && joinedProjects.length > projectPreferences.limitedProjectsCount;
 
-  const handleCopyText = (projectId: string) => {
-    copyUrlToClipboard(`${workspaceSlug}/projects/${projectId}/issues`).then(() => {
-      setToast({
-        type: "success",
-        title: t("link_copied"),
-        message: t("project_link_copied_to_clipboard"),
-      });
+  const handleCopyText = async (projectId: string) => {
+    await copyUrlToClipboard(`${workspaceSlug}/projects/${projectId}/issues`);
+    setToast({
+      type: "success",
+      title: t("link_copied"),
+      message: t("project_link_copied_to_clipboard"),
     });
   };
 
@@ -230,7 +229,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
                     )}
                   >
                     <MoreHorizontalOutline className="size-4 flex-shrink-0" />
-                    <span>{isExtendedProjectSidebarOpened ? "Hide" : "More"}</span>
+                    <span>{isExtendedProjectSidebarOpened ? t("web.hide") : t("web.more")}</span>
                   </button>
                 </SidebarNavItem>
               )}

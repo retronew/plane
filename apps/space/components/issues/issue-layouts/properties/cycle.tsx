@@ -12,6 +12,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 //hooks
 import { useCycle } from "@/hooks/store/use-cycle";
+import { translate } from "@plane/i18n";
 
 type Props = {
   cycleId: string | undefined;
@@ -33,7 +34,7 @@ export const IssueBlockCycle = observer(function IssueBlockCycle({ cycleId, shou
       >
         <div className="flex w-full items-center gap-1.5 text-11">
           <CyclesOutline className="h-3 w-3 flex-shrink-0" />
-          <div className="max-w-40 truncate">{cycle?.name ?? "No Cycle"}</div>
+          <div className="max-w-40 truncate">{cycle?.name ?? translate("web.no_cycle")}</div>
         </div>
       </div>
     </Tooltip>

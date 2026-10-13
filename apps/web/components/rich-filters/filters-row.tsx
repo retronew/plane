@@ -19,6 +19,7 @@ import type { TAddFilterButtonProps } from "./add-filters/button";
 import { AddFilterButton } from "./add-filters/button";
 import { FilterItem } from "./filter-item/root";
 import { ElementTransition, RowTransition } from "./transition-components";
+import { translate } from "@plane/i18n";
 
 export type TFiltersRowProps<K extends TFilterProperty, E extends TExternalFilter> = {
   buttonConfig?: TAddFilterButtonProps<K, E>["buttonConfig"];
@@ -44,7 +45,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
   };
 
   const modalButtonConfig: Partial<TAddFilterButtonProps<K, E>["buttonConfig"]> = {
-    label: !hasAnyConditions ? "Filters" : null,
+    label: !hasAnyConditions ? translate("web.filters") : null,
   };
 
   const handleUpdate = useCallback(async () => {
@@ -85,7 +86,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
           variant="secondary"
           size="sm"
           stretch="auto"
-          label={filter.clearFilterOptions?.label ?? "Clear all"}
+          label={filter.clearFilterOptions?.label ?? translate("web.clear_all")}
           onClick={filter.clearFilters}
         />
       </ElementTransition>
@@ -94,7 +95,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
           variant="secondary"
           size="sm"
           stretch="auto"
-          label={filter.saveViewOptions?.label ?? "Save view"}
+          label={filter.saveViewOptions?.label ?? translate("web.save_view")}
           onClick={filter.saveView}
         />
       </ElementTransition>
@@ -103,7 +104,9 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
           variant="secondary"
           size="sm"
           stretch="auto"
-          label={isUpdating ? "Confirming" : (filter.updateViewOptions?.label ?? "Update view")}
+          label={
+            isUpdating ? translate("web.confirming") : (filter.updateViewOptions?.label ?? translate("web.update_view"))
+          }
           onClick={handleUpdate}
           loading={isUpdating}
           disabled={isUpdating}

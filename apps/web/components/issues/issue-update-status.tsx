@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import { RefreshOutline } from "@makeplane/propel/icons";
 // types
 import type { TNameDescriptionLoader } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 type Props = {
   isSubmitting: TNameDescriptionLoader;
@@ -27,7 +28,9 @@ export const NameDescriptionUpdateStatus = observer(function NameDescriptionUpda
         {isSubmitting !== "submitted" && isSubmitting !== "saved" && (
           <RefreshOutline className="size-3.5 animate-spin text-tertiary" />
         )}
-        <span className="text-13 text-tertiary">{isSubmitting === "submitting" ? "Saving..." : "Saved"}</span>
+        <span className="text-13 text-tertiary">
+          {isSubmitting === "submitting" ? translate("web.saving_2") : translate("web.saved")}
+        </span>
       </div>
     </>
   );

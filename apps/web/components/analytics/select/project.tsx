@@ -13,6 +13,7 @@ import { ProjectsOutline } from "@makeplane/propel/icons";
 import type { TLogoProps } from "@plane/types";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
+import { translate } from "@plane/i18n";
 
 type ProjectOption = {
   id: string;
@@ -85,7 +86,7 @@ export const ProjectSelect = observer(function ProjectSelect(props: Props) {
               ? `3+ projects`
               : selectedOptions.length > 0
                 ? selectedOptions.map((option) => option.name).join(", ")
-                : "All projects"}
+                : translate("web.all_projects")}
           </span>
         )}
       </Select.Trigger>

@@ -164,11 +164,11 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
             <DialogBody tabIndex={0}>
               <div className="flex flex-col gap-3 md:!flex-row md:items-center">
                 <div className="flex-1 pb-3 md:pb-0">
-                  <h6 className="mb-2 block text-body-xs-medium text-placeholder">Pick a date</h6>
+                  <h6 className="mb-2 block text-body-xs-medium text-placeholder">{t("web.pick_a_date")}</h6>
                   <Controller
                     name="date"
                     control={control}
-                    rules={{ required: "Please select a date" }}
+                    rules={{ required: t("web.please_select_a_date") }}
                     render={({ field: { value, onChange } }) => (
                       <DateSelect
                         value={value ?? null}
@@ -186,11 +186,11 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                   />
                 </div>
                 <div className="flex-1">
-                  <h6 className="mb-2 block text-body-xs-medium text-placeholder">Pick a time</h6>
+                  <h6 className="mb-2 block text-body-xs-medium text-placeholder">{t("web.pick_a_time")}</h6>
                   <Controller
                     control={control}
                     name="time"
-                    rules={{ required: "Please select a time" }}
+                    rules={{ required: t("web.please_select_a_time") }}
                     render={({ field: { value, onChange } }) => (
                       <Select<TTimeOption>
                         value={timeStamps.find((option) => option.value === value) ?? null}
@@ -261,7 +261,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
               size="md"
               stretch="auto"
               type="submit"
-              label={isSubmitting ? "Submitting..." : "Submit"}
+              label={isSubmitting ? t("web.submitting") : t("web.submit")}
               loading={isSubmitting}
             />
           </DialogActions>

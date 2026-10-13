@@ -11,6 +11,7 @@ import { renderFormattedDate } from "@plane/utils";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
+import { translate } from "@plane/i18n";
 // helpers
 
 type TIssueTargetDateActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
@@ -32,7 +33,7 @@ export const IssueTargetDateActivity = observer(function IssueTargetDateActivity
       ends={ends}
     >
       <>
-        {activity.new_value ? `set the due date to ` : `removed the due date `}
+        {activity.new_value ? translate("web.set_the_due_date_to") : translate("web.removed_the_due_date")}
         {activity.new_value && (
           <>
             <span className="font-medium text-primary">{renderFormattedDate(activity.new_value)}</span>

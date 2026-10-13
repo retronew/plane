@@ -25,6 +25,7 @@ import { ButtonAvatars } from "../dropdowns/member/avatar";
 import { DeleteProjectViewModal } from "./delete-view-modal";
 import { CreateUpdateProjectViewModal } from "./modal";
 import { ViewQuickActions } from "./quick-actions";
+import { translate } from "@plane/i18n";
 
 type Props = {
   parentRef: React.RefObject<HTMLElement | null>;
@@ -90,7 +91,7 @@ export const ViewListItemAction = observer(function ViewListItemAction(props: Pr
       )}
       <DeleteProjectViewModal data={view} isOpen={deleteViewModal} onClose={() => setDeleteViewModal(false)} />
       <div className="cursor-default text-tertiary">
-        <Tooltip label={access === EViewAccess.PUBLIC ? "Public" : "Private"}>
+        <Tooltip label={access === EViewAccess.PUBLIC ? translate("web.public") : translate("web.private")}>
           {access === EViewAccess.PUBLIC ? <GlobeOutline className="h-4 w-4" /> : <LockOutline className="h-4 w-4" />}
         </Tooltip>
       </div>
@@ -102,7 +103,7 @@ export const ViewListItemAction = observer(function ViewListItemAction(props: Pr
           onClick={() => setPublishModalOpen(true)}
         >
           <span className="size-1.5 flex-shrink-0 rounded-full bg-success-primary" />
-          Live
+          {translate("web.live")}
         </div>
       ) : (
         <></>

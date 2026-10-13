@@ -93,7 +93,7 @@ export function IconRoot(props: IconRootProps) {
                 }}
               />
               <span id={hexLabelId} className="flex-shrink-0 text-caption-sm-regular text-tertiary">
-                HEX
+                {t("web.hex")}
               </span>
               <span className="-mr-1 flex-shrink-0 text-caption-sm-regular text-secondary">#</span>
               <input

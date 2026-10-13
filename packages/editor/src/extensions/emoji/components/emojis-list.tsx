@@ -10,6 +10,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 // plane imports
 import { useOutsideClickDetector } from "@plane/hooks";
 import { cn } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 export type EmojiItem = {
   name: string;
@@ -127,6 +128,7 @@ export const EmojisListDropdown = forwardRef(function EmojisListDropdown(
         }}
         lockScroll
       />
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc */}
       <div
         ref={dropdownContainerRef}
         className={cn(
@@ -172,7 +174,7 @@ export const EmojisListDropdown = forwardRef(function EmojisListDropdown(
             );
           })
         ) : (
-          <div className="py-2 text-center text-13 text-placeholder">No emojis found</div>
+          <div className="py-2 text-center text-13 text-placeholder">{translate("web.no_emojis_found")}</div>
         )}
       </div>
     </>

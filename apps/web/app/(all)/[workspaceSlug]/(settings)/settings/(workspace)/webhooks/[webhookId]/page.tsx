@@ -73,7 +73,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
       setToast({
         type: "error",
         title: translate("toast.error"),
-        message: error?.error ?? "Something went wrong. Please try again.",
+        message: error?.error ?? translate("web.something_went_wrong_please_try_again"),
       });
     }
   };

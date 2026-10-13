@@ -69,7 +69,7 @@ export function IssueLink({ activity }: { activity: IIssueActivity }) {
         </a>
       ) : (
         <span className="inline-flex items-center gap-1 font-medium whitespace-nowrap text-primary">
-          {" a work item"}{" "}
+          {translate("web.a_work_item")}{" "}
         </span>
       )}
     </Tooltip>
@@ -143,7 +143,7 @@ const getInboxUserActivityMessage = (activity: IIssueActivity, showIssue: boolea
     case "2":
       return showIssue ? inboxActivityMessage.markedDuplicate.showIssue : inboxActivityMessage.markedDuplicate.noIssue;
     default:
-      return "updated intake work item status.";
+      return translate("web.updated_intake_work_item_status");
   }
 };
 
@@ -425,7 +425,7 @@ const activityDetails: {
         return (
           <>
             <span className="flex-shrink-0">
-              added {showIssue ? <IssueLink activity={activity} /> : "this work item"}{" "}
+              added {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")}{" "}
               <span className="whitespace-nowrap">to the cycle</span>{" "}
             </span>
             <a
@@ -474,7 +474,7 @@ const activityDetails: {
       if (activity.verb === "created")
         return (
           <>
-            added {showIssue ? <IssueLink activity={activity} /> : "this work item"} to the module{" "}
+            added {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} to the module{" "}
             <a
               href={`/${workspaceSlug}/projects/${activity.project}/modules/${activity.new_identifier}`}
               target="_blank"
@@ -564,7 +564,7 @@ const activityDetails: {
       <>
         set the priority to{" "}
         <span className="font-medium text-primary">
-          {activity.new_value ? capitalizeFirstLetter(activity.new_value) : "None"}
+          {activity.new_value ? capitalizeFirstLetter(activity.new_value) : translate("web.none")}
         </span>
         {showIssue && (
           <>
@@ -581,7 +581,7 @@ const activityDetails: {
       if (activity.old_value === "")
         return (
           <>
-            marked that {showIssue ? <IssueLink activity={activity} /> : "this work item"} relates to{" "}
+            marked that {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} relates to{" "}
             <span className="font-medium whitespace-nowrap text-primary">{activity.new_value}</span>.
           </>
         );
@@ -600,8 +600,8 @@ const activityDetails: {
       if (activity.old_value === "")
         return (
           <>
-            marked {showIssue ? <IssueLink activity={activity} /> : "this work item"} is blocking work item{" "}
-            <span className="font-medium whitespace-nowrap text-primary">{activity.new_value}</span>.
+            marked {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} is blocking work
+            item <span className="font-medium whitespace-nowrap text-primary">{activity.new_value}</span>.
           </>
         );
       else
@@ -619,15 +619,15 @@ const activityDetails: {
       if (activity.old_value === "")
         return (
           <>
-            marked {showIssue ? <IssueLink activity={activity} /> : "this work item"} is being blocked by{" "}
+            marked {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} is being blocked by{" "}
             <span className="font-medium whitespace-nowrap text-primary">{activity.new_value}</span>.
           </>
         );
       else
         return (
           <>
-            removed {showIssue ? <IssueLink activity={activity} /> : "this work item"} being blocked by work item{" "}
-            <span className="font-medium whitespace-nowrap text-primary">{activity.old_value}</span>.
+            removed {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} being blocked by
+            work item <span className="font-medium whitespace-nowrap text-primary">{activity.old_value}</span>.
           </>
         );
     },
@@ -638,14 +638,14 @@ const activityDetails: {
       if (activity.old_value === "")
         return (
           <>
-            marked {showIssue ? <IssueLink activity={activity} /> : "this work item"} as duplicate of{" "}
+            marked {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} as duplicate of{" "}
             <span className="font-medium whitespace-nowrap text-primary">{activity.new_value}</span>.
           </>
         );
       else
         return (
           <>
-            removed {showIssue ? <IssueLink activity={activity} /> : "this work item"} as a duplicate of{" "}
+            removed {showIssue ? <IssueLink activity={activity} /> : translate("web.this_work_item")} as a duplicate of{" "}
             <span className="font-medium whitespace-nowrap text-primary">{activity.old_value}</span>.
           </>
         );
@@ -739,7 +739,7 @@ const activityDetails: {
             <IssueLink activity={activity} />
           </>
         )}
-        {activity.verb === "2" && ` from intake by marking a duplicate work item.`}
+        {activity.verb === "2" && translate("web.from_intake_by_marking_a_duplicate_work_item")}
       </>
     ),
     icon: <IntakeOutline className="size-3 text-secondary" aria-hidden="true" />,

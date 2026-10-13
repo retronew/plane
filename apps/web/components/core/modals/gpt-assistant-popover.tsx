@@ -91,8 +91,8 @@ export function GptAssistantPopover(props: Props) {
     const error = err?.data?.error;
     const errorMessage =
       err?.status === 429
-        ? error || "You have reached the maximum number of requests of 50 requests per month per user."
-        : error || "Some error occurred. Please try again.";
+        ? error || translate("web.you_have_reached_the_maximum_number_of_requests_of_50_reques")
+        : error || translate("web.some_error_occurred_please_try_again");
 
     setToast({
       type: "error",
@@ -184,10 +184,10 @@ export function GptAssistantPopover(props: Props) {
   );
 
   const generateResponseButtonText = isSubmitting
-    ? "Generating response..."
+    ? translate("web.generating_response")
     : response === ""
-      ? "Generate response"
-      : "Generate again";
+      ? translate("web.generate_response")
+      : translate("web.generate_again");
 
   return (
     <div className="relative w-min text-left">
@@ -218,7 +218,7 @@ export function GptAssistantPopover(props: Props) {
               <div className="vertical-scroll-enable max-h-72 space-y-4 overflow-y-auto">
                 {prompt && (
                   <div className="text-13">
-                    Content:
+                    {translate("web.content")}
                     <RichTextEditor
                       editable={false}
                       id="ai-assistant-content"
@@ -233,7 +233,7 @@ export function GptAssistantPopover(props: Props) {
                 )}
                 {response !== "" && (
                   <div className="page-block-section max-h-[8rem] text-13">
-                    Response:
+                    {translate("web.response")}
                     <RichTextEditor
                       editable={false}
                       id="ai-assistant-response"

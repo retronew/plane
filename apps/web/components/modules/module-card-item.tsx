@@ -134,7 +134,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: err?.detail ?? "Module could not be updated. Please try again.",
+          message: err?.detail ?? translate("web.module_could_not_be_updated_please_try_again"),
         });
       });
   };

@@ -97,7 +97,7 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
           control={control}
           name="use_case"
           rules={{
-            required: "Please select at least one option",
+            required: translate("web.please_select_at_least_one_option"),
             validate: (value) => (value && value.length > 0) || "Please select at least one option",
           }}
           render={({ field: { value, onChange } }) => (

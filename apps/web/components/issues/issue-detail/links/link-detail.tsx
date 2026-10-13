@@ -113,7 +113,7 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
 
         <div className="px-5">
           <p className="mt-0.5 stroke-[1.5] text-11 text-tertiary">
-            Added {calculateTimeAgo(linkDetail.created_at)}
+            {translate("web.added")} {calculateTimeAgo(linkDetail.created_at)}
             <br />
             {createdByDetails && (
               <>

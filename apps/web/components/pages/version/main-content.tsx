@@ -114,7 +114,7 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
               <h6 className="text-14 font-medium">
                 {versionDetails
                   ? `${renderFormattedDate(versionDetails.last_saved_at)} ${renderFormattedTime(versionDetails.last_saved_at)}`
-                  : "Loading version details"}
+                  : translate("web.loading_version_details")}
               </h6>
               <span className="flex flex-shrink-0 items-center gap-1 rounded-sm bg-accent-primary/20 px-1.5 py-1 text-11 font-medium text-accent-primary">
                 <ShowOutline className="size-3 flex-shrink-0" />
@@ -126,7 +126,7 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
                 variant="primary"
                 size="sm"
                 stretch="auto"
-                label={isRestoring ? "Restoring" : "Restore"}
+                label={isRestoring ? translate("web.restoring") : translate("web.restore")}
                 onClick={() => void handleRestoreVersion()}
                 loading={isRestoring}
               />

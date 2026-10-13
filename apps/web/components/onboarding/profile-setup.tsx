@@ -306,7 +306,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     control={control}
                     name="first_name"
                     rules={{
-                      required: "First name is required",
+                      required: t("web.first_name_is_required"),
                       validate: validatePersonName,
                       maxLength: {
                         value: 50,
@@ -348,7 +348,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     control={control}
                     name="last_name"
                     rules={{
-                      required: "Last name is required",
+                      required: t("web.last_name_is_required"),
                       validate: validatePersonName,
                       maxLength: {
                         value: 50,
@@ -487,7 +487,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   control={control}
                   name="role"
                   rules={{
-                    required: "This field is required",
+                    required: t("web.this_field_is_required"),
                   }}
                   render={({ field: { value, onChange } }) => (
                     <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
@@ -523,7 +523,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   control={control}
                   name="use_case"
                   rules={{
-                    required: "Please select at least one option",
+                    required: t("web.please_select_at_least_one_option"),
                     validate: (value) => (value && value.length > 0) || "Please select at least one option",
                   }}
                   render={({ field: { value, onChange } }) => (
@@ -558,7 +558,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
             </>
           )}
           <Button variant="primary" type="submit" size="lg" stretch="full" disabled={isButtonDisabled}>
-            {isSubmitting ? <Spinner height="20px" width="20px" /> : "Continue"}
+            {isSubmitting ? <Spinner height="20px" width="20px" /> : t("web.continue")}
           </Button>
         </form>
       </div>

@@ -20,6 +20,7 @@ import { useUploader, useDropZone, uploadFirstFileAndInsertRemaining } from "@/h
 import { ECustomImageStatus } from "../types";
 import { getImageComponentImageFileMap } from "../utils";
 import type { CustomImageNodeViewProps } from "./node-view";
+import { translate } from "@plane/i18n";
 
 type CustomImageUploaderProps = CustomImageNodeViewProps & {
   failedToLoadImage: boolean;
@@ -209,6 +210,7 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
   );
 
   return (
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc
     <div
       className={cn(
         "image-upload-component flex cursor-default items-center justify-start gap-2 rounded-lg border border-dashed bg-layer-3 px-2 py-3 text-tertiary transition-all duration-200 ease-in-out",
@@ -247,10 +249,10 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
               "hover:bg-danger-subtle-hover": selected,
             }
           )}
-          title="Retry duplication"
+          title={translate("web.retry_duplication")}
         >
           <RefreshOutline className="size-3" />
-          <span className="text-11">Retry</span>
+          <span className="text-11">{translate("web.retry")}</span>
         </button>
       )}
       <input

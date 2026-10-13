@@ -10,6 +10,7 @@ import { EQUALITY_OPERATOR, COLLECTION_OPERATOR } from "@plane/types";
 // local imports
 import type { TCreateFilterConfigParams, IFilterIconConfig, TCreateFilterConfig } from "../../../rich-filters";
 import { createFilterConfig, getMultiSelectConfig, createOperatorConfigEntry } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 /**
  * Label filter specific params
@@ -53,7 +54,7 @@ export const getLabelFilterConfig =
   (params: TCreateLabelFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Label",
+      label: translate("web.label"),
       ...params,
       icon: params.filterIcon,
       supportedOperatorConfigsMap: new Map([

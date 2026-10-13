@@ -16,6 +16,7 @@ import { cn } from "@plane/utils";
 import { DROPDOWN_NAVIGATION_KEYS, getNextValidIndex } from "@/helpers/tippy";
 // types
 import type { TMentionHandler, TMentionSection, TMentionSuggestion } from "@/types";
+import { translate } from "@plane/i18n";
 
 export type MentionsListDropdownProps = SuggestionProps<TMentionSection, TMentionSuggestion> &
   Pick<TMentionHandler, "searchCallback"> & {
@@ -83,6 +84,7 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
   }, [sections]);
 
   // debounced search callback
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- debounced callback is intentionally created once
   const debouncedSearchCallback = useCallback(
     debounce(async (searchQuery: string) => {
       try {
@@ -144,6 +146,7 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
         }}
         lockScroll
       />
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc */}
       <div
         ref={dropdownContainer}
         className="relative max-h-80 w-[14rem] space-y-2 overflow-y-auto rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200"
@@ -158,7 +161,7 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
         }}
       >
         {isLoading ? (
-          <div className="text-center text-13 text-placeholder">Loading...</div>
+          <div className="text-center text-13 text-placeholder">{translate("web.loading")}</div>
         ) : sections.length ? (
           sections.map((section, sectionIndex) => (
             <div key={section.key} className="space-y-2">
@@ -200,7 +203,7 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
             </div>
           ))
         ) : (
-          <div className="text-center text-13 text-placeholder">No results</div>
+          <div className="text-center text-13 text-placeholder">{translate("web.no_results")}</div>
         )}
       </div>
     </>

@@ -84,7 +84,7 @@ export const WorkspaceInvitationsListItem = observer(function WorkspaceInvitatio
       setToast({
         type: "error",
         title: t("toast.error"),
-        message: error?.error || "Something went wrong. Please try again.",
+        message: error?.error || t("web.something_went_wrong_please_try_again"),
       });
     }
   };
@@ -163,7 +163,7 @@ export const WorkspaceInvitationsListItem = observer(function WorkspaceInvitatio
                   setToast({
                     type: "error",
                     title: t("toast.error"),
-                    message: error?.error || "An error occurred while updating member role. Please try again.",
+                    message: error?.error || t("web.an_error_occurred_while_updating_member_role_please_try_agai"),
                   });
                 });
               }}

@@ -355,7 +355,7 @@ export function InviteMembers(props: Props) {
                 stretch="full"
                 disabled={isInvitationDisabled || !isValid || isSubmitting}
               >
-                {isSubmitting ? <Spinner height="20px" width="20px" /> : "Continue"}
+                {isSubmitting ? <Spinner height="20px" width="20px" /> : translate("web.continue")}
               </ButtonElement>
               <Button
                 variant="ghost"

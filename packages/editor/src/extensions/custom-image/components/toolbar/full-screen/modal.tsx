@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 // plane imports
 import { cn } from "@plane/utils";
+import { translate } from "@plane/i18n";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
@@ -81,6 +82,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         targetZoom = ZOOM_STEPS.find((step) => step > prev) ?? MAX_ZOOM;
       } else {
         // Reverse the array to find the next lower step
+        // oxlint-disable-next-line unicorn/no-array-reverse -- ZOOM_STEPS is copied first; toReversed needs ES2023 lib in consumers
         targetZoom = [...ZOOM_STEPS].reverse().find((step) => step < prev) ?? MIN_ZOOM;
       }
 
@@ -205,8 +207,9 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
       })}
       role="dialog"
       aria-modal="true"
-      aria-label="Fullscreen image viewer"
+      aria-label={translate("web.fullscreen_image_viewer")}
     >
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc */}
       <div
         ref={modalRef}
         onMouseDown={(e) => e.target === modalRef.current && handleClose()}
@@ -216,13 +219,14 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
           type="button"
           onClick={handleClose}
           className="absolute top-10 right-10 grid size-8 place-items-center"
-          aria-label="Close image viewer"
+          aria-label={translate("web.close_image_viewer")}
         >
           <CloseOutline className="size-8 text-white/60 transition-colors hover:text-white" />
         </button>
         <img
           ref={setImageRef}
           src={src}
+          alt={translate("web.image")}
           className="read-only-image rounded-lg"
           style={{
             width: `${widthInNumber * initialMagnification}px`,
@@ -249,7 +253,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
               }}
               className="grid size-6 place-items-center text-white/60 transition-colors duration-200 hover:text-white disabled:text-white/30"
               disabled={magnification <= MIN_ZOOM}
-              aria-label="Zoom out"
+              aria-label={translate("web.zoom_out")}
             >
               <MinusOutline className="size-4" />
             </button>
@@ -265,7 +269,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
               }}
               className="grid size-6 place-items-center text-white/60 transition-colors duration-200 hover:text-white disabled:text-white/30"
               disabled={magnification >= MAX_ZOOM}
-              aria-label="Zoom in"
+              aria-label={translate("web.zoom_in")}
             >
               <AddOutline className="size-4" />
             </button>
@@ -275,7 +279,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
               type="button"
               onClick={() => window.open(downloadSrc, "_blank")}
               className="grid size-8 flex-shrink-0 place-items-center text-white/60 transition-colors duration-200 hover:text-white"
-              aria-label="Download image"
+              aria-label={translate("web.download_image")}
             >
               <DownloadOutline className="size-4" />
             </button>
@@ -285,7 +289,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
               type="button"
               onClick={() => window.open(src, "_blank")}
               className="grid size-8 flex-shrink-0 place-items-center text-white/60 transition-colors duration-200 hover:text-white"
-              aria-label="Open image in new tab"
+              aria-label={translate("web.open_image_in_new_tab")}
             >
               <NewTabOutline className="size-4" />
             </button>

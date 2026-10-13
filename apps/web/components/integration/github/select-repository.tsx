@@ -13,6 +13,7 @@ import type { IGithubRepository, IWorkspaceIntegration } from "@plane/types";
 // helpers
 import { truncateText } from "@plane/utils";
 import { ProjectService } from "@/services/project";
+import { translate } from "@plane/i18n";
 // types
 
 type Props = {
@@ -77,7 +78,7 @@ export function SelectRepository(props: Props) {
             stretch="full"
             onClick={() => void setSize(size + 1)}
             disabled={isValidating}
-            label={isValidating ? "Loading..." : "Click to load more..."}
+            label={isValidating ? translate("web.loading") : translate("web.click_to_load_more")}
           />
         ) : undefined
       }

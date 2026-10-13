@@ -84,7 +84,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
           <MenuTrigger
             render={<button type="button" className="flex flex-grow justify-center text-13 text-secondary" />}
           >
-            Layout
+            {t("web.layout")}
           </MenuTrigger>
           <MenuContent side="bottom" align="start">
             {SUPPORTED_LAYOUTS.map((layout, index) => (
@@ -105,7 +105,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
             placement="bottom-end"
             menuButton={
               <span className="flex items-center text-13 text-secondary">
-                Display
+                {t("web.display")}
                 <ChevronDownOutline className="ml-2 h-4 w-4 text-secondary" />
               </span>
             }
@@ -129,7 +129,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
           onClick={() => setAnalyticsModal(true)}
           className="flex flex-grow justify-center border-l border-subtle text-13 text-secondary"
         >
-          Analytics
+          {t("web.analytics")}
         </button>
       </div>
     </div>

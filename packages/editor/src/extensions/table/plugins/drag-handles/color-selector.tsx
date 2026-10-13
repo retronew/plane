@@ -12,6 +12,7 @@ import { DeactivatedOutline, PaletteOutline } from "@makeplane/propel/icons";
 // constants
 import { COLORS_LIST } from "@/constants/common";
 import { CORE_EXTENSIONS } from "@/constants/extension";
+import { translate } from "@plane/i18n";
 
 // TODO: implement text color selector
 
@@ -70,7 +71,7 @@ export function TableDragHandleDropdownColorSelector(props: Props) {
           </div>
         </div> */}
         <div className="space-y-1">
-          <p className="text-11 font-semibold text-tertiary">Background colors</p>
+          <p className="text-11 font-semibold text-tertiary">{translate("web.background_colors")}</p>
           <div className="flex flex-wrap items-center gap-2">
             {COLORS_LIST.map((color) => (
               <button

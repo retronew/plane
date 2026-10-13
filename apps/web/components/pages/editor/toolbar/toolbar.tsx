@@ -114,7 +114,7 @@ export function PageToolbar(props: Props) {
       <div className="animate-in fade-in flex items-center overflow-x-auto duration-200">
         <Toolbar size="md" elevation="flat" aria-label={translate("web.formatting_toolbar")}>
           <Menu>
-            <ToolbarMenuTrigger label={activeTypography?.name || "Text"} />
+            <ToolbarMenuTrigger label={activeTypography?.name || translate("web.text")} />
             <MenuContent side="bottom" align="start">
               {TYPOGRAPHY_ITEMS.map((item) => (
                 <MenuItem

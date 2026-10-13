@@ -14,6 +14,7 @@ import { cn } from "@plane/utils";
 import type { TPageInstance } from "@/store/pages/base-page";
 // local imports
 import { PageEditorHeaderLogoPicker } from "./logo-picker";
+import { translate } from "@plane/i18n";
 
 type Props = {
   page: TPageInstance;
@@ -54,7 +55,7 @@ export const PageEditorHeaderRoot = observer(function PageEditorHeaderRoot(props
                   )}
                 >
                   <ReactionOutline className="size-4 flex-shrink-0" />
-                  Icon
+                  {translate("web.icon")}
                 </button>
               }
               onChange={updatePageLogo}

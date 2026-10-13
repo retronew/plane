@@ -134,7 +134,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
               ? isInstalled
                 ? integrationDetails[integration.provider].installed
                 : integrationDetails[integration.provider].notInstalled
-              : "Loading..."}
+              : translate("web.loading")}
           </p>
         </div>
       </div>
@@ -142,7 +142,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
       {workspaceIntegrations ? (
         isInstalled ? (
           <Tooltip
-            label={!isUserAdmin ? "You don't have permission to perform this" : ""}
+            label={!isUserAdmin ? translate("web.you_don_t_have_permission_to_perform_this") : ""}
             layout="stacked"
             disabled={isUserAdmin || isMobile}
           >
@@ -157,12 +157,12 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
               }}
               disabled={!isUserAdmin}
               loading={deletingIntegration}
-              label={deletingIntegration ? "Uninstalling..." : "Uninstall"}
+              label={deletingIntegration ? translate("web.uninstalling") : translate("web.uninstall")}
             />
           </Tooltip>
         ) : (
           <Tooltip
-            label={!isUserAdmin ? "You don't have permission to perform this" : ""}
+            label={!isUserAdmin ? translate("web.you_don_t_have_permission_to_perform_this") : ""}
             layout="stacked"
             disabled={isUserAdmin || isMobile}
           >
@@ -176,7 +176,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
                 startAuth();
               }}
               loading={isInstalling}
-              label={isInstalling ? "Installing..." : "Install"}
+              label={isInstalling ? translate("web.installing") : translate("web.install")}
             />
           </Tooltip>
         )

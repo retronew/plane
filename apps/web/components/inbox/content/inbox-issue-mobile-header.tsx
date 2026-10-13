@@ -171,7 +171,11 @@ export const InboxIssueActionsMobileHeader = observer(function InboxIssueActions
               {canMarkAsAccepted && !isAcceptedOrDeclined && (
                 <MenuItem
                   icon={<Icon icon={ClockOutline} />}
-                  label={inboxIssue?.snoozed_till && numberOfDaysLeft && numberOfDaysLeft > 0 ? "Un-snooze" : "Snooze"}
+                  label={
+                    inboxIssue?.snoozed_till && numberOfDaysLeft && numberOfDaysLeft > 0
+                      ? t("web.un_snooze")
+                      : t("web.snooze")
+                  }
                   onClick={() =>
                     handleActionWithPermission(
                       isProjectAdmin,

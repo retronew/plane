@@ -57,7 +57,7 @@ export const PagesListHeader = observer(function PagesListHeader() {
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: err?.data?.error || "Page could not be created. Please try again.",
+          message: err?.data?.error || translate("web.page_could_not_be_created_please_try_again"),
         });
       })
       .finally(() => setIsCreatingPage(false));
@@ -91,7 +91,7 @@ export const PagesListHeader = observer(function PagesListHeader() {
             variant="primary"
             size="md"
             stretch="auto"
-            label={isCreatingPage ? "Adding" : "Add page"}
+            label={isCreatingPage ? translate("web.adding") : translate("web.add_page")}
             onClick={handleCreatePage}
             loading={isCreatingPage}
           />

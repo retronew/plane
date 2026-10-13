@@ -20,6 +20,7 @@ import { InstanceFailureView } from "@/components/instance/instance-failure-view
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
 import { useUser } from "@/hooks/store/use-user";
+import { translate } from "@plane/i18n";
 
 export const InstanceProvider = observer(function InstanceProvider({ children }: { children: React.ReactNode }) {
   const { fetchInstanceInfo, instance, error } = useInstance();
@@ -58,7 +59,11 @@ export const InstanceProvider = observer(function InstanceProvider({ children }:
             </div>
           </div>
           <div className="absolute inset-0 z-0">
-            <img src={patternBackground} className="h-full w-screen object-cover" alt="Plane background pattern" />
+            <img
+              src={patternBackground}
+              className="h-full w-screen object-cover"
+              alt={translate("web.plane_background_pattern")}
+            />
           </div>
           <div className="relative z-10 flex-grow">
             <div className="relative mx-auto flex h-full w-full items-center justify-center overflow-y-auto px-6 py-10">

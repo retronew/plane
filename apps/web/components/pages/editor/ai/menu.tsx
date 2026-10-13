@@ -274,7 +274,7 @@ export function EditorAIMenu(props: Props) {
                   </div>
                 ) : (
                   <p className="text-13 text-secondary">
-                    {activeTask ? LOADING_TEXTS[activeTask] : "Pi is writing"}...
+                    {activeTask ? LOADING_TEXTS[activeTask] : translate("web.pi_is_writing")}…
                   </p>
                 )}
               </div>
@@ -309,7 +309,7 @@ export function EditorAIMenu(props: Props) {
             <WarningTriangleOutline className="size-3" />
           </span>
           <p className="flex-shrink-0 text-11 font-medium">
-            By using this feature, you consent to sharing the message with a 3rd party service.
+            {translate("web.by_using_this_feature_you_consent_to_sharing_the_message_wit")}
           </p>
         </div>
       )}

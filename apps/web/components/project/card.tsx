@@ -300,7 +300,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
           <div className="item-center flex justify-between">
             <div className="flex items-center justify-center gap-2">
               <Tooltip
-                label={project.members?.length ? `Members: ${project.members.length}` : "No members"}
+                label={project.members?.length ? `Members: ${project.members.length}` : translate("web.no_members")}
                 layout="stacked"
                 disabled={isMobile}
               >
@@ -367,7 +367,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
                   ) : (
                     <span className="flex items-center gap-1 text-13 text-placeholder">
                       <TickOutline className="h-3.5 w-3.5" />
-                      Joined
+                      {translate("web.joined")}
                     </span>
                   ))}
                 {!isMemberOfProject && (

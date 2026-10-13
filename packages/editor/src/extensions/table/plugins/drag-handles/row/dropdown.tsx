@@ -20,6 +20,7 @@ import { findTable, getSelectedRows } from "@/extensions/table/table/utilities/h
 // local imports
 import { duplicateRows } from "../actions";
 import { TableDragHandleDropdownColorSelector } from "../color-selector";
+import { translate } from "@plane/i18n";
 
 const DROPDOWN_ITEMS: {
   key: string;
@@ -29,19 +30,25 @@ const DROPDOWN_ITEMS: {
 }[] = [
   {
     key: "insert-above",
-    label: "Insert above",
+    get label() {
+      return translate("web.insert_above");
+    },
     icon: TopArrowOutline,
     action: (editor) => editor.chain().focus().addRowBefore().run(),
   },
   {
     key: "insert-below",
-    label: "Insert below",
+    get label() {
+      return translate("web.insert_below");
+    },
     icon: ArrowDownOutline,
     action: (editor) => editor.chain().focus().addRowAfter().run(),
   },
   {
     key: "duplicate",
-    label: "Duplicate",
+    get label() {
+      return translate("web.duplicate");
+    },
     icon: CopyOutline,
     action: (editor) => {
       const table = findTable(editor.state.selection);
@@ -56,7 +63,9 @@ const DROPDOWN_ITEMS: {
   },
   {
     key: "clear-contents",
-    label: "Clear contents",
+    get label() {
+      return translate("web.clear_contents");
+    },
     icon: CloseOutline,
     action: (editor) => editor.chain().focus().clearSelectedCells().run(),
   },
@@ -88,7 +97,7 @@ export function RowOptionsDropdown(props: Props) {
           onClose();
         }}
       >
-        <div className="flex-grow truncate">Header row</div>
+        <div className="flex-grow truncate">{translate("web.header_row")}</div>
         <ToggleFilled className="size-3 shrink-0" />
       </button>
       <hr className="my-2 border-subtle" />

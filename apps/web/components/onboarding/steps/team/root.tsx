@@ -350,7 +350,7 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
           stretch="full"
           disabled={isInvitationDisabled || !isValid || isSubmitting}
         >
-          {isSubmitting ? <Spinner height="20px" width="20px" /> : "Continue"}
+          {isSubmitting ? <Spinner height="20px" width="20px" /> : translate("web.continue")}
         </ButtonElement>
         <Button variant="ghost" size="lg" stretch="full" onClick={nextStep} label={translate("web.i_ll_do_it_later")} />
       </div>

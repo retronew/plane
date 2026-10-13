@@ -6,6 +6,7 @@
 
 import type { TAnalyticsTabsBase } from "@plane/types";
 import { ChartXAxisProperty, ChartYAxisMetric } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export interface IInsightField {
   key: string;
@@ -124,66 +125,96 @@ export const ANALYTICS_DURATION_FILTER_OPTIONS = [
 export const ANALYTICS_X_AXIS_VALUES: { value: ChartXAxisProperty; label: string }[] = [
   {
     value: ChartXAxisProperty.STATES,
-    label: "State name",
+    get label() {
+      return translate("web.state_name");
+    },
   },
   {
     value: ChartXAxisProperty.STATE_GROUPS,
-    label: "State group",
+    get label() {
+      return translate("web.state_group");
+    },
   },
   {
     value: ChartXAxisProperty.PRIORITY,
-    label: "Priority",
+    get label() {
+      return translate("web.priority");
+    },
   },
   {
     value: ChartXAxisProperty.LABELS,
-    label: "Label",
+    get label() {
+      return translate("web.label");
+    },
   },
   {
     value: ChartXAxisProperty.ASSIGNEES,
-    label: "Assignee",
+    get label() {
+      return translate("web.assignee");
+    },
   },
   {
     value: ChartXAxisProperty.ESTIMATE_POINTS,
-    label: "Estimate point",
+    get label() {
+      return translate("web.estimate_point");
+    },
   },
   {
     value: ChartXAxisProperty.CYCLES,
-    label: "Cycle",
+    get label() {
+      return translate("web.cycle");
+    },
   },
   {
     value: ChartXAxisProperty.MODULES,
-    label: "Module",
+    get label() {
+      return translate("web.module");
+    },
   },
   {
     value: ChartXAxisProperty.COMPLETED_AT,
-    label: "Completed date",
+    get label() {
+      return translate("web.completed_date");
+    },
   },
   {
     value: ChartXAxisProperty.TARGET_DATE,
-    label: "Due date",
+    get label() {
+      return translate("web.due_date");
+    },
   },
   {
     value: ChartXAxisProperty.START_DATE,
-    label: "Start date",
+    get label() {
+      return translate("web.start_date");
+    },
   },
   {
     value: ChartXAxisProperty.CREATED_AT,
-    label: "Created date",
+    get label() {
+      return translate("web.created_date");
+    },
   },
 ];
 
 export const ANALYTICS_Y_AXIS_VALUES: { value: ChartYAxisMetric; label: string }[] = [
   {
     value: ChartYAxisMetric.WORK_ITEM_COUNT,
-    label: "Work item",
+    get label() {
+      return translate("web.work_item");
+    },
   },
   {
     value: ChartYAxisMetric.ESTIMATE_POINT_COUNT,
-    label: "Estimate",
+    get label() {
+      return translate("web.estimate");
+    },
   },
   {
     value: ChartYAxisMetric.EPIC_WORK_ITEM_COUNT,
-    label: "Epic",
+    get label() {
+      return translate("web.epic");
+    },
   },
 ];
 

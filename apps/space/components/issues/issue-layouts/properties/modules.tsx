@@ -12,6 +12,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 // hooks
 import { useModule } from "@/hooks/store/use-module";
+import { translate } from "@plane/i18n";
 
 type Props = {
   moduleIds: string[] | undefined;
@@ -37,13 +38,15 @@ export const IssueBlockModules = observer(function IssueBlockModules({ moduleIds
           >
             <div className="flex items-center gap-1.5 text-secondary">
               <ModuleOutline className="h-3 w-3 flex-shrink-0" />
-              <div className="text-11">{modules?.[0]?.name ?? "No Modules"}</div>
+              <div className="text-11">{modules?.[0]?.name ?? translate("web.no_modules")}</div>
             </div>
           </div>
         ) : (
           <div className="flex h-full flex-shrink-0 cursor-default items-center rounded-md border border-strong px-2.5 py-1 text-11">
             <div className="flex items-center gap-1.5 text-secondary">
-              <div className="text-11">{modules.length} Modules</div>
+              <div className="text-11">
+                {modules.length} {translate("web.title_modules")}
+              </div>
             </div>
           </div>
         )}

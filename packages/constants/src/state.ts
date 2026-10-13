@@ -5,6 +5,7 @@
  */
 
 import type { TStateGroups } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export type TDraggableData = {
   groupKey: TStateGroups;
@@ -21,31 +22,41 @@ export const STATE_GROUPS: {
 } = {
   backlog: {
     key: "backlog",
-    label: "Backlog",
+    get label() {
+      return translate("web.backlog");
+    },
     defaultStateName: "Backlog",
     color: "#d9d9d9",
   },
   unstarted: {
     key: "unstarted",
-    label: "Unstarted",
+    get label() {
+      return translate("web.unstarted");
+    },
     defaultStateName: "Todo",
     color: "#3f76ff",
   },
   started: {
     key: "started",
-    label: "Started",
+    get label() {
+      return translate("web.started");
+    },
     defaultStateName: "In Progress",
     color: "#f59e0b",
   },
   completed: {
     key: "completed",
-    label: "Completed",
+    get label() {
+      return translate("web.completed");
+    },
     defaultStateName: "Done",
     color: "#16a34a",
   },
   cancelled: {
     key: "cancelled",
-    label: "Canceled",
+    get label() {
+      return translate("web.canceled");
+    },
     defaultStateName: "Cancelled",
     color: "#dc2626",
   },
@@ -91,22 +102,30 @@ export const STATE_DISTRIBUTION = {
 export const PROGRESS_STATE_GROUPS_DETAILS = [
   {
     key: "completed_issues",
-    title: "Completed",
+    get title() {
+      return translate("web.completed");
+    },
     color: "#16A34A",
   },
   {
     key: "started_issues",
-    title: "Started",
+    get title() {
+      return translate("web.started");
+    },
     color: "#F59E0B",
   },
   {
     key: "unstarted_issues",
-    title: "Unstarted",
+    get title() {
+      return translate("web.unstarted");
+    },
     color: "#3A3A3A",
   },
   {
     key: "backlog_issues",
-    title: "Backlog",
+    get title() {
+      return translate("web.backlog");
+    },
     color: "#A3A3A3",
   },
 ];

@@ -69,7 +69,7 @@ export function GeneratedTokenDetails(props: Props) {
         <DialogInfo>
           {tokenDetails.expired_at
             ? `Expires ${renderFormattedDate(tokenDetails.expired_at)} at ${renderFormattedTime(tokenDetails.expired_at)}`
-            : "Never expires"}
+            : t("web.never_expires")}
         </DialogInfo>
         <Button variant="secondary" size="sm" stretch="auto" label={t("close")} onClick={handleClose} />
       </DialogActions>

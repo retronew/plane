@@ -12,6 +12,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 // local imports
 import type { TCustomImageAlignment } from "../../types";
 import { IMAGE_ALIGNMENT_OPTIONS } from "../../utils";
+import { translate } from "@plane/i18n";
 
 type Props = {
   activeAlignment: TCustomImageAlignment;
@@ -37,7 +38,7 @@ export function ImageAlignmentAction(props: Props) {
 
   return (
     <div ref={dropdownRef} className="relative h-full">
-      <Tooltip disabled={isTouchDevice} label="Align">
+      <Tooltip disabled={isTouchDevice} label={translate("web.align")}>
         <button
           type="button"
           className="flex h-full items-center gap-1 text-white/60 transition-colors hover:text-white"

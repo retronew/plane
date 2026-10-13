@@ -25,6 +25,7 @@ import { CORE_EXTENSIONS } from "@/constants/extension";
 import type { IEditorProps } from "@/types";
 // components
 import { getNodeOptions } from "./block-menu-options";
+import { translate } from "@plane/i18n";
 
 type Props = {
   disabledExtensions?: IEditorProps["disabledExtensions"];
@@ -160,7 +161,7 @@ export function BlockMenu(props: Props) {
     {
       icon: CopyOutline,
       key: "duplicate",
-      label: "Duplicate",
+      label: translate("web.duplicate"),
       isDisabled:
         editor.state.selection.content().content.firstChild?.type.name === CORE_EXTENSIONS.IMAGE ||
         editor.isActive(CORE_EXTENSIONS.CUSTOM_IMAGE),

@@ -80,7 +80,10 @@ export const AppRailRoot = observer(() => {
             selected={preferences.displayMode === "icon_with_label"}
           />
           <ContextMenuSeparator />
-          <ContextMenuItem onClick={toggleAppRail} label={isCollapsed ? "Dock App Rail" : "Undock App Rail"} />
+          <ContextMenuItem
+            onClick={toggleAppRail}
+            label={isCollapsed ? translate("web.dock_app_rail") : translate("web.undock_app_rail")}
+          />
         </ContextMenuContent>
       </ContextMenu>
     </div>

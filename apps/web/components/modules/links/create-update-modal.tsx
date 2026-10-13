@@ -80,7 +80,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
       setToast({
         type: "error",
         title: translate("toast.error"),
-        message: error?.data?.error ?? "Some error occurred. Please try again.",
+        message: error?.data?.error ?? translate("web.some_error_occurred_please_try_again"),
       });
     }
   };
@@ -104,7 +104,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>{data ? "Update" : "Add"} link</DialogTitle>
+                <DialogTitle>{data ? translate("web.update") : translate("web.add")} link</DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody tabIndex={0}>
@@ -113,7 +113,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
                   control={control}
                   name="url"
                   rules={{
-                    required: "URL is required",
+                    required: translate("web.url_is_required"),
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <InputField
@@ -161,7 +161,13 @@ export function CreateUpdateModuleLinkModal(props: Props) {
               type="submit"
               loading={isSubmitting}
               label={
-                data ? (isSubmitting ? "Updating link" : "Update link") : isSubmitting ? "Adding link" : "Add link"
+                data
+                  ? isSubmitting
+                    ? translate("web.updating_link")
+                    : translate("web.update_link")
+                  : isSubmitting
+                    ? translate("web.adding_link")
+                    : translate("web.add_link")
               }
             />
           </DialogActions>

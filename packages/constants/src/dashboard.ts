@@ -6,6 +6,7 @@
 
 // types
 import type { TIssuesListTypes } from "@plane/types";
+import { translate } from "@plane/i18n";
 
 export enum EDurationFilters {
   NONE = "none",
@@ -23,27 +24,39 @@ export const DURATION_FILTER_OPTIONS: {
 }[] = [
   {
     key: EDurationFilters.NONE,
-    label: "All time",
+    get label() {
+      return translate("web.all_time");
+    },
   },
   {
     key: EDurationFilters.TODAY,
-    label: "Due today",
+    get label() {
+      return translate("web.due_today");
+    },
   },
   {
     key: EDurationFilters.THIS_WEEK,
-    label: "Due this week",
+    get label() {
+      return translate("web.due_this_week");
+    },
   },
   {
     key: EDurationFilters.THIS_MONTH,
-    label: "Due this month",
+    get label() {
+      return translate("web.due_this_month");
+    },
   },
   {
     key: EDurationFilters.THIS_YEAR,
-    label: "Due this year",
+    get label() {
+      return translate("web.due_this_year");
+    },
   },
   {
     key: EDurationFilters.CUSTOM,
-    label: "Custom",
+    get label() {
+      return translate("web.custom");
+    },
   },
 ];
 
@@ -66,15 +79,21 @@ export const FILTERED_ISSUES_TABS_LIST: {
 }[] = [
   {
     key: "upcoming",
-    label: "Upcoming",
+    get label() {
+      return translate("web.upcoming");
+    },
   },
   {
     key: "overdue",
-    label: "Overdue",
+    get label() {
+      return translate("web.overdue");
+    },
   },
   {
     key: "completed",
-    label: "Marked completed",
+    get label() {
+      return translate("web.marked_completed");
+    },
   },
 ];
 
@@ -85,11 +104,15 @@ export const UNFILTERED_ISSUES_TABS_LIST: {
 }[] = [
   {
     key: "pending",
-    label: "Pending",
+    get label() {
+      return translate("web.pending");
+    },
   },
   {
     key: "completed",
-    label: "Marked completed",
+    get label() {
+      return translate("web.marked_completed");
+    },
   },
 ];
 

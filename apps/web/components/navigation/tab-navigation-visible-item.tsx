@@ -56,7 +56,7 @@ export function TabNavigationVisibleItem({
                 onToggleDefault(item.key);
               }}
               icon={<Icon icon={DefaultTabOutline} />}
-              label={isDefault ? "Clear default" : "Set as default"}
+              label={isDefault ? t("web.clear_default") : t("web.set_as_default")}
             />
             <ContextMenuItem
               onClick={(e) => {

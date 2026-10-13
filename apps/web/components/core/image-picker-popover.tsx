@@ -142,7 +142,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           console.error("Error uploading user cover image:", error);
           setIsImageUploading(false);
           setToast({
-            message: error?.error ?? "The image could not be uploaded",
+            message: error?.error ?? translate("web.the_image_could_not_be_uploaded"),
             type: "error",
             title: translate("web.image_not_uploaded"),
           });
@@ -163,7 +163,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           console.error("Error uploading project cover image:", error);
           setIsImageUploading(false);
           setToast({
-            message: error?.error ?? "The image could not be uploaded",
+            message: error?.error ?? translate("web.the_image_could_not_be_uploaded"),
             type: "error",
             title: translate("web.image_not_uploaded"),
           });
@@ -333,7 +333,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                 type="button"
                                 className="absolute top-0 right-0 z-40 -translate-y-1/2 rounded-sm bg-surface-2 px-2 py-0.5 text-11 font-medium text-secondary"
                               >
-                                Edit
+                                {translate("web.edit")}
                               </button>
                               {image !== null || (value && value !== "") ? (
                                 <>
@@ -346,7 +346,9 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                               ) : (
                                 <div>
                                   <span className="mt-2 block text-13 font-medium text-secondary">
-                                    {isDragActive ? "Drop image here to upload" : "Drag & drop image here"}
+                                    {isDragActive
+                                      ? translate("web.drop_image_here_to_upload")
+                                      : translate("web.drag_drop_image_here")}
                                   </span>
                                 </div>
                               )}
@@ -357,8 +359,8 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                           {fileRejections.length > 0 && (
                             <p className="text-13 text-danger-primary">
                               {fileRejections[0].errors[0].code === "file-too-large"
-                                ? "The image size cannot exceed 5 MB."
-                                : "Please upload a file in a valid format."}
+                                ? translate("web.the_image_size_cannot_exceed_5_mb")
+                                : translate("web.please_upload_a_file_in_a_valid_format")}
                             </p>
                           )}
 
@@ -381,7 +383,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                               variant="primary"
                               size="sm"
                               stretch="full"
-                              label={isImageUploading ? "Uploading" : "Upload & Save"}
+                              label={isImageUploading ? translate("web.uploading_2") : translate("web.upload_save")}
                               onClick={handleSubmit}
                               disabled={!image}
                               loading={isImageUploading}

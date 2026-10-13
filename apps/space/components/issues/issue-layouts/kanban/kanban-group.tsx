@@ -21,6 +21,7 @@ import { cn } from "@plane/utils";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 // local imports
 import { KanbanIssueBlocksList } from "./blocks-list";
+import { translate } from "@plane/i18n";
 
 interface IKanbanGroup {
   groupId: string;
@@ -95,14 +96,14 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
   const loadMore = isPaginating ? (
     <KanbanIssueBlockLoader />
   ) : (
-    <div
-      className="w-full cursor-pointer p-3 text-13 font-medium text-accent-primary hover:text-accent-secondary hover:underline"
+    <button
+      type="button"
+      className="w-full cursor-pointer p-3 text-left text-13 font-medium text-accent-primary hover:text-accent-secondary hover:underline"
       onClick={loadMoreIssuesInThisGroup}
-      role="button"
     >
       {" "}
-      Load More &darr;
-    </div>
+      {translate("web.load_more")}
+    </button>
   );
 
   const shouldLoadMore = nextPageResults === undefined ? issueIds?.length < groupIssueCount : !!nextPageResults;
@@ -126,9 +127,8 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
           <>{loadMore}</>
         ) : (
           <div className="flex flex-col gap-2">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <KanbanIssueBlockLoader key={index} />
-            ))}
+            <KanbanIssueBlockLoader />
+            <KanbanIssueBlockLoader />
             <KanbanIssueBlockLoader ref={setIntersectionElement} />
           </div>
         ))}

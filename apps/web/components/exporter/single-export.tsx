@@ -22,7 +22,7 @@ export function SingleExport({ service, refreshing }: Props) {
   const provider = service.provider;
 
   const [isLoading] = useState(false);
-  const downloadLabel = isLoading ? "Downloading..." : "Download";
+  const downloadLabel = isLoading ? translate("web.downloading") : translate("web.download");
 
   const checkExpiry = (inputDateString: string) => {
     const currentDate = new Date();
@@ -55,12 +55,14 @@ export function SingleExport({ service, refreshing }: Props) {
                       : ""
             }`}
           >
-            {refreshing ? "Refreshing..." : service.status}
+            {refreshing ? translate("web.refreshing") : service.status}
           </span>
         </h4>
         <div className="mt-2 flex items-center gap-2 text-11 text-secondary">
           <span>{renderFormattedDate(service.created_at)}</span>|
-          <span>Exported by {service?.initiated_by_detail?.display_name}</span>
+          <span>
+            {translate("web.exported_by_2")} {service?.initiated_by_detail?.display_name}
+          </span>
         </div>
       </div>
       {checkExpiry(service.created_at) ? (

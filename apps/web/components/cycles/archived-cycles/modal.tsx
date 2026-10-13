@@ -70,7 +70,7 @@ export function ArchiveCycleModal(props: Props) {
       variant="primary"
       title={`Archive cycle ${cycleName ?? ""}`}
       content={translate("web.are_you_sure_you_want_to_archive_the_cycle_all_your_archives")}
-      primaryButtonText={{ loading: translate("web.archiving"), default: "Archive" }}
+      primaryButtonText={{ loading: translate("web.archiving"), default: translate("web.archive") }}
       secondaryButtonText={translate("web.cancel")}
     />
   );

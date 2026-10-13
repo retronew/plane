@@ -9,6 +9,7 @@ import type { TFilterProperty } from "@plane/types";
 // local imports
 import type { TCreateFilterConfig, TCreateDateFilterParams } from "../../../rich-filters";
 import { createFilterConfig, getSupportedDateOperators } from "../../../rich-filters";
+import { translate } from "@plane/i18n";
 
 // ------------ Date filters ------------
 
@@ -23,7 +24,7 @@ export const getStartDateFilterConfig =
   (params: TCreateDateFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Start date",
+      label: translate("web.start_date"),
       ...params,
       icon: params.filterIcon,
       allowMultipleFilters: true,
@@ -41,7 +42,7 @@ export const getTargetDateFilterConfig =
   (params: TCreateDateFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Target date",
+      label: translate("web.target_date"),
       ...params,
       icon: params.filterIcon,
       allowMultipleFilters: true,
@@ -59,7 +60,7 @@ export const getCreatedAtFilterConfig =
   (params: TCreateDateFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Created at",
+      label: translate("web.created_at"),
       ...params,
       icon: params.filterIcon,
       allowMultipleFilters: true,
@@ -77,7 +78,7 @@ export const getUpdatedAtFilterConfig =
   (params: TCreateDateFilterParams) =>
     createFilterConfig<P>({
       id: key,
-      label: "Updated at",
+      label: translate("web.updated_at"),
       ...params,
       icon: params.filterIcon,
       allowMultipleFilters: true,

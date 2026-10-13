@@ -66,12 +66,12 @@ export function SwitchAccountModal(props: Props) {
       content={
         userData?.email ? (
           <>
-            If you have signed up via <span className="text-accent-primary">{userData.email}</span> un-intentionally,
-            you can switch your account to a different one from here.
+            {translate("web.if_you_have_signed_up_via")} <span className="text-accent-primary">{userData.email}</span>{" "}
+            un-intentionally, you can switch your account to a different one from here.
           </>
         ) : null
       }
-      primaryButtonText={{ loading: translate("web.switching"), default: "Switch account" }}
+      primaryButtonText={{ loading: translate("web.switching"), default: translate("web.switch_account") }}
     />
   );
 }

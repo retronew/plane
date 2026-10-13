@@ -13,6 +13,7 @@ import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 import { HEADER_HEIGHT, SIDEBAR_WIDTH } from "../../constants";
 import type { IMonthBlock, IQuarterMonthBlock } from "../../views";
 import { groupMonthsToQuarters } from "../../views";
+import { translate } from "@plane/i18n";
 
 export const QuarterChartView = observer(function QuarterChartView(_props: any) {
   const { currentViewData, renderView } = useTimeLineChartStore();
@@ -46,7 +47,7 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                   {quarterBlock?.title}
                   {quarterBlock.today && (
                     <span className={cn("ml-2 rounded-sm bg-accent-primary px-1 text-9 font-medium text-on-color")}>
-                      Current
+                      {translate("web.current")}
                     </span>
                   )}
                 </div>
@@ -56,9 +57,9 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
               </div>
               {/** Months Sub title */}
               <div className="flex h-5 w-full">
-                {quarterBlock?.children?.map((monthBlock, index) => (
+                {quarterBlock?.children?.map((monthBlock) => (
                   <div
-                    key={`sub-title-${rootIndex}-${index}`}
+                    key={`sub-title-${rootIndex}-${monthBlock.title}`}
                     className={cn(
                       "flex flex-shrink-0 justify-center text-center capitalize outline-[0.25px] outline-subtle-1",
                       {
@@ -82,9 +83,9 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
             </div>
             {/** Month Columns */}
             <div className="flex h-full w-full flex-grow">
-              {quarterBlock?.children?.map((monthBlock, index) => (
+              {quarterBlock?.children?.map((monthBlock) => (
                 <div
-                  key={`column-${rootIndex}-${index}`}
+                  key={`column-${rootIndex}-${monthBlock.title}`}
                   className={cn("h-full overflow-hidden outline-[0.25px] outline-subtle", {
                     "bg-accent-primary/20": monthBlock.today,
                   })}

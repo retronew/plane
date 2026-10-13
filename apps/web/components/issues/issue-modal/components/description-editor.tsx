@@ -129,8 +129,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
           setToast({
             type: "error",
             title: t("toast.error"),
-            message:
-              "Work item title isn't informative enough to generate the description. Please try with a different title.",
+            message: t("web.work_item_title_isn_t_informative_enough_to_generate_the_des"),
           });
         else handleAiAssistance(res.response_html);
         return undefined;
@@ -142,13 +141,13 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: error || "You have reached the maximum number of requests of 50 requests per month per user.",
+            message: error || t("web.you_have_reached_the_maximum_number_of_requests_of_50_reques"),
           });
         else
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: error || "Some error occurred. Please try again.",
+            message: error || t("web.some_error_occurred_please_try_again"),
           });
       })
       .finally(() => setIAmFeelingLucky(false));
@@ -256,7 +255,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
                 tabIndex={getIndex("feeling_lucky")}
               >
                 {iAmFeelingLucky ? (
-                  "Generating response"
+                  t("web.generating_response_2")
                 ) : (
                   <>
                     <AiStar1Outline className="h-3.5 w-3.5" />I{"'"}m feeling lucky

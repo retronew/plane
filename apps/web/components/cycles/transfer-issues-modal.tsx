@@ -85,7 +85,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
       setToast({
         type: "error",
         title: t("web.error"),
-        message: error.error || "Unable to fetch cycle details",
+        message: error.error || t("web.unable_to_fetch_cycle_details"),
       });
     });
   };
