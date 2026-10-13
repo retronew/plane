@@ -15,7 +15,6 @@ from django.utils import timezone
 
 # Module imports
 from plane.license.models import Instance, InstanceEdition
-from plane.license.bgtasks.telemetry_metrics import push_instance_metrics
 
 
 class Command(BaseCommand):
@@ -72,6 +71,7 @@ class Command(BaseCommand):
                 last_checked_at=timezone.now(),
                 is_test=os.environ.get("IS_TEST", "0") == "1",
                 edition=InstanceEdition.PLANE_COMMUNITY.value,
+                is_telemetry_enabled=False,
             )
 
             self.stdout.write(self.style.SUCCESS("Instance registered"))
@@ -84,9 +84,7 @@ class Command(BaseCommand):
             instance.latest_version = latest_version
             instance.is_test = os.environ.get("IS_TEST", "0") == "1"
             instance.edition = InstanceEdition.PLANE_COMMUNITY.value
+            instance.is_telemetry_enabled = False
             instance.save()
-
-        # Push instance metrics on registration
-        push_instance_metrics.delay()
 
         return
