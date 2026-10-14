@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { ComponentProps } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // PLane
@@ -18,6 +19,14 @@ import { useModule } from "@/hooks/store/use-module";
 import { useModuleFilter } from "@/hooks/store/use-module-filter";
 import { useProject } from "@/hooks/store/use-project";
 import { translate } from "@plane/i18n";
+
+function renderModuleSidebar(props: ComponentProps<typeof ModuleGanttSidebar>) {
+  return <ModuleGanttSidebar {...props} />;
+}
+
+function renderModuleBlock(data: IModule) {
+  return <ModuleGanttBlock moduleId={data.id} />;
+}
 
 export const ModulesListGanttChartView = observer(function ModulesListGanttChartView() {
   // router
@@ -60,11 +69,11 @@ export const ModulesListGanttChartView = observer(function ModulesListGanttChart
     <TimeLineTypeContext.Provider value={GANTT_TIMELINE_TYPE.MODULE}>
       <GanttChartRoot
         title={translate("web.modules")}
-        loaderTitle="Modules"
+        loaderTitle={translate("web.modules")}
         blockIds={filteredModuleIds}
-        sidebarToRender={(props) => <ModuleGanttSidebar {...props} />}
+        sidebarToRender={renderModuleSidebar}
         blockUpdateHandler={(block, payload) => handleModuleUpdate(block, payload)}
-        blockToRender={(data: IModule) => <ModuleGanttBlock moduleId={data.id} />}
+        blockToRender={renderModuleBlock}
         enableBlockLeftResize={isAllowed}
         enableBlockRightResize={isAllowed}
         enableBlockMove={isAllowed}
