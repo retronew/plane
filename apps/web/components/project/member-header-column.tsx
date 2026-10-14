@@ -56,12 +56,11 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
   return (
     <Menu>
       <MenuTrigger
-        tabIndex={-1}
         render={
           <button
             type="button"
             aria-label={t(propertyDetails.i18n_title)}
-            className="clickable flex w-full cursor-pointer items-center justify-between gap-1.5 py-2 text-13 text-secondary hover:text-primary"
+            className="clickable flex h-5 w-fit cursor-pointer items-center justify-between gap-1.5 py-0 text-13 text-secondary hover:text-primary"
           />
         }
       >
@@ -80,7 +79,7 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
           <ChevronDownOutline className="h-3 w-3" aria-hidden="true" />
         </div>
       </MenuTrigger>
-      <MenuContent side="bottom" align="end">
+      <MenuContent side="bottom" align="start" sizing="anchor">
         {propertyDetails.isSortingAllowed && (
           <>
             <MenuItem

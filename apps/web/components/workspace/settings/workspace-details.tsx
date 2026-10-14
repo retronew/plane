@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 // Plane Imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -47,13 +47,13 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
     handleSubmit,
     control,
     reset,
-    watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<IWorkspace>({
     defaultValues: { ...defaultValues, ...currentWorkspace },
   });
   // derived values
-  const workspaceLogo = watch("logo_url");
+  const workspaceLogo = useWatch({ control, name: "logo_url" });
+  const workspaceName = useWatch({ control, name: "name" });
 
   const onSubmit = async (formData: IWorkspace) => {
     if (!currentWorkspace) return;
@@ -74,10 +74,9 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
       });
     } catch (err: unknown) {
       console.error(err);
+      setToast({ type: "error", title: t("toast.error"), message: t("web.workspace_update_failed") });
     } finally {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
+      setIsLoading(false);
     }
   };
 
@@ -147,13 +146,18 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
       <div className={cn("flex w-full flex-col gap-y-7", { "opacity-60": !isAdmin })}>
         <div className="flex items-center gap-5">
           <div className="flex shrink-0 flex-col gap-1">
-            <button type="button" onClick={() => setIsImageUploadModalOpen(true)} disabled={!isAdmin}>
+            <button
+              type="button"
+              aria-label={t("workspace_settings.settings.general.upload_logo")}
+              onClick={() => setIsImageUploadModalOpen(true)}
+              disabled={!isAdmin}
+            >
               {workspaceLogo && workspaceLogo !== "" ? (
                 <div className="relative flex size-14">
                   <img
                     src={getFileURL(workspaceLogo)}
                     className="absolute top-0 left-0 size-full rounded-md object-cover"
-                    alt="Workspace Logo"
+                    alt={t("workspace_settings.settings.general.upload_logo")}
                   />
                 </div>
               ) : (
@@ -164,14 +168,14 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
             </button>
           </div>
           <div className="flex flex-col gap-1">
-            <div className="mb:-my-5 text-h5-semibold leading-6">{watch("name")}</div>
+            <div className="mb:-my-5 text-h5-semibold leading-6">{workspaceName}</div>
             <button type="button" onClick={handleCopyUrl} className="text-left text-body-xs-regular tracking-tight">{`${
               typeof window !== "undefined" && window.location.origin.replace("http://", "").replace("https://", "")
             }/${currentWorkspace.slug}`}</button>
             {isAdmin && (
               <button
                 type="button"
-                className="flex items-center gap-1.5 text-left text-caption-sm-medium text-accent-primary"
+                className="flex items-center gap-1.5 text-left text-13 leading-5 font-medium text-accent-primary"
                 onClick={() => setIsImageUploadModalOpen(true)}
               >
                 {workspaceLogo && workspaceLogo !== "" ? (
@@ -187,9 +191,11 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
           </div>
         </div>
         <div className="flex flex-col gap-7">
-          <div className="grid-col grid w-full grid-cols-1 items-center justify-between gap-10 xl:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid w-full grid-cols-1 items-start gap-x-8 gap-y-8 @min-[36rem]:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <h4 className="text-body-sm-medium text-tertiary">{t("workspace_settings.settings.general.name")}</h4>
+              <label htmlFor="name" className="text-body-sm-medium text-primary">
+                {t("workspace_settings.settings.general.name")}
+              </label>
               <Controller
                 control={control}
                 name="name"
@@ -217,7 +223,9 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
               {errors.name && <p className="text-caption-sm-regular text-danger-primary">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-2">
-              <h4 className="text-body-sm-medium text-tertiary">{t("workspace_settings.settings.general.url")}</h4>
+              <label htmlFor="url" className="text-body-sm-medium text-primary">
+                {t("workspace_settings.settings.general.url")}
+              </label>
               <Controller
                 control={control}
                 name="url"
@@ -243,7 +251,7 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <h4 className="text-body-sm-medium text-tertiary">
+              <h4 className="text-body-sm-medium text-primary">
                 {t("workspace_settings.settings.general.workspace_timezone")}
               </h4>
               <Controller
@@ -268,6 +276,7 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
               onClick={(e) => {
                 void handleSubmit(onSubmit)(e);
               }}
+              disabled={!isDirty || isLoading}
               loading={isLoading}
             />
           </div>

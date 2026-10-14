@@ -63,7 +63,7 @@ export const PrevExports = observer(function PrevExports(props: Props) {
     const interval = setInterval(() => {
       if (
         Array.isArray(exporterServices?.results) &&
-        exporterServices.results.some((service) => service.status === "processing")
+        exporterServices.results.some((service) => service.status === "processing" || service.status === "queued")
       ) {
         handleRefresh();
       } else {

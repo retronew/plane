@@ -23,6 +23,12 @@ from plane.utils.llm import LLMError
 
 @pytest.mark.unit
 class TestWriting:
+    @pytest.fixture(autouse=True)
+    def enabled_workspace(self):
+        with patch("plane.app.views.external.base.Workspace.objects.filter") as workspace:
+            workspace.return_value.exists.return_value = True
+            yield
+
     @pytest.mark.parametrize(
         "data",
         [
@@ -178,6 +184,7 @@ class TestWriting:
         assert "only a title" in serializer.validated_data["task"]
 
     @patch("plane.app.views.external.base.get_llm_config", return_value=object())
+    @pytest.mark.django_db
     def test_disconnecting_closes_upstream(self, config):
         closed = []
 

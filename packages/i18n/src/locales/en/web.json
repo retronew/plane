@@ -1784,6 +1784,32 @@
         "completed": "Completed",
         "cancelled": "Cancelled"
       }
-    }
+    },
+    "workspace_sidebar": {
+      "expand": "Expand settings sidebar",
+      "collapse": "Collapse settings sidebar"
+    },
+    "workspace_update_failed": "Unable to update the workspace. Please try again.",
+    "clear_member_search": "Clear member search",
+    "settings_products": "Products",
+    "workspace_projects_title": "Projects",
+    "workspace_ai_title": "Plane AI",
+    "workspace_projects_description": "Manage who can create projects in this workspace.",
+    "workspace_ai_description": "Manage AI writing for work items and pages in this workspace.",
+    "workspace_projects_toggle": "Allow members to create projects",
+    "workspace_projects_hint": "When enabled, members can create projects in addition to administrators and owners.",
+    "workspace_ai_toggle": "Enable AI for this workspace",
+    "workspace_ai_hint": "When disabled, this workspace cannot start new AI writing requests.",
+    "workspace_feature_saved": "Workspace settings updated",
+    "workspace_project_creation_restricted": "Only workspace administrators can create projects.",
+    "workspace_tokens_title": "API tokens",
+    "workspace_tokens_description": "Create API tokens restricted to this workspace.",
+    "token_load_failed": "Unable to load access tokens. Please try again.",
+    "retry_token_load": "Retry",
+    "webhook_name": "Webhook title",
+    "webhook_name_placeholder": "Enter a title for the webhook",
+    "webhook_name_required": "Enter a webhook title",
+    "webhook_update_failed": "Unable to update webhook. Please try again.",
+    "workspace_tokens_empty": "No workspace API tokens"
   }
 }

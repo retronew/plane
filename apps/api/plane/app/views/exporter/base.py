@@ -3,19 +3,21 @@
 # See the LICENSE file for details.
 
 # Third Party imports
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.response import Response
 
 from plane.app.permissions import allow_permission, ROLE
 from plane.app.serializers import ExporterHistorySerializer
 from plane.bgtasks.export_task import issue_export_task
-from plane.db.models import ExporterHistory, Project, Workspace
+from plane.db.models import ExporterHistory, Project, Workspace, Issue
+from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 
 # Module imports
 from .. import BaseAPIView
 
 
 class ExportIssuesEndpoint(BaseAPIView):
+    filterset_class = IssueFilterSet
     model = ExporterHistory
     serializer_class = ExporterHistorySerializer
 
@@ -26,7 +28,21 @@ class ExportIssuesEndpoint(BaseAPIView):
 
         provider = request.data.get("provider", False)
         multiple = request.data.get("multiple", False)
-        project_ids = request.data.get("project", [])
+        project_field = serializers.ListField(child=serializers.UUIDField(), allow_empty=True)
+        project_ids = [str(value) for value in project_field.run_validation(request.data.get("project", []))]
+        rich_filters = request.data.get("rich_filters", {})
+        ComplexFilterBackend().filter_queryset(request, Issue.objects.none(), self, filter_data=rich_filters)
+        accessible_ids = set(
+            str(pk)
+            for pk in Project.objects.filter(
+                workspace=workspace,
+                project_projectmember__member=request.user,
+                project_projectmember__is_active=True,
+                archived_at__isnull=True,
+            ).values_list("id", flat=True)
+        )
+        if set(project_ids) - accessible_ids:
+            return Response({"error": "One or more projects are not accessible."}, status=status.HTTP_403_FORBIDDEN)
 
         if provider in ["csv", "xlsx", "json"]:
             if not project_ids:
@@ -44,6 +60,7 @@ class ExportIssuesEndpoint(BaseAPIView):
                 initiated_by=request.user,
                 provider=provider,
                 type="issue_exports",
+                rich_filters=rich_filters,
             )
 
             issue_export_task.delay(

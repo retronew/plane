@@ -10,18 +10,21 @@ import { EUserWorkspaceRoles } from "@plane/types";
 
 export enum WORKSPACE_SETTINGS_CATEGORY {
   ADMINISTRATION = "administration",
+  PRODUCTS = "products",
   FEATURES = "features",
   DEVELOPER = "developer",
 }
 
 export const WORKSPACE_SETTINGS_CATEGORIES: WORKSPACE_SETTINGS_CATEGORY[] = [
   WORKSPACE_SETTINGS_CATEGORY.ADMINISTRATION,
+  WORKSPACE_SETTINGS_CATEGORY.PRODUCTS,
   WORKSPACE_SETTINGS_CATEGORY.FEATURES,
   WORKSPACE_SETTINGS_CATEGORY.DEVELOPER,
 ];
 
 export const WORKSPACE_SETTINGS_CATEGORY_LABELS: Record<WORKSPACE_SETTINGS_CATEGORY, string> = {
   [WORKSPACE_SETTINGS_CATEGORY.ADMINISTRATION]: "common.administration",
+  [WORKSPACE_SETTINGS_CATEGORY.PRODUCTS]: "web.settings_products",
   [WORKSPACE_SETTINGS_CATEGORY.FEATURES]: "common.features",
   [WORKSPACE_SETTINGS_CATEGORY.DEVELOPER]: "common.developer",
 };
@@ -48,6 +51,27 @@ export const WORKSPACE_SETTINGS: Record<TWorkspaceSettingsTabs, TWorkspaceSettin
     access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/exports/`,
   },
+  projects: {
+    key: "projects",
+    i18n_label: "web.workspace_projects_title",
+    href: "/settings/project-configuration",
+    access: [EUserWorkspaceRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/project-configuration/`,
+  },
+  ai: {
+    key: "ai",
+    i18n_label: "web.workspace_ai_title",
+    href: "/settings/plane-intelligence",
+    access: [EUserWorkspaceRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/plane-intelligence/`,
+  },
+  tokens: {
+    key: "tokens",
+    i18n_label: "web.workspace_tokens_title",
+    href: "/settings/access-tokens",
+    access: [EUserWorkspaceRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/access-tokens/`,
+  },
   webhooks: {
     key: "webhooks",
     i18n_label: "workspace_settings.settings.webhooks.title",
@@ -67,6 +91,7 @@ export const GROUPED_WORKSPACE_SETTINGS: Record<WORKSPACE_SETTINGS_CATEGORY, TWo
     WORKSPACE_SETTINGS["members"],
     WORKSPACE_SETTINGS["export"],
   ],
-  [WORKSPACE_SETTINGS_CATEGORY.FEATURES]: [],
-  [WORKSPACE_SETTINGS_CATEGORY.DEVELOPER]: [WORKSPACE_SETTINGS["webhooks"]],
+  [WORKSPACE_SETTINGS_CATEGORY.PRODUCTS]: [WORKSPACE_SETTINGS.ai],
+  [WORKSPACE_SETTINGS_CATEGORY.FEATURES]: [WORKSPACE_SETTINGS.projects],
+  [WORKSPACE_SETTINGS_CATEGORY.DEVELOPER]: [WORKSPACE_SETTINGS["webhooks"], WORKSPACE_SETTINGS.tokens],
 };

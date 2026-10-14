@@ -3,6 +3,8 @@
 # See the LICENSE file for details.
 
 # Python imports
+from types import SimpleNamespace
+from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 import io
 import zipfile
 from typing import List
@@ -187,6 +189,17 @@ def issue_export_task(
                     queryset=Issue.objects.select_related("type", "project"),
                 ),
             )
+        )
+
+        workspace_issues = (
+            ComplexFilterBackend()
+            .filter_queryset(
+                None,
+                workspace_issues,
+                SimpleNamespace(filterset_class=IssueFilterSet),
+                filter_data=exporter_instance.rich_filters or {},
+            )
+            .distinct()
         )
 
         # Create exporter for the specified format

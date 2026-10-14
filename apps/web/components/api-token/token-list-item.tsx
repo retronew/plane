@@ -13,9 +13,9 @@ import { renderFormattedDate, renderFormattedTime, calculateTimeAgo } from "@pla
 import { translate } from "@plane/i18n";
 import { DeleteApiTokenModal } from "@/components/api-token/delete-token-modal";
 
-type Props = { token: IApiToken };
+type Props = { token: IApiToken; workspaceSlug?: string };
 
-export function ApiTokenListItem({ token }: Props) {
+export function ApiTokenListItem({ token, workspaceSlug }: Props) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   return (
     <tr className="border-b border-subtle last:border-0 hover:bg-layer-1-hover">
@@ -71,7 +71,12 @@ export function ApiTokenListItem({ token }: Props) {
             </div>
           </MenuContent>
         </Menu>
-        <DeleteApiTokenModal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} tokenId={token.id} />
+        <DeleteApiTokenModal
+          workspaceSlug={workspaceSlug}
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          tokenId={token.id}
+        />
       </td>
     </tr>
   );

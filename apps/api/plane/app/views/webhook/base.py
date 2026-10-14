@@ -47,6 +47,7 @@ class WebhookEndpoint(BaseAPIView):
                 fields=(
                     "id",
                     "url",
+                    "name",
                     "is_active",
                     "created_at",
                     "updated_at",
@@ -66,6 +67,7 @@ class WebhookEndpoint(BaseAPIView):
                 fields=(
                     "id",
                     "url",
+                    "name",
                     "is_active",
                     "created_at",
                     "updated_at",
@@ -89,6 +91,7 @@ class WebhookEndpoint(BaseAPIView):
             fields=(
                 "id",
                 "url",
+                "name",
                 "is_active",
                 "created_at",
                 "updated_at",

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { mutate } from "swr";
 // plane imports
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
@@ -20,12 +20,12 @@ import { GeneratedTokenDetails } from "./generated-token-details";
 import { translate } from "@plane/i18n";
 
 type Props = {
+  workspaceSlug?: string;
   isOpen: boolean;
   onClose: () => void;
 };
 
 // services
-const apiTokenService = new APITokenService();
 
 const downloadSecretKey = (data: IApiToken) => {
   const csvData = {
@@ -39,7 +39,9 @@ const downloadSecretKey = (data: IApiToken) => {
 };
 
 export function CreateApiTokenModal(props: Props) {
-  const { isOpen, onClose } = props;
+  const { isOpen, onClose, workspaceSlug } = props;
+  const apiTokenService = useMemo(() => new APITokenService(undefined, workspaceSlug), [workspaceSlug]);
+  const cacheKey = workspaceSlug ? `${API_TOKENS_LIST}:${workspaceSlug}` : API_TOKENS_LIST;
   // states
   const [generatedToken, setGeneratedToken] = useState<IApiToken | null | undefined>(null);
 
@@ -57,14 +59,15 @@ export function CreateApiTokenModal(props: Props) {
       .create(data)
       .then((res) => {
         setGeneratedToken(res);
-        downloadSecretKey(res);
+        if (!workspaceSlug) downloadSecretKey(res);
 
         mutate<IApiToken[]>(
-          API_TOKENS_LIST,
+          cacheKey,
           (prevData) => {
             if (!prevData) return;
 
-            return [res, ...prevData];
+            const { token: _secret, ...metadata } = res;
+            return [metadata, ...prevData];
           },
           false
         );
@@ -87,7 +90,11 @@ export function CreateApiTokenModal(props: Props) {
     <Dialog open={isOpen} disablePointerDismissal onOpenChange={() => {}}>
       <DialogContent size="md">
         {generatedToken ? (
-          <GeneratedTokenDetails handleClose={handleClose} tokenDetails={generatedToken} />
+          <GeneratedTokenDetails
+            handleClose={handleClose}
+            tokenDetails={generatedToken}
+            showMcpSetup={!workspaceSlug}
+          />
         ) : (
           <CreateApiTokenForm handleClose={handleClose} onSubmit={handleCreateToken} />
         )}

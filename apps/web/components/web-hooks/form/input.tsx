@@ -21,9 +21,9 @@ export function WebhookInput(props: Props) {
     <>
       <h6 className="text-13 font-medium">{t("workspace_settings.settings.webhooks.modal.payload")}</h6>
       <Field name="payload" invalid={hasError}>
-        <InputGroup size="lg">
+        <InputGroup size="md">
           <Input
-            size="lg"
+            size="md"
             type="url"
             onChange={(e) => onChange(e.target.value)}
             value={value}

@@ -5,6 +5,7 @@
  */
 
 export interface IWebhook {
+  name?: string;
   created_at: string;
   cycle: boolean;
   id: string;

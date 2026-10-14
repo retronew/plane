@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { sortBy } from "lodash-es";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -60,17 +61,14 @@ export const WorkspaceMembersList = observer(function WorkspaceMembersList(props
   const filteredMemberIds = workspaceSlug ? getFilteredWorkspaceMemberIds(workspaceSlug.toString()) : [];
   const searchedMemberIds = searchQuery ? getSearchedWorkspaceMemberIds(searchQuery) : filteredMemberIds;
   const searchedInvitationsIds = getSearchedWorkspaceInvitationIds(searchQuery);
-  const memberDetails = searchedMemberIds
-    ?.map((memberId) => getWorkspaceMemberDetails(memberId))
-    .sort((a, b) => {
-      if (a?.is_active && !b?.is_active) return -1;
-      if (!a?.is_active && b?.is_active) return 1;
-      return 0;
-    });
+  const memberDetails = sortBy(
+    searchedMemberIds?.map((memberId) => getWorkspaceMemberDetails(memberId)) ?? [],
+    (member) => (member?.is_active ? 0 : 1)
+  );
 
   return (
     <>
-      <div className="divide-y-[0.5px] divide-subtle overflow-scroll">
+      <div className="min-w-0 divide-y-[0.5px] divide-subtle">
         {searchedMemberIds?.length !== 0 && <WorkspaceMembersListItem memberDetails={memberDetails ?? []} />}
         {searchedInvitationsIds?.length === 0 && searchedMemberIds?.length === 0 && (
           <h4 className="mt-16 text-center text-body-xs-regular text-placeholder">{t("no_matching_members")}</h4>

@@ -47,7 +47,7 @@ export const WorkspaceSettingsSidebarItemCategories = observer(function Workspac
             <div className="p-2 text-caption-md-medium text-tertiary capitalize">
               {t(WORKSPACE_SETTINGS_CATEGORY_LABELS[category])}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-0.5">
               {accessibleItems.map((item) => {
                 const isItemActive =
                   item.href === "/settings"
@@ -56,6 +56,7 @@ export const WorkspaceSettingsSidebarItemCategories = observer(function Workspac
 
                 return (
                   <SettingsSidebarItem
+                    className="h-8 rounded-md py-0 text-13 [&_svg]:size-4"
                     key={item.key}
                     as="link"
                     href={joinUrlPath(workspaceSlug ?? "", item.href)}

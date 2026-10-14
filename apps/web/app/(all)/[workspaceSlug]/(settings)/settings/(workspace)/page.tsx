@@ -26,7 +26,7 @@ function GeneralWorkspaceSettingsPage() {
     : undefined;
 
   return (
-    <SettingsContentWrapper header={<GeneralWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper compact header={<GeneralWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <WorkspaceDetails />
     </SettingsContentWrapper>

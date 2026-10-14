@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { WorkspaceSettingsSidebarToggle } from "./collapse";
 import { ArrowNarrowLeftOutline } from "@makeplane/propel/icons";
 import { observer } from "mobx-react";
 // plane imports
@@ -35,7 +36,7 @@ export const WorkspaceSettingsSidebarHeader = observer(function WorkspaceSetting
 
   return (
     <div className="shrink-0">
-      <div className="flex items-center gap-1 py-3 pr-5 pl-4 text-body-md-medium">
+      <div className="flex items-center gap-1 py-3 pr-3 pl-4 text-body-md-medium">
         <IconButton
           variant="ghost"
           size="sm"
@@ -43,7 +44,8 @@ export const WorkspaceSettingsSidebarHeader = observer(function WorkspaceSetting
           aria-label={t("back_to_workspace")}
           onClick={() => router.push(`/${currentWorkspace?.slug}/`)}
         />
-        <p>{t("web.workspace_settings")}</p>
+        <p className="min-w-0 flex-1 truncate">{t("web.workspace_settings")}</p>
+        <WorkspaceSettingsSidebarToggle />
       </div>
       <div className="mt-1.5 flex items-center justify-between gap-2 px-5 py-0.5">
         <div className="flex items-center gap-2 truncate">

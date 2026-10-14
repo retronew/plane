@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { mutate } from "swr";
 // types
 import { useTranslation } from "@plane/i18n";
@@ -17,15 +17,16 @@ import { ConfirmDialog } from "@plane/blocks/dialog";
 import { API_TOKENS_LIST } from "@plane/constants";
 
 type Props = {
+  workspaceSlug?: string;
   isOpen: boolean;
   onClose: () => void;
   tokenId: string;
 };
 
-const apiTokenService = new APITokenService();
-
 export function DeleteApiTokenModal(props: Props) {
-  const { isOpen, onClose, tokenId } = props;
+  const { isOpen, onClose, tokenId, workspaceSlug } = props;
+  const apiTokenService = useMemo(() => new APITokenService(undefined, workspaceSlug), [workspaceSlug]);
+  const cacheKey = workspaceSlug ? `${API_TOKENS_LIST}:${workspaceSlug}` : API_TOKENS_LIST;
   // states
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   // router params
@@ -48,14 +49,11 @@ export function DeleteApiTokenModal(props: Props) {
           message: t("workspace_settings.settings.api_tokens.delete.success.message"),
         });
 
-        mutate<IApiToken[]>(
-          API_TOKENS_LIST,
-          (prevData) => (prevData ?? []).filter((token) => token.id !== tokenId),
-          false
-        );
+        mutate<IApiToken[]>(cacheKey, (prevData) => (prevData ?? []).filter((token) => token.id !== tokenId), false);
 
         handleClose();
         setDeleteLoading(false);
+        return undefined;
       })
       .catch((err) => {
         setToast({

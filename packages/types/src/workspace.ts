@@ -33,6 +33,8 @@ export interface IWorkspace {
   total_projects?: number;
   role: number;
   timezone: string;
+  allow_member_project_creation: boolean;
+  ai_enabled: boolean;
 }
 
 export interface IWorkspaceLite {

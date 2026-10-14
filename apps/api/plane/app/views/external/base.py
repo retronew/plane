@@ -166,6 +166,9 @@ class GPTIntegrationEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id):
+        if not Workspace.objects.filter(slug=slug, ai_enabled=True).exists():
+            return Response({"error": "AI is disabled for this workspace."}, status=status.HTTP_403_FORBIDDEN)
+
         if not get_llm_config():
             return Response(
                 {"error": "LLM provider API key and model are required"},
@@ -203,6 +206,9 @@ class WorkspaceGPTIntegrationEndpoint(BaseAPIView):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def post(self, request, slug):
+        if not Workspace.objects.filter(slug=slug, ai_enabled=True).exists():
+            return Response({"error": "AI is disabled for this workspace."}, status=status.HTTP_403_FORBIDDEN)
+
         if not get_llm_config():
             return Response(
                 {"error": "LLM provider API key and model are required"},

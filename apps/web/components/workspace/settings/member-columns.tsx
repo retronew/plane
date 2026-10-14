@@ -61,14 +61,14 @@ export function NameColumn(props: NameProps) {
 
   return (
     <div className="group relative">
-      <div className="flex w-72 items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex flex-1 items-center gap-x-2 gap-y-2">
+      <div className="flex w-44 items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2">
           {isSuspended ? (
             <div className="rounded-full bg-layer-1">
               <DeactivatedUserOutline className="size-6 text-placeholder" />
             </div>
           ) : avatar_url && avatar_url.trim() !== "" ? (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
               <span className="relative flex size-6 items-center justify-center rounded-full text-on-color capitalize">
                 <img
                   src={getFileURL(avatar_url)}
@@ -78,19 +78,22 @@ export function NameColumn(props: NameProps) {
               </span>
             </Link>
           ) : (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
               <span className="relative flex size-6 items-center justify-center rounded-full bg-layer-3 text-11 text-tertiary capitalize">
                 {(email ?? display_name ?? "?")[0]}
               </span>
             </Link>
           )}
-          <span className={isSuspended ? "text-placeholder" : ""}>
+          <span
+            title={`${first_name ?? ""} ${last_name ?? ""}`.trim()}
+            className={`truncate ${isSuspended ? "text-placeholder" : ""}`}
+          >
             {first_name} {last_name}
           </span>
         </div>
 
         {!isSuspended && (isAdmin || id === currentUser?.id) && (
-          <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100">
+          <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100">
             <Menu>
               <MenuTrigger
                 render={

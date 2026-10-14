@@ -1784,6 +1784,32 @@
         "completed": "已完成",
         "cancelled": "已取消"
       }
-    }
+    },
+    "workspace_sidebar": {
+      "expand": "展开设置侧栏",
+      "collapse": "折叠设置侧栏"
+    },
+    "workspace_update_failed": "工作区更新失败，请重试。",
+    "clear_member_search": "清除成员搜索",
+    "settings_products": "产品",
+    "workspace_projects_title": "项目",
+    "workspace_ai_title": "Plane AI",
+    "workspace_projects_description": "管理此工作区的项目创建权限。",
+    "workspace_ai_description": "管理此工作区中工作项和页面的 AI 内容优化。",
+    "workspace_projects_toggle": "允许成员创建项目",
+    "workspace_projects_hint": "启用后，除管理员和所有者之外，成员也可以创建新项目。",
+    "workspace_ai_toggle": "为此工作区开启 AI",
+    "workspace_ai_hint": "关闭后，此工作区将无法发起新的 AI 优化请求。",
+    "workspace_feature_saved": "工作区设置已更新",
+    "workspace_project_creation_restricted": "此工作区仅允许管理员创建项目。",
+    "workspace_tokens_title": "API 令牌",
+    "workspace_tokens_description": "创建用于访问此工作区的 API 令牌。",
+    "token_load_failed": "无法加载访问令牌，请重试。",
+    "retry_token_load": "重试",
+    "webhook_name": "Webhook 标题",
+    "webhook_name_placeholder": "为 Webhook 输入标题",
+    "webhook_name_required": "请输入 Webhook 标题",
+    "webhook_update_failed": "Webhook 更新失败，请重试。",
+    "workspace_tokens_empty": "暂无工作区 API 令牌"
   }
 }

@@ -55,6 +55,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
 
     const payload = {
       url: formData.url,
+      name: formData.name,
       is_active: formData.is_active,
       project: formData.project,
       cycle: formData.cycle,
@@ -98,7 +99,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
     );
 
   return (
-    <SettingsContentWrapper header={<WebhookDetailsWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper compact header={<WebhookDetailsWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <DeleteWebhookModal isOpen={deleteWebhookModal} onClose={() => setDeleteWebhookModal(false)} />
       <div className="w-full space-y-8 overflow-y-auto">

@@ -8,8 +8,8 @@
     "settings": {
       "general": {
         "title": "常规",
-        "upload_logo": "上传 Logo",
-        "edit_logo": "编辑 Logo",
+        "upload_logo": "上传图标",
+        "edit_logo": "编辑图标",
         "name": "工作区名称",
         "url": "工作区 URL",
         "workspace_timezone": "工作区时区",
@@ -367,7 +367,7 @@
         "export_as_csv": "导出为 CSV",
         "slug_already_exists": "该标识已存在",
         "failed_to_create_application": "创建应用失败",
-        "upload_logo": "上传 Logo",
+        "upload_logo": "上传图标",
         "app_name_error": "请输入应用名称",
         "app_short_description_title": "简短描述",
         "app_short_description_error": "请输入应用的简短描述",

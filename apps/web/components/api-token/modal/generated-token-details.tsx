@@ -28,12 +28,13 @@ import { ApiTokenMcpSetup } from "../mcp-setup";
 import { Copy } from "lucide-react";
 
 type Props = {
+  showMcpSetup?: boolean;
   handleClose: () => void;
   tokenDetails: IApiToken;
 };
 
 export function GeneratedTokenDetails(props: Props) {
-  const { handleClose, tokenDetails } = props;
+  const { handleClose, tokenDetails, showMcpSetup = true } = props;
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
   const copyApiToken = (token: string) => {
@@ -66,7 +67,7 @@ export function GeneratedTokenDetails(props: Props) {
               <Copy className="h-4 w-4 flex-shrink-0 text-placeholder" />
             </Tooltip>
           </button>
-          {tokenDetails.token && <ApiTokenMcpSetup token={tokenDetails.token} />}
+          {showMcpSetup && tokenDetails.token && <ApiTokenMcpSetup token={tokenDetails.token} />}
         </DialogBody>
       </DialogMain>
       <DialogActions>

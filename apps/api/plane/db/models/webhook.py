@@ -33,6 +33,7 @@ def validate_domain(value):
 
 
 class Webhook(BaseModel):
+    name = models.CharField(max_length=255, blank=True, default="")
     workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, related_name="workspace_webhooks")
     url = models.URLField(validators=[validate_schema, validate_domain], max_length=1024)
     is_active = models.BooleanField(default=True)
