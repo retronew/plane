@@ -4,17 +4,18 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useRef } from "react";
 import { observer } from "mobx-react";
-import Link from "next/link";
 import { WEB_BASE_URL } from "@plane/constants";
 // plane internal packages
 import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import {
-  ArrowNarrowLeftOutline,
   ChatOutline,
   Github,
   HelpOutline,
+  LeftSidePaneOutline,
   NewTabOutline,
   PagesOutline,
 } from "@makeplane/propel/icons";
@@ -43,14 +44,10 @@ const helpOptions = [
 ];
 
 export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection() {
-  // states
-  const [isNeedHelpOpen, setIsNeedHelpOpen] = useState(false);
   const { t } = useTranslation();
   // store
   const { instance } = useInstance();
   const { isSidebarCollapsed, toggleSidebar } = useTheme();
-  // refs
-  const helpOptionsRef = useRef<HTMLDivElement | null>(null);
 
   const redirectionLink = encodeURI(WEB_BASE_URL + "/");
 
@@ -89,74 +86,48 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
             </a>
           </Tooltip>
         )}
-        <Tooltip label={t("admin.help.help")} side={isSidebarCollapsed ? "right" : "top"}>
-          <button
-            type="button"
-            aria-label={t("admin.help.help")}
-            className={`ml-auto grid place-items-center rounded-md p-1.5 text-secondary outline-none hover:bg-layer-1-hover hover:text-primary ${
-              isSidebarCollapsed ? "w-full" : ""
-            }`}
-            onClick={() => setIsNeedHelpOpen((prev) => !prev)}
-          >
-            <HelpOutline className="size-4" />
-          </button>
-        </Tooltip>
-        <Tooltip label={t("admin.header.toggle_sidebar")} side={isSidebarCollapsed ? "right" : "top"}>
-          <button
-            type="button"
-            aria-label={t("admin.header.toggle_sidebar")}
-            className={`grid place-items-center rounded-md p-1.5 text-secondary outline-none hover:bg-layer-1-hover hover:text-primary ${
-              isSidebarCollapsed ? "w-full" : ""
-            }`}
-            onClick={() => toggleSidebar(!isSidebarCollapsed)}
-          >
-            <ArrowNarrowLeftOutline className={`size-4 duration-300 ${isSidebarCollapsed ? "rotate-180" : ""}`} />
-          </button>
-        </Tooltip>
-      </div>
-      <div className="relative">
-        {/* The standalone Headless UI enter/leave transition is now a mount-time fade (leave animation
-            dropped), the same shape Propel's own panels animate with. */}
-        {isNeedHelpOpen && (
-          <div
-            className={`absolute bottom-2 z-[15] min-w-[10rem] ${
-              isSidebarCollapsed ? "left-full" : "-left-[75px]"
-            } animate-fade-in divide-y divide-subtle-1 rounded-sm bg-surface-1 p-1 whitespace-nowrap shadow-raised-100 motion-reduce:animate-none`}
-            ref={helpOptionsRef}
-          >
-            <div className="space-y-1 pb-2">
-              {helpOptions.map(({ name, Icon, href }) => {
-                if (href)
-                  return (
-                    <Link href={href} key={name} target="_blank">
-                      <div className="flex items-center gap-x-2 rounded-sm px-2 py-1 text-11 hover:bg-layer-1-hover">
-                        <div className="grid flex-shrink-0 place-items-center">
-                          <Icon className="h-3.5 w-3.5 text-secondary" />
-                        </div>
-                        <span className="text-11">{t(name)}</span>
-                      </div>
-                    </Link>
-                  );
-                else
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      className="flex w-full items-center gap-x-2 rounded-sm px-2 py-1 text-11 hover:bg-layer-1"
-                    >
-                      <div className="grid flex-shrink-0 place-items-center">
-                        <Icon className="h-3.5 w-3.5 text-secondary" />
-                      </div>
-                      <span className="text-11">{t(name)}</span>
-                    </button>
-                  );
-              })}
-            </div>
-            <div className="px-2 pt-2 pb-1 text-10">
-              {t("admin.help.version", { version: instance?.current_version })}
-            </div>
-          </div>
-        )}
+        {/* Same composition as the web app's help menu and sidebar toggle (propel Menu + IconButton) */}
+        <div className={isSidebarCollapsed ? "" : "ml-auto"}>
+          <Menu>
+            <MenuTrigger
+              render={
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  icon={<Icon icon={HelpOutline} />}
+                  aria-label={t("admin.help.help")}
+                  showTooltip
+                />
+              }
+            />
+            <MenuContent
+              side={isSidebarCollapsed ? "right" : "top"}
+              align="end"
+              footer={
+                <div className="shrink-0 border-t border-subtle bg-layer-2 px-3 py-2 text-caption-md-regular text-tertiary">
+                  {t("admin.help.version", { version: instance?.current_version })}
+                </div>
+              }
+            >
+              {helpOptions.map(({ name, Icon: OptionIcon, href }) => (
+                <MenuItem
+                  key={name}
+                  icon={<Icon icon={OptionIcon} tint="secondary" />}
+                  label={t(name)}
+                  onClick={() => window.open(href, "_blank", "noopener,noreferrer")}
+                />
+              ))}
+            </MenuContent>
+          </Menu>
+        </div>
+        <IconButton
+          size="sm"
+          variant="ghost"
+          icon={<Icon icon={LeftSidePaneOutline} />}
+          aria-label={t("admin.header.toggle_sidebar")}
+          showTooltip
+          onClick={() => toggleSidebar(!isSidebarCollapsed)}
+        />
       </div>
     </div>
   );
