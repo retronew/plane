@@ -20,7 +20,7 @@ const isCustomTypography = (value: string) =>
 const isCustomFontSize = (value: string) => /^(9|10|11|12|13|14|16|18|20|24|28|32|40)$/.test(value);
 
 // Matches custom text color classes: text-primary, text-on-color, text-secondary, etc.
-const CUSTOM_TEXT_COLORS = [
+const CUSTOM_TEXT_COLORS = new Set([
   "primary",
   "secondary",
   "tertiary",
@@ -40,8 +40,12 @@ const CUSTOM_TEXT_COLORS = [
   "danger",
   "danger-primary",
   "danger-secondary",
-];
-const isCustomTextColor = (value: string) => CUSTOM_TEXT_COLORS.includes(value);
+]);
+const isCustomTextColor = (value: string) => CUSTOM_TEXT_COLORS.has(value);
+
+// Propel's border widths (--border-width-xs..xl). Without these, tailwind-merge reads `border-sm` as a
+// border color and drops it whenever a real color like `border-subtle-1` follows.
+const BORDER_WIDTHS = ["xs", "sm", "md", "lg", "xl"];
 
 const twMerge = extendTailwindMerge<"custom-typography" | "custom-text-color">({
   override: {
@@ -62,6 +66,15 @@ const twMerge = extendTailwindMerge<"custom-typography" | "custom-text-color">({
       "custom-typography": [{ text: [isCustomTypography] }],
       // Custom text colors in their own group (won't conflict with font sizes)
       "custom-text-color": [{ text: [isCustomTextColor] }],
+      "border-w": [{ border: BORDER_WIDTHS }],
+      "border-w-x": [{ "border-x": BORDER_WIDTHS }],
+      "border-w-y": [{ "border-y": BORDER_WIDTHS }],
+      "border-w-s": [{ "border-s": BORDER_WIDTHS }],
+      "border-w-e": [{ "border-e": BORDER_WIDTHS }],
+      "border-w-t": [{ "border-t": BORDER_WIDTHS }],
+      "border-w-r": [{ "border-r": BORDER_WIDTHS }],
+      "border-w-b": [{ "border-b": BORDER_WIDTHS }],
+      "border-w-l": [{ "border-l": BORDER_WIDTHS }],
     },
   },
 });
