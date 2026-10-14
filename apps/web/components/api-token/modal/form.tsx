@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { add } from "date-fns";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "@makeplane/propel/components/button";
 import {
   DialogActions,
@@ -98,13 +98,15 @@ export function CreateApiTokenForm(props: Props) {
   const { handleClose, neverExpires, toggleNeverExpires, onSubmit } = props;
   // states
   const [customDate, setCustomDate] = useState<Date | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  // Earliest selectable custom expiry date, fixed when the form mounts
+  const [tomorrow] = useState(() => add(new Date(), { days: 1 }));
   // form
   const {
     control,
     formState: { errors, isSubmitting },
     handleSubmit,
     reset,
-    watch,
   } = useForm<IApiToken>({ defaultValues });
   // hooks
   const { t } = useTranslation();
@@ -123,6 +125,7 @@ export function CreateApiTokenForm(props: Props) {
     const payload: Partial<IApiToken> = {
       label: data.label,
       description: data.description,
+      scope: readOnly ? "read" : "write",
     };
 
     // if never expires is toggled on, set expired_at to null
@@ -140,13 +143,12 @@ export function CreateApiTokenForm(props: Props) {
     await onSubmit(payload).then(() => {
       reset(defaultValues);
       setCustomDate(null);
+      setReadOnly(false);
       return undefined;
     });
   };
 
-  const today = new Date();
-  const tomorrow = add(today, { days: 1 });
-  const expiredAt = watch("expired_at");
+  const expiredAt = useWatch({ control, name: "expired_at" });
   const expiryDate = getExpiryDate(expiredAt ?? "");
   const customDateFormatted = customDate && getFormattedDate(customDate);
 
@@ -274,6 +276,15 @@ export function CreateApiTokenForm(props: Props) {
               aria-label={t("workspace_settings.settings.api_tokens.never_expires")}
             />
             <span>{t("workspace_settings.settings.api_tokens.never_expires")}</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-1.5">
+            <Switch
+              size="sm"
+              checked={readOnly}
+              onCheckedChange={setReadOnly}
+              aria-label={t("workspace_settings.settings.api_tokens.read_only")}
+            />
+            <span>{t("workspace_settings.settings.api_tokens.read_only")}</span>
           </label>
         </DialogInfo>
         <Button variant="secondary" size="sm" stretch="auto" label={t("cancel")} onClick={handleClose} />

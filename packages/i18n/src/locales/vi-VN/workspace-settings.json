@@ -152,6 +152,7 @@
         "add_token": "Thêm token truy cập",
         "create_token": "Tạo token",
         "never_expires": "Không bao giờ hết hạn",
+        "read_only": "Chỉ đọc",
         "generate_token": "Tạo token",
         "generating": "Đang tạo",
         "delete": {

@@ -22,6 +22,9 @@ class ApiTokenEndpoint(BaseAPIView):
         label = request.data.get("label", str(uuid4().hex))
         description = request.data.get("description", "")
         expired_at = request.data.get("expired_at", None)
+        scope = request.data.get("scope", APIToken.SCOPE_WRITE)
+        if scope not in (APIToken.SCOPE_READ, APIToken.SCOPE_WRITE):
+            return Response({"error": "scope must be 'read' or 'write'"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check the user type
         user_type = 1 if request.user.is_bot else 0
@@ -32,6 +35,7 @@ class ApiTokenEndpoint(BaseAPIView):
             user=request.user,
             user_type=user_type,
             expired_at=expired_at,
+            scope=scope,
         )
 
         serializer = APITokenSerializer(api_token)

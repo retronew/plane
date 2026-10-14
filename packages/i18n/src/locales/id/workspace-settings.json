@@ -152,6 +152,7 @@
         "add_token": "Tambah token akses",
         "create_token": "Buat token",
         "never_expires": "Tidak pernah kedaluwarsa",
+        "read_only": "Hanya baca",
         "generate_token": "Hasilkan token",
         "generating": "Menghasilkan",
         "delete": {

@@ -21,6 +21,10 @@ def generate_token():
 
 
 class APIToken(BaseModel):
+    SCOPE_READ = "read"
+    SCOPE_WRITE = "write"
+    SCOPE_CHOICES = ((SCOPE_READ, "Read only"), (SCOPE_WRITE, "Read and write"))
+
     # Meta information
     label = models.CharField(max_length=255, default=generate_label_token)
     description = models.TextField(blank=True)
@@ -37,6 +41,8 @@ class APIToken(BaseModel):
     expired_at = models.DateTimeField(blank=True, null=True)
     is_service = models.BooleanField(default=False)
     allowed_rate_limit = models.CharField(max_length=255, default="60/min")
+    # A read-only token may only make safe (GET/HEAD/OPTIONS) requests
+    scope = models.CharField(max_length=16, choices=SCOPE_CHOICES, default=SCOPE_WRITE)
 
     class Meta:
         verbose_name = "API Token"

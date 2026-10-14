@@ -152,6 +152,7 @@
         "add_token": "新增存取權杖",
         "create_token": "建立權杖",
         "never_expires": "永不過期",
+        "read_only": "唯讀",
         "generate_token": "產生權杖",
         "generating": "產生中",
         "delete": {

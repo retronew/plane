@@ -152,6 +152,7 @@
         "add_token": "Добавить токен доступа",
         "create_token": "Создать токен",
         "never_expires": "Бессрочный",
+        "read_only": "Только чтение",
         "generate_token": "Сгенерировать токен",
         "generating": "Генерация",
         "delete": {

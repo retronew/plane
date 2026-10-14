@@ -152,6 +152,7 @@
         "add_token": "Přidat token přístupu",
         "create_token": "Vytvořit token",
         "never_expires": "Nikdy neexpiruje",
+        "read_only": "Pouze pro čtení",
         "generate_token": "Generovat token",
         "generating": "Generování",
         "delete": {

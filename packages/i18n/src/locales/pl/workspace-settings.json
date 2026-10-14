@@ -152,6 +152,7 @@
         "add_token": "Dodaj token dostępu",
         "create_token": "Utwórz token",
         "never_expires": "Nigdy nie wygasa",
+        "read_only": "Tylko do odczytu",
         "generate_token": "Wygeneruj token",
         "generating": "Generowanie",
         "delete": {

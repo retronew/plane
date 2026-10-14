@@ -48,6 +48,11 @@ export function ApiTokenListItem(props: Props) {
           >
             {token.is_active ? translate("web.active") : translate("web.expired")}
           </span>
+          {token.scope === "read" && (
+            <span className="ml-2 flex h-4 max-h-fit items-center rounded-xs bg-layer-1 px-2 text-11 font-medium text-secondary">
+              {translate("workspace_settings.settings.api_tokens.read_only")}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex w-full flex-col justify-center">
           {token.description.trim() !== "" && (

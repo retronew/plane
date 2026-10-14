@@ -152,6 +152,7 @@
         "add_token": "アクセストークンを追加",
         "create_token": "トークンを作成",
         "never_expires": "無期限",
+        "read_only": "読み取り専用",
         "generate_token": "トークンを生成",
         "generating": "生成中",
         "delete": {

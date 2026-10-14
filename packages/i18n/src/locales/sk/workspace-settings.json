@@ -152,6 +152,7 @@
         "add_token": "Pridať token prístupu",
         "create_token": "Vytvoriť token",
         "never_expires": "Nikdy neexpiruje",
+        "read_only": "Iba na čítanie",
         "generate_token": "Generovať token",
         "generating": "Generovanie",
         "delete": {

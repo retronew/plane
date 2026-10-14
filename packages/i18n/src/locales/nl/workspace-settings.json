@@ -152,6 +152,7 @@
         "add_token": "Toegangstoken toevoegen",
         "create_token": "Token aanmaken",
         "never_expires": "Verloopt nooit",
+        "read_only": "Alleen-lezen",
         "generate_token": "Token genereren",
         "generating": "Genereren",
         "delete": {

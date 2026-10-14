@@ -152,6 +152,7 @@
         "add_token": "Додати токен доступу",
         "create_token": "Створити токен",
         "never_expires": "Ніколи не спливає",
+        "read_only": "Лише читання",
         "generate_token": "Згенерувати токен",
         "generating": "Генерація",
         "delete": {

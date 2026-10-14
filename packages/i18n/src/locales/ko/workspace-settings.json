@@ -152,6 +152,7 @@
         "add_token": "액세스 토큰 추가",
         "create_token": "토큰 생성",
         "never_expires": "만료되지 않음",
+        "read_only": "읽기 전용",
         "generate_token": "토큰 생성",
         "generating": "생성 중",
         "delete": {

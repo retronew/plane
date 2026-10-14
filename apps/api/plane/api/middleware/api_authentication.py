@@ -8,7 +8,8 @@ from django.db.models import Q
 
 # Third party imports
 from rest_framework import authentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from rest_framework.permissions import SAFE_METHODS
 
 # Module imports
 from plane.db.models import APIToken
@@ -26,7 +27,7 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
     def get_api_token(self, request):
         return request.headers.get(self.auth_header_name)
 
-    def validate_api_token(self, token):
+    def validate_api_token(self, token, request=None):
         try:
             api_token = APIToken.objects.get(
                 Q(Q(expired_at__gt=timezone.now()) | Q(expired_at__isnull=True)),
@@ -40,6 +41,10 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
         # save api token last used
         api_token.last_used = timezone.now()
         api_token.save(update_fields=["last_used"])
+        # A read-only token may only make safe requests
+        if request is not None and api_token.scope == APIToken.SCOPE_READ and request.method not in SAFE_METHODS:
+            raise PermissionDenied("This API token is read-only")
+
         return (api_token.user, api_token.token)
 
     def authenticate(self, request):
@@ -48,5 +53,5 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
             return None
 
         # Validate the API token
-        user, token = self.validate_api_token(token)
+        user, token = self.validate_api_token(token, request=request)
         return user, token

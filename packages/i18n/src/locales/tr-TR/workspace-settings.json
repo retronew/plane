@@ -152,6 +152,7 @@
         "add_token": "Erişim token'ı ekle",
         "create_token": "Token oluştur",
         "never_expires": "Süresi dolmaz",
+        "read_only": "Salt okunur",
         "generate_token": "Token oluştur",
         "generating": "Oluşturuluyor",
         "delete": {

@@ -152,6 +152,7 @@
         "add_token": "Ajouter un jeton d'accès",
         "create_token": "Créer un jeton",
         "never_expires": "N’expire jamais",
+        "read_only": "Lecture seule",
         "generate_token": "Générer un jeton",
         "generating": "Génération",
         "delete": {

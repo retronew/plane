@@ -152,6 +152,7 @@
         "add_token": "Adaugă token de acces",
         "create_token": "Creează cheie secretă",
         "never_expires": "Nu expiră niciodată",
+        "read_only": "Doar citire",
         "generate_token": "Generează cheie secretă",
         "generating": "Se generează",
         "delete": {

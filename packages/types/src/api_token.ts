@@ -12,6 +12,7 @@ export interface IApiToken {
   id: string;
   is_active: boolean;
   label: string;
+  scope?: "read" | "write";
   last_used: string | null;
   updated_at: string;
   updated_by: string;
