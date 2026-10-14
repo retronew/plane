@@ -64,6 +64,8 @@ services:
       - "5432:5432"
 
   api:
+    # Built once here; worker, beat-worker and migrator reuse this image
+    image: plane-api:local
     build:
       context: ./apps/api
       dockerfile: Dockerfile.dev
@@ -85,11 +87,8 @@ services:
       - "8000:8000"
 
   worker:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile.dev
-      args:
-        DOCKER_BUILDKIT: 1
+    image: plane-api:local
+    pull_policy: never
     restart: unless-stopped
     networks:
       - dev_env
@@ -104,11 +103,8 @@ services:
       - plane-redis
 
   beat-worker:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile.dev
-      args:
-        DOCKER_BUILDKIT: 1
+    image: plane-api:local
+    pull_policy: never
     restart: unless-stopped
     networks:
       - dev_env
@@ -123,11 +119,8 @@ services:
       - plane-redis
 
   migrator:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile.dev
-      args:
-        DOCKER_BUILDKIT: 1
+    image: plane-api:local
+    pull_policy: never
     restart: "no"
     networks:
       - dev_env
