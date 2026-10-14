@@ -176,6 +176,7 @@ def stream_chat(config: LLMConfig, prompt: str, max_tokens: int | None = None) -
         raise LLMError("Model is required")
     kwargs = _call_kwargs(config)
 
+    upstream = None
     try:
         if config.protocol == "openai-responses":
             events = any_llm.responses(
@@ -186,7 +187,10 @@ def stream_chat(config: LLMConfig, prompt: str, max_tokens: int | None = None) -
                 timeout=REQUEST_TIMEOUT,
                 **kwargs,
             )
+            upstream = events
             for event in events:
+                if getattr(event, "type", "") in ("response.failed", "response.incomplete", "error"):
+                    raise LLMError("Model response failed or was incomplete")
                 if getattr(event, "type", "") == "response.output_text.delta":
                     yield event.delta
             return
@@ -200,8 +204,11 @@ def stream_chat(config: LLMConfig, prompt: str, max_tokens: int | None = None) -
             timeout=REQUEST_TIMEOUT,
             **kwargs,
         )
+        upstream = chunks
         for chunk in chunks:
             for choice in chunk.choices or []:
+                if getattr(choice, "finish_reason", None) in ("length", "content_filter"):
+                    raise LLMError("Model response was incomplete")
                 delta = choice.delta.content if choice.delta else None
                 if delta:
                     yield delta
@@ -209,6 +216,11 @@ def stream_chat(config: LLMConfig, prompt: str, max_tokens: int | None = None) -
         raise
     except Exception as e:
         raise LLMError(_error_message(e)) from e
+
+    finally:
+        close = getattr(upstream, "close", None)
+        if close:
+            close()
 
 
 def chat(config: LLMConfig, prompt: str, max_tokens: int | None = None) -> str:

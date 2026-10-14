@@ -192,9 +192,10 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
         onClose={onClose}
         workspaceId={workspaceId}
         workspaceSlug={workspaceSlug}
+        title={page.name ?? ""}
       />
     ),
-    [editorRef, workspaceId, workspaceSlug]
+    [editorRef, workspaceId, workspaceSlug, page.name]
   );
 
   const serverHandler: TServerHandler = useMemo(

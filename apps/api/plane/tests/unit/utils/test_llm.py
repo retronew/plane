@@ -151,3 +151,25 @@ class TestMaskSecret:
         from plane.license.api.serializers.configuration import mask_secret
 
         assert mask_secret(value) == expected
+
+
+@pytest.mark.unit
+class TestIncompleteWriting:
+    @patch("plane.utils.llm.any_llm.responses")
+    @pytest.mark.parametrize("event", ["response.failed", "response.incomplete", "error"])
+    def test_responses_failure(self, mock_responses, event):
+        mock_responses.return_value = iter([SimpleNamespace(type=event)])
+        with pytest.raises(LLMError):
+            chat(LLMConfig("openai-responses", "", "test", "test"), "prompt")
+
+    @patch("plane.utils.llm.any_llm.completion")
+    def test_token_limit_is_not_success(self, completion):
+        completion.return_value = iter([SimpleNamespace(choices=[SimpleNamespace(finish_reason="length")])])
+        with pytest.raises(LLMError):
+            chat(LLMConfig("openai", "", "test", "test"), "prompt")
+
+    @patch("plane.utils.llm.get_configuration_value", return_value=["key", "openai", "", ""])
+    def test_key_without_model_is_unconfigured(self, config):
+        from plane.utils.llm import get_llm_config
+
+        assert get_llm_config() is None

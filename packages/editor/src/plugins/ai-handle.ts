@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { NodeSelection } from "@tiptap/pm/state";
+import { translate } from "@plane/i18n";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 // extensions
 import type { SideMenuHandleOptions, SideMenuPluginProps } from "@/extensions";
@@ -53,6 +54,8 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
 
   const handleClick = (event: MouseEvent, view: EditorView) => {
     view.focus();
+    // An explicit text selection is the user's requested scope; don't expand it to the block.
+    if (view.state.selection instanceof TextSelection && !view.state.selection.empty) return;
 
     const node = nodeDOMAtCoords({
       x: event.clientX + 50 + options.dragHandleWidth,
@@ -98,6 +101,8 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
     aiHandleElement = document.createElement("button");
     aiHandleElement.type = "button";
     aiHandleElement.id = "ai-handle";
+    aiHandleElement.setAttribute("aria-label", translate("web.ai_writing_title"));
+    aiHandleElement.title = translate("web.ai_writing_title");
     aiHandleElement.classList.value = className;
     const iconElement = document.createElement("span");
     iconElement.classList.value = "pointer-events-none";

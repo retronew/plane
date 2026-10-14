@@ -161,22 +161,15 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
       if (!editor) return null;
 
       const { state } = editor;
-      const { from, to, empty } = state.selection;
+      const { empty } = state.selection;
 
       if (empty) return null;
 
-      const nodesArray: string[] = [];
-      state.doc.nodesBetween(from, to, (node, _pos, parent) => {
-        if (parent === state.doc && editor) {
-          const serializer = DOMSerializer.fromSchema(editor.schema);
-          const dom = serializer.serializeNode(node);
-          const tempDiv = document.createElement("div");
-          tempDiv.appendChild(dom);
-          nodesArray.push(tempDiv.innerHTML);
-        }
-      });
-      const selection = nodesArray.join("");
-      return selection;
+      const container = document.createElement("div");
+      container.appendChild(
+        DOMSerializer.fromSchema(editor.schema).serializeFragment(state.selection.content().content)
+      );
+      return container.innerHTML;
     },
     insertText: (contentHTML, insertOnNextLine) => {
       if (!editor) return;

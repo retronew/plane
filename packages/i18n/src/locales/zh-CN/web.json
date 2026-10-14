@@ -1943,6 +1943,19 @@
       "public_site_title": "Plane Publish | 一键公开分享 Plane 看板",
       "public_site_description": "Plane Publish 是基于 Plane 的客户反馈管理工具。",
       "public_board_description": "由 Plane 构建，支持公开发布的 AI 工作管理平台。"
-    }
+    },
+    "ai_writing_title": "AI 优化",
+    "ai_writing_context": "请确认优化结果后再采用。",
+    "ai_writing_stop": "停止生成",
+    "ai_writing_stopped": "已停止生成，请重试以获取完整结果。",
+    "ai_writing_failed": "生成失败或连接中断，请重试；原文未修改。",
+    "ai_writing_changed": "原文或选区已变化，请重新生成后再采用。",
+    "ai_writing_replace": "替换原文",
+    "ai_writing_append": "追加到原文后",
+    "ai_writing_undo": "撤销采用",
+    "ai_writing_optimizing": "正在根据现有内容优化…",
+    "ai_writing_retry": "重新优化",
+    "ai_writing_invalid": "请先填写标题或正文，并将上下文控制在 4 万字符内。若仍失败，请检查 AI 配置。",
+    "ai_writing_quota": "AI 请求次数已达上限，请稍后再试。"
   }
 }

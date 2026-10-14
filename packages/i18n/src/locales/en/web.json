@@ -1943,6 +1943,19 @@
       "public_site_title": "Plane Publish | Make your Plane boards public with one click",
       "public_site_description": "Plane Publish is a customer feedback management tool built on top of plane.so",
       "public_board_description": "Made with Plane, an AI-powered work management platform with publishing capabilities."
-    }
+    },
+    "ai_writing_title": "AI optimize",
+    "ai_writing_context": "Review the optimized content before applying.",
+    "ai_writing_stop": "Stop generating",
+    "ai_writing_stopped": "Generation stopped. Retry to produce a complete response.",
+    "ai_writing_failed": "Generation failed or was interrupted. Retry; the original content is unchanged.",
+    "ai_writing_changed": "The source content or selection changed. Generate again before applying.",
+    "ai_writing_replace": "Replace source",
+    "ai_writing_append": "Append after source",
+    "ai_writing_undo": "Undo insertion",
+    "ai_writing_optimizing": "Optimizing your content…",
+    "ai_writing_retry": "Optimize again",
+    "ai_writing_invalid": "Add a title or content, and keep the context under 40,000 characters. If this persists, check the AI configuration.",
+    "ai_writing_quota": "AI request limit reached. Please try again later."
   }
 }

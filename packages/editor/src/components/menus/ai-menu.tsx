@@ -58,9 +58,7 @@ export function AIFeaturesMenu(props: Props) {
   useEffect(() => {
     const handleClickAIHandle = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.matches("#ai-handle") || menuRef.current?.contains(e.target as Node)) {
-        e.preventDefault();
-
+      if (target.matches("#ai-handle") || (menuRef.current && e.composedPath().includes(menuRef.current))) {
         if (!isPopupVisible) {
           popup.current?.setProps({
             getReferenceClientRect: () => target.getBoundingClientRect(),
@@ -75,14 +73,17 @@ export function AIFeaturesMenu(props: Props) {
       return;
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") hidePopup();
+    };
     document.addEventListener("click", handleClickAIHandle);
     document.addEventListener("contextmenu", handleClickAIHandle);
-    document.addEventListener("keydown", hidePopup);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("click", handleClickAIHandle);
       document.removeEventListener("contextmenu", handleClickAIHandle);
-      document.removeEventListener("keydown", hidePopup);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [hidePopup, isPopupVisible]);
 

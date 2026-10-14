@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useInstance } from "@/hooks/store/use-instance";
+
 // editor
 import type { TExtensions } from "@plane/editor";
 import type { EPageStoreType } from "@/hooks/store";
@@ -32,17 +34,20 @@ export type TEditorFlaggingHookProps = {
 /**
  * @description extensions disabled in various editors
  */
-export const useEditorFlagging = (_props: TEditorFlaggingHookProps): TEditorFlaggingHookReturnType => ({
-  document: {
-    disabled: ["ai", "collaboration-cursor"],
-    flagged: [],
-  },
-  liteText: {
-    disabled: ["ai", "collaboration-cursor"],
-    flagged: [],
-  },
-  richText: {
-    disabled: ["ai", "collaboration-cursor"],
-    flagged: [],
-  },
-});
+export const useEditorFlagging = (_props: TEditorFlaggingHookProps): TEditorFlaggingHookReturnType => {
+  const { config } = useInstance();
+  return {
+    document: {
+      disabled: config?.has_llm_configured ? ["collaboration-cursor"] : ["ai", "collaboration-cursor"],
+      flagged: [],
+    },
+    liteText: {
+      disabled: ["ai", "collaboration-cursor"],
+      flagged: [],
+    },
+    richText: {
+      disabled: ["ai", "collaboration-cursor"],
+      flagged: [],
+    },
+  };
+};
