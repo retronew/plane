@@ -6,6 +6,7 @@
 
 // assets
 import SomethingWentWrongImage from "@/app/assets/something-went-wrong.svg?url";
+import { Button } from "@makeplane/propel/components/button";
 import { translate } from "@plane/i18n";
 
 export function SomethingWentWrongError() {
@@ -22,7 +23,16 @@ export function SomethingWentWrongError() {
           </div>
         </div>
         <h1 className="mt-12 text-24 font-semibold">{translate("web.oops_something_went_wrong")}</h1>
-        <p className="mt-4 text-tertiary">{translate("web.the_public_board_does_not_exist_please_check_the_url")}</p>
+        <p className="mt-4 text-tertiary">{translate("web.runtime.public_board_load_failed")}</p>
+        <div className="mt-6">
+          <Button
+            variant="primary"
+            size="md"
+            stretch="auto"
+            label={translate("web.retry")}
+            onClick={() => window.location.reload()}
+          />
+        </div>
       </div>
     </div>
   );

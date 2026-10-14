@@ -1935,6 +1935,7 @@
       "weeks_ago": "{count} 周前",
       "months_ago": "{count} 个月前",
       "priority_enum_value": "优先级：{priority, select, urgent {紧急} high {高} medium {中} low {低} other {无}}",
+      "public_board_load_failed": "无法加载此分享看板，请检查网络连接后重试。",
       "public_page_not_found": "404 — 页面不存在",
       "public_signin_subtitle": "参与反馈，推动您期待的功能落地。",
       "public_signup_subtitle": "注册或登录，即可参与 Plane 工作项和页面的协作。",

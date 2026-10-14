@@ -28,10 +28,13 @@ export class SitesProjectPublishService extends APIService {
    * @throws {Error} If the API request fails
    */
   async retrieveSettingsByAnchor(anchor: string): Promise<TProjectPublishSettings> {
-    return this.get(`/api/public/anchor/${anchor}/settings/`)
-      .then((response) => response?.data)
+    return this.get(`/api/public/anchor/${anchor}/settings/`, { timeout: 15_000 })
+      .then((response) => {
+        if (!response?.data?.anchor) throw new Error("Invalid publish settings response");
+        return response.data;
+      })
       .catch((error) => {
-        throw error?.response;
+        throw error?.response || error;
       });
   }
 
@@ -43,10 +46,13 @@ export class SitesProjectPublishService extends APIService {
    * @throws {Error} If the API request fails
    */
   async retrieveSettingsByProjectId(workspaceSlug: string, projectID: string): Promise<TProjectPublishSettings> {
-    return this.get(`/api/public/workspaces/${workspaceSlug}/projects/${projectID}/anchor/`)
-      .then((response) => response?.data)
+    return this.get(`/api/public/workspaces/${workspaceSlug}/projects/${projectID}/anchor/`, { timeout: 15_000 })
+      .then((response) => {
+        if (!response?.data?.anchor) throw new Error("Invalid publish settings response");
+        return response.data;
+      })
       .catch((error) => {
-        throw error?.response;
+        throw error?.response || error;
       });
   }
 }

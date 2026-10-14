@@ -43,7 +43,7 @@ export const IssuesLayoutsRoot = observer(function IssuesLayoutsRoot(props: Prop
     anchor
       ? () => fetchPublicIssues(anchor, "init-loader", { groupedBy: "state", canGroup: true, perPageCount: 50 })
       : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
+    { revalidateIfStale: false, revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
   useEffect(() => {

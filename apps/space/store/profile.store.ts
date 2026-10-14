@@ -90,7 +90,7 @@ export class ProfileStore implements IProfileStore {
         this.isLoading = true;
         this.error = undefined;
       });
-      const userProfile = await this.userService.profile();
+      const userProfile = await this.userService.profile({ timeout: 15_000 });
       runInAction(() => {
         this.isLoading = false;
         this.data = userProfile;

@@ -42,13 +42,15 @@ export class InstanceService extends APIService {
    * Retrieves information about the current instance
    * @returns {Promise<IInstanceInfo>} Promise resolving to instance information
    * @throws {Error} If the API request fails
-   * @remarks This method uses the validateStatus: null option to bypass interceptors for unauthorized errors.
    */
   async info(): Promise<IInstanceInfo> {
-    return this.get("/api/instances/", { validateStatus: null })
-      .then((response) => response.data)
+    return this.get("/api/instances/", { timeout: 15_000 })
+      .then((response) => {
+        if (!response.data?.instance) throw new Error("Invalid instance response");
+        return response.data;
+      })
       .catch((error) => {
-        throw error?.response?.data;
+        throw error?.response?.data || error;
       });
   }
 

@@ -31,10 +31,14 @@ export class SitesIssueService extends APIService {
   async list(anchor: string, params: any): Promise<TPublicIssuesResponse> {
     return this.get(`/api/public/anchor/${anchor}/issues/`, {
       params,
+      timeout: 15_000,
     })
-      .then((response) => response?.data)
+      .then((response) => {
+        if (response?.data?.results == null) throw new Error("Invalid public issues response");
+        return response.data;
+      })
       .catch((error) => {
-        throw error?.response;
+        throw error?.response || error;
       });
   }
 
@@ -46,10 +50,10 @@ export class SitesIssueService extends APIService {
    * @throws {Error} If the API request fails
    */
   async retrieve(anchor: string, issueID: string): Promise<IPublicIssue> {
-    return this.get(`/api/public/anchor/${anchor}/issues/${issueID}/`)
+    return this.get(`/api/public/anchor/${anchor}/issues/${issueID}/`, { timeout: 15_000 })
       .then((response) => response?.data)
       .catch((error) => {
-        throw error?.response;
+        throw error?.response || error;
       });
   }
 

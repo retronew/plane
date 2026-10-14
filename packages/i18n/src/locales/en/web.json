@@ -1935,6 +1935,7 @@
       "weeks_ago": "{count, plural, one {# week ago} other {# weeks ago}}",
       "months_ago": "{count, plural, one {# month ago} other {# months ago}}",
       "priority_enum_value": "Priority: {priority, select, urgent {Urgent} high {High} medium {Medium} low {Low} other {None}}",
+      "public_board_load_failed": "Unable to load this shared board. Check your connection and try again.",
       "public_page_not_found": "404 — Page not found",
       "public_signin_subtitle": "Contribute in nudging the features you want to get built.",
       "public_signup_subtitle": "Sign up or log in to work with Plane work items and Pages.",

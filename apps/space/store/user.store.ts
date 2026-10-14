@@ -98,7 +98,7 @@ export class UserStore implements IUserStore {
         if (this.data === undefined && !this.error) this.isInitializing = true;
         this.error = undefined;
       });
-      const user = await this.userService.me();
+      const user = await this.userService.me({ timeout: 15_000 });
       if (user && user?.id) {
         await this.profile.fetchUserProfile();
         runInAction(() => {

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { AxiosRequestConfig } from "axios";
 // plane imports
 import { API_BASE_URL } from "@plane/constants";
 import type { IUser, TUserProfile } from "@plane/types";
@@ -28,8 +29,8 @@ export class UserService extends APIService {
    * Retrieves the current user details
    * @returns {Promise<IUser>} Promise resolving to the current user details
    */
-  async me(): Promise<IUser> {
-    return this.get("/api/users/me/")
+  async me(config: AxiosRequestConfig = {}): Promise<IUser> {
+    return this.get("/api/users/me/", {}, config)
       .then((response) => response?.data)
       .catch((error) => {
         throw error;
@@ -55,8 +56,8 @@ export class UserService extends APIService {
    * @returns {Promise<TUserProfile>} Promise resolving to the current user's profile details
    * @throws {Error} If the API request fails
    */
-  async profile(): Promise<TUserProfile> {
-    return this.get("/api/users/me/profile/")
+  async profile(config: AxiosRequestConfig = {}): Promise<TUserProfile> {
+    return this.get("/api/users/me/profile/", {}, config)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response;
