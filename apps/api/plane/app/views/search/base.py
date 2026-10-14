@@ -29,6 +29,7 @@ from rest_framework.response import Response
 # Module imports
 from plane.app.views.base import BaseAPIView
 from plane.app.permissions import WorkspaceUserPermission
+from plane.api.views.search import visible_projects, visible_work_items
 from plane.db.models import (
     Workspace,
     Project,
@@ -93,13 +94,8 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        issues = Issue.issue_objects.filter(
-            q,
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-            project__archived_at__isnull=True,
-            workspace__slug=slug,
-        )
+        # Restricted guests only see work items they created
+        issues = visible_work_items(slug, self.request.user).filter(q)
 
         if workspace_search == "false" and project_id:
             issues = issues.filter(project_id=project_id)
@@ -168,14 +164,18 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
+        user = self.request.user
+        full, restricted = visible_projects(slug, user)
         pages = (
             Page.objects.filter(
                 q,
-                projects__project_projectmember__member=self.request.user,
-                projects__project_projectmember__is_active=True,
-                projects__archived_at__isnull=True,
                 workspace__slug=slug,
+                archived_at__isnull=True,
+                project_pages__deleted_at__isnull=True,
             )
+            # Private pages belong to their owner only, and restricted guests only see their own pages
+            .filter(Q(owned_by=user) | Q(access=Page.PUBLIC_ACCESS))
+            .filter(Q(project_pages__project_id__in=full) | Q(project_pages__project_id__in=restricted, owned_by=user))
             .annotate(
                 project_ids=Coalesce(
                     ArrayAgg("projects__id", distinct=True, filter=~Q(projects__id=True)),
@@ -214,12 +214,13 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
-        issue_views = IssueView.objects.filter(
-            q,
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-            project__archived_at__isnull=True,
-            workspace__slug=slug,
+        user = self.request.user
+        full, restricted = visible_projects(slug, user)
+        issue_views = (
+            IssueView.objects.filter(q, workspace__slug=slug)
+            # Views use access 1 for public; private views belong to their owner only
+            .filter(Q(owned_by=user) | Q(access=1))
+            .filter(Q(project_id__in=full) | Q(project_id__in=restricted, owned_by=user))
         )
 
         if workspace_search == "false" and project_id:
@@ -244,12 +245,11 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        issues = Issue.objects.filter(
-            q,
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-            project__archived_at__isnull=True,
-            workspace__slug=slug,
+        full, restricted = visible_projects(slug, self.request.user)
+        issues = (
+            Issue.objects.filter(q, workspace__slug=slug).filter(
+                Q(project_id__in=full) | Q(project_id__in=restricted, created_by=self.request.user)
+            )
         ).filter(models.Q(issue_intake__status=0) | models.Q(issue_intake__status=-2))
 
         if workspace_search == "false" and project_id:
