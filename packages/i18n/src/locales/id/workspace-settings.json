@@ -153,6 +153,13 @@
         "create_token": "Buat token",
         "never_expires": "Tidak pernah kedaluwarsa",
         "read_only": "Hanya baca",
+        "mcp_title": "Hubungkan alat AI (MCP)",
+        "mcp_description": "Izinkan Claude Code, Cursor, dan alat AI lainnya bekerja atas nama Anda di ruang kerja {workspace}. Salin konfigurasi di bawah.",
+        "mcp_description_no_workspace": "Izinkan Claude Code, Cursor, dan alat AI lainnya bekerja atas nama Anda di Plane. Salin konfigurasi di bawah.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Klien lain (konfigurasi JSON)",
+        "mcp_copy": "Salin",
+        "mcp_config_copied": "Konfigurasi MCP disalin",
         "generate_token": "Hasilkan token",
         "generating": "Menghasilkan",
         "delete": {

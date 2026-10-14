@@ -153,6 +153,13 @@
         "create_token": "Créer un jeton",
         "never_expires": "N’expire jamais",
         "read_only": "Lecture seule",
+        "mcp_title": "Connecter des outils d’IA (MCP)",
+        "mcp_description": "Permettez à Claude Code, Cursor et d’autres outils d’IA de travailler en votre nom dans l’espace de travail {workspace}. Copiez une configuration ci-dessous.",
+        "mcp_description_no_workspace": "Permettez à Claude Code, Cursor et d’autres outils d’IA de travailler en votre nom dans Plane. Copiez une configuration ci-dessous.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Autres clients (configuration JSON)",
+        "mcp_copy": "Copier",
+        "mcp_config_copied": "Configuration MCP copiée",
         "generate_token": "Générer un jeton",
         "generating": "Génération",
         "delete": {

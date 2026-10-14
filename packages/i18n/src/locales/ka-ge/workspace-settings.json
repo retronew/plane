@@ -153,6 +153,13 @@
         "create_token": "ტოკენის შექმნა",
         "never_expires": "არასდროს იწურება",
         "read_only": "მხოლოდ წაკითხვა",
+        "mcp_title": "AI ხელსაწყოების დაკავშირება (MCP)",
+        "mcp_description": "მიეცით Claude Code-ს, Cursor-ს და სხვა AI ხელსაწყოებს საშუალება, თქვენი სახელით იმუშაონ სამუშაო სივრცეში {workspace}. დააკოპირეთ კონფიგურაცია ქვემოთ.",
+        "mcp_description_no_workspace": "მიეცით Claude Code-ს, Cursor-ს და სხვა AI ხელსაწყოებს საშუალება, თქვენი სახელით იმუშაონ Plane-ში. დააკოპირეთ კონფიგურაცია ქვემოთ.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "სხვა კლიენტები (JSON კონფიგურაცია)",
+        "mcp_copy": "კოპირება",
+        "mcp_config_copied": "MCP კონფიგურაცია დაკოპირდა",
         "generate_token": "ტოკენის გენერირება",
         "generating": "გენერირება",
         "delete": {

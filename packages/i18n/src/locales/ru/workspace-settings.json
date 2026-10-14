@@ -153,6 +153,13 @@
         "create_token": "Создать токен",
         "never_expires": "Бессрочный",
         "read_only": "Только чтение",
+        "mcp_title": "Подключить ИИ-инструменты (MCP)",
+        "mcp_description": "Позвольте Claude Code, Cursor и другим ИИ-инструментам работать от Вашего имени в рабочем пространстве {workspace}. Скопируйте конфигурацию ниже.",
+        "mcp_description_no_workspace": "Позвольте Claude Code, Cursor и другим ИИ-инструментам работать от Вашего имени в Plane. Скопируйте конфигурацию ниже.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Другие клиенты (конфигурация JSON)",
+        "mcp_copy": "Копировать",
+        "mcp_config_copied": "Конфигурация MCP скопирована",
         "generate_token": "Сгенерировать токен",
         "generating": "Генерация",
         "delete": {

@@ -153,6 +153,13 @@
         "create_token": "Створити токен",
         "never_expires": "Ніколи не спливає",
         "read_only": "Лише читання",
+        "mcp_title": "Підключити ШІ-інструменти (MCP)",
+        "mcp_description": "Дозвольте Claude Code, Cursor та іншим ШІ-інструментам працювати від вашого імені в робочому просторі {workspace}. Скопіюйте конфігурацію нижче.",
+        "mcp_description_no_workspace": "Дозвольте Claude Code, Cursor та іншим ШІ-інструментам працювати від вашого імені в Plane. Скопіюйте конфігурацію нижче.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Інші клієнти (конфігурація JSON)",
+        "mcp_copy": "Копіювати",
+        "mcp_config_copied": "Конфігурацію MCP скопійовано",
         "generate_token": "Згенерувати токен",
         "generating": "Генерація",
         "delete": {

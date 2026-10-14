@@ -153,6 +153,13 @@
         "create_token": "建立權杖",
         "never_expires": "永不過期",
         "read_only": "唯讀",
+        "mcp_title": "連接 AI 工具（MCP）",
+        "mcp_description": "讓 Claude Code、Cursor 等 AI 工具以您的身分操作 {workspace} 工作區。複製下方設定即可。",
+        "mcp_description_no_workspace": "讓 Claude Code、Cursor 等 AI 工具以您的身分操作 Plane。複製下方設定即可。",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "其他用戶端（JSON 設定）",
+        "mcp_copy": "複製",
+        "mcp_config_copied": "已複製 MCP 設定",
         "generate_token": "產生權杖",
         "generating": "產生中",
         "delete": {

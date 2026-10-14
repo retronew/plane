@@ -153,6 +153,13 @@
         "create_token": "토큰 생성",
         "never_expires": "만료되지 않음",
         "read_only": "읽기 전용",
+        "mcp_title": "AI 도구 연결(MCP)",
+        "mcp_description": "Claude Code, Cursor 등 AI 도구가 사용자 본인으로 {workspace} 워크스페이스에서 작업하게 합니다. 아래 구성을 복사하십시오.",
+        "mcp_description_no_workspace": "Claude Code, Cursor 등 AI 도구가 사용자 본인으로 Plane에서 작업하게 합니다. 아래 구성을 복사하십시오.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "기타 클라이언트(JSON 구성)",
+        "mcp_copy": "복사",
+        "mcp_config_copied": "MCP 구성을 복사했습니다",
         "generate_token": "토큰 생성",
         "generating": "생성 중",
         "delete": {

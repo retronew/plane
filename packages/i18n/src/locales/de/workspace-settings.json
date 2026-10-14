@@ -153,6 +153,13 @@
         "create_token": "Token erstellen",
         "never_expires": "Läuft nie ab",
         "read_only": "Schreibgeschützt",
+        "mcp_title": "KI-Tools verbinden (MCP)",
+        "mcp_description": "Claude Code, Cursor und andere KI-Tools in Ihrem Namen im Workspace {workspace} arbeiten lassen. Kopieren Sie unten eine Konfiguration.",
+        "mcp_description_no_workspace": "Claude Code, Cursor und andere KI-Tools in Ihrem Namen in Plane arbeiten lassen. Kopieren Sie unten eine Konfiguration.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Andere Clients (JSON-Konfiguration)",
+        "mcp_copy": "Kopieren",
+        "mcp_config_copied": "MCP-Konfiguration kopiert",
         "generate_token": "Token generieren",
         "generating": "Wird generiert",
         "delete": {

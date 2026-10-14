@@ -153,6 +153,13 @@
         "create_token": "Creează cheie secretă",
         "never_expires": "Nu expiră niciodată",
         "read_only": "Doar citire",
+        "mcp_title": "Conectați instrumente AI (MCP)",
+        "mcp_description": "Permiteți ca Claude Code, Cursor și alte instrumente AI să lucreze în numele dumneavoastră în spațiul de lucru {workspace}. Copiați mai jos o configurație.",
+        "mcp_description_no_workspace": "Permiteți ca Claude Code, Cursor și alte instrumente AI să lucreze în numele dumneavoastră în Plane. Copiați mai jos o configurație.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Alți clienți (configurație JSON)",
+        "mcp_copy": "Copiați",
+        "mcp_config_copied": "Configurația MCP a fost copiată",
         "generate_token": "Generează cheie secretă",
         "generating": "Se generează",
         "delete": {

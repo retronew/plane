@@ -153,6 +153,13 @@
         "create_token": "トークンを作成",
         "never_expires": "無期限",
         "read_only": "読み取り専用",
+        "mcp_title": "AI ツールを接続（MCP）",
+        "mcp_description": "Claude Code、Cursor などの AI ツールが、あなたとして {workspace} ワークスペースを操作できるようにします。下の設定をコピーしてください。",
+        "mcp_description_no_workspace": "Claude Code、Cursor などの AI ツールが、あなたとして Plane を操作できるようにします。下の設定をコピーしてください。",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "その他のクライアント（JSON 設定）",
+        "mcp_copy": "コピー",
+        "mcp_config_copied": "MCP 設定をコピーしました",
         "generate_token": "トークンを生成",
         "generating": "生成中",
         "delete": {

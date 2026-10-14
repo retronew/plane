@@ -153,6 +153,13 @@
         "create_token": "Token oluştur",
         "never_expires": "Süresi dolmaz",
         "read_only": "Salt okunur",
+        "mcp_title": "Yapay zekâ araçlarını bağlayın (MCP)",
+        "mcp_description": "Claude Code, Cursor ve diğer yapay zekâ araçlarının {workspace} çalışma alanında sizin adınıza çalışmasına izin verin. Aşağıdan bir yapılandırma kopyalayın.",
+        "mcp_description_no_workspace": "Claude Code, Cursor ve diğer yapay zekâ araçlarının Plane'de sizin adınıza çalışmasına izin verin. Aşağıdan bir yapılandırma kopyalayın.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Diğer istemciler (JSON yapılandırması)",
+        "mcp_copy": "Kopyala",
+        "mcp_config_copied": "MCP yapılandırması kopyalandı",
         "generate_token": "Token oluştur",
         "generating": "Oluşturuluyor",
         "delete": {

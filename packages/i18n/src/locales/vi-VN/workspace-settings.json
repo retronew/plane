@@ -153,6 +153,13 @@
         "create_token": "Tạo token",
         "never_expires": "Không bao giờ hết hạn",
         "read_only": "Chỉ đọc",
+        "mcp_title": "Kết nối công cụ AI (MCP)",
+        "mcp_description": "Cho phép Claude Code, Cursor và các công cụ AI khác thay bạn làm việc trong không gian làm việc {workspace}. Hãy sao chép một cấu hình bên dưới.",
+        "mcp_description_no_workspace": "Cho phép Claude Code, Cursor và các công cụ AI khác thay bạn làm việc trong Plane. Hãy sao chép một cấu hình bên dưới.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Ứng dụng khác (cấu hình JSON)",
+        "mcp_copy": "Sao chép",
+        "mcp_config_copied": "Đã sao chép cấu hình MCP",
         "generate_token": "Tạo token",
         "generating": "Đang tạo",
         "delete": {

@@ -153,6 +153,13 @@
         "create_token": "Crea token",
         "never_expires": "Non scade mai",
         "read_only": "Sola lettura",
+        "mcp_title": "Collega strumenti di IA (MCP)",
+        "mcp_description": "Consenta a Claude Code, Cursor e ad altri strumenti di IA di lavorare a suo nome nello spazio di lavoro {workspace}. Copi una configurazione qui sotto.",
+        "mcp_description_no_workspace": "Consenta a Claude Code, Cursor e ad altri strumenti di IA di lavorare a suo nome in Plane. Copi una configurazione qui sotto.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Altri client (configurazione JSON)",
+        "mcp_copy": "Copia",
+        "mcp_config_copied": "Configurazione MCP copiata",
         "generate_token": "Genera token",
         "generating": "Generazione in corso",
         "delete": {

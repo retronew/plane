@@ -153,6 +153,13 @@
         "create_token": "创建令牌",
         "never_expires": "永不过期",
         "read_only": "只读",
+        "mcp_title": "连接 AI 工具（MCP）",
+        "mcp_description": "让 Claude Code、Cursor 等 AI 工具以您的身份操作 {workspace} 工作区。复制下方配置即可。",
+        "mcp_description_no_workspace": "让 Claude Code、Cursor 等 AI 工具以您的身份操作 Plane。复制下方配置即可。",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "其他客户端（JSON 配置）",
+        "mcp_copy": "复制",
+        "mcp_config_copied": "已复制 MCP 配置",
         "generate_token": "生成令牌",
         "generating": "正在生成",
         "delete": {

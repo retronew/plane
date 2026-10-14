@@ -23,6 +23,8 @@ import {
 import { renderFormattedDate, renderFormattedTime, copyTextToClipboard } from "@plane/utils";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
+// local imports
+import { ApiTokenMcpSetup } from "../mcp-setup";
 
 type Props = {
   handleClose: () => void;
@@ -63,6 +65,7 @@ export function GeneratedTokenDetails(props: Props) {
               <CopyOutline className="h-4 w-4 flex-shrink-0 text-placeholder" />
             </Tooltip>
           </button>
+          {tokenDetails.token && <ApiTokenMcpSetup token={tokenDetails.token} />}
         </DialogBody>
       </DialogMain>
       <DialogActions>

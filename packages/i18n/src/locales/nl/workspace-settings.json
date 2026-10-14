@@ -153,6 +153,13 @@
         "create_token": "Token aanmaken",
         "never_expires": "Verloopt nooit",
         "read_only": "Alleen-lezen",
+        "mcp_title": "AI-tools koppelen (MCP)",
+        "mcp_description": "Laat Claude Code, Cursor en andere AI-tools namens u werken in de workspace {workspace}. Kopieer hieronder een configuratie.",
+        "mcp_description_no_workspace": "Laat Claude Code, Cursor en andere AI-tools namens u werken in Plane. Kopieer hieronder een configuratie.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Andere clients (JSON-configuratie)",
+        "mcp_copy": "Kopiëren",
+        "mcp_config_copied": "MCP-configuratie gekopieerd",
         "generate_token": "Token genereren",
         "generating": "Genereren",
         "delete": {

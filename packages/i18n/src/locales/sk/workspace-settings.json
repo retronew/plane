@@ -153,6 +153,13 @@
         "create_token": "Vytvoriť token",
         "never_expires": "Nikdy neexpiruje",
         "read_only": "Iba na čítanie",
+        "mcp_title": "Pripojiť nástroje AI (MCP)",
+        "mcp_description": "Umožnite Claude Code, Cursoru a ďalším nástrojom AI pracovať vaším menom v pracovnom priestore {workspace}. Skopírujte nižšie konfiguráciu.",
+        "mcp_description_no_workspace": "Umožnite Claude Code, Cursoru a ďalším nástrojom AI pracovať vaším menom v Plane. Skopírujte nižšie konfiguráciu.",
+        "mcp_claude_code": "Claude Code",
+        "mcp_other_clients": "Ďalší klienti (konfigurácia JSON)",
+        "mcp_copy": "Kopírovať",
+        "mcp_config_copied": "Konfigurácia MCP skopírovaná",
         "generate_token": "Generovať token",
         "generating": "Generovanie",
         "delete": {
