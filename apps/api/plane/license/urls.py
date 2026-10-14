@@ -18,6 +18,9 @@ from plane.license.api.views import (
     InstanceAdminUserSessionEndpoint,
     InstanceWorkSpaceAvailabilityCheckEndpoint,
     InstanceWorkSpaceEndpoint,
+    InstanceAIModelsEndpoint,
+    InstanceAIProvidersEndpoint,
+    InstanceAITestEndpoint,
 )
 
 urlpatterns = [
@@ -70,5 +73,8 @@ urlpatterns = [
         InstanceWorkSpaceAvailabilityCheckEndpoint.as_view(),
         name="instance-workspace-availability",
     ),
+    path("ai/providers/", InstanceAIProvidersEndpoint.as_view(), name="instance-ai-providers"),
+    path("ai/models/", InstanceAIModelsEndpoint.as_view(), name="instance-ai-models"),
+    path("ai/test/", InstanceAITestEndpoint.as_view(), name="instance-ai-test"),
     path("workspaces/", InstanceWorkSpaceEndpoint.as_view(), name="instance-workspace"),
 ]

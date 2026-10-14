@@ -3,13 +3,14 @@
 # See the LICENSE file for details.
 
 # Python import
+import json
 import os
-from typing import List, Dict, Tuple
+from typing import Tuple
 
 # Third party import
-from openai import OpenAI
 import requests
 
+from django.http import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -19,138 +20,53 @@ from plane.app.serializers import ProjectLiteSerializer, WorkspaceLiteSerializer
 from plane.db.models import Project, Workspace
 from plane.license.utils.instance_value import get_configuration_value
 from plane.utils.exception_logger import log_exception
+from plane.utils.llm import LLMError, chat, get_llm_config, stream_chat
 
 from ..base import BaseAPIView
 
 
-class LLMProvider:
-    """Base class for LLM provider configurations"""
-
-    name: str = ""
-    models: List[str] = []
-    default_model: str = ""
-
-    @classmethod
-    def get_config(cls) -> Dict[str, str | List[str]]:
-        return {
-            "name": cls.name,
-            "models": cls.models,
-            "default_model": cls.default_model,
-        }
-
-
-class OpenAIProvider(LLMProvider):
-    name = "OpenAI"
-    models = ["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o", "o1-mini", "o1-preview"]
-    default_model = "gpt-4o-mini"
-
-
-class AnthropicProvider(LLMProvider):
-    name = "Anthropic"
-    models = [
-        "claude-3-5-sonnet-20240620",
-        "claude-3-haiku-20240307",
-        "claude-3-opus-20240229",
-        "claude-3-sonnet-20240229",
-        "claude-2.1",
-        "claude-2",
-        "claude-instant-1.2",
-        "claude-instant-1",
-    ]
-    default_model = "claude-3-sonnet-20240229"
-
-
-class GeminiProvider(LLMProvider):
-    name = "Gemini"
-    models = ["gemini-pro", "gemini-1.5-pro-latest", "gemini-pro-vision"]
-    default_model = "gemini-pro"
-
-
-SUPPORTED_PROVIDERS = {
-    "openai": OpenAIProvider,
-    "anthropic": AnthropicProvider,
-    "gemini": GeminiProvider,
-}
-
-
-def get_llm_config() -> Tuple[str | None, str | None, str | None]:
-    """
-    Helper to get LLM configuration values, returns:
-        - api_key, model, provider
-    """
-    api_key, provider_key, model = get_configuration_value(
-        [
-            {
-                "key": "LLM_API_KEY",
-                "default": os.environ.get("LLM_API_KEY", None),
-            },
-            {
-                "key": "LLM_PROVIDER",
-                "default": os.environ.get("LLM_PROVIDER", "openai"),
-            },
-            {
-                "key": "LLM_MODEL",
-                "default": os.environ.get("LLM_MODEL", None),
-            },
-        ]
-    )
-
-    provider = SUPPORTED_PROVIDERS.get(provider_key.lower())
-    if not provider:
-        log_exception(ValueError(f"Unsupported provider: {provider_key}"))
-        return None, None, None
-
-    if not api_key:
-        log_exception(ValueError(f"Missing API key for provider: {provider.name}"))
-        return None, None, None
-
-    # If no model specified, use provider's default
-    if not model:
-        model = provider.default_model
-
-    # Validate model is supported by provider
-    if model not in provider.models:
-        log_exception(
-            ValueError(
-                f"Model {model} not supported by {provider.name}. Supported models: {', '.join(provider.models)}"
-            )
-        )
-        return None, None, None
-
-    return api_key, model, provider_key
-
-
-def get_llm_response(task, prompt, api_key: str, model: str, provider: str) -> Tuple[str | None, str | None]:
-    """Helper to get LLM completion response"""
-    final_text = task + "\n" + prompt
+def get_llm_response(task, prompt) -> Tuple[str | None, str | None]:
+    """Helper to get LLM completion response, returns (text, error)"""
+    config = get_llm_config()
+    if not config:
+        return None, "LLM provider API key and model are required"
+    final_text = task + "\n" + (prompt or "")
     try:
-        # For Gemini, prepend provider name to model
-        if provider.lower() == "gemini":
-            model = f"gemini/{model}"
-
-        client = OpenAI(api_key=api_key)
-        chat_completion = client.chat.completions.create(
-            model=model, messages=[{"role": "user", "content": final_text}]
-        )
-        text = chat_completion.choices[0].message.content
-        return text, None
-    except Exception as e:
+        return chat(config, final_text), None
+    except LLMError as e:
         log_exception(e)
-        error_type = e.__class__.__name__
-        if error_type == "AuthenticationError":
-            return None, f"Invalid API key for {provider}"
-        elif error_type == "RateLimitError":
-            return None, f"Rate limit exceeded for {provider}"
-        else:
-            return None, f"Error occurred while generating response from {provider}"
+        return None, str(e)
+
+
+def stream_llm_response(task, prompt) -> StreamingHttpResponse:
+    """
+    Stream the completion as server-sent events:
+    `data: {"delta": "..."}` per chunk, then `data: {"done": true}` or `data: {"error": "..."}`.
+    """
+    config = get_llm_config()
+    final_text = task + "\n" + (prompt or "")
+
+    def events():
+        try:
+            for delta in stream_chat(config, final_text):
+                yield f"data: {json.dumps({'delta': delta})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except LLMError as e:
+            log_exception(e)
+            yield f"data: {json.dumps({'error': 'An error occurred while generating the response.'})}\n\n"
+
+    response = StreamingHttpResponse(events(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    # Keep GZipMiddleware and reverse proxies from buffering the stream
+    response["Content-Encoding"] = "identity"
+    response["X-Accel-Buffering"] = "no"
+    return response
 
 
 class GPTIntegrationEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id):
-        api_key, model, provider = get_llm_config()
-
-        if not api_key or not model or not provider:
+        if not get_llm_config():
             return Response(
                 {"error": "LLM provider API key and model are required"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -160,7 +76,7 @@ class GPTIntegrationEndpoint(BaseAPIView):
         if not task:
             return Response({"error": "Task is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        text, error = get_llm_response(task, request.data.get("prompt", False), api_key, model, provider)
+        text, error = get_llm_response(task, request.data.get("prompt", False))
         if not text and error:
             return Response(
                 {"error": "An internal error has occurred."},
@@ -184,9 +100,7 @@ class GPTIntegrationEndpoint(BaseAPIView):
 class WorkspaceGPTIntegrationEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def post(self, request, slug):
-        api_key, model, provider = get_llm_config()
-
-        if not api_key or not model or not provider:
+        if not get_llm_config():
             return Response(
                 {"error": "LLM provider API key and model are required"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -196,7 +110,10 @@ class WorkspaceGPTIntegrationEndpoint(BaseAPIView):
         if not task:
             return Response({"error": "Task is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        text, error = get_llm_response(task, request.data.get("prompt", False), api_key, model, provider)
+        if request.data.get("stream"):
+            return stream_llm_response(task, request.data.get("prompt", False))
+
+        text, error = get_llm_response(task, request.data.get("prompt", False))
         if not text and error:
             return Response(
                 {"error": "An internal error has occurred."},

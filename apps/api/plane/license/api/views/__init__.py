@@ -26,3 +26,5 @@ from .workspace import (
     InstanceWorkSpaceAvailabilityCheckEndpoint,
     InstanceWorkSpaceEndpoint,
 )
+
+from .ai import InstanceAIModelsEndpoint, InstanceAIProvidersEndpoint, InstanceAITestEndpoint

@@ -24,6 +24,7 @@ from .base import BaseAPIView
 from plane.license.api.permissions import InstanceAdminPermission
 from plane.license.models import InstanceConfiguration
 from plane.license.api.serializers import InstanceConfigurationSerializer
+from plane.license.api.serializers.configuration import WRITE_ONLY_SECRETS
 from plane.license.utils.encryption import encrypt_data
 from plane.utils.cache import cache_response, invalidate_cache
 from plane.license.utils.instance_value import get_email_configuration
@@ -48,6 +49,9 @@ class InstanceConfigurationEndpoint(BaseAPIView):
         for configuration in configurations:
             raw_value = request.data.get(configuration.key, configuration.value)
             value = "" if raw_value is None else str(raw_value).strip()
+            # An empty write-only secret means "keep the saved one" (the UI never holds it)
+            if configuration.key in WRITE_ONLY_SECRETS and not value:
+                continue
             if configuration.is_encrypted:
                 configuration.value = encrypt_data(value)
             else:
