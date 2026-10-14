@@ -256,7 +256,7 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
                           </>
                         ) : (
                           <Button
-                            variant="secondary"
+                            variant="danger-outline"
                             size="sm"
                             stretch="auto"
                             disabled={isBusy}
