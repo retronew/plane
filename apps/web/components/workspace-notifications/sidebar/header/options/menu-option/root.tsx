@@ -4,22 +4,29 @@
  * See the LICENSE file for details.
  */
 
-import type { ReactNode } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { observer } from "mobx-react";
-import { ArchiveOutline, ClockOutline, MoreVerticalOutline, TickCircleOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 // plane imports
 import type { TNotificationFilter } from "@plane/types";
-import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuCheckboxItem, MenuContent, MenuTrigger } from "@makeplane/propel/components/menu";
+import {
+  Menu,
+  MenuCheckboxItem,
+  MenuContent,
+  MenuTrigger,
+  MenuSeparator,
+  MenuLabel,
+  MenuGroup,
+  MenuRadioGroup,
+  MenuRadioItem,
+} from "@makeplane/propel/components/menu";
 // hooks
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
 
 type TNotificationMenuOption = {
   key: string;
   label: string;
-  icon: ReactNode;
   checked: boolean;
   onChange: () => void;
 };
@@ -38,30 +45,27 @@ export const NotificationHeaderMenuOption = observer(function NotificationHeader
     {
       key: "menu-unread",
       label: t("notification.options.show_unread"),
-      icon: <Icon icon={TickCircleOutline} />,
       checked: !!filters?.read,
       onChange: () => handleFilterChange("read", !filters?.read),
     },
     {
-      key: "menu-archived",
-      label: t("notification.options.show_archived"),
-      icon: <Icon icon={ArchiveOutline} />,
-      checked: !!filters?.archived,
-      onChange: () =>
-        handleBulkFilterChange({
-          archived: !filters?.archived,
-          snoozed: false,
-        }),
-    },
-    {
       key: "menu-snoozed",
       label: t("notification.options.show_snoozed"),
-      icon: <Icon icon={ClockOutline} />,
       checked: !!filters?.snoozed,
       onChange: () =>
         handleBulkFilterChange({
           snoozed: !filters?.snoozed,
           archived: false,
+        }),
+    },
+    {
+      key: "menu-archived",
+      label: t("notification.options.show_archived"),
+      checked: !!filters?.archived,
+      onChange: () =>
+        handleBulkFilterChange({
+          archived: !filters?.archived,
+          snoozed: false,
         }),
     },
   ];
@@ -73,9 +77,9 @@ export const NotificationHeaderMenuOption = observer(function NotificationHeader
         render={
           <IconButton
             size="sm"
-            variant="ghost"
-            icon={<Icon icon={MoreVerticalOutline} />}
-            aria-label={t("web.notification_options")}
+            variant="secondary"
+            icon={<SlidersHorizontal className="size-3.5" />}
+            aria-label={t("web.inbox_filters.sort")}
           />
         }
       />
@@ -83,12 +87,30 @@ export const NotificationHeaderMenuOption = observer(function NotificationHeader
         {menuOptions.map((option) => (
           <MenuCheckboxItem
             key={option.key}
-            icon={option.icon}
             label={option.label}
             checked={option.checked}
             onCheckedChange={option.onChange}
           />
         ))}
+        <MenuSeparator />
+        <MenuGroup>
+          <MenuLabel>{t("web.inbox_filters.sort")}</MenuLabel>
+          <MenuRadioGroup
+            value={filters.order_by ?? "-created_at"}
+            onValueChange={(value) => updateFilters("order_by", value as TNotificationFilter["order_by"])}
+          >
+            {(
+              [
+                ["-created_at", "web.inbox_filters.newest"],
+                ["created_at", "web.inbox_filters.oldest"],
+                ["priority", "priority"],
+                ["unread", "web.inbox_filters.unread_first"],
+              ] as const
+            ).map(([value, label]) => (
+              <MenuRadioItem key={value} value={value} label={t(label)} />
+            ))}
+          </MenuRadioGroup>
+        </MenuGroup>
       </MenuContent>
     </Menu>
   );

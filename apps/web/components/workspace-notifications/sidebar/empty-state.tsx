@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useWorkspaceNotifications } from "@/hooks/store/notifications";
 import { observer } from "mobx-react";
 // plane imports
 import { ENotificationTab } from "@plane/constants";
@@ -19,6 +20,14 @@ export const NotificationEmptyState = observer(function NotificationEmptyState({
 }: TNotificationEmptyStateProps) {
   // plane imports
   const { t } = useTranslation();
+  const { filters } = useWorkspaceNotifications();
+  const filtered = Boolean(
+    filters.search?.trim() ||
+    Object.values(filters.type).some(Boolean) ||
+    [filters.priority, filters.state_group, filters.assignees, filters.triggered_by, filters.project].some(
+      (values) => values?.length
+    )
+  );
 
   return (
     <>
@@ -26,11 +35,13 @@ export const NotificationEmptyState = observer(function NotificationEmptyState({
         assetKey="inbox"
         assetClassName="size-24"
         title={
-          currentNotificationTab === ENotificationTab.ALL
-            ? t("workspace_empty_state.inbox_sidebar_all.title")
-            : t("workspace_empty_state.inbox_sidebar_mentions.title")
+          filtered
+            ? t("web.inbox_filters.no_results")
+            : currentNotificationTab === ENotificationTab.ALL
+              ? t("workspace_empty_state.inbox_sidebar_all.title")
+              : t("workspace_empty_state.inbox_sidebar_mentions.title")
         }
-        className="max-w-56"
+        className="max-w-72 px-3"
       />
     </>
   );

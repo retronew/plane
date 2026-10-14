@@ -5,68 +5,57 @@
  */
 
 import { observer } from "mobx-react";
-// plane imports
-import { ENotificationFilterType, FILTER_TYPE_OPTIONS } from "@plane/constants";
+import { X } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
-import { Icon } from "@makeplane/propel/components/icon";
-import { Pill } from "@makeplane/propel/components/pill";
-import { CloseOutline } from "@makeplane/propel/icons";
-import { Header, EHeaderVariant } from "@plane/blocks/layout";
-// hooks
+import type { ENotificationFilterType } from "@plane/constants";
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
+import { selectedNotificationFilterValues, useNotificationFilterGroups } from "./use-filter-groups";
 
-type TAppliedFilters = {
-  workspaceSlug: string;
-};
-
-export const AppliedFilters = observer(function AppliedFilters(props: TAppliedFilters) {
-  const { workspaceSlug } = props;
-  // hooks
-  const { filters, updateFilters } = useWorkspaceNotifications();
+export const AppliedFilters = observer(function AppliedFilters({ workspaceSlug }: { workspaceSlug: string }) {
   const { t } = useTranslation();
-  // derived values
-  const isFiltersEnabled = Object.entries(filters.type || {}).some(([, value]) => value);
-
-  const handleFilterTypeChange = (filterType: ENotificationFilterType, filterValue: boolean) =>
-    updateFilters("type", {
-      ...filters.type,
-      [filterType]: filterValue,
-    });
-
-  const handleClearFilters = () => {
-    updateFilters("type", {
-      [ENotificationFilterType.ASSIGNED]: false,
-      [ENotificationFilterType.CREATED]: false,
-      [ENotificationFilterType.SUBSCRIBED]: false,
-    });
-  };
-
-  if (!isFiltersEnabled || !workspaceSlug) return <></>;
+  const { filters, updateFilters, updateBulkFilters } = useWorkspaceNotifications();
+  const groups = useNotificationFilterGroups();
+  if (!workspaceSlug || !groups.some(({ key }) => selectedNotificationFilterValues(filters, key).length)) return null;
   return (
-    <Header variant={EHeaderVariant.TERNARY}>
-      <Header.LeftItem className="w-full">
-        {FILTER_TYPE_OPTIONS.map((filter) => {
-          const isSelected = filters?.type?.[filter?.value] || false;
-          if (!isSelected) return <></>;
-          return (
-            <Pill
-              key={filter.value}
-              size="md"
-              variant="outline"
-              label={t(filter.i18n_label)}
-              endIcon={<Icon icon={CloseOutline} />}
-              onClick={() => handleFilterTypeChange(filter?.value, !isSelected)}
-            />
-          );
-        })}
-        <Pill
-          size="md"
-          variant="outline"
-          label={t("common.clear_all")}
-          endIcon={<Icon icon={CloseOutline} />}
-          onClick={handleClearFilters}
-        />
-      </Header.LeftItem>
-    </Header>
+    <div className="flex flex-wrap gap-1 border-b border-subtle px-5 py-2">
+      {groups.flatMap(({ key, label, options }) =>
+        selectedNotificationFilterValues(filters, key).map((value) => (
+          <button
+            key={`${key}-${value}`}
+            type="button"
+            className="flex max-w-full items-center gap-1 rounded border border-subtle px-1.5 py-0.5 text-11 text-secondary hover:bg-layer-1"
+            onClick={() => {
+              if (key === "type") updateFilters("type", { ...filters.type, [value as ENotificationFilterType]: false });
+              else
+                updateFilters(
+                  key,
+                  (filters[key] ?? []).filter((v) => v !== value)
+                );
+            }}
+          >
+            <span className="truncate">
+              {label}: {options.find((o) => o.value === value)?.label ?? value}
+            </span>
+            <X className="size-3 shrink-0" />
+          </button>
+        ))
+      )}
+      <button
+        type="button"
+        className="px-1 text-11 text-tertiary hover:text-primary"
+        onClick={() =>
+          updateBulkFilters({
+            type: { assigned: false, created: false, subscribed: false },
+            priority: [],
+            state_group: [],
+            assignees: [],
+            triggered_by: [],
+            project: [],
+          })
+        }
+      >
+        {t("common.clear_all")}
+      </button>
+    </div>
   );
 });

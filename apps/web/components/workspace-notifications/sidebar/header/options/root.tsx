@@ -4,8 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { CheckCheck } from "lucide-react";
 import { observer } from "mobx-react";
-import { CheckDoneOutline, RefreshOutline } from "@makeplane/propel/icons";
+import { RefreshOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ENotificationLoader, ENotificationQueryParamType } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -14,8 +15,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
-import { NotificationFilter } from "../../filters/menu";
-import { NotificationHeaderMenuOption } from "./menu-option";
+
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 
@@ -52,13 +52,14 @@ export const NotificationSidebarHeaderOptions = observer(function NotificationSi
   };
 
   return (
-    <div className="relative flex items-center justify-center gap-2 text-body-xs-medium">
+    <div className="relative flex items-center justify-center gap-1 text-body-xs-medium">
       {/* mark all notifications as read*/}
       <Tooltip label={t("notification.options.mark_all_as_read")} side="bottom" disabled={isMobile}>
         <IconButton
+          showTooltip={false}
           size="sm"
           variant="ghost"
-          icon={<Icon icon={CheckDoneOutline} />}
+          icon={<CheckCheck className="size-3.5" />}
           loading={loader === ENotificationLoader.MARK_ALL_AS_READY}
           aria-label={t("notification.options.mark_all_as_read")}
           onClick={() => {
@@ -70,6 +71,7 @@ export const NotificationSidebarHeaderOptions = observer(function NotificationSi
       {/* refetch current notifications */}
       <Tooltip label={t("notification.options.refresh")} side="bottom" disabled={isMobile}>
         <IconButton
+          showTooltip={false}
           size="sm"
           variant="ghost"
           icon={<Icon icon={RefreshOutline} />}
@@ -80,12 +82,6 @@ export const NotificationSidebarHeaderOptions = observer(function NotificationSi
           }}
         />
       </Tooltip>
-
-      {/* notification filters */}
-      <NotificationFilter />
-
-      {/* notification menu options */}
-      <NotificationHeaderMenuOption />
     </div>
   );
 });

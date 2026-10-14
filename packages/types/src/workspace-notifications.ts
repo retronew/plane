@@ -12,6 +12,13 @@ export type TNotificationFilter = {
   type: {
     [key in ENotificationFilterType]: boolean;
   };
+  priority?: string[];
+  state_group?: string[];
+  assignees?: string[];
+  triggered_by?: string[];
+  project?: string[];
+  search?: string;
+  order_by?: "-created_at" | "created_at" | "priority" | "unread";
   snoozed: boolean;
   archived: boolean;
   read: boolean;
@@ -68,6 +75,13 @@ export type TNotification = {
 
 // notification paginated information
 export type TNotificationPaginatedInfoQueryParams = {
+  priority?: string;
+  state_group?: string;
+  assignees?: string;
+  triggered_by?: string;
+  project?: string;
+  search?: string;
+  order_by?: string;
   type?: string | undefined;
   snoozed?: boolean;
   archived?: boolean;

@@ -1762,6 +1762,28 @@
     "token_expiry_year": "1 年",
     "token_last_used": "最近使用",
     "token_never_used": "从未使用",
-    "clear_token_search": "清空搜索"
+    "clear_token_search": "清空搜索",
+    "inbox_filters": {
+      "label": "收件箱筛选",
+      "relation": "关联",
+      "source": "通知来源",
+      "state_group": "状态组",
+      "assignees": "负责人",
+      "no_results": "未找到匹配项",
+      "sort": "排序方式",
+      "newest": "最新",
+      "oldest": "最早优先",
+      "unread_first": "未读优先",
+      "search": "搜索通知…",
+      "empty_title": "未选择通知",
+      "empty_description": "选择一条通知以查看其详细信息。",
+      "states": {
+        "backlog": "待办",
+        "unstarted": "未开始",
+        "started": "进行中",
+        "completed": "已完成",
+        "cancelled": "已取消"
+      }
+    }
   }
 }

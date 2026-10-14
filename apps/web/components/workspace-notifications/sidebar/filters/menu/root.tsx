@@ -4,56 +4,88 @@
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
 import { observer } from "mobx-react";
-import { FilterOutline } from "@makeplane/propel/icons";
-// plane imports
+import { ListFilter } from "lucide-react";
 import type { ENotificationFilterType } from "@plane/constants";
-import { FILTER_TYPE_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuCheckboxItem, MenuContent, MenuTrigger } from "@makeplane/propel/components/menu";
-import { Tooltip } from "@makeplane/propel/components/tooltip";
-// hooks
+import {
+  Menu,
+  MenuCheckboxItem,
+  MenuContent,
+  MenuTrigger,
+  MenuSubmenu,
+  MenuSubmenuTrigger,
+  MenuSubmenuContent,
+  MenuLabel,
+  MenuGroup,
+  MenuSearch,
+} from "@makeplane/propel/components/menu";
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
-import { usePlatformOS } from "@/hooks/use-platform-os";
+import { selectedNotificationFilterValues, useNotificationFilterGroups } from "../use-filter-groups";
 
 export const NotificationFilter = observer(function NotificationFilter() {
-  // hooks
-  const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
   const { filters, updateFilters } = useWorkspaceNotifications();
-
-  const handleFilterTypeChange = (filterType: ENotificationFilterType, filterValue: boolean) =>
-    updateFilters("type", {
-      ...filters.type,
-      [filterType]: filterValue,
-    });
-
+  const groups = useNotificationFilterGroups();
+  const [search, setSearch] = useState("");
+  const active = groups.some(({ key }) => selectedNotificationFilterValues(filters, key).length > 0);
   return (
-    // A toggle list: checkbox rows keep the menu open, as the legacy popover did.
     <Menu>
-      <Tooltip label={t("notification.options.filters")} side="bottom" disabled={isMobile}>
-        <MenuTrigger
-          render={
-            <IconButton
-              size="sm"
-              variant="ghost"
-              icon={<Icon icon={FilterOutline} />}
-              aria-label={t("notification.options.filters")}
-            />
-          }
-        />
-      </Tooltip>
-      <MenuContent side="bottom" align="end">
-        {FILTER_TYPE_OPTIONS.map((filter) => (
-          <MenuCheckboxItem
-            key={filter.value}
-            label={t(filter.i18n_label)}
-            checked={filters?.type?.[filter.value] || false}
-            onCheckedChange={(checked) => handleFilterTypeChange(filter.value, checked)}
+      <MenuTrigger
+        render={
+          <IconButton
+            size="sm"
+            variant="secondary"
+            icon={<ListFilter className={`size-3.5 ${active ? "text-accent-primary" : ""}`} />}
+            aria-label={t("web.inbox_filters.label")}
           />
-        ))}
+        }
+      />
+      <MenuContent side="bottom" align="end">
+        <MenuGroup>
+          <MenuLabel>{t("web.inbox_filters.label")}</MenuLabel>
+          {groups.map(({ key, label, icon: GroupIcon, options, searchable }) => (
+            <MenuSubmenu key={key} onOpenChange={() => setSearch("")}>
+              <MenuSubmenuTrigger label={label} icon={<GroupIcon className="size-4" />} />
+              <MenuSubmenuContent
+                search={
+                  searchable ? (
+                    <MenuSearch value={search} onValueChange={setSearch} placeholder={t("search")} />
+                  ) : undefined
+                }
+              >
+                {options
+                  .filter((o) => !searchable || o.label.toLowerCase().includes(search.toLowerCase()))
+                  .map((option) => {
+                    const selected = selectedNotificationFilterValues(filters, key);
+                    return (
+                      <MenuCheckboxItem
+                        key={option.value}
+                        label={option.label}
+                        checked={selected.includes(option.value)}
+                        onCheckedChange={(checked) => {
+                          if (key === "type")
+                            updateFilters("type", {
+                              ...filters.type,
+                              [option.value as ENotificationFilterType]: checked,
+                            });
+                          else
+                            updateFilters(
+                              key,
+                              checked ? [...selected, option.value] : selected.filter((v) => v !== option.value)
+                            );
+                        }}
+                      />
+                    );
+                  })}
+                {options.filter((o) => !searchable || o.label.toLowerCase().includes(search.toLowerCase())).length ===
+                  0 && <div className="px-2 py-3 text-12 text-tertiary">{t("web.inbox_filters.no_results")}</div>}
+              </MenuSubmenuContent>
+            </MenuSubmenu>
+          ))}
+        </MenuGroup>
       </MenuContent>
     </Menu>
   );

@@ -1762,6 +1762,28 @@
     "token_expiry_year": "1 year",
     "token_last_used": "Last used",
     "token_never_used": "Never used",
-    "clear_token_search": "Clear search"
+    "clear_token_search": "Clear search",
+    "inbox_filters": {
+      "label": "Inbox filters",
+      "relation": "Relationship",
+      "source": "Notification source",
+      "state_group": "State group",
+      "assignees": "Assignees",
+      "no_results": "No matches found",
+      "sort": "Sort by",
+      "newest": "Newest",
+      "oldest": "Oldest first",
+      "unread_first": "Unread first",
+      "search": "Search notifications…",
+      "empty_title": "No notification selected",
+      "empty_description": "Select a notification to view its details.",
+      "states": {
+        "backlog": "Backlog",
+        "unstarted": "Unstarted",
+        "started": "Started",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    }
   }
 }

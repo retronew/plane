@@ -7,11 +7,13 @@
 import { observer } from "mobx-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
-import { InboxOutline } from "@makeplane/propel/icons";
-import { Breadcrumbs } from "@plane/blocks/breadcrumb";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+
 import { Header } from "@plane/blocks/layout";
 // components
-import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
+
 // local imports
 import { NotificationSidebarHeaderOptions } from "./options";
 
@@ -24,22 +26,22 @@ export const NotificationSidebarHeader = observer(function NotificationSidebarHe
 ) {
   const { workspaceSlug } = props;
   const { t } = useTranslation();
+  const router = useRouter();
 
   if (!workspaceSlug) return <></>;
   return (
-    <Header className="my-auto bg-surface-1">
+    <Header className="my-auto bg-surface-1 px-0">
       <Header.LeftItem>
-        <Breadcrumbs>
-          <Breadcrumbs.Item
-            component={
-              <BreadcrumbLink
-                label={t("notification.label")}
-                icon={<InboxOutline className="h-4 w-4 text-primary" />}
-                disableTooltip
-              />
-            }
+        <div className="flex items-center gap-1">
+          <IconButton
+            size="sm"
+            variant="ghost"
+            icon={<ArrowLeft className="size-3.5" />}
+            aria-label={t("common.back")}
+            onClick={() => router.push(`/${workspaceSlug}/`)}
           />
-        </Breadcrumbs>
+          <h1 className="text-h5-semibold">{t("notification.label")}</h1>
+        </div>
       </Header.LeftItem>
       <Header.RightItem>
         <NotificationSidebarHeaderOptions workspaceSlug={workspaceSlug} />
