@@ -15,7 +15,9 @@ import {
   EXPORTERS_LIST,
   // ISSUE_DISPLAY_FILTERS_BY_PAGE,
 } from "@plane/constants";
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
+import { Download } from "lucide-react";
+import { Icon } from "@makeplane/propel/components/icon";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 // import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -217,11 +219,14 @@ export const ExportForm = observer(function ExportForm(props: Props) {
             size="md"
             stretch="auto"
             type="submit"
+            disabled={exportLoading}
             loading={exportLoading}
+            icon={<Icon icon={Download} />}
+            iconPosition="start"
             label={
               exportLoading
-                ? translate("web.runtime.loading_label", { label: t("workspace_settings.settings.exports.exporting") })
-                : t("export")
+                ? t("workspace_settings.settings.exports.submitting")
+                : t("workspace_settings.settings.exports.start_export")
             }
           />
         </div>

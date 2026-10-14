@@ -4,26 +4,39 @@
  * See the LICENSE file for details.
  */
 
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useMemo, useRef, useEffect, useCallback } from "react";
+import { useEditorPreferences } from "@/components/editor-preferences";
 // components
 import { EditorWrapper } from "@/components/editors/editor-wrapper";
 // extensions
-import { EnterKeyExtension } from "@/extensions";
+import { EnterKeyExtension as createEnterKeyExtension } from "@/extensions";
 // types
 import type { EditorRefApi, ILiteTextEditorProps } from "@/types";
 
 function LiteTextEditor(props: ILiteTextEditorProps) {
   const { onEnterKeyPress, disabledExtensions, extensions: externalExtensions = [] } = props;
 
+  const { commentSubmitShortcut } = useEditorPreferences();
+  const submitShortcut = props.useCommentSubmitShortcut ? commentSubmitShortcut : "enter";
+
+  const current = useRef({ onEnterKeyPress, submitShortcut });
+  useEffect(() => {
+    current.current = { onEnterKeyPress, submitShortcut };
+  }, [onEnterKeyPress, submitShortcut]);
+  const submit = useCallback(() => current.current.onEnterKeyPress?.(), []);
+  const getShortcut = useCallback(() => current.current.submitShortcut, []);
+
   const extensions = useMemo(() => {
     const resolvedExtensions = [...externalExtensions];
 
     if (!disabledExtensions?.includes("enter-key")) {
-      resolvedExtensions.push(EnterKeyExtension(onEnterKeyPress));
+      // This factory only registers handlers; refs are read later on keyboard events.
+      // oxlint-disable-next-line react/refs
+      resolvedExtensions.push(createEnterKeyExtension(submit, getShortcut));
     }
 
     return resolvedExtensions;
-  }, [externalExtensions, disabledExtensions, onEnterKeyPress]);
+  }, [externalExtensions, disabledExtensions, submit, getShortcut]);
 
   return <EditorWrapper {...props} extensions={extensions} />;
 }

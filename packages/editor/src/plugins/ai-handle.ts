@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { NodeSelection } from "@tiptap/pm/state";
+import { translate } from "@plane/i18n";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 // extensions
 import type { SideMenuHandleOptions, SideMenuPluginProps } from "@/extensions";
@@ -53,6 +54,8 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
 
   const handleClick = (event: MouseEvent, view: EditorView) => {
     view.focus();
+    // An explicit text selection is the user's requested scope; don't expand it to the block.
+    if (view.state.selection instanceof TextSelection && !view.state.selection.empty) return;
 
     const node = nodeDOMAtCoords({
       x: event.clientX + 50 + options.dragHandleWidth,
@@ -91,13 +94,15 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
     view.dispatch(view.state.tr.setSelection(nodeSelection));
   };
 
-  const view = (view: EditorView, sideMenu: HTMLDivElement | null) => {
+  const createView = (view: EditorView, sideMenu: HTMLDivElement | null) => {
     // create handle element
     const className =
       "grid place-items-center font-medium size-5 aspect-square text-11 text-tertiary hover:bg-layer-1 rounded-xs opacity-100 !outline-none z-[5] transition-[background-color,_opacity] duration-200 ease-linear";
     aiHandleElement = document.createElement("button");
     aiHandleElement.type = "button";
     aiHandleElement.id = "ai-handle";
+    aiHandleElement.setAttribute("aria-label", translate("web.ai_writing_title"));
+    aiHandleElement.title = translate("web.ai_writing_title");
     aiHandleElement.classList.value = className;
     const iconElement = document.createElement("span");
     iconElement.classList.value = "pointer-events-none";
@@ -120,7 +125,7 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
   const domEvents = {};
 
   return {
-    view,
+    view: createView,
     domEvents,
   };
 };

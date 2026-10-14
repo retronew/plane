@@ -192,9 +192,10 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
         onClose={onClose}
         workspaceId={workspaceId}
         workspaceSlug={workspaceSlug}
+        title={page.name ?? ""}
       />
     ),
-    [editorRef, workspaceId, workspaceSlug]
+    [editorRef, workspaceId, workspaceSlug, page.name]
   );
 
   const serverHandler: TServerHandler = useMemo(
@@ -229,12 +230,9 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     [currentUser?.display_name, currentUser?.id]
   );
 
-  const blockWidthClassName = cn(
-    "mx-auto block w-full max-w-[720px] bg-transparent transition-all duration-200 ease-in-out",
-    {
-      "max-w-[1152px]": isFullWidth,
-    }
-  );
+  const blockWidthClassName = cn("mx-auto block w-full max-w-[720px] bg-transparent", {
+    "max-w-[1152px]": isFullWidth,
+  });
 
   const isPageLoading = pageId === undefined || !realtimeConfig;
 
@@ -251,11 +249,17 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
           <div className="page-summary-container absolute top-[64px] right-0 z-[5] h-full">
             <div className="sticky top-[72px]">
               <div className="group/page-toc relative px-page-x">
-                {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events */}
                 <div
                   className="max-h-[50vh] !cursor-pointer overflow-hidden"
                   // oxlint-disable-next-line jsx_a11y/prefer-tag-over-role
                   role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleOpenNavigationPane();
+                    }
+                  }}
                   aria-label={t("page_navigation_pane.outline_floating_button")}
                   onClick={handleOpenNavigationPane}
                 >
@@ -269,7 +273,7 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
           </div>
         )}
         <div>
-          <div className="page-header-container group/page-header">
+          <div className={cn("page-header-container group/page-header", { "wide-layout": isFullWidth })}>
             <div className={blockWidthClassName}>
               <PageEditorHeaderRoot page={page} projectId={projectId} />
             </div>

@@ -39,12 +39,13 @@ export function RecentPage(props: BlockProps) {
 
   return (
     <ListItem
+      compact
       key={activity.id}
       itemLink={pageLink}
       title={getPageName(pageDetails?.name)}
       prependTitleElement={
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <div className="grid size-8 flex-shrink-0 place-items-center rounded-sm bg-layer-2">
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="grid size-4 flex-shrink-0 place-items-center">
             {pageDetails?.logo_props?.in_use ? (
               <Logo logo={pageDetails?.logo_props} size={16} type="lucide" />
             ) : (
@@ -52,19 +53,19 @@ export function RecentPage(props: BlockProps) {
             )}
           </div>
           {pageDetails?.project_identifier && (
-            <div className="text-13 font-medium whitespace-nowrap text-placeholder">
+            <div className="text-caption-md-regular whitespace-nowrap text-tertiary">
               {pageDetails?.project_identifier}
             </div>
           )}
         </div>
       }
       appendTitleElement={
-        <div className="flex-shrink-0 text-11 font-medium text-placeholder">
+        <div className="flex-shrink-0 text-caption-md-regular text-tertiary">
           {calculateTimeAgo(activity.visited_at)}
         </div>
       }
       quickActionElement={
-        <div className="flex gap-4">
+        <div className="flex shrink-0 items-center gap-2">
           <Avatar
             alt={ownerDetails?.display_name}
             fallback={ownerDetails?.display_name?.[0]?.toUpperCase()}
@@ -75,8 +76,8 @@ export function RecentPage(props: BlockProps) {
       }
       parentRef={ref}
       disableLink={false}
-      className="my-auto border-none !px-2 py-3"
-      itemClassName="my-auto bg-layer-transparent"
+      className="border-none"
+      itemClassName="bg-layer-transparent"
       onItemClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

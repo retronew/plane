@@ -182,7 +182,12 @@ export class ProjectPageService extends APIService {
       });
   }
 
-  async move(workspaceSlug: string, projectId: string, pageId: string, newProjectId: string): Promise<void> {
+  async move(
+    workspaceSlug: string,
+    projectId: string,
+    pageId: string,
+    newProjectId: string
+  ): Promise<{ page_ids: string[]; project_id: string }> {
     return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/move/`, {
       new_project_id: newProjectId,
     })

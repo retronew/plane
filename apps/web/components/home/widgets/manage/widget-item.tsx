@@ -123,7 +123,7 @@ export const WidgetItem = observer(function WidgetItem(props: Props) {
       <div
         ref={elementRef}
         className={cn(
-          "group/widget-item relative flex items-center justify-between rounded-sm px-2 py-2 text-13 font-medium hover:bg-layer-1",
+          "group/widget-item relative flex min-h-9 items-center justify-between rounded-md px-2 py-1.5 text-13 font-medium hover:bg-layer-1",
           {
             "cursor-grabbing bg-layer-1": isDragging,
           }
@@ -134,7 +134,7 @@ export const WidgetItem = observer(function WidgetItem(props: Props) {
           <div>{t(widgetTitle, { count: 1 })}</div>
         </div>
         <Switch
-          size="sm"
+          size="md"
           checked={widget.is_enabled}
           onCheckedChange={(enabled) => handleToggle(workspaceSlug.toString(), widget.key, enabled)}
           aria-label={t(widgetTitle, { count: 1 })}

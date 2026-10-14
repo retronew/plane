@@ -226,7 +226,7 @@ export function ExistingIssuesListModal(props: Props) {
                     }`}
                   >
                     <Switch
-                      size="sm"
+                      size="md"
                       checked={isWorkspaceLevel}
                       onCheckedChange={setIsWorkspaceLevel}
                       aria-label={t("common.workspace_level")}

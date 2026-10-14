@@ -42,7 +42,3 @@ export type TSubscriptionPrice = {
   price: number;
   recurring: TBillingFrequency;
 };
-
-export type TProductBillingFrequency = {
-  [key in EProductSubscriptionEnum]: TBillingFrequency | undefined;
-};

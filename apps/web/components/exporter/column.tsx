@@ -5,7 +5,7 @@
  */
 
 import { Translation } from "@plane/i18n";
-import { DownloadOutline } from "@makeplane/propel/icons";
+import { ExportDownload, exportStatusLabel } from "./presentation";
 import type { IExportData } from "@plane/types";
 import { getDate, getFileURL, renderFormattedDate } from "@plane/utils";
 import { translate } from "@plane/i18n";
@@ -94,7 +94,7 @@ export const useExportColumns = () => {
                     : "bg-gray-500/20 text-gray-500"
           }`}
         >
-          {rowData.status}
+          {exportStatusLabel(rowData.status)}
         </span>
       ),
     },
@@ -103,18 +103,7 @@ export const useExportColumns = () => {
       content: translate("web.download"),
       tdRender: (rowData: RowData) =>
         checkExpiry(rowData.created_at) ? (
-          <>
-            {rowData.status == "completed" ? (
-              <a target="_blank" href={rowData?.url} rel="noopener noreferrer">
-                <button className="flex w-full items-center gap-1 font-medium text-accent-primary">
-                  <DownloadOutline className="h-4 w-4" />
-                  <div>{translate("web.download")}</div>
-                </button>
-              </a>
-            ) : (
-              "-"
-            )}
-          </>
+          <>{rowData.status == "completed" ? <ExportDownload provider={rowData.provider} url={rowData.url} /> : "-"}</>
         ) : (
           <div className="text-11 text-danger-primary">{translate("web.expired")}</div>
         ),

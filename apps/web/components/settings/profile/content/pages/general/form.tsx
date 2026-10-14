@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
-import { UserOutline } from "@makeplane/propel/icons";
+import { Avatar } from "@makeplane/propel/components/avatar";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -212,35 +212,35 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
         )}
       />
       <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-        <div className="flex w-full flex-col gap-7">
-          <div className="relative h-44 w-full">
+        <div className="flex w-full flex-col gap-6">
+          <div className="relative h-[149px] w-full overflow-hidden rounded-lg bg-layer-2">
             <CoverImage
               src={userCover}
-              className="h-44 w-full rounded-lg"
+              className="absolute inset-0 size-full"
               alt={currentUser?.first_name ?? translate("web.cover_image")}
+              showDefaultWhenEmpty
             />
-            <div className="absolute -bottom-6 left-6 flex items-end justify-between">
-              <div className="flex gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface-2">
-                  <button type="button" onClick={() => setIsImageUploadModalOpen(true)}>
-                    {!userAvatar || userAvatar === "" ? (
-                      <div className="h-16 w-16 rounded-md bg-layer-1 p-2">
-                        <UserOutline className="h-full w-full text-secondary" />
-                      </div>
-                    ) : (
-                      <div className="relative h-16 w-16 overflow-hidden">
-                        <img
-                          src={getFileURL(userAvatar)}
-                          className="absolute top-0 left-0 h-full w-full rounded-lg object-cover"
-                          alt={currentUser?.display_name}
-                        />
-                      </div>
-                    )}
-                  </button>
+            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  className="flex shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-accent-strong"
+                  aria-label={t("web.upload_image")}
+                  onClick={() => setIsImageUploadModalOpen(true)}
+                >
+                  <Avatar
+                    src={getFileURL(userAvatar)}
+                    alt={currentUser?.display_name}
+                    fallback={currentUser?.display_name?.[0]?.toUpperCase()}
+                    size="xl"
+                  />
+                </button>
+                <div className="flex min-w-0 flex-col text-on-color">
+                  <span className="truncate text-body-sm-medium">{`${watch("first_name")} ${watch("last_name")}`}</span>
+                  <span className="truncate text-body-xs-regular">{watch("email")}</span>
                 </div>
               </div>
-            </div>
-            <div className="absolute right-3 bottom-3 flex">
               <Controller
                 control={control}
                 name="cover_image_url"
@@ -255,21 +255,13 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
               />
             </div>
           </div>
-          <div className="item-center mt-6 flex justify-between">
-            <div className="flex flex-col">
-              <div className="item-center flex text-16 font-medium text-secondary">
-                <span>{`${watch("first_name")} ${watch("last_name")}`}</span>
-              </div>
-              <span className="text-13 tracking-tight text-tertiary">{watch("email")}</span>
-            </div>
-          </div>
           <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
-              <div className="flex flex-col gap-1">
-                <h4 className="text-13 font-medium text-secondary">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-6 @sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="first_name" className="text-body-xs-medium text-primary">
                   {t("first_name")}&nbsp;
                   <span className="text-danger-primary">*</span>
-                </h4>
+                </label>
                 <Controller
                   control={control}
                   name="first_name"
@@ -298,8 +290,10 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                 />
                 {errors.first_name && <span className="text-11 text-danger-primary">{errors.first_name.message}</span>}
               </div>
-              <div className="flex flex-col gap-1">
-                <h4 className="text-13 font-medium text-secondary">{t("last_name")}</h4>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="last_name" className="text-body-xs-medium text-primary">
+                  {t("last_name")}
+                </label>
                 <Controller
                   control={control}
                   name="last_name"
@@ -327,11 +321,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                 />
                 {errors.last_name && <span className="text-11 text-danger-primary">{errors.last_name.message}</span>}
               </div>
-              <div className="flex flex-col gap-1">
-                <h4 className="text-13 font-medium text-secondary">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="display_name" className="text-body-xs-medium text-primary">
                   {t("display_name")}&nbsp;
                   <span className="text-danger-primary">*</span>
-                </h4>
+                </label>
                 <Controller
                   control={control}
                   name="display_name"
@@ -361,11 +355,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   <span className="text-11 text-danger-primary">{errors?.display_name?.message}</span>
                 )}
               </div>
-              <div className="flex flex-col gap-1">
-                <h4 className="text-13 font-medium text-secondary">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="email" className="text-body-xs-medium text-primary">
                   {t("auth.common.email.label")}&nbsp;
                   <span className="text-danger-primary">*</span>
-                </h4>
+                </label>
                 <Controller
                   control={control}
                   name="email"
@@ -405,7 +399,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
           <div>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               stretch="auto"
               type="submit"
               label={isLoading ? t("saving") : t("save_changes")}

@@ -20,6 +20,7 @@ from plane.license.api.permissions import InstanceAdminPermission
 from plane.license.api.serializers import InstanceSerializer
 from plane.license.models import Instance
 from plane.license.utils.instance_value import get_configuration_value
+from plane.utils.llm import get_llm_config
 from plane.utils.cache import cache_response, invalidate_cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
@@ -146,7 +147,7 @@ class InstanceEndpoint(BaseAPIView):
         data["slack_client_id"] = SLACK_CLIENT_ID
 
         # Open AI settings
-        data["has_llm_configured"] = bool(LLM_API_KEY)
+        data["has_llm_configured"] = bool(get_llm_config())
 
         # File size settings
         data["file_size_limit"] = float(os.environ.get("FILE_SIZE_LIMIT", 5242880))

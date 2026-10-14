@@ -243,6 +243,10 @@ class Profile(TimeAuditModel):
         max_length=255, choices=NotificationViewMode.choices, default=NotificationViewMode.FULL
     )
     is_smooth_cursor_enabled = models.BooleanField(default=False)
+    comment_submit_shortcut = models.CharField(
+        max_length=16, choices=[("enter", "Enter"), ("mod-enter", "Ctrl/Cmd + Enter")], default="enter"
+    )
+    timezone_auto_set = models.BooleanField(default=False)
     # mobile
     is_mobile_onboarded = models.BooleanField(default=False)
     mobile_onboarding_step = models.JSONField(default=get_mobile_default_onboarding)

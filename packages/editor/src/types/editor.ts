@@ -184,7 +184,7 @@ export type IEditorProps = {
   workItemIdentifier?: string | null;
 };
 
-export type ILiteTextEditorProps = IEditorProps;
+export type ILiteTextEditorProps = IEditorProps & { useCommentSubmitShortcut?: boolean };
 
 export type IRichTextEditorProps = IEditorProps & {
   dragDropEnabled?: boolean;

@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
+import { getBrowserTimezone } from "@/helpers/browser-timezone";
 import { observer } from "mobx-react";
 // plane imports
 import { SUPPORTED_LANGUAGES, useTranslation } from "@plane/i18n";
@@ -19,6 +21,12 @@ import { useUser, useUserProfile } from "@/hooks/store/user";
 /** A supported UI language, in the shape the `Select` renders. */
 type LanguageOption = { value: string; label: string };
 
+const getLanguageLabel = (value: string) => {
+  const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.value === value);
+  if (!selectedLanguage) return value;
+  return selectedLanguage.label;
+};
+
 export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
   function ProfileSettingsLanguageAndTimezonePreferencesList() {
     // store hooks
@@ -31,9 +39,13 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
     // translation
     const { t } = useTranslation();
 
+    const [savingTimezone, setSavingTimezone] = useState(false);
+
     const handleTimezoneChange = async (value: string) => {
+      setSavingTimezone(true);
       try {
         await updateCurrentUser({ user_timezone: value });
+        if (!(await updateUserProfile({ timezone_auto_set: true }))) throw new Error("Update failed");
         setToast({
           title: t("toast.success"),
           message: t("web.timezone_updated_successfully"),
@@ -45,6 +57,8 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
           message: t("web.failed_to_update_timezone"),
           type: "error",
         });
+      } finally {
+        setSavingTimezone(false);
       }
     };
 
@@ -65,12 +79,6 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
       }
     };
 
-    const getLanguageLabel = (value: string) => {
-      const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.value === value);
-      if (!selectedLanguage) return value;
-      return selectedLanguage.label;
-    };
-
     const languageOptions: LanguageOption[] = SUPPORTED_LANGUAGES.map((item) => ({
       value: item.value,
       label: item.label,
@@ -82,7 +90,15 @@ export const ProfileSettingsLanguageAndTimezonePreferencesList = observer(
         <SettingsControlItem
           title={t("timezone")}
           description={t("timezone_setting")}
-          control={<TimezoneSelect value={user?.user_timezone || "Asia/Kolkata"} onChange={handleTimezoneChange} />}
+          control={
+            <TimezoneSelect
+              value={user?.user_timezone || getBrowserTimezone()}
+              onChange={handleTimezoneChange}
+              size="md"
+              className="w-52 max-w-full"
+              disabled={savingTimezone}
+            />
+          }
         />
         <SettingsControlItem
           title={t("language")}

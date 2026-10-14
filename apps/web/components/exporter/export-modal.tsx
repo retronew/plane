@@ -9,7 +9,9 @@ import { intersection } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
+import { Download } from "lucide-react";
+import { Icon } from "@makeplane/propel/components/icon";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, IImporterService } from "@plane/types";
@@ -154,10 +156,12 @@ export const Exporter = observer(function Exporter(props: Props) {
             onClick={() => void ExportCSVToMail()}
             disabled={exportLoading}
             loading={exportLoading}
+            icon={<Icon icon={Download} />}
+            iconPosition="start"
             label={
               exportLoading
-                ? translate("web.runtime.loading_label", { label: t("workspace_settings.settings.exports.exporting") })
-                : t("workspace_settings.settings.exports.title")
+                ? t("workspace_settings.settings.exports.submitting")
+                : t("workspace_settings.settings.exports.start_export")
             }
           />
         </DialogActions>

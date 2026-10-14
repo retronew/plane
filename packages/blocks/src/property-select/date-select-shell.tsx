@@ -168,7 +168,7 @@ export function DateSelectShell(props: DateSelectShellProps) {
       ) : (
         trigger
       )}
-      <PopoverContent variant="rich" side={side} align={align}>
+      <PopoverContent variant="rich" side={side} align={align} data-date-picker="">
         <PopoverBody tabIndex={0}>{children}</PopoverBody>
         {canClear ? (
           <div className="flex justify-end border-t border-subtle pt-2">

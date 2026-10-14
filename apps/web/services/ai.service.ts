@@ -9,6 +9,8 @@ import { API_BASE_URL } from "@plane/constants";
 import { normalizeAPIRequestURL } from "@plane/services";
 import type { AI_EDITOR_TASKS } from "@plane/constants";
 // services
+import type { WritingContext } from "@/components/ai/writing";
+import { readAIStream } from "./ai-stream";
 import { APIService } from "@/services/api.service";
 // types
 // FIXME:
@@ -41,7 +43,7 @@ export class AIService extends APIService {
    */
   async streamGptTask(
     workspaceSlug: string,
-    data: { prompt: string; task: string },
+    data: { context: WritingContext },
     onDelta: (delta: string) => void,
     signal?: AbortSignal
   ): Promise<string> {
@@ -49,9 +51,9 @@ export class AIService extends APIService {
     const response = await fetch(url, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream, application/json" },
       body: JSON.stringify({ ...data, stream: true }),
-      signal,
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(90000)]) : AbortSignal.timeout(90000),
     });
 
     if (!response.ok || !response.body) {
@@ -59,28 +61,7 @@ export class AIService extends APIService {
       throw { status: response.status, data: body };
     }
 
-    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-    let buffer = "";
-    let text = "";
-    for (;;) {
-      // oxlint-disable-next-line no-await-in-loop -- stream chunks must be read in order
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += value;
-      const events = buffer.split("\n\n");
-      buffer = events.pop() ?? "";
-      for (const event of events) {
-        const line = event.split("\n").find((l) => l.startsWith("data: "));
-        if (!line) continue;
-        const payload = JSON.parse(line.slice("data: ".length)) as { delta?: string; error?: string; done?: boolean };
-        if (payload.error) throw { status: 500, data: { error: payload.error } };
-        if (payload.delta) {
-          text += payload.delta;
-          onDelta(payload.delta);
-        }
-      }
-    }
-    return text;
+    return readAIStream(response.body, onDelta);
   }
 
   async performEditorTask(

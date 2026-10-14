@@ -69,7 +69,7 @@ export const NotificationsProfileSettingsForm = observer(function NotificationsP
             name="property_change"
             render={({ field: { value, onChange } }) => (
               <Switch
-                size="sm"
+                size="md"
                 checked={value}
                 onCheckedChange={(newValue) => {
                   onChange(newValue);
@@ -90,7 +90,7 @@ export const NotificationsProfileSettingsForm = observer(function NotificationsP
             name="state_change"
             render={({ field: { value, onChange } }) => (
               <Switch
-                size="sm"
+                size="md"
                 checked={value}
                 onCheckedChange={(newValue) => {
                   onChange(newValue);
@@ -102,29 +102,27 @@ export const NotificationsProfileSettingsForm = observer(function NotificationsP
           />
         }
       />
-      <div className="border-l-3 border-subtle-1 pl-3">
-        <SettingsControlItem
-          title={t("issue_completed")}
-          description={t("issue_completed_description")}
-          control={
-            <Controller
-              control={control}
-              name="issue_completed"
-              render={({ field: { value, onChange } }) => (
-                <Switch
-                  size="sm"
-                  checked={value}
-                  onCheckedChange={(newValue) => {
-                    onChange(newValue);
-                    void handleSettingChange("issue_completed", newValue);
-                  }}
-                  aria-label={t("issue_completed")}
-                />
-              )}
-            />
-          }
-        />
-      </div>
+      <SettingsControlItem
+        title={t("issue_completed")}
+        description={t("issue_completed_description")}
+        control={
+          <Controller
+            control={control}
+            name="issue_completed"
+            render={({ field: { value, onChange } }) => (
+              <Switch
+                size="md"
+                checked={value}
+                onCheckedChange={(newValue) => {
+                  onChange(newValue);
+                  void handleSettingChange("issue_completed", newValue);
+                }}
+                aria-label={t("issue_completed")}
+              />
+            )}
+          />
+        }
+      />
       <SettingsControlItem
         title={t("comments")}
         description={t("comments_description")}
@@ -134,7 +132,7 @@ export const NotificationsProfileSettingsForm = observer(function NotificationsP
             name="comment"
             render={({ field: { value, onChange } }) => (
               <Switch
-                size="sm"
+                size="md"
                 checked={value}
                 onCheckedChange={(newValue) => {
                   onChange(newValue);
@@ -155,7 +153,7 @@ export const NotificationsProfileSettingsForm = observer(function NotificationsP
             name="mention"
             render={({ field: { value, onChange } }) => (
               <Switch
-                size="sm"
+                size="md"
                 checked={value}
                 onCheckedChange={(newValue) => {
                   onChange(newValue);

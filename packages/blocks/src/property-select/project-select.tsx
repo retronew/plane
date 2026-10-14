@@ -109,6 +109,8 @@ function TriggerLogos({ selected }: { selected: ProjectOption[] }) {
  * Presentational, data-source-agnostic project picker.
  * Pass `multiple={true}` for multi-select; omit or pass `multiple={false}` for single-select.
  */
+const renderProjectLogo = (project: ProjectOption) => <ProjectLogo logoProps={project.logo_props} />;
+
 export function ProjectSelect(props: ProjectSelectProps) {
   const { t } = useTranslation();
   const { variant } = props;
@@ -136,6 +138,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
 
     return (
       <Select<ProjectOption>
+        pinSelected={false}
         infinite
         getValues={getValues}
         value={value}
@@ -146,7 +149,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
         onClose={onClose}
         getOptionValue={(project) => project.id}
         getOptionLabel={(project) => project.name}
-        getOptionIcon={(project) => <ProjectLogo logoProps={project.logo_props} />}
+        getOptionIcon={renderProjectLogo}
       >
         <Select.Trigger<ProjectOption>
           disabled={disabled}
@@ -213,6 +216,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
 
   return (
     <Select<ProjectOption>
+      pinSelected={false}
       infinite
       multiple
       getValues={getValues}
@@ -224,7 +228,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
       onClose={onClose}
       getOptionValue={(project) => project.id}
       getOptionLabel={(project) => project.name}
-      getOptionIcon={(project) => <ProjectLogo logoProps={project.logo_props} />}
+      getOptionIcon={renderProjectLogo}
     >
       <Select.Trigger<ProjectOption>
         disabled={disabled}

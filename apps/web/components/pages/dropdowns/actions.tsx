@@ -4,13 +4,12 @@
  * See the LICENSE file for details.
  */
 
-import { isValidElement, useMemo, useState } from "react";
+import { Fragment, isValidElement, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import {
   ArchiveOutline,
   DeleteOutline,
-  ExportOutline,
   GlobeOutline,
   LinkOutline,
   LockOutline,
@@ -20,17 +19,27 @@ import {
   RestoreOutline,
   UnlockedOutline,
 } from "@makeplane/propel/icons";
-import { Copy } from "lucide-react";
+import { Copy, ArrowRightLeft } from "lucide-react";
 // constants
 import { EPageAccess } from "@plane/constants";
 // plane ui
 import { useTranslation } from "@plane/i18n";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
+  MenuSubmenu,
+  MenuSubmenuContent,
+  MenuSubmenuTrigger,
+} from "@makeplane/propel/components/menu";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
 // components
+import { MovePageModal } from "@/components/pages/modals/move-page-modal";
 import { DeletePageModal } from "@/components/pages/modals/delete-page-modal";
 // hooks
 import { usePageOperations } from "@/hooks/use-page-operations";
@@ -69,7 +78,7 @@ export const PageActions = observer(function PageActions(props: Props) {
   const { t } = useTranslation();
   // states
   const [deletePageModal, setDeletePageModal] = useState(false);
-  const [, setMovePageModal] = useState(false);
+  const [movePageModal, setMovePageModal] = useState(false);
   // params
   const { workspaceSlug } = useParams();
   // page flag
@@ -158,8 +167,8 @@ export const PageActions = observer(function PageActions(props: Props) {
         {
           key: "move",
           action: () => setMovePageModal(true),
-          title: t("web.move"),
-          icon: ExportOutline,
+          title: t("web.move_page"),
+          icon: ArrowRightLeft,
           shouldRender: canCurrentUserMovePage && isMovePageEnabled,
         },
       ];
@@ -195,6 +204,7 @@ export const PageActions = observer(function PageActions(props: Props) {
 
   return (
     <>
+      <MovePageModal isOpen={movePageModal} onClose={() => setMovePageModal(false)} page={page} storeType={storeType} />
       <DeletePageModal
         isOpen={deletePageModal}
         onClose={() => setDeletePageModal(false)}
@@ -207,7 +217,7 @@ export const PageActions = observer(function PageActions(props: Props) {
           render={
             <IconButton
               variant="ghost"
-              size="sm"
+              size="md"
               aria-label={t("aria_labels.common.more_actions")}
               icon={<Icon icon={MoreHorizontalOutline} />}
               // the list row is a link: keep the trigger from navigating or bubbling to it
@@ -222,23 +232,51 @@ export const PageActions = observer(function PageActions(props: Props) {
           }
         />
         <MenuContent side="bottom" align="end">
-          {getRenderableItems(arrangedOptions).map((item) => (
-            <MenuItem
-              key={item.key}
-              variant={resolveItemVariant(item)}
-              label={item.title ?? ""}
-              description={item.description}
-              icon={item.icon && <Icon icon={item.icon} />}
-              // `customContent` (the full-width / sticky-toolbar switches) sits at the row's inline end.
-              trailing={isValidElement(item.customContent) ? item.customContent : undefined}
-              disabled={item.disabled}
-              closeOnClick={item.closeOnClick}
-              onClick={(e) => {
-                e.stopPropagation();
-                item.action?.();
-              }}
-            />
-          ))}
+          {getRenderableItems(arrangedOptions).map((item) => {
+            const nestedItems = getRenderableItems(item.nestedMenuItems);
+            if (nestedItems.length)
+              return (
+                <MenuSubmenu key={item.key}>
+                  <MenuSubmenuTrigger
+                    label={item.title ?? ""}
+                    icon={item.icon && <Icon icon={item.icon} />}
+                    disabled={item.disabled}
+                  />
+                  <MenuSubmenuContent sizing="auto" onClick={(event) => event.stopPropagation()}>
+                    {nestedItems.map((nestedItem) => (
+                      <MenuItem
+                        key={nestedItem.key}
+                        label={nestedItem.title ?? ""}
+                        icon={nestedItem.icon && <Icon icon={nestedItem.icon} />}
+                        disabled={nestedItem.disabled}
+                        closeOnClick={nestedItem.closeOnClick}
+                        onClick={() => nestedItem.action()}
+                      />
+                    ))}
+                  </MenuSubmenuContent>
+                </MenuSubmenu>
+              );
+            return (
+              <Fragment key={item.key}>
+                {item.key === "archive-restore" && <MenuSeparator />}
+                <MenuItem
+                  key={item.key}
+                  variant={resolveItemVariant(item)}
+                  label={item.title ?? ""}
+                  description={item.description}
+                  icon={item.icon && <Icon icon={item.icon} />}
+                  // `customContent` (the full-width / sticky-toolbar switches) sits at the row's inline end.
+                  trailing={isValidElement(item.customContent) ? item.customContent : undefined}
+                  disabled={item.disabled}
+                  closeOnClick={item.closeOnClick}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    item.action?.();
+                  }}
+                />
+              </Fragment>
+            );
+          })}
         </MenuContent>
       </Menu>
     </>

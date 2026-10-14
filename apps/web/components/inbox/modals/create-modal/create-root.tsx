@@ -230,7 +230,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
               {/* A label (not a role="button" div) so clicking the switch or the text toggles once. */}
               <label className="inline-flex cursor-pointer items-center gap-1.5">
                 <Switch
-                  size="sm"
+                  size="md"
                   checked={createMore}
                   onCheckedChange={() => setCreateMore((prevData) => !prevData)}
                   tabIndex={getIndex("create_more")}

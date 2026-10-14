@@ -4,5 +4,4 @@
  * See the LICENSE file for details.
  */
 
-export * from "./ask-pi-menu";
 export * from "./menu";

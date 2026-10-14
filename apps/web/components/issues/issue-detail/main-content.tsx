@@ -7,6 +7,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
+import { AiStar1Outline } from "@makeplane/propel/icons";
+import { useTranslation } from "@plane/i18n";
+import { GptAssistantPopover } from "@/components/core/modals/gpt-assistant-popover";
+import { useInstance } from "@/hooks/store/use-instance";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
 import type { TNameDescriptionLoader } from "@plane/types";
@@ -50,6 +54,9 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
   const editorRef = useRef<EditorRefApi>(null);
   // states
   const [isSubmitting, setIsSubmitting] = useState<TNameDescriptionLoader>("saved");
+  const [aiOpen, setAiOpen] = useState(false);
+  const { config: instanceConfig } = useInstance();
+  const { t } = useTranslation();
   // hooks
   const windowSize = useSize();
   const { data: currentUser } = useUser();
@@ -126,6 +133,40 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           setIsSubmitting={(value) => setIsSubmitting(value)}
           workspaceSlug={workspaceSlug}
         />
+
+        {isEditable && !isArchived && instanceConfig?.has_llm_configured && (
+          <div className="flex justify-end">
+            <GptAssistantPopover
+              key={issue.id}
+              isOpen={aiOpen}
+              handleClose={() => setAiOpen(false)}
+              workspaceSlug={workspaceSlug}
+              getContext={() => ({
+                kind: "issue",
+                title: issue.name,
+                document: editorRef.current?.getDocument().html ?? "",
+              })}
+              onApply={(html, mode, context) => {
+                const editor = editorRef.current;
+                if (!editor || context.title !== issue.name || context.document !== editor.getDocument().html)
+                  return false;
+                editor.setEditorValue(mode === "replace" ? html : context.document + html, true);
+                return true;
+              }}
+              onUndo={(context) => editorRef.current?.setEditorValue(context.document, true)}
+              button={
+                <button
+                  type="button"
+                  className="flex items-center gap-1 rounded-sm px-2 py-1 text-13 hover:bg-layer-1"
+                  onClick={() => setAiOpen(true)}
+                >
+                  <AiStar1Outline className="size-4" />
+                  {t("web.ai_writing_title")}
+                </button>
+              }
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-2">
           {currentUser && (

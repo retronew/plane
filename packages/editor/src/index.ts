@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+export { EditorPreferencesContext } from "@/components/editor-preferences";
+
 // editors
 export {
   CollaborativeDocumentEditorWithRef,

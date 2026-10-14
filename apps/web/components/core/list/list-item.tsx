@@ -15,6 +15,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 
 interface IListItemProps {
   id?: string;
+  compact?: boolean;
   title: string;
   itemLink: string;
   onItemClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
@@ -37,6 +38,7 @@ interface IListItemProps {
 export function ListItem(props: IListItemProps) {
   const {
     id,
+    compact = false,
     title,
     prependTitleElement,
     appendTitleElement,
@@ -71,30 +73,37 @@ export function ListItem(props: IListItemProps) {
         className={cn(
           "group flex min-h-[52px] w-full flex-col items-center justify-between gap-3 border-b border-subtle bg-layer-transparent py-4 text-13 hover:bg-layer-transparent-hover",
           { "xl:flex-row xl:gap-5 xl:py-0": isSidebarOpen, "lg:flex-row lg:gap-5 lg:py-0": !isSidebarOpen },
+          compact && "!min-h-[38px] !flex-row !gap-0 rounded-md !p-2",
           className
         )}
       >
-        <div className={cn("relative flex w-full items-center justify-between gap-3 truncate", itemClassName)}>
+        <div
+          className={cn(
+            "relative flex w-full items-center justify-between gap-3 truncate",
+            compact && "gap-2",
+            itemClassName
+          )}
+        >
           <ControlLink
             id={id}
-            className="relative flex w-full items-center gap-3 overflow-hidden"
+            className={cn("relative flex w-full items-center gap-3 overflow-hidden", compact && "gap-2")}
             href={itemLink}
             target="_self"
             onClick={handleControlLinkClick}
             disabled={disableLink}
             data-prevent-progress={preventDefaultProgress}
           >
-            <div className={cn("flex items-center gap-4 truncate", leftElementClassName)}>
+            <div className={cn("flex items-center gap-4 truncate", compact && "gap-2", leftElementClassName)}>
               {prependTitleElement && <span className="flex flex-shrink-0 items-center">{prependTitleElement}</span>}
               <Tooltip label={title} layout="stacked" disabled={isMobile}>
-                <span className="truncate text-13">{title}</span>
+                <span className={cn("truncate text-13", compact && "text-body-sm-medium")}>{title}</span>
               </Tooltip>
             </div>
             {appendTitleElement && (
               <span className={cn("flex flex-shrink-0 items-center", rightElementClassName)}>{appendTitleElement}</span>
             )}
           </ControlLink>
-          {quickActionElement && quickActionElement}
+          {quickActionElement}
         </div>
         {actionableItems && (
           <div

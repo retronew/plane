@@ -48,7 +48,7 @@ export const ProfileSettingsModal = observer(function ProfileSettingsModal() {
         <DialogCloseGroup>
           <IconButton
             size="sm"
-            variant="tertiary"
+            variant="ghost"
             icon={<Icon icon={CloseOutline} />}
             aria-label={t("close")}
             render={<DialogClose />}
@@ -64,7 +64,7 @@ export const ProfileSettingsModal = observer(function ProfileSettingsModal() {
         <div className="@container flex min-h-0 flex-1">
           <ProfileSettingsSidebarRoot
             activeTab={activeTab}
-            className="w-[250px] rounded-l-xl"
+            className="w-[280px] rounded-l-xl"
             updateActiveTab={(tab) => toggleProfileSettingsModal({ activeTab: tab })}
           />
           <ProfileSettingsContent activeTab={activeTab} className="flex-1 rounded-r-xl" />

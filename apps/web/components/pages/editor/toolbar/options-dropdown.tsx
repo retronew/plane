@@ -6,7 +6,9 @@
 
 import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
-import { ClipboardOutline, ExportOutline, HistoryOutline } from "@makeplane/propel/icons";
+import { HistoryOutline } from "@makeplane/propel/icons";
+import { Download, Copy, Maximize2, Pin, Type, FileText, Code2 } from "lucide-react";
+import { copyPageContent } from "./copy-content";
 // plane imports
 import { setToast } from "@plane/blocks/toast";
 import { Switch } from "@makeplane/propel/components/switch";
@@ -48,43 +50,66 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
   const { updateQueryParams } = useQueryParams();
   // menu items list
   const EXTRA_MENU_OPTIONS = useMemo(
-    function EXTRA_MENU_OPTIONS(): React.ComponentProps<typeof PageActions>["extraOptions"] {
+    function getExtraMenuOptions(): React.ComponentProps<typeof PageActions>["extraOptions"] {
       return [
         {
           key: "full-screen",
+          closeOnClick: false,
           action: () => handleFullWidth(!isFullWidth),
           title: translate("web.full_width"),
+          icon: Maximize2,
           // The row itself does the toggling; the switch is the state readout at the row's end.
           customContent: (
             <span className="pointer-events-none">
-              <Switch size="sm" checked={isFullWidth} aria-hidden tabIndex={-1} />
+              <Switch size="md" checked={isFullWidth} aria-hidden tabIndex={-1} />
             </span>
           ),
         },
         {
           key: "sticky-toolbar",
+          closeOnClick: false,
           action: () => handleStickyToolbar(!isStickyToolbarEnabled),
           title: translate("web.sticky_toolbar"),
+          icon: Pin,
           customContent: (
             <span className="pointer-events-none">
-              <Switch size="sm" checked={isStickyToolbarEnabled} aria-hidden tabIndex={-1} />
+              <Switch size="md" checked={isStickyToolbarEnabled} aria-hidden tabIndex={-1} />
             </span>
           ),
           shouldRender: isContentEditable,
         },
         {
           key: "copy-markdown",
-          action: () => {
-            if (!editorRef) return;
-            editorRef.copyMarkdownToClipboard();
-            setToast({
-              type: "success",
-              title: translate("toast.success"),
-              message: translate("web.markdown_copied_to_clipboard"),
-            });
-          },
-          title: translate("web.copy_markdown"),
-          icon: ClipboardOutline,
+          action: () => {},
+          title: translate("web.copy_as"),
+          icon: Copy,
+          disabled: !editorRef,
+          nestedMenuItems: [
+            { key: "text", title: translate("web.plain_text"), icon: Type },
+            { key: "markdown", title: "Markdown", icon: FileText },
+            { key: "html", title: "HTML", icon: Code2 },
+          ].map(({ key, title, icon }) => ({
+            key,
+            title,
+            icon,
+            action: () => {
+              if (!editorRef) return;
+              void copyPageContent(editorRef, key as "text" | "markdown" | "html").then(
+                () =>
+                  setToast({
+                    type: "success",
+                    title: translate("toast.success"),
+                    message: translate("web.page_content_copied"),
+                  }),
+                () =>
+                  setToast({
+                    type: "error",
+                    title: translate("toast.error"),
+                    message: translate("web.page_copy_failed"),
+                  })
+              );
+            },
+          })),
           shouldRender: true,
         },
         {
@@ -106,7 +131,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
           key: "export",
           action: () => setIsExportModalOpen(true),
           title: translate("web.export"),
-          icon: ExportOutline,
+          icon: Download,
           shouldRender: true,
         },
       ];
@@ -137,13 +162,14 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
         optionsOrder={[
           "full-screen",
           "sticky-toolbar",
-          "copy-markdown",
           "version-history",
           "make-a-copy",
-          "archive-restore",
+          "move",
           "delete",
           "toggle-access",
+          "copy-markdown",
           "export",
+          "archive-restore",
         ]}
         page={page}
         storeType={storeType}

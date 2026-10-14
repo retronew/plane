@@ -10,7 +10,7 @@ import type { Editor } from "@tiptap/react";
 import { cn } from "@plane/utils";
 // components
 import { DocumentContentLoader, EditorContainer, EditorContentWrapper } from "@/components/editors";
-import { BlockMenu, EditorBubbleMenu } from "@/components/menus";
+import { AIFeaturesMenu, BlockMenu, EditorBubbleMenu } from "@/components/menus";
 // types
 import type { TCollabValue } from "@/contexts";
 import type {
@@ -43,6 +43,7 @@ type Props = {
 
 export function PageRenderer(props: Props) {
   const {
+    aiHandler,
     bubbleMenuEnabled,
     disabledExtensions,
     displayConfig,
@@ -99,6 +100,7 @@ export function PageRenderer(props: Props) {
             <EditorContentWrapper editor={editor} id={id} tabIndex={tabIndex} />
             {editor.isEditable && !isTouchDevice && (
               <div>
+                {!disabledExtensions.includes("ai") && aiHandler?.menu && <AIFeaturesMenu menu={aiHandler.menu} />}
                 {bubbleMenuEnabled && (
                   <EditorBubbleMenu
                     editor={editor}

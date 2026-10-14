@@ -13,8 +13,7 @@ type UseExpandableSearchOptions = {
 
 /**
  * Custom hook for expandable search input behavior
- * Handles focus management to prevent unwanted opening on programmatic focus restoration
- * Opens on click, typing, or keyboard shortcut (via PowerK Cmd+F)
+ * Keeps focused input and visible results in sync for mouse, Tab and shortcuts.
  */
 export const useExpandableSearch = (options?: UseExpandableSearchOptions) => {
   const { onClose } = options || {};
@@ -25,8 +24,6 @@ export const useExpandableSearch = (options?: UseExpandableSearchOptions) => {
   // refs
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const wasClickedRef = useRef<boolean>(false);
-  const wasKeyboardTriggeredRef = useRef<boolean>(false);
 
   // Handle close
   const handleClose = useCallback(() => {
@@ -59,34 +56,9 @@ export const useExpandableSearch = (options?: UseExpandableSearchOptions) => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, handleClose]);
 
-  // Track keyboard shortcuts that trigger focus (Cmd+F / Ctrl+F)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
-        // Mark as keyboard triggered so handleFocus knows to open
-        wasKeyboardTriggeredRef.current = true;
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  // Track explicit clicks
-  const handleMouseDown = useCallback(() => {
-    wasClickedRef.current = true;
-  }, []);
-
-  // Open on explicit clicks or keyboard shortcut, not programmatic focus restoration
-  const handleFocus = useCallback(() => {
-    if (wasClickedRef.current || wasKeyboardTriggeredRef.current) {
-      setIsOpen(true);
-      wasClickedRef.current = false;
-      wasKeyboardTriggeredRef.current = false;
-    }
-  }, []);
+  // Focus (including Tab and shortcuts) and repeated clicks must both expand results.
+  const handleFocus = useCallback(() => setIsOpen(true), []);
+  const handleMouseDown = handleFocus;
 
   // Helper to open panel (for typing/onChange)
   const openPanel = useCallback(() => {

@@ -330,7 +330,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                         name="is_comments_enabled"
                         render={({ field: { onChange, value } }) => (
                           <Switch
-                            size="sm"
+                            size="md"
                             checked={!!value}
                             onCheckedChange={onChange}
                             aria-label={translate("web.allow_comments")}
@@ -345,7 +345,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                         name="is_reactions_enabled"
                         render={({ field: { onChange, value } }) => (
                           <Switch
-                            size="sm"
+                            size="md"
                             checked={!!value}
                             onCheckedChange={onChange}
                             aria-label={translate("web.allow_reactions")}
@@ -360,7 +360,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                         name="is_votes_enabled"
                         render={({ field: { onChange, value } }) => (
                           <Switch
-                            size="sm"
+                            size="md"
                             checked={!!value}
                             onCheckedChange={onChange}
                             aria-label={translate("web.allow_voting")}

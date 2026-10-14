@@ -41,17 +41,14 @@ export const PageEditorToolbarRoot = observer(function PageEditorToolbarRoot(pro
     <>
       <div
         id="page-toolbar-container"
-        className={cn("max-h-[52px] overflow-auto transition-all duration-300 ease-linear", {
-          "max-h-0 overflow-hidden": shouldHideToolbar,
-        })}
+        className="page-toolbar-shell shrink-0 overflow-hidden"
+        data-hidden={shouldHideToolbar}
+        inert={shouldHideToolbar}
       >
         <div
-          className={cn(
-            "page-toolbar-content relative hidden min-h-[52px] items-center px-page-x transition-all duration-200 ease-in-out md:flex",
-            {
-              "wide-layout": isFullWidth,
-            }
-          )}
+          className={cn("page-toolbar-content relative hidden min-h-[52px] items-center px-page-x md:flex", {
+            "wide-layout": isFullWidth,
+          })}
         >
           <div className="flex w-full max-w-full items-center justify-between">
             <div className="flex-1">{editorRef && <PageToolbar editorRef={editorRef} />}</div>

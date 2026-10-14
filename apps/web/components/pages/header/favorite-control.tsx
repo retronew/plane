@@ -41,6 +41,7 @@ export const PageFavoriteControl = observer(function PageFavoriteControl({ page 
       render={
         <button
           type="button"
+          aria-label={is_favorite ? translate("web.remove_favorite") : translate("web.add_to_favorites")}
           className={
             is_favorite ? "[&_svg]:fill-(--color-label-yellow-icon) [&_svg]:stroke-(--color-label-yellow-icon)" : ""
           }

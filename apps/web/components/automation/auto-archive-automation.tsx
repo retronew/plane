@@ -100,7 +100,7 @@ export const AutoArchiveAutomation = observer(function AutoArchiveAutomation(pro
             description={t("project_settings.automations.auto-archive.description")}
             control={
               <Switch
-                size="sm"
+                size="md"
                 checked={autoArchiveStatus}
                 onCheckedChange={handleToggleArchive}
                 disabled={!isAdmin}

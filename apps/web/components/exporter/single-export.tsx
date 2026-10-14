@@ -4,9 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
 // ui
-import { Button } from "@makeplane/propel/components/button";
+import { ExportDownload, exportStatusLabel } from "./presentation";
 import type { IExportData } from "@plane/types";
 // helpers
 import { getDate, renderFormattedDate } from "@plane/utils";
@@ -18,19 +17,16 @@ type Props = {
   refreshing: boolean;
 };
 
+const checkExpiry = (inputDateString: string) => {
+  const currentDate = new Date();
+  const expiryDate = getDate(inputDateString);
+  if (!expiryDate) return false;
+  expiryDate.setDate(expiryDate.getDate() + 7);
+  return expiryDate > currentDate;
+};
+
 export function SingleExport({ service, refreshing }: Props) {
   const provider = service.provider;
-
-  const [isLoading] = useState(false);
-  const downloadLabel = isLoading ? translate("web.downloading") : translate("web.download");
-
-  const checkExpiry = (inputDateString: string) => {
-    const currentDate = new Date();
-    const expiryDate = getDate(inputDateString);
-    if (!expiryDate) return false;
-    expiryDate.setDate(expiryDate.getDate() + 7);
-    return expiryDate > currentDate;
-  };
 
   return (
     <div className="flex items-center justify-between gap-2 px-4 py-3">
@@ -55,7 +51,7 @@ export function SingleExport({ service, refreshing }: Props) {
                       : ""
             }`}
           >
-            {refreshing ? translate("web.refreshing") : service.status}
+            {refreshing ? translate("web.refreshing") : exportStatusLabel(service.status)}
           </span>
         </h4>
         <div className="mt-2 flex items-center gap-2 text-11 text-secondary">
@@ -69,18 +65,7 @@ export function SingleExport({ service, refreshing }: Props) {
         <>
           {service.status == "completed" && (
             <div>
-              <Button
-                variant="primary"
-                size="sm"
-                stretch="full"
-                label={downloadLabel}
-                nativeButton={false}
-                render={
-                  <a target="_blank" href={service?.url} rel="noopener noreferrer">
-                    {downloadLabel}
-                  </a>
-                }
-              />
+              <ExportDownload provider={service.provider} url={service.url} />
             </div>
           )}
         </>

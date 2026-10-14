@@ -37,7 +37,7 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
 
   return (
     <div
-      className={cn("w-full px-4 py-2", {
+      className={cn("flex w-full flex-col gap-2.5 rounded-md p-2", {
         "bg-layer-transparent-active": isActiveWorkspace,
       })}
     >
@@ -50,13 +50,13 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
           handleItemClick();
         }}
         className={cn(
-          "flex items-center justify-between gap-1 rounded-sm p-1 text-13 text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent-strong",
+          "flex items-center justify-between gap-2 rounded-md text-13 text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent-strong",
           {
             "hover:bg-layer-transparent-hover data-highlighted:bg-layer-transparent-hover": !isActiveWorkspace,
           }
         )}
       >
-        <div className="relative flex w-[80%] items-center justify-start gap-2.5">
+        <div className="relative flex min-w-0 flex-1 items-center justify-start gap-2">
           <span
             className={`relative flex h-8 w-8 flex-shrink-0 items-center justify-center border-subtle p-2 text-14 font-medium uppercase ${
               !workspace?.logo_url && "rounded-md bg-[#026292] text-on-color"
@@ -72,40 +72,40 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
               (workspace?.name?.[0] ?? "...")
             )}
           </span>
-          <div className="w-[inherit]">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div
-              className={`truncate text-left text-13 font-medium text-ellipsis ${workspaceSlug === workspace.slug ? "" : "text-secondary"}`}
+              className={`truncate text-left text-13 leading-5 text-ellipsis ${workspaceSlug === workspace.slug ? "" : "text-secondary"}`}
             >
               {workspace.name}
             </div>
-            <div className="flex w-fit gap-2 text-13 text-tertiary capitalize">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-12 leading-3.5 text-tertiary capitalize">
               <span>{getUserRole(workspace.role)?.toLowerCase() || "guest"}</span>
-              <div className="m-auto h-1 w-1 rounded-full bg-layer-1/50" />
+              <div className="size-1 shrink-0 rounded-full bg-current opacity-50" />
               <span className="capitalize">{t("member", { count: workspace.total_members || 0 })}</span>
             </div>
           </div>
         </div>
         {isActiveWorkspace ? (
-          <span className="flex-shrink-0 p-1">
-            <TickOutline className="h-5 w-5 text-primary" />
+          <span className="shrink-0">
+            <TickOutline className="size-4 text-primary" />
           </span>
         ) : null}
       </Menu.Item>
       {isActiveWorkspace && (
-        <div className="mt-2 mb-1 flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {[EUserPermissions.ADMIN, EUserPermissions.MEMBER].includes(workspace?.role) && (
             <Menu.Item
               render={
                 <Button
                   variant="secondary"
-                  size="lg"
+                  size="sm"
                   stretch="auto"
                   render={<Link href={`/${workspace.slug}/settings`} />}
                 />
               }
               onClick={handleClose}
             >
-              <SettingsOutline className="size-4 shrink-0" />
+              <SettingsOutline className="size-3.5 shrink-0" />
               {t("settings")}
             </Menu.Item>
           )}
@@ -114,14 +114,14 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
               render={
                 <Button
                   variant="secondary"
-                  size="lg"
+                  size="sm"
                   stretch="auto"
                   render={<Link href={`/${workspace.slug}/settings/members`} />}
                 />
               }
               onClick={handleClose}
             >
-              <UserPlusOutline className="size-4 shrink-0" />
+              <UserPlusOutline className="size-3.5 shrink-0" />
               {t("project_settings.members.invite_members.title")}
             </Menu.Item>
           )}

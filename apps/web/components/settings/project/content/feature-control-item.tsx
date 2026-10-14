@@ -63,7 +63,7 @@ export const ProjectSettingsFeatureControlItem = observer(function ProjectSettin
       description={description}
       control={
         <Switch
-          size="sm"
+          size="md"
           checked={value}
           onCheckedChange={handleSubmit}
           disabled={disabled}

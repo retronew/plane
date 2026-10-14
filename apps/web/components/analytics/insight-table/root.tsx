@@ -5,7 +5,7 @@
  */
 
 import type { ColumnDef, Row, Table } from "@tanstack/react-table";
-import { DownloadOutline } from "@makeplane/propel/icons";
+import { Download } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -43,8 +43,8 @@ export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(
             variant="secondary"
             size="sm"
             stretch="auto"
-            label={t("exporter.csv.short_description")}
-            icon={<Icon icon={DownloadOutline} />}
+            label={t("web.download_format", { format: "CSV" })}
+            icon={<Icon icon={Download} />}
             iconPosition="start"
             onClick={() => onExport?.(table.getFilteredRowModel().rows)}
           />

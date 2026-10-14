@@ -81,7 +81,7 @@ export const TimezoneSelect = observer(function TimezoneSelect(props: TTimezoneS
   const selectedOption = options.find((option) => option.value === value) ?? null;
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full min-w-0 [&_[role=combobox]]:w-full [&_[role=combobox]]:min-w-0", className)}>
       <Field size={size} invalid={error} disabled={isSelectDisabled}>
         <Combobox<TTimezoneOption, false>
           items={options}

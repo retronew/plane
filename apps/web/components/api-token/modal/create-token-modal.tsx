@@ -27,30 +27,28 @@ type Props = {
 // services
 const apiTokenService = new APITokenService();
 
+const downloadSecretKey = (data: IApiToken) => {
+  const csvData = {
+    Title: data.label,
+    Description: data.description,
+    Expiry: data.expired_at ? (renderFormattedDate(data.expired_at)?.replace(",", " ") ?? "") : "Never expires",
+    "Secret key": data.token ?? "",
+  };
+
+  csvDownload(csvData, `secret-key-${Date.now()}`);
+};
+
 export function CreateApiTokenModal(props: Props) {
   const { isOpen, onClose } = props;
   // states
-  const [neverExpires, setNeverExpires] = useState<boolean>(false);
   const [generatedToken, setGeneratedToken] = useState<IApiToken | null | undefined>(null);
 
   const handleClose = () => {
     onClose();
 
     setTimeout(() => {
-      setNeverExpires(false);
       setGeneratedToken(null);
     }, 350);
-  };
-
-  const downloadSecretKey = (data: IApiToken) => {
-    const csvData = {
-      Title: data.label,
-      Description: data.description,
-      Expiry: data.expired_at ? (renderFormattedDate(data.expired_at)?.replace(",", " ") ?? "") : "Never expires",
-      "Secret key": data.token ?? "",
-    };
-
-    csvDownload(csvData, `secret-key-${Date.now()}`);
   };
 
   const handleCreateToken = async (data: Partial<IApiToken>) => {
@@ -91,12 +89,7 @@ export function CreateApiTokenModal(props: Props) {
         {generatedToken ? (
           <GeneratedTokenDetails handleClose={handleClose} tokenDetails={generatedToken} />
         ) : (
-          <CreateApiTokenForm
-            handleClose={handleClose}
-            neverExpires={neverExpires}
-            toggleNeverExpires={() => setNeverExpires((prevData) => !prevData)}
-            onSubmit={handleCreateToken}
-          />
+          <CreateApiTokenForm handleClose={handleClose} onSubmit={handleCreateToken} />
         )}
       </DialogContent>
     </Dialog>

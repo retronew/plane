@@ -10,6 +10,8 @@ import useSWR from "swr";
 
 import { useTranslation } from "@plane/i18n";
 import { AddOutline } from "@makeplane/propel/icons";
+import { Button } from "@makeplane/propel/components/button";
+import { Icon } from "@makeplane/propel/components/icon";
 import type { THomeWidgetProps } from "@plane/types";
 import { useHome } from "@/hooks/store/use-home";
 import { LinkCreateUpdateModal } from "./create-update-link-modal";
@@ -49,12 +51,14 @@ export const DashboardQuickLinks = observer(function DashboardQuickLinks(props: 
       <div className="mb-2">
         <div className="mb-4 flex items-center justify-between">
           <div className="text-14 font-semibold text-tertiary">{t("home.quick_links.title_plural")}</div>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            stretch="auto"
+            icon={<Icon icon={AddOutline} />}
+            label={t("home.quick_links.add")}
             onClick={handleCreateLinkModal}
-            className="my-auto flex gap-1 text-13 font-medium text-accent-primary"
-          >
-            <AddOutline className="my-auto size-4" /> <span>{t("home.quick_links.add")}</span>
-          </button>
+          />
         </div>
         <div className="flex w-full flex-wrap">
           {/* rendering links */}

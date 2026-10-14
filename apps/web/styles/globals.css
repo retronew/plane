@@ -1,3 +1,4 @@
+@import "./date-picker.css";
 @import "@plane/tailwind-config/index.css";
 @import "@plane/editor/styles";
 @import "./power-k.css";

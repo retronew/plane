@@ -20,7 +20,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { ChevronRight, X } from "lucide-react";
-import { DialogActions, DialogBody, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
+import { DialogActions, DialogBody, DialogInfo, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
 import type { TIssue, TWorkspaceDraftIssue } from "@plane/types";
 // hooks
@@ -57,6 +57,9 @@ export interface IssueFormProps {
   onCreateMoreToggleChange: (value: boolean) => void;
   onChange?: (formData: Partial<TIssue> | null) => void;
   onClose: () => void;
+  onDiscard?: () => void;
+  onKeepDraft?: (values: Partial<TIssue>, hasChanges: boolean) => void;
+  closeRequestRef?: React.MutableRefObject<(() => void) | null>;
   onSubmit: (values: Partial<TIssue>, is_draft_issue?: boolean) => Promise<void>;
   projectId: string;
   isDraft: boolean;
@@ -81,7 +84,10 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     issueTitleRef,
     onAssetUpload,
     onChange,
-    onClose,
+    onClose: closeWithDraftPrompt,
+    onKeepDraft,
+    closeRequestRef,
+    onDiscard,
     onSubmit,
     projectId: defaultProjectId,
     isCreateMoreToggleEnabled,
@@ -150,6 +156,26 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   } = methods;
 
   const projectId = watch("project_id");
+
+  const onClose = () => {
+    if (isSubmitting || isMoving || isApplyingTemplate) return;
+    if (!editorRef.current?.isEditorReadyToDiscard()) {
+      setToast({ type: "error", title: t("error"), message: t("editor_is_not_ready_to_discard_changes") });
+      return;
+    }
+    if (onKeepDraft && !data?.id) {
+      onKeepDraft(getValues(), isDirty);
+      return;
+    }
+    closeWithDraftPrompt();
+  };
+  useEffect(() => {
+    if (!closeRequestRef) return;
+    closeRequestRef.current = onClose;
+    return () => {
+      closeRequestRef.current = null;
+    };
+  });
 
   const isDisabled = isSubmitting || isApplyingTemplate;
 
@@ -444,10 +470,33 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
           </DialogMain>
           {showActionButtons && (
             <DialogActions render={<div className="issue-composer-actions" />}>
+              {!data?.id && onDiscard && (
+                <DialogInfo>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    stretch="auto"
+                    type="button"
+                    label={t("web.discard")}
+                    disabled={isDisabled || isMoving}
+                    onClick={() => {
+                      if (!editorRef.current?.isEditorReadyToDiscard()) {
+                        setToast({
+                          type: "error",
+                          title: t("error"),
+                          message: t("editor_is_not_ready_to_discard_changes"),
+                        });
+                        return;
+                      }
+                      onDiscard();
+                    }}
+                  />
+                </DialogInfo>
+              )}
               {!data?.id && (
                 <label className="inline-flex cursor-pointer items-center gap-1.5" tabIndex={getIndex("create_more")}>
                   <Switch
-                    size="sm"
+                    size="md"
                     checked={isCreateMoreToggleEnabled}
                     onCheckedChange={(checked) => onCreateMoreToggleChange(checked)}
                     aria-label={t("create_more")}

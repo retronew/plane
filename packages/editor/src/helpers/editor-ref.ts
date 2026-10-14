@@ -140,7 +140,7 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
       const { itemKey } = props;
       const editorItems = getEditorMenuItems(editor);
 
-      const getEditorMenuItem = (itemKey: TEditorCommands) => editorItems.find((item) => item.key === itemKey);
+      const getEditorMenuItem = (commandKey: TEditorCommands) => editorItems.find((item) => item.key === commandKey);
 
       const item = getEditorMenuItem(itemKey);
       if (item) {
@@ -149,7 +149,7 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
         console.warn(`No command found for item: ${itemKey}`);
       }
     },
-    focus: (args) => editor?.commands.focus(args),
+    focus: (position) => editor?.commands.focus(position),
     getCoordsFromPos: (pos) => editor?.view.coordsAtPos(pos ?? editor.state.selection.from),
     getCurrentCursorPosition: () => editor?.state.selection.from,
     getAttributesWithExtendedMark: (mark, attribute) => {
@@ -161,22 +161,15 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
       if (!editor) return null;
 
       const { state } = editor;
-      const { from, to, empty } = state.selection;
+      const { empty } = state.selection;
 
       if (empty) return null;
 
-      const nodesArray: string[] = [];
-      state.doc.nodesBetween(from, to, (node, _pos, parent) => {
-        if (parent === state.doc && editor) {
-          const serializer = DOMSerializer.fromSchema(editor.schema);
-          const dom = serializer.serializeNode(node);
-          const tempDiv = document.createElement("div");
-          tempDiv.appendChild(dom);
-          nodesArray.push(tempDiv.innerHTML);
-        }
-      });
-      const selection = nodesArray.join("");
-      return selection;
+      const container = document.createElement("div");
+      container.appendChild(
+        DOMSerializer.fromSchema(editor.schema).serializeFragment(state.selection.content().content)
+      );
+      return container.innerHTML;
     },
     insertText: (contentHTML, insertOnNextLine) => {
       if (!editor) return;
@@ -195,7 +188,7 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
       const { itemKey } = props;
       const editorItems = getEditorMenuItems(editor);
 
-      const getEditorMenuItem = (itemKey: TEditorCommands) => editorItems.find((item) => item.key === itemKey);
+      const getEditorMenuItem = (commandKey: TEditorCommands) => editorItems.find((item) => item.key === commandKey);
       const item = getEditorMenuItem(itemKey);
       if (!item) return false;
 

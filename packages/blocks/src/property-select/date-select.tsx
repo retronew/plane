@@ -5,6 +5,8 @@
  */
 
 import { useState } from "react";
+import { getCalendarLocale } from "./calendar-locale";
+import { useTranslation } from "@plane/i18n";
 import { Calendar } from "@makeplane/propel/components/calendar";
 import { formatLocalizedDate, getCalendarFormatters } from "@plane/utils";
 import type { DateSelectCommonProps } from "./date-select-shell";
@@ -36,6 +38,7 @@ export function DateSelect(props: DateSelectProps) {
     clearable = false,
     onClose,
   } = props;
+  const { currentLocale } = useTranslation();
   // states
   const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false);
   // derived values
@@ -62,6 +65,7 @@ export function DateSelect(props: DateSelectProps) {
       }}
     >
       <Calendar
+        {...getCalendarLocale(currentLocale)}
         formatters={getCalendarFormatters()}
         mode="single"
         selected={value ?? undefined}
