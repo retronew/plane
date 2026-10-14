@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { TPaginationInfo } from "../common";
 import type { IUserLite } from "../users";
 import type {
   TInstanceAIConfigurationKeys,
@@ -66,15 +67,26 @@ export interface IInstanceConfig {
   instance_changelog_url?: string;
 }
 
-export interface IInstanceUserSearchResult {
+export interface IInstanceUser {
   id: string;
   email: string;
   display_name: string;
   first_name: string;
   last_name: string;
   avatar_url: string | null;
+  is_active: boolean;
   is_instance_admin: boolean;
+  /** Linked to the instance's OIDC identity provider */
+  has_sso: boolean;
+  last_login_medium: string | null;
+  last_login_time: string | null;
+  workspace_count: number;
+  date_joined: string;
 }
+
+export type TInstanceUserStatus = "active" | "deactivated";
+
+export type TInstanceUserList = TPaginationInfo & { results: IInstanceUser[] };
 
 export interface IInstanceAdmin {
   created_at: string;

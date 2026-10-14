@@ -15,7 +15,6 @@ from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import logout
 from django.db import transaction
-from django.db.models import Q
 
 # Third party imports
 from rest_framework.response import Response
@@ -122,41 +121,6 @@ class InstanceAdminEndpoint(BaseAPIView):
 
         instance_admin.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class InstanceUserSearchEndpoint(BaseAPIView):
-    """Lets God mode pick an existing user, e.g. to promote them to admin."""
-
-    permission_classes = [InstanceAdminPermission]
-    MAX_RESULTS = 10
-
-    def get(self, request):
-        search = str(request.query_params.get("search") or "").strip()
-        users = User.objects.filter(is_active=True, is_bot=False)
-        if search:
-            users = users.filter(
-                Q(email__icontains=search)
-                | Q(display_name__icontains=search)
-                | Q(first_name__icontains=search)
-                | Q(last_name__icontains=search)
-            )
-        instance = Instance.objects.first()
-        admin_ids = set(
-            InstanceAdmin.objects.filter(instance=instance, user__isnull=False).values_list("user_id", flat=True)
-        )
-        results = [
-            {
-                "id": str(user.id),
-                "email": user.email,
-                "display_name": user.display_name,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "avatar_url": user.avatar_url,
-                "is_instance_admin": user.id in admin_ids,
-            }
-            for user in users.order_by("first_name", "email")[: self.MAX_RESULTS]
-        ]
-        return Response(results, status=status.HTTP_200_OK)
 
 
 class InstanceAdminSignUpEndpoint(View):

@@ -10,7 +10,9 @@ import type {
   IFormattedInstanceConfiguration,
   IInstance,
   IInstanceAdmin,
-  IInstanceUserSearchResult,
+  IInstanceUser,
+  TInstanceUserList,
+  TInstanceUserStatus,
   IInstanceConfiguration,
   IInstanceInfo,
   TInstanceAIConnectionPayload,
@@ -78,13 +80,46 @@ export class InstanceService extends APIService {
   }
 
   /**
-   * Searches active users by name or email
-   * @param {string} search Text to match against name and email
-   * @returns {Promise<IInstanceUserSearchResult[]>} Up to 10 matching users
+   * Lists users, optionally filtered by name/email and status
+   * @param {object} params Search text, status filter, page size and cursor
+   * @returns {Promise<TInstanceUserList>} One page of users with pagination info
    * @throws {Error} If the API request fails
    */
-  async searchUsers(search: string): Promise<IInstanceUserSearchResult[]> {
-    return this.get("/api/instances/users/", { params: { search } })
+  async listUsers(params: {
+    search?: string;
+    status?: TInstanceUserStatus;
+    per_page?: number;
+    cursor?: string;
+  }): Promise<TInstanceUserList> {
+    return this.get("/api/instances/users/", { params })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Deactivates a user: they can no longer sign in and their sessions end
+   * @param {string} userId Id of the user
+   * @returns {Promise<IInstanceUser>} The updated user
+   * @throws {Error} If the API request fails
+   */
+  async deactivateUser(userId: string): Promise<IInstanceUser> {
+    return this.post(`/api/instances/users/${userId}/deactivate/`)
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Reactivates a deactivated user
+   * @param {string} userId Id of the user
+   * @returns {Promise<IInstanceUser>} The updated user
+   * @throws {Error} If the API request fails
+   */
+  async activateUser(userId: string): Promise<IInstanceUser> {
+    return this.post(`/api/instances/users/${userId}/activate/`)
       .then((response) => response.data)
       .catch((error) => {
         throw error?.response?.data;

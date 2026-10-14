@@ -7,6 +7,7 @@
 // values are translation keys; brand names are passed through as-is
 export const CORE_HEADER_SEGMENT_LABELS: Record<string, string> = {
   general: "admin.header.general",
+  users: "admin.header.users",
   admins: "admin.header.admins",
   ai: "admin.header.ai",
   email: "admin.header.email",

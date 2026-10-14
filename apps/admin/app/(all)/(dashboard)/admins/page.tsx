@@ -12,11 +12,11 @@ import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { setToast } from "@plane/blocks/toast";
 import { translate, useTranslation } from "@plane/i18n";
 import { InstanceService } from "@plane/services";
-import type { IInstanceAdmin, IInstanceUserSearchResult } from "@plane/types";
-import { getFileURL } from "@plane/utils";
+import type { IInstanceAdmin, IInstanceUser } from "@plane/types";
 // components
 import { PageWrapper } from "@/components/common/page-wrapper";
 import { Skeleton } from "@/components/common/skeleton";
+import { UserAvatar } from "@/components/common/user-avatar";
 // hooks
 import { useUser } from "@/hooks/store";
 // types
@@ -32,18 +32,6 @@ const ADMIN_ERROR_KEYS: Record<string, string> = {
   LAST_ADMIN: "admin.admins.errors.last_admin",
 };
 
-function UserAvatar({ name, avatarUrl }: { name?: string; avatarUrl?: string | null }) {
-  return (
-    <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-primary text-13 text-on-color uppercase">
-      {avatarUrl ? (
-        <img src={getFileURL(avatarUrl)} alt="" className="absolute inset-0 size-full object-cover" />
-      ) : (
-        (name?.[0] ?? "?")
-      )}
-    </span>
-  );
-}
-
 const InstanceAdminsPage = observer(function InstanceAdminsPage(_props: Route.ComponentProps) {
   const { t } = useTranslation();
   const { currentUser } = useUser();
@@ -56,7 +44,9 @@ const InstanceAdminsPage = observer(function InstanceAdminsPage(_props: Route.Co
   // data
   const { data: admins, mutate } = useSWR("INSTANCE_ADMINS", () => instanceService.admins());
   const { data: users, mutate: mutateUsers } = useSWR(["INSTANCE_USER_SEARCH", debouncedSearch], () =>
-    instanceService.searchUsers(debouncedSearch)
+    instanceService
+      .listUsers({ search: debouncedSearch, status: "active", per_page: 10 })
+      .then((response) => response.results)
   );
 
   useEffect(() => {
@@ -73,7 +63,7 @@ const InstanceAdminsPage = observer(function InstanceAdminsPage(_props: Route.Co
     });
   };
 
-  const handleAdd = async (user: IInstanceUserSearchResult) => {
+  const handleAdd = async (user: IInstanceUser) => {
     setAddingUserId(user.id);
     try {
       await instanceService.addAdmin(user.email);

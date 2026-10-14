@@ -133,7 +133,8 @@
       "settings": "设置",
       "toggle_sidebar": "切换侧边栏",
       "breadcrumb": "面包屑导航",
-      "admins": "管理员"
+      "admins": "管理员",
+      "users": "用户"
     },
     "sidebar": {
       "general": {
@@ -166,6 +167,10 @@
       "admins": {
         "name": "管理员",
         "description": "可以管理本实例的人员"
+      },
+      "users": {
+        "name": "用户",
+        "description": "本实例的所有账号"
       }
     },
     "help": {
@@ -353,7 +358,8 @@
       "home_description": "配置您的 Plane 实例，或登录管理后台。",
       "app_title": "Plane | 简单、可扩展的开源项目管理工具",
       "app_description": "开源项目管理工具，轻松管理工作项、迭代和产品路线图。",
-      "admins": "管理员 - God Mode"
+      "admins": "管理员 - God Mode",
+      "users": "用户 - God Mode"
     },
     "ai": {
       "title": "AI 模型服务",
@@ -475,6 +481,45 @@
       "search_placeholder": "按姓名或邮箱搜索用户",
       "no_users": "没有匹配的用户。",
       "already_admin": "已是管理员"
+    },
+    "users": {
+      "title": "用户",
+      "description": "本实例中的所有账号。已停用的用户无法登录。",
+      "search_placeholder": "按姓名或邮箱搜索",
+      "total": "{count, plural, other{共 # 名用户}}",
+      "empty": "没有匹配的用户。",
+      "filters": {
+        "label": "状态",
+        "all": "全部",
+        "active": "正常",
+        "deactivated": "已停用"
+      },
+      "badges": {
+        "admin": "管理员",
+        "sso": "单点登录",
+        "deactivated": "已停用"
+      },
+      "workspaces": "{count, plural, other{# 个工作区}}",
+      "last_login": "最近登录 {time}",
+      "never_signed_in": "从未登录",
+      "login_medium": {
+        "oidc": "单点登录",
+        "email": "密码",
+        "magic_code": "邮箱验证码"
+      },
+      "deactivate": "停用",
+      "confirm_deactivate": "确认停用",
+      "activate": "恢复",
+      "deactivated": "已停用该用户，并已让其在所有设备上退出登录。",
+      "activated": "已恢复该用户。",
+      "previous_page": "上一页",
+      "next_page": "下一页",
+      "deactivate_hint": "停用后会立即让该用户在所有设备上退出登录，并阻止其通过密码、单点登录和 API 令牌访问。工作区成员身份会保留，恢复后即可照常使用。如需将其彻底移出某个工作区，请在该工作区的成员设置中操作。",
+      "errors": {
+        "cannot_deactivate_self": "不能停用你自己。",
+        "user_is_admin": "该用户是管理员，请先在「管理员」页面移除其管理员权限。",
+        "default": "出了点问题，请重试。"
+      }
     }
   }
 }

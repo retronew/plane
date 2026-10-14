@@ -7,7 +7,9 @@ from django.urls import path
 from plane.license.api.views import (
     EmailCredentialCheckEndpoint,
     InstanceAdminEndpoint,
-    InstanceUserSearchEndpoint,
+    InstanceUserEndpoint,
+    InstanceUserActivateEndpoint,
+    InstanceUserDeactivateEndpoint,
     InstanceAdminOIDCInitiateEndpoint,
     InstanceAdminOIDCCallbackEndpoint,
     InstanceAdminSignInEndpoint,
@@ -41,7 +43,13 @@ urlpatterns = [
         name="instance-admins",
     ),
     path("admins/<uuid:pk>/", InstanceAdminEndpoint.as_view(), name="instance-admins"),
-    path("users/", InstanceUserSearchEndpoint.as_view(), name="instance-users"),
+    path("users/", InstanceUserEndpoint.as_view(), name="instance-users"),
+    path(
+        "users/<uuid:pk>/deactivate/",
+        InstanceUserDeactivateEndpoint.as_view(),
+        name="instance-user-deactivate",
+    ),
+    path("users/<uuid:pk>/activate/", InstanceUserActivateEndpoint.as_view(), name="instance-user-activate"),
     path("admins/oidc/", InstanceAdminOIDCInitiateEndpoint.as_view(), name="instance-admin-oidc"),
     path(
         "admins/oidc/callback/",

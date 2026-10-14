@@ -133,7 +133,8 @@
       "settings": "Settings",
       "toggle_sidebar": "Toggle sidebar",
       "breadcrumb": "Breadcrumb",
-      "admins": "Admins"
+      "admins": "Admins",
+      "users": "Users"
     },
     "sidebar": {
       "general": {
@@ -166,6 +167,10 @@
       "admins": {
         "name": "Admins",
         "description": "Who can manage this instance"
+      },
+      "users": {
+        "name": "Users",
+        "description": "Everyone with an account on this instance"
       }
     },
     "help": {
@@ -353,7 +358,8 @@
       "home_description": "Configure your Plane instance or sign in to the admin portal.",
       "app_title": "Plane | Simple, extensible, open-source project management tool.",
       "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind.",
-      "admins": "Admins - God Mode"
+      "admins": "Admins - God Mode",
+      "users": "Users - God Mode"
     },
     "ai": {
       "title": "AI model provider",
@@ -475,6 +481,45 @@
       "search_placeholder": "Search users by name or email",
       "no_users": "No matching users.",
       "already_admin": "Admin"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Everyone who has an account on this instance. Deactivated users cannot sign in.",
+      "search_placeholder": "Search by name or email",
+      "total": "{count, plural, one{# user} other{# users}}",
+      "empty": "No matching users.",
+      "filters": {
+        "label": "Status",
+        "all": "All",
+        "active": "Active",
+        "deactivated": "Deactivated"
+      },
+      "badges": {
+        "admin": "Admin",
+        "sso": "SSO",
+        "deactivated": "Deactivated"
+      },
+      "workspaces": "{count, plural, one{# workspace} other{# workspaces}}",
+      "last_login": "Last sign-in {time}",
+      "never_signed_in": "Never signed in",
+      "login_medium": {
+        "oidc": "SSO",
+        "email": "Password",
+        "magic_code": "Email code"
+      },
+      "deactivate": "Deactivate",
+      "confirm_deactivate": "Confirm deactivate",
+      "activate": "Reactivate",
+      "deactivated": "User deactivated. They have been signed out everywhere.",
+      "activated": "User reactivated.",
+      "previous_page": "Previous",
+      "next_page": "Next",
+      "deactivate_hint": "Deactivating signs the user out everywhere and blocks password, SSO and API token access. Workspace memberships are kept, so reactivating restores their access. To fully remove someone from a workspace, use that workspace's member settings.",
+      "errors": {
+        "cannot_deactivate_self": "You cannot deactivate yourself.",
+        "user_is_admin": "This user is an admin. Remove their admin access on the Admins page first.",
+        "default": "Something went wrong. Please try again."
+      }
     }
   }
 }

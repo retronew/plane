@@ -12,10 +12,10 @@ from .configuration import (
 )
 
 
+from .user import InstanceUserActivateEndpoint, InstanceUserDeactivateEndpoint, InstanceUserEndpoint
 from .admin_sso import InstanceAdminOIDCCallbackEndpoint, InstanceAdminOIDCInitiateEndpoint
 from .admin import (
     InstanceAdminEndpoint,
-    InstanceUserSearchEndpoint,
     InstanceAdminSignInEndpoint,
     InstanceAdminSignUpEndpoint,
     InstanceAdminUserMeEndpoint,
