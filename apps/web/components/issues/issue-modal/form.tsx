@@ -17,14 +17,10 @@ import type { EditorRefApi } from "@plane/editor";
 // i18n
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import {
-  DialogActions,
-  DialogBody,
-  DialogHeader,
-  DialogHeading,
-  DialogMain,
-  DialogTitle,
-} from "@makeplane/propel/components/dialog";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Icon } from "@makeplane/propel/components/icon";
+import { ChevronRight, X } from "lucide-react";
+import { DialogActions, DialogBody, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
 import type { TIssue, TWorkspaceDraftIssue } from "@plane/types";
 // hooks
@@ -94,7 +90,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     moveToIssue = false,
     modalTitle = `${data?.id ? t("update") : isDraft ? t("create_a_draft") : t("create_new_issue")}`,
     primaryButtonText = {
-      default: `${data?.id ? t("update") : isDraft ? t("save_to_drafts") : t("save")}`,
+      default: `${data?.id ? t("update") : isDraft ? t("save_to_drafts") : t("create_new_issue")}`,
       loading: `${data?.id ? t("updating") : t("saving")}`,
     },
     isProjectSelectionDisabled = false,
@@ -361,20 +357,38 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
           onSubmit={handleSubmit((data) => handleFormSubmit(data))}
           className="flex min-h-0 w-full flex-1 flex-col"
         >
-          <DialogMain>
-            <DialogHeader>
-              <DialogHeading>
-                <DialogTitle>{modalTitle}</DialogTitle>
-              </DialogHeading>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-x-1">
+          <DialogMain render={<div className="issue-composer-main" />}>
+            <div className="flex shrink-0 items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <div data-composer-pill-group="">
                   <IssueProjectSelect
                     control={control}
                     disabled={!!data?.id || !!data?.sourceIssueId || isProjectSelectionDisabled}
                     handleFormChange={handleFormChange}
                   />
                 </div>
+                <ChevronRight className="size-3.5 shrink-0 text-placeholder" aria-hidden="true" />
+                <DialogTitle data-composer-heading="">{modalTitle}</DialogTitle>
               </div>
+              <IconButton
+                variant="ghost"
+                size="md"
+                icon={<Icon icon={X} />}
+                aria-label={t("close")}
+                onClick={() => {
+                  if (editorRef.current?.isEditorReadyToDiscard()) {
+                    onClose();
+                  } else {
+                    setToast({
+                      type: "error",
+                      title: t("toast.error"),
+                      message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div className="flex shrink-0 flex-col gap-3 pt-2">
               {watch("parent_id") && selectedParentIssue && (
                 <IssueParentTag
                   control={control}
@@ -389,8 +403,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                 formState={formState}
                 handleFormChange={handleFormChange}
               />
-            </DialogHeader>
-            <DialogBody tabIndex={0} render={<div className="vertical-scrollbar scrollbar-sm" />}>
+            </div>
+            <DialogBody tabIndex={0} render={<div className="vertical-scrollbar scrollbar-sm [&>div]:w-auto" />}>
               <IssueDescriptionEditor
                 control={control}
                 isDraft={isDraft}
@@ -412,7 +426,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                 onClose={onClose}
               />
             </DialogBody>
-            <div className="shrink-0">
+            <div className="shrink-0" data-composer-pill-group="">
               <IssueDefaultProperties
                 control={control}
                 id={data?.id}
@@ -429,7 +443,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
             </div>
           </DialogMain>
           {showActionButtons && (
-            <DialogActions>
+            <DialogActions render={<div className="issue-composer-actions" />}>
               {!data?.id && (
                 <label className="inline-flex cursor-pointer items-center gap-1.5" tabIndex={getIndex("create_more")}>
                   <Switch
@@ -441,25 +455,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   <span className="text-caption-sm-regular">{t("create_more")}</span>
                 </label>
               )}
-              <div tabIndex={getIndex("discard_button")}>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  stretch="auto"
-                  onClick={() => {
-                    if (editorRef.current?.isEditorReadyToDiscard()) {
-                      onClose();
-                    } else {
-                      setToast({
-                        type: "error",
-                        title: t("toast.error"),
-                        message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
-                      });
-                    }
-                  }}
-                  label={t("discard")}
-                />
-              </div>
               <div tabIndex={isDraft ? getIndex("submit_button") : getIndex("draft_button")}>
                 <Button
                   variant={moveToIssue ? "secondary" : "primary"}

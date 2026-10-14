@@ -297,9 +297,9 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
             }}
             render={({ field: { value, onChange, ref } }) => (
               <Field name="name" invalid={Boolean(errors.name)}>
-                <InputGroup size="2xl">
+                <InputGroup size="lg">
                   <Input
-                    size="2xl"
+                    size="lg"
                     id="name"
                     name="name"
                     type="text"
@@ -360,9 +360,9 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                 }}
                 render={({ field: { value, ref } }) => (
                   <Field name="identifier" invalid={Boolean(errors.identifier)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="identifier"
                         name="identifier"
                         type="text"

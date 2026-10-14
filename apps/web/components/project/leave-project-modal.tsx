@@ -150,9 +150,9 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                     }}
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="projectName" invalid={Boolean(errors.projectName)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="projectName"
                             name="projectName"
                             type="text"
@@ -180,9 +180,9 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                     name="confirmLeave"
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="confirmLeave" invalid={Boolean(errors.confirmLeave)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="confirmLeave"
                             name="confirmLeave"
                             type="text"

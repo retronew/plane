@@ -122,7 +122,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
                     <InputField
                       id="url"
                       type="text"
-                      size="xl"
+                      size="lg"
                       orientation="vertical"
                       label="URL"
                       value={value}
@@ -140,7 +140,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
                     <InputField
                       id="title"
                       type="text"
-                      size="xl"
+                      size="lg"
                       orientation="vertical"
                       label={translate("web.display_title")}
                       description={translate("web.optional")}

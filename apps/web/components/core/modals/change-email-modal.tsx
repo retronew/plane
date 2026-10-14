@@ -185,9 +185,9 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
                     }}
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="email" invalid={Boolean(errors.email)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="email"
                             name="email"
                             type="email"
@@ -213,9 +213,9 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
                       name="code"
                       rules={{ required: changeEmailT("form.code.errors.required") }}
                       render={({ field: { value, onChange, ref } }) => (
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="code"
                             name="code"
                             value={value}

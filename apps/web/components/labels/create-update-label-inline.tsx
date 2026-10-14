@@ -204,9 +204,9 @@ export const CreateUpdateLabelInline = observer(
               }}
               render={({ field: { value, onChange, ref: fieldRef } }) => (
                 <Field name="name" invalid={Boolean(errors.name)}>
-                  <InputGroup size="2xl">
+                  <InputGroup size="lg">
                     <Input
-                      size="2xl"
+                      size="lg"
                       id="labelName"
                       name="name"
                       type="text"

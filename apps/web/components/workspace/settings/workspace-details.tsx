@@ -198,9 +198,9 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
                 }}
                 render={({ field: { value, onChange, ref } }) => (
                   <Field name="name" invalid={Boolean(errors.name)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="name"
                         name="name"
                         type="text"
@@ -223,9 +223,9 @@ export const WorkspaceDetails = observer(function WorkspaceDetails() {
                 name="url"
                 render={({ field: { onChange, ref } }) => (
                   <Field name="url" invalid={Boolean(errors.url)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="url"
                         name="url"
                         type="url"

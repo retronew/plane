@@ -17,7 +17,7 @@ import { CreateLabelEmptyState } from "./create-label-empty-state";
 export type LabelOption = {
   id: string;
   name: string;
-  color: string;
+  color?: string | null;
   identifier?: string;
 };
 
@@ -51,8 +51,10 @@ export type LabelSelectProps = {
   tabIndex?: number;
 };
 
-function LabelDot({ color }: { color: string }) {
-  return <span className="block size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />;
+function LabelDot({ color }: { color?: string | null }) {
+  const backgroundColor = color?.trim();
+  if (!backgroundColor) return null;
+  return <span aria-hidden="true" className="block size-2 shrink-0 rounded-full" style={{ backgroundColor }} />;
 }
 
 /**
@@ -112,7 +114,7 @@ export function LabelSelect(props: LabelSelectProps) {
       onClose={onClose}
       getOptionValue={(label) => label.id}
       getOptionLabel={(label) => label.name}
-      getOptionIcon={(label) => <LabelDot color={label.color} />}
+      getOptionIcon={(label) => (label.color?.trim() ? <LabelDot color={label.color} /> : undefined)}
       getOptionTrailing={
         showIdentifier
           ? (label) => (label.identifier ? <ProjectIdentifierElement show identifier={label.identifier} /> : undefined)
@@ -148,10 +150,7 @@ export function LabelSelect(props: LabelSelectProps) {
                     key={label.id}
                     className="flex h-6 shrink-0 items-center gap-1 rounded-md bg-label-grey-bg px-2 text-body-xs-medium text-label-grey-text"
                   >
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: label.color ?? "#000000" }}
-                    />
+                    <LabelDot color={label.color} />
                     <span className="truncate">{label.name}</span>
                   </span>
                 ))}
@@ -163,17 +162,14 @@ export function LabelSelect(props: LabelSelectProps) {
             const label = labels[0];
             return (
               <>
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: label.color ?? "#000000" }} />
+                <LabelDot color={label.color} />
                 <span className="min-w-0 grow truncate text-left">{label.name}</span>
               </>
             );
           }
           return (
             <>
-              <span
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: labels[0].color ?? "#000000" }}
-              />
+              <LabelDot color={labels[0].color} />
               <span className="min-w-0 grow truncate text-left">{t("labels_count", { count: labels.length })}</span>
             </>
           );

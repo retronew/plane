@@ -126,9 +126,9 @@ export function ModuleForm(props: Props) {
               }}
               render={({ field: { value, onChange } }) => (
                 <Field name="name" invalid={Boolean(errors?.name)}>
-                  <InputGroup size="2xl">
+                  <InputGroup size="lg">
                     <Input
-                      size="2xl"
+                      size="lg"
                       id="name"
                       name="name"
                       type="text"

@@ -53,23 +53,25 @@ export function ConfirmIssueDiscard(props: Props) {
         if (!open) handleClose();
       }}
     >
-      <DialogContent size="md">
-        <DialogMain>
+      <DialogContent size="sm" data-save-draft-dialog="">
+        <DialogMain data-confirm-main="">
           <DialogHeader>
             <DialogHeading>
               <DialogTitle>{translate("web.save_this_draft")}</DialogTitle>
-              <DialogDescription>{translate("web.save_to_drafts_description")}</DialogDescription>
+              <DialogDescription data-confirm-description="">
+                {translate("web.save_to_drafts_description")}
+              </DialogDescription>
             </DialogHeading>
           </DialogHeader>
         </DialogMain>
-        <DialogActions>
+        <DialogActions data-confirm-actions="">
           <DialogInfo>
-            <Button variant="secondary" size="sm" stretch="auto" onClick={onDiscard} label={translate("web.discard")} />
+            <Button variant="secondary" size="md" stretch="auto" onClick={onDiscard} label={translate("web.discard")} />
           </DialogInfo>
-          <Button variant="secondary" size="sm" stretch="auto" onClick={onClose} label={translate("web.cancel")} />
+          <Button variant="secondary" size="md" stretch="auto" onClick={onClose} label={translate("web.cancel")} />
           <Button
             variant="primary"
-            size="sm"
+            size="md"
             stretch="auto"
             onClick={() => void handleDeletion()}
             loading={isLoading}

@@ -110,9 +110,9 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                     }}
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="url" invalid={Boolean(errors.url)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="url"
                             type="text"
                             value={value}
@@ -136,9 +136,9 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                     name="title"
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="title" invalid={Boolean(errors.title)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="title"
                             type="text"
                             value={value}

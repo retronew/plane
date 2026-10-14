@@ -4,6 +4,10 @@
  * See the LICENSE file for details.
  */
 
+// Scoped composer styles are intentionally loaded for their side effect.
+// oxlint-disable-next-line import/no-unassigned-import
+import "./composer.css";
+
 import { useEffect, useRef, useState } from "react";
 import { isEqual, xor } from "lodash-es";
 import { observer } from "mobx-react";
@@ -410,7 +414,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   return (
     /* The modal it replaces passed no `handleClose`, so only its own form dismisses it. */
     <Dialog open={isOpen} disablePointerDismissal onOpenChange={() => {}}>
-      <DialogContent size="lg">
+      <DialogContent size="lg" data-issue-composer="">
         {withDraftIssueWrapper ? (
           <DraftIssueLayout {...commonIssueModalProps} changesMade={changesMade} onChange={handleFormChange} />
         ) : (

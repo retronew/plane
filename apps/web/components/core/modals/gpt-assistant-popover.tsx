@@ -260,9 +260,9 @@ export function GptAssistantPopover(props: Props) {
               control={control}
               name="task"
               render={({ field: { value, onChange, ref } }) => (
-                <InputGroup size="2xl">
+                <InputGroup size="lg">
                   <Input
-                    size="2xl"
+                    size="lg"
                     id="task"
                     name="task"
                     type="text"

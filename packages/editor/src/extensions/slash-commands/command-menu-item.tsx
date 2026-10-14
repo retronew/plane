@@ -17,6 +17,7 @@ type Props = {
   onMouseEnter: () => void;
   sectionIndex: number;
   query?: string;
+  separatorBefore?: boolean;
 };
 
 // Utility to highlight matched text in a string
@@ -47,26 +48,33 @@ const highlightMatch = (text: string, query: string): React.ReactNode => {
 };
 
 export function CommandMenuItem(props: Props) {
-  const { isSelected, item, itemIndex, onClick, onMouseEnter, sectionIndex, query } = props;
+  const { isSelected, item, itemIndex, onClick, onMouseEnter, sectionIndex, query, separatorBefore = false } = props;
 
   return (
-    <button
-      type="button"
-      id={`item-${sectionIndex}-${itemIndex}`}
-      className={cn(
-        "flex w-full items-center gap-2 truncate rounded-sm px-1 py-1.5 text-left text-13 text-secondary hover:bg-layer-1-hover",
-        {
-          "bg-layer-1-hover": isSelected,
-        }
-      )}
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-    >
-      <span className="grid size-5 flex-shrink-0 place-items-center" style={item.iconContainerStyle}>
-        {item.icon}
-      </span>
-      <p className="flex-grow truncate text-12">{query ? highlightMatch(item.title, query) : item.title}</p>
-      {item.badge}
-    </button>
+    <div className={cn({ "mt-1 border-t border-subtle-1 pt-1": separatorBefore })}>
+      <button
+        type="button"
+        id={`item-${sectionIndex}-${itemIndex}`}
+        data-selected={isSelected || undefined}
+        className={cn(
+          "flex min-h-8 w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-body-xs-regular text-primary transition-colors outline-none hover:bg-layer-transparent-hover focus-visible:bg-layer-transparent-hover",
+          {
+            "bg-layer-transparent-hover": isSelected,
+          }
+        )}
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+      >
+        <span
+          aria-hidden="true"
+          className="grid size-4 shrink-0 place-items-center text-secondary [&>svg]:size-4"
+          style={item.iconContainerStyle}
+        >
+          {item.icon}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{query ? highlightMatch(item.title, query) : item.title}</span>
+        {item.badge}
+      </button>
+    </div>
   );
 }

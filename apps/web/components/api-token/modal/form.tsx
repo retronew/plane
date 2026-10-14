@@ -176,7 +176,7 @@ export function CreateApiTokenForm(props: Props) {
               render={({ field: { value, onChange, ref } }) => (
                 <InputField
                   type="text"
-                  size="2xl"
+                  size="lg"
                   orientation="vertical"
                   value={value}
                   onChange={onChange}

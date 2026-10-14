@@ -1,0 +1,78 @@
+/* Propel modal surfaces only: popovers and the custom issue composer keep their own geometry. */
+:where([role="dialog"].shadow-raised-300:not([data-issue-composer]), [data-confirm-dialog]) {
+  border-radius: 16px;
+  border-color: color-mix(in oklab, var(--border-color-subtle-1) 70%, transparent);
+}
+
+:where([role="dialog"].shadow-raised-300, [data-confirm-dialog]) button[data-size] {
+  border-radius: 8px;
+}
+
+:where([role="dialog"].shadow-raised-300, [data-confirm-dialog])
+  button[data-variant="secondary"]:not(:hover):not(:active):not(:focus-visible) {
+  border-color: color-mix(in oklab, var(--border-color-subtle-1) 65%, transparent);
+  box-shadow: none;
+}
+
+/* Match the standard DialogActions anatomy without touching form section dividers. */
+[role="dialog"].shadow-raised-300:not([data-issue-composer]) :where(.flex.items-center.justify-end[class*="border-t"]) {
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 0;
+  padding: 12px 20px 20px;
+}
+
+[data-save-draft-dialog] {
+  width: 440px;
+}
+
+[data-save-draft-dialog] [data-confirm-main] {
+  padding: 24px 24px 12px;
+}
+
+[data-save-draft-dialog] h2,
+[data-confirm-dialog] h2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+[data-save-draft-dialog] [data-confirm-description],
+[data-confirm-dialog] [data-confirm-description] {
+  font-size: 14px;
+  line-height: 22px;
+}
+
+[role="dialog"].shadow-raised-300[data-save-draft-dialog] [data-confirm-actions].border-t {
+  padding: 12px 24px 24px;
+}
+
+[data-confirm-dialog] [data-confirm-body] {
+  padding: 24px 24px 8px;
+}
+
+[data-confirm-dialog] [data-confirm-actions] {
+  gap: 8px;
+  padding: 12px 24px 24px;
+}
+
+@media (max-width: 479px) {
+  [data-save-draft-dialog] [data-confirm-actions] {
+    gap: 8px;
+  }
+  [data-save-draft-dialog] [data-confirm-actions] > div {
+    flex-basis: 100%;
+  }
+}
+
+/* A nested save prompt is a focused confirmation, centered above its parent composer. */
+.fixed:has(> [data-save-draft-dialog]) {
+  align-items: center;
+  padding-block: 24px;
+}
+
+/* Standard comfortable DialogMain gutters line up with the action row. */
+[role="dialog"].shadow-raised-300:not([data-issue-composer]):not([data-save-draft-dialog])
+  .flex-auto.flex-col.overflow-clip.p-4 {
+  padding: 20px;
+}

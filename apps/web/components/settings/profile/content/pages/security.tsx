@@ -161,9 +161,9 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                 }}
                 render={({ field: { value, onChange } }) => (
                   <Field name="old_password" invalid={Boolean(errors.old_password)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="old_password"
                         type={showPassword?.oldPassword ? "text" : "password"}
                         value={value}
@@ -203,9 +203,9 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                 }}
                 render={({ field: { value, onChange } }) => (
                   <Field name="new_password" invalid={Boolean(errors.new_password)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="new_password"
                         type={showPassword?.password ? "text" : "password"}
                         value={value}
@@ -251,9 +251,9 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
                 }}
                 render={({ field: { value, onChange } }) => (
                   <Field name="confirm_password" invalid={Boolean(errors.confirm_password)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="confirm_password"
                         type={showPassword?.confirmPassword ? "text" : "password"}
                         placeholder={t("auth.common.password.confirm_password.placeholder")}

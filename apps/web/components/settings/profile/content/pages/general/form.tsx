@@ -279,9 +279,9 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <Field name="first_name" invalid={Boolean(errors.first_name)}>
-                      <InputGroup size="2xl">
+                      <InputGroup size="lg">
                         <Input
-                          size="2xl"
+                          size="lg"
                           id="first_name"
                           name="first_name"
                           type="text"
@@ -308,9 +308,9 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <Field name="last_name" invalid={Boolean(errors.last_name)}>
-                      <InputGroup size="2xl">
+                      <InputGroup size="lg">
                         <Input
-                          size="2xl"
+                          size="lg"
                           id="last_name"
                           name="last_name"
                           type="text"
@@ -341,9 +341,9 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <Field name="display_name" invalid={Boolean(errors?.display_name)}>
-                      <InputGroup size="2xl">
+                      <InputGroup size="lg">
                         <Input
-                          size="2xl"
+                          size="lg"
                           id="display_name"
                           name="display_name"
                           type="text"
@@ -374,9 +374,9 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   }}
                   render={({ field: { value, ref } }) => (
                     <Field name="email" invalid={Boolean(errors.email)}>
-                      <InputGroup size="2xl">
+                      <InputGroup size="lg">
                         <Input
-                          size="2xl"
+                          size="lg"
                           id="email"
                           name="email"
                           type="email"

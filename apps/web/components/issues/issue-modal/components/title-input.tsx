@@ -10,7 +10,7 @@ import type { Control, FormState } from "react-hook-form";
 import { Controller } from "react-hook-form";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
-import { Input, InputGroup } from "@makeplane/propel/components/input";
+import { Input } from "@makeplane/propel/components/input";
 import { ETabIndices } from "@plane/constants";
 // types
 import { useTranslation } from "@plane/i18n";
@@ -63,27 +63,36 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: TIssueTi
         }}
         render={({ field: { value, onChange, ref } }) => (
           <Field name="name" invalid={Boolean(errors.name)}>
-            <InputGroup size="2xl">
-              <Input
-                size="2xl"
-                id="name"
-                name="name"
-                type="text"
-                value={value}
-                onChange={(e) => {
-                  onChange(e.target.value);
-                  handleFormChange();
-                }}
-                ref={issueTitleRef || ref}
-                placeholder={t("title")}
-                autoFocus
-                tabIndex={getIndex("name")}
-              />
-            </InputGroup>
+            <Input
+              size="2xl"
+              data-composer-title=""
+              aria-label={t("title")}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "issue-composer-title-error" : undefined}
+              id="name"
+              name="name"
+              type="text"
+              value={value}
+              onChange={(e) => {
+                onChange(e.target.value);
+                handleFormChange();
+              }}
+              ref={(element) => {
+                issueTitleRef.current = element;
+                ref(element);
+              }}
+              placeholder={t("title")}
+              autoFocus
+              tabIndex={getIndex("name")}
+            />
           </Field>
         )}
       />
-      <span className="text-caption-sm-medium text-danger-primary">{errors?.name?.message}</span>
+      {errors.name && (
+        <span id="issue-composer-title-error" role="alert" className="text-caption-sm-medium text-danger-primary">
+          {errors.name.message}
+        </span>
+      )}
     </div>
   );
 });

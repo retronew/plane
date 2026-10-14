@@ -1,0 +1,60 @@
+/* Scoped to the work-item composer: ordinary forms keep Propel's framed inputs. */
+[data-issue-composer] {
+  max-width: min(750px, calc(100vw - 2rem));
+  border-radius: 20px;
+}
+
+[data-issue-composer] .issue-composer-main {
+  gap: 12px;
+  padding: 16px 20px 12px;
+}
+
+[data-issue-composer] [data-composer-heading] {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-issue-composer] [data-composer-title] {
+  width: 100%;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+[data-issue-composer] [data-composer-title][aria-invalid="true"] {
+  box-shadow: 0 1px 0 var(--border-color-danger-strong);
+}
+
+[data-issue-composer] .issue-composer-editor {
+  --font-size-regular: 14px;
+  padding: 0;
+}
+
+[data-issue-composer] .issue-composer-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 0;
+  padding: 12px 20px 16px;
+}
+
+/* Keep the stronger hover/open/keyboard-focus states of the property controls. */
+[data-issue-composer] [data-composer-pill-group] button.border-subtle-1 {
+  border-radius: 8px;
+}
+
+[data-issue-composer]
+  [data-composer-pill-group]
+  button.border-subtle-1:not(:hover):not(:active):not(:focus-visible):not([data-popup-open]):not(
+    [aria-expanded="true"]
+  ) {
+  border-color: color-mix(in oklab, var(--border-color-subtle-1) 65%, transparent);
+}
+
+[data-issue-composer] [data-composer-pill-group] button.border-subtle-1:focus-visible {
+  border-color: var(--border-color-accent-strong);
+}

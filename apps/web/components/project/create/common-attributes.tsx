@@ -71,9 +71,9 @@ function ProjectCommonAttributes(props: Props) {
           }}
           render={({ field: { value, onChange } }) => (
             <Field name="name" invalid={Boolean(errors.name)}>
-              <InputGroup size="2xl">
+              <InputGroup size="lg">
                 <Input
-                  size="2xl"
+                  size="lg"
                   id="name"
                   name="name"
                   type="text"
@@ -108,9 +108,9 @@ function ProjectCommonAttributes(props: Props) {
           }}
           render={({ field: { value, onChange } }) => (
             <Field name="identifier" invalid={Boolean(errors.identifier)}>
-              <InputGroup size="2xl">
+              <InputGroup size="lg">
                 <Input
-                  size="2xl"
+                  size="lg"
                   id="identifier"
                   name="identifier"
                   type="text"

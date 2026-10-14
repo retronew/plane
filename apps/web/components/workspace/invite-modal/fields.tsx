@@ -71,9 +71,9 @@ export const InvitationFields = observer(function InvitationFields(props: TInvit
               render={({ field: { value, onChange, ref } }) => (
                 <>
                   <Field name="input" invalid={Boolean(errors.emails?.[index]?.email)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id={`emails.${index}.email`}
                         name={`emails.${index}.email`}
                         type="text"

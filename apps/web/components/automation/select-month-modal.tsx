@@ -71,7 +71,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           value={value?.toString()}
           onChange={onChange}
           ref={ref}
-          size="2xl"
+          size="lg"
           orientation="vertical"
           placeholder={translate("web.enter_months")}
           min={1}

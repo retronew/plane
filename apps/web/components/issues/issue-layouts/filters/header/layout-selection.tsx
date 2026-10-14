@@ -32,7 +32,7 @@ export function LayoutSelection(props: Props) {
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-md bg-layer-3 p-1">
+    <div className="flex items-center gap-1 rounded-lg bg-layer-3 p-0.5">
       {ISSUE_LAYOUTS.map((layout) => {
         if (!layouts.includes(layout.key)) return null;
         return (
@@ -41,7 +41,7 @@ export function LayoutSelection(props: Props) {
               type="button"
               aria-label={t(layout.i18n_title)}
               className={cn(
-                "group grid h-5.5 w-7 place-items-center overflow-hidden rounded-sm transition-all hover:bg-layer-transparent-hover",
+                "group grid h-6 w-7 place-items-center overflow-hidden rounded-md transition-all hover:bg-layer-transparent-hover",
                 {
                   "bg-layer-transparent-active hover:bg-layer-transparent-active": selectedLayout === layout.key,
                 }

@@ -34,10 +34,10 @@ function WorkspaceViewsPage() {
       <PageHead title={pageTitle} />
       <div className="flex h-full w-full flex-col overflow-hidden">
         <div className="flex h-11 w-full items-center overflow-hidden border-b border-subtle px-5 py-3">
-          <InputGroup size="2xl">
+          <InputGroup size="lg">
             <SearchOutline className="text-secondary" width={14} height={14} />
             <Input
-              size="2xl"
+              size="lg"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("web.search")}

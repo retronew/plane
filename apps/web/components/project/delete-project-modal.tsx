@@ -127,9 +127,9 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                     name="projectName"
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="projectName" invalid={Boolean(errors.projectName)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="projectName"
                             name="projectName"
                             type="text"
@@ -156,9 +156,9 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                     name="confirmDelete"
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="confirmDelete" invalid={Boolean(errors.confirmDelete)}>
-                        <InputGroup size="2xl">
+                        <InputGroup size="lg">
                           <Input
-                            size="2xl"
+                            size="lg"
                             id="confirmDelete"
                             name="confirmDelete"
                             type="text"

@@ -154,7 +154,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
   };
 
   return (
-    <div className="relative rounded-lg border-[0.5px] border-subtle-1 bg-layer-2">
+    <div className="issue-composer-description relative">
       {descriptionHtmlData === undefined || !projectId ? (
         <Loader className="max-h-64 min-h-[120px] space-y-2 overflow-hidden rounded-md border border-subtle p-3 py-2 pt-3">
           <Loader.Item width="100%" height="26px" />
@@ -203,7 +203,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
                     project_id: projectId?.toString() ?? "",
                   })
                 }
-                containerClassName="pt-3 min-h-[120px]"
+                containerClassName="issue-composer-editor min-h-[84px]"
                 uploadFile={async (blockId, file) => {
                   try {
                     const { asset_id } = await uploadEditorAsset({
@@ -243,7 +243,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
               />
             )}
           />
-          <div className="border-0.5 z-10 flex items-center justify-end gap-2 p-3">
+          <div className="z-10 flex items-center justify-end gap-2 pt-1">
             {issueName && issueName.trim() !== "" && config?.has_llm_configured && (
               <button
                 type="button"

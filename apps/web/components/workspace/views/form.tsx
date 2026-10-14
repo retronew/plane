@@ -93,9 +93,9 @@ export const WorkspaceViewForm = observer(function WorkspaceViewForm(props: Prop
               }}
               render={({ field: { value, onChange, ref } }) => (
                 <Field name="name" invalid={Boolean(errors.name)}>
-                  <InputGroup size="2xl">
+                  <InputGroup size="lg">
                     <Input
-                      size="2xl"
+                      size="lg"
                       id="name"
                       name="name"
                       type="name"

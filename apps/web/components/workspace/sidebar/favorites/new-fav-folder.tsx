@@ -147,9 +147,9 @@ export const NewFavoriteFolder = observer(function NewFavoriteFolder(props: TPro
           control={control}
           rules={{ required: true }}
           render={({ field }) => (
-            <InputGroup size="2xl">
+            <InputGroup size="lg">
               <Input
-                size="2xl"
+                size="lg"
                 placeholder={t("new_folder")}
                 aria-label={t("aria_labels.projects_sidebar.enter_folder_name")}
                 {...field}

@@ -123,9 +123,9 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
                 name="workspaceName"
                 render={({ field: { value, onChange, ref } }) => (
                   <Field name="workspaceName" invalid={Boolean(errors.workspaceName)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="workspaceName"
                         name="workspaceName"
                         type="text"
@@ -151,9 +151,9 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
                 name="confirmDelete"
                 render={({ field: { value, onChange, ref } }) => (
                   <Field name="confirmDelete" invalid={Boolean(errors.confirmDelete)}>
-                    <InputGroup size="2xl">
+                    <InputGroup size="lg">
                       <Input
-                        size="2xl"
+                        size="lg"
                         id="confirmDelete"
                         name="confirmDelete"
                         type="text"

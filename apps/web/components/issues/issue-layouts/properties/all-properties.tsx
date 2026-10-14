@@ -57,7 +57,10 @@ export interface IIssueProperties {
 }
 
 export const IssueProperties = observer(function IssueProperties(props: IIssueProperties) {
-  const { issue, updateIssue, displayProperties, isReadOnly, className, isEpic = false } = props;
+  const { issue, updateIssue, displayProperties, isReadOnly, className, activeLayout, isEpic = false } = props;
+  const pillVariant = activeLayout === "Kanban" ? "pill-md" : "pill-sm";
+  const avatarVariant = activeLayout === "Kanban" ? "avatar-group-md" : "avatar-group-sm";
+  const propertyHeight = activeLayout === "Kanban" ? "h-6" : "h-5";
   // i18n
   const { t } = useTranslation();
   // store hooks
@@ -209,13 +212,13 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       {/* state */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="state">
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <StateSelect
             value={issue.state_id}
             onChange={handleState}
             projectId={issue.project_id}
             disabled={isReadOnly}
-            variant="pill-sm"
+            variant={pillVariant}
             tooltip
           />
         </div>
@@ -224,12 +227,12 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       {/* priority */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="priority">
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <PrioritySelect
             value={issue?.priority}
             onChange={handlePriority}
             disabled={isReadOnly}
-            variant="pill-sm"
+            variant={pillVariant}
             tooltip
           />
         </div>
@@ -242,7 +245,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         shouldRenderProperty={() => isDateRangeEnabled}
       >
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <DateRangeSelect
             value={{
               from: getDate(issue.start_date) ?? null,
@@ -259,7 +262,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             showTooltip
             tooltipHeading={t("project_cycles.date_range")}
             weekStartsOn={userProfile?.start_of_the_week}
-            variant="pill-sm"
+            variant={pillVariant}
           />
         </div>
       </WithDisplayPropertiesHOC>
@@ -271,7 +274,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         shouldRenderProperty={() => !isDateRangeEnabled}
       >
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <DateSelect
             value={getDate(issue.start_date) ?? null}
             onChange={handleStartDate}
@@ -283,7 +286,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             showTooltip
             tooltipHeading={t("common.order_by.start_date")}
             weekStartsOn={userProfile?.start_of_the_week}
-            variant="pill-sm"
+            variant={pillVariant}
           />
         </div>
       </WithDisplayPropertiesHOC>
@@ -295,7 +298,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         shouldRenderProperty={() => !isDateRangeEnabled}
       >
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <DateSelect
             value={getDate(issue?.target_date) ?? null}
             onChange={handleTargetDate}
@@ -310,7 +313,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             showTooltip
             tooltipHeading={t("common.order_by.due_date")}
             weekStartsOn={userProfile?.start_of_the_week}
-            variant="pill-sm"
+            variant={pillVariant}
           />
         </div>
       </WithDisplayPropertiesHOC>
@@ -318,14 +321,14 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       {/* assignee */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="assignee">
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+        <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <MemberSelect
             projectId={issue?.project_id ?? undefined}
             value={issue?.assignee_ids ?? []}
             onChange={handleAssignee}
             disabled={isReadOnly}
             multiple
-            variant={issue.assignee_ids?.length ? "avatar-group-sm" : "pill-sm"}
+            variant={issue.assignee_ids?.length ? avatarVariant : pillVariant}
             placeholder={t("common.assignees")}
             tooltip={{ heading: t("common.assignees") }}
           />
@@ -339,14 +342,14 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             {projectDetails?.module_view && (
               <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="modules">
                 {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-                <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+                <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
                   <ModuleSelect
                     multiple
                     projectId={issue?.project_id ?? undefined}
                     value={issue?.module_ids ?? []}
                     onChange={handleModule}
                     disabled={isReadOnly}
-                    variant="pill-sm"
+                    variant={pillVariant}
                     tooltip
                   />
                 </div>
@@ -357,13 +360,13 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             {projectDetails?.cycle_view && (
               <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="cycle">
                 {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-                <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+                <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
                   <CycleSelect
                     projectId={issue?.project_id ?? undefined}
                     value={issue?.cycle_id}
                     onChange={handleCycle}
                     disabled={isReadOnly}
-                    variant="pill-sm"
+                    variant={pillVariant}
                     tooltip
                   />
                 </div>
@@ -377,13 +380,13 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       {projectId && areEstimateEnabledByProjectId(projectId?.toString()) && (
         <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="estimate">
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+          <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
             <EstimateSelect
               value={issue.estimate_point ?? undefined}
               onChange={handleEstimate}
               projectId={issue.project_id}
               disabled={isReadOnly}
-              variant="pill-sm"
+              variant={pillVariant}
               tooltip
             />
           </div>

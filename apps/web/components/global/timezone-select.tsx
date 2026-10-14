@@ -98,7 +98,7 @@ export const TimezoneSelect = observer(function TimezoneSelect(props: TTimezoneS
           <ComboboxTrigger size={size} placeholder={label} />
           <ComboboxContent
             aria-label={label}
-            sizing="anchor"
+            sizing="anchor-fixed"
             search={<ComboboxSearch placeholder={t("common.search.label")} aria-label={t("common.search.label")} />}
           >
             <ComboboxEmpty>{t("common.search.no_matches_found")}</ComboboxEmpty>

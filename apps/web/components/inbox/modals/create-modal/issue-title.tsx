@@ -31,9 +31,9 @@ export const InboxIssueTitle = observer(function InboxIssueTitle(props: TInboxIs
   const { t } = useTranslation();
   return (
     <div className="space-y-1">
-      <InputGroup size="2xl">
+      <InputGroup size="lg">
         <Input
-          size="2xl"
+          size="lg"
           id="name"
           name="name"
           type="text"

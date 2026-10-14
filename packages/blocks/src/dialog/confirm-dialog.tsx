@@ -128,8 +128,8 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         handleClose();
       }}
     >
-      <AlertDialogContent data-prevent-outside-click>
-        <AlertDialogBody>
+      <AlertDialogContent data-prevent-outside-click data-confirm-dialog="">
+        <AlertDialogBody data-confirm-body="">
           <AlertDialogHeader>
             {!hideIcon &&
               (customIcon ? (
@@ -139,14 +139,14 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               ))}
             <AlertDialogIntro>
               <AlertDialogTitle>{title}</AlertDialogTitle>
-              <AlertDialogDescription>{content}</AlertDialogDescription>
+              <AlertDialogDescription data-confirm-description="">{content}</AlertDialogDescription>
             </AlertDialogIntro>
           </AlertDialogHeader>
         </AlertDialogBody>
-        <AlertDialogActions>
+        <AlertDialogActions data-confirm-actions="">
           <Button
             variant="secondary"
-            size="sm"
+            size="md"
             stretch="auto"
             label={cancelLabel}
             disabled={isSubmitting}
@@ -154,7 +154,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           />
           <Button
             variant={BUTTON_VARIANTS[variant]}
-            size="sm"
+            size="md"
             stretch="auto"
             tabIndex={0}
             onClick={() => void handleSubmit()}

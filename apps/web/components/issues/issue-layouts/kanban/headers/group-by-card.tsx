@@ -125,7 +125,7 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
           }`}
         >
           <div
-            className={`line-clamp-1 inline-block truncate overflow-hidden font-medium text-primary ${
+            className={`line-clamp-1 inline-block truncate overflow-hidden text-body-sm-medium text-primary ${
               verticalAlignPosition ? `max-h-[400px] vertical-lr` : ``
             }`}
           >

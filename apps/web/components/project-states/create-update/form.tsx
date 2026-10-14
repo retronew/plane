@@ -93,9 +93,9 @@ export function StateForm(props: TStateForm) {
       <div className="w-full space-y-2">
         {/* title */}
         <Field name="name" invalid={(errors && Boolean(errors.name)) || false}>
-          <InputGroup size="2xl">
+          <InputGroup size="lg">
             <Input
-              size="2xl"
+              size="lg"
               id="name"
               type="text"
               name="name"

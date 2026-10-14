@@ -137,7 +137,7 @@ export const SlashCommandsMenu = forwardRef(function SlashCommandsMenu(props: Sl
       <div
         id="slash-command"
         ref={commandListContainer}
-        className="relative max-h-80 min-w-[12rem] space-y-2 overflow-y-auto rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200"
+        className="relative w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-subtle-1 bg-surface-1 p-1.5 shadow-raised-200"
         style={{
           zIndex: 100,
         }}
@@ -148,33 +148,42 @@ export const SlashCommandsMenu = forwardRef(function SlashCommandsMenu(props: Sl
           e.stopPropagation();
         }}
       >
-        {sections.map((section, sectionIndex) => (
-          <div key={section.key} className="space-y-2">
-            {section.title && <h6 className="text-11 font-semibold text-tertiary">{section.title}</h6>}
-            <div>
-              {section.items?.map((item, itemIndex) => (
-                <CommandMenuItem
-                  key={item.key}
-                  isSelected={sectionIndex === selectedIndex.section && itemIndex === selectedIndex.item}
-                  item={item}
-                  itemIndex={itemIndex}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    selectItem(sectionIndex, itemIndex);
-                  }}
-                  onMouseEnter={() =>
-                    setSelectedIndex({
-                      section: sectionIndex,
-                      item: itemIndex,
-                    })
-                  }
-                  sectionIndex={sectionIndex}
-                  query={query}
-                />
-              ))}
+        <div className="vertical-scrollbar scrollbar-sm max-h-[min(29rem,calc(100dvh-3rem))] overflow-y-auto overscroll-contain rounded-md">
+          {sections.map((section, sectionIndex) => (
+            <div key={section.key} className="border-subtle-1 not-first:mt-1 not-first:border-t not-first:pt-1">
+              {section.title && (
+                <h6 className="px-2.5 pt-2 pb-1 text-caption-md-medium text-tertiary">{section.title}</h6>
+              )}
+              <div>
+                {section.items?.map((item, itemIndex) => (
+                  <CommandMenuItem
+                    key={item.key}
+                    isSelected={sectionIndex === selectedIndex.section && itemIndex === selectedIndex.item}
+                    item={item}
+                    itemIndex={itemIndex}
+                    separatorBefore={
+                      !query &&
+                      itemIndex > 0 &&
+                      ["numbered-list", "table", "image", "callout"].includes(item.commandKey)
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectItem(sectionIndex, itemIndex);
+                    }}
+                    onMouseEnter={() =>
+                      setSelectedIndex({
+                        section: sectionIndex,
+                        item: itemIndex,
+                      })
+                    }
+                    sectionIndex={sectionIndex}
+                    query={query}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </>
   );
