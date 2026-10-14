@@ -28,9 +28,7 @@ def celery_eager():
 @pytest.fixture
 def project(db, workspace, create_user):
     """Create a test project with the user as an admin member and a default state."""
-    project = Project.objects.create(
-        name="Test Project", identifier="TP", workspace=workspace, created_by=create_user
-    )
+    project = Project.objects.create(name="Test Project", identifier="TP", workspace=workspace, created_by=create_user)
     ProjectMember.objects.create(project=project, member=create_user, role=20, is_active=True)
     State.objects.create(
         name="Backlog",
@@ -68,18 +66,16 @@ class TestIssueAssigneeLabelValidationContract:
     """
 
     def get_list_url(self, workspace_slug, project_id):
-        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/issues/"
+        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/"
 
     def get_detail_url(self, workspace_slug, project_id, issue_id):
-        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/issues/{issue_id}/"
+        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/{issue_id}/"
 
     @pytest.mark.django_db
     def test_create_with_non_member_assignee_is_rejected(self, api_key_client, workspace, project, outsider_user):
         url = self.get_list_url(workspace.slug, project.id)
 
-        response = api_key_client.post(
-            url, {"name": "New Issue", "assignees": [str(outsider_user.id)]}, format="json"
-        )
+        response = api_key_client.post(url, {"name": "New Issue", "assignees": [str(outsider_user.id)]}, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert not Issue.objects.filter(name="New Issue").exists()
@@ -90,9 +86,7 @@ class TestIssueAssigneeLabelValidationContract:
         foreign_label = Label.objects.create(name="Foreign", project=other_project)
 
         url = self.get_list_url(workspace.slug, project.id)
-        response = api_key_client.post(
-            url, {"name": "New Issue", "labels": [str(foreign_label.id)]}, format="json"
-        )
+        response = api_key_client.post(url, {"name": "New Issue", "labels": [str(foreign_label.id)]}, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert not Issue.objects.filter(name="New Issue").exists()
@@ -129,9 +123,7 @@ class TestIssueAssigneeLabelValidationContract:
         """Regression guard: a genuinely valid project member must still be assignable."""
         url = self.get_list_url(workspace.slug, project.id)
 
-        response = api_key_client.post(
-            url, {"name": "New Issue", "assignees": [str(create_user.id)]}, format="json"
-        )
+        response = api_key_client.post(url, {"name": "New Issue", "assignees": [str(create_user.id)]}, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
         issue = Issue.objects.get(name="New Issue")

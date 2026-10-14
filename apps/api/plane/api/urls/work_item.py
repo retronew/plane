@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
-from functools import wraps
-
 from django.urls import path
 
 from plane.api.views import (
@@ -37,86 +35,6 @@ from plane.api.views import (
 )
 
 
-def deprecated(view):
-    """Serve a legacy `/issues/` route unchanged, pointing clients at its `/work-items/` successor."""
-
-    @wraps(view)
-    def wrapper(request, *args, **kwargs):
-        response = view(request, *args, **kwargs)
-        successor = request.path.replace("/issues/", "/work-items/").replace("/issue-attachments/", "/attachments/")
-        response["Deprecation"] = "true"
-        if successor != request.path:
-            response["Link"] = f'<{successor}>; rel="successor-version"'
-        return response
-
-    return wrapper
-
-
-# Deprecated url patterns
-old_url_patterns = [
-    path(
-        "workspaces/<str:slug>/issues/search/",
-        IssueSearchEndpoint.as_view(http_method_names=["get"]),
-        name="issue-search",
-    ),
-    path(
-        "workspaces/<str:slug>/issues/<str:project_identifier>-<str:issue_identifier>/",
-        WorkspaceIssueAPIEndpoint.as_view(http_method_names=["get"]),
-        name="issue-by-identifier",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/",
-        IssueListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="issue",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:pk>/",
-        IssueDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="issue",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/links/",
-        IssueLinkListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="link",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/links/<uuid:pk>/",
-        IssueLinkDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="link",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/",
-        IssueCommentListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="comment",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comments/<uuid:pk>/",
-        IssueCommentDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="comment",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/activities/",
-        IssueActivityListAPIEndpoint.as_view(http_method_names=["get"]),
-        name="activity",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/activities/<uuid:pk>/",
-        IssueActivityDetailAPIEndpoint.as_view(http_method_names=["get"]),
-        name="activity",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/issue-attachments/",
-        IssueAttachmentListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
-        name="attachment",
-    ),
-    path(
-        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/issue-attachments/<uuid:pk>/",
-        IssueAttachmentDetailAPIEndpoint.as_view(http_method_names=["get", "patch", "delete"]),
-        name="issue-attachment",
-    ),
-]
-
-# New url patterns with work-items as the prefix
 new_url_patterns = [
     path(
         "workspaces/<str:slug>/work-items/search/",
@@ -261,7 +179,4 @@ engagement_url_patterns = [
     ),
 ]
 
-# Every legacy route keeps working but advertises its successor
-old_url_patterns = [path(str(p.pattern), deprecated(p.callback), name=p.name) for p in old_url_patterns]
-
-urlpatterns = old_url_patterns + new_url_patterns + lifecycle_url_patterns + engagement_url_patterns
+urlpatterns = new_url_patterns + lifecycle_url_patterns + engagement_url_patterns

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
-"""POST /api/v1/.../issues/{issue_id}/issue-attachments/ with ``size`` as a string.
+"""POST /api/v1/.../work-items/{issue_id}/attachments/ with ``size`` as a string.
 
 ``size`` was passed straight to ``min(size, FILE_SIZE_LIMIT)``, so a numeric
 string like ``"53314"`` raised ``TypeError`` (HTTP 500). Non-positive sizes and
@@ -26,7 +26,7 @@ def issue(db, workspace, create_user):
 
 
 def url(workspace, issue):
-    return f"/api/v1/workspaces/{workspace.slug}/projects/{issue.project_id}/issues/{issue.id}/issue-attachments/"
+    return f"/api/v1/workspaces/{workspace.slug}/projects/{issue.project_id}/work-items/{issue.id}/attachments/"
 
 
 @pytest.mark.contract

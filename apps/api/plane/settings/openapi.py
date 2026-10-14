@@ -40,11 +40,6 @@ SPECTACULAR_SETTINGS = {
     "PREPROCESSING_HOOKS": [
         "plane.utils.openapi.hooks.preprocess_filter_api_v1_paths",
     ],
-    # Setting this replaces drf-spectacular's default, so keep its enum hook first
-    "POSTPROCESSING_HOOKS": [
-        "drf_spectacular.hooks.postprocess_schema_enums",
-        "plane.utils.openapi.hooks.postprocess_mark_legacy_issue_paths",
-    ],
     # ========================================================================
     # Server Configuration
     # ========================================================================

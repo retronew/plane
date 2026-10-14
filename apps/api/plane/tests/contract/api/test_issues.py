@@ -51,7 +51,7 @@ def issue(db, workspace, project, state, create_user):
 @pytest.mark.contract
 class TestIssueListOrderByInjection:
     """Regression tests for GHSA-p885-6jpg-cr2p on the work-item list
-    endpoint: GET /api/v1/workspaces/{slug}/projects/{project_id}/issues/.
+    endpoint: GET /api/v1/workspaces/{slug}/projects/{project_id}/work-items/.
 
     The raw ``order_by`` query parameter fell through the endpoint's hardcoded
     branch logic to ``issue_queryset.order_by(order_by_param)``, letting an
@@ -61,7 +61,7 @@ class TestIssueListOrderByInjection:
     """
 
     def get_url(self, workspace_slug, project_id):
-        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/issues/"
+        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/"
 
     @pytest.mark.django_db
     def test_invalid_order_by_does_not_500(self, api_key_client, workspace, project, issue):
@@ -98,7 +98,7 @@ class TestIssueListOrderByInjection:
 
 @pytest.mark.contract
 class TestIssueByIdentifier:
-    """GET /api/v1/workspaces/{slug}/issues/{project_identifier}-{issue_identifier}/
+    """GET /api/v1/workspaces/{slug}/work-items/{project_identifier}-{issue_identifier}/
 
     A non-numeric ``issue_identifier`` (e.g. the tail of a UUID) used to reach
     ``sequence_id=<str>`` and raise ValueError (HTTP 500).
@@ -106,21 +106,23 @@ class TestIssueByIdentifier:
 
     @pytest.mark.django_db
     def test_non_numeric_identifier_returns_404(self, api_key_client, workspace, project, issue):
-        response = api_key_client.get(f"/api/v1/workspaces/{workspace.slug}/issues/{project.identifier}-5263003e54ee/")
+        response = api_key_client.get(
+            f"/api/v1/workspaces/{workspace.slug}/work-items/{project.identifier}-5263003e54ee/"
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.django_db
     def test_non_decimal_digit_returns_404(self, api_key_client, workspace, project):
         # "²".isdigit() is True but int("²") raises ValueError
-        response = api_key_client.get(f"/api/v1/workspaces/{workspace.slug}/issues/{project.identifier}-²/")
+        response = api_key_client.get(f"/api/v1/workspaces/{workspace.slug}/work-items/{project.identifier}-²/")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.django_db
     def test_identifier_still_resolves(self, api_key_client, workspace, project, issue):
         response = api_key_client.get(
-            f"/api/v1/workspaces/{workspace.slug}/issues/{project.identifier}-{issue.sequence_id}/"
+            f"/api/v1/workspaces/{workspace.slug}/work-items/{project.identifier}-{issue.sequence_id}/"
         )
 
         assert response.status_code == status.HTTP_200_OK

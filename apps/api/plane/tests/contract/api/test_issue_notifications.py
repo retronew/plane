@@ -74,11 +74,11 @@ class TestIssueNotificationContract:
 
     def get_list_url(self, workspace_slug, project_id):
         """Helper to build the work item list/create endpoint URL."""
-        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/issues/"
+        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/"
 
     def get_detail_url(self, workspace_slug, project_id, issue_id):
         """Helper to build the work item detail endpoint URL."""
-        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/issues/{issue_id}/"
+        return f"/api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/{issue_id}/"
 
     @pytest.mark.django_db
     def test_create_issue_triggers_notification(self, api_key_client, workspace, project):

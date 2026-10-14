@@ -34,9 +34,9 @@ def _write_targets(workspace, project, issue):
     base = f"/api/v1/workspaces/{slug}"
     missing_id = uuid.uuid4()
     return {
-        "comment_post": ("post", f"{base}/projects/{project.id}/issues/{issue.id}/comments/"),
-        "comment_patch": ("patch", f"{base}/projects/{project.id}/issues/{issue.id}/comments/{missing_id}/"),
-        "issue_put": ("put", f"{base}/projects/{project.id}/issues/"),
+        "comment_post": ("post", f"{base}/projects/{project.id}/work-items/{issue.id}/comments/"),
+        "comment_patch": ("patch", f"{base}/projects/{project.id}/work-items/{issue.id}/comments/{missing_id}/"),
+        "issue_put": ("put", f"{base}/projects/{project.id}/work-items/"),
         "sticky_post": ("post", f"{base}/stickies/"),
         "sticky_patch": ("patch", f"{base}/stickies/{missing_id}/"),
         "sticky_put": ("put", f"{base}/stickies/{missing_id}/"),
@@ -66,7 +66,7 @@ def test_object_body_still_works(api_key_client, workspace, project_issue):
     project, issue = project_issue
 
     response = api_key_client.post(
-        f"/api/v1/workspaces/{workspace.slug}/projects/{project.id}/issues/{issue.id}/comments/",
+        f"/api/v1/workspaces/{workspace.slug}/projects/{project.id}/work-items/{issue.id}/comments/",
         data=json.dumps({"comment_html": "<p>hi</p>"}),
         content_type="application/json",
     )
