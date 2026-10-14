@@ -29,7 +29,6 @@ export function WebhookInput(props: Props) {
             value={value}
             autoComplete="off"
             placeholder="https://example.com/post"
-            autoFocus
             aria-label={t("workspace_settings.settings.webhooks.modal.payload")}
           />
         </InputGroup>

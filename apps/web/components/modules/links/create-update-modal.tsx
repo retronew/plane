@@ -87,10 +87,11 @@ export function CreateUpdateModuleLinkModal(props: Props) {
   };
 
   useEffect(() => {
-    reset({
-      ...defaultValues,
-      ...data,
-    });
+    if (isOpen)
+      reset({
+        ...defaultValues,
+        ...data,
+      });
   }, [data, isOpen, reset]);
 
   return (

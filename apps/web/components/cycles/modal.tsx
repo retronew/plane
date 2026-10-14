@@ -4,13 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { mutate } from "swr";
 // types
 import { setToast } from "@plane/blocks/toast";
 import type { CycleDateCheckData, ICycle, TCycleTabOptions } from "@plane/types";
 // ui
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
+import { getDialogInitialFocusProps } from "@/helpers/dialog";
 // hooks
 import { renderFormattedPayloadDate } from "@plane/utils";
 import { useCycle } from "@/hooks/store/use-cycle";
@@ -161,26 +162,14 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
       });
   };
 
-  useEffect(() => {
-    // if modal is closed, reset active project to null
-    // and return to avoid activeProject being set to some other project
-    if (!isOpen) {
-      setActiveProject(null);
-      return;
-    }
-
-    // if data is present, set active project to the project of the
-    // issue. This has more priority than the project in the url.
-    if (data && data.project_id) {
-      setActiveProject(data.project_id);
-      return;
-    }
-
-    // if data is not present, set active project to the project
-    // in the url. This has the least priority.
-    if (workspaceProjectIds && workspaceProjectIds.length > 0 && !activeProject)
-      setActiveProject(projectId ?? workspaceProjectIds?.[0] ?? null);
-  }, [activeProject, data, projectId, workspaceProjectIds, isOpen]);
+  // Synchronize the selected project before rendering the form, without an effect render.
+  if (!isOpen && activeProject !== null) {
+    setActiveProject(null);
+  } else if (isOpen && data?.project_id && activeProject !== data.project_id) {
+    setActiveProject(data.project_id);
+  } else if (isOpen && !data?.project_id && !activeProject && workspaceProjectIds?.length) {
+    setActiveProject(projectId ?? workspaceProjectIds[0] ?? null);
+  }
 
   return (
     <Dialog
@@ -192,7 +181,11 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
         if (!open) handleClose();
       }}
     >
-      <DialogContent size="md">
+      <DialogContent
+        data-cycle-dialog=""
+        {...getDialogInitialFocusProps("[data-cycle-dialog] input[name=name]")}
+        size="md"
+      >
         <CycleForm
           handleFormSubmit={handleFormSubmit}
           handleClose={handleClose}

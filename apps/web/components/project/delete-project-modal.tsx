@@ -6,7 +6,7 @@
 
 import { Translation } from "@plane/i18n";
 import { useParams } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { WarningTriangleOutline } from "@makeplane/propel/icons";
 // Plane imports
 import { Field } from "@makeplane/propel/components/field";
@@ -53,10 +53,10 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
     formState: { errors, isSubmitting },
     handleSubmit,
     reset,
-    watch,
   } = useForm({ defaultValues });
 
-  const canDelete = watch("projectName") === project?.name && watch("confirmDelete") === "delete my project";
+  const [projectName, confirmDelete] = useWatch({ control, name: ["projectName", "confirmDelete"] });
+  const canDelete = projectName === project?.name && confirmDelete === "delete my project";
 
   const handleClose = () => {
     const timer = setTimeout(() => {

@@ -136,7 +136,6 @@ export function ModuleForm(props: Props) {
                       onChange={onChange}
                       placeholder={t("title")}
                       tabIndex={getIndex("name")}
-                      autoFocus
                     />
                   </InputGroup>
                 </Field>

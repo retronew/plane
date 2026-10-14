@@ -124,7 +124,6 @@ export function CycleForm(props: Props) {
                       value={value}
                       onChange={onChange}
                       tabIndex={getIndex("description")}
-                      autoFocus
                       aria-label={t("title")}
                     />
                   </InputGroup>

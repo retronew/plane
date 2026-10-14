@@ -14,6 +14,7 @@ import { useTranslation, translate } from "@plane/i18n";
 import type { IModule } from "@plane/types";
 // components
 import { ModuleForm } from "@/components/modules";
+import { getDialogInitialFocusProps } from "@/helpers/dialog";
 // hooks
 import { useModule } from "@/hooks/store/use-module";
 import { useProject } from "@/hooks/store/use-project";
@@ -143,6 +144,8 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
     >
       {/* ModuleForm renders its own visible heading; the dialog carries the same text as its name. */}
       <DialogContent
+        data-module-dialog=""
+        {...getDialogInitialFocusProps("[data-module-dialog] input[name=name]")}
         size="md"
         aria-label={translate("web.runtime.module_dialog_title", { mode: data ? "update" : "create" })}
       >

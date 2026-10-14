@@ -55,7 +55,6 @@ export const CreateUpdateLabelInline = observer(
       control,
       reset,
       formState: { errors, isSubmitting },
-      watch,
       setValue,
       setFocus,
     } = useForm<IIssueLabel>({
@@ -135,7 +134,7 @@ export const CreateUpdateLabelInline = observer(
      * For settings focus on name input
      */
     useEffect(() => {
-      setFocus("name");
+      if (labelForm) setFocus("name");
     }, [setFocus, labelForm]);
 
     useEffect(() => {
@@ -176,7 +175,7 @@ export const CreateUpdateLabelInline = observer(
                         <span
                           className="h-4 w-4 rounded-full"
                           style={{
-                            backgroundColor: watch("color"),
+                            backgroundColor: value,
                           }}
                         />
                       </button>

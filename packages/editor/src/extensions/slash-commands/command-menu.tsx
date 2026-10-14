@@ -10,7 +10,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffec
 // plane imports
 import { useOutsideClickDetector } from "@plane/hooks";
 // helpers
-import { DROPDOWN_NAVIGATION_KEYS, getNextValidIndex } from "@/helpers/tippy";
+import { DROPDOWN_NAVIGATION_KEYS, getNextValidIndex } from "../../helpers/tippy";
 // types
 import type { ISlashCommandItem } from "@/types";
 // components
@@ -78,13 +78,13 @@ export const SlashCommandsMenu = forwardRef(function SlashCommandsMenu(props: Sl
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [sections, selectedIndex, setSelectedIndex, selectItem]);
-  // initialize the select index to 0 by default
-  useEffect(() => {
-    setSelectedIndex({
-      section: 0,
-      item: 0,
-    });
-  }, [sections]);
+  // Reset before rendering new search results, without an extra effect-driven render.
+  const resultKey = JSON.stringify([query, sections.map((section) => section.items.map((item) => item.key))]);
+  const [previousResultKey, setPreviousResultKey] = useState(resultKey);
+  if (previousResultKey !== resultKey) {
+    setPreviousResultKey(resultKey);
+    setSelectedIndex({ section: 0, item: 0 });
+  }
   // scroll to the dropdown item when navigating via keyboard
   useLayoutEffect(() => {
     const container = commandListContainer?.current;
@@ -94,7 +94,7 @@ export const SlashCommandsMenu = forwardRef(function SlashCommandsMenu(props: Sl
 
     // use scroll into view to bring the item in view if it is not in view
     item?.scrollIntoView({ block: "nearest" });
-  }, [sections, selectedIndex]);
+  }, [selectedIndex]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }: { event: KeyboardEvent }) => {
@@ -135,6 +135,7 @@ export const SlashCommandsMenu = forwardRef(function SlashCommandsMenu(props: Sl
         lockScroll
       />
       <div
+        role="presentation"
         id="slash-command"
         ref={commandListContainer}
         className="relative w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-subtle-1 bg-surface-1 p-1.5 shadow-raised-200"

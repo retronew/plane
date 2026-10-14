@@ -82,7 +82,6 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: TIssueTi
                 ref(element);
               }}
               placeholder={t("title")}
-              autoFocus
               tabIndex={getIndex("name")}
             />
           </Field>

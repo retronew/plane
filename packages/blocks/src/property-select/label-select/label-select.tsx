@@ -57,6 +57,11 @@ function LabelDot({ color }: { color?: string | null }) {
   return <span aria-hidden="true" className="block size-2 shrink-0 rounded-full" style={{ backgroundColor }} />;
 }
 
+const getLabelIcon = (label: LabelOption) => (label.color?.trim() ? <LabelDot color={label.color} /> : undefined);
+const getLabelIdentifier = (label: LabelOption) =>
+  label.identifier ? <ProjectIdentifierElement show identifier={label.identifier} /> : undefined;
+const getEmptyLabelIcon = (labels: LabelOption[]) => (labels.length === 0 ? <LabelPropertyIcon /> : undefined);
+
 /**
  * Presentational, data-source-agnostic label picker built on the generic multi-select `Select`.
  * The client supplies `getValues` (bound to the label lite list), the selected `value` objects, and
@@ -114,12 +119,8 @@ export function LabelSelect(props: LabelSelectProps) {
       onClose={onClose}
       getOptionValue={(label) => label.id}
       getOptionLabel={(label) => label.name}
-      getOptionIcon={(label) => (label.color?.trim() ? <LabelDot color={label.color} /> : undefined)}
-      getOptionTrailing={
-        showIdentifier
-          ? (label) => (label.identifier ? <ProjectIdentifierElement show identifier={label.identifier} /> : undefined)
-          : undefined
-      }
+      getOptionIcon={getLabelIcon}
+      getOptionTrailing={showIdentifier ? getLabelIdentifier : undefined}
     >
       <Select.Trigger<LabelOption>
         disabled={disabled}
@@ -127,7 +128,7 @@ export function LabelSelect(props: LabelSelectProps) {
         tabIndex={tabIndex}
         className={className}
         data-testid={testId}
-        prependIcon={(labels) => (labels.length === 0 ? <LabelPropertyIcon /> : undefined)}
+        prependIcon={getEmptyLabelIcon}
         label={(labels) =>
           labels.length === 0
             ? (placeholder ?? "")

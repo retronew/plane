@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
@@ -38,12 +38,10 @@ export function StateForm(props: TStateForm) {
   // plane hooks
   const { t } = useTranslation();
   // states
-  const [formData, setFromData] = useState<Partial<IState> | undefined>(undefined);
+  const [formData, setFromData] = useState<Partial<IState> | undefined>(data);
   const [errors, setErrors] = useState<Partial<Record<keyof IState, string>> | undefined>(undefined);
 
-  useEffect(() => {
-    if (data && !formData) setFromData(data);
-  }, [data, formData]);
+  if (data && !formData) setFromData(data);
 
   const handleFormData = <T extends keyof IState>(key: T, value: IState[T]) => {
     setFromData((prev) => ({ ...prev, [key]: value }));

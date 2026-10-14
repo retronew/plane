@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 // plane imports
+import { getDialogInitialFocusProps } from "@/helpers/dialog";
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
@@ -78,6 +79,7 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
 
         const csvData = getCurrentHookAsCSV(currentWorkspace, webHook, secretKey ?? undefined);
         csvDownload(csvData, `webhook-secret-key-${Date.now()}`);
+        return undefined;
       })
       .catch((error) => {
         setToast({
@@ -109,6 +111,8 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
       }}
     >
       <DialogContent
+        data-webhook-dialog=""
+        {...getDialogInitialFocusProps("[data-webhook-dialog] input[type=url]")}
         size="md"
         aria-label={
           generatedWebhook ? t("workspace_settings.key_created") : t("workspace_settings.settings.webhooks.modal.title")
