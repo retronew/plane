@@ -48,7 +48,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
   const { updateQueryParams } = useQueryParams();
   // menu items list
   const EXTRA_MENU_OPTIONS = useMemo(
-    function EXTRA_MENU_OPTIONS(): React.ComponentProps<typeof PageActions>["extraOptions"] {
+    function getExtraMenuOptions(): React.ComponentProps<typeof PageActions>["extraOptions"] {
       return [
         {
           key: "full-screen",
@@ -57,7 +57,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
           // The row itself does the toggling; the switch is the state readout at the row's end.
           customContent: (
             <span className="pointer-events-none">
-              <Switch size="sm" checked={isFullWidth} aria-hidden tabIndex={-1} />
+              <Switch size="md" checked={isFullWidth} aria-hidden tabIndex={-1} />
             </span>
           ),
         },
@@ -67,7 +67,7 @@ export const PageOptionsDropdown = observer(function PageOptionsDropdown(props: 
           title: translate("web.sticky_toolbar"),
           customContent: (
             <span className="pointer-events-none">
-              <Switch size="sm" checked={isStickyToolbarEnabled} aria-hidden tabIndex={-1} />
+              <Switch size="md" checked={isStickyToolbarEnabled} aria-hidden tabIndex={-1} />
             </span>
           ),
           shouldRender: isContentEditable,

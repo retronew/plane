@@ -8,6 +8,8 @@ import { EditorContent } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import type { ReactNode } from "react";
 
+import { SmoothCursor } from "./smooth-cursor";
+
 type Props = {
   className?: string;
   children?: ReactNode;
@@ -26,6 +28,7 @@ export function EditorContentWrapper(props: Props) {
       className={className}
     >
       <EditorContent editor={editor} id={id} />
+      <SmoothCursor editor={editor} />
       {children}
     </div>
   );

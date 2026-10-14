@@ -1956,6 +1956,10 @@
     "ai_writing_optimizing": "Optimizing your content…",
     "ai_writing_retry": "Optimize again",
     "ai_writing_invalid": "Add a title or content, and keep the context under 40,000 characters. If this persists, check the AI configuration.",
-    "ai_writing_quota": "AI request limit reached. Please try again later."
+    "ai_writing_quota": "AI request limit reached. Please try again later.",
+    "smooth_cursor_description": "Animate the text cursor as you move through the editor.",
+    "comment_submit_shortcut": "Comment submission shortcut",
+    "comment_submit_shortcut_description": "Choose the keyboard shortcut for submitting comments.",
+    "preferences_save_failed": "Could not save your preferences. Please try again."
   }
 }

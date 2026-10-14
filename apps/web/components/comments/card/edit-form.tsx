@@ -75,12 +75,9 @@ export const CommentCardEditForm = observer(function CommentCardEditForm(props: 
 
   return (
     <form className="flex flex-col gap-2">
-      <div
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !isEmpty) handleSubmit(onEnter)(e);
-        }}
-      >
+      <div>
         <LiteTextEditor
+          useCommentSubmitShortcut
           editable
           workspaceId={workspaceId}
           workspaceSlug={workspaceSlug}

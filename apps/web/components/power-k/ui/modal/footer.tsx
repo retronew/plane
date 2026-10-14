@@ -26,7 +26,7 @@ export const PowerKModalFooter = observer(function PowerKModalFooter(props: Prop
       <div className="flex items-center gap-2">
         <span className="text-11 text-tertiary">{t("power_k.footer.workspace_level")}</span>
         <Switch
-          size="sm"
+          size="md"
           checked={isWorkspaceLevel}
           onCheckedChange={onWorkspaceLevelChange}
           disabled={!projectId}

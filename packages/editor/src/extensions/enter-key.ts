@@ -8,22 +8,23 @@ import { Extension } from "@tiptap/core";
 // constants
 import { CORE_EXTENSIONS } from "@/constants/extension";
 
-export const EnterKeyExtension = (onEnterKeyPress?: () => void) =>
+export const EnterKeyExtension = (
+  onEnterKeyPress?: () => void,
+  getShortcut: () => "enter" | "mod-enter" = () => "enter"
+) =>
   Extension.create({
     name: CORE_EXTENSIONS.ENTER_KEY,
 
     addKeyboardShortcuts(this) {
+      const submit = () => {
+        const { activeDropbarExtensions } = this.editor.storage.utility;
+        if (this.editor.view.composing || !onEnterKeyPress || activeDropbarExtensions.length > 0) return false;
+        onEnterKeyPress();
+        return true;
+      };
       return {
-        Enter: () => {
-          const { activeDropbarExtensions } = this.editor.storage.utility;
-
-          if (activeDropbarExtensions.length === 0) {
-            onEnterKeyPress?.();
-            return true;
-          }
-
-          return false;
-        },
+        Enter: () => getShortcut() === "enter" && submit(),
+        "Mod-Enter": () => getShortcut() === "mod-enter" && submit(),
         "Shift-Enter": ({ editor }) =>
           editor.commands.first(({ commands }) => [
             () => commands.newlineInCode(),

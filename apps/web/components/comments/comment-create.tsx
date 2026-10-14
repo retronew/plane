@@ -91,21 +91,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
   const isEmpty = isCommentEmpty(commentHTML ?? undefined);
 
   return (
-    <div
-      className={cn("sticky bottom-0 z-[4] bg-surface-1 sm:static")}
-      onKeyDown={(e) => {
-        if (
-          e.key === "Enter" &&
-          !e.shiftKey &&
-          !e.ctrlKey &&
-          !e.metaKey &&
-          !isEmpty &&
-          !isSubmitting &&
-          editorRef.current?.isEditorReadyToDiscard()
-        )
-          handleSubmit(onSubmit)(e);
-      }}
-    >
+    <div className={cn("sticky bottom-0 z-[4] bg-surface-1 sm:static")}>
       <Controller
         name="access"
         control={control}
@@ -115,6 +101,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
             control={control}
             render={({ field: { value, onChange } }) => (
               <LiteTextEditor
+                useCommentSubmitShortcut
                 editable
                 workspaceId={workspaceId}
                 id={"add_comment_" + entityId}
@@ -122,7 +109,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
                 workspaceSlug={workspaceSlug}
                 projectId={projectId}
                 onEnterKeyPress={(e) => {
-                  if (!isEmpty && !isSubmitting) {
+                  if (!isEmpty && !isSubmitting && editorRef.current?.isEditorReadyToDiscard()) {
                     handleSubmit(onSubmit)(e);
                   }
                 }}

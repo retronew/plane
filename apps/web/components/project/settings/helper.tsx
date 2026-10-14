@@ -35,7 +35,7 @@ export function ProjectFeatureToggle(props: Props) {
     </Link>
   ) : (
     <Switch
-      size="sm"
+      size="md"
       checked={value}
       onCheckedChange={() => handleSubmit(featureItem?.key, featureItem?.property)}
       disabled={disabled}

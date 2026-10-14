@@ -66,7 +66,7 @@ export const StartOfWeekPreference = observer(function StartOfWeekPreference(pro
             pinSelected={false}
             contentSizing="anchor"
           >
-            <Select.Trigger<TStartOfWeekOption> variant="select-md" className="w-42 max-w-full border-subtle-1">
+            <Select.Trigger<TStartOfWeekOption> variant="select-md" className="w-32 max-w-full border-subtle-1">
               {(options) => <span className="min-w-0 grow truncate text-left">{options[0]?.label}</span>}
             </Select.Trigger>
           </Select>

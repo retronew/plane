@@ -206,7 +206,7 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
         >
           <div className="flex items-center justify-end">
             <Switch
-              size="sm"
+              size="md"
               checked={!!currentProjectDetails?.guest_view_all_features}
               onCheckedChange={toggleGuestViewAllIssues}
               disabled={!isAdmin}

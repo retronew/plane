@@ -23,7 +23,7 @@ export function WebhookToggle({ control }: IWebHookToggle) {
         control={control}
         name="is_active"
         render={({ field: { onChange, value } }) => (
-          <Switch size="sm" checked={value} onCheckedChange={onChange} aria-label={translate("web.enable_webhook")} />
+          <Switch size="md" checked={value} onCheckedChange={onChange} aria-label={translate("web.enable_webhook")} />
         )}
       />
     </div>

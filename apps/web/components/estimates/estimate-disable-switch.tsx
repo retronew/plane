@@ -55,7 +55,7 @@ export const EstimateDisableSwitch = observer(function EstimateDisableSwitch(pro
 
   return (
     <Switch
-      size="sm"
+      size="md"
       checked={Boolean(currentProjectActiveEstimate)}
       onCheckedChange={() => {
         void disableEstimate();

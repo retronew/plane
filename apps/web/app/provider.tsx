@@ -13,6 +13,8 @@ import { PlaneToastProvider } from "@plane/blocks/toast";
 // mobx store provider
 import { StoreProvider } from "@/lib/store-context";
 
+import { EditorPreferencesProvider } from "@/components/editor/preferences-provider";
+
 // lazy imports
 const AppProgressBar = lazy(function AppProgressBar() {
   return import("@/lib/b-progress/AppProgressBar");
@@ -44,7 +46,9 @@ export function AppProvider(props: IAppProvider) {
             <StoreWrapper>
               <InstanceWrapper>
                 <Suspense>
-                  <SWRConfig value={WEB_SWR_CONFIG}>{children}</SWRConfig>
+                  <EditorPreferencesProvider>
+                    <SWRConfig value={WEB_SWR_CONFIG}>{children}</SWRConfig>
+                  </EditorPreferencesProvider>
                 </Suspense>
               </InstanceWrapper>
             </StoreWrapper>

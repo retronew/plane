@@ -82,6 +82,9 @@ export type TUserProfile = {
   created_at: Date | string;
   updated_at: Date | string;
   start_of_the_week: EStartOfTheWeek;
+  is_smooth_cursor_enabled?: boolean;
+  comment_submit_shortcut?: "enter" | "mod-enter";
+  timezone_auto_set?: boolean;
 };
 
 export interface IInstanceAdminStatus {

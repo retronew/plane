@@ -66,6 +66,9 @@ export class ProfileStore implements IUserProfileStore {
     updated_at: "",
     language: "",
     start_of_the_week: EStartOfTheWeek.SUNDAY,
+    is_smooth_cursor_enabled: false,
+    comment_submit_shortcut: "enter",
+    timezone_auto_set: false,
   };
 
   // services
@@ -141,7 +144,7 @@ export class ProfileStore implements IUserProfileStore {
    * @returns {Promise<TUserProfile | undefined>}
    */
   updateUserProfile = async (data: Partial<TUserProfile>): Promise<TUserProfile | undefined> => {
-    const currentUserProfileData = this.data;
+    const currentUserProfileData = cloneDeep(this.data);
     try {
       if (currentUserProfileData) {
         this.mutateUserProfile(data);

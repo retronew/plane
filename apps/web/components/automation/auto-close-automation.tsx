@@ -32,6 +32,10 @@ type TAutomationMonthOption = {
   label: string;
 };
 
+const renderStateOptionIcon = (state: IState) => (
+  <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.LG} />
+);
+
 export const AutoCloseAutomation = observer(function AutoCloseAutomation(props: Props) {
   const { handleChange } = props;
   // router
@@ -109,7 +113,7 @@ export const AutoCloseAutomation = observer(function AutoCloseAutomation(props: 
             description={t("project_settings.automations.auto-close.description")}
             control={
               <Switch
-                size="sm"
+                size="md"
                 checked={autoCloseStatus}
                 onCheckedChange={() => {
                   if (currentProjectDetails?.close_in === 0) {
@@ -177,9 +181,7 @@ export const AutoCloseAutomation = observer(function AutoCloseAutomation(props: 
                       disabled={!multipleOptions}
                       getOptionValue={(state) => state.id}
                       getOptionLabel={(state) => state.name}
-                      getOptionIcon={(state) => (
-                        <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.LG} />
-                      )}
+                      getOptionIcon={renderStateOptionIcon}
                       pinSelected={false}
                       placeholder={t("state")}
                     >

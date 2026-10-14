@@ -18,7 +18,7 @@ type Props = {
 function ThemeOptionIcon({ option }: { option: I_THEME_OPTION }) {
   return (
     <div
-      className="relative flex h-4 w-4 rotate-45 transform items-center justify-center rounded-full border"
+      className="relative flex h-4 w-4 shrink-0 rotate-45 transform items-center justify-center rounded-full border"
       style={{
         borderColor: option.icon.border,
       }}
@@ -40,6 +40,8 @@ function ThemeOptionIcon({ option }: { option: I_THEME_OPTION }) {
   );
 }
 
+const renderThemeOptionIcon = (option: I_THEME_OPTION) => <ThemeOptionIcon option={option} />;
+
 export function ThemeSwitch(props: Props) {
   const { value, onChange } = props;
   // translation
@@ -55,18 +57,18 @@ export function ThemeSwitch(props: Props) {
       }}
       getOptionValue={(option) => option.value}
       getOptionLabel={(option) => t(option.key)}
-      getOptionIcon={(option) => <ThemeOptionIcon option={option} />}
-      contentSizing="anchor"
+      getOptionIcon={renderThemeOptionIcon}
+      contentSizing="auto"
       showSearch={false}
       pinSelected={false}
       placeholder={t("select_your_theme")}
     >
-      <Select.Trigger variant="select-md" className="w-42 max-w-full border-subtle-1">
+      <Select.Trigger variant="select-md" className="w-32 max-w-full border-subtle-1">
         <div className="min-w-0 grow">
           {value ? (
             <div className="flex w-full items-center gap-2">
               <ThemeOptionIcon option={value} />
-              {t(value.key)}
+              <span className="truncate">{t(value.key)}</span>
             </div>
           ) : (
             t("select_your_theme")

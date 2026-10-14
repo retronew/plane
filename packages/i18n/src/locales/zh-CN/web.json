@@ -1956,6 +1956,10 @@
     "ai_writing_optimizing": "正在根据现有内容优化…",
     "ai_writing_retry": "重新优化",
     "ai_writing_invalid": "请先填写标题或正文，并将上下文控制在 4 万字符内。若仍失败，请检查 AI 配置。",
-    "ai_writing_quota": "AI 请求次数已达上限，请稍后再试。"
+    "ai_writing_quota": "AI 请求次数已达上限，请稍后再试。",
+    "smooth_cursor_description": "让编辑器中的文本光标平滑移动。",
+    "comment_submit_shortcut": "评论提交快捷键",
+    "comment_submit_shortcut_description": "选择提交评论的键盘快捷键。",
+    "preferences_save_failed": "偏好设置保存失败，请重试。"
   }
 }

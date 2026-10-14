@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { getBrowserTimezone } from "@/helpers/browser-timezone";
 import { cloneDeep, set } from "lodash-es";
 import { action, makeObservable, observable, runInAction, computed, observableRef } from "mobx";
 // plane imports
@@ -123,6 +124,18 @@ export class UserStore implements IUserStore {
           this.userSettings.fetchCurrentUserSettings(),
           this.store.workspaceRoot.fetchWorkspaces(),
         ]);
+        if (!this.userProfile.data.timezone_auto_set) {
+          try {
+            const timezone = getBrowserTimezone();
+            if (timezone !== user.user_timezone) {
+              await this.userService.updateUser({ user_timezone: timezone });
+              user.user_timezone = timezone;
+            }
+            await this.userProfile.updateUserProfile({ timezone_auto_set: true });
+          } catch (error) {
+            console.error("Could not initialize browser time zone", error);
+          }
+        }
         runInAction(() => {
           this.data = user;
           this.isLoading = false;

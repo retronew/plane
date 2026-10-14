@@ -46,7 +46,7 @@ export function WebhooksListItem(props: IWebhookListItem) {
           role="presentation"
         >
           <Switch
-            size="sm"
+            size="md"
             checked={webhook.is_active}
             onCheckedChange={() => {
               void handleToggle();

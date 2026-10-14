@@ -134,7 +134,7 @@ export const WidgetItem = observer(function WidgetItem(props: Props) {
           <div>{t(widgetTitle, { count: 1 })}</div>
         </div>
         <Switch
-          size="sm"
+          size="md"
           checked={widget.is_enabled}
           onCheckedChange={(enabled) => handleToggle(workspaceSlug.toString(), widget.key, enabled)}
           aria-label={t(widgetTitle, { count: 1 })}

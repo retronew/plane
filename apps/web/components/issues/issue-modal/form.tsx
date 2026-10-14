@@ -447,7 +447,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               {!data?.id && (
                 <label className="inline-flex cursor-pointer items-center gap-1.5" tabIndex={getIndex("create_more")}>
                   <Switch
-                    size="sm"
+                    size="md"
                     checked={isCreateMoreToggleEnabled}
                     onCheckedChange={(checked) => onCreateMoreToggleChange(checked)}
                     aria-label={t("create_more")}
