@@ -425,7 +425,8 @@
     },
     "copy": {
       "title": "已复制到剪贴板",
-      "message": "{label} 已复制到剪贴板"
+      "message": "{label} 已复制到剪贴板",
+      "aria_label": "复制{label}"
     },
     "new_user": {
       "description": "实例设置完成！欢迎使用 Plane 实例管理后台。从创建第一个工作区开始吧。",

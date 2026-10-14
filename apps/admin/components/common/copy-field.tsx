@@ -5,9 +5,10 @@
  */
 
 import React from "react";
+// propel's CopyOutline is drawn tall and narrow; lucide's Copy is square
+import { Copy } from "lucide-react";
 // ui
-import { Button } from "@makeplane/propel/components/button";
-import { CopyOutline } from "@makeplane/propel/icons";
+import { Input, InputGroup } from "@makeplane/propel/components/input";
 // components
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
@@ -32,22 +33,32 @@ export function CopyField(props: Props) {
   return (
     <div className="flex flex-col gap-1">
       <h4 className="text-13 text-tertiary">{label}</h4>
-      <Button
-        variant="secondary"
-        size="md"
-        stretch="auto"
-        icon={<CopyOutline width={18} height={18} color="#B9B9B9" />}
-        iconPosition="end"
-        label={url}
-        onClick={() => {
-          navigator.clipboard.writeText(url);
-          setToast({
-            type: "info",
-            title: t("admin.copy.title"),
-            message: t("admin.copy.message", { label }),
-          });
-        }}
-      />
+      {/* Same InputGroup as the form inputs (read-only), with the copy action where the password toggle sits */}
+      <InputGroup size="lg">
+        <Input
+          size="lg"
+          value={url}
+          readOnly
+          title={url}
+          aria-label={label}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <button
+          type="button"
+          aria-label={t("admin.copy.aria_label", { label })}
+          className="flex items-center justify-center text-placeholder hover:text-secondary"
+          onClick={() => {
+            navigator.clipboard.writeText(url);
+            setToast({
+              type: "info",
+              title: t("admin.copy.title"),
+              message: t("admin.copy.message", { label }),
+            });
+          }}
+        >
+          <Copy className="h-4 w-4" />
+        </button>
+      </InputGroup>
       <div className="text-11 text-tertiary">{description}</div>
     </div>
   );

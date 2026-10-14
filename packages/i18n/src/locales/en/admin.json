@@ -425,7 +425,8 @@
     },
     "copy": {
       "title": "Copied to clipboard",
-      "message": "The {label} has been successfully copied to your clipboard"
+      "message": "The {label} has been successfully copied to your clipboard",
+      "aria_label": "Copy {label}"
     },
     "new_user": {
       "description": "Instance setup done! Welcome to Plane instance portal. Start your journey by creating your first workspace.",

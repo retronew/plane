@@ -22,7 +22,7 @@ export function PlaneDetailsPanel(props: Props) {
   return (
     <div className="flex flex-col gap-y-4">
       <div className="text-14 font-medium">{title}</div>
-      <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 py-4">
+      <div className="flex flex-col gap-y-6 rounded-lg bg-layer-1 p-4">
         {fields.map((field) => (
           <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
         ))}
