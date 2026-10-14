@@ -70,3 +70,4 @@ from .member import (
 from .sticky import StickySerializer
 from .page import PageAPISerializer
 from .view import IssueViewAPISerializer
+from .notification import NotificationAPISerializer

@@ -16,6 +16,7 @@ from .invite import urlpatterns as invite_patterns
 from .sticky import urlpatterns as sticky_patterns
 from .page import urlpatterns as page_patterns
 from .view import urlpatterns as view_patterns
+from .my_work import urlpatterns as my_work_patterns
 
 urlpatterns = [
     *asset_patterns,
@@ -32,4 +33,5 @@ urlpatterns = [
     *sticky_patterns,
     *page_patterns,
     *view_patterns,
+    *my_work_patterns,
 ]

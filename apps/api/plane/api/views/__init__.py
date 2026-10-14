@@ -97,3 +97,13 @@ from .work_item_lifecycle import (
     WorkItemBulkArchiveAPIEndpoint,
     WorkItemBulkDeleteAPIEndpoint,
 )
+
+from .notification import (
+    NotificationListAPIEndpoint,
+    NotificationUnreadCountAPIEndpoint,
+    NotificationReadAPIEndpoint,
+    NotificationArchiveAPIEndpoint,
+    NotificationMarkAllReadAPIEndpoint,
+)
+from .search import WorkspaceSearchAPIEndpoint
+from .my_work import MyWorkItemsAPIEndpoint, MyWorkSummaryAPIEndpoint, MyActivityAPIEndpoint
