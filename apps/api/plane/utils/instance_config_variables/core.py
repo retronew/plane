@@ -313,15 +313,6 @@ llm_config_variables = [
     },
 ]
 
-unsplash_config_variables = [
-    {
-        "key": "UNSPLASH_ACCESS_KEY",
-        "value": os.environ.get("UNSPLASH_ACCESS_KEY", ""),
-        "category": "UNSPLASH",
-        "is_encrypted": True,
-    },
-]
-
 core_config_variables = [
     *authentication_config_variables,
     *session_config_variables,
@@ -333,5 +324,4 @@ core_config_variables = [
     *oidc_config_variables,
     *smtp_config_variables,
     *llm_config_variables,
-    *unsplash_config_variables,
 ]

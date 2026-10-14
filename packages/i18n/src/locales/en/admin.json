@@ -118,7 +118,6 @@
       "ai": "AI",
       "email": "Email",
       "authentication": "Authentication",
-      "image": "Image",
       "workspace": "Workspace",
       "create": "Create",
       "settings": "Settings",
@@ -145,10 +144,6 @@
       "ai": {
         "name": "AI",
         "description": "Connect a model provider."
-      },
-      "image": {
-        "name": "Images in Plane",
-        "description": "Allow third-party image libraries."
       },
       "switch_to_light": "Switch to light mode",
       "switch_to_dark": "Switch to dark mode",
@@ -333,7 +328,6 @@
       "general": "General Settings - God Mode",
       "authentication": "Authentication Settings - God Mode",
       "workspace": "Workspace Management - God Mode",
-      "image": "Images Settings - God Mode",
       "ai": "AI Settings - God Mode",
       "email": "Email Settings - God Mode",
       "home": "Admin – Instance Setup & Sign-In",
@@ -391,14 +385,6 @@
       "test_result": "{model} replied in {latency} ms.",
       "request_failed": "The request failed. Check the base URL and API key.",
       "toast_updated": "AI settings updated"
-    },
-    "image": {
-      "title": "Third-party image libraries",
-      "description": "Let your users search and choose images from third-party libraries",
-      "toast_updated": "Image Configuration Settings updated successfully",
-      "access_key": "Access key from your Unsplash account",
-      "access_key_description": "You will find your access key in your Unsplash developer console.",
-      "docs": "Unsplash developer account documentation"
     },
     "workspace": {
       "title": "Workspaces on this instance",

@@ -118,7 +118,6 @@
       "ai": "AI",
       "email": "邮件",
       "authentication": "身份认证",
-      "image": "图片",
       "workspace": "工作区",
       "create": "创建",
       "settings": "设置",
@@ -145,10 +144,6 @@
       "ai": {
         "name": "AI",
         "description": "接入大模型服务。"
-      },
-      "image": {
-        "name": "图片",
-        "description": "允许使用第三方图片库。"
       },
       "switch_to_light": "切换到浅色模式",
       "switch_to_dark": "切换到深色模式",
@@ -333,7 +328,6 @@
       "general": "常规设置 - God Mode",
       "authentication": "认证设置 - God Mode",
       "workspace": "工作区管理 - God Mode",
-      "image": "图片设置 - God Mode",
       "ai": "AI 设置 - God Mode",
       "email": "邮件设置 - God Mode",
       "home": "管理后台 - 实例设置与登录",
@@ -391,14 +385,6 @@
       "test_result": "{model} 已响应，耗时 {latency} 毫秒。",
       "request_failed": "请求失败，请检查 API 地址和 API 密钥。",
       "toast_updated": "AI 设置已更新"
-    },
-    "image": {
-      "title": "第三方图片库",
-      "description": "允许用户从第三方图片库搜索和选择图片",
-      "toast_updated": "图片配置已更新",
-      "access_key": "Unsplash 账号的 Access Key",
-      "access_key_description": "可以在 Unsplash 开发者控制台中找到 Access Key。",
-      "docs": "Unsplash 开发者账号文档"
     },
     "workspace": {
       "title": "此实例上的工作区",

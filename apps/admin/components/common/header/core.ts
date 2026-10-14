@@ -10,7 +10,6 @@ export const CORE_HEADER_SEGMENT_LABELS: Record<string, string> = {
   ai: "admin.header.ai",
   email: "admin.header.email",
   authentication: "admin.header.authentication",
-  image: "admin.header.image",
   workspace: "admin.header.workspace",
   create: "admin.header.create",
 };

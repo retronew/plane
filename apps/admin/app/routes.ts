@@ -16,7 +16,6 @@ export default [
     route("email", "./(all)/(dashboard)/email/page.tsx"),
     route("authentication", "./(all)/(dashboard)/authentication/page.tsx"),
     route("ai", "./(all)/(dashboard)/ai/page.tsx"),
-    route("image", "./(all)/(dashboard)/image/page.tsx"),
   ]),
   // Catch-all route for 404 handling - must be last
   route("*", "./components/404.tsx"),

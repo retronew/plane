@@ -43,6 +43,13 @@ export interface IProjectDetailsForm {
 }
 const projectService = new ProjectService();
 
+const renderNetworkOptionIcon = (network: TNetworkChoice) => (
+  <ProjectNetworkIcon iconKey={network.iconKey} className="mt-0.5 size-4 shrink-0" />
+);
+
+const renderNetworkTriggerIcon = (networks: TNetworkChoice[]) =>
+  networks[0] ? <ProjectNetworkIcon iconKey={networks[0].iconKey} className="h-3.5 w-3.5" /> : undefined;
+
 export function ProjectDetailsForm(props: IProjectDetailsForm) {
   const { project, workspaceSlug, projectId, isAdmin } = props;
   const { t } = useTranslation();
@@ -264,7 +271,6 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                 render={({ field: { value, onChange } }) => (
                   <ImagePickerPopover
                     label={t("change_cover")}
-                    control={control}
                     onChange={onChange}
                     value={value ?? null}
                     disabled={!isAdmin}
@@ -398,9 +404,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                     onChange={(key) => onChange(Number(key))}
                     getOptionValue={(network) => String(network.key)}
                     getOptionLabel={(network) => t(network.i18n_label)}
-                    getOptionIcon={(network) => (
-                      <ProjectNetworkIcon iconKey={network.iconKey} className="mt-0.5 size-4 shrink-0" />
-                    )}
+                    getOptionIcon={renderNetworkOptionIcon}
                     getOptionDescription={(network) => t(network.description)}
                     placeholder={t("select_network")}
                     showSearch={false}
@@ -413,11 +417,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                       variant="select-lg"
                       className="font-medium"
                       disabled={!isAdmin}
-                      prependIcon={(networks) =>
-                        networks[0] ? (
-                          <ProjectNetworkIcon iconKey={networks[0].iconKey} className="h-3.5 w-3.5" />
-                        ) : undefined
-                      }
+                      prependIcon={renderNetworkTriggerIcon}
                     >
                       {(networks) => (
                         <span className="min-w-0 grow truncate text-left">

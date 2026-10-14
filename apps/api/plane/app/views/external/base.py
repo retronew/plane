@@ -4,11 +4,9 @@
 
 # Python import
 import json
-import os
 from typing import Tuple
 
 # Third party import
-import requests
 
 from django.http import StreamingHttpResponse
 from rest_framework import status
@@ -18,7 +16,6 @@ from rest_framework.response import Response
 from plane.app.permissions import ROLE, allow_permission
 from plane.app.serializers import ProjectLiteSerializer, WorkspaceLiteSerializer
 from plane.db.models import Project, Workspace
-from plane.license.utils.instance_value import get_configuration_value
 from plane.utils.exception_logger import log_exception
 from plane.utils.llm import LLMError, chat, get_llm_config, stream_chat
 
@@ -127,34 +124,3 @@ class WorkspaceGPTIntegrationEndpoint(BaseAPIView):
             },
             status=status.HTTP_200_OK,
         )
-
-
-class UnsplashEndpoint(BaseAPIView):
-    def get(self, request):
-        (UNSPLASH_ACCESS_KEY,) = get_configuration_value(
-            [
-                {
-                    "key": "UNSPLASH_ACCESS_KEY",
-                    "default": os.environ.get("UNSPLASH_ACCESS_KEY"),
-                }
-            ]
-        )
-        # Check unsplash access key
-        if not UNSPLASH_ACCESS_KEY:
-            return Response([], status=status.HTTP_200_OK)
-
-        # Query parameters
-        query = request.GET.get("query", False)
-        page = request.GET.get("page", 1)
-        per_page = request.GET.get("per_page", 20)
-
-        url = (
-            f"https://api.unsplash.com/search/photos/?client_id={UNSPLASH_ACCESS_KEY}&query={query}&page=${page}&per_page={per_page}"
-            if query
-            else f"https://api.unsplash.com/photos/?client_id={UNSPLASH_ACCESS_KEY}&page={page}&per_page={per_page}"
-        )
-
-        headers = {"Content-Type": "application/json"}
-
-        resp = requests.get(url=url, headers=headers)
-        return Response(resp.json(), status=resp.status_code)
