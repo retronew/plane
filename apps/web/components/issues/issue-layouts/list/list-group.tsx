@@ -6,8 +6,8 @@
 
 import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 // plane imports
 import { DRAG_ALLOWED_GROUPS } from "@plane/constants";
@@ -176,6 +176,9 @@ export const ListGroup = observer(function ListGroup(props: Props) {
     return preloadedData;
   };
 
+  // Pre-existing: the drop target re-registers only on the listed deps; the handlers it reads were
+  // left out on purpose, so adding them now would change when it re-registers.
+  /* oxlint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const element = groupRef.current;
 
@@ -247,6 +250,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
     setIsDraggingOverColumn,
     isWorkflowDropDisabled,
   ]);
+  /* oxlint-enable react-hooks/exhaustive-deps */
 
   const isDragAllowed = group_by ? DRAG_ALLOWED_GROUPS.includes(group_by) : true;
   const canOverlayBeVisible = isWorkflowDropDisabled || orderBy !== "sort_order" || !!group.isDropDisabled;

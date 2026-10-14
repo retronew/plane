@@ -4,11 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import type {
-  DragLocationHistory,
-  DropTargetRecord,
-  ElementDragPayload,
-} from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
+import type { DragLocationHistory, DropTargetRecord } from "@atlaskit/pragmatic-drag-and-drop/types";
+import type { ElementDragPayload } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
@@ -43,6 +40,7 @@ export const WidgetList = observer(function WidgetList({ workspaceSlug }: { work
             title: t("toast.success"),
             message: t("home.widget.reordered_successfully"),
           });
+          return undefined;
         })
         .catch(() => {
           setToast({

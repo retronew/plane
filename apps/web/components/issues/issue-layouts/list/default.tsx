@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 // plane constants
@@ -111,7 +111,7 @@ export const List = observer(function List(props: IList) {
 
   const getGroupIndex = (groupId: string | undefined) => groups.findIndex(({ id }) => id === groupId);
 
-  const is_list = group_by === null ? true : false;
+  const is_list = group_by === null;
 
   // create groupIds array and entities object for bulk ops
   const groupIds = groups.map((g) => g.id);

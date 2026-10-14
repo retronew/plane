@@ -5,13 +5,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import type {
-  DragLocationHistory,
-  DropTargetRecord,
-  ElementDragPayload,
-} from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
-import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
+import type { DragLocationHistory, DropTargetRecord } from "@atlaskit/pragmatic-drag-and-drop/types";
+import type { ElementDragPayload } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { orderBy } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";

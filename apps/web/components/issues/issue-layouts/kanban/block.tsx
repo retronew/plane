@@ -6,8 +6,8 @@
 
 import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
+import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane helpers

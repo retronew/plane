@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
+import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/extract-instruction";
 import type { InstructionType, IPragmaticPayloadLocation, TDropTarget, TWidgetEntityData } from "@plane/types";
 
 export type TargetData = {

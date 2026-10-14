@@ -5,9 +5,10 @@
  */
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
+import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
+import { attachClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge/attach-closest-edge";
+import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge/extract-closest-edge";
 import { observer } from "mobx-react";
 // Plane
 import type { TDraggableData } from "@plane/constants";
@@ -45,7 +46,7 @@ export const StateItem = observer(function StateItem(props: TStateItem) {
   const [isDraggedOver, setIsDraggedOver] = useState(false);
   const [closestEdge, setClosestEdge] = useState<string | null>(null);
   // derived values
-  const isDraggable = totalStates === 1 ? false : true;
+  const isDraggable = totalStates !== 1;
   const commonStateItemListProps = {
     stateCount: totalStates,
     state: state,

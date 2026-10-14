@@ -6,8 +6,8 @@
 
 import type { Dispatch, MouseEvent, SetStateAction } from "react";
 import { useEffect, useRef } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
+import { draggable } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { ChevronRightOutline } from "@makeplane/propel/icons";

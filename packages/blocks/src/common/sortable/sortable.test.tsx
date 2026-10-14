@@ -20,7 +20,7 @@ type TMonitorArgs = {
 // Records what `Sortable` and its `Draggable`s register on the element adapter, so the tests can drive the monitor.
 const adapter = vi.hoisted(() => ({ monitors: [] as TMonitorArgs[], draggableCount: 0 }));
 
-vi.mock("@atlaskit/pragmatic-drag-and-drop/element/adapter", () => ({
+vi.mock("@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter", () => ({
   monitorForElements: (args: TMonitorArgs) => {
     adapter.monitors.push(args);
     return () => undefined;
