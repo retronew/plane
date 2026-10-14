@@ -13,6 +13,7 @@ import {
   MembersOutline,
   ModuleOutline,
   PagesOutline,
+  SettingsOutline,
   StateOutline,
   TriggerOutline,
   ViewsOutline,
@@ -20,11 +21,9 @@ import {
 // plane imports
 import type { ISvgIcons } from "@plane/blocks/icons";
 import type { TProjectSettingsTabs } from "@plane/types";
-// components
-import { SettingIcon } from "@/components/icons/attachment";
 
 export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
-  general: SettingIcon,
+  general: SettingsOutline,
   members: MembersOutline,
   features_cycles: CyclesOutline,
   features_modules: ModuleOutline,
