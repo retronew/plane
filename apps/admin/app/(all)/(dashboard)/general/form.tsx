@@ -57,7 +57,7 @@ export const GeneralConfigurationForm = observer(function GeneralConfigurationFo
     <div className="space-y-8">
       <div className="space-y-4">
         <div className="text-16 font-medium text-primary">{t("admin.general.instance_details")}</div>
-        <div className="grid-col grid w-full grid-cols-1 items-center justify-between gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid-col grid w-full grid-cols-1 items-start justify-between gap-8 md:grid-cols-2 lg:grid-cols-3">
           <ControllerInput
             key="instance_name"
             name="instance_name"

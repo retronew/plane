@@ -30,7 +30,15 @@ const InstanceEmailPage = observer(function InstanceEmailPage(_props: Route.Comp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSMTPEnabled, setIsSMTPEnabled] = useState(false);
 
+  // Whether SMTP is switched on in the saved configuration, not just in this form
+  const isSMTPSaved = formattedConfig?.ENABLE_SMTP === "1";
+
   const handleToggle = async () => {
+    // Switching off an unsaved form only hides it; there is nothing to disable on the server
+    if (isSMTPEnabled && !isSMTPSaved) {
+      setIsSMTPEnabled(false);
+      return;
+    }
     if (isSMTPEnabled) {
       setIsSubmitting(true);
       try {
