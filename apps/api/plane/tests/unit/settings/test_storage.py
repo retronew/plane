@@ -222,3 +222,49 @@ class TestS3StorageObjectMetadata:
 
         assert S3Storage().get_object_metadata("ws/missing.png") is None
         assert mock_log.called is logged
+
+
+@pytest.mark.unit
+class TestS3StoragePublicEndpoint:
+    """AWS_S3_PUBLIC_ENDPOINT_URL signs browser-facing URLs for a host the browser can reach."""
+
+    ENV = {
+        "AWS_ACCESS_KEY_ID": "test-key",
+        "AWS_SECRET_ACCESS_KEY": "test-secret",
+        "AWS_S3_BUCKET_NAME": "test-bucket",
+        "AWS_S3_ENDPOINT_URL": "http://plane-minio:9000",
+    }
+
+    def _clients(self, mock_boto3):
+        internal, public = Mock(), Mock()
+        clients = {"http://plane-minio:9000": internal, "http://localhost:9000": public}
+        mock_boto3.client.side_effect = lambda *args, **kwargs: clients[kwargs["endpoint_url"]]
+        return internal, public
+
+    @patch.dict(os.environ, {**ENV, "AWS_S3_PUBLIC_ENDPOINT_URL": "http://localhost:9000"}, clear=True)
+    @patch("plane.settings.storage.boto3")
+    def test_presigned_urls_use_public_endpoint(self, mock_boto3):
+        internal, public = self._clients(mock_boto3)
+        public.generate_presigned_url.return_value = "http://localhost:9000/test-bucket/a.png?sig"
+
+        storage = S3Storage()
+        url = storage.generate_presigned_url("a.png")
+        storage.generate_presigned_post("a.png", "image/png", 10)
+
+        assert url == "http://localhost:9000/test-bucket/a.png?sig"
+        public.generate_presigned_post.assert_called_once()
+        internal.generate_presigned_url.assert_not_called()
+        internal.generate_presigned_post.assert_not_called()
+        # Server-side operations keep using the internal endpoint
+        assert storage.s3_client is internal
+
+    @patch.dict(os.environ, ENV, clear=True)
+    @patch("plane.settings.storage.boto3")
+    def test_without_public_endpoint_presigns_with_internal_client(self, mock_boto3):
+        internal, _ = self._clients(mock_boto3)
+
+        storage = S3Storage()
+        storage.generate_presigned_url("a.png")
+
+        internal.generate_presigned_url.assert_called_once()
+        assert storage.presign_client is internal
