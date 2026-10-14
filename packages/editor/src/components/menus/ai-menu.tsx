@@ -51,9 +51,12 @@ export function AIFeaturesMenu(props: Props) {
   }, []);
 
   const hidePopup = useCallback(() => {
-    popup.current?.hide();
     setIsPopupVisible(false);
   }, []);
+
+  useEffect(() => {
+    if (!isPopupVisible) popup.current?.hide();
+  }, [isPopupVisible]);
 
   useEffect(() => {
     const handleClickAIHandle = (e: MouseEvent) => {
