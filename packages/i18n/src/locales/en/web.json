@@ -1960,6 +1960,15 @@
     "smooth_cursor_description": "Animate the text cursor as you move through the editor.",
     "comment_submit_shortcut": "Comment submission shortcut",
     "comment_submit_shortcut_description": "Choose the keyboard shortcut for submitting comments.",
-    "preferences_save_failed": "Could not save your preferences. Please try again."
+    "preferences_save_failed": "Could not save your preferences. Please try again.",
+    "search_access_tokens": "Search access tokens",
+    "token_expiration": "Expires at",
+    "token_expiry_week": "1 week",
+    "token_expiry_month": "1 month",
+    "token_expiry_three_months": "3 months",
+    "token_expiry_year": "1 year",
+    "token_last_used": "Last used",
+    "token_never_used": "Never used",
+    "clear_token_search": "Clear search"
   }
 }

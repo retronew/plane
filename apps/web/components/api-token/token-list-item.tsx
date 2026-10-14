@@ -3,73 +3,76 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-
 import { useState } from "react";
-import { CloseCircleOutline } from "@makeplane/propel/icons";
-// plane imports
-import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Menu, MenuTrigger, MenuContent, MenuItem } from "@makeplane/propel/components/menu";
 import type { IApiToken } from "@plane/types";
-import { renderFormattedDate, calculateTimeAgo, renderFormattedTime } from "@plane/utils";
-// components
-import { DeleteApiTokenModal } from "@/components/api-token/delete-token-modal";
-// hooks
-import { usePlatformOS } from "@/hooks/use-platform-os";
+import { renderFormattedDate, renderFormattedTime, calculateTimeAgo } from "@plane/utils";
 import { translate } from "@plane/i18n";
+import { DeleteApiTokenModal } from "@/components/api-token/delete-token-modal";
 
-type Props = {
-  token: IApiToken;
-};
+type Props = { token: IApiToken };
 
-export function ApiTokenListItem(props: Props) {
-  const { token } = props;
-  // states
+export function ApiTokenListItem({ token }: Props) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  // hooks
-  const { isMobile } = usePlatformOS();
-
   return (
-    <>
-      <DeleteApiTokenModal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} tokenId={token.id} />
-      <div className="group relative flex flex-col justify-center border-b border-subtle py-3">
-        <Tooltip label={translate("web.delete_token")} disabled={isMobile}>
-          <button
-            onClick={() => setDeleteModalOpen(true)}
-            className="absolute right-4 hidden place-items-center group-hover:grid"
-          >
-            <CloseCircleOutline className="h-4 w-4 text-danger-primary" />
-          </button>
-        </Tooltip>
-        <div className="flex w-4/5 items-center">
-          <h5 className="truncate text-13 font-medium">{token.label}</h5>
-          <span
-            className={`${
-              token.is_active ? "bg-success-subtle text-success-primary" : "bg-layer-1 text-placeholder"
-            } ml-2 flex h-4 max-h-fit items-center rounded-xs px-2 text-11 font-medium`}
-          >
-            {token.is_active ? translate("web.active") : translate("web.expired")}
+    <tr className="border-b border-subtle last:border-0 hover:bg-layer-1-hover">
+      <td className="min-w-0 px-3 py-3">
+        <div className="truncate text-body-xs-medium text-primary" title={token.description || token.label}>
+          {token.label}
+        </div>
+        {token.scope === "read" && (
+          <span className="text-caption-sm-regular text-secondary">
+            {translate("workspace_settings.settings.api_tokens.read_only")}
           </span>
-          {token.scope === "read" && (
-            <span className="ml-2 flex h-4 max-h-fit items-center rounded-xs bg-layer-1 px-2 text-11 font-medium text-secondary">
-              {translate("workspace_settings.settings.api_tokens.read_only")}
-            </span>
-          )}
-        </div>
-        <div className="mt-1 flex w-full flex-col justify-center">
-          {token.description.trim() !== "" && (
-            <p className="mb-1 max-w-[70%] text-13 break-words">{token.description}</p>
-          )}
-          <p className="mb-1 text-11 leading-6 text-placeholder">
-            {token.is_active
-              ? token.expired_at
-                ? translate("web.runtime.expires_at", {
-                    date: renderFormattedDate(token.expired_at) ?? "",
-                    time: renderFormattedTime(token.expired_at) ?? "",
-                  })
-                : translate("web.never_expires")
-              : translate("web.runtime.expired_ago", { time: calculateTimeAgo(token.expired_at) })}
-          </p>
-        </div>
-      </div>
-    </>
+        )}
+      </td>
+      <td className="px-3 py-3">
+        <span className={token.is_active ? "text-success-primary" : "text-secondary"}>
+          {token.is_active ? translate("web.active") : translate("web.expired")}
+        </span>
+      </td>
+      <td className="px-3 py-3 whitespace-nowrap text-secondary">{renderFormattedDate(token.created_at)}</td>
+      <td className="px-3 py-3 whitespace-nowrap text-secondary">
+        {token.expired_at ? renderFormattedDate(token.expired_at) : translate("web.never_expires")}
+      </td>
+      <td
+        className="px-3 py-3 text-secondary"
+        title={
+          token.last_used
+            ? `${renderFormattedDate(token.last_used)} ${renderFormattedTime(token.last_used)}`
+            : undefined
+        }
+      >
+        {token.last_used ? calculateTimeAgo(token.last_used) : translate("web.token_never_used")}
+      </td>
+      <td className="px-2 py-2 text-right">
+        <Menu>
+          <MenuTrigger
+            render={
+              <IconButton
+                variant="ghost"
+                size="sm"
+                icon={<Icon icon={MoreHorizontalOutline} />}
+                aria-label={translate("common.options")}
+              />
+            }
+          />
+          <MenuContent side="bottom" align="end" sizing="anchor">
+            <div className="w-32">
+              <MenuItem
+                variant="danger"
+                icon={<Icon icon={DeleteOutline} />}
+                label={translate("web.delete_token")}
+                onClick={() => setDeleteModalOpen(true)}
+              />
+            </div>
+          </MenuContent>
+        </Menu>
+        <DeleteApiTokenModal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} tokenId={token.id} />
+      </td>
+    </tr>
   );
 }

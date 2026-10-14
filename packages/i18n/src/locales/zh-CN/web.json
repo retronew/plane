@@ -1851,7 +1851,7 @@
       "count_cycle": "此周期中有 {count} 个工作项",
       "count_module": "此模块中有 {count} 个工作项",
       "count_archived": "此项目中有 {count} 个已归档工作项",
-      "expires_at": "于 {date} {time} 到期",
+      "expires_at": "将于 {date} {time} 过期",
       "expired_ago": "已于 {time} 到期",
       "update_entity_failed": "{type, select, epic {无法更新史诗，请重试。} other {无法更新工作项，请重试。}}",
       "entity_title_required": "{type, select, epic {请输入史诗标题。} other {请输入工作项标题。}}",
@@ -1960,6 +1960,15 @@
     "smooth_cursor_description": "让编辑器中的文本光标平滑移动。",
     "comment_submit_shortcut": "评论提交快捷键",
     "comment_submit_shortcut_description": "选择提交评论的键盘快捷键。",
-    "preferences_save_failed": "偏好设置保存失败，请重试。"
+    "preferences_save_failed": "偏好设置保存失败，请重试。",
+    "search_access_tokens": "搜索访问令牌",
+    "token_expiration": "过期时间",
+    "token_expiry_week": "1 周",
+    "token_expiry_month": "1 个月",
+    "token_expiry_three_months": "3 个月",
+    "token_expiry_year": "1 年",
+    "token_last_used": "最近使用",
+    "token_never_used": "从未使用",
+    "clear_token_search": "清空搜索"
   }
 }
