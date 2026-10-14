@@ -169,7 +169,8 @@
       "instance_name": "实例名称",
       "instance_name_placeholder": "实例名称",
       "admin_email": "管理员邮箱",
-      "admin_email_description": "创建实例的管理员账号，仅供查看。",
+      "admin_email_description": "管理员的登录邮箱，可在 Plane 的个人资料设置中修改。",
+      "admin_email_change_link": "前往修改",
       "instance_id": "实例 ID"
     },
     "email": {

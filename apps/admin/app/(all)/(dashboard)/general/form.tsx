@@ -15,6 +15,7 @@ import { ControllerInput } from "@/components/common/controller-input";
 import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
+import { WEB_BASE_URL } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 
 export interface IGeneralConfigurationForm {
@@ -85,7 +86,17 @@ export const GeneralConfigurationForm = observer(function GeneralConfigurationFo
                 />
               </InputGroup>
             </div>
-            <p className="text-11 text-tertiary">{t("admin.general.admin_email_description")}</p>
+            <p className="text-11 text-tertiary">
+              {t("admin.general.admin_email_description")}{" "}
+              <a
+                href={encodeURI(`${WEB_BASE_URL}/settings/profile/general/`)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-accent-primary hover:underline"
+              >
+                {t("admin.general.admin_email_change_link")}
+              </a>
+            </p>
           </div>
 
           <div className="flex flex-col gap-1">

@@ -169,7 +169,8 @@
       "instance_name": "Name of instance",
       "instance_name_placeholder": "Instance name",
       "admin_email": "Admin email",
-      "admin_email_description": "The admin account that set up this instance. Read only.",
+      "admin_email_description": "The admin's sign-in email. Change it in your Plane profile settings.",
+      "admin_email_change_link": "Go to profile",
       "instance_id": "Instance ID"
     },
     "email": {
