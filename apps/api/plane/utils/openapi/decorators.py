@@ -298,11 +298,42 @@ def sticky_docs(**kwargs):
 
     return extend_schema(**_merge_schema_options(defaults, kwargs))
 
+
 def page_docs(**kwargs):
     """Decorator for page management endpoints"""
     defaults = {
         "tags": ["Pages"],
         "parameters": [WORKSPACE_SLUG_PARAMETER, PROJECT_ID_PARAMETER],
+        "responses": {
+            401: UNAUTHORIZED_RESPONSE,
+            403: FORBIDDEN_RESPONSE,
+            404: NOT_FOUND_RESPONSE,
+        },
+    }
+
+    return extend_schema(**_merge_schema_options(defaults, kwargs))
+
+
+def view_docs(**kwargs):
+    """Decorator for project view endpoints"""
+    defaults = {
+        "tags": ["Views"],
+        "parameters": [WORKSPACE_SLUG_PARAMETER, PROJECT_ID_PARAMETER],
+        "responses": {
+            401: UNAUTHORIZED_RESPONSE,
+            403: FORBIDDEN_RESPONSE,
+            404: NOT_FOUND_RESPONSE,
+        },
+    }
+
+    return extend_schema(**_merge_schema_options(defaults, kwargs))
+
+
+def workspace_view_docs(**kwargs):
+    """Decorator for workspace view endpoints"""
+    defaults = {
+        "tags": ["Views"],
+        "parameters": [WORKSPACE_SLUG_PARAMETER],
         "responses": {
             401: UNAUTHORIZED_RESPONSE,
             403: FORBIDDEN_RESPONSE,
@@ -325,6 +356,7 @@ def estimate_docs(**kwargs):
         },
     }
     return extend_schema(**_merge_schema_options(defaults, kwargs))
+
 
 def estimate_point_docs(**kwargs):
     """Decorator for estimate point-related endpoints"""

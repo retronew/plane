@@ -79,3 +79,12 @@ from .page import (
     PageArchiveAPIEndpoint,
     PageLockAPIEndpoint,
 )
+
+from .view import (
+    ProjectViewListCreateAPIEndpoint,
+    ProjectViewDetailAPIEndpoint,
+    ProjectViewWorkItemsAPIEndpoint,
+    WorkspaceViewListCreateAPIEndpoint,
+    WorkspaceViewDetailAPIEndpoint,
+    WorkspaceViewWorkItemsAPIEndpoint,
+)
