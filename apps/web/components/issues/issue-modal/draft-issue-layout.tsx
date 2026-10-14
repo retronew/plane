@@ -88,7 +88,7 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
       .then((res) => {
         setToast({
           type: "success",
-          title: `${t("success")}!`,
+          title: t("success"),
           message: t("workspace_draft_issues.toasts.created.success"),
         });
         onChange(null);
@@ -99,7 +99,7 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
       .catch((_error) => {
         setToast({
           type: "error",
-          title: `${t("error")}!`,
+          title: t("error"),
           message: t("workspace_draft_issues.toasts.created.error"),
         });
       });

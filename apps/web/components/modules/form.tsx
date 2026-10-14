@@ -11,7 +11,7 @@ import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
 import { ETabIndices } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { DateRangeSelect } from "@plane/blocks/property-select";
 import { Button } from "@makeplane/propel/components/button";
 import { CalendarOutline } from "@makeplane/propel/icons";
@@ -187,7 +187,7 @@ export function ModuleForm(props: Props) {
                         onChangeStartDate(range.from ? renderFormattedPayloadDate(range.from) : null);
                         onChangeEndDate(range.to ? renderFormattedPayloadDate(range.to) : null);
                       }}
-                      placeholder={`${t("start_date")} - ${t("end_date")}`}
+                      placeholder={translate("web.runtime.date_range_placeholder")}
                       icon={<CalendarOutline />}
                       weekStartsOn={userProfile?.start_of_the_week}
                       tabIndex={getIndex("date_range")}

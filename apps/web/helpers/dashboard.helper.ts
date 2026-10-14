@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { endOfMonth, endOfWeek, endOfYear, startOfMonth, startOfWeek, startOfYear } from "date-fns";
 // helpers
 // types
@@ -94,8 +96,9 @@ export const getDurationFilterDropdownLabel = (duration: EDurationFilters, custo
     const beforeDate = customDates.find((date) => date.includes("before"))?.split(";")[0];
 
     if (afterDate && beforeDate) return `${renderFormattedDate(afterDate)} - ${renderFormattedDate(beforeDate)}`;
-    else if (afterDate) return `After ${renderFormattedDate(afterDate)}`;
-    else if (beforeDate) return `Before ${renderFormattedDate(beforeDate)}`;
+    else if (afterDate) return translate("web.runtime.date_afterDate", { date: renderFormattedDate(afterDate) ?? "" });
+    else if (beforeDate)
+      return translate("web.runtime.date_beforeDate", { date: renderFormattedDate(beforeDate) ?? "" });
     else return "";
   }
 };

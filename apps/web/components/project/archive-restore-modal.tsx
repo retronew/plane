@@ -56,7 +56,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
         setToast({
           type: "success",
           title: translate("web.archive_success"),
-          message: `${projectDetails.name} has been archived successfully`,
+          message: translate("web.ui.project_archived", { name: projectDetails.name }),
         });
         onClose();
         router.push(`/${workspaceSlug}/projects/`);
@@ -79,7 +79,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
         setToast({
           type: "success",
           title: translate("web.restore_success"),
-          message: `You can find ${projectDetails.name} in your projects.`,
+          message: translate("web.ui.project_restored_location", { name: projectDetails.name }),
         });
         onClose();
         router.push(`/${workspaceSlug}/projects/`);

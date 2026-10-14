@@ -109,7 +109,7 @@ export function SelectTrigger<T>(props: SelectTriggerProps<T>) {
                             variant="ghost"
                             size="xs"
                             disabled={isDisabled}
-                            aria-label={`${t("common.remove")} ${chipLabel}`}
+                            aria-label={t("web.runtime.remove_named", { name: chipLabel })}
                             icon={<PropelIcon icon={<CloseOutline aria-hidden="true" />} />}
                           />
                         }

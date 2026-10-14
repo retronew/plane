@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 import { Circle } from "lucide-react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel, SPACE_BASE_PATH, SPACE_BASE_URL } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/elements/button";
 import { NewTabOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -85,7 +85,7 @@ export const IssuesHeader = observer(function IssuesHeader() {
           </Breadcrumbs>
           {issuesCount && issuesCount > 0 ? (
             <Tooltip
-              label={`There are ${issuesCount} ${issuesCount > 1 ? "work items" : "work item"} in this project`}
+              label={translate("web.runtime.count_project", { count: issuesCount })}
               layout="stacked"
               side="bottom"
               disabled={isMobile}
@@ -109,8 +109,8 @@ export const IssuesHeader = observer(function IssuesHeader() {
           <></>
         )}
       </Header.LeftItem>
-      <Header.RightItem>
-        <div className="hidden gap-2 md:flex">
+      <Header.RightItem className="[&_button]:rounded-lg [&_button:not(:hover):not(:active):not([aria-expanded=true])>span.border-strong]:border-subtle-1/65 [&_button>span.border-strong]:rounded-lg [&_button>span.border-strong]:shadow-none [&_button[data-variant=secondary]]:shadow-none [&_button[data-variant=secondary]:not(:hover):not(:active):not([aria-expanded=true])]:border-subtle-1/65">
+        <div className="hidden items-center gap-2 md:flex">
           <HeaderFilters
             projectId={projectId}
             currentProjectDetails={currentProjectDetails}

@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { isNil } from "lodash-es";
 // types
 import { EIconSize, ISSUE_PRIORITIES } from "@plane/constants";
@@ -55,7 +57,15 @@ export const getGroupByColumns = (
     case "created_by":
       return getCreatedByColumns(member) as any;
     default:
-      if (includeNone) return [{ id: `All Issues`, name: `All work items`, payload: {}, icon: undefined }];
+      if (includeNone)
+        return [
+          {
+            id: `All Issues`,
+            name: translate("web.runtime.all_entities", { type: "issue" }),
+            payload: {},
+            icon: undefined,
+          },
+        ];
   }
 };
 
@@ -79,7 +89,7 @@ const getCycleColumns = (cycleStore: ICycleStore): IGroupByColumn[] | undefined 
   });
   cycleGroups.push({
     id: "None",
-    name: "None",
+    name: translate("common.none"),
     icon: <CyclesOutline className="h-3.5 w-3.5" />,
     payload: { cycle_id: null },
   });
@@ -105,7 +115,7 @@ const getModuleColumns = (moduleStore: IIssueModuleStore): IGroupByColumn[] | un
   }) as any;
   moduleGroups.push({
     id: "None",
-    name: "None",
+    name: translate("common.none"),
     icon: <ModuleOutline className="h-3.5 w-3.5" />,
     payload: { module_ids: [] },
   });
@@ -145,7 +155,7 @@ const getLabelsColumns = (label: IIssueLabelStore) => {
 
   if (!storeLabels) return;
 
-  const labels = [...storeLabels, { id: "None", name: "None", color: "#666" }];
+  const labels = [...storeLabels, { id: "None", name: translate("common.none"), color: "#666" }];
 
   return labels.map((label) => ({
     id: label.id,
@@ -175,7 +185,7 @@ const getAssigneeColumns = (member: IIssueMemberStore) => {
     payload: { assignee_ids: [member.id] },
   }));
 
-  assigneeColumns.push({ id: "None", name: "None", icon: <Avatar size="xs" />, payload: {} });
+  assigneeColumns.push({ id: "None", name: translate("common.none"), icon: <Avatar size="xs" />, payload: {} });
 
   return assigneeColumns;
 };

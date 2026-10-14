@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 // plane types
@@ -104,7 +105,9 @@ export function CreateUpdateModuleLinkModal(props: Props) {
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>{data ? translate("web.update") : translate("web.add")} link</DialogTitle>
+                <DialogTitle>
+                  <Translation translationKey={data ? "web.ui.update_link" : "web.ui.add_link"} />
+                </DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody tabIndex={0}>

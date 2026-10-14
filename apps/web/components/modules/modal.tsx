@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 // Plane imports
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { IModule } from "@plane/types";
 // components
 import { ModuleForm } from "@/components/modules";
@@ -144,7 +144,7 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
       {/* ModuleForm renders its own visible heading; the dialog carries the same text as its name. */}
       <DialogContent
         size="md"
-        aria-label={`${data ? t("common.update") : t("common.create")} ${t("common.module").toLowerCase()}`}
+        aria-label={translate("web.runtime.module_dialog_title", { mode: data ? "update" : "create" })}
       >
         <ModuleForm
           handleFormSubmit={handleFormSubmit}

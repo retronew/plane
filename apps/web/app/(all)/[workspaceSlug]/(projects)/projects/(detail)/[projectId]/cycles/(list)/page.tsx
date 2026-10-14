@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 // plane imports
 import { useTheme } from "next-themes";
 import { EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TCycleFilters } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
@@ -54,7 +54,9 @@ function ProjectCyclesPage({ params }: Route.ComponentProps) {
   const resolvedEmptyState = resolvedTheme === "light" ? lightEmptyState : darkEmptyState;
   const totalCycles = currentProjectCycleIds?.length ?? 0;
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - ${t("common.cycles", { count: 2 })}` : undefined;
+  const pageTitle = project?.name
+    ? translate("web.runtime.page_title", { name: project?.name, section: t("common.cycles", { count: 2 }) })
+    : undefined;
   const hasAdminLevelPermission = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const hasMemberLevelPermission = allowPermissions(
     [EUserProjectRoles.ADMIN, EUserProjectRoles.MEMBER],

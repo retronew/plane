@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -105,7 +106,10 @@ export const ActivityList = observer(function ActivityList(props: Props) {
               ) &&
               !activityItem.field ? (
                 <span>
-                  created <IssueLink activity={activityItem} />
+                  <Translation
+                    translationKey="web.activity.created"
+                    components={{ issue: <IssueLink activity={activityItem} /> }}
+                  />
                 </span>
               ) : (
                 <ActivityMessage activity={activityItem} showIssue />

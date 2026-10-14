@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
@@ -80,9 +82,10 @@ export const IssueAttachmentsDetail = observer(function IssueAttachmentsDetail(p
                   <span className="text-13">{truncateText(`${fileName}`, 10)}</span>
                 </Tooltip>
                 <Tooltip
-                  label={`${
-                    getUserDetails(attachment.updated_by)?.display_name ?? ""
-                  } uploaded on ${renderFormattedDate(attachment.updated_at)}`}
+                  label={translate("web.runtime.uploaded_by", {
+                    name: getUserDetails(attachment.updated_by)?.display_name ?? "",
+                    date: renderFormattedDate(attachment.updated_at) ?? "",
+                  })}
                   layout="stacked"
                   disabled={isMobile}
                 >

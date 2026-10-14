@@ -27,7 +27,7 @@ function GlobalViewIssuesPage({ params }: Route.ComponentProps) {
   // derived values
   const defaultView = DEFAULT_GLOBAL_VIEWS_LIST.find((view) => view.key === globalViewId);
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace?.name} - ${translate("web.title_all_views")}`
+    ? translate("web.runtime.page_title", { name: currentWorkspace?.name, section: translate("web.title_all_views") })
     : undefined;
 
   // handlers

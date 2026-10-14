@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import * as React from "react";
 import { cn } from "@plane/utils";
 import { OAuthButton } from "./oauth-button";
@@ -57,7 +58,7 @@ export function OAuthOptions(props: OAuthOptionsProps) {
         <div className="mt-4 flex items-center transition-all duration-300">
           <hr className="w-full border-strong transition-colors duration-300" />
           <p className="mx-3 flex-shrink-0 text-center text-body-xs-regular text-placeholder transition-colors duration-300">
-            or
+            <Translation translationKey="web.ui.or" />
           </p>
           <hr className="w-full border-strong transition-colors duration-300" />
         </div>

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { useEffect } from "react";
 import { observer } from "mobx-react";
 // components
@@ -42,7 +43,7 @@ export const GanttChartRoot = observer(function GanttChartRoot(props: GanttChart
     border = true,
     title,
     blockIds,
-    loaderTitle = "blocks",
+    loaderTitle = translate("web.ui.gantt_items"),
     blockUpdateHandler,
     sidebarToRender,
     blockToRender,

@@ -28,7 +28,7 @@ export function PasswordInput({
   label,
   value,
   onChange,
-  placeholder = "Enter your password",
+  placeholder: placeholderProp,
   className,
   showToggle = true,
   error = false,
@@ -36,6 +36,7 @@ export function PasswordInput({
 }: TPasswordInputProps) {
   // plane hooks
   const { t } = useTranslation();
+  const placeholder = placeholderProp ?? t("web.ui.enter_password");
   // states
   const [showPassword, setShowPassword] = useState(false);
   return (

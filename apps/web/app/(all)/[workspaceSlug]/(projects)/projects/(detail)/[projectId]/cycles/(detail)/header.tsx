@@ -18,7 +18,7 @@ import {
   ISSUE_DISPLAY_FILTERS_BY_PAGE,
 } from "@plane/constants";
 import { usePlatformOS } from "@plane/hooks";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -164,7 +164,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
             </Breadcrumbs>
             {workItemsCount && workItemsCount > 0 ? (
               <Tooltip
-                label={`There are ${workItemsCount} ${workItemsCount > 1 ? "work items" : "work item"} in this cycle`}
+                label={translate("web.runtime.count_cycle", { count: workItemsCount })}
                 layout="stacked"
                 side="bottom"
                 disabled={isMobile}

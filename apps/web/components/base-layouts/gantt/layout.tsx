@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { useCallback, useMemo } from "react";
 import { observer } from "mobx-react";
 import { GANTT_TIMELINE_TYPE } from "@plane/types";
@@ -39,8 +40,8 @@ export const BaseGanttLayout = observer(function BaseGanttLayout<T extends IBase
     showAllBlocks = false,
     showToday = true,
     border = false,
-    title = "Items",
-    loaderTitle = "items",
+    title = translate("web.ui.gantt_items"),
+    loaderTitle = translate("web.ui.gantt_items"),
     quickAdd,
     loadMoreItems,
     isLoading: _isLoading,

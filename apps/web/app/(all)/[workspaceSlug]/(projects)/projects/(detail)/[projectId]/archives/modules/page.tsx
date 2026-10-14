@@ -20,7 +20,9 @@ function ProjectArchivedModulesPage({ params }: Route.ComponentProps) {
   const { getProjectById } = useProject();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name && `${project?.name} - ${translate("web.title_archived_modules")}`;
+  const pageTitle =
+    project?.name &&
+    translate("web.runtime.page_title", { name: project?.name, section: translate("web.title_archived_modules") });
 
   return (
     <>

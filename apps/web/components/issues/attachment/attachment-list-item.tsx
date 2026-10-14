@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssueServiceType } from "@plane/types";
@@ -77,9 +77,10 @@ export const IssueAttachmentsListItem = observer(function IssueAttachmentsListIt
             {attachment?.created_by && (
               <>
                 <Tooltip
-                  label={`${
-                    getUserDetails(attachment?.created_by)?.display_name ?? ""
-                  } uploaded on ${renderFormattedDate(attachment.updated_at)}`}
+                  label={translate("web.runtime.uploaded_by", {
+                    name: getUserDetails(attachment?.created_by)?.display_name ?? "",
+                    date: renderFormattedDate(attachment.updated_at) ?? "",
+                  })}
                   layout="stacked"
                   disabled={isMobile}
                 >

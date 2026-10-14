@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -69,9 +70,10 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       title={translate("web.delete_state")}
       content={
         <>
-          {translate("web.are_you_sure_you_want_to_delete_state")}{" "}
-          <span className="font-medium text-primary">{data?.name}</span>? All of the data related to the state will be
-          permanently removed. This action cannot be undone.
+          <Translation
+            translationKey="web.ui.delete_state_confirm"
+            components={{ name: <span className="font-medium text-primary">{data?.name}</span> }}
+          />
         </>
       }
     />

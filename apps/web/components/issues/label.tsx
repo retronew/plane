@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import React from "react";
 // components
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -25,7 +27,11 @@ export function ViewIssueLabel({ labelDetails, maxRender = 1 }: Props) {
                 key={label.id}
                 className="shadow-sm flex flex-shrink-0 cursor-default items-center rounded-md border border-strong px-2.5 py-1 text-11"
               >
-                <Tooltip label={`Label: ${label.name}`} layout="stacked" disabled={isMobile}>
+                <Tooltip
+                  label={translate("web.runtime.labels_value", { labels: label.name })}
+                  layout="stacked"
+                  disabled={isMobile}
+                >
                   <div className="flex items-center gap-1.5 text-secondary">
                     <span
                       className="h-2 w-2 flex-shrink-0 rounded-full"
@@ -42,13 +48,13 @@ export function ViewIssueLabel({ labelDetails, maxRender = 1 }: Props) {
         ) : (
           <div className="shadow-sm flex flex-shrink-0 cursor-default items-center rounded-md border border-strong px-2.5 py-1 text-11">
             <Tooltip
-              label={`Labels: ${labelDetails.map((l) => l.name).join(", ")}`}
+              label={translate("web.runtime.labels_value", { labels: labelDetails.map((l) => l.name).join(", ") })}
               layout="stacked"
               disabled={isMobile}
             >
               <div className="flex items-center gap-1.5 text-secondary">
                 <span className="h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary" />
-                {`${labelDetails.length} Labels`}
+                {translate("web.runtime.labels_count", { count: labelDetails.length })}
               </div>
             </Tooltip>
           </div>

@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
 // Plane Imports
 import { CYCLE_STATUS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { ChevronRightOutline } from "@makeplane/propel/icons";
 import { DateRangeSelect } from "@plane/blocks/property-select";
 import { setToast } from "@plane/blocks/toast";
@@ -174,7 +174,7 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
                           }
                         })();
                       }}
-                      placeholder={`${t("project_cycles.start_date")} - ${t("project_cycles.end_date")}`}
+                      placeholder={translate("web.runtime.date_range_placeholder")}
                       tooltipHeading={t("project_cycles.in_your_timezone")}
                       tooltipContent={`${renderFormattedDateInUserTimezone(
                         cycleDetails.start_date ?? ""

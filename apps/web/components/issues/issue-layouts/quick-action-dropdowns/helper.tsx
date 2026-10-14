@@ -82,7 +82,7 @@ export function handleOptionalAction<T>(
     setToast({
       type: "error",
       title: translate("web.action_not_available"),
-      message: `${actionName} action is not implemented.`,
+      message: translate("web.runtime.action_unavailable", { action: actionName }),
     });
   }
 }
@@ -145,7 +145,7 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
 
   const handleIssueRestore = async () => {
     if (!handleRestore) {
-      handleOptionalAction(handleRestore, "Restore");
+      handleOptionalAction(handleRestore, translate("web.runtime.action_restore"));
       return;
     }
     await handleRestore()
@@ -246,7 +246,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     key: "remove-from-cycle",
     title: t("web.remove_from_cycle"),
     icon: CloseCircleOutline,
-    action: () => handleOptionalAction(handleRemoveFromView, "Remove from cycle"),
+    action: () => handleOptionalAction(handleRemoveFromView, translate("web.runtime.action_remove_from_cycle")),
     shouldRender: isEditingAllowed,
   });
 
@@ -254,7 +254,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     key: "remove-from-module",
     title: t("web.remove_from_module"),
     icon: CloseCircleOutline,
-    action: () => handleOptionalAction(handleRemoveFromView, "Remove from module"),
+    action: () => handleOptionalAction(handleRemoveFromView, translate("web.runtime.action_remove_from_module")),
     shouldRender: isEditingAllowed,
   });
 
@@ -263,7 +263,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     title: t("common.actions.archive"),
     description: isInArchivableGroup ? undefined : t("issue.archive.description"),
     icon: ArchiveOutline,
-    action: () => handleOptionalAction(setArchiveIssueModal, "Archive", true),
+    action: () => handleOptionalAction(setArchiveIssueModal, translate("web.runtime.action_archive"), true),
     disabled: !isInArchivableGroup,
     shouldRender: isArchivingAllowed,
   });

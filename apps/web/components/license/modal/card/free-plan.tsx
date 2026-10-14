@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { CloseCircleOutline } from "@makeplane/propel/icons";
 // plane constants
@@ -28,8 +29,12 @@ export const FreePlanCard = observer(function FreePlanCard(props: FreePlanCardPr
         </div>
       )}
       <div className="px-4 py-2 font-semibold">
-        <div className="text-20">Free</div>
-        <div className="text-caption-md text-tertiary">$0 per user per month</div>
+        <div className="text-20">
+          <Translation translationKey="web.ui.free_plan" />
+        </div>
+        <div className="text-caption-md text-tertiary">
+          <Translation translationKey="web.ui.price_per_user_month" values={{ price: "$0" }} />
+        </div>
       </div>
       <div className="px-2 pt-2 pb-3">
         <ul className="grid w-full grid-cols-12 gap-x-4">

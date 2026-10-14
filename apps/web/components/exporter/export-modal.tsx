@@ -9,7 +9,7 @@ import { intersection } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, IImporterService } from "@plane/types";
@@ -156,7 +156,7 @@ export const Exporter = observer(function Exporter(props: Props) {
             loading={exportLoading}
             label={
               exportLoading
-                ? `${t("workspace_settings.settings.exports.exporting")}...`
+                ? translate("web.runtime.loading_label", { label: t("workspace_settings.settings.exports.exporting") })
                 : t("workspace_settings.settings.exports.title")
             }
           />

@@ -188,7 +188,7 @@ function ImagePickerPopoverComponent(props: Props) {
                               type="button"
                               key={imageUrl}
                               className="relative col-span-2 aspect-video md:col-span-1"
-                              aria-label={`Select cover image ${index + 1}`}
+                              aria-label={translate("web.runtime.select_cover", { number: index + 1 })}
                               onClick={() => handleStaticImageSelect(imageUrl)}
                             >
                               <img

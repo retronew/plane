@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -34,7 +35,7 @@ export const LayoutQuickActions = observer(function LayoutQuickActions(props: Pr
     setToast({
       type: "success",
       title: t("web.link_copied_acf8"),
-      message: `${storeType === "EPIC" ? "Epics" : "Work items"} link copied to clipboard.`,
+      message: translate("web.ui.layout_link_copied", { type: storeType }),
     });
   };
 

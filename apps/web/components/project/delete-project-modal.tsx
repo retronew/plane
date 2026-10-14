@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { WarningTriangleOutline } from "@makeplane/propel/icons";
@@ -116,8 +117,10 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">
-                    {translate("web.enter_the_project_name")}{" "}
-                    <span className="font-medium text-primary">{project?.name}</span> to continue:
+                    <Translation
+                      translationKey="web.ui.confirm_project_name"
+                      components={{ name: <span className="font-medium text-primary">{project?.name}</span> }}
+                    />
                   </p>
                   <Controller
                     control={control}
@@ -143,8 +146,10 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                 </div>
                 <div className="text-secondary">
                   <p className="text-13">
-                    {translate("web.to_confirm_type")}{" "}
-                    <span className="font-medium text-primary">delete my project</span> below:
+                    <Translation
+                      translationKey="web.ui.confirm_phrase"
+                      components={{ phrase: <span className="font-medium text-primary">delete my project</span> }}
+                    />
                   </p>
                   <Controller
                     control={control}

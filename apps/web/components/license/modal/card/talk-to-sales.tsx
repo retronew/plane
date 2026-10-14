@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // types
 // plane imports
@@ -31,12 +33,13 @@ export type TalkToSalesCardProps = {
 
 const renderPriceContent = (price: TSubscriptionPrice) => (
   <>
-    {price.recurring === "month" && "Monthly"}
-    {price.recurring === "year" && "Yearly"}
+    {price.recurring === "month" && translate("web.ui.monthly")}
+    {price.recurring === "year" && translate("web.ui.yearly")}
   </>
 );
 
 export const TalkToSalesCard = observer(function TalkToSalesCard(props: TalkToSalesCardProps) {
+  useTranslation();
   const {
     planVariant,
     href,
@@ -64,7 +67,9 @@ export const TalkToSalesCard = observer(function TalkToSalesCard(props: TalkToSa
             <>{translate("web.quote_on_request")}</>
           )}
         </div>
-        <div className="text-caption-md-medium text-tertiary">per user per month</div>
+        <div className="text-caption-md-medium text-tertiary">
+          <Translation translationKey="web.ui.per_user_month" />
+        </div>
       </div>
       {isLoading ? (
         <Loader className="flex flex-col items-center justify-center">

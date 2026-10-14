@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -136,8 +137,10 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                 </p>
                 <div className="text-secondary">
                   <p className="text-13 break-words">
-                    {translate("web.enter_the_project_name")}{" "}
-                    <span className="font-medium text-primary">{project?.name}</span> to continue:
+                    <Translation
+                      translationKey="web.ui.confirm_project_name"
+                      components={{ name: <span className="font-medium text-primary">{project?.name}</span> }}
+                    />
                   </p>
                   <Controller
                     control={control}
@@ -165,8 +168,12 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                 </div>
                 <div className="text-secondary">
                   <p className="text-13">
-                    {translate("web.to_confirm_type")}{" "}
-                    <span className="font-medium text-primary">{translate("web.leave_project")}</span> below:
+                    <Translation
+                      translationKey="web.ui.confirm_phrase"
+                      components={{
+                        phrase: <span className="font-medium text-primary">{translate("web.leave_project")}</span>,
+                      }}
+                    />
                   </p>
                   <Controller
                     control={control}

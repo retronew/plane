@@ -90,7 +90,9 @@ const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsP
   };
 
   // derived values
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace.name} - ${translate("web.title_members")}` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? translate("web.runtime.page_title", { name: currentWorkspace.name, section: translate("web.title_members") })
+    : undefined;
   const appliedRoleFilters = filtersStore.filters?.roles || [];
 
   // if user is not authorized to view this page
@@ -123,7 +125,7 @@ const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsP
               <SearchOutline className="h-3.5 w-3.5 text-placeholder" />
               <input
                 className="w-full max-w-[234px] border-none bg-transparent text-body-xs-regular outline-none placeholder:text-placeholder"
-                placeholder={`${t("search")}...`}
+                placeholder={translate("web.runtime.loading_label", { label: t("search") })}
                 value={searchQuery}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus

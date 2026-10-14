@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -18,7 +19,7 @@ import { WorkspaceService } from "@/services/workspace.service";
 import type { TPowerKContext, TPowerKPageType } from "../../core/types";
 import { PowerKModalNoSearchResultsCommand } from "./no-results-command";
 import { PowerKModalSearchResults } from "./search-results";
-import { translate } from "@plane/i18n";
+
 // services init
 const workspaceService = new WorkspaceService();
 
@@ -90,13 +91,10 @@ export function PowerKModalSearchMenu(props: Props) {
               "animate-pulse": isSearching,
             })}
           >
-            {translate("web.search_results_for")}{" "}
-            <span className="font-medium">
-              {'"'}
-              {searchTerm}
-              {'"'}
-            </span>{" "}
-            in {isWorkspaceLevel ? "workspace" : "project"}:
+            <Translation
+              translationKey={isWorkspaceLevel ? "web.ui.search_workspace" : "web.ui.project_search_results"}
+              components={{ query: <span className="font-medium">{searchTerm}</span> }}
+            />
           </h5>
         </div>
       )}

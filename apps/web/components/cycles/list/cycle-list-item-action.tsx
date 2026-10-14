@@ -19,7 +19,7 @@ import {
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import { setPromiseToast } from "@plane/blocks/toast";
@@ -216,9 +216,10 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
           <div className="flex gap-2">
             {/* Duration */}
             <Tooltip
-              label={`${t("project_cycles.in_your_timezone")}: ${renderFormattedDateInUserTimezone(
-                cycleDetails.start_date ?? ""
-              )} → ${renderFormattedDateInUserTimezone(cycleDetails.end_date ?? "")}`}
+              label={translate("web.runtime.timezone_range", {
+                start: renderFormattedDateInUserTimezone(cycleDetails.start_date ?? "") ?? "",
+                end: renderFormattedDateInUserTimezone(cycleDetails.end_date ?? "") ?? "",
+              })}
               layout="stacked"
               disabled={!isProjectTimeZoneDifferent()}
             >
@@ -248,7 +249,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
                 to: getDate(cycleDetails.end_date) ?? null,
               }}
               onChange={() => {}}
-              placeholder={`${t("project_cycles.start_date")} - ${t("project_cycles.end_date")}`}
+              placeholder={translate("web.runtime.date_range_placeholder")}
               showTooltip={isProjectTimeZoneDifferent()}
               tooltipHeading={t("project_cycles.in_your_timezone")}
               tooltipContent={`${renderFormattedDateInUserTimezone(
@@ -265,7 +266,11 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
       {/* created by */}
       {createdByDetails && !isActive && <ButtonAvatars showTooltip={false} userIds={createdByDetails?.id} />}
       {!isActive && (
-        <Tooltip label={`${cycleDetails.assignee_ids?.length} Members`} layout="stacked" disabled={isMobile}>
+        <Tooltip
+          label={translate("web.runtime.members_count", { count: cycleDetails.assignee_ids?.length ?? 0 })}
+          layout="stacked"
+          disabled={isMobile}
+        >
           <div className="flex w-min cursor-default items-center justify-center">
             {cycleDetails.assignee_ids && cycleDetails.assignee_ids?.length > 0 ? (
               <AvatarGroup size="xs" max={2}>

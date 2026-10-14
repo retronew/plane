@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -75,7 +76,10 @@ export const ProfileActivity = observer(function ProfileActivity() {
                       <ActivityMessage activity={activity} showIssue />
                     ) : (
                       <span>
-                        created <IssueLink activity={activity} />
+                        <Translation
+                          translationKey="web.activity.created"
+                          components={{ issue: <IssueLink activity={activity} /> }}
+                        />
                       </span>
                     )}
                   </p>

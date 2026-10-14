@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
 import { observer } from "mobx-react";
@@ -170,7 +172,7 @@ export const EstimatePointCreateRoot = observer(function EstimatePointCreateRoot
           variant="ghost"
           size="sm"
           stretch="auto"
-          label={`Add ${estimateType}`}
+          label={translate("web.runtime.add_estimate", { type: estimateType })}
           icon={<Icon icon={AddOutline} />}
           iconPosition="start"
           onClick={handleCreate}

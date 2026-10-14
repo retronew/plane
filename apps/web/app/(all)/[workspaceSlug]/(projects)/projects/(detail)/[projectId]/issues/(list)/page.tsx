@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // i18n
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // components
 import { PageHead } from "@/components/core/page-title";
 import { ProjectLayoutRoot } from "@/components/issues/issue-layouts/roots/project-layout-root";
@@ -23,7 +23,9 @@ function ProjectIssuesPage({ params }: Route.ComponentProps) {
 
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - ${t("issue.label", { count: 2 })}` : undefined; // Count is for pluralization
+  const pageTitle = project?.name
+    ? translate("web.runtime.page_title", { name: project?.name, section: t("issue.label", { count: 2 }) })
+    : undefined; // Count is for pluralization
 
   return (
     <>

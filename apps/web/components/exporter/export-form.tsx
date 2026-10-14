@@ -15,7 +15,7 @@ import {
   EXPORTERS_LIST,
   // ISSUE_DISPLAY_FILTERS_BY_PAGE,
 } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 // import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -218,7 +218,11 @@ export const ExportForm = observer(function ExportForm(props: Props) {
             stretch="auto"
             type="submit"
             loading={exportLoading}
-            label={exportLoading ? `${t("workspace_settings.settings.exports.exporting")}...` : t("export")}
+            label={
+              exportLoading
+                ? translate("web.runtime.loading_label", { label: t("workspace_settings.settings.exports.exporting") })
+                : t("export")
+            }
           />
         </div>
       </div>

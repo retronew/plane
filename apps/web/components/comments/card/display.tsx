@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+import { Translation } from "@plane/i18n";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { observer } from "mobx-react";
@@ -122,18 +124,27 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
         <div className="flex flex-1 flex-wrap items-center gap-1">
           <div className="text-caption-sm-medium">{displayName}</div>
           <div className="text-caption-sm-regular text-tertiary">
-            commented{" "}
-            <Tooltip
-              label={`${renderFormattedDate(comment.created_at)} at ${renderFormattedTime(comment.created_at)}`}
-              side="bottom"
-              layout="single"
-              delay={200}
-            >
-              <span className="text-tertiary">
-                {calculateTimeAgo(comment.created_at)}
-                {comment.edited_at && " (edited)"}
-              </span>
-            </Tooltip>
+            <Translation
+              translationKey="web.ui.commented_at"
+              components={{
+                time: (
+                  <Tooltip
+                    label={translate("web.ui.date_at_time", {
+                      date: renderFormattedDate(comment.created_at),
+                      time: renderFormattedTime(comment.created_at),
+                    })}
+                    side="bottom"
+                    layout="single"
+                    delay={200}
+                  >
+                    <span className="text-tertiary">
+                      {calculateTimeAgo(comment.created_at)}
+                      {comment.edited_at && translate("web.ui.edited")}
+                    </span>
+                  </Tooltip>
+                ),
+              }}
+            />
           </div>
         </div>
         {!disabled && (

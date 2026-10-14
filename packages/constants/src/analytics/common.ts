@@ -105,19 +105,27 @@ export const ANALYTICS_INSIGHTS_FIELDS: Record<TAnalyticsTabsBase, IInsightField
 
 export const ANALYTICS_DURATION_FILTER_OPTIONS = [
   {
-    name: "Yesterday",
+    get name() {
+      return translate("web.runtime.yesterday");
+    },
     value: "yesterday",
   },
   {
-    name: "Last 7 days",
+    get name() {
+      return translate("web.runtime.last_7_days");
+    },
     value: "last_7_days",
   },
   {
-    name: "Last 30 days",
+    get name() {
+      return translate("web.runtime.last_30_days");
+    },
     value: "last_30_days",
   },
   {
-    name: "Last 3 months",
+    get name() {
+      return translate("web.runtime.last_3_months");
+    },
     value: "last_3_months",
   },
 ];

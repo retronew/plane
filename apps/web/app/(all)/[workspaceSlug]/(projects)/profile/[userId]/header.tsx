@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronDownOutline, RightSidePaneOutline, YourWorkOutline } from "@makeplane/propel/icons";
 import { PROFILE_VIEWER_TAB, PROFILE_ADMINS_TAB, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { IUserProfileProjectSegregation } from "@plane/types";
 import { Breadcrumbs } from "@plane/blocks/breadcrumb";
 import { Header } from "@plane/blocks/layout";
@@ -54,7 +54,9 @@ export const UserProfileHeader = observer(function UserProfileHeader(props: TUse
 
   const isCurrentUser = currentUser?.id === userId;
 
-  const breadcrumbLabel = isCurrentUser ? t("profile.page_label") : `${userName} ${t("profile.work")}`;
+  const breadcrumbLabel = isCurrentUser
+    ? t("profile.page_label")
+    : translate("web.runtime.user_work", { name: userName });
 
   return (
     <Header>

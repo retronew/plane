@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { API_BASE_URL } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { LockOutline } from "@makeplane/propel/icons";
 import type { TOAuthConfigs, TOAuthOption } from "@plane/types";
 // assets
@@ -33,7 +33,7 @@ function OIDCProviderIcon({ iconUrl, providerName }: { iconUrl?: string; provide
       height={18}
       width={18}
       className="size-[18px] rounded-sm object-contain"
-      alt={`${providerName} Logo`}
+      alt={translate("web.runtime.provider_logo", { name: providerName })}
       onError={() => setFailedUrl(iconUrl)}
     />
   );

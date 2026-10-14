@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import useSWR from "swr";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 // components
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
@@ -47,7 +47,10 @@ function WebhooksListPage({ params }: Route.ComponentProps) {
   );
 
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace.name} - ${t("workspace_settings.settings.webhooks.title")}`
+    ? translate("web.runtime.page_title", {
+        name: currentWorkspace.name,
+        section: t("workspace_settings.settings.webhooks.title"),
+      })
     : undefined;
 
   // clear secret key when modal is closed.

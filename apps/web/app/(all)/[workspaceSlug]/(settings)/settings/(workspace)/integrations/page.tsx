@@ -33,7 +33,7 @@ function WorkspaceIntegrationsPage() {
   // derived values
   const isAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace.name} - ${translate("web.title_integrations")}`
+    ? translate("web.runtime.page_title", { name: currentWorkspace.name, section: translate("web.title_integrations") })
     : undefined;
   const { data: appIntegrations } = useSWR(isAdmin ? APP_INTEGRATIONS : null, () =>
     isAdmin ? integrationService.getAppIntegrationsList() : null

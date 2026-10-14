@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-import { translate } from "@plane/i18n";
+import { translate, Translation } from "@plane/i18n";
 
 type Props = {
   isSignUp?: boolean;
@@ -14,17 +14,32 @@ export function TermsAndConditions(props: Props) {
   return (
     <span className="flex items-center justify-center py-6">
       <p className="text-center text-13 whitespace-pre-line text-secondary">
-        {isSignUp ? translate("web.by_creating_an_account") : translate("web.by_signing_in")}, you agree to our{" \n"}
-        <a href="https://plane.so/legals/terms-and-conditions" target="_blank" rel="noopener noreferrer">
-          <span className="text-13 font-medium underline hover:cursor-pointer">
-            {translate("web.terms_of_service")}
-          </span>
-        </a>{" "}
-        and{" "}
-        <a href="https://plane.so/legals/privacy-policy" target="_blank" rel="noopener noreferrer">
-          <span className="text-13 font-medium underline hover:cursor-pointer">{translate("web.privacy_policy")}</span>
-        </a>
-        {"."}
+        <Translation
+          translationKey="web.runtime.terms_agreement"
+          values={{ mode: isSignUp ? "signup" : "signin" }}
+          components={{
+            terms: (
+              <a
+                href="https://plane.so/legals/terms-and-conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {translate("web.terms_of_service")}
+              </a>
+            ),
+            privacy: (
+              <a
+                href="https://plane.so/legals/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {translate("web.privacy_policy")}
+              </a>
+            ),
+          }}
+        />
       </p>
     </span>
   );

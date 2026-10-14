@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { Outlet } from "react-router";
 import type { ShouldRevalidateFunctionArgs } from "react-router";
@@ -20,7 +21,6 @@ import { useIssueFilter } from "@/hooks/store/use-issue-filter";
 import type { Route } from "./+types/layout";
 
 const DEFAULT_TITLE = "Plane";
-const DEFAULT_DESCRIPTION = "Made with Plane, an AI-powered work management platform with publishing capabilities.";
 
 interface IssueMetadata {
   name?: string;
@@ -58,7 +58,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const metadata = loaderData?.metadata;
 
   const title = metadata?.name || DEFAULT_TITLE;
-  const description = metadata?.description || DEFAULT_DESCRIPTION;
+  const description = metadata?.description || translate("web.runtime.public_board_description");
   const coverImage = metadata?.cover_image;
 
   const metaTags = [

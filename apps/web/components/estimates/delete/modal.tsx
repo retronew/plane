@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 // ui
@@ -91,9 +92,10 @@ export const DeleteEstimateModal = observer(function DeleteEstimateModal(props: 
           {/* estimate steps */}
           <DialogBody tabIndex={0}>
             <div className="text-14 text-secondary">
-              {translate("web.deleting_the_estimate")} <span className="font-bold text-primary">{estimate?.name}</span>
-              &nbsp;system will remove it from all work items permanently. This action cannot be undone. If you add
-              estimates again, you will need to update all the work items.
+              <Translation
+                translationKey="web.ui.delete_estimate_confirm"
+                components={{ name: <span className="font-bold text-primary">{estimate?.name}</span> }}
+              />
             </div>
           </DialogBody>
         </DialogMain>

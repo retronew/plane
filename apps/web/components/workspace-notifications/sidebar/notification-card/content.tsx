@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import type { ReactNode } from "react";
 // plane imports
 import type { TNotification } from "@plane/types";
@@ -15,12 +16,7 @@ import {
 } from "@plane/utils";
 // components
 import { LiteTextEditor } from "@/components/editor/lite-text";
-import {
-  ADDITIONAL_NOTIFICATION_CONTENT_MAP,
-  renderAdditionalAction,
-  renderAdditionalValue,
-  shouldShowConnector,
-} from "../../notification-card/content";
+import { ADDITIONAL_NOTIFICATION_CONTENT_MAP, renderAdditionalValue } from "../../notification-card/content";
 
 // Types
 export type TNotificationFieldData = {
@@ -32,6 +28,7 @@ export type TNotificationFieldData = {
 
 export type TNotificationContentDetails = {
   action?: ReactNode;
+  translationKey?: string;
   value?: ReactNode;
   showConnector?: boolean;
 };
@@ -44,75 +41,42 @@ export type TNotificationContentMap = {
 
 // Base notification content map for core fields
 export const BASE_NOTIFICATION_CONTENT_MAP: TNotificationContentMap = {
-  duplicate: ({ verb }) => ({
-    action:
-      verb === "created"
-        ? "marked that this work item is a duplicate of"
-        : "marked that this work item is not a duplicate",
-    value: null,
-    showConnector: false,
-  }),
+  duplicate: ({ verb }) => ({ translationKey: verb === "created" ? "duplicate_added" : "duplicate_removed" }),
   assignees: ({ newValue, oldValue }) => ({
-    action: newValue !== "" ? "added assignee" : "removed assignee",
-    value: newValue !== "" ? newValue : oldValue,
-    showConnector: false,
+    translationKey: newValue ? "assignee_added" : "assignee_removed",
+    value: newValue || oldValue,
   }),
   start_date: ({ newValue }) => ({
-    action: newValue !== "" ? "set start date" : "removed the start date",
-    value: renderFormattedDate(newValue),
-    showConnector: false,
+    translationKey: newValue ? "start_date_set" : "start_date_removed",
+    value: newValue ? renderFormattedDate(newValue) : undefined,
   }),
   target_date: ({ newValue }) => ({
-    action: newValue !== "" ? "set due date" : "removed the due date",
-    value: renderFormattedDate(newValue),
-    showConnector: false,
+    translationKey: newValue ? "due_date_set" : "due_date_removed",
+    value: newValue ? renderFormattedDate(newValue) : undefined,
   }),
   labels: ({ newValue, oldValue }) => ({
-    action: newValue !== "" ? "added label" : "removed label",
-    value: newValue !== "" ? newValue : oldValue,
-    showConnector: false,
+    translationKey: newValue ? "label_added" : "label_removed",
+    value: newValue || oldValue,
   }),
   parent: ({ newValue, oldValue }) => ({
-    action: newValue !== "" ? "added parent" : "removed parent",
-    value: newValue !== "" ? newValue : oldValue,
-    showConnector: false,
+    translationKey: newValue ? "parent_added" : "parent_removed",
+    value: newValue || oldValue,
   }),
-  relates_to: () => ({
-    action: "marked that this work item is related to",
-    value: null,
-    showConnector: true,
+  relates_to: ({ newValue, oldValue, verb }) => ({
+    translationKey: verb === "deleted" ? "relation_removed" : "relation_added",
+    value: newValue || oldValue,
   }),
   comment: ({ newValue }, renderCommentBox?: boolean) => ({
-    action: "commented",
+    translationKey: renderCommentBox ? "commented" : "commented_value",
     value: renderCommentBox ? null : sanitizeCommentForNotification(newValue),
-    showConnector: false,
   }),
-  archived_at: ({ newValue }) => ({
-    action: newValue === "restore" ? "restored the work item" : "archived the work item",
-    value: null,
-    showConnector: false,
-  }),
-  None: () => ({
-    action: null,
-    value: "the work item and assigned it to you.",
-    showConnector: false,
-  }),
-  // Fields below only define value - action falls through to default handler
-  attachment: () => ({
-    action: null,
-    value: "the work item",
-    showConnector: true,
-  }),
-  description: ({ newValue }) => ({
-    value: stripAndTruncateHTML(newValue || "", 55),
-    showConnector: true,
-  }),
+  archived_at: ({ newValue }) => ({ translationKey: newValue === "restore" ? "restored" : "archived" }),
+  None: () => ({ translationKey: "assigned_to_you" }),
+  attachment: ({ verb }) => ({ translationKey: verb === "deleted" ? "attachment_removed" : "attachment_added" }),
+  description: ({ newValue }) => ({ translationKey: "description", value: stripAndTruncateHTML(newValue || "", 55) }),
   estimate_time: ({ newValue, oldValue }) => ({
-    value:
-      newValue !== ""
-        ? convertMinutesToHoursMinutesString(Number(newValue))
-        : convertMinutesToHoursMinutesString(Number(oldValue)),
-    showConnector: true,
+    translationKey: newValue ? "estimate_set" : "estimate_removed",
+    value: convertMinutesToHoursMinutesString(Number(newValue || oldValue)),
   }),
 };
 
@@ -181,36 +145,39 @@ export function NotificationContent({
   // Get content details from map
   const contentDetails = getNotificationContentDetails(fieldData, renderCommentBox);
 
-  // Render action - use map value if defined, otherwise fall through to default handler
-  // Note: undefined = fall through to default, null = explicitly no action text
-  const renderAction = (): ReactNode => {
-    if (!notificationField) return "";
-    // Check if action is explicitly defined in map (including null)
-    if (contentDetails && "action" in contentDetails) return contentDetails.action;
-    // Fallback to default action handler for fields not in map or without action defined
-    return renderAdditionalAction(notificationField, verb);
+  const fieldKeys: Record<string, string> = {
+    name: "common.title",
+    priority: "priority",
+    state: "state",
+    cycles: "common.cycle",
+    modules: "common.module",
+    estimate_point: "common.estimate",
   };
-
-  // Render value - use map value if defined, otherwise fall through to default handler
-  const renderValue = (): ReactNode => {
-    // Check if value is explicitly defined in map
-    if (contentDetails && "value" in contentDetails) return contentDetails.value;
-    // Fallback to default value handler for fields not in map or without value defined
-    return renderAdditionalValue(notificationField, newValue, oldValue);
-  };
-
-  // Determine if connector should be shown - prefer map value, fallback to function
-  const showConnector =
-    contentDetails?.showConnector !== undefined ? contentDetails.showConnector : shouldShowConnector(notificationField);
+  const key =
+    contentDetails?.translationKey ??
+    (contentDetails?.action !== undefined ? "extension" : verb === "deleted" ? "property_removed" : "property_set");
+  const value =
+    contentDetails && "value" in contentDetails
+      ? contentDetails.value
+      : renderAdditionalValue(notificationField, newValue, oldValue);
 
   return (
     <>
-      {renderTriggerName()}
-      <span className="text-tertiary">{renderAction()} </span>
+      <Translation
+        translationKey={`web.notifications.${key}`}
+        components={{
+          actor: renderTriggerName(),
+          value: (
+            <span className="font-medium text-primary">
+              {notificationField === "priority" ? <Translation translationKey={newValue || "none"} /> : value}
+            </span>
+          ),
+          field: <Translation translationKey={fieldKeys[notificationField ?? ""] ?? "web.ui.work_item_property"} />,
+          action: contentDetails?.action,
+        }}
+      />
       {verb !== "deleted" && (
         <>
-          {showConnector && <span className="text-tertiary">to </span>}
-          <span className="font-medium text-primary">{renderValue()}</span>
           {notificationField === "comment" && renderCommentBox && (
             <div className="origin-left scale-75">
               <LiteTextEditor
@@ -226,7 +193,6 @@ export function NotificationContent({
               />
             </div>
           )}
-          {"."}
         </>
       )}
     </>

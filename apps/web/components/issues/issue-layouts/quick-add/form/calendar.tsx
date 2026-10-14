@@ -28,7 +28,7 @@ export const CalendarQuickAddIssueForm = observer(function CalendarQuickAddIssue
           autoComplete="off"
           placeholder={isEpic ? translate("web.epic_title") : translate("web.work_item_title")}
           {...register("name", {
-            required: `${isEpic ? "Epic" : "Work item"} title is required.`,
+            required: translate("web.runtime.entity_title_required", { type: isEpic ? "epic" : "issue" }),
           })}
           className="w-full rounded-md bg-transparent py-1.5 pr-2 text-13 leading-5 font-medium text-secondary outline-none md:text-11"
         />

@@ -292,7 +292,7 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
               type="submit"
               label={
                 isSubmitting
-                  ? `${t("auth.common.password.change_password.label.submitting")}`
+                  ? t("auth.common.password.change_password.label.submitting")
                   : t("auth.common.password.change_password.label.default")
               }
               loading={isSubmitting}

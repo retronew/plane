@@ -41,7 +41,11 @@ export const IssueBlockLabels = observer(function IssueBlockLabels({ labelIds, s
       {labels.length <= 2 ? (
         <>
           {labels.map((label) => (
-            <Tooltip key={label.id} side="top" label={`Labels: ${label?.name ?? ""}`}>
+            <Tooltip
+              key={label.id}
+              side="top"
+              label={translate("web.runtime.labels_value", { labels: label?.name ?? "" })}
+            >
               <div
                 key={label?.id}
                 className={`flex h-full max-w-full flex-shrink-0 items-center overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1 text-11`}
@@ -63,10 +67,10 @@ export const IssueBlockLabels = observer(function IssueBlockLabels({ labelIds, s
         <div
           className={`cursor-not-allowed" flex h-full flex-shrink-0 items-center rounded-sm border-[0.5px] border-strong px-2.5 py-1 text-11`}
         >
-          <Tooltip side="top" label={`Labels: ${labelsString}`}>
+          <Tooltip side="top" label={translate("web.runtime.labels_value", { labels: labelsString })}>
             <div className="flex h-full items-center gap-1.5 text-secondary">
               <span className="h-2 w-2 flex-shrink-0 rounded-full bg-accent-primary" />
-              {`${labels.length} Labels`}
+              {translate("web.runtime.labels_count", { count: labels.length })}
             </div>
           </Tooltip>
         </div>

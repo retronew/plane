@@ -31,7 +31,10 @@ function ProjectSettingsPage({ params }: Route.ComponentProps) {
   const isAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId);
 
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} - ${translate("web.title_general_settings")}`
+    ? translate("web.runtime.page_title", {
+        name: currentProjectDetails?.name,
+        section: translate("web.title_general_settings"),
+      })
     : undefined;
 
   return (

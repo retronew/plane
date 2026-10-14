@@ -5,7 +5,7 @@
  */
 
 import type { FormEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 // icons
 import { CloseCircleOutline, WarningCircleOutline } from "@makeplane/propel/icons";
@@ -17,7 +17,7 @@ import { Input } from "@makeplane/propel/components/input";
 // helpers
 import { cn } from "@plane/utils";
 import { checkEmailValidity } from "@/helpers/string.helper";
-import { translate } from "@plane/i18n";
+import { translate, useTranslation } from "@plane/i18n";
 
 type TAuthEmailForm = {
   defaultEmail: string;
@@ -30,10 +30,8 @@ export const AuthEmailForm = observer(function AuthEmailForm(props: TAuthEmailFo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState(defaultEmail);
 
-  const emailError = useMemo(
-    () => (email && !checkEmailValidity(email) ? { email: "Email is invalid" } : undefined),
-    [email]
-  );
+  const { t } = useTranslation();
+  const emailError = email && !checkEmailValidity(email) ? { email: t("web.auth_errors.invalid_email") } : undefined;
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

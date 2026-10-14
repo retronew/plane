@@ -61,9 +61,12 @@ export function ApiTokenListItem(props: Props) {
           <p className="mb-1 text-11 leading-6 text-placeholder">
             {token.is_active
               ? token.expired_at
-                ? `Expires ${renderFormattedDate(token.expired_at)} at ${renderFormattedTime(token.expired_at)}`
+                ? translate("web.runtime.expires_at", {
+                    date: renderFormattedDate(token.expired_at) ?? "",
+                    time: renderFormattedTime(token.expired_at) ?? "",
+                  })
                 : translate("web.never_expires")
-              : `Expired ${calculateTimeAgo(token.expired_at)}`}
+              : translate("web.runtime.expired_ago", { time: calculateTimeAgo(token.expired_at) })}
           </p>
         </div>
       </div>

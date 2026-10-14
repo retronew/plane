@@ -32,7 +32,10 @@ function MembersSettingsPage({ params }: Route.ComponentProps) {
   const { workspaceUserInfo, allowPermissions } = useUserPermissions();
   // derived values
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} - ${translate("web.title_members")}`
+    ? translate("web.runtime.page_title", {
+        name: currentProjectDetails?.name,
+        section: translate("web.title_members"),
+      })
     : undefined;
   const isProjectMemberOrAdmin = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],

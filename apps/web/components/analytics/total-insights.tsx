@@ -34,20 +34,10 @@ const getInsightLabel = (
       : t(item.i18nKey, { entity: t("common.work_items") });
   }
 
-  // Get the base translation with entity
-  const baseTranslation = t(item.i18nKey, {
+  return t(item.i18nKey, {
     ...item.i18nProps,
-    entity: item.i18nProps?.entity && t(item.i18nProps?.entity),
+    entity: item.i18nProps?.entity && t(item.i18nProps.entity),
   });
-
-  // Add prefix if available
-  const prefix = item.i18nProps?.prefix ? `${t(item.i18nProps.prefix)} ` : "";
-
-  // Add suffix if available
-  const suffix = item.i18nProps?.suffix ? ` ${t(item.i18nProps.suffix)}` : "";
-
-  // Combine prefix, base translation, and suffix
-  return `${prefix}${baseTranslation}${suffix}`;
 };
 
 const TotalInsights = observer(function TotalInsights({

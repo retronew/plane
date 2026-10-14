@@ -152,7 +152,9 @@ export function BlockMenu(props: Props) {
     {
       icon: DeleteOutline,
       key: "delete",
-      label: "Delete",
+      get label() {
+        return translate("delete");
+      },
       onClick: (_e) => {
         // Execute the delete action
         editor.chain().deleteSelection().focus().run();

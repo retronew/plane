@@ -5,6 +5,7 @@
  */
 
 //
+import { translate } from "@plane/i18n";
 import type { ChartDataType } from "@plane/types";
 import { EStartOfTheWeek } from "@plane/types";
 import { months, generateWeeks } from "../data";
@@ -161,7 +162,7 @@ export const getWeeksBetweenTwoDates = (
       weekNumber,
       weekData: {
         shortTitle: `w${weekNumber}`,
-        title: `Week ${weekNumber}`,
+        title: translate("web.ui.week_number", { count: weekNumber }),
       },
       title:
         monthAtStartOfTheWeek === monthAtEndOfTheWeek

@@ -94,7 +94,7 @@ function WorkspaceInvitationPage() {
             </div>
           ) : (
             <EmptySpace
-              title={`You have been invited to ${invitationDetail.workspace.name}`}
+              title={translate("web.runtime.invited_to", { name: invitationDetail.workspace.name })}
               description={translate("web.your_workspace_is_where_you_ll_create_projects_collaborate_o")}
             >
               <EmptySpaceItem Icon={TickOutline} title={translate("web.accept")} action={handleAccept} />
@@ -104,7 +104,7 @@ function WorkspaceInvitationPage() {
         ) : error || invitationDetail?.responded_at ? (
           invitationDetail?.accepted ? (
             <EmptySpace
-              title={`You are already a member of ${invitationDetail.workspace.name}`}
+              title={translate("web.runtime.already_member", { name: invitationDetail.workspace.name })}
               description={translate("web.your_workspace_is_where_you_ll_create_projects_collaborate_o")}
             >
               <EmptySpaceItem Icon={BoxesOutline} title={translate("web.continue_to_home")} href="/" />

@@ -27,7 +27,10 @@ function EstimatesSettingsPage({ params }: Route.ComponentProps) {
 
   // derived values
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} - ${translate("web.title_estimates")}`
+    ? translate("web.runtime.page_title", {
+        name: currentProjectDetails?.name,
+        section: translate("web.title_estimates"),
+      })
     : undefined;
   const canPerformProjectAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT);
 

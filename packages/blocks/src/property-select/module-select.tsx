@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import { ModuleOutline } from "@makeplane/propel/icons";
 import type { TPaginatedResponse } from "@plane/types";
 import { Select } from "../select/select";
@@ -48,10 +49,15 @@ export type ModuleSelectProps =
       variant: SelectVariant;
     });
 
-function triggerLabel(selected: ModuleOption[], showCountOnMultiple: boolean, placeholder?: string): string {
+function triggerLabel(
+  selected: ModuleOption[],
+  showCountOnMultiple: boolean,
+  placeholder: string | undefined,
+  countLabel: string
+): string {
   if (selected.length === 0) return placeholder ?? "";
   if (selected.length === 1) return selected[0]?.name ?? "";
-  if (showCountOnMultiple) return `${selected.length} modules`;
+  if (showCountOnMultiple) return countLabel;
   return selected.map((module) => module.name).join(", ");
 }
 
@@ -61,6 +67,7 @@ function triggerLabel(selected: ModuleOption[], showCountOnMultiple: boolean, pl
  * single-select (breadcrumb navigation, inline picker).
  */
 export function ModuleSelect(props: ModuleSelectProps) {
+  const { t } = useTranslation();
   if (!props.multiple) {
     const {
       getValues,
@@ -69,7 +76,7 @@ export function ModuleSelect(props: ModuleSelectProps) {
       variant,
       disabled = false,
       placeholder = "",
-      searchPlaceholder = "Search modules...",
+      searchPlaceholder = t("property_select.search_modules"),
       onClose,
       className,
       showIdentifier = false,
@@ -123,7 +130,7 @@ export function ModuleSelect(props: ModuleSelectProps) {
     variant,
     disabled = false,
     placeholder = "",
-    searchPlaceholder = "Search modules...",
+    searchPlaceholder = t("property_select.search_modules"),
     onClose,
     className,
     showIdentifier = false,
@@ -161,7 +168,14 @@ export function ModuleSelect(props: ModuleSelectProps) {
         tabIndex={tabIndex}
         className={className}
         prependIcon={(modules) => (!showCountOnMultiple && modules.length > 0 ? undefined : <ModuleOutline />)}
-        label={(modules) => triggerLabel(modules, showCountOnMultiple, placeholder)}
+        label={(modules) =>
+          triggerLabel(
+            modules,
+            showCountOnMultiple,
+            placeholder,
+            t("property_select.modules_count", { count: modules.length })
+          )
+        }
         tooltip={tooltip}
       >
         {(modules) => {
@@ -181,7 +195,12 @@ export function ModuleSelect(props: ModuleSelectProps) {
           ) : (
             (modules.length > 0 || !!placeholder) && (
               <span className="min-w-0 grow truncate text-left">
-                {triggerLabel(modules, showCountOnMultiple, placeholder)}
+                {triggerLabel(
+                  modules,
+                  showCountOnMultiple,
+                  placeholder,
+                  t("property_select.modules_count", { count: modules.length })
+                )}
               </span>
             )
           );

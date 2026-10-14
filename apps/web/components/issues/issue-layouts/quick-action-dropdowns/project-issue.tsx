@@ -12,7 +12,7 @@ import { useParams } from "next/navigation";
 import { ARCHIVABLE_STATE_GROUPS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { TIssue } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import {
@@ -89,7 +89,7 @@ export const ProjectIssueQuickActions = observer(function ProjectIssueQuickActio
   const duplicateIssuePayload = omit(
     {
       ...issue,
-      name: `${issue.name} (copy)`,
+      name: translate("web.runtime.copy_name", { name: issue.name }),
       sourceIssueId: issue.id,
     },
     ["id"]

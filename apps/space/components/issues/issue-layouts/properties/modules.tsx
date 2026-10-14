@@ -28,7 +28,7 @@ export const IssueBlockModules = observer(function IssueBlockModules({ moduleIds
 
   return (
     <div className="relative flex h-full flex-wrap items-center gap-1">
-      <Tooltip label={`Modules: ${modulesString || "None"}`}>
+      <Tooltip label={translate("web.runtime.modules_value", { names: modulesString || translate("web.no_modules") })}>
         {modules.length <= 1 ? (
           <div
             key={modules?.[0]?.id}
@@ -44,9 +44,7 @@ export const IssueBlockModules = observer(function IssueBlockModules({ moduleIds
         ) : (
           <div className="flex h-full flex-shrink-0 cursor-default items-center rounded-md border border-strong px-2.5 py-1 text-11">
             <div className="flex items-center gap-1.5 text-secondary">
-              <div className="text-11">
-                {modules.length} {translate("web.title_modules")}
-              </div>
+              <div className="text-11">{translate("web.runtime.modules_count", { count: modules.length })}</div>
             </div>
           </div>
         )}

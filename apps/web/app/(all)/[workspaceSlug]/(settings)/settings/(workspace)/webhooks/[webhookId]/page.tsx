@@ -41,7 +41,9 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
   // }, [clearSecretKey, isCreated]);
   // derived values
   const isAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace.name} - ${translate("web.title_webhook")}` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? translate("web.runtime.page_title", { name: currentWorkspace.name, section: translate("web.title_webhook") })
+    : undefined;
 
   useSWR(
     isAdmin ? `WEBHOOK_DETAILS_${workspaceSlug}_${webhookId}` : null,

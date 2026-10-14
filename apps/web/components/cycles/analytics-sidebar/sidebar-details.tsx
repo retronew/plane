@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 import { MembersOutline, UserAltOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 // plane types
 import { EEstimateSystem } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import { TextArea } from "@makeplane/propel/components/text-area";
@@ -41,10 +41,10 @@ export const CycleSidebarDetails = observer(function CycleSidebarDetails(props: 
   const issueCount =
     isCompleted && !isEmpty(cycleDetails?.progress_snapshot)
       ? cycleDetails?.progress_snapshot?.total_issues === 0
-        ? `0 ${t("common.work_item")}`
+        ? translate("web.runtime.items_count", { count: 0 })
         : `${cycleDetails?.progress_snapshot?.completed_issues}/${cycleDetails?.progress_snapshot?.total_issues}`
       : cycleDetails?.total_issues === 0
-        ? `0 ${t("common.work_item")}`
+        ? translate("web.runtime.items_count", { count: 0 })
         : `${cycleDetails?.completed_issues}/${cycleDetails?.total_issues}`;
   const estimateType = areEstimateEnabled && currentActiveEstimateId && estimateById(currentActiveEstimateId);
   const cycleOwnerDetails = cycleDetails ? getUserDetails(cycleDetails.owned_by_id) : undefined;
@@ -60,10 +60,10 @@ export const CycleSidebarDetails = observer(function CycleSidebarDetails(props: 
   const issueEstimatePointCount =
     isCompleted && !isEmpty(cycleDetails?.progress_snapshot)
       ? cycleDetails?.progress_snapshot.total_issues === 0
-        ? `0 ${t("common.work_item")}`
+        ? translate("web.runtime.items_count", { count: 0 })
         : `${cycleDetails?.progress_snapshot.completed_estimate_points}/${cycleDetails?.progress_snapshot.total_estimate_points}`
       : cycleDetails?.total_issues === 0
-        ? `0 ${t("common.work_item")}`
+        ? translate("web.runtime.items_count", { count: 0 })
         : `${cycleDetails?.completed_estimate_points}/${cycleDetails?.total_estimate_points}`;
   return (
     <div className="flex w-full flex-col gap-5">

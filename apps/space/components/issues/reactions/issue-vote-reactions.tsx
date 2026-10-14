@@ -84,13 +84,13 @@ export const IssueVotes = observer(function IssueVotes(props: TIssueVotes) {
       <Tooltip
         label={
           allUpVotes.length > 0
-            ? allUpVotes
-                .map((r) => r.actor_details?.display_name)
-                .slice(0, VOTES_LIMIT)
-                .join(", ") +
-              (allUpVotes.length > VOTES_LIMIT
-                ? ` ${translate("web.and_n_more", { count: allUpVotes.length - VOTES_LIMIT })}`
-                : "")
+            ? translate("web.runtime.voter_names", {
+                names: allUpVotes
+                  .map((r) => r.actor_details?.display_name)
+                  .slice(0, VOTES_LIMIT)
+                  .join(", "),
+                count: Math.max(0, allUpVotes.length - VOTES_LIMIT),
+              })
             : translate("web.no_upvotes_yet")
         }
       >
@@ -121,13 +121,13 @@ export const IssueVotes = observer(function IssueVotes(props: TIssueVotes) {
       <Tooltip
         label={
           allDownVotes.length > 0
-            ? allDownVotes
-                .map((r) => r.actor_details.display_name)
-                .slice(0, VOTES_LIMIT)
-                .join(", ") +
-              (allDownVotes.length > VOTES_LIMIT
-                ? ` ${translate("web.and_n_more", { count: allDownVotes.length - VOTES_LIMIT })}`
-                : "")
+            ? translate("web.runtime.voter_names", {
+                names: allDownVotes
+                  .map((r) => r.actor_details.display_name)
+                  .slice(0, VOTES_LIMIT)
+                  .join(", "),
+                count: Math.max(0, allDownVotes.length - VOTES_LIMIT),
+              })
             : translate("web.no_downvotes_yet")
         }
       >

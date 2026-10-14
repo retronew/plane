@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -67,9 +68,10 @@ export const DeleteLabelModal = observer(function DeleteLabelModal(props: Props)
       title={translate("web.delete_label")}
       content={
         <>
-          {translate("web.are_you_sure_you_want_to_delete")}{" "}
-          <span className="font-medium text-primary">{data?.name}</span>? This will remove the label from all the work
-          item and from any views where the label is being filtered upon.
+          <Translation
+            translationKey="web.ui.delete_label_confirm"
+            components={{ name: <span className="font-medium text-primary">{data?.name}</span> }}
+          />
         </>
       }
     />

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 // plane imports
@@ -200,7 +201,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                         getOptionLabel={(option) => option.label}
                         showSearch={false}
                         pinSelected={false}
-                        emptyMessage="No available time for this date."
+                        emptyMessage={t("web.ui.no_time")}
                         header={
                           <div className="mb-2 flex h-9 w-full overflow-hidden rounded-xs">
                             <button
@@ -216,7 +217,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                                 }
                               )}
                             >
-                              AM
+                              <Translation translationKey="web.ui.am" />
                             </button>
                             <button
                               type="button"
@@ -231,7 +232,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                                 }
                               )}
                             >
-                              PM
+                              <Translation translationKey="web.ui.pm" />
                             </button>
                           </div>
                         }

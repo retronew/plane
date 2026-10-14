@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 export enum EFileError {
   INVALID_FILE_TYPE = "INVALID_FILE_TYPE",
   FILE_SIZE_TOO_LARGE = "FILE_SIZE_TOO_LARGE",
@@ -21,20 +23,17 @@ export const isFileValid = (args: TArgs): boolean => {
   const { acceptedMimeTypes, file, maxFileSize, onError } = args;
 
   if (!file) {
-    onError(EFileError.NO_FILE_SELECTED, "No file selected. Please select a file to upload.");
+    onError(EFileError.NO_FILE_SELECTED, translate("web.ui.file_not_selected"));
     return false;
   }
 
   if (!acceptedMimeTypes.includes(file.type)) {
-    onError(EFileError.INVALID_FILE_TYPE, "Invalid file type.");
+    onError(EFileError.INVALID_FILE_TYPE, translate("web.ui.invalid_file_type"));
     return false;
   }
 
   if (file.size > maxFileSize) {
-    onError(
-      EFileError.FILE_SIZE_TOO_LARGE,
-      `File size too large. Please select a file smaller than ${maxFileSize / 1024 / 1024}MB.`
-    );
+    onError(EFileError.FILE_SIZE_TOO_LARGE, translate("web.ui.file_size_limit", { size: maxFileSize / 1024 / 1024 }));
     return false;
   }
 

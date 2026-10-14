@@ -27,7 +27,7 @@ function LabelsSettingsPage() {
   const { workspaceUserInfo, allowPermissions } = useUserPermissions();
 
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} - ${translate("web.title_labels")}`
+    ? translate("web.runtime.page_title", { name: currentProjectDetails?.name, section: translate("web.title_labels") })
     : undefined;
 
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);

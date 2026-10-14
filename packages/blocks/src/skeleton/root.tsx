@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import React from "react";
 // helpers
 import { cn } from "@plane/utils";
@@ -14,9 +15,15 @@ type SkeletonProps = {
   ariaLabel?: string;
 };
 
-function SkeletonRoot({ children, className = "", ariaLabel = "Loading content" }: SkeletonProps) {
+function SkeletonRoot({ children, className = "", ariaLabel }: SkeletonProps) {
+  const { t } = useTranslation();
   return (
-    <div data-slot="skeleton" className={cn("animate-pulse", className)} role="status" aria-label={ariaLabel}>
+    <div
+      data-slot="skeleton"
+      className={cn("animate-pulse", className)}
+      role="status"
+      aria-label={ariaLabel ?? t("web.ui.loading_content")}
+    >
       {children}
     </div>
   );

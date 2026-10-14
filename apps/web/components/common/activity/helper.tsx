@@ -39,7 +39,7 @@ import {
 
 import { store } from "@/lib/store-context";
 import type { TProjectActivity } from "@plane/types";
-import { translate } from "@plane/i18n";
+import { translate, Translation } from "@plane/i18n";
 
 type ActivityIconMap = {
   [key: string]: FC<{ className?: string }>;
@@ -78,217 +78,98 @@ export const iconsMap: ActivityIconMap = {
   intake_view: IntakeOutline,
 };
 
+function projectMessage(key: string, value?: ReactNode) {
+  return (
+    <Translation
+      translationKey={`web.project_activity.${key}`}
+      components={{ value: <span className="font-medium text-primary">{value}</span> }}
+    />
+  );
+}
+
 export const messages = (activity: TProjectActivity): { message: string | ReactNode; customUserName?: string } => {
-  const activityType = activity.field;
-  const newValue = activity.new_value;
-  const oldValue = activity.old_value;
-  const verb = activity.verb;
+  const { field, new_value: newValue, old_value: oldValue, verb } = activity;
   const workspaceDetail = store.workspaceRoot.getWorkspaceById(activity.workspace);
-
-  const getBooleanActionText = (value: string | undefined) => {
-    if (value === "true") return "enabled";
-    if (value === "false") return "disabled";
-    return verb;
-  };
-
-  switch (activityType) {
-    case "priority":
-      return {
-        message: (
-          <>
-            set the priority to <span className="font-medium text-primary">{newValue || "none"}</span>
-          </>
-        ),
-      };
+  const value = newValue || oldValue;
+  switch (field) {
     case "archived_at":
       return {
-        message: newValue === "restore" ? translate("web.restored_the_project") : translate("web.archived_the_project"),
+        message: projectMessage(newValue === "restore" ? "restored" : "archived"),
         customUserName: newValue === "archive" ? "Plane" : undefined,
       };
+    case "priority":
+      return { message: projectMessage("priority", <Translation translationKey={newValue || "none"} />) };
     case "name":
-      return {
-        message: (
-          <>
-            renamed the project to <span className="font-medium text-primary">{newValue}</span>
-          </>
-        ),
-      };
+      return { message: projectMessage("name", newValue) };
     case "description":
-      return {
-        message: newValue
-          ? translate("web.updated_the_project_description")
-          : translate("web.removed_the_project_description"),
-      };
+      return { message: projectMessage(newValue ? "description_set" : "description_removed") };
     case "start_date":
-      return {
-        message: (
-          <>
-            {newValue ? (
-              <>
-                set the start date to <span className="font-medium text-primary">{newValue}</span>
-              </>
-            ) : (
-              translate("web.removed_the_start_date")
-            )}
-          </>
-        ),
-      };
     case "target_date":
-      return {
-        message: (
-          <>
-            {newValue ? (
-              <>
-                set the target date to <span className="font-medium text-primary">{newValue}</span>
-              </>
-            ) : (
-              translate("web.removed_the_target_date")
-            )}
-          </>
-        ),
-      };
+      return { message: projectMessage(`${field}_${newValue ? "set" : "removed"}`, newValue) };
     case "state":
-      return {
-        message: (
-          <>
-            set the state to <span className="font-medium text-primary">{newValue || "none"}</span>
-          </>
-        ),
-      };
+      return { message: projectMessage("state", newValue || <Translation translationKey="none" />) };
     case "estimate":
-      return {
-        message: (
-          <>
-            {newValue ? (
-              <>
-                set the estimate point to <span className="font-medium text-primary">{newValue}</span>
-              </>
-            ) : (
-              <>
-                removed the estimate point
-                {oldValue && (
-                  <>
-                    {" "}
-                    <span className="font-medium text-primary">{oldValue}</span>
-                  </>
-                )}
-              </>
-            )}
-          </>
-        ),
-      };
+      return { message: projectMessage(newValue ? "estimate_set" : "estimate_removed", value) };
     case "cycles":
-      return {
-        message: (
-          <>
-            <span>
-              {verb} this project {verb === "removed" ? "from" : "to"} the cycle{" "}
-            </span>
-            {verb !== "removed" ? (
-              <a
-                href={`/${workspaceDetail?.slug}/projects/${activity.project}/cycles/${activity.new_identifier}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex font-medium text-primary"
-              >
-                {activity.new_value}
-              </a>
-            ) : (
-              <span className="font-medium text-primary">{activity.old_value || translate("web.unknown_cycle")}</span>
-            )}
-          </>
-        ),
-      };
-    case "modules":
-      return {
-        message: (
-          <>
-            <span>
-              {verb} this project {verb === "removed" ? "from" : "to"} the module{" "}
-            </span>
-            <span className="font-medium text-primary">
-              {verb === "removed" ? oldValue : newValue || translate("web.unknown_module")}
-            </span>
-          </>
-        ),
-      };
+    case "modules": {
+      const removed = verb === "removed";
+      const name =
+        (removed ? oldValue : newValue) || translate(field === "cycles" ? "web.unknown_cycle" : "web.unknown_module");
+      const linkedName = removed ? (
+        name
+      ) : (
+        <a
+          href={`/${workspaceDetail?.slug}/projects/${activity.project}/${field}/${activity.new_identifier}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex font-medium text-primary"
+        >
+          {name}
+        </a>
+      );
+      return { message: projectMessage(`${field}_${removed ? "removed" : "added"}`, linkedName) };
+    }
     case "labels":
       return {
-        message: (
-          <>
-            {verb} the label{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || translate("web.untitled_label")}</span>
-          </>
+        message: projectMessage(
+          verb === "removed" ? "label_removed" : "label_added",
+          value || translate("web.untitled_label")
         ),
-      };
-    case "inbox":
-      return {
-        message: <>{newValue ? "enabled" : "disabled"} inbox</>,
       };
     case "page":
       return {
-        message: (
-          <>
-            {newValue ? "created" : "removed"} the project page{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || translate("web.untitled_page")}</span>
-          </>
-        ),
-      };
-    case "network":
-      return {
-        message: <>{newValue ? "enabled" : "disabled"} network access</>,
+        message: projectMessage(newValue ? "page_created" : "page_removed", value || translate("web.untitled_page")),
       };
     case "identifier":
-      return {
-        message: (
-          <>
-            updated project identifier to <span className="font-medium text-primary">{newValue || "none"}</span>
-          </>
-        ),
-      };
+      return { message: projectMessage("identifier", newValue || <Translation translationKey="none" />) };
     case "timezone":
+      return { message: projectMessage("timezone", newValue || <Translation translationKey="web.ui.default" />) };
+    default: {
+      const features: Record<string, string> = {
+        inbox: "inbox",
+        network: "network",
+        module_view: "module_view",
+        cycle_view: "cycle_view",
+        issue_views_view: "work_item_view",
+        page_view: "page_view",
+        intake_view: "intake_view",
+        is_project_updates_enabled: "project_updates",
+        is_epic_enabled: "epics",
+        is_workflow_enabled: "workflow",
+        is_time_tracking_enabled: "time_tracking",
+        is_issue_type_enabled: "work_item_types",
+      };
+      const feature = field ? features[field] : undefined;
+      if (!feature) return { message: projectMessage("updated") };
+      const enabled = field === "inbox" || field === "network" ? Boolean(newValue) : newValue === "true";
       return {
         message: (
-          <>
-            changed project timezone to <span className="font-medium text-primary">{newValue || "default"}</span>
-          </>
+          <Translation
+            translationKey={enabled ? "web.project_activity.enabled" : "web.project_activity.disabled"}
+            components={{ feature: <Translation translationKey={`web.project_activity.features.${feature}`} /> }}
+          />
         ),
       };
-    case "module_view":
-    case "cycle_view":
-    case "issue_views_view":
-    case "page_view":
-    case "intake_view":
-      return {
-        message: (
-          <>
-            {getBooleanActionText(newValue)} {activityType.replace(/_view$/, "").replace(/_/g, " ")} view
-          </>
-        ),
-      };
-    case "is_project_updates_enabled":
-      return {
-        message: <>{getBooleanActionText(newValue)} project updates</>,
-      };
-    case "is_epic_enabled":
-      return {
-        message: <>{getBooleanActionText(newValue)} epics</>,
-      };
-    case "is_workflow_enabled":
-      return {
-        message: <>{getBooleanActionText(newValue)} custom workflow</>,
-      };
-    case "is_time_tracking_enabled":
-      return {
-        message: <>{getBooleanActionText(newValue)} time tracking</>,
-      };
-    case "is_issue_type_enabled":
-      return {
-        message: <>{getBooleanActionText(newValue)} work item types</>,
-      };
-    default:
-      return {
-        message: `${verb} ${activityType?.replace(/_/g, " ")} `,
-      };
+    }
   }
 };

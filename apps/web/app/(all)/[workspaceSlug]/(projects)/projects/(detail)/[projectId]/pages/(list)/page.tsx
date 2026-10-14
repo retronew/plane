@@ -49,7 +49,9 @@ function ProjectPagesPage({ params }: Route.ComponentProps) {
   const { allowPermissions } = useUserPermissions();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - ${translate("web.title_pages")}` : undefined;
+  const pageTitle = project?.name
+    ? translate("web.runtime.page_title", { name: project?.name, section: translate("web.title_pages") })
+    : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const resolvedPath = resolvedTheme === "light" ? lightPagesAsset : darkPagesAsset;
   const pageType = getPageType(type);

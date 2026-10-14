@@ -8,7 +8,7 @@ import { useCallback, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams, usePathname } from "next/navigation";
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { TProjectAppliedDisplayFilterKeys, TProjectFilters } from "@plane/types";
 import { calculateTotalFilters } from "@plane/utils";
 // components
@@ -38,7 +38,10 @@ export const ProjectRoot = observer(function ProjectRoot() {
   } = useProjectFilter();
   // derived values
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace?.name} - ${t("workspace_projects.label", { count: 2 })}`
+    ? translate("web.runtime.page_title", {
+        name: currentWorkspace?.name,
+        section: t("workspace_projects.label", { count: 2 }),
+      })
     : undefined;
 
   const isArchived = pathname.includes("/archives");

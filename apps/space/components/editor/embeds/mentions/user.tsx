@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { observer } from "mobx-react";
 // helpers
 import { cn } from "@plane/utils";
@@ -26,7 +28,7 @@ export const EditorUserMention = observer(function EditorUserMention(props: Prop
   if (!userDetails) {
     return (
       <div className="not-prose inline rounded-sm bg-layer-1 px-1 py-0.5 text-tertiary no-underline">
-        @deactivated user
+        {translate("web.runtime.deactivated_mention")}
       </div>
     );
   }

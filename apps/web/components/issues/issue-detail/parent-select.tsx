@@ -8,7 +8,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { CloseOutline, EditOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -91,7 +91,11 @@ export const IssueParentSelect = observer(function IssueParentSelect(props: TIss
       >
         {issue.parent_id && parentIssue ? (
           <div className="flex items-center gap-1.5">
-            <Tooltip label={`Title: ${parentIssue.name}`} layout="stacked" disabled={isMobile}>
+            <Tooltip
+              label={translate("web.runtime.title_value", { name: parentIssue.name })}
+              layout="stacked"
+              disabled={isMobile}
+            >
               <Link href={workItemLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                 {parentIssue?.project_id && parentIssueProjectDetails && (
                   <IssueIdentifier

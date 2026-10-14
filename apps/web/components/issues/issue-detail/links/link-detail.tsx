@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { DeleteOutline, EditOutline, NewTabOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -117,7 +118,14 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
             <br />
             {createdByDetails && (
               <>
-                by {createdByDetails?.is_bot ? createdByDetails?.first_name + " Bot" : createdByDetails?.display_name}
+                <Translation
+                  translationKey="web.ui.created_by"
+                  values={{
+                    name: createdByDetails?.is_bot
+                      ? translate("web.ui.bot_name", { name: createdByDetails?.first_name ?? "" })
+                      : (createdByDetails?.display_name ?? ""),
+                  }}
+                />
               </>
             )}
           </p>

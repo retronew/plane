@@ -7,7 +7,7 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // plane types
 import { Button } from "@makeplane/propel/components/button";
 import type { TIssueLinkEditableFields, TIssueServiceType } from "@plane/types";
@@ -149,15 +149,9 @@ export const IssueLinkCreateUpdateModal = observer(function IssueLinkCreateUpdat
               stretch="auto"
               type="submit"
               loading={isSubmitting}
-              label={`${
-                preloadedData?.id
-                  ? isSubmitting
-                    ? t("common.updating")
-                    : t("common.update")
-                  : isSubmitting
-                    ? t("common.adding")
-                    : t("common.add")
-              } ${t("common.link")}`}
+              label={translate("web.runtime.link_submit", {
+                mode: preloadedData?.id ? (isSubmitting ? "updating" : "update") : isSubmitting ? "adding" : "add",
+              })}
             />
           </DialogActions>
         </form>

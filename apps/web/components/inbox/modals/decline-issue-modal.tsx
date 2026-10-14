@@ -4,9 +4,10 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React, { useState } from "react";
 // types
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 import type { TIssue } from "@plane/types";
 // ui
 import { ConfirmDialog } from "@plane/blocks/dialog";
@@ -56,11 +57,16 @@ export function DeclineIssueModal(props: Props) {
       // TODO: Need to translate the confirmation message
       content={
         <>
-          {translate("web.decline_work_item_confirm_prefix")}{" "}
-          <span className="font-medium break-words text-primary">
-            {projectDetails?.identifier}-{data?.sequence_id}
-          </span>
-          {""}? This action cannot be undone.
+          <Translation
+            translationKey="web.ui.decline_intake_confirm"
+            components={{
+              name: (
+                <span className="font-medium break-words text-primary">
+                  {projectDetails?.identifier}-{data?.sequence_id}
+                </span>
+              ),
+            }}
+          />
         </>
       }
       primaryButtonText={{

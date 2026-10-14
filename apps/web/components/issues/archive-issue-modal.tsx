@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 // i18n
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // types
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { setToast } from "@plane/blocks/toast";
@@ -72,7 +72,10 @@ export function ArchiveIssueModal(props: Props) {
       handleSubmit={handleArchiveIssue}
       isSubmitting={isArchiving}
       variant="primary"
-      title={`${t("issue.archive.label")} ${projectDetails?.identifier ?? ""} ${issue.sequence_id}`}
+      title={translate("web.runtime.archive_issue", {
+        identifier: projectDetails?.identifier ?? "",
+        sequence: issue.sequence_id,
+      })}
       content={t("issue.archive.confirm_message")}
       primaryButtonText={{ loading: t("common.archiving"), default: t("common.archive") }}
       secondaryButtonText={t("common.cancel")}

@@ -170,7 +170,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     ? !moduleTotalIssues || moduleTotalIssues === 0
       ? `0 work items`
       : moduleTotalIssues === moduleCompletedIssues
-        ? `${moduleTotalIssues} Work item${moduleTotalIssues > 1 ? `s` : ``}`
+        ? translate("web.runtime.items_count", { count: moduleTotalIssues })
         : `${moduleCompletedIssues}/${moduleTotalIssues} Work items`
     : `0 work items`;
 

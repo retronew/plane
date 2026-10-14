@@ -15,7 +15,7 @@ import { Select } from "../select/select";
 import type { SelectPaginationParams, SelectTooltip, SelectTriggerSize, SelectVariant } from "../select/types";
 import { splitSelectVariant } from "../select/utils";
 import { cn, getAvatarName } from "@plane/utils";
-import { translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 
 /** Minimal member shape the dropdown needs — the client maps its richer record down to this. */
 export type MemberOption = {
@@ -131,10 +131,15 @@ export type MemberSelectProps = MemberSelectCommonProps &
       }
   );
 
-function triggerLabel(selected: MemberOption[], showCountOnMultiple: boolean, placeholder?: string): string {
+function triggerLabel(
+  selected: MemberOption[],
+  showCountOnMultiple: boolean,
+  placeholder: string | undefined,
+  countLabel: string
+): string {
   if (selected.length === 0) return placeholder ?? "";
   if (selected.length === 1) return selected[0]?.display_name ?? "";
-  if (showCountOnMultiple) return `${selected.length} members`;
+  if (showCountOnMultiple) return countLabel;
   // Join-names variant: only the first few selected are resolved (the rest are count-only stubs), so list
   // those names and summarise the remainder rather than rendering blanks for the unresolved ids.
   const names = selected
@@ -155,6 +160,7 @@ function triggerLabel(selected: MemberOption[], showCountOnMultiple: boolean, pl
  * selection never materialises hundreds of avatar nodes.
  */
 export function MemberSelect(props: MemberSelectProps) {
+  const { t } = useTranslation();
   const {
     getValues,
     disabled = false,
@@ -167,7 +173,7 @@ export function MemberSelect(props: MemberSelectProps) {
     filterOption,
     testId,
     tabIndex,
-    suspendedLabel = "Suspended",
+    suspendedLabel = t("web.suspended"),
   } = props;
   const clearable = !props.multiple && !!props.clearable;
 
@@ -182,7 +188,7 @@ export function MemberSelect(props: MemberSelectProps) {
   // `search-input`'s box IS the trigger (no separate label), so `placeholder` doubles as its empty
   // text unless the caller sets a distinct `searchPlaceholder`.
   const searchPlaceholder =
-    searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? translate("web.search_members");
+    searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? t("web.search_members");
 
   // Only `avatar-group-*` maps its size onto the face — every other variant keeps the `xs` trigger face it
   // always had, so this fix doesn't reflow `pill-lg`/`select-lg`'s existing chrome. It's also not a Select
@@ -209,8 +215,8 @@ export function MemberSelect(props: MemberSelectProps) {
   const selectedIds = new Set(selectedList.map((member) => member.id));
 
   const clearLabel = !props.multiple
-    ? (props.clearLabel ?? (placeholder || translate("web.no_assignee")))
-    : translate("web.no_assignee");
+    ? (props.clearLabel ?? (placeholder || t("web.no_assignee")))
+    : t("web.no_assignee");
   const clearOption = useMemo<MemberOption>(
     () => ({ id: CLEAR_OPTION_ID, display_name: clearLabel, avatar_url: null }),
     [clearLabel]
@@ -270,7 +276,9 @@ export function MemberSelect(props: MemberSelectProps) {
       prependIcon={(members) =>
         members.length === 0 ? props.multiple ? <AssigneeOutline /> : <UserAltOutline /> : undefined
       }
-      label={(members) => triggerLabel(members, showCountOnMultiple, placeholder)}
+      label={(members) =>
+        triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))
+      }
       tooltip={tooltip}
     >
       {(members) => (
@@ -290,7 +298,7 @@ export function MemberSelect(props: MemberSelectProps) {
           )}
           {showLabel && (members.length > 0 || !!placeholder) && (
             <span className="min-w-0 grow truncate text-left">
-              {triggerLabel(members, showCountOnMultiple, placeholder)}
+              {triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))}
             </span>
           )}
         </>

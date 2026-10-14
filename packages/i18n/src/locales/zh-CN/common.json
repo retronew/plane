@@ -1,4 +1,11 @@
 {
+  "property_select": {
+    "search_states": "搜索状态…",
+    "search_modules": "搜索模块…",
+    "search_labels": "搜索标签…",
+    "projects_count": "{count} 个项目",
+    "modules_count": "{count} 个模块"
+  },
   "cloud_maintenance_message": {
     "we_are_working_on_this_if_you_need_immediate_assistance": "我们正在处理。如需紧急协助，",
     "reach_out_to_us": "请联系我们",

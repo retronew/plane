@@ -23,8 +23,9 @@ type Props = {
 const getDurationOption = (value: string | null) =>
   ANALYTICS_DURATION_FILTER_OPTIONS.find((option) => option.value === value) ?? null;
 
-function DurationDropdown({ placeholder = "Duration", onChange, value }: Props) {
-  useTranslation();
+function DurationDropdown({ placeholder: placeholderProp, onChange, value }: Props) {
+  const { t } = useTranslation();
+  const placeholder = placeholderProp ?? t("web.ui.duration");
 
   // derived values
   const selectedOption = getDurationOption(value);

@@ -20,7 +20,7 @@ import {
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 import { MODULE_STATUS, EUserPermissions, EUserPermissionsLevel, EEstimateSystem } from "@plane/constants";
 // plane types
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { ModuleStatusIcon } from "@plane/blocks/icons";
 import { setToast } from "@plane/blocks/toast";
 import type { ILinkDetails, IModule, ModuleLink } from "@plane/types";
@@ -360,7 +360,7 @@ export const ModuleAnalyticsSidebar = observer(function ModuleAnalyticsSidebar(p
                             onChangeEndDate(range.to ? renderFormattedPayloadDate(range.to) : null);
                             void handleDateChange(range.from ?? undefined, range.to ?? undefined);
                           }}
-                          placeholder={`${t("start_date")} - ${t("end_date")}`}
+                          placeholder={translate("web.runtime.date_range_placeholder")}
                           weekStartsOn={userProfile?.start_of_the_week}
                           disabled={!isEditingAllowed || isArchived}
                         />

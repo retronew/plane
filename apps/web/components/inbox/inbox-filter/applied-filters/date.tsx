@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { observer } from "mobx-react";
 import { PAST_DURATION_FILTER_OPTIONS } from "@plane/constants";
 import { CloseOutline } from "@makeplane/propel/icons";
@@ -29,7 +31,10 @@ export const InboxIssueAppliedFiltersDate = observer(function InboxIssueAppliedF
     if (currentDate) return currentDate;
     const dateSplit = date.split(";");
     return {
-      name: `${dateSplit[1].charAt(0).toUpperCase() + dateSplit[1].slice(1)} ${renderFormattedDate(dateSplit[0])}`,
+      name: translate("web.runtime.date_relation", {
+        relation: dateSplit[1],
+        date: renderFormattedDate(dateSplit[0]) ?? "",
+      }),
       value: date,
     };
   };

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 // react
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -65,7 +66,10 @@ export const useYjsSetup = ({ docId, serverUrl, authToken, onStateChange }: UseY
       url: serverUrl,
       onAuthenticationFailed: () => {
         if (isDisposedRef.current) return;
-        const error: CollaborationError = { type: "auth-failed", message: "Authentication failed" };
+        const error: CollaborationError = {
+          type: "auth-failed",
+          message: translate("web.ui.collaboration_auth_failed"),
+        };
         const newStage = { kind: "disconnected" as const, error };
         stageRef.current = newStage;
         setStage(newStage);
@@ -153,7 +157,9 @@ export const useYjsSetup = ({ docId, serverUrl, authToken, onStateChange }: UseY
         const error: CollaborationError = {
           type: "forced-close",
           code: closeCode || 0,
-          message: isManualDisconnect ? "Manually disconnected" : "Server forced connection close",
+          message: isManualDisconnect
+            ? translate("web.ui.collaboration_disconnected")
+            : translate("web.ui.collaboration_server_closed"),
         };
         const newStage = { kind: "disconnected" as const, error };
         stageRef.current = newStage;
@@ -175,7 +181,7 @@ export const useYjsSetup = ({ docId, serverUrl, authToken, onStateChange }: UseY
           // Exceeded max retry attempts
           const error: CollaborationError = {
             type: "max-retries",
-            message: `Failed to connect after ${DEFAULT_MAX_RETRIES} attempts`,
+            message: translate("web.ui.collaboration_retries_failed", { count: DEFAULT_MAX_RETRIES }),
           };
           const newStage = { kind: "disconnected" as const, error };
           stageRef.current = newStage;

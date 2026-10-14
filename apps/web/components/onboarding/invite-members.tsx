@@ -218,7 +218,7 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
       {email && !emailRegex.test(email) && (
         <div className="mx-8 my-1">
           <span className="text-13">🤥</span>{" "}
-          <span className="mt-1 text-11 text-danger-primary">That doesn{"'"}t look like an email address.</span>
+          <span className="mt-1 text-11 text-danger-primary">{translate("web.ui.invalid_email")}</span>
         </div>
       )}
     </div>
@@ -305,7 +305,7 @@ export function InviteMembers(props: Props) {
           <div className="mx-auto w-4/5 space-y-1 py-4 text-center">
             <h3 className="text-24 font-bold text-primary">{translate("web.invite_your_teammates")}</h3>
             <p className="font-medium text-placeholder">
-              {translate("web.work_in_plane_happens_best_with_your_team_invite_them_now")}
+              {translate("web.work_in_plane_happens_best_with_your_team_invite_them_now_to")}
             </p>
           </div>
           <form

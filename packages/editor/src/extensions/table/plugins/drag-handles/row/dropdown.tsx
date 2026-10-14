@@ -71,7 +71,9 @@ const DROPDOWN_ITEMS: {
   },
   {
     key: "delete",
-    label: "Delete",
+    get label() {
+      return translate("delete");
+    },
     icon: DeleteOutline,
     action: (editor) => editor.chain().focus().deleteRow().run(),
   },

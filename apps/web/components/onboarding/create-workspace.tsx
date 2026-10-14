@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
@@ -121,7 +122,9 @@ export const CreateWorkspace = observer(function CreateWorkspace(props: Props) {
           </Button>
           <div className="mx-auto mt-4 flex items-center sm:w-96">
             <hr className="w-full border-strong" />
-            <p className="mx-3 flex-shrink-0 text-center text-13 text-placeholder">or</p>
+            <p className="mx-3 flex-shrink-0 text-center text-13 text-placeholder">
+              <Translation translationKey="web.ui.or" />
+            </p>
             <hr className="w-full border-strong" />
           </div>
         </>

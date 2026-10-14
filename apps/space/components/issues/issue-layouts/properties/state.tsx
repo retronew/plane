@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { observer } from "mobx-react";
 // plane ui
 import { StateGroupIcon } from "@plane/blocks/icons";
@@ -37,7 +39,7 @@ export const IssueBlockState = observer(function IssueBlockState(props: Props) {
   if (!state) return null;
 
   return (
-    <Tooltip label={`State: ${state.name}`}>
+    <Tooltip label={translate("web.runtime.state_value", { name: state.name })}>
       <div
         className={cn("flex h-full w-full items-center justify-between gap-1 rounded-sm px-2.5 py-1 text-11", {
           "border-[0.5px] border-strong": shouldShowBorder,

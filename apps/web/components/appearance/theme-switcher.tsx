@@ -68,7 +68,7 @@ export const ThemeSwitcher = observer(function ThemeSwitcher(props: {
           },
           error: {
             title: t("toast.error"),
-            message: () => "Failed to update theme. Please try again.",
+            message: () => t("web.ui.theme_update_failed"),
           },
         });
         await updatePromise;

@@ -74,7 +74,7 @@ export function IntegrationCard({ integration }: Props) {
         setToast({
           type: "success",
           title: translate("toast.success"),
-          message: `${login}/${name} repository synced with the project successfully.`,
+          message: translate("web.ui.repository_synced", { repository: `${login}/${name}` }),
         });
         return undefined;
       })
@@ -97,7 +97,7 @@ export function IntegrationCard({ integration }: Props) {
               <img
                 src={integrationDetails[integration.integration_detail.provider].logo}
                 className="h-full w-full object-cover"
-                alt={`${integration.integration_detail.title} Logo`}
+                alt={translate("web.runtime.provider_logo", { name: integration.integration_detail.title })}
               />
             </div>
             <div>

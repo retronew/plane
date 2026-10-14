@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 
 import { DeleteOutline, EditOutline } from "@makeplane/propel/icons";
@@ -102,7 +103,16 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
         <p className="mt-0.5 flex items-center gap-1.5 stroke-[1.5] text-11 text-tertiary">
           {translate("web.added")} {calculateTimeAgo(link.created_at)}{" "}
           {createdByDetails && (
-            <>by {createdByDetails?.is_bot ? createdByDetails?.first_name + " Bot" : createdByDetails?.display_name}</>
+            <>
+              <Translation
+                translationKey="web.ui.created_by"
+                values={{
+                  name: createdByDetails?.is_bot
+                    ? translate("web.ui.bot_name", { name: createdByDetails?.first_name ?? "" })
+                    : (createdByDetails?.display_name ?? ""),
+                }}
+              />
+            </>
           )}
         </p>
       </div>

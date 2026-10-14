@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { useSelectContext } from "./context";
 import type { SelectValueProps } from "./types";
 
@@ -36,6 +38,7 @@ export function SelectValue<T>({ placeholder, children }: SelectValueProps<T>) {
 
   // Multi-select default: short summary (consumers wanting chips can pass a render-prop child).
   const labels = ctx.selected.map((o) => ctx.getOptionLabel(o));
-  const summary = labels.length <= 2 ? labels.join(", ") : `${labels.length} selected`;
+  const summary =
+    labels.length <= 2 ? labels.join(", ") : translate("web.runtime.selected_count", { count: labels.length });
   return <span className="truncate">{summary}</span>;
 }

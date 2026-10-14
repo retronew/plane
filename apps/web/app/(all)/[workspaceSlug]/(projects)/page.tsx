@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // components
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { AppHeader } from "@/components/core/app-header";
 import { ContentWrapper } from "@/components/core/content-wrapper";
 import { PageHead } from "@/components/core/page-title";
@@ -20,7 +20,9 @@ function WorkspaceDashboardPage() {
   const { currentWorkspace } = useWorkspace();
   const { t } = useTranslation();
   // derived values
-  const pageTitle = currentWorkspace?.name ? `${currentWorkspace?.name} - ${t("home.title")}` : undefined;
+  const pageTitle = currentWorkspace?.name
+    ? translate("web.runtime.page_title", { name: currentWorkspace?.name, section: t("home.title") })
+    : undefined;
 
   return (
     <>

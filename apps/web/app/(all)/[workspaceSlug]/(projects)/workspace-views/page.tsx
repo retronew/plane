@@ -26,7 +26,7 @@ function WorkspaceViewsPage() {
   const { t } = useTranslation();
   // derived values
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace?.name} - ${translate("web.title_all_views")}`
+    ? translate("web.runtime.page_title", { name: currentWorkspace?.name, section: translate("web.title_all_views") })
     : undefined;
 
   return (

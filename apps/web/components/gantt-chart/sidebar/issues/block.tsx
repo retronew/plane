@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane imports
 import type { IGanttBlock } from "@plane/types";
@@ -87,7 +88,7 @@ export const IssuesSidebarBlock = observer(function IssuesSidebarBlock(props: Pr
           {duration && (
             <div className="flex-shrink-0 text-13 text-secondary">
               <span>
-                {duration} day{duration > 1 ? "s" : ""}
+                <Translation translationKey="web.ui.duration_days" values={{ count: duration }} />
               </span>
             </div>
           )}

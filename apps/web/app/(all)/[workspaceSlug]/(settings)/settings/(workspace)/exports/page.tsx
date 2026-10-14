@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { cn } from "@plane/utils";
 // components
 import { NotAuthorizedView } from "@/components/auth-screens/not-authorized-view";
@@ -32,7 +32,10 @@ function ExportsPage() {
     EUserPermissionsLevel.WORKSPACE
   );
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace.name} - ${t("workspace_settings.settings.exports.title")}`
+    ? translate("web.runtime.page_title", {
+        name: currentWorkspace.name,
+        section: t("workspace_settings.settings.exports.title"),
+      })
     : undefined;
 
   // if user is not authorized to view this page

@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
 import { PROJECT_ERROR_MESSAGES, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, Translation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { TDeDupeIssue, TIssue } from "@plane/types";
 // ui
@@ -116,14 +116,17 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
       isOpen={isOpen}
       title={t("entity.delete.label", { entity: isEpic ? t("common.epic") : t("common.work_item") })}
       content={
-        <>
-          {/* TODO: Translate here */}
-          {`Are you sure you want to delete ${isEpic ? "epic" : "work item"} `}
-          <span className="font-medium break-words text-primary">
-            {projectDetails?.identifier}-{issue?.sequence_id}
-          </span>
-          {` ? All of the data related to the ${isEpic ? "epic" : "work item"} will be permanently removed. This action cannot be undone.`}
-        </>
+        <Translation
+          translationKey="web.runtime.delete_issue_confirmation"
+          values={{ type: isEpic ? "epic" : "issue" }}
+          components={{
+            identifier: (
+              <span className="font-medium break-words text-primary">
+                {projectDetails?.identifier}-{issue?.sequence_id}
+              </span>
+            ),
+          }}
+        />
       }
     />
   );

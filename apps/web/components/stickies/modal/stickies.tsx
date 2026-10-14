@@ -56,7 +56,7 @@ export const Stickies = observer(function Stickies(props: TProps) {
                 <div
                   className={`h-4 w-4 animate-spin rounded-full border-2 border-accent-strong border-t-transparent`}
                   role="status"
-                  aria-label="loading"
+                  aria-label={translate("loading")}
                 />
               </div>
             )}

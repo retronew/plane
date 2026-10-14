@@ -96,13 +96,13 @@ export const usePageOperations = (
           setToast({
             type: "success",
             title: translate("toast.success"),
-            message: `The page has been marked ${changedPageType} and moved to the ${changedPageType} section.`,
+            message: translate("web.ui.page_access_changed", { access: changedPageType }),
           });
         } catch (_error) {
           setToast({
             type: "error",
             title: translate("toast.error"),
-            message: `The page couldn't be marked ${changedPageType}. Please try again.`,
+            message: translate("web.ui.page_access_failed", { access: changedPageType }),
           });
         }
       },

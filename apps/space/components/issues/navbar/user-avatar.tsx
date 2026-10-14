@@ -55,9 +55,9 @@ export const UserAvatar = observer(function UserAvatar() {
   const { queryParam } = queryParamGenerator({ peekId, board, state, priority, labels });
   const displayName =
     currentUser?.display_name ||
-    `${currentUser?.first_name} ${currentUser?.first_name}` ||
+    [currentUser?.first_name, currentUser?.last_name].filter(Boolean).join(" ") ||
     currentUser?.email ||
-    "User";
+    translate("unknown_user");
 
   return (
     <div className="relative mr-2">

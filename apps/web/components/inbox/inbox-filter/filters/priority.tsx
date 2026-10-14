@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { ISSUE_PRIORITIES } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { PriorityIcon } from "@plane/blocks/icons";
 import type { TIssuePriorities } from "@plane/types";
 // plane constants
@@ -38,7 +38,7 @@ export const FilterPriority = observer(function FilterPriority(props: Props) {
   return (
     <>
       <FilterHeader
-        title={`${t("common.priority")}${appliedFiltersCount > 0 ? ` (${appliedFiltersCount})` : ""}`}
+        title={translate("web.runtime.filter_priority", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
       />

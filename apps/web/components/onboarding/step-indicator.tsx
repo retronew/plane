@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React from "react";
 // helpers
 import { cn } from "@plane/utils";
@@ -43,7 +44,7 @@ export function OnboardingStepIndicator({ currentStep, totalSteps }: OnboardingS
   return (
     <div className="flex flex-col justify-center">
       <div className="text-13 font-medium text-tertiary">
-        {currentStep} of {totalSteps} steps
+        <Translation translationKey="web.ui.step_progress" values={{ current: currentStep, total: totalSteps }} />
       </div>
       <div className="mx-1 my-0.5 flex w-40 items-center justify-center lg:w-52">{renderIndicators()}</div>
     </div>

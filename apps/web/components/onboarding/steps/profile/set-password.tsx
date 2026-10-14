@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React, { useState, useCallback, useMemo } from "react";
 import { ChevronDownOutline, LockOutline } from "@makeplane/propel/icons";
 import { PasswordInput, PasswordStrengthIndicator } from "@plane/blocks/auth";
@@ -127,7 +128,11 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
             {hasPasswordMismatch && (
               <p className="mt-1 text-11 text-danger-primary">{translate("web.passwords_do_not_match")}</p>
             )}
-            {isPasswordValid && <p className="mt-1 text-11 text-success-primary">✓ Passwords match</p>}
+            {isPasswordValid && (
+              <p className="mt-1 text-11 text-success-primary">
+                <Translation translationKey="web.ui.passwords_match" />
+              </p>
+            )}
           </div>
         </div>
       </div>

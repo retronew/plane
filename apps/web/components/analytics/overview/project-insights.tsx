@@ -53,7 +53,7 @@ const ProjectInsights = observer(function ProjectInsights() {
 
   return (
     <AnalyticsSectionWrapper
-      title={`${t("workspace_analytics.project_insights")}`}
+      title={t("workspace_analytics.project_insights")}
       subtitle={selectedDurationLabel}
       className="md:col-span-3"
     >

@@ -110,7 +110,7 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
       <AuthContainer>
         <AuthHeaderBase
           header={t("web.no_authentication_methods_available")}
-          subHeader="Please contact your administrator to enable authentication for your instance."
+          subHeader={t("web.ui.enable_authentication")}
         />
       </AuthContainer>
     );

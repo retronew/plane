@@ -40,10 +40,7 @@ export const UserLoggedIn = observer(function UserLoggedIn() {
             </div>
           </div>
           <h1 className="mt-8 text-18 font-semibold md:mt-12 md:text-24">{translate("web.nice_just_one_more_step")}</h1>
-          <p className="mt-2 text-13 md:mt-4 md:text-14">
-            {translate("web.enter_the_public_share_url_or_link_of_the_view_or_page_you_a")}
-            {"'"}s address bar.
-          </p>
+          <p className="mt-2 text-13 md:mt-4 md:text-14">{translate("web.runtime.enter_public_url")}</p>
         </div>
       </div>
       <PoweredBy />

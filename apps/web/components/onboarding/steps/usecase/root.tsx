@@ -98,7 +98,7 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
           name="use_case"
           rules={{
             required: translate("web.please_select_at_least_one_option"),
-            validate: (value) => (value && value.length > 0) || "Please select at least one option",
+            validate: (value) => (value && value.length > 0) || translate("web.ui.select_one_option"),
           }}
           render={({ field: { value, onChange } }) => (
             <div className="flex flex-col gap-3">

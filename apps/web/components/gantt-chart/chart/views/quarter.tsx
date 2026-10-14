@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
+import { formatGanttMonth } from "../../views/format-labels";
 import { observer } from "mobx-react";
 // plane utils
 import { cn } from "@plane/utils";
@@ -16,6 +18,7 @@ import { groupMonthsToQuarters } from "../../views";
 import { translate } from "@plane/i18n";
 
 export const QuarterChartView = observer(function QuarterChartView(_props: any) {
+  const { t, currentLocale } = useTranslation();
   const { currentViewData, renderView } = useTimeLineChartStore();
   const monthBlocks: IMonthBlock[] = renderView;
 
@@ -44,7 +47,10 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                     left: `${SIDEBAR_WIDTH}px`,
                   }}
                 >
-                  {quarterBlock?.title}
+                  {t("web.ui.quarter_year", {
+                    year: String(quarterBlock.year),
+                    quarter: quarterBlock.quarterNumber + 1,
+                  })}
                   {quarterBlock.today && (
                     <span className={cn("ml-2 rounded-sm bg-accent-primary px-1 text-9 font-medium text-on-color")}>
                       {translate("web.current")}
@@ -52,7 +58,7 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                   )}
                 </div>
                 <div className="sticky px-3 py-2 text-11 whitespace-nowrap text-placeholder capitalize">
-                  {quarterBlock.shortTitle}
+                  {t("web.ui.quarter_number", { count: quarterBlock.quarterNumber + 1 })}
                 </div>
               </div>
               {/** Months Sub title */}
@@ -74,7 +80,7 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                           "rounded-lg bg-accent-primary px-2 text-on-color": monthBlock.today,
                         })}
                       >
-                        {monthBlock.monthData.shortTitle}
+                        {formatGanttMonth(monthBlock.year, monthBlock.month, currentLocale, false)}
                       </span>
                     </div>
                   </div>

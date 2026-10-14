@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { InfoOutline } from "@makeplane/propel/icons";
 // plane imports
 import { EEstimateSystem, ESTIMATE_SYSTEMS } from "@plane/constants";
@@ -84,8 +85,10 @@ export function EstimateCreateStageOne(props: TEstimateCreateStageOne) {
             >
               <p className="text-14 font-medium">{t("project_settings.estimates.create.custom")}</p>
               <p className="text-11 text-tertiary">
-                {/* TODO: Translate here */}
-                {t("web.add_your_own")} <span className="lowercase">{currentEstimateSystem.name}</span> from scratch.
+                <Translation
+                  translationKey="web.ui.custom_estimate"
+                  components={{ system: <span className="lowercase">{currentEstimateSystem.name}</span> }}
+                />
               </p>
             </button>
           </div>

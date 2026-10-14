@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -74,9 +75,10 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
         title={t("web.delete_state")}
         content={
           <>
-            {t("web.are_you_sure_you_want_to_delete_state")}{" "}
-            <span className="font-medium text-primary">{state?.name}</span>? All of the data related to the state will
-            be permanently removed. This action cannot be undone.
+            <Translation
+              translationKey="web.ui.delete_state_confirm"
+              components={{ name: <span className="font-medium text-primary">{state?.name}</span> }}
+            />
           </>
         }
       />

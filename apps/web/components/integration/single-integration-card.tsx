@@ -93,7 +93,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
         setToast({
           type: "success",
           title: translate("web.deleted_successfully"),
-          message: `${integration.title} integration deleted successfully.`,
+          message: translate("web.ui.integration_deleted", { name: integration.title }),
         });
         return undefined;
       })
@@ -103,7 +103,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
         setToast({
           type: "error",
           title: translate("toast.error"),
-          message: `${integration.title} integration could not be deleted. Please try again.`,
+          message: translate("web.ui.integration_delete_failed", { name: integration.title }),
         });
       });
   };
@@ -119,7 +119,7 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
           <img
             src={integrationDetails[integration.provider].logo}
             className="h-full w-full object-cover"
-            alt={`${integration.title} Logo`}
+            alt={translate("web.runtime.provider_logo", { name: integration.title })}
           />
         </div>
         <div>

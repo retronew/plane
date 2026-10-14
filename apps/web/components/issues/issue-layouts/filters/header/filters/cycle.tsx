@@ -64,7 +64,7 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
   return (
     <>
       <FilterHeader
-        title={`Cycle ${appliedFiltersCount > 0 ? ` (${appliedFiltersCount})` : ""}`}
+        title={translate("web.runtime.filter_cycle", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
       />

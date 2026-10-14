@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { DownloadOutline } from "@makeplane/propel/icons";
 import type { IExportData } from "@plane/types";
 import { getDate, getFileURL, renderFormattedDate } from "@plane/utils";
@@ -55,7 +56,11 @@ export const useExportColumns = () => {
     {
       key: "Exported projects",
       content: translate("web.exported_projects"),
-      tdRender: (rowData: RowData) => <div className="text-13">{rowData.project.length} project(s)</div>,
+      tdRender: (rowData: RowData) => (
+        <div className="text-13">
+          <Translation translationKey="web.ui.project_count" values={{ count: rowData.project.length }} />
+        </div>
+      ),
     },
     {
       key: "Format",

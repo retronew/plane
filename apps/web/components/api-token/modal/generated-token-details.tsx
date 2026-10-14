@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 
 import { setToast } from "@plane/blocks/toast";
@@ -40,7 +40,7 @@ export function GeneratedTokenDetails(props: Props) {
     copyTextToClipboard(token).then(() =>
       setToast({
         type: "success",
-        title: `${t("success")}!`,
+        title: t("success"),
         message: t("workspace_settings.token_copied"),
       })
     );
@@ -72,7 +72,10 @@ export function GeneratedTokenDetails(props: Props) {
       <DialogActions>
         <DialogInfo>
           {tokenDetails.expired_at
-            ? `Expires ${renderFormattedDate(tokenDetails.expired_at)} at ${renderFormattedTime(tokenDetails.expired_at)}`
+            ? translate("web.runtime.expires_at", {
+                date: renderFormattedDate(tokenDetails.expired_at) ?? "",
+                time: renderFormattedTime(tokenDetails.expired_at) ?? "",
+              })
             : t("web.never_expires")}
         </DialogInfo>
         <Button variant="secondary" size="sm" stretch="auto" label={t("close")} onClick={handleClose} />

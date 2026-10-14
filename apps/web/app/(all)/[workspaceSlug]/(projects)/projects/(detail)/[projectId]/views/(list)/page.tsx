@@ -43,7 +43,9 @@ function ProjectViewsPage({ params }: Route.ComponentProps) {
   const { allowPermissions } = useUserPermissions();
   // derived values
   const project = getProjectById(projectId);
-  const pageTitle = project?.name ? `${project?.name} - ${translate("web.title_views")}` : undefined;
+  const pageTitle = project?.name
+    ? translate("web.runtime.page_title", { name: project?.name, section: translate("web.title_views") })
+    : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
   const resolvedPath = resolvedTheme === "light" ? lightViewsAsset : darkViewsAsset;
 

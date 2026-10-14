@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import type { TInboxIssueStatus } from "@plane/types";
 import { EInboxIssueStatus } from "@plane/types";
 
@@ -83,19 +85,27 @@ export const PAST_DURATION_FILTER_OPTIONS: {
   value: string;
 }[] = [
   {
-    name: "Today",
+    get name() {
+      return translate("web.runtime.today");
+    },
     value: EPastDurationFilters.TODAY,
   },
   {
-    name: "Yesterday",
+    get name() {
+      return translate("web.runtime.yesterday");
+    },
     value: EPastDurationFilters.YESTERDAY,
   },
   {
-    name: "Last 7 days",
+    get name() {
+      return translate("web.runtime.last_7_days");
+    },
     value: EPastDurationFilters.LAST_7_DAYS,
   },
   {
-    name: "Last 30 days",
+    get name() {
+      return translate("web.runtime.last_30_days");
+    },
     value: EPastDurationFilters.LAST_30_DAYS,
   },
 ];

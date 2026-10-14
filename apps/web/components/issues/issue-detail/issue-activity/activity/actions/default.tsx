@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane imports
 import { WorkItemsOutline } from "@makeplane/propel/icons";
@@ -38,14 +39,22 @@ export const IssueDefaultActivity = observer(function IssueDefaultActivity(props
         {activity.verb === "created" ? (
           source && source !== EInboxIssueSource.IN_APP ? (
             <span>
-              created the work item via{" "}
-              <span className="font-medium">{capitalizeFirstLetter(source.toLowerCase() || "")}</span>.
+              <Translation
+                translationKey="web.ui.created_via"
+                components={{
+                  source: <span className="font-medium">{capitalizeFirstLetter(source.toLowerCase() || "")}</span>,
+                }}
+              />
             </span>
           ) : (
-            <span> created the work item.</span>
+            <span>
+              <Translation translationKey="web.ui.created_work_item" />
+            </span>
           )
         ) : (
-          <span> deleted a work item.</span>
+          <span>
+            <Translation translationKey="web.ui.deleted_work_item" />
+          </span>
         )}
       </>
     </IssueActivityBlockComponent>

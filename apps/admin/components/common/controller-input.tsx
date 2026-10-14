@@ -11,7 +11,7 @@ import { Controller } from "react-hook-form";
 import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 
 // Generic over the form's values because react-hook-form's Control is invariant: its
 // `_options.validate` narrows `name` to a keyof union, so `Control<any>` no longer
@@ -53,7 +53,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
         <Controller
           control={control}
           name={name}
-          rules={{ required: required ? `${label} is required.` : false }}
+          rules={{ required: required ? translate("web.runtime.field_required", { label }) : false }}
           render={({ field: { value, onChange, ref } }) => (
             <Input
               size="lg"

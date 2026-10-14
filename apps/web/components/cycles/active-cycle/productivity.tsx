@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { ICycle, TCycleEstimateType } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
 // assets
@@ -64,9 +64,18 @@ export const ActiveCycleProductivity = observer(function ActiveCycleProductivity
             <div className="h-full w-full px-2">
               <div className="flex items-center justify-end gap-4 py-1 text-11 text-tertiary">
                 {estimateType === "points" ? (
-                  <span>{`Pending points - ${cycle.backlog_estimate_points + cycle.unstarted_estimate_points + cycle.started_estimate_points}`}</span>
+                  <span>
+                    {translate("web.runtime.pending_points", {
+                      count:
+                        cycle.backlog_estimate_points + cycle.unstarted_estimate_points + cycle.started_estimate_points,
+                    })}
+                  </span>
                 ) : (
-                  <span>{`Pending work items - ${cycle.backlog_issues + cycle.unstarted_issues + cycle.started_issues}`}</span>
+                  <span>
+                    {translate("web.runtime.pending_work_items", {
+                      count: cycle.backlog_issues + cycle.unstarted_issues + cycle.started_issues,
+                    })}
+                  </span>
                 )}
               </div>
 

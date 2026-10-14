@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { Links, Meta, Outlet, Scripts } from "react-router";
 // assets
 import appleTouchIcon from "@/app/assets/favicon/apple-touch-icon.png?url";
@@ -23,9 +24,6 @@ import "@fontsource-variable/inter";
 import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import "@fontsource/material-symbols-rounded";
 import "@fontsource/ibm-plex-mono";
-
-const APP_TITLE = "Plane Publish | Make your Plane boards public with one-click";
-const APP_DESCRIPTION = "Plane Publish is a customer feedback management tool built on top of plane.so";
 
 export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", sizes: "180x180", href: appleTouchIcon },
@@ -70,10 +68,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export const meta: Route.MetaFunction = () => [
-  { title: APP_TITLE },
-  { name: "description", content: APP_DESCRIPTION },
-  { property: "og:title", content: APP_TITLE },
-  { property: "og:description", content: APP_DESCRIPTION },
+  { title: translate("web.runtime.public_site_title") },
+  { name: "description", content: translate("web.runtime.public_site_description") },
+  { property: "og:title", content: translate("web.runtime.public_site_title") },
+  { property: "og:description", content: translate("web.runtime.public_site_description") },
   { property: "og:url", content: "https://sites.plane.so/" },
   {
     name: "keywords",

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { AlignLeftOutline } from "@makeplane/propel/icons";
 // hooks
@@ -30,9 +31,16 @@ export const IssueDescriptionActivity = observer(function IssueDescriptionActivi
       ends={ends}
     >
       <>
-        updated the description
-        {showIssue ? ` of ` : ``}
-        {showIssue && <IssueLink activityId={activityId} />}.
+        <Translation
+          translationKey="web.activity.description"
+          components={{
+            issue: showIssue ? (
+              <IssueLink activityId={activityId} />
+            ) : (
+              <Translation translationKey="web.this_work_item" />
+            ),
+          }}
+        />
       </>
     </IssueActivityBlockComponent>
   );

@@ -59,13 +59,14 @@ export type CycleSelectProps = {
  * an `onChange` that persists the chosen id — this block owns only the cycle-specific markup.
  */
 export function CycleSelect(props: CycleSelectProps) {
+  const { t } = useTranslation();
   const {
     getValues,
     value,
     onChange,
     disabled = false,
     placeholder = "",
-    searchPlaceholder = "Search cycles...",
+    searchPlaceholder = t("web.search_for_a_cycle"),
     onClose,
     variant,
     className,
@@ -76,7 +77,6 @@ export function CycleSelect(props: CycleSelectProps) {
     tabIndex,
   } = props;
   // translation
-  const { t } = useTranslation();
   // derived values
 
   const resolvedClearLabel = clearLabel ?? (placeholder || t("cycle.no_cycle"));

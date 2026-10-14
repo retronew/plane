@@ -255,10 +255,16 @@ export function CreateApiTokenForm(props: Props) {
                 <span className="text-caption-sm-regular text-placeholder">
                   {expiredAt === "custom"
                     ? customDate
-                      ? `Expires ${renderFormattedDate(customDateFormatted ?? "")} at ${renderFormattedTime(customDateFormatted ?? "")}`
+                      ? translate("web.runtime.expires_at", {
+                          date: renderFormattedDate(customDateFormatted ?? "") ?? "",
+                          time: renderFormattedTime(customDateFormatted ?? "") ?? "",
+                        })
                       : null
                     : expiredAt
-                      ? `Expires ${renderFormattedDate(expiryDate ?? "")} at ${renderFormattedTime(expiryDate ?? "")}`
+                      ? translate("web.runtime.expires_at", {
+                          date: renderFormattedDate(expiryDate ?? "") ?? "",
+                          time: renderFormattedTime(expiryDate ?? "") ?? "",
+                        })
                       : null}
                 </span>
               )}

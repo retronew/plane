@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
+
 import Link from "next/link";
 // plane packages
 import type { TAdminAuthErrorInfo } from "@plane/constants";
@@ -20,13 +22,20 @@ export enum EErrorAlertType {
 type TTranslate = (key: string, params?: Record<string, unknown>) => string;
 
 const signInLink = (t: TTranslate, messageKey: string) => (
-  <div>
-    {t(messageKey)}&nbsp;
-    <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
-      {t("admin.auth_errors.sign_in")}
-    </Link>
-    &nbsp;{t("admin.auth_errors.now")}
-  </div>
+  <Translation
+    translationKey={
+      messageKey === "admin.auth_errors.admin_user_already_exist.message"
+        ? "web.runtime.auth_admin_existing"
+        : "web.runtime.auth_admin_missing"
+    }
+    components={{
+      link: (
+        <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href="/admin">
+          {t("admin.auth_errors.sign_in")}
+        </Link>
+      ),
+    }}
+  />
 );
 
 const errorCodeMessages: {

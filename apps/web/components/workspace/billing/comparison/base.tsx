@@ -15,7 +15,7 @@ import type { TPlanePlans } from "@/components/workspace/billing/comparison/plan
 import { ComingSoonBadge, PLANE_PLANS, PLANS_LIST } from "@/components/workspace/billing/comparison/plans";
 // local imports
 import { PlanFeatureDetail } from "./feature-detail";
-import { translate } from "@plane/i18n";
+import { translate, useTranslation } from "@plane/i18n";
 
 type TPlansComparisonBaseProps = {
   planeDetails: React.ReactNode;
@@ -33,6 +33,7 @@ export const shouldRenderPlanDetail = (planKey: TPlanePlans) => {
 };
 
 export const PlansComparisonBase = observer(function PlansComparisonBase(props: TPlansComparisonBaseProps) {
+  useTranslation();
   const { planeDetails, isSelfManaged, isCompareAllFeaturesSectionOpen, setIsCompareAllFeaturesSectionOpen } = props;
   // plan details
   const { planDetails, planHighlights, planComparison } = PLANE_PLANS;

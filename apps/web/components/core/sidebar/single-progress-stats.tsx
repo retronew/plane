@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React from "react";
 
 type TSingleProgressStatsProps = {
@@ -29,7 +30,9 @@ export function SingleProgressStats({ title, completed, total, onClick, selected
             {isNaN(Math.round((completed / total) * 100)) ? "0" : Math.round((completed / total) * 100)}%
           </span>
         </div>
-        <span>of {total}</span>
+        <span>
+          <Translation translationKey="web.ui.progress_total" values={{ total: total }} />
+        </span>
       </div>
     </div>
   );

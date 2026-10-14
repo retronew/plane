@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 // icons
@@ -12,7 +13,7 @@ import { RocketOutline } from "@makeplane/propel/icons";
 import { Combobox, ComboboxItem, ComboboxList, ComboboxSearch } from "@makeplane/propel/components/combobox";
 import { Dialog, DialogContent, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 // i18n
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 // types
 import type { ISearchIssueResponse } from "@plane/types";
 // ui
@@ -128,13 +129,10 @@ export function ParentIssuesListModal({
             <div className="vertical-scrollbar scrollbar-md max-h-80 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain">
               {searchTerm !== "" && (
                 <h5 className="mx-2 text-13 text-secondary">
-                  {translate("web.search_results_for")}{" "}
-                  <span className="text-primary">
-                    {'"'}
-                    {searchTerm}
-                    {'"'}
-                  </span>{" "}
-                  in project:
+                  <Translation
+                    translationKey="web.ui.project_search_results"
+                    components={{ query: <span className="text-primary">{searchTerm}</span> }}
+                  />
                 </h5>
               )}
 

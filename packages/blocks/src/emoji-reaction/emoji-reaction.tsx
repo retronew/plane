@@ -55,6 +55,7 @@ const EmojiReaction = React.forwardRef(function EmojiReaction(
   }: EmojiReactionProps,
   ref: React.ForwardedRef<HTMLButtonElement>
 ) {
+  const { t } = useTranslation();
   const handleClick = () => {
     onReactionClick?.(emoji);
   };
@@ -66,11 +67,12 @@ const EmojiReaction = React.forwardRef(function EmojiReaction(
     const displayUsers = users.slice(0, 5);
     const remainingCount = users.length - displayUsers.length;
 
-    return [
-      stringToEmoji(emoji),
-      `${displayUsers.join(", ")}${remainingCount > 0 ? ` and ${remainingCount} more` : ""}`,
-    ].join(": ");
-  }, [emoji, users]);
+    return t("web.runtime.reaction_users", {
+      emoji: stringToEmoji(emoji),
+      names: displayUsers.join(", "),
+      count: remainingCount,
+    });
+  }, [emoji, users, t]);
 
   const button = (
     <button

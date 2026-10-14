@@ -23,7 +23,7 @@ import {
 } from "@makeplane/propel/icons";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { ICycle, IIssueLabel, IModule, TIssue, TIssuePriorities } from "@plane/types";
 import { EIssueServiceType, EUserPermissions } from "@plane/types";
@@ -94,7 +94,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         setToast({
           type: "error",
           title: t("toast.error"),
-          message: `${isEpic ? "Epic" : "Work item"} could not be updated. Please try again.`,
+          message: translate("web.runtime.update_entity_failed", { type: isEpic ? "epic" : "issue" }),
         });
       });
     },
@@ -327,7 +327,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
+            message: translate("web.runtime.update_entity_failed", { type: entityDetails.is_epic ? "epic" : "issue" }),
           });
         }
       },
@@ -359,7 +359,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
+            message: translate("web.runtime.update_entity_failed", { type: entityDetails.is_epic ? "epic" : "issue" }),
           });
         }
       },

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import type { RefObject } from "react";
 import { useState } from "react";
 import { observer } from "mobx-react";
@@ -124,7 +125,7 @@ export const BaseGanttSidebar = observer(function BaseGanttSidebar<T extends IBa
                             {duration && (
                               <div className="flex-shrink-0 text-13 text-secondary">
                                 <span>
-                                  {duration} day{duration > 1 ? "s" : ""}
+                                  <Translation translationKey="web.ui.duration_days" values={{ count: duration }} />
                                 </span>
                               </div>
                             )}

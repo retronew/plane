@@ -40,7 +40,9 @@ export const ButtonAvatars = observer(function ButtonAvatars(props: AvatarProps)
         <AvatarGroup
           size="xs"
           label={resolvedMembers.map((member) => member.member__display_name).join(", ")}
-          overflowTooltip={showTooltip ? undefined : `${resolvedMembers.length} total`}
+          overflowTooltip={
+            showTooltip ? undefined : translate("web.runtime.members_count", { count: resolvedMembers.length ?? 0 })
+          }
         >
           {resolvedMembers.map((member) => (
             <Avatar

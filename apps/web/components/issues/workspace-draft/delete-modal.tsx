@@ -72,7 +72,7 @@ export function WorkspaceDraftIssueDeleteIssueModal(props: Props) {
       await onSubmit();
       setToast({
         type: "success",
-        title: `${t("success")}!`,
+        title: t("success"),
         message: t("workspace_draft_issues.toasts.deleted.success"),
       });
     } catch (errors) {

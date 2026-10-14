@@ -43,7 +43,7 @@ export const ReadonlyLabels = observer(function ReadonlyLabels(props: TReadonlyL
       {labels && (
         <>
           <Tooltip
-            label={`Labels: ${labels.map((l) => l?.name).join(", ")}`}
+            label={translate("web.runtime.labels_value", { labels: labels.map((l) => l?.name).join(", ") })}
             layout="stacked"
             disabled={labels.length === 0 || isMobile}
           >

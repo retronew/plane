@@ -23,7 +23,7 @@ export const GeneralProfileSettings = observer(function GeneralProfileSettings()
 
   return (
     <>
-      <PageHead title={`${t("profile.label")} - ${t("general_settings")}`} />
+      <PageHead title={t("web.runtime.profile_settings_title")} />
       <GeneralProfileSettingsForm user={currentUser} profile={userProfile.data} />
       <div className="mt-8">
         <ProfileSSOLink currentEmail={currentUser.email} />

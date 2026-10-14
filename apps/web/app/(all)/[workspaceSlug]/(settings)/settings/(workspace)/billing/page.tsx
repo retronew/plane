@@ -25,7 +25,10 @@ function BillingSettingsPage() {
   // derived values
   const canPerformWorkspaceAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace.name} - ${translate("web.title_billing_plans")}`
+    ? translate("web.runtime.page_title", {
+        name: currentWorkspace.name,
+        section: translate("web.title_billing_plans"),
+      })
     : undefined;
 
   if (workspaceUserInfo && !canPerformWorkspaceAdminActions) {

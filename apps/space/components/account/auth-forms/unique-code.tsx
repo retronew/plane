@@ -149,7 +149,7 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
             disabled={isRequestNewCodeDisabled}
           >
             {resendTimerCode > 0
-              ? `Resend in ${resendTimerCode}s`
+              ? translate("web.runtime.resend_countdown", { seconds: resendTimerCode })
               : isRequestingNewCode
                 ? translate("web.requesting_new_code")
                 : translate("web.resend")}

@@ -25,7 +25,7 @@ export const IssueBlockCycle = observer(function IssueBlockCycle({ cycleId, shou
   const cycle = getCycleById(cycleId);
 
   return (
-    <Tooltip label={`Cycle: ${cycle?.name ?? "No Cycle"}`}>
+    <Tooltip label={translate("web.runtime.cycle_value", { name: cycle?.name ?? translate("web.no_cycle") })}>
       <div
         className={cn(
           "flex h-full w-full items-center justify-between gap-1 rounded-sm px-2.5 py-1 text-11 duration-300 focus:outline-none",

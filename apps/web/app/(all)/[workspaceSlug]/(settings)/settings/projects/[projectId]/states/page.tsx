@@ -30,7 +30,7 @@ function StatesSettingsPage({ params }: Route.ComponentProps) {
 
   // derived values
   const pageTitle = currentProjectDetails?.name
-    ? `${currentProjectDetails?.name} - ${translate("web.title_states")}`
+    ? translate("web.runtime.page_title", { name: currentProjectDetails?.name, section: translate("web.title_states") })
     : undefined;
   // derived values
   const canPerformProjectMemberActions = allowPermissions(

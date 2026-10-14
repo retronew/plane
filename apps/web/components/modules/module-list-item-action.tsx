@@ -11,7 +11,7 @@ import { CalendarOutline, UserAltOutline } from "@makeplane/propel/icons";
 // Plane imports
 import { MODULE_STATUS, EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IModule } from "@plane/types";
@@ -149,7 +149,7 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
           });
         }}
         mergeDates
-        placeholder={`${t("start_date")} - ${t("end_date")}`}
+        placeholder={translate("web.runtime.date_range_placeholder")}
         weekStartsOn={userProfile?.start_of_the_week}
         disabled={isDisabled}
         icon={renderIcon ? undefined : <CalendarOutline aria-hidden="true" />}

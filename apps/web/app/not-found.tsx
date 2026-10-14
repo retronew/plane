@@ -24,7 +24,7 @@ function PageNotFound() {
       <div className="grid h-full place-items-center p-4">
         <div className="space-y-8 text-center">
           <div className="relative mx-auto h-60 w-60 lg:h-80 lg:w-80">
-            <img src={Image404} className="h-full w-full object-contain" alt="404- Page not found" />
+            <img src={Image404} className="h-full w-full object-contain" alt={translate("web.page_not_found_title")} />
           </div>
           <div className="space-y-2">
             <h3 className="text-16 font-semibold">{translate("web.oops_something_went_wrong")}</h3>

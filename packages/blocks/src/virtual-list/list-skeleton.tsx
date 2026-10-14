@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import { cn } from "@plane/utils";
 import { Skeleton } from "../skeleton/root";
 
@@ -24,8 +25,9 @@ type VirtualListSkeletonProps = {
  * generic spinner.
  */
 export function VirtualListSkeleton({ rows = 3, rowHeight = 52, className }: VirtualListSkeletonProps) {
+  const { t } = useTranslation();
   return (
-    <Skeleton ariaLabel="Loading more rows" className={cn("flex w-full flex-col gap-2", className)}>
+    <Skeleton ariaLabel={t("web.ui.loading_rows")} className={cn("flex w-full flex-col gap-2", className)}>
       {Array.from({ length: Math.max(1, rows) }).map((_, index) => (
         // oxlint-disable-next-line react/no-array-index-key -- static, identical placeholder rows
         <Skeleton.Item key={index} height={`${rowHeight}px`} width="100%" className="rounded-md" />

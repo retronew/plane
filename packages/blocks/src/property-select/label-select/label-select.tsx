@@ -61,13 +61,14 @@ function LabelDot({ color }: { color: string }) {
  * an `onChange` that persists the chosen ids — this block owns only the label-specific markup.
  */
 export function LabelSelect(props: LabelSelectProps) {
+  const { t } = useTranslation();
   const {
     getValues,
     value,
     onChange,
     disabled = false,
     placeholder = "",
-    searchPlaceholder = "Search labels...",
+    searchPlaceholder = t("property_select.search_labels"),
     onClose,
     createLabel,
     className,
@@ -78,7 +79,6 @@ export function LabelSelect(props: LabelSelectProps) {
   } = props;
 
   const { variant } = props;
-  const { t } = useTranslation();
   const isSelectKind = ["select", "select-ghost"].includes(splitSelectVariant(variant).variant);
 
   const handleLabelCreated = (id: string) => {

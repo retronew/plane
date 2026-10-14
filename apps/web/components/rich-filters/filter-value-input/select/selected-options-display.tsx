@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation, translate } from "@plane/i18n";
 import React from "react";
 // plane imports
 import type { SingleOrArray, IFilterOption, TFilterValue } from "@plane/types";
@@ -34,7 +35,11 @@ export function SelectedOptionsDisplay<V extends TFilterValue>(props: TSelectedO
 
   // When no options are found but we have a fallback text
   if (options.length === 0) {
-    return <span className="text-placeholder">{fallbackText ?? `${selectedArray.length} option(s) selected`}</span>;
+    return (
+      <span className="text-placeholder">
+        {fallbackText ?? translate("web.runtime.selected_count", { count: selectedArray.length })}
+      </span>
+    );
   }
 
   return (
@@ -55,7 +60,7 @@ export function SelectedOptionsDisplay<V extends TFilterValue>(props: TSelectedO
       {remainingCount > 0 && (
         // Was a Headless UI `Transition show appear` doing nothing but a fade-in on mount (Ruling 36).
         <span className="ml-1 shrink-0 animate-fade-in whitespace-nowrap text-tertiary motion-reduce:animate-none">
-          +{remainingCount} more
+          <Translation translationKey="web.ui.more_count" values={{ count: remainingCount }} />
         </span>
       )}
     </div>

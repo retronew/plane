@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation, translate } from "@plane/i18n";
 import { ChatOutline, MailOutline } from "@makeplane/propel/icons";
 import { EProductSubscriptionEnum } from "@plane/types";
 // plane imports
@@ -62,7 +63,7 @@ export function ComingSoonBadge({ className }: { className?: string }) {
         className
       )}
     >
-      COMING SOON
+      <Translation translationKey="web.ui.coming_soon" />
     </span>
   );
 }
@@ -72,11 +73,17 @@ export const PLANS_LIST: TPlanePlans[] = ["free", "one", "pro", "business", "ent
 export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   {
     id: "project-work-tracking",
-    title: "Project + work tracking",
+    get title() {
+      return translate("web.plan_features.project_work_tracking");
+    },
     features: [
       {
-        title: "Projects",
-        description: "Add projects to house work items, cycles, and modules.",
+        get title() {
+          return translate("web.plan_features.projects");
+        },
+        get description() {
+          return translate("web.plan_features.add_projects_to_house_work_items_cycles_and_modules");
+        },
         cloud: {
           free: true,
           one: true,
@@ -86,8 +93,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Work items",
-        description: "Add work via work items, set properties for tracking, and add to\ncycles or modules.",
+        get title() {
+          return translate("web.plan_features.work_items");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.add_work_via_work_items_set_properties_for_tracking_and_add_to_cycles_or_modules"
+          );
+        },
         cloud: {
           free: true,
           one: true,
@@ -97,8 +110,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Comments",
-        description: "Respond to work items, @mention members, and brainstorm\ntogether without leaving Plane.",
+        get title() {
+          return translate("web.plan_features.comments");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.respond_to_work_items_mention_members_and_brainstorm_together_without_leaving_plane"
+          );
+        },
         cloud: {
           free: true,
           one: true,
@@ -108,8 +127,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Cycles",
-        description: "Track work in timeboxes with differing frequency.",
+        get title() {
+          return translate("web.plan_features.cycles");
+        },
+        get description() {
+          return translate("web.plan_features.track_work_in_timeboxes_with_differing_frequency");
+        },
         cloud: {
           free: true,
           one: true,
@@ -119,8 +142,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Modules",
-        description: "Group replicable work in modules with their own\nleads.",
+        get title() {
+          return translate("web.plan_features.modules");
+        },
+        get description() {
+          return translate("web.plan_features.group_replicable_work_in_modules_with_their_own_leads");
+        },
         cloud: {
           free: true,
           one: true,
@@ -130,9 +157,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Intake",
-        description:
-          "See suggestions and feedback from viewers and\nguests before you decide to add them to your\nproject.",
+        get title() {
+          return translate("web.plan_features.intake");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.see_suggestions_and_feedback_from_viewers_and_guests_before_you_decide_to_add_them_to_your"
+          );
+        },
         cloud: {
           free: true,
           one: true,
@@ -142,57 +174,99 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Estimates",
-        description: "Measure effort in points in a system that works for\nyou.",
+        get title() {
+          return translate("web.plan_features.estimates");
+        },
+        get description() {
+          return translate("web.plan_features.measure_effort_in_points_in_a_system_that_works_for_you");
+        },
         cloud: {
-          free: "Basic",
-          one: "Basic",
-          pro: "Advanced",
-          business: "Advanced",
-          enterprise: "Advanced",
+          get free() {
+            return translate("web.plan_features.basic");
+          },
+          get one() {
+            return translate("web.plan_features.basic");
+          },
+          get pro() {
+            return translate("web.plan_features.advanced");
+          },
+          get business() {
+            return translate("web.plan_features.advanced");
+          },
+          get enterprise() {
+            return translate("web.plan_features.advanced");
+          },
         },
       },
     ],
   },
   {
     id: "project-work-management",
-    title: "Project + work management",
+    get title() {
+      return translate("web.plan_features.project_work_management");
+    },
     features: [
       {
-        title: "Bulk Ops",
-        description: "Add several work items to cycles or modules, transfer\nthem, or edit their properties.",
+        get title() {
+          return translate("web.plan_features.bulk_ops");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.add_several_work_items_to_cycles_or_modules_transfer_them_or_edit_their_properties"
+          );
+        },
         cloud: {
           free: false,
-          one: "Limited props",
-          pro: "All props",
+          get one() {
+            return translate("web.plan_features.limited_props");
+          },
+          get pro() {
+            return translate("web.plan_features.all_props");
+          },
           business: (
             <span className="flex flex-col items-end gap-1 lg:items-center">
               <ComingSoonBadge />
-              Work item transfers and conversions
+              <Translation translationKey="web.ui.work_item_transfers" />
             </span>
           ),
           enterprise: (
             <span className="flex flex-col items-end gap-1 lg:items-center">
               <ComingSoonBadge />
-              Work item transfers and conversions
+              <Translation translationKey="web.ui.work_item_transfers" />
             </span>
           ),
         },
       },
       {
-        title: "Time Tracking + Worklogs",
-        description: "Track time per work item, see aggregated reports, and\nfilter by need.",
+        get title() {
+          return translate("web.plan_features.time_tracking_worklogs");
+        },
+        get description() {
+          return translate("web.plan_features.track_time_per_work_item_see_aggregated_reports_and_filter_by_need");
+        },
         cloud: {
           free: false,
-          one: "Basic",
-          pro: "Historical timesheets",
-          business: "Historical timesheets\nand approvals",
-          enterprise: "Historical timesheets\nand approvals",
+          get one() {
+            return translate("web.plan_features.basic");
+          },
+          get pro() {
+            return translate("web.plan_features.historical_timesheets");
+          },
+          get business() {
+            return translate("web.plan_features.historical_timesheets_and_approvals");
+          },
+          get enterprise() {
+            return translate("web.plan_features.historical_timesheets_and_approvals");
+          },
         },
       },
       {
-        title: "Active Cycles",
-        description: "See all running cycles across all projects, or soon, in\na single project.",
+        get title() {
+          return translate("web.plan_features.active_cycles");
+        },
+        get description() {
+          return translate("web.plan_features.see_all_running_cycles_across_all_projects_or_soon_in_a_single_project");
+        },
         cloud: {
           free: false,
           one: true,
@@ -202,8 +276,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Work item Types",
-        description: "Create your own work item types with your own\nproperties.",
+        get title() {
+          return translate("web.plan_features.work_item_types");
+        },
+        get description() {
+          return translate("web.plan_features.create_your_own_work_item_types_with_your_own_properties");
+        },
         cloud: {
           free: false,
           one: false,
@@ -213,42 +291,33 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Custom Properties",
-        description: "Create your own properties and apply them to your\nworkspace or project.",
+        get title() {
+          return translate("web.plan_features.custom_properties");
+        },
+        get description() {
+          return translate("web.plan_features.create_your_own_properties_and_apply_them_to_your_workspace_or_project");
+        },
         cloud: {
           free: false,
           one: false,
-          pro: "Project-level\ncustom properties",
-          business: "Workspace-level\nproperties and roll-ups",
-          enterprise: "Workspace-level\nproperties and roll-ups",
+          get pro() {
+            return translate("web.plan_features.project_level_custom_properties");
+          },
+          get business() {
+            return translate("web.plan_features.workspace_level_properties_and_roll_ups");
+          },
+          get enterprise() {
+            return translate("web.plan_features.workspace_level_properties_and_roll_ups");
+          },
         },
       },
       {
-        title: "Dependencies in Gantt",
-        description: "Adjust timelines for dependent work items visually on\nour Gantt layout.",
-        cloud: {
-          free: false,
-          one: false,
-          pro: true,
-          business: true,
-          enterprise: true,
+        get title() {
+          return translate("web.plan_features.dependencies_in_gantt");
         },
-      },
-      {
-        title: "Work item Transfers",
-        description: "Move a work item from a project or a cycle to\nanother.",
-        cloud: {
-          free: false,
-          one: false,
-          pro: true,
-          business: true,
-          enterprise: true,
+        get description() {
+          return translate("web.plan_features.adjust_timelines_for_dependent_work_items_visually_on_our_gantt_layout");
         },
-      },
-      {
-        title: "Auto-transfer Cycle Work items",
-        description:
-          "Transfer incomplete work items from a completed cycle\nto the next cycle or to the default project state. ",
         cloud: {
           free: false,
           one: false,
@@ -258,8 +327,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Epics",
-        description: "Organize long-term work in epics that house work items,\ncycles, and modules.",
+        get title() {
+          return translate("web.plan_features.work_item_transfers");
+        },
+        get description() {
+          return translate("web.plan_features.move_a_work_item_from_a_project_or_a_cycle_to_another");
+        },
         cloud: {
           free: false,
           one: false,
@@ -269,8 +342,46 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Initiatives",
-        description: "Create initiatives to roll up several epics.",
+        get title() {
+          return translate("web.plan_features.auto_transfer_cycle_work_items");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.transfer_incomplete_work_items_from_a_completed_cycle_to_the_next_cycle_or_to_the_default_"
+          );
+        },
+        cloud: {
+          free: false,
+          one: false,
+          pro: true,
+          business: true,
+          enterprise: true,
+        },
+      },
+      {
+        get title() {
+          return translate("web.plan_features.epics");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.organize_long_term_work_in_epics_that_house_work_items_cycles_and_modules"
+          );
+        },
+        cloud: {
+          free: false,
+          one: false,
+          pro: true,
+          business: true,
+          enterprise: true,
+        },
+      },
+      {
+        get title() {
+          return translate("web.plan_features.initiatives");
+        },
+        get description() {
+          return translate("web.plan_features.create_initiatives_to_roll_up_several_epics");
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -281,9 +392,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Checkpoints",
-        description:
-          "Add markers to Projects, Epics and Initiatives to keep your\nteam on track and report on progress.",
+        get title() {
+          return translate("web.plan_features.checkpoints");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.add_markers_to_projects_epics_and_initiatives_to_keep_your_team_on_track_and_report_on_pro"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -294,8 +410,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Module Overview",
-        description: "Like Cycle Overviews, see relevant details and\nprogress charts for each module.",
+        get title() {
+          return translate("web.plan_features.module_overview");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.like_cycle_overviews_see_relevant_details_and_progress_charts_for_each_module"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -305,14 +427,26 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Auto-assignment In Modules",
-        description: "Choose assignment rules for work items in a\nmodule including Linear, Round Robin, or Capacity.",
+        get title() {
+          return translate("web.plan_features.auto_assignment_in_modules");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.choose_assignment_rules_for_work_items_in_a_module_including_linear_round_robin_or_capacit"
+          );
+        },
         cloud: {
           free: false,
           one: false,
-          pro: "Linear",
-          business: "Round-robin and Capacity",
-          enterprise: "Round-robin and Capacity",
+          get pro() {
+            return translate("web.plan_features.linear");
+          },
+          get business() {
+            return translate("web.plan_features.round_robin_and_capacity");
+          },
+          get enterprise() {
+            return translate("web.plan_features.round_robin_and_capacity");
+          },
         },
       },
       // {
@@ -328,9 +462,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       //   },
       // },
       {
-        title: "Public, Private, and Secret projects",
-        description:
-          "Public projects are visible and accessible to\neveryone. Private ones are visible but need approval\nto join. Secret projects aren't visible or accessible.",
+        get title() {
+          return translate("web.plan_features.public_private_and_secret_projects");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.public_projects_are_visible_and_accessible_to_everyone_private_ones_are_visible_but_need_a"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -340,9 +479,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "State Of Projects",
-        description:
-          "See all projects laid across states that highlight\nthose that need attention and those on track.",
+        get title() {
+          return translate("web.plan_features.state_of_projects");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.see_all_projects_laid_across_states_that_highlight_those_that_need_attention_and_those_on_"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -365,9 +509,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       //   },
       // },
       {
-        title: "Pre-defined work item Templates",
-        description:
-          "Choose from our available work item templates that\ncustomize work item types and properties for several\nuse cases.",
+        get title() {
+          return translate("web.plan_features.pre_defined_work_item_templates");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.choose_from_our_available_work_item_templates_that_customize_work_item_types_and_propertie"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -378,8 +527,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Teamspace Cycles",
-        description: "See multiple cycles in multiple projects at once.",
+        get title() {
+          return translate("web.plan_features.teamspace_cycles");
+        },
+        get description() {
+          return translate("web.plan_features.see_multiple_cycles_in_multiple_projects_at_once");
+        },
         cloud: {
           free: false,
           one: false,
@@ -389,8 +542,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Project Templates",
-        description: "Save states, workflows, automation, and other project\nsettings into templates.",
+        get title() {
+          return translate("web.plan_features.project_templates");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.save_states_workflows_automation_and_other_project_settings_into_templates"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -400,8 +559,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Baselines And Deviations",
-        description: "Declare baselines for how your projects progress\nand zoom in on deviations.",
+        get title() {
+          return translate("web.plan_features.baselines_and_deviations");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.declare_baselines_for_how_your_projects_progress_and_zoom_in_on_deviations"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -411,8 +576,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Scheduled Comms",
-        description: "Schedule reports, notifications, and messages to\nthird-party tools.",
+        get title() {
+          return translate("web.plan_features.scheduled_comms");
+        },
+        get description() {
+          return translate("web.plan_features.schedule_reports_notifications_and_messages_to_third_party_tools");
+        },
         cloud: {
           free: false,
           one: false,
@@ -422,8 +591,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Intake Assignees",
-        description: "Assign approved Intake work items to a member by\ndefault.",
+        get title() {
+          return translate("web.plan_features.intake_assignees");
+        },
+        get description() {
+          return translate("web.plan_features.assign_approved_intake_work_items_to_a_member_by_default");
+        },
         cloud: {
           free: false,
           one: false,
@@ -433,8 +606,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Custom SLAs",
-        description: "Set SLA matrices for time-sensitive work items.",
+        get title() {
+          return translate("web.plan_features.custom_slas");
+        },
+        get description() {
+          return translate("web.plan_features.set_sla_matrices_for_time_sensitive_work_items");
+        },
         cloud: {
           free: false,
           one: false,
@@ -444,8 +621,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Intake Forms",
-        description: "Take Intake work items from externally accessible web\nforms.",
+        get title() {
+          return translate("web.plan_features.intake_forms");
+        },
+        get description() {
+          return translate("web.plan_features.take_intake_work_items_from_externally_accessible_web_forms");
+        },
         cloud: {
           free: false,
           one: false,
@@ -455,8 +636,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Emails For Intake",
-        description: "Get an email address for reporting work items\ndirectly into a project's Intake.",
+        get title() {
+          return translate("web.plan_features.emails_for_intake");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.get_an_email_address_for_reporting_work_items_directly_into_a_project_s_intake"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -470,12 +657,19 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "visualization",
-    title: "Visualization",
+    get title() {
+      return translate("web.plan_features.visualization");
+    },
     features: [
       {
-        title: "Layouts",
-        description:
-          "Choose from the List, the Board, the Calendar, the\nGantt, or the Spreadsheet layout for your work items.",
+        get title() {
+          return translate("web.plan_features.layouts");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.choose_from_the_list_the_board_the_calendar_the_gantt_or_the_spreadsheet_layout_for_your_w"
+          );
+        },
         cloud: {
           free: true,
           one: true,
@@ -485,8 +679,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Views",
-        description: "Save sort, filter, and display options on a layout to a\nview.",
+        get title() {
+          return translate("web.plan_features.views");
+        },
+        get description() {
+          return translate("web.plan_features.save_sort_filter_and_display_options_on_a_layout_to_a_view");
+        },
         cloud: {
           free: true,
           one: true,
@@ -496,8 +694,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Shared Views",
-        description: "Choose a few members to share a view with.",
+        get title() {
+          return translate("web.plan_features.shared_views");
+        },
+        get description() {
+          return translate("web.plan_features.choose_a_few_members_to_share_a_view_with");
+        },
         cloud: {
           free: false,
           one: false,
@@ -507,8 +709,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Publish Views",
-        description: "Put a view on the Internet and let your customers\ninteract with them.",
+        get title() {
+          return translate("web.plan_features.publish_views");
+        },
+        get description() {
+          return translate("web.plan_features.put_a_view_on_the_internet_and_let_your_customers_interact_with_them");
+        },
         cloud: {
           free: false,
           one: false,
@@ -518,8 +724,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Dashboards and Widgets",
-        description: "Create your own dashboards with custom widgets\nand data types.",
+        get title() {
+          return translate("web.plan_features.dashboards_and_widgets");
+        },
+        get description() {
+          return translate("web.plan_features.create_your_own_dashboards_with_custom_widgets_and_data_types");
+        },
         cloud: {
           free: false,
           one: false,
@@ -532,12 +742,19 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "analytics-reports",
-    title: "Analytics + reports",
+    get title() {
+      return translate("web.plan_features.analytics_reports");
+    },
     features: [
       {
-        title: "Progress Charts",
-        description:
-          "Track progress in cycles, modules, and overviews\nthroughout Plane without switching to dashboards\nor Analytics.",
+        get title() {
+          return translate("web.plan_features.progress_charts");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.track_progress_in_cycles_modules_and_overviews_throughout_plane_without_switching_to_dashb"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -547,8 +764,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Cycle Reports",
-        description: "Get on-demand cycle reports during and after a\ncycle. Revisit reports anytime from permalinks.",
+        get title() {
+          return translate("web.plan_features.cycle_reports");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.get_on_demand_cycle_reports_during_and_after_a_cycle_revisit_reports_anytime_from_permalin"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -558,8 +781,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Insights",
-        description: "Hindsight, On-demand insights, Foresights.",
+        get title() {
+          return translate("web.plan_features.insights");
+        },
+        get description() {
+          return translate("web.plan_features.hindsight_on_demand_insights_foresights");
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -582,8 +809,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       //   },
       // },
       {
-        title: "Advanced Pages Analytics",
-        description: "See who's viewing, sharing, and commenting on\nyour pages along with other useful info.",
+        get title() {
+          return translate("web.plan_features.advanced_pages_analytics");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.see_who_s_viewing_sharing_and_commenting_on_your_pages_along_with_other_useful_info"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -594,8 +827,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Custom Reports",
-        description: "Generate reports by any dimension and metric\nacross your project or workspace.",
+        get title() {
+          return translate("web.plan_features.custom_reports");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.generate_reports_by_any_dimension_and_metric_across_your_project_or_workspace"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -609,11 +848,15 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "navigation",
-    title: "Navigation",
+    get title() {
+      return translate("web.plan_features.navigation");
+    },
     features: [
       {
         title: "Power K",
-        description: "Access a keyboard-first gateway to almost anything\nin Plane.",
+        get description() {
+          return translate("web.plan_features.access_a_keyboard_first_gateway_to_almost_anything_in_plane");
+        },
         cloud: {
           free: true,
           one: true,
@@ -656,8 +899,11 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       // },
       {
         title: "PQL",
-        description:
-          "Write Plane Query Language in search with support\nfor Boolean operators. Soon, you can write natural\nlanguage queries.",
+        get description() {
+          return translate(
+            "web.plan_features.write_plane_query_language_in_search_with_support_for_boolean_operators_soon_you_can_write"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -670,52 +916,98 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "workspace-user-management",
-    title: "Workspace and user management",
+    get title() {
+      return translate("web.plan_features.workspace_and_user_management");
+    },
     features: [
       {
-        title: "Member limit",
-        description: "Number of seats that can use project and work management features",
-        selfHostedDescription: "Number of users that our standard infra supports\nIncrease infra to get more users",
+        get title() {
+          return translate("web.plan_features.member_limit");
+        },
+        get description() {
+          return translate("web.plan_features.number_of_seats_that_can_use_project_and_work_management_features");
+        },
+        get selfHostedDescription() {
+          return translate(
+            "web.plan_features.number_of_users_that_our_standard_infra_supports_increase_infra_to_get_more_users"
+          );
+        },
         cloud: {
           free: "12",
           one: "",
-          pro: "Unlimited",
-          business: "Unlimited",
-          enterprise: "Unlimited",
+          get pro() {
+            return translate("web.plan_features.unlimited");
+          },
+          get business() {
+            return translate("web.plan_features.unlimited");
+          },
+          get enterprise() {
+            return translate("web.plan_features.unlimited");
+          },
         },
         "self-hosted": {
           free: "~50",
           one: "~50",
           pro: "~200",
           business: "~200",
-          enterprise: "Unlimited",
+          get enterprise() {
+            return translate("web.plan_features.unlimited");
+          },
         },
       },
       {
-        title: "Roles",
-        description: "Choose from one of four pre-defined roles or create\ncustom ones with RBAC.",
+        get title() {
+          return translate("web.plan_features.roles");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.choose_from_one_of_four_pre_defined_roles_or_create_custom_ones_with_rbac"
+          );
+        },
         cloud: {
-          free: "Basic",
-          one: "Basic",
-          pro: "Pre-defined roles",
+          get free() {
+            return translate("web.plan_features.basic");
+          },
+          get one() {
+            return translate("web.plan_features.basic");
+          },
+          get pro() {
+            return translate("web.plan_features.pre_defined_roles");
+          },
           business: "RBAC",
           enterprise: "GAC",
         },
       },
       {
-        title: "Guests",
-        description: "Let some users see everything or just their work items in\na project.",
+        get title() {
+          return translate("web.plan_features.guests");
+        },
+        get description() {
+          return translate("web.plan_features.let_some_users_see_everything_or_just_their_work_items_in_a_project");
+        },
         cloud: {
           free: false,
-          one: "5 per paid member",
-          pro: "5 per paid member",
-          business: "5 per paid member",
-          enterprise: "5 per paid member",
+          get one() {
+            return translate("web.plan_features.5_per_paid_member");
+          },
+          get pro() {
+            return translate("web.plan_features.5_per_paid_member");
+          },
+          get business() {
+            return translate("web.plan_features.5_per_paid_member");
+          },
+          get enterprise() {
+            return translate("web.plan_features.5_per_paid_member");
+          },
         },
       },
       {
-        title: "Approvals",
-        description: "Set workspace, project, and work item type approvals to\ndesignated admins.",
+        get title() {
+          return translate("web.plan_features.approvals");
+        },
+        get description() {
+          return translate("web.plan_features.set_workspace_project_and_work_item_type_approvals_to_designated_admins");
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -726,8 +1018,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Admin Interface",
-        description: "Get an admin overview to manage workspace and\nproject settings.",
+        get title() {
+          return translate("web.plan_features.admin_interface");
+        },
+        get description() {
+          return translate("web.plan_features.get_an_admin_overview_to_manage_workspace_and_project_settings");
+        },
         cloud: {
           free: false,
           one: false,
@@ -737,8 +1033,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Workspace Activity Logs",
-        description: "See filterable activity logs for your entire\nworkspace.",
+        get title() {
+          return translate("web.plan_features.workspace_activity_logs");
+        },
+        get description() {
+          return translate("web.plan_features.see_filterable_activity_logs_for_your_entire_workspace");
+        },
         cloud: {
           free: false,
           one: false,
@@ -748,8 +1048,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "API-enabled Audit Logs",
-        description: "See a full-workspace audit log and use APIs to flag\nPlane activity in compliance systems.",
+        get title() {
+          return translate("web.plan_features.api_enabled_audit_logs");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.see_a_full_workspace_audit_log_and_use_apis_to_flag_plane_activity_in_compliance_systems"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -763,11 +1069,17 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "automations-workflows",
-    title: "Automations and workflows",
+    get title() {
+      return translate("web.plan_features.automations_and_workflows");
+    },
     features: [
       {
-        title: "Trigger And Action",
-        description: "Choose a trigger and a corresponding action per\nautomation flow.",
+        get title() {
+          return translate("web.plan_features.trigger_and_action");
+        },
+        get description() {
+          return translate("web.plan_features.choose_a_trigger_and_a_corresponding_action_per_automation_flow");
+        },
         cloud: {
           free: false,
           one: false,
@@ -777,8 +1089,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Decisions And Loops Automation",
-        description: "Use actions as triggers indefinitely in an\nautomation flow.",
+        get title() {
+          return translate("web.plan_features.decisions_and_loops_automation");
+        },
+        get description() {
+          return translate("web.plan_features.use_actions_as_triggers_indefinitely_in_an_automation_flow");
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -789,25 +1105,37 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Number of automations",
-        description: "Total number of automation flows in your\nworkspace",
+        get title() {
+          return translate("web.plan_features.number_of_automations");
+        },
+        get description() {
+          return translate("web.plan_features.total_number_of_automation_flows_in_your_workspace");
+        },
         cloud: {
           free: false,
           one: false,
           pro: "5,000",
           business: "10,000",
-          enterprise: "Unlimited",
+          get enterprise() {
+            return translate("web.plan_features.unlimited");
+          },
         },
       },
     ],
   },
   {
     id: "knowledge-management",
-    title: "Knowledge management",
+    get title() {
+      return translate("web.plan_features.knowledge_management");
+    },
     features: [
       {
-        title: "Pages",
-        description: "Build knowledge bases for your teams which are\naccessible & shareable.",
+        get title() {
+          return translate("web.plan_features.pages");
+        },
+        get description() {
+          return translate("web.plan_features.build_knowledge_bases_for_your_teams_which_are_accessible_shareable");
+        },
         cloud: {
           free: true,
           one: true,
@@ -817,8 +1145,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Real-time Collab",
-        description: "Edit a page together with members in your project,\nteam, or workspace.",
+        get title() {
+          return translate("web.plan_features.real_time_collab");
+        },
+        get description() {
+          return translate("web.plan_features.edit_a_page_together_with_members_in_your_project_team_or_workspace");
+        },
         cloud: {
           free: false,
           one: true,
@@ -828,8 +1160,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Work item Embeds",
-        description: "Embed work items from any project you are a member\nof.",
+        get title() {
+          return translate("web.plan_features.work_item_embeds");
+        },
+        get description() {
+          return translate("web.plan_features.embed_work_items_from_any_project_you_are_a_member_of");
+        },
         cloud: {
           free: false,
           one: true,
@@ -839,8 +1175,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Link-to-work items",
-        description: "Link pages in work items in a separate section in work item\ndetails.",
+        get title() {
+          return translate("web.plan_features.link_to_work_items");
+        },
+        get description() {
+          return translate("web.plan_features.link_pages_in_work_items_in_a_separate_section_in_work_item_details");
+        },
         cloud: {
           free: false,
           one: true,
@@ -850,9 +1190,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Publish",
-        description:
-          "Put your pages on the web for external users and let\nthem comment without signing into your workspace.",
+        get title() {
+          return translate("web.plan_features.publish");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.put_your_pages_on_the_web_for_external_users_and_let_them_comment_without_signing_into_you"
+          );
+        },
         cloud: {
           free: false,
           one: true,
@@ -862,8 +1207,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Wiki",
-        description: "Create company-wide wikis or knowledge bases\nwithout creating a project.",
+        get title() {
+          return translate("web.plan_features.wiki");
+        },
+        get description() {
+          return translate("web.plan_features.create_company_wide_wikis_or_knowledge_bases_without_creating_a_project");
+        },
         cloud: {
           free: false,
           one: true,
@@ -873,19 +1222,33 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Exports",
-        description: "Export page content into PDFs or Word-compatible\ndocs.",
+        get title() {
+          return translate("web.plan_features.exports");
+        },
+        get description() {
+          return translate("web.plan_features.export_page_content_into_pdfs_or_word_compatible_docs");
+        },
         cloud: {
           free: false,
           one: false,
-          pro: "One download\nat a time",
-          business: "Queued downloads",
-          enterprise: "Queued downloads",
+          get pro() {
+            return translate("web.plan_features.one_download_at_a_time");
+          },
+          get business() {
+            return translate("web.plan_features.queued_downloads");
+          },
+          get enterprise() {
+            return translate("web.plan_features.queued_downloads");
+          },
         },
       },
       {
-        title: "Templates",
-        description: "Use pages as templates for your project, team, or\nworkspace.",
+        get title() {
+          return translate("web.plan_features.templates");
+        },
+        get description() {
+          return translate("web.plan_features.use_pages_as_templates_for_your_project_team_or_workspace");
+        },
         cloud: {
           free: false,
           one: false,
@@ -895,20 +1258,35 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Versions",
-        description: "See restorable version of edits to your pages.",
+        get title() {
+          return translate("web.plan_features.versions");
+        },
+        get description() {
+          return translate("web.plan_features.see_restorable_version_of_edits_to_your_pages");
+        },
         cloud: {
           free: false,
           one: false,
-          pro: "2 days",
-          business: "3 months",
-          enterprise: "Unlimited",
+          get pro() {
+            return translate("web.plan_features.2_days");
+          },
+          get business() {
+            return translate("web.plan_features.3_months");
+          },
+          get enterprise() {
+            return translate("web.plan_features.unlimited");
+          },
         },
       },
       {
-        title: "Databases + Formulas",
-        description:
-          "Put databases and formulas into a page without\nworrying about losing text, images, or other content\ntypes.",
+        get title() {
+          return translate("web.plan_features.databases_formulas");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.put_databases_and_formulas_into_a_page_without_worrying_about_losing_text_images_or_other_"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -919,56 +1297,97 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Nested Pages",
-        description: "Pages inside a page, organize your pages\nas you see fit for the progressive\ndisclosure.",
+        get title() {
+          return translate("web.plan_features.nested_pages");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.pages_inside_a_page_organize_your_pages_as_you_see_fit_for_the_progressive_disclosure"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
           one: false,
           pro: false,
-          business: "Word-compatible + other format downloads",
-          enterprise: "Word-compatible + other format downloads",
+          get business() {
+            return translate("web.plan_features.word_compatible_other_format_downloads");
+          },
+          get enterprise() {
+            return translate("web.plan_features.word_compatible_other_format_downloads");
+          },
         },
       },
     ],
   },
   {
     id: "importers",
-    title: "Importers",
+    get title() {
+      return translate("web.plan_features.importers");
+    },
     features: [
       {
         title: "Jira",
-        description: "Import your work items and members from Jira.",
+        get description() {
+          return translate("web.plan_features.import_your_work_items_and_members_from_jira");
+        },
         cloud: {
-          free: "Without custom props",
-          one: "Without custom props",
-          pro: "With custom props",
-          business: "With custom props",
-          enterprise: "With custom props",
+          get free() {
+            return translate("web.plan_features.without_custom_props");
+          },
+          get one() {
+            return translate("web.plan_features.without_custom_props");
+          },
+          get pro() {
+            return translate("web.plan_features.with_custom_props");
+          },
+          get business() {
+            return translate("web.plan_features.with_custom_props");
+          },
+          get enterprise() {
+            return translate("web.plan_features.with_custom_props");
+          },
         },
       },
       {
         title: "GitHub",
-        description: "Import your work items and members from GitHub.",
+        get description() {
+          return translate("web.plan_features.import_your_work_items_and_members_from_github");
+        },
         cloud: {
-          free: "Without custom props",
-          one: "Without custom props",
-          pro: "With custom props",
-          business: "With custom props",
-          enterprise: "With custom props",
+          get free() {
+            return translate("web.plan_features.without_custom_props");
+          },
+          get one() {
+            return translate("web.plan_features.without_custom_props");
+          },
+          get pro() {
+            return translate("web.plan_features.with_custom_props");
+          },
+          get business() {
+            return translate("web.plan_features.with_custom_props");
+          },
+          get enterprise() {
+            return translate("web.plan_features.with_custom_props");
+          },
         },
       },
     ],
   },
   {
     id: "integrations",
-    title: "Integrations",
+    get title() {
+      return translate("web.plan_features.integrations");
+    },
     comingSoon: true,
     features: [
       {
         title: "GitHub",
-        description:
-          "Sync Plane work items and states to GitHub work items and\nstates. Update GitHub automatically with activity\nfrom Plane and vice-versa.",
+        get description() {
+          return translate(
+            "web.plan_features.sync_plane_work_items_and_states_to_github_work_items_and_states_update_github_automatical"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -979,7 +1398,11 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "Slack",
-        description: "Get Plane activity in Slack and use / commands in\nSlack to make changes in Plane.",
+        get description() {
+          return translate(
+            "web.plan_features.get_plane_activity_in_slack_and_use_commands_in_slack_to_make_changes_in_plane"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -990,7 +1413,9 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "Zapier",
-        description: "Run if-then-else automations using Zapier.",
+        get description() {
+          return translate("web.plan_features.run_if_then_else_automations_using_zapier");
+        },
         cloud: {
           free: false,
           one: false,
@@ -1001,7 +1426,9 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "Zendesk",
-        description: "Create Plane work items from Zendesk tickets.",
+        get description() {
+          return translate("web.plan_features.create_plane_work_items_from_zendesk_tickets");
+        },
         cloud: {
           free: false,
           one: false,
@@ -1012,7 +1439,9 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "Freshdesk",
-        description: "Create Plane work items from Freshdesk tickets.",
+        get description() {
+          return translate("web.plan_features.create_plane_work_items_from_freshdesk_tickets");
+        },
         cloud: {
           free: false,
           one: false,
@@ -1025,40 +1454,60 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "storage",
-    title: "Storage",
+    get title() {
+      return translate("web.plan_features.storage");
+    },
     cloudOnly: true,
     features: [
       {
-        title: "Space",
-        description: "Total storage allowed per workspace",
+        get title() {
+          return translate("web.plan_features.space");
+        },
+        get description() {
+          return translate("web.plan_features.total_storage_allowed_per_workspace");
+        },
         cloud: {
           free: "5GB",
           one: false,
           pro: "1 TB",
           business: "5 TB",
-          enterprise: "Custom",
+          get enterprise() {
+            return translate("web.plan_features.custom");
+          },
         },
       },
       {
-        title: "Max file size",
-        description: "Limit for uploads to your workspace",
+        get title() {
+          return translate("web.plan_features.max_file_size");
+        },
+        get description() {
+          return translate("web.plan_features.limit_for_uploads_to_your_workspace");
+        },
         cloud: {
           free: "5 MB",
           one: false,
           pro: "100 MB",
           business: "200 MB",
-          enterprise: "Custom",
+          get enterprise() {
+            return translate("web.plan_features.custom");
+          },
         },
       },
     ],
   },
   {
     id: "security",
-    title: "Security",
+    get title() {
+      return translate("web.plan_features.security");
+    },
     features: [
       {
         title: "SAML",
-        description: "Get the officially supported SAML implementation\nand make Plane secure with any IdP.",
+        get description() {
+          return translate(
+            "web.plan_features.get_the_officially_supported_saml_implementation_and_make_plane_secure_with_any_idp"
+          );
+        },
         cloud: {
           free: false,
           one: true,
@@ -1069,7 +1518,11 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "OIDC",
-        description: "Get the officially supported OIDC implementation\nand make Plane secure with any IdP.",
+        get description() {
+          return translate(
+            "web.plan_features.get_the_officially_supported_oidc_implementation_and_make_plane_secure_with_any_idp"
+          );
+        },
         selfHostedOnly: true,
         cloud: {
           free: false,
@@ -1080,9 +1533,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Domain Security",
-        description:
-          "Choose other domains that can authenticate into\nyour Plane workspace or restrict all but one domain.",
+        get title() {
+          return translate("web.plan_features.domain_security");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.choose_other_domains_that_can_authenticate_into_your_plane_workspace_or_restrict_all_but_o"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -1092,8 +1550,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Two-factor authentication and passkeys",
-        description: "Secure your Plane workspace with device-\ndependent two-factor authentication and passkeys. ",
+        get title() {
+          return translate("web.plan_features.two_factor_authentication_and_passkeys");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.secure_your_plane_workspace_with_device_dependent_two_factor_authentication_and_passkeys"
+          );
+        },
         cloud: {
           free: false,
           one: false,
@@ -1103,8 +1567,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Password Policy",
-        description: "Set custom password policies in line with your\ncompliance requirements.",
+        get title() {
+          return translate("web.plan_features.password_policy");
+        },
+        get description() {
+          return translate("web.plan_features.set_custom_password_policies_in_line_with_your_compliance_requirements");
+        },
         cloud: {
           free: false,
           one: false,
@@ -1115,7 +1583,11 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "LDAP",
-        description: "Get our official LDAP implementation and secure\nyour Plane workspace with your LDAP server.",
+        get description() {
+          return translate(
+            "web.plan_features.get_our_official_ldap_implementation_and_secure_your_plane_workspace_with_your_ldap_server"
+          );
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -1129,12 +1601,20 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "self-hosted",
-    title: "Self-hosted",
+    get title() {
+      return translate("web.plan_features.self_hosted");
+    },
     selfHostedOnly: true,
     features: [
       {
-        title: "God Mode",
-        description: "Manage your self-hosted Plane instance better with\nan instance admin interface.",
+        get title() {
+          return translate("web.plan_features.god_mode");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.manage_your_self_hosted_plane_instance_better_with_an_instance_admin_interface"
+          );
+        },
         cloud: {
           free: true,
           one: true,
@@ -1144,8 +1624,14 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "One-click Deployment",
-        description: "Install and deploy your self-hosted Plane to any\nprivate cloud with a single-line command.",
+        get title() {
+          return translate("web.plan_features.one_click_deployment");
+        },
+        get description() {
+          return translate(
+            "web.plan_features.install_and_deploy_your_self_hosted_plane_to_any_private_cloud_with_a_single_line_command"
+          );
+        },
         cloud: {
           free: false,
           one: true,
@@ -1155,8 +1641,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Digital Ocean Marketplace app",
-        description: "Get our Digital Ocean-compatible app on their\nmarketplace.",
+        get title() {
+          return translate("web.plan_features.digital_ocean_marketplace_app");
+        },
+        get description() {
+          return translate("web.plan_features.get_our_digital_ocean_compatible_app_on_their_marketplace");
+        },
         cloud: {
           free: false,
           one: true,
@@ -1166,8 +1656,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Heroku Platform app",
-        description: "Get our Heroku Platform-compatible app and deploy\nto Heroku easily.",
+        get title() {
+          return translate("web.plan_features.heroku_platform_app");
+        },
+        get description() {
+          return translate("web.plan_features.get_our_heroku_platform_compatible_app_and_deploy_to_heroku_easily");
+        },
         cloud: {
           free: false,
           one: true,
@@ -1178,7 +1672,9 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
       },
       {
         title: "AWS AMI",
-        description: "Get our AMI-compatible app from the AWS\nmarketplace.",
+        get description() {
+          return translate("web.plan_features.get_our_ami_compatible_app_from_the_aws_marketplace");
+        },
         cloud: {
           free: false,
           one: true,
@@ -1188,8 +1684,12 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
         },
       },
       {
-        title: "Private deployments",
-        description: "Get our hosted Cloud app on a private Cloud\nmanaged by us.",
+        get title() {
+          return translate("web.plan_features.private_deployments");
+        },
+        get description() {
+          return translate("web.plan_features.get_our_hosted_cloud_app_on_a_private_cloud_managed_by_us");
+        },
         comingSoon: true,
         cloud: {
           free: false,
@@ -1203,11 +1703,17 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
   },
   {
     id: "support",
-    title: "Support",
+    get title() {
+      return translate("web.plan_features.support");
+    },
     features: [
       {
-        title: "Channels",
-        description: "Get access to one or more Support channels\nby your plan.",
+        get title() {
+          return translate("web.plan_features.channels");
+        },
+        get description() {
+          return translate("web.plan_features.get_access_to_one_or_more_support_channels_by_your_plan");
+        },
         cloud: {
           free: (
             <>
@@ -1227,19 +1733,33 @@ export const PLANS_COMPARISON_LIST: TPlansComparisonDetails[] = [
               <ChatOutline className="size-4 flex-shrink-0" />
             </div>
           ),
-          business: "Full-suite\nprofessional services",
-          enterprise: "Full-suite\nprofessional services",
+          get business() {
+            return translate("web.plan_features.full_suite_professional_services");
+          },
+          get enterprise() {
+            return translate("web.plan_features.full_suite_professional_services");
+          },
         },
       },
       {
         title: "SLA",
         description: (
           <>
-            Get business-friendly SLAs with higher plans. SLAs are by priority of work item and tiers{" "}
-            <a href="https://plane.so/talk-to-sales" target="_blank" rel="noopener noreferrer" className="underline">
-              can be requested
-            </a>
-            .
+            <Translation
+              translationKey="web.ui.sla_description"
+              components={{
+                request: (
+                  <a
+                    href="https://plane.so/talk-to-sales"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    <Translation translationKey="web.ui.request_tiers" />
+                  </a>
+                ),
+              }}
+            />
           </>
         ),
         cloud: {
@@ -1268,9 +1788,15 @@ export const PLANE_PLANS: PlanePlans = {
       name: "One",
       monthlyPrice: 799,
       yearlyPrice: 799,
-      monthlyPriceSecondaryDescription: "per workspace",
-      yearlyPriceSecondaryDescription: "per workspace",
-      buttonCTA: "Upgrade",
+      get monthlyPriceSecondaryDescription() {
+        return translate("web.plan_features.per_workspace");
+      },
+      get yearlyPriceSecondaryDescription() {
+        return translate("web.plan_features.per_workspace");
+      },
+      get buttonCTA() {
+        return translate("web.plan_features.upgrade");
+      },
       isActive: false,
     },
     pro: {
@@ -1278,34 +1804,87 @@ export const PLANE_PLANS: PlanePlans = {
       name: "Pro",
       monthlyPrice: 8,
       yearlyPrice: 6,
-      monthlyPriceSecondaryDescription: "billed monthly",
-      yearlyPriceSecondaryDescription: "billed yearly",
-      buttonCTA: "Upgrade",
+      get monthlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_monthly");
+      },
+      get yearlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_yearly");
+      },
+      get buttonCTA() {
+        return translate("web.plan_features.upgrade");
+      },
       isActive: true,
     },
     business: {
       id: EProductSubscriptionEnum.BUSINESS,
       name: "Business",
-      monthlyPriceSecondaryDescription: "billed monthly",
-      yearlyPriceSecondaryDescription: "billed yearly",
-      buttonCTA: "Talk to Sales",
+      get monthlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_monthly");
+      },
+      get yearlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_yearly");
+      },
+      get buttonCTA() {
+        return translate("web.plan_features.talk_to_sales");
+      },
       isActive: false,
     },
     enterprise: {
       id: EProductSubscriptionEnum.ENTERPRISE,
       name: "Enterprise",
-      monthlyPriceSecondaryDescription: "billed monthly",
-      yearlyPriceSecondaryDescription: "billed yearly",
-      buttonCTA: "Talk to Sales",
+      get monthlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_monthly");
+      },
+      get yearlyPriceSecondaryDescription() {
+        return translate("web.plan_features.billed_yearly");
+      },
+      get buttonCTA() {
+        return translate("web.plan_features.talk_to_sales");
+      },
       isActive: false,
     },
   },
   planHighlights: {
-    free: ["Upto 12 users", "Pages", "Unlimited projects", "Unlimited cycles and modules"],
-    one: ["Upto 50 users", "OIDC and SAML", "Active cycles", "Limited time tracking"],
-    pro: ["Unlimited users", "Custom work items + Properties", "Work item templates", "Full Time Tracking"],
-    business: ["RBAC", "Project Templates", "Baselines And Deviations", "Custom Reports"],
-    enterprise: ["Private + managed deployments", "GAC", "LDAP support", "Databases + Formulas"],
+    get free() {
+      return [
+        translate("web.plan_features.upto_12_users"),
+        translate("web.plan_features.pages"),
+        translate("web.plan_features.unlimited_projects"),
+        translate("web.plan_features.unlimited_cycles_and_modules"),
+      ];
+    },
+    get one() {
+      return [
+        translate("web.plan_features.upto_50_users"),
+        translate("web.plan_features.oidc_and_saml"),
+        translate("web.plan_features.active_cycles"),
+        translate("web.plan_features.limited_time_tracking"),
+      ];
+    },
+    get pro() {
+      return [
+        translate("web.plan_features.unlimited_users"),
+        translate("web.plan_features.custom_work_items_properties"),
+        translate("web.plan_features.work_item_templates"),
+        translate("web.plan_features.full_time_tracking"),
+      ];
+    },
+    get business() {
+      return [
+        "RBAC",
+        translate("web.plan_features.project_templates"),
+        translate("web.plan_features.baselines_and_deviations"),
+        translate("web.plan_features.custom_reports"),
+      ];
+    },
+    get enterprise() {
+      return [
+        translate("web.plan_features.private_managed_deployments"),
+        "GAC",
+        translate("web.plan_features.ldap_support"),
+        translate("web.plan_features.databases_formulas"),
+      ];
+    },
   },
   planComparison: PLANS_COMPARISON_LIST,
 };

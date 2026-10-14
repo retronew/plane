@@ -524,7 +524,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   name="use_case"
                   rules={{
                     required: t("web.please_select_at_least_one_option"),
-                    validate: (value) => (value && value.length > 0) || "Please select at least one option",
+                    validate: (value) => (value && value.length > 0) || t("web.ui.select_one_option"),
                   }}
                   render={({ field: { value, onChange } }) => (
                     <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">

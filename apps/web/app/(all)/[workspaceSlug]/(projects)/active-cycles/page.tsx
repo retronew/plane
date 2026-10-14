@@ -17,7 +17,10 @@ function WorkspaceActiveCyclesPage() {
   const { currentWorkspace } = useWorkspace();
   // derived values
   const pageTitle = currentWorkspace?.name
-    ? `${currentWorkspace?.name} - ${translate("web.title_active_cycles")}`
+    ? translate("web.runtime.page_title", {
+        name: currentWorkspace?.name,
+        section: translate("web.title_active_cycles"),
+      })
     : undefined;
 
   return (

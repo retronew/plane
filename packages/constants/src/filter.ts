@@ -4,40 +4,56 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 export enum E_SORT_ORDER {
   ASC = "asc",
   DESC = "desc",
 }
 export const DATE_AFTER_FILTER_OPTIONS = [
   {
-    name: "1 week from now",
+    get name() {
+      return translate("web.runtime.weeks_from_now", { count: 1 });
+    },
     value: "1_weeks;after;fromnow",
   },
   {
-    name: "2 weeks from now",
+    get name() {
+      return translate("web.runtime.weeks_from_now", { count: 2 });
+    },
     value: "2_weeks;after;fromnow",
   },
   {
-    name: "1 month from now",
+    get name() {
+      return translate("web.runtime.months_from_now", { count: 1 });
+    },
     value: "1_months;after;fromnow",
   },
   {
-    name: "2 months from now",
+    get name() {
+      return translate("web.runtime.months_from_now", { count: 2 });
+    },
     value: "2_months;after;fromnow",
   },
 ];
 
 export const DATE_BEFORE_FILTER_OPTIONS = [
   {
-    name: "1 week ago",
+    get name() {
+      return translate("web.runtime.weeks_ago", { count: 1 });
+    },
     value: "1_weeks;before;fromnow",
   },
   {
-    name: "2 weeks ago",
+    get name() {
+      return translate("web.runtime.weeks_ago", { count: 2 });
+    },
     value: "2_weeks;before;fromnow",
   },
   {
-    name: "1 month ago",
+    get name() {
+      return translate("web.runtime.months_ago", { count: 1 });
+    },
     i18n_name: "date_filters.1_month_ago",
     value: "1_months;before;fromnow",
   },
@@ -45,19 +61,27 @@ export const DATE_BEFORE_FILTER_OPTIONS = [
 
 export const PROJECT_CREATED_AT_FILTER_OPTIONS = [
   {
-    name: "Today",
+    get name() {
+      return translate("web.runtime.today");
+    },
     value: "today;custom;custom",
   },
   {
-    name: "Yesterday",
+    get name() {
+      return translate("web.runtime.yesterday");
+    },
     value: "yesterday;custom;custom",
   },
   {
-    name: "Last 7 days",
+    get name() {
+      return translate("web.runtime.last_7_days");
+    },
     value: "last_7_days;custom;custom",
   },
   {
-    name: "Last 30 days",
+    get name() {
+      return translate("web.runtime.last_30_days");
+    },
     value: "last_30_days;custom;custom",
   },
 ];

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import useSWR from "swr";
@@ -114,7 +115,7 @@ export const EstimateRoot = observer(function EstimateRoot(props: TEstimateRoot)
                       className="text-accent-primary/80 hover:text-accent-primary"
                       rel="noreferrer"
                     >
-                      here.
+                      <Translation translationKey="web.ui.learn_more_here" />
                     </a>
                   </>
                 }

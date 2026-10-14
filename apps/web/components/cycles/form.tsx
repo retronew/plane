@@ -12,7 +12,7 @@ import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
 import { ETabIndices } from "@plane/constants";
 // types
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { DateRangeSelect } from "@plane/blocks/property-select";
 import { Button } from "@makeplane/propel/components/button";
 import { CalendarOutline } from "@makeplane/propel/icons";
@@ -178,7 +178,7 @@ export function CycleForm(props: Props) {
                         onChangeEndDate(val.to ? renderFormattedPayloadDate(val.to) : null);
                       }}
                       icon={<CalendarOutline />}
-                      placeholder={`${t("start_date")} - ${t("end_date")}`}
+                      placeholder={translate("web.runtime.date_range_placeholder")}
                       weekStartsOn={userProfile?.start_of_the_week}
                       tabIndex={getIndex("date_range")}
                     />

@@ -64,17 +64,10 @@ const getTimezoneLabel = (option: { value: string; query: string; content: React
 
 export const TimezoneSelect = observer(function TimezoneSelect(props: TTimezoneSelect) {
   // props
-  const {
-    value,
-    onChange,
-    error = false,
-    label = "Select a timezone",
-    size = "lg",
-    className = "",
-    disabled = false,
-  } = props;
+  const { value, onChange, error = false, label: labelProp, size = "lg", className = "", disabled = false } = props;
   // hooks
   const { t } = useTranslation();
+  const label = labelProp ?? t("web.ui.select_timezone");
   const { contains } = useFilter();
   const { disabled: isDisabled, timezones } = useTimezone();
   // derived values

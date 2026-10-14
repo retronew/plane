@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import type React from "react";
 // ui
 import { Button } from "@makeplane/propel/components/button";
@@ -30,7 +31,7 @@ export function FiltersDropdown(props: Props) {
     children,
     miniIcon,
     icon,
-    title = "Dropdown",
+    title = translate("web.ui.dropdown"),
     placement,
     disabled = false,
     tabIndex,

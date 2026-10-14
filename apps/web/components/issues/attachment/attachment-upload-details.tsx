@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { CircularProgress } from "@makeplane/propel/components/circular-progress";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -57,7 +58,9 @@ export const IssueAttachmentsUploadDetails = observer(function IssueAttachmentsU
             aria-label={translate("web.upload_progress")}
           />
         </span>
-        <div className="flex-shrink-0 text-13 font-medium">{uploadStatus.progress}% done</div>
+        <div className="flex-shrink-0 text-13 font-medium">
+          <Translation translationKey="web.ui.upload_progress" values={{ progress: uploadStatus.progress }} />
+        </div>
       </div>
     </div>
   );

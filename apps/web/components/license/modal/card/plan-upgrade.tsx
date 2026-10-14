@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane imports
 import { TALK_TO_SALES_URL } from "@plane/constants";
@@ -75,7 +76,7 @@ export const PlanUpgradeCard = observer(function PlanUpgradeCard(props: PlanUpgr
       {price.recurring === "month" && "Monthly"}
       {price.recurring === "year" && (
         <>
-          Yearly
+          <Translation translationKey="web.ui.yearly" />
           {yearlyDiscount > 0 && (
             <span className="text-caption-sm ml-1 rounded-full bg-accent-primary px-1.5 py-0.5 text-on-color">
               -{yearlyDiscount}%

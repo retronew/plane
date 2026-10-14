@@ -8,21 +8,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 // plane imports
 import { SUPPORT_EMAIL } from "@plane/constants";
-import { translate } from "@plane/i18n";
-
-// Look up a translation keyed by the English text; fall back to the English text when none exists.
-const localizeAuthText = (text: string): string => {
-  if (!text) return text;
-  const key = `web.auth_errors.${text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")}`;
-  const value = translate(key);
-  return value === key ? text : value;
-};
-
-const localizeMessage = (message: ReactNode): ReactNode =>
-  typeof message === "string" ? localizeAuthText(message) : message;
+import { translate, Translation } from "@plane/i18n";
 
 export enum EPageTypes {
   PUBLIC = "PUBLIC",
@@ -131,303 +117,436 @@ export type TAuthErrorInfo = {
   message: ReactNode;
 };
 
-// TODO: move all error messages to translation files
 const errorCodeMessages: {
   [key in EAuthenticationErrorCodes]: { title: string; message: (email?: string) => ReactNode };
 } = {
   // global
   [EAuthenticationErrorCodes.INSTANCE_NOT_CONFIGURED]: {
-    title: `Instance not configured`,
-    message: () => `Instance not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.instance_not_configured");
+    },
+    message: () => translate("web.auth_errors.instance_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.INVALID_EMAIL]: {
-    title: `Invalid email`,
-    message: () => `Invalid email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_email");
+    },
+    message: () => translate("web.auth_errors.invalid_email_please_try_again"),
   },
   [EAuthenticationErrorCodes.EMAIL_REQUIRED]: {
-    title: `Email required`,
-    message: () => `Email required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_required");
+    },
+    message: () => translate("web.auth_errors.email_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.SIGNUP_DISABLED]: {
-    title: `Sign up disabled`,
-    message: () => `Sign up disabled. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.sign_up_disabled");
+    },
+    message: () => translate("web.auth_errors.sign_up_disabled_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.MAGIC_LINK_LOGIN_DISABLED]: {
-    title: `Magic link login disabled`,
-    message: () => `Magic link login disabled. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.magic_link_login_disabled");
+    },
+    message: () => translate("web.auth_errors.magic_link_login_disabled_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.PASSWORD_LOGIN_DISABLED]: {
-    title: `Password login disabled`,
-    message: () => `Password login disabled. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.password_login_disabled");
+    },
+    message: () => translate("web.auth_errors.password_login_disabled_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.USER_ACCOUNT_DEACTIVATED]: {
-    title: `User account deactivated`,
+    get title() {
+      return translate("web.auth_errors.user_account_deactivated");
+    },
     message: () =>
       translate("web.auth_errors.user_account_deactivated_contact", {
-        contact: SUPPORT_EMAIL ? SUPPORT_EMAIL : localizeAuthText("administrator"),
+        contact: SUPPORT_EMAIL ? SUPPORT_EMAIL : translate("web.auth_errors.administrator"),
       }),
   },
   [EAuthenticationErrorCodes.BOT_USER_LOGIN_FORBIDDEN]: {
-    title: `Sign in not allowed`,
-    message: () => `This account cannot be used to sign in. Please use a personal account.`,
+    get title() {
+      return translate("web.auth_errors.sign_in_not_allowed");
+    },
+    message: () => translate("web.auth_errors.this_account_cannot_be_used_to_sign_in_please_use_a_personal_account"),
   },
   [EAuthenticationErrorCodes.INVALID_PASSWORD]: {
-    title: `Invalid password`,
-    message: () => `Invalid password. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_password");
+    },
+    message: () => translate("web.auth_errors.invalid_password_please_try_again"),
   },
   [EAuthenticationErrorCodes.PASSWORD_TOO_WEAK]: {
-    title: `Password too weak`,
-    message: () => `Please use a stronger password.`,
+    get title() {
+      return translate("web.auth_errors.password_too_weak");
+    },
+    message: () => translate("web.auth_errors.please_use_a_stronger_password"),
   },
   [EAuthenticationErrorCodes.SMTP_NOT_CONFIGURED]: {
-    title: `SMTP not configured`,
-    message: () => `SMTP not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.smtp_not_configured");
+    },
+    message: () => translate("web.auth_errors.smtp_not_configured_please_contact_your_administrator"),
   },
 
   // sign up
   [EAuthenticationErrorCodes.USER_ALREADY_EXIST]: {
-    title: `User already exists`,
+    get title() {
+      return translate("web.auth_errors.user_already_exists");
+    },
     message: (email = undefined) => (
-      <div>
-        {localizeAuthText("Your account is already registered.")}&nbsp;
-        <Link
-          className="font-medium underline underline-offset-4 transition-all hover:font-bold"
-          href={`/sign-in${email ? `?email=${encodeURIComponent(email)}` : ``}`}
-        >
-          {localizeAuthText("Sign In")}
-        </Link>
-        &nbsp;{localizeAuthText("now.")}
-      </div>
+      <Translation
+        translationKey="web.runtime.auth_existing"
+        components={{
+          link: (
+            <Link
+              className="font-medium underline underline-offset-4 transition-all hover:font-bold"
+              href={`/sign-in${email ? `?email=${encodeURIComponent(email)}` : ``}`}
+            >
+              {translate("web.auth_errors.sign_in")}
+            </Link>
+          ),
+        }}
+      />
     ),
   },
   [EAuthenticationErrorCodes.REQUIRED_EMAIL_PASSWORD_SIGN_UP]: {
-    title: `Email and password required`,
-    message: () => `Email and password required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_and_password_required");
+    },
+    message: () => translate("web.auth_errors.email_and_password_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.AUTHENTICATION_FAILED_SIGN_UP]: {
-    title: `Authentication failed`,
-    message: () => `Authentication failed. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.authentication_failed");
+    },
+    message: () => translate("web.auth_errors.authentication_failed_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_EMAIL_SIGN_UP]: {
-    title: `Invalid email`,
-    message: () => `Invalid email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_email");
+    },
+    message: () => translate("web.auth_errors.invalid_email_please_try_again"),
   },
   [EAuthenticationErrorCodes.MAGIC_SIGN_UP_EMAIL_CODE_REQUIRED]: {
-    title: `Email and code required`,
-    message: () => `Email and code required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_and_code_required");
+    },
+    message: () => translate("web.auth_errors.email_and_code_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_EMAIL_MAGIC_SIGN_UP]: {
-    title: `Invalid email`,
-    message: () => `Invalid email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_email");
+    },
+    message: () => translate("web.auth_errors.invalid_email_please_try_again"),
   },
 
   [EAuthenticationErrorCodes.USER_DOES_NOT_EXIST]: {
-    title: `User does not exist`,
+    get title() {
+      return translate("web.auth_errors.user_does_not_exist");
+    },
     message: (email = undefined) => (
-      <div>
-        {localizeAuthText("No account found.")}&nbsp;
-        <Link
-          className="font-medium underline underline-offset-4 transition-all hover:font-bold"
-          href={`/${email ? `?email=${encodeURIComponent(email)}` : ``}`}
-        >
-          {localizeAuthText("Create one")}
-        </Link>
-        &nbsp;{localizeAuthText("to get started.")}
-      </div>
+      <Translation
+        translationKey="web.runtime.auth_missing"
+        components={{
+          link: (
+            <Link
+              className="font-medium underline underline-offset-4 transition-all hover:font-bold"
+              href={`/${email ? `?email=${encodeURIComponent(email)}` : ``}`}
+            >
+              {translate("web.auth_errors.create_one")}
+            </Link>
+          ),
+        }}
+      />
     ),
   },
   [EAuthenticationErrorCodes.REQUIRED_EMAIL_PASSWORD_SIGN_IN]: {
-    title: `Email and password required`,
-    message: () => `Email and password required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_and_password_required");
+    },
+    message: () => translate("web.auth_errors.email_and_password_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.AUTHENTICATION_FAILED_SIGN_IN]: {
-    title: `Authentication failed`,
-    message: () => `Authentication failed. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.authentication_failed");
+    },
+    message: () => translate("web.auth_errors.authentication_failed_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_EMAIL_SIGN_IN]: {
-    title: `Invalid email`,
-    message: () => `Invalid email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_email");
+    },
+    message: () => translate("web.auth_errors.invalid_email_please_try_again"),
   },
   [EAuthenticationErrorCodes.MAGIC_SIGN_IN_EMAIL_CODE_REQUIRED]: {
-    title: `Email and code required`,
-    message: () => `Email and code required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_and_code_required");
+    },
+    message: () => translate("web.auth_errors.email_and_code_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_EMAIL_MAGIC_SIGN_IN]: {
-    title: `Invalid email`,
-    message: () => `Invalid email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_email");
+    },
+    message: () => translate("web.auth_errors.invalid_email_please_try_again"),
   },
 
   // Both Sign in and Sign up
   [EAuthenticationErrorCodes.INVALID_MAGIC_CODE_SIGN_IN]: {
-    title: `Authentication failed`,
-    message: () => `Invalid magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.authentication_failed");
+    },
+    message: () => translate("web.auth_errors.invalid_magic_code_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_MAGIC_CODE_SIGN_UP]: {
-    title: `Authentication failed`,
-    message: () => `Invalid magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.authentication_failed");
+    },
+    message: () => translate("web.auth_errors.invalid_magic_code_please_try_again"),
   },
   [EAuthenticationErrorCodes.EXPIRED_MAGIC_CODE_SIGN_IN]: {
-    title: `Expired magic code`,
-    message: () => `Expired magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.expired_magic_code");
+    },
+    message: () => translate("web.auth_errors.expired_magic_code_please_try_again"),
   },
   [EAuthenticationErrorCodes.EXPIRED_MAGIC_CODE_SIGN_UP]: {
-    title: `Expired magic code`,
-    message: () => `Expired magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.expired_magic_code");
+    },
+    message: () => translate("web.auth_errors.expired_magic_code_please_try_again"),
   },
   [EAuthenticationErrorCodes.EMAIL_CODE_ATTEMPT_EXHAUSTED_SIGN_IN]: {
-    title: `Expired magic code`,
-    message: () => `Expired magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.expired_magic_code");
+    },
+    message: () => translate("web.auth_errors.expired_magic_code_please_try_again"),
   },
   [EAuthenticationErrorCodes.EMAIL_CODE_ATTEMPT_EXHAUSTED_SIGN_UP]: {
-    title: `Expired magic code`,
-    message: () => `Expired magic code. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.expired_magic_code");
+    },
+    message: () => translate("web.auth_errors.expired_magic_code_please_try_again"),
   },
 
   // Oauth
   [EAuthenticationErrorCodes.OAUTH_NOT_CONFIGURED]: {
-    title: `OAuth not configured`,
-    message: () => `OAuth not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.oauth_not_configured");
+    },
+    message: () => translate("web.auth_errors.oauth_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.GOOGLE_NOT_CONFIGURED]: {
-    title: `Google not configured`,
-    message: () => `Google not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.google_not_configured");
+    },
+    message: () => translate("web.auth_errors.google_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.GITHUB_NOT_CONFIGURED]: {
-    title: `GitHub not configured`,
-    message: () => `GitHub not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.github_not_configured");
+    },
+    message: () => translate("web.auth_errors.github_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.GITLAB_NOT_CONFIGURED]: {
-    title: `GitLab not configured`,
-    message: () => `GitLab not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.gitlab_not_configured");
+    },
+    message: () => translate("web.auth_errors.gitlab_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.GOOGLE_OAUTH_PROVIDER_ERROR]: {
-    title: `Google OAuth provider error`,
-    message: () => `Google OAuth provider error. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.google_oauth_provider_error");
+    },
+    message: () => translate("web.auth_errors.google_oauth_provider_error_please_try_again"),
   },
   [EAuthenticationErrorCodes.GITHUB_OAUTH_PROVIDER_ERROR]: {
-    title: `GitHub OAuth provider error`,
-    message: () => `GitHub OAuth provider error. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.github_oauth_provider_error");
+    },
+    message: () => translate("web.auth_errors.github_oauth_provider_error_please_try_again"),
   },
   [EAuthenticationErrorCodes.GITLAB_OAUTH_PROVIDER_ERROR]: {
-    title: `GitLab OAuth provider error`,
-    message: () => `GitLab OAuth provider error. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.gitlab_oauth_provider_error");
+    },
+    message: () => translate("web.auth_errors.gitlab_oauth_provider_error_please_try_again"),
   },
   [EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED]: {
-    title: `OIDC not configured`,
-    message: () => `OIDC is not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.oidc_not_configured");
+    },
+    message: () => translate("web.auth_errors.oidc_is_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR]: {
-    title: `OIDC provider error`,
-    message: () => `OIDC provider error. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.oidc_provider_error");
+    },
+    message: () => translate("web.auth_errors.oidc_provider_error_please_try_again"),
   },
   [EAuthenticationErrorCodes.OIDC_EMAIL_NOT_PROVIDED]: {
-    title: `Email not provided`,
+    get title() {
+      return translate("web.auth_errors.email_not_provided");
+    },
     message: () =>
-      `Your identity provider did not return an email address, and email verification is unavailable because SMTP is not configured. Please ask your administrator to add your email in the identity provider or configure SMTP.`,
+      translate(
+        "web.auth_errors.your_identity_provider_did_not_return_an_email_address_and_email_verification_is_unavailable_because_smtp_is_not_configured_please_ask_your_administrator_to_add_your_email_in_the_identity_provider_or_configure_smtp"
+      ),
   },
   [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED]: {
-    title: `Email binding expired`,
-    message: () => `Your email binding session has expired. Please sign in again.`,
+    get title() {
+      return translate("web.auth_errors.email_binding_expired");
+    },
+    message: () => translate("web.auth_errors.your_email_binding_session_has_expired_please_sign_in_again"),
   },
   [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE]: {
-    title: `Invalid verification code`,
-    message: () => `The verification code is incorrect. Please check your email and try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_verification_code");
+    },
+    message: () =>
+      translate("web.auth_errors.the_verification_code_is_incorrect_please_check_your_email_and_try_again"),
   },
   [EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED]: {
-    title: `Account already linked`,
-    message: () => `This single sign-on account is already linked to another Plane account.`,
+    get title() {
+      return translate("web.auth_errors.account_already_linked");
+    },
+    message: () => translate("web.auth_errors.this_single_sign_on_account_is_already_linked_to_another_plane_account"),
   },
   [EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL]: {
-    title: `Unverified email`,
-    message: () => `Your identity provider did not return a verified email. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.unverified_email");
+    },
+    message: () =>
+      translate(
+        "web.auth_errors.your_identity_provider_did_not_return_a_verified_email_please_contact_your_administrator"
+      ),
   },
 
   // Reset Password
   [EAuthenticationErrorCodes.INVALID_PASSWORD_TOKEN]: {
-    title: `Invalid password token`,
-    message: () => `Invalid password token.`,
+    get title() {
+      return translate("web.auth_errors.invalid_password_token");
+    },
+    message: () => translate("web.auth_errors.invalid_password_token"),
   },
   [EAuthenticationErrorCodes.EXPIRED_PASSWORD_TOKEN]: {
-    title: `Expired password token`,
-    message: () => `Expired password token. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.expired_password_token");
+    },
+    message: () => translate("web.auth_errors.expired_password_token_please_try_again"),
   },
 
   // Change password
   [EAuthenticationErrorCodes.MISSING_PASSWORD]: {
-    title: `Password required`,
-    message: () => `Password required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.password_required");
+    },
+    message: () => translate("web.auth_errors.password_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.INCORRECT_OLD_PASSWORD]: {
-    title: `Incorrect old password`,
-    message: () => `Incorrect old password. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.incorrect_old_password");
+    },
+    message: () => translate("web.auth_errors.incorrect_old_password_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_NEW_PASSWORD]: {
-    title: `Invalid new password`,
-    message: () => `Invalid new password. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_new_password");
+    },
+    message: () => translate("web.auth_errors.invalid_new_password_please_try_again"),
   },
 
   // set password
   [EAuthenticationErrorCodes.PASSWORD_ALREADY_SET]: {
-    title: `Password already set`,
-    message: () => `Password already set. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.password_already_set");
+    },
+    message: () => translate("web.auth_errors.password_already_set_please_try_again"),
   },
 
   // admin
   [EAuthenticationErrorCodes.ADMIN_ALREADY_EXIST]: {
-    title: `Admin already exists`,
-    message: () => `Admin already exists. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.admin_already_exists");
+    },
+    message: () => translate("web.auth_errors.admin_already_exists_please_try_again"),
   },
   [EAuthenticationErrorCodes.REQUIRED_ADMIN_EMAIL_PASSWORD_FIRST_NAME]: {
-    title: `Email, password and first name required`,
-    message: () => `Email, password and first name required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_password_and_first_name_required");
+    },
+    message: () => translate("web.auth_errors.email_password_and_first_name_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_ADMIN_EMAIL]: {
-    title: `Invalid admin email`,
-    message: () => `Invalid admin email. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_admin_email");
+    },
+    message: () => translate("web.auth_errors.invalid_admin_email_please_try_again"),
   },
   [EAuthenticationErrorCodes.INVALID_ADMIN_PASSWORD]: {
-    title: `Invalid admin password`,
-    message: () => `Invalid admin password. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.invalid_admin_password");
+    },
+    message: () => translate("web.auth_errors.invalid_admin_password_please_try_again"),
   },
   [EAuthenticationErrorCodes.REQUIRED_ADMIN_EMAIL_PASSWORD]: {
-    title: `Email and password required`,
-    message: () => `Email and password required. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.email_and_password_required");
+    },
+    message: () => translate("web.auth_errors.email_and_password_required_please_try_again"),
   },
   [EAuthenticationErrorCodes.ADMIN_AUTHENTICATION_FAILED]: {
-    title: `Authentication failed`,
-    message: () => `Authentication failed. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.authentication_failed");
+    },
+    message: () => translate("web.auth_errors.authentication_failed_please_try_again"),
   },
   [EAuthenticationErrorCodes.ADMIN_USER_ALREADY_EXIST]: {
-    title: `Admin user already exists`,
+    get title() {
+      return translate("web.auth_errors.admin_user_already_exists");
+    },
     message: () => (
-      <div>
-        {localizeAuthText("Admin user already exists.")}&nbsp;
-        <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
-          {localizeAuthText("Sign In")}
-        </Link>
-        &nbsp;{localizeAuthText("now.")}
-      </div>
+      <Translation
+        translationKey="web.runtime.auth_admin_existing"
+        components={{
+          link: (
+            <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
+              {translate("web.auth_errors.sign_in")}
+            </Link>
+          ),
+        }}
+      />
     ),
   },
   [EAuthenticationErrorCodes.ADMIN_USER_DOES_NOT_EXIST]: {
-    title: `Admin user does not exist`,
+    get title() {
+      return translate("web.auth_errors.admin_user_does_not_exist");
+    },
     message: () => (
-      <div>
-        {localizeAuthText("Admin user does not exist.")}&nbsp;
-        <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
-          {localizeAuthText("Sign In")}
-        </Link>
-        &nbsp;{localizeAuthText("now.")}
-      </div>
+      <Translation
+        translationKey="web.runtime.auth_admin_missing"
+        components={{
+          link: (
+            <Link className="font-medium underline underline-offset-4 transition-all hover:font-bold" href={`/admin`}>
+              {translate("web.auth_errors.sign_in")}
+            </Link>
+          ),
+        }}
+      />
     ),
   },
   [EAuthenticationErrorCodes.ADMIN_USER_DEACTIVATED]: {
-    title: `Admin user deactivated`,
-    message: () => <div>{localizeAuthText("Your account is deactivated")}</div>,
+    get title() {
+      return translate("web.auth_errors.admin_user_deactivated");
+    },
+    message: () => <div>{translate("web.auth_errors.your_account_is_deactivated")}</div>,
   },
   [EAuthenticationErrorCodes.RATE_LIMIT_EXCEEDED]: {
     title: "",
-    message: () => `Rate limit exceeded. Please try again later.`,
+    message: () => translate("web.auth_errors.rate_limit_exceeded_please_try_again_later"),
   },
 };
 
@@ -498,10 +617,8 @@ export const authErrorHandler = (errorCode: EAuthenticationErrorCodes, email?: s
     return {
       type: EErrorAlertType.BANNER_ALERT,
       code: errorCode,
-      title: localizeAuthText(errorCodeMessages[errorCode]?.title || "Error"),
-      message: localizeMessage(
-        errorCodeMessages[errorCode]?.message(email) || "Something went wrong. Please try again."
-      ),
+      title: errorCodeMessages[errorCode]?.title || translate("error"),
+      message: errorCodeMessages[errorCode]?.message(email) || translate("something_went_wrong_please_try_again"),
     };
 
   return undefined;

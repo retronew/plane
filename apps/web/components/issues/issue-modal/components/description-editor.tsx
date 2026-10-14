@@ -258,7 +258,8 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
                   t("web.generating_response_2")
                 ) : (
                   <>
-                    <AiStar1Outline className="h-3.5 w-3.5" />I{"'"}m feeling lucky
+                    <AiStar1Outline className="h-3.5 w-3.5" />
+                    {t("web.ui.feeling_lucky")}
                   </>
                 )}
               </button>

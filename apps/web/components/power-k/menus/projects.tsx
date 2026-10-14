@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import React from "react";
 // components
 import { Logo } from "@plane/blocks/emoji-icon-picker";
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function PowerKProjectsMenu({ projects, onSelect }: Props) {
+  const { t } = useTranslation();
   return (
     <PowerKMenuBuilder
       items={projects}
@@ -30,7 +32,7 @@ export function PowerKProjectsMenu({ projects, onSelect }: Props) {
       getValue={(project) => project.name}
       getLabel={(project) => project.name}
       onSelect={onSelect}
-      emptyText="No projects found"
+      emptyText={t("web.ui.no_projects")}
     />
   );
 }

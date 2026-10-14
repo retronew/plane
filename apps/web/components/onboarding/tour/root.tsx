@@ -75,8 +75,9 @@ const TOUR_STEPS: {
     get title() {
       return translate("web.title_views");
     },
-    description:
-      "Create custom filters to display only the work items that matter to you. Save and share your filters in just a few clicks.",
+    get description() {
+      return translate("web.ui.views_tour");
+    },
     image: ViewsTour,
     prevStep: "modules",
     nextStep: "pages",

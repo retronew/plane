@@ -8,7 +8,7 @@ import { observer } from "mobx-react";
 import { useTheme } from "next-themes";
 // plane imports
 import { PROGRESS_STATE_GROUPS_DETAILS } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import type { TWorkItemFilterCondition } from "@plane/shared-state";
 import { LinearProgress } from "@makeplane/propel/components/linear-progress";
 import type { ICycle } from "@plane/types";
@@ -102,11 +102,7 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
           ))}
           {cycle.cancelled_issues > 0 && (
             <span className="flex items-center gap-2 text-13 text-tertiary">
-              <span>
-                {`${cycle.cancelled_issues} cancelled ${
-                  cycle.cancelled_issues > 1 ? "work items are" : "work item is"
-                } excluded from this report.`}{" "}
-              </span>
+              <span>{translate("web.runtime.cancelled_excluded", { count: cycle.cancelled_issues })} </span>
             </span>
           )}
         </div>

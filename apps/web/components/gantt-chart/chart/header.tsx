@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { ArrowCollapseOutline, FullScreenOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
@@ -43,7 +44,9 @@ export const GanttChartHeader = observer(function GanttChartHeader(props: Props)
     >
       <div className="ml-auto">
         <div className="ml-auto text-11 font-medium text-tertiary">
-          {blockIds ? `${blockIds.length} ${loaderTitle}` : t("common.loading")}
+          {blockIds
+            ? translate("web.ui.gantt_item_count", { count: blockIds.length, type: loaderTitle })
+            : t("common.loading")}
         </div>
       </div>
 

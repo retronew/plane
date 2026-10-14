@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 // plane imports
 import { ROLE, EUserPermissions } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { AddOutline, ChevronDownOutline, CloseOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
@@ -293,7 +293,7 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
                   type="submit"
                   label={
                     isSubmitting
-                      ? `${fields && fields.length > 1 ? `${t("add_members")}...` : `${t("add_member")}...`}`
+                      ? `${fields && fields.length > 1 ? translate("web.runtime.loading_label", { label: t("add_members") }) : translate("web.runtime.loading_label", { label: t("add_member") })}`
                       : `${fields && fields.length > 1 ? t("add_members") : t("add_member")}`
                   }
                   loading={isSubmitting}

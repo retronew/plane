@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // Plane
 import { Row } from "@plane/blocks/layout";
@@ -57,7 +58,7 @@ export const ModulesSidebarBlock = observer(function ModulesSidebarBlock(props: 
           </div>
           {duration !== undefined && (
             <div className="flex-shrink-0 text-13 text-secondary">
-              {duration} day{duration > 1 ? "s" : ""}
+              <Translation translationKey="web.ui.duration_days" values={{ count: duration }} />
             </div>
           )}
         </div>

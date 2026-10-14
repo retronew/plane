@@ -5,6 +5,7 @@
  */
 
 // plane imports
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import type { EProductSubscriptionEnum, TBillingFrequency } from "@plane/types";
 import { calculateYearlyDiscount, cn } from "@plane/utils";
@@ -35,7 +36,7 @@ export const PlanFrequencyToggle = observer(function PlanFrequencyToggle(props: 
               : "text-tertiary hover:text-secondary"
           )}
         >
-          Monthly
+          <Translation translationKey="web.ui.monthly" />
         </button>
         <button
           type="button"
@@ -47,7 +48,7 @@ export const PlanFrequencyToggle = observer(function PlanFrequencyToggle(props: 
               : "text-tertiary hover:text-secondary"
           )}
         >
-          Yearly
+          <Translation translationKey="web.ui.yearly" />
           {yearlyDiscount > 0 && (
             <span className="ml-1.5 rounded-full bg-accent-primary px-1 py-0.5 text-caption-xs-regular text-on-color">
               -{yearlyDiscount}%

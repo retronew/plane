@@ -83,7 +83,9 @@ const PROJECT_FEATURES_LIST = {
   inbox: {
     key: "intake",
     property: "inbox_view",
-    title: "Intake",
+    get title() {
+      return translate("web.ui.intake");
+    },
     get description() {
       return translate("web.consider_and_discuss_work_items_before_you_add_them_to_your");
     },

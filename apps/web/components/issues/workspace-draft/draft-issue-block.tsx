@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import React, { useRef, useState } from "react";
 import { omit } from "lodash-es";
 import { observer } from "mobx-react";
@@ -54,7 +56,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
   const duplicateIssuePayload = omit(
     {
       ...issue,
-      name: `${issue.name} (copy)`,
+      name: translate("web.runtime.copy_name", { name: issue.name }),
       is_draft: true,
     },
     ["id"]

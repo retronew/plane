@@ -5,7 +5,7 @@
  */
 
 import { SignalHigh } from "lucide-react";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 // types
 import { PriorityIcon } from "@plane/blocks/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -35,7 +35,9 @@ export function IssueBlockPriority({
   if (priority_detail === null) return <></>;
 
   return (
-    <Tooltip label={`Priority: ${t(priority_detail?.titleTranslationKey || "")}`}>
+    <Tooltip
+      label={translate("web.runtime.priority_value", { priority: t(priority_detail?.titleTranslationKey || "") })}
+    >
       <div
         className={cn(
           "flex h-full items-center gap-1.5 rounded-sm border-[0.5px] px-2 py-0.5 text-11",

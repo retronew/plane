@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import React from "react";
 import { observer } from "mobx-react";
 // local imports
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export const PowerKSettingsMenu = observer(function PowerKSettingsMenu({ settings, onSelect }: Props) {
+  const { t } = useTranslation();
   return (
     <PowerKMenuBuilder
       items={settings}
@@ -30,7 +32,7 @@ export const PowerKSettingsMenu = observer(function PowerKSettingsMenu({ setting
       getValue={(setting) => setting.label}
       getLabel={(setting) => setting.label}
       onSelect={onSelect}
-      emptyText="No settings found"
+      emptyText={t("web.ui.no_settings")}
     />
   );
 });

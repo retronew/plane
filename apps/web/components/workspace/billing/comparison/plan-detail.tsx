@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane imports
 import {
@@ -38,7 +39,7 @@ export const PlanDetail = observer(function PlanDetail(props: TPlanDetailProps) 
   const isSubscriptionActive = planDetail.isActive;
   // pricing details
   const displayPrice = billingFrequency === "month" ? planDetail.monthlyPrice : planDetail.yearlyPrice;
-  const pricingDescription = isSubscriptionActive ? "a user per month" : "Quote on request";
+  const pricingDescription = isSubscriptionActive ? t("web.ui.per_user_month") : t("web.quote_on_request");
   const pricingSecondaryDescription =
     billingFrequency === "month"
       ? planDetail.monthlyPriceSecondaryDescription
@@ -60,7 +61,7 @@ export const PlanDetail = observer(function PlanDetail(props: TPlanDetailProps) 
           <span>{subscriptionName}</span>
           {subscriptionType === EProductSubscriptionEnum.PRO && (
             <span className="rounded-sm bg-accent-primary px-2 py-0.5 text-caption-sm-medium text-on-color">
-              Popular
+              <Translation translationKey="web.ui.popular" />
             </span>
           )}
         </div>
@@ -104,7 +105,11 @@ export const PlanDetail = observer(function PlanDetail(props: TPlanDetailProps) 
           variant="primary"
           size="md"
           stretch="full"
-          label={isSubscriptionActive ? `Upgrade to ${subscriptionName}` : t("common.upgrade_cta.talk_to_sales")}
+          label={
+            isSubscriptionActive
+              ? t("web.ui.upgrade_to", { plan: subscriptionName })
+              : t("common.upgrade_cta.talk_to_sales")
+          }
           onClick={handleRedirection}
         />
       </div>

@@ -59,7 +59,7 @@ export const useRealtimePageEvents = ({
       if (!userId) return "";
       try {
         const userDetails = getUserDetails(userId);
-        return userDetails?.display_name ? ` by ${userDetails.display_name}` : "";
+        return userDetails?.display_name ?? "";
       } catch {
         return "";
       }
@@ -121,7 +121,9 @@ export const useRealtimePageEvents = ({
                 setToast({
                   type: "error",
                   title: translate("web.page_deleted"),
-                  message: `Page deleted${getUserDisplayText(data.user_id)}`,
+                  message: getUserDisplayText(data.user_id)
+                    ? translate("web.ui.page_deleted_by", { name: getUserDisplayText(data.user_id) })
+                    : translate("web.ui.page_deleted"),
                 });
                 router.push(handlers.getRedirectionLink());
               } else if (page.id === pageId) {

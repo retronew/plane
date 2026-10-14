@@ -8,7 +8,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 
 // plane imports
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { AddOutline } from "@makeplane/propel/icons";
 // hooks
 import { useSticky } from "@/hooks/use-stickies";
@@ -49,7 +49,7 @@ export const StickiesWidget = observer(function StickiesWidget() {
               <div
                 className="size-4 animate-spin rounded-full border-2 border-accent-strong border-t-transparent"
                 role="status"
-                aria-label="loading"
+                aria-label={translate("loading")}
               />
             )}
           </button>

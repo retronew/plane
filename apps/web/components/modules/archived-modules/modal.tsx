@@ -67,7 +67,7 @@ export function ArchiveModuleModal(props: Props) {
       handleSubmit={handleArchiveModule}
       isSubmitting={isArchiving}
       variant="primary"
-      title={`Archive module ${moduleName}`}
+      title={translate("web.runtime.archive_module", { name: moduleName })}
       content={translate("web.are_you_sure_you_want_to_archive_the_module_all_your_archive")}
       primaryButtonText={{ loading: translate("web.archiving"), default: translate("web.archive") }}
       secondaryButtonText={translate("web.cancel")}

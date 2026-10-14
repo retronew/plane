@@ -50,7 +50,7 @@ function AutomationSettingsPage({ params }: Route.ComponentProps) {
 
   // derived values
   const pageTitle = projectDetails?.name
-    ? `${projectDetails?.name} - ${translate("web.title_automations")}`
+    ? translate("web.runtime.page_title", { name: projectDetails?.name, section: translate("web.title_automations") })
     : undefined;
 
   if (workspaceUserInfo && !canPerformProjectAdminActions) {

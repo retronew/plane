@@ -5,6 +5,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import type { CSSProperties } from "react";
 import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/extract-instruction";
 import { clone, isNil, pull, uniq, concat } from "lodash-es";
@@ -128,7 +129,7 @@ export const getGroupByColumns = ({
     return [
       {
         id: "All Issues",
-        name: `All ${isEpic ? "Epics" : "work items"}`,
+        name: translate("web.runtime.all_entities", { type: isEpic ? "epic" : "issue" }),
         payload: {},
         icon: undefined,
       },
@@ -739,14 +740,17 @@ export const getBlockViewDetails = (
 
   if (isBlockVisibleOnChart && !isBlockComplete) {
     if (block?.start_date) {
-      message = `From ${renderFormattedDate(block.start_date)}`;
+      message = translate("web.ui.date_from", { date: renderFormattedDate(block.start_date) });
       blockStyle.maskImage = `linear-gradient(to right, ${backgroundColor} 50%, transparent 95%)`;
     } else if (block?.target_date) {
-      message = `Till ${renderFormattedDate(block.target_date)}`;
+      message = translate("web.ui.date_until", { date: renderFormattedDate(block.target_date) });
       blockStyle.maskImage = `linear-gradient(to left, ${backgroundColor} 50%, transparent 95%)`;
     }
   } else if (isBlockComplete) {
-    message = `${renderFormattedDate(block?.start_date)} to ${renderFormattedDate(block?.target_date)}`;
+    message = translate("web.ui.date_range", {
+      start: renderFormattedDate(block?.start_date),
+      end: renderFormattedDate(block?.target_date),
+    });
   }
 
   return {

@@ -4,11 +4,12 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import React, { useState } from "react";
 import { observer } from "mobx-react";
 // types
 import { PROJECT_ERROR_MESSAGES } from "@plane/constants";
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { TIssue } from "@plane/types";
 // ui
@@ -49,8 +50,8 @@ export const DeleteInboxIssueModal = observer(function DeleteInboxIssueModal({
       .then(() => {
         setToast({
           type: "success",
-          title: `${t("success")}`,
-          message: `${t("inbox_issue.modals.delete.success")}`,
+          title: t("success"),
+          message: t("inbox_issue.modals.delete.success"),
         });
         return undefined;
       })
@@ -78,11 +79,16 @@ export const DeleteInboxIssueModal = observer(function DeleteInboxIssueModal({
       // TODO: Need to translate the confirmation message
       content={
         <>
-          {translate("web.delete_work_item_confirm_prefix")}{" "}
-          <span className="font-medium break-words text-primary">
-            {projectDetails?.identifier}-{data?.sequence_id}
-          </span>
-          {""}? The work item will only be deleted from the intake and this action cannot be undone.
+          <Translation
+            translationKey="web.ui.delete_intake_confirm"
+            components={{
+              name: (
+                <span className="font-medium break-words text-primary">
+                  {projectDetails?.identifier}-{data?.sequence_id}
+                </span>
+              ),
+            }}
+          />
         </>
       }
     />

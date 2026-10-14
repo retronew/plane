@@ -110,7 +110,7 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
     })
       .then(() => {
         setToast({
-          title: `${t("success")}!`,
+          title: t("success"),
           type: "success",
           message: t("project_settings.general.toast.success"),
         });
@@ -129,7 +129,7 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
     })
       .then(() => {
         setToast({
-          title: `${t("success")}!`,
+          title: t("success"),
           type: "success",
           message: t("project_settings.general.toast.success"),
         });

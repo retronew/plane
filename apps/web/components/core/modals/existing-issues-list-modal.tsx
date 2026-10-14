@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Translation } from "@plane/i18n";
 import { useEffect, useState, useRef } from "react";
 import { Combobox, ComboboxItem, ComboboxList, ComboboxSearch } from "@makeplane/propel/components/combobox";
 import {
@@ -16,7 +17,7 @@ import {
 } from "@makeplane/propel/components/dialog";
 import { CloseOutline, RocketOutline } from "@makeplane/propel/icons";
 // i18n
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 // types
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
@@ -246,13 +247,10 @@ export function ExistingIssuesListModal(props: Props) {
               {/* TODO: Translate here */}
               {searchTerm !== "" && (
                 <h5 className="text-13 text-secondary">
-                  {translate("web.search_results_for")}{" "}
-                  <span className="text-primary">
-                    {'"'}
-                    {searchTerm}
-                    {'"'}
-                  </span>{" "}
-                  in project:
+                  <Translation
+                    translationKey="web.ui.project_search_results"
+                    components={{ query: <span className="text-primary">{searchTerm}</span> }}
+                  />
                 </h5>
               )}
 

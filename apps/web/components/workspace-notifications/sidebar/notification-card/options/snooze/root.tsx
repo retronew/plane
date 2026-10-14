@@ -42,7 +42,7 @@ export const NotificationItemSnoozeOption = observer(function NotificationItemSn
       try {
         await snoozeNotification(workspaceSlug, snoozeTill);
         setToast({
-          title: `${t("common.success")}!`,
+          title: t("common.success"),
           message: t("notification.toasts.snoozed"),
           type: "success",
         });
@@ -53,7 +53,7 @@ export const NotificationItemSnoozeOption = observer(function NotificationItemSn
       try {
         await unSnoozeNotification(workspaceSlug);
         setToast({
-          title: `${t("common.success")}!`,
+          title: t("common.success"),
           message: t("notification.toasts.unsnoozed"),
           type: "success",
         });

@@ -26,13 +26,17 @@ const Titles: TAuthHeaderDetails = {
     get header() {
       return translate("web.sign_in_to_upvote_or_comment");
     },
-    subHeader: "Contribute in nudging the features you want to get built.",
+    get subHeader() {
+      return translate("web.runtime.public_signin_subtitle");
+    },
   },
   [EAuthModes.SIGN_UP]: {
     get header() {
       return translate("web.view_comment_and_do_more");
     },
-    subHeader: "Sign up or log in to work with Plane work items and Pages.",
+    get subHeader() {
+      return translate("web.runtime.public_signup_subtitle");
+    },
   },
 };
 
@@ -46,7 +50,7 @@ export function AuthHeader(props: TAuthHeader) {
 
     return {
       header: translate("web.comment_or_react_to_work_items"),
-      subHeader: "Use plane to add your valuable inputs to features.",
+      subHeader: translate("web.runtime.public_auth_subtitle"),
     };
   };
 

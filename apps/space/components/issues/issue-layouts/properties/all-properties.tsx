@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
+
 import { observer } from "mobx-react";
 import { AttachOutline, LinkOutline, ViewsOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -137,7 +139,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="sub_issue_count"
         shouldRenderProperty={(properties) => !!properties.sub_issue_count && !!issue.sub_issues_count}
       >
-        <Tooltip label={`Sub-work items: ${issue.sub_issues_count}`}>
+        <Tooltip label={translate("web.runtime.sub_items_count", { count: issue.sub_issues_count ?? 0 })}>
           <div
             className={cn(
               "flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1",
@@ -158,7 +160,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="attachment_count"
         shouldRenderProperty={(properties) => !!properties.attachment_count && !!issue.attachment_count}
       >
-        <Tooltip label={`Attachments: ${issue.attachment_count}`}>
+        <Tooltip label={translate("web.runtime.attachments_count", { count: issue.attachment_count ?? 0 })}>
           <div className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1">
             <AttachOutline className="h-3 w-3 flex-shrink-0" />
             <div className="text-11">{issue.attachment_count}</div>
@@ -172,7 +174,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayPropertyKey="link"
         shouldRenderProperty={(properties) => !!properties.link && !!issue.link_count}
       >
-        <Tooltip label={`Links: ${issue.link_count}`}>
+        <Tooltip label={translate("web.runtime.links_count", { count: issue.link_count ?? 0 })}>
           <div className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1">
             <LinkOutline className="h-3 w-3 flex-shrink-0" />
             <div className="text-11">{issue.link_count}</div>

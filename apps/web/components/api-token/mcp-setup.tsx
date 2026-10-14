@@ -8,7 +8,7 @@ import { observer } from "mobx-react";
 
 import { setToast } from "@plane/blocks/toast";
 import { API_BASE_URL } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { copyTextToClipboard } from "@plane/utils";
 // hooks
 import { useUser } from "@/hooks/store/user";
@@ -49,7 +49,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
     copyTextToClipboard(value).then(() =>
       setToast({
         type: "success",
-        title: `${t("success")}!`,
+        title: t("success"),
         message: t("workspace_settings.settings.api_tokens.mcp_config_copied"),
       })
     );
@@ -70,7 +70,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
           <button
             type="button"
             onClick={() => void copy(snippet.value)}
-            aria-label={`${t("workspace_settings.settings.api_tokens.mcp_copy")}: ${snippet.label}`}
+            aria-label={translate("web.runtime.copy_config", { name: snippet.label })}
             className="flex w-full items-start justify-between gap-2 rounded-md border-[0.5px] border-subtle px-3 py-2 text-left outline-none"
           >
             <pre className="font-mono max-h-32 min-w-0 flex-1 overflow-auto text-11 break-all whitespace-pre-wrap">
