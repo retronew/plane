@@ -5,7 +5,7 @@
  */
 
 import { isEmpty, set } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // Plane Imports
 import type { TSupportedFilterTypeForUpdate } from "@plane/constants";
@@ -64,7 +64,7 @@ export class WorkspaceDraftIssuesFilter extends IssueFilterHelperStore implement
     super();
     makeObservable(this, {
       // observables
-      workspaceSlug: observable.ref,
+      workspaceSlug: observableRef,
       filters: observable,
       // computed
       issueFilters: computed,

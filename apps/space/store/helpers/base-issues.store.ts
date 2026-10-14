@@ -5,7 +5,7 @@
  */
 
 import { concat, get, set, uniq, update } from "lodash-es";
-import { action, makeObservable, observable, runInAction } from "mobx";
+import { makeObservable, observable, runInAction, actionBound } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane imports
 import { ALL_ISSUES } from "@plane/constants";
@@ -91,12 +91,12 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
 
       paginationOptions: observable,
       // action
-      storePreviousPaginationValues: action.bound,
+      storePreviousPaginationValues: actionBound,
 
-      onfetchIssues: action.bound,
-      onfetchNexIssues: action.bound,
-      clear: action.bound,
-      setLoader: action.bound,
+      onfetchIssues: actionBound,
+      onfetchNexIssues: actionBound,
+      clear: actionBound,
+      setLoader: actionBound,
     });
     this.rootIssueStore = _rootStore;
     this.issueService = new SitesIssueService();
@@ -412,27 +412,27 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     set(this.groupedIssueCount, [ALL_ISSUES], groupedIssueCount[ALL_ISSUES]);
 
     // loop through the groups of groupedIssues.
-    for (const groupId in groupedIssues) {
-      const issueGroup = groupedIssues[groupId];
-      const issueGroupCount = groupedIssueCount[groupId];
+    for (const groupKey in groupedIssues) {
+      const issueGroup = groupedIssues[groupKey];
+      const issueGroupCount = groupedIssueCount[groupKey];
 
-      // update the groupId's issue count
-      set(this.groupedIssueCount, [groupId], issueGroupCount);
+      // update the groupKey's issue count
+      set(this.groupedIssueCount, [groupKey], issueGroupCount);
 
       // This updates the group issue list in the store, if the issueGroup is a string
-      const storeUpdated = this.updateIssueGroup(issueGroup, [groupId]);
+      const storeUpdated = this.updateIssueGroup(issueGroup, [groupKey]);
       // if issueGroup is indeed a string, continue
       if (storeUpdated) continue;
 
       // if issueGroup is not a string, loop through the sub group Issues
-      for (const subGroupId in issueGroup) {
-        const issueSubGroup = (issueGroup as TGroupedIssues)[subGroupId];
-        const issueSubGroupCount = groupedIssueCount[this.getGroupKey(groupId, subGroupId)];
+      for (const subGroupKey in issueGroup) {
+        const issueSubGroup = (issueGroup as TGroupedIssues)[subGroupKey];
+        const issueSubGroupCount = groupedIssueCount[this.getGroupKey(groupKey, subGroupKey)];
 
-        // update the subGroupId's issue count
-        set(this.groupedIssueCount, [this.getGroupKey(groupId, subGroupId)], issueSubGroupCount);
+        // update the subGroupKey's issue count
+        set(this.groupedIssueCount, [this.getGroupKey(groupKey, subGroupKey)], issueSubGroupCount);
         // This updates the subgroup issue list in the store
-        this.updateIssueGroup(issueSubGroup, [groupId, subGroupId]);
+        this.updateIssueGroup(issueSubGroup, [groupKey, subGroupKey]);
       }
     }
   }
@@ -467,10 +467,10 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
   updateIssueCount(accumulatedUpdatesForCount: { [key: string]: EIssueGroupedAction }) {
     const updateKeys = Object.keys(accumulatedUpdatesForCount);
     for (const updateKey of updateKeys) {
-      const update = accumulatedUpdatesForCount[updateKey];
-      if (!update) continue;
+      const groupedAction = accumulatedUpdatesForCount[updateKey];
+      if (!groupedAction) continue;
 
-      const increment = update === EIssueGroupedAction.ADD ? 1 : -1;
+      const increment = groupedAction === EIssueGroupedAction.ADD ? 1 : -1;
       // get current count at the key
       const issueCount = get(this.groupedIssueCount, updateKey) ?? 0;
       // update the count at the key

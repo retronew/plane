@@ -5,7 +5,7 @@
  */
 
 import { update, concat, set, sortBy } from "lodash-es";
-import { action, computed, observable, makeObservable, runInAction } from "mobx";
+import { action, computed, observable, makeObservable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // types
 import type { IModule, ILinkDetails, TModulePlotType } from "@plane/types";
@@ -96,9 +96,9 @@ export class ModulesStore implements IModuleStore {
   constructor(_rootStore: CoreRootStore) {
     makeObservable(this, {
       // observables
-      loader: observable.ref,
+      loader: observableRef,
       moduleMap: observable,
-      plotType: observable.ref,
+      plotType: observableRef,
       fetchedMap: observable,
       // computed
       projectModuleIds: computed,
@@ -459,6 +459,7 @@ export class ModulesStore implements IModuleStore {
         delete this.moduleMap[moduleId];
         if (this.rootStore.favorite.entityMap[moduleId]) this.rootStore.favorite.removeFavoriteFromStore(moduleId);
       });
+      return undefined;
     });
   };
 
@@ -476,15 +477,11 @@ export class ModulesStore implements IModuleStore {
     moduleId: string,
     data: Partial<ILinkDetails>
   ) => {
-    try {
-      const moduleLink = await this.moduleService.createModuleLink(workspaceSlug, projectId, moduleId, data);
-      runInAction(() => {
-        update(this.moduleMap, [moduleId, "link_module"], (moduleLinks = []) => concat(moduleLinks, moduleLink));
-      });
-      return moduleLink;
-    } catch (error) {
-      throw error;
-    }
+    const moduleLink = await this.moduleService.createModuleLink(workspaceSlug, projectId, moduleId, data);
+    runInAction(() => {
+      update(this.moduleMap, [moduleId, "link_module"], (moduleLinks = []) => concat(moduleLinks, moduleLink));
+    });
+    return moduleLink;
   };
 
   /**
@@ -530,17 +527,13 @@ export class ModulesStore implements IModuleStore {
    * @param linkId
    */
   deleteModuleLink = async (workspaceSlug: string, projectId: string, moduleId: string, linkId: string) => {
-    try {
-      const moduleLink = await this.moduleService.deleteModuleLink(workspaceSlug, projectId, moduleId, linkId);
-      runInAction(() => {
-        update(this.moduleMap, [moduleId, "link_module"], (moduleLinks = []) =>
-          moduleLinks.filter((link: ILinkDetails) => link.id !== linkId)
-        );
-      });
-      return moduleLink;
-    } catch (error) {
-      throw error;
-    }
+    const moduleLink = await this.moduleService.deleteModuleLink(workspaceSlug, projectId, moduleId, linkId);
+    runInAction(() => {
+      update(this.moduleMap, [moduleId, "link_module"], (moduleLinks = []) =>
+        moduleLinks.filter((link: ILinkDetails) => link.id !== linkId)
+      );
+    });
+    return moduleLink;
   };
 
   /**
@@ -611,6 +604,7 @@ export class ModulesStore implements IModuleStore {
           set(this.moduleMap, [moduleId, "archived_at"], response.archived_at);
           if (this.rootStore.favorite.entityMap[moduleId]) this.rootStore.favorite.removeFavoriteFromStore(moduleId);
         });
+        return undefined;
       })
       .catch((error) => {
         console.error("Failed to archive module in module store", error);
@@ -633,6 +627,7 @@ export class ModulesStore implements IModuleStore {
         runInAction(() => {
           set(this.moduleMap, [moduleId, "archived_at"], null);
         });
+        return undefined;
       })
       .catch((error) => {
         console.error("Failed to restore module in module store", error);

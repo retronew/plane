@@ -5,7 +5,7 @@
  */
 
 import { pull, find, concat, set, update } from "lodash-es";
-import { action, makeObservable, observable, runInAction } from "mobx";
+import { action, makeObservable, observable, runInAction, actionBound } from "mobx";
 // Plane Imports
 import type { TIssueReaction, TIssueReactionMap, TIssueReactionIdMap, TIssueServiceType } from "@plane/types";
 import { groupReactions } from "@plane/utils";
@@ -54,7 +54,7 @@ export class IssueReactionStore implements IIssueReactionStore {
       reactions: observable,
       reactionMap: observable,
       // actions
-      addReactions: action.bound,
+      addReactions: actionBound,
       fetchReactions: action,
       createReaction: action,
       removeReaction: action,

@@ -5,7 +5,7 @@
  */
 
 import { pull, concat, uniq, set, update } from "lodash-es";
-import { action, makeObservable, observable, runInAction } from "mobx";
+import { action, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // Plane Imports
 import type {
@@ -83,7 +83,7 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
       subIssuesStateDistribution: observable,
       subIssues: observable,
       subIssueHelpers: observable,
-      loader: observable.ref,
+      loader: observableRef,
       // actions
       setSubIssueHelpers: action,
       fetchSubIssues: action,
@@ -186,10 +186,10 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
         });
       });
 
-      const issueIds = subIssues.map((issue) => issue.id);
+      const subIssueIds = subIssues.map((issue) => issue.id);
       update(this.subIssues, [parentIssueId], (issues) => {
-        if (!issues) return issueIds;
-        return concat(issues, issueIds);
+        if (!issues) return subIssueIds;
+        return concat(issues, subIssueIds);
       });
     });
 
