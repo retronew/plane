@@ -5,25 +5,44 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { observer } from "mobx-react";
 import { useSearchParams } from "next/navigation";
-import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
+import { HideOutline, LockOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import type { EAdminAuthErrorCodes, TAdminAuthErrorInfo } from "@plane/constants";
 import { API_BASE_URL } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
+import { OAuthOptions } from "@plane/blocks/auth";
 import { AuthService } from "@plane/services";
 // components
 import { Banner } from "@/components/common/banner";
 // local components
 import { FormHeader } from "@/components/instance/form-header";
+import { useInstance } from "@/hooks/store";
 import { AuthBanner } from "./auth-banner";
 import { AuthHeader } from "./auth-header";
 import { authErrorHandler } from "./auth-helpers";
 
 // service initialization
 const authService = new AuthService();
+
+// Falls back to the generic lock icon when no icon is configured or it fails to load
+function OIDCProviderIcon({ iconUrl }: { iconUrl?: string }) {
+  const [failedUrl, setFailedUrl] = useState<string | undefined>(undefined);
+  if (!iconUrl || failedUrl === iconUrl) return <LockOutline className="size-[18px] text-secondary" />;
+  return (
+    <img
+      src={iconUrl}
+      height={18}
+      width={18}
+      className="size-[18px] rounded-sm object-contain"
+      alt=""
+      onError={() => setFailedUrl(iconUrl)}
+    />
+  );
+}
 
 // error codes
 enum EErrorCodes {
@@ -50,10 +69,12 @@ const defaultFromData: TFormData = {
   password: "",
 };
 
-export function InstanceSignInForm() {
+export const InstanceSignInForm = observer(function InstanceSignInForm() {
   const { t } = useTranslation();
   // search params
   const searchParams = useSearchParams();
+  const { config } = useInstance();
+  const isOIDCEnabled = !!config?.is_oidc_enabled;
   const emailParam = searchParams.get("email") || undefined;
   const errorCode = searchParams.get("error_code") || undefined;
   const errorMessage = searchParams.get("error_message") || undefined;
@@ -116,12 +137,31 @@ export function InstanceSignInForm() {
       <div className="mt-10 flex w-full flex-grow flex-col items-center justify-center py-6">
         <div className="relative flex w-full max-w-[22.5rem] flex-col gap-6">
           <FormHeader heading={t("admin.sign_in.heading")} subHeading={t("admin.sign_in.sub_heading")} />
+          {isOIDCEnabled && (
+            <>
+              <OAuthOptions
+                showDivider={false}
+                options={[
+                  {
+                    id: "oidc",
+                    text: t("admin.sign_in.sso", { provider: config?.oidc_provider_name || "OIDC" }),
+                    icon: <OIDCProviderIcon iconUrl={config?.oidc_provider_icon_url} />,
+                    onClick: () => window.location.assign(`${API_BASE_URL}/api/instances/admins/oidc/`),
+                  },
+                ]}
+              />
+              <div className="flex items-center">
+                <hr className="w-full border-strong" />
+                <p className="mx-3 shrink-0 text-11 text-placeholder">{t("admin.sign_in.sso_divider")}</p>
+                <hr className="w-full border-strong" />
+              </div>
+            </>
+          )}
           <form
             className="space-y-4"
             method="POST"
             action={`${API_BASE_URL}/api/instances/admins/sign-in/`}
             onSubmit={() => setIsSubmitting(true)}
-            onError={() => setIsSubmitting(false)}
           >
             {errorData.type && errorData?.message ? (
               <Banner type="error" message={errorData?.message} />
@@ -202,4 +242,4 @@ export function InstanceSignInForm() {
       </div>
     </>
   );
-}
+});

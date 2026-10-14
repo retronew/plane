@@ -69,6 +69,10 @@ export enum EAuthenticationErrorCodes {
   GITLAB_OAUTH_PROVIDER_ERROR = "5121",
   OAUTH_PROVIDER_UNVERIFIED_EMAIL = "5124",
   OIDC_OAUTH_PROVIDER_ERROR = "5126",
+  OIDC_EMAIL_NOT_PROVIDED = "5127",
+  OIDC_EMAIL_BIND_EXPIRED = "5128",
+  OIDC_EMAIL_BIND_INVALID_CODE = "5129",
+  OIDC_ACCOUNT_ALREADY_LINKED = "5131",
   // Reset Password
   INVALID_PASSWORD_TOKEN = "5125",
   EXPIRED_PASSWORD_TOKEN = "5130",
@@ -332,16 +336,53 @@ const errorCodeMessages: {
     message: () => `GitLab OAuth provider error. Please try again.`,
   },
   [EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED]: {
-    title: `OIDC not configured`,
-    message: () => `OIDC is not configured. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.oidc_not_configured");
+    },
+    message: () => translate("web.auth_errors.oidc_is_not_configured_please_contact_your_administrator"),
   },
   [EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR]: {
-    title: `OIDC provider error`,
-    message: () => `OIDC provider error. Please try again.`,
+    get title() {
+      return translate("web.auth_errors.oidc_provider_error");
+    },
+    message: () => translate("web.auth_errors.oidc_provider_error_please_try_again"),
+  },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_NOT_PROVIDED]: {
+    get title() {
+      return translate("web.auth_errors.email_not_provided");
+    },
+    message: () =>
+      translate(
+        "web.auth_errors.your_identity_provider_did_not_return_an_email_address_and_email_verification_is_unavailable_because_smtp_is_not_configured_please_ask_your_administrator_to_add_your_email_in_the_identity_provider_or_configure_smtp"
+      ),
+  },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED]: {
+    get title() {
+      return translate("web.auth_errors.email_binding_expired");
+    },
+    message: () => translate("web.auth_errors.your_email_binding_session_has_expired_please_sign_in_again"),
+  },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE]: {
+    get title() {
+      return translate("web.auth_errors.invalid_verification_code");
+    },
+    message: () =>
+      translate("web.auth_errors.the_verification_code_is_incorrect_please_check_your_email_and_try_again"),
+  },
+  [EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED]: {
+    get title() {
+      return translate("web.auth_errors.account_already_linked");
+    },
+    message: () => translate("web.auth_errors.this_single_sign_on_account_is_already_linked_to_another_plane_account"),
   },
   [EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL]: {
-    title: `Unverified email`,
-    message: () => `Your identity provider did not return a verified email. Please contact your administrator.`,
+    get title() {
+      return translate("web.auth_errors.unverified_email");
+    },
+    message: () =>
+      translate(
+        "web.auth_errors.your_identity_provider_did_not_return_a_verified_email_please_contact_your_administrator"
+      ),
   },
 
   // Reset Password
@@ -488,6 +529,10 @@ export const authErrorHandler = (errorCode: EAuthenticationErrorCodes, email?: s
     EAuthenticationErrorCodes.GITLAB_OAUTH_PROVIDER_ERROR,
     EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED,
     EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR,
+    EAuthenticationErrorCodes.OIDC_EMAIL_NOT_PROVIDED,
+    EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED,
+    EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE,
+    EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED,
     EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL,
     EAuthenticationErrorCodes.INVALID_PASSWORD_TOKEN,
     EAuthenticationErrorCodes.EXPIRED_PASSWORD_TOKEN,

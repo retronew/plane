@@ -39,7 +39,6 @@
         "add_member": "Dodaj członka",
         "pending_invites": "Oczekujące zaproszenia",
         "invitations_sent_successfully": "Zaproszenia wysłano pomyślnie",
-        "leave_confirmation": "Czy na pewno chcesz opuścić przestrzeń? Stracisz dostęp. Ta akcja jest nieodwracalna.",
         "details": {
           "full_name": "Imię i nazwisko",
           "display_name": "Nazwa wyświetlana",

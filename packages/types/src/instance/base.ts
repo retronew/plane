@@ -51,6 +51,7 @@ export interface IInstanceConfig {
   is_gitea_enabled: boolean;
   is_oidc_enabled: boolean;
   oidc_provider_name: string | undefined;
+  oidc_provider_icon_url: string | undefined;
   is_magic_login_enabled: boolean;
   is_email_password_enabled: boolean;
   github_app_name: string | undefined;
@@ -63,6 +64,16 @@ export interface IInstanceConfig {
   admin_base_url: string | undefined;
   is_self_managed: boolean;
   instance_changelog_url?: string;
+}
+
+export interface IInstanceUserSearchResult {
+  id: string;
+  email: string;
+  display_name: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+  is_instance_admin: boolean;
 }
 
 export interface IInstanceAdmin {

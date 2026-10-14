@@ -39,7 +39,6 @@
         "add_member": "Agregar miembro",
         "pending_invites": "Invitaciones pendientes",
         "invitations_sent_successfully": "Invitaciones enviadas exitosamente",
-        "leave_confirmation": "¿Estás seguro de que quieres abandonar el espacio de trabajo? Ya no tendrás acceso a este espacio de trabajo. Esta acción no se puede deshacer.",
         "details": {
           "full_name": "Nombre completo",
           "display_name": "Nombre para mostrar",

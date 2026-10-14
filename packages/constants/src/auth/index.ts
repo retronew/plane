@@ -94,6 +94,8 @@ export enum EAdminAuthErrorCodes {
   ADMIN_USER_ALREADY_EXIST = "5180",
   ADMIN_USER_DOES_NOT_EXIST = "5185",
   ADMIN_USER_DEACTIVATED = "5190",
+  ADMIN_SSO_NOT_ADMIN = "5195",
+  ADMIN_SSO_FAILED = "5196",
 }
 
 export type TAdminAuthErrorInfo = {

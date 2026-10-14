@@ -57,13 +57,23 @@
       "admin_user_deactivated": {
         "title": "User account deactivated",
         "message": "User account deactivated. Please contact {contact}."
+      },
+      "sso_not_admin": {
+        "title": "Not an admin",
+        "message": "This account is not an instance admin. Ask an existing admin to add you under Admins."
+      },
+      "sso_failed": {
+        "title": "Single sign-on failed",
+        "message": "Could not sign in with single sign-on. Please try again or use your password."
       }
     },
     "sign_in": {
       "heading": "Manage your Plane instance",
       "sub_heading": "Configure instance-wide settings to secure your instance",
       "password_placeholder": "Enter your password",
-      "submit": "Sign in"
+      "submit": "Sign in",
+      "sso": "Sign in with {provider}",
+      "sso_divider": "or use your password"
     },
     "setup": {
       "heading": "Setup your Plane Instance",
@@ -122,7 +132,8 @@
       "create": "Create",
       "settings": "Settings",
       "toggle_sidebar": "Toggle sidebar",
-      "breadcrumb": "Breadcrumb"
+      "breadcrumb": "Breadcrumb",
+      "admins": "Admins"
     },
     "sidebar": {
       "general": {
@@ -151,7 +162,11 @@
       "instance_admin_menu": "Instance admin menu",
       "instance_admin": "Instance admin",
       "account_menu": "Account menu",
-      "admin_user": "Admin user"
+      "admin_user": "Admin user",
+      "admins": {
+        "name": "Admins",
+        "description": "Who can manage this instance"
+      }
     },
     "help": {
       "documentation": "Documentation",
@@ -302,6 +317,8 @@
         "gitea_host_description": "Use the URL of your Gitea instance. For the official Gitea instance, use \"https://gitea.com\".",
         "oidc_provider_name": "Button label",
         "oidc_provider_name_description": "Shown on the login button, e.g. \"Log in with Casdoor\".",
+        "oidc_provider_icon_url": "Icon URL",
+        "oidc_provider_icon_url_description": "Optional. Image shown on the login button, e.g. your identity provider's logo. Leave empty to use the default icon.",
         "oidc_issuer_url": "Issuer URL",
         "oidc_issuer_url_description": "The OIDC issuer URL of your identity provider. Plane reads <issuer>/.well-known/openid-configuration to find the endpoints.",
         "oidc_client_description": "You will get this from the OAuth/OIDC application in your identity provider.",
@@ -335,7 +352,8 @@
       "home": "Admin – Instance Setup & Sign-In",
       "home_description": "Configure your Plane instance or sign in to the admin portal.",
       "app_title": "Plane | Simple, extensible, open-source project management tool.",
-      "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind."
+      "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind.",
+      "admins": "Admins - God Mode"
     },
     "ai": {
       "title": "AI model provider",
@@ -432,6 +450,31 @@
     "new_user": {
       "description": "Instance setup done! Welcome to Plane instance portal. Start your journey by creating your first workspace.",
       "plane_icon": "Plane icon"
+    },
+    "admins": {
+      "title": "Instance admins",
+      "description": "Admins can sign in to God mode and manage this instance's settings.",
+      "add_label": "Add an admin",
+      "add_button": "Make admin",
+      "add_hint": "Only people who already have a Plane account are listed (e.g. after signing in once with SSO). To sign in to God mode they set a password under Profile settings → Security in the web app.",
+      "list_title": "Admins",
+      "you": "(you)",
+      "remove": "Remove",
+      "confirm_remove": "Confirm remove",
+      "cancel": "Cancel",
+      "added": "Admin added.",
+      "removed": "Admin removed.",
+      "errors": {
+        "invalid_email": "Enter a valid email address.",
+        "user_not_found": "No active Plane account uses this email. Ask the person to sign in once first.",
+        "already_admin": "This person is already an admin.",
+        "cannot_remove_self": "You cannot remove yourself.",
+        "last_admin": "At least one admin is required.",
+        "default": "Something went wrong. Please try again."
+      },
+      "search_placeholder": "Search users by name or email",
+      "no_users": "No matching users.",
+      "already_admin": "Admin"
     }
   }
 }

@@ -39,7 +39,6 @@
         "add_member": "Додати учасника",
         "pending_invites": "Очікувані запрошення",
         "invitations_sent_successfully": "Запрошення успішно надіслано",
-        "leave_confirmation": "Справді вийти з цього простору? Ви втратите доступ. Дія незворотна.",
         "details": {
           "full_name": "Повне ім'я",
           "display_name": "Відображуване ім'я",

@@ -32,6 +32,12 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
   const { displayFilters, handleDisplayFilterUpdate, property } = props;
   // i18n
   const { t } = useTranslation();
+  // Sort bounds come from constants as English words ("Old", "Low", "A", ...)
+  const sortOrderLabel = (title: string) => {
+    const key = `common.sort_order.${title.toLowerCase()}`;
+    const label = t(key);
+    return label === key ? title : label;
+  };
 
   const propertyDetails = MEMBER_PROPERTY_DETAILS[property];
 
@@ -54,6 +60,7 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
         render={
           <button
             type="button"
+            aria-label={t(propertyDetails.i18n_title)}
             className="clickable flex w-full cursor-pointer items-center justify-between gap-1.5 py-2 text-13 text-secondary hover:text-primary"
           />
         }
@@ -78,13 +85,13 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
           <>
             <MenuItem
               icon={<Icon icon={SortDescendingOutline} />}
-              label={`${propertyDetails.ascendingOrderTitle} \u2192 ${propertyDetails.descendingOrderTitle}`}
+              label={`${sortOrderLabel(propertyDetails.ascendingOrderTitle)} → ${sortOrderLabel(propertyDetails.descendingOrderTitle)}`}
               selected={activeSortingProperty === propertyDetails.ascendingOrderKey}
               onClick={() => handleOrderBy(propertyDetails.ascendingOrderKey, property)}
             />
             <MenuItem
               icon={<Icon icon={SortAscendingOutline} />}
-              label={`${propertyDetails.descendingOrderTitle} \u2192 ${propertyDetails.ascendingOrderTitle}`}
+              label={`${sortOrderLabel(propertyDetails.descendingOrderTitle)} → ${sortOrderLabel(propertyDetails.ascendingOrderTitle)}`}
               selected={activeSortingProperty === propertyDetails.descendingOrderKey}
               onClick={() => handleOrderBy(propertyDetails.descendingOrderKey, property)}
             />

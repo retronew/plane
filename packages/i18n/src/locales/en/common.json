@@ -714,7 +714,21 @@
     "developer": "Developer",
     "work_structure": "Work structure",
     "execution": "Execution",
-    "administration": "Administration"
+    "administration": "Administration",
+    "sort_order": {
+      "a": "A",
+      "z": "Z",
+      "old": "Old",
+      "new": "New",
+      "low": "Low",
+      "high": "High",
+      "urgent": "Urgent",
+      "none": "None",
+      "least": "Least",
+      "most": "Most",
+      "admin": "Admin",
+      "guest": "Guest"
+    }
   },
   "chart": {
     "x_axis": "X-axis",

@@ -28,15 +28,15 @@ const MESSAGES = {
 function LegalLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link href={href} className="text-secondary" target="_blank" rel="noopener noreferrer">
-      <span className="text-13 font-medium underline hover:cursor-pointer">{children}</span>
+      <span className="text-13 font-medium whitespace-nowrap underline hover:cursor-pointer">{children}</span>
     </Link>
   );
 }
 
 export function TermsAndConditions({ authType = EAuthModes.SIGN_IN }: TermsAndConditionsProps) {
   return (
-    <div className="flex items-center justify-center">
-      <p className="text-center text-13 whitespace-pre-line text-tertiary">
+    <div>
+      <p className="text-13 text-tertiary">
         {translate(MESSAGES[authType])}
         <LegalLink href={LEGAL_LINKS.termsOfService}>{translate("web.terms_of_service")}</LegalLink>{" "}
         {translate("web.and")} <LegalLink href={LEGAL_LINKS.privacyPolicy}>{translate("web.privacy_policy")}</LegalLink>

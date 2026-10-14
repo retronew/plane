@@ -27,6 +27,7 @@ from plane.bgtasks.forgot_password_task import forgot_password
 from plane.license.models import Instance
 from plane.db.models import User
 from plane.license.utils.instance_value import get_configuration_value
+from plane.authentication.utils.password_management import can_manage_password, password_management_disabled
 from plane.authentication.utils.host import base_host
 from plane.authentication.adapter.error import (
     AuthenticationException,
@@ -79,6 +80,9 @@ class ForgotPasswordEndpoint(APIView):
 
         # Get the user
         user = User.objects.filter(email=email).first()
+        if user and not can_manage_password(user):
+            exc = password_management_disabled()
+            return Response(exc.get_error_dict(), status=status.HTTP_400_BAD_REQUEST)
         if user:
             # Get the reset token for user
             uidb64, token = generate_password_token(user=user)
@@ -125,6 +129,14 @@ class ResetPasswordEndpoint(View):
                 url = urljoin(
                     base_host(request=request, is_app=True),
                     "accounts/reset-password?" + urlencode(params),
+                )
+                return HttpResponseRedirect(url)
+
+            if not can_manage_password(user):
+                exc = password_management_disabled()
+                url = urljoin(
+                    base_host(request=request, is_app=True),
+                    "accounts/reset-password?" + urlencode(exc.get_error_dict()),
                 )
                 return HttpResponseRedirect(url)
 

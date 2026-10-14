@@ -35,6 +35,12 @@ export function HeaderColumn(props: Props) {
   const { displayFilters, handleDisplayFilterUpdate, property, onClose, isEpic = false } = props;
   // i18n
   const { t } = useTranslation();
+  // Sort bounds come from constants as English words ("Old", "Low", "A", ...)
+  const sortOrderLabel = (title: string) => {
+    const key = `common.sort_order.${title.toLowerCase()}`;
+    const label = t(key);
+    return label === key ? title : label;
+  };
   const { storedValue: selectedMenuItem, setValue: setSelectedMenuItem } = useLocalStorage(
     "spreadsheetViewSorting",
     ""
@@ -65,7 +71,7 @@ export function HeaderColumn(props: Props) {
     >
       <MenuTrigger
         render={
-          <button type="button" tabIndex={-1} className="clickable w-full">
+          <button type="button" tabIndex={-1} aria-label={t(propertyDetails.i18n_title)} className="clickable w-full">
             <Row className="flex w-full cursor-pointer items-center justify-between gap-1.5 py-2 text-13 text-secondary hover:text-primary">
               <div className="flex items-center gap-1.5">
                 {<SpreadSheetPropertyIcon iconKey={propertyDetails.icon} className="h-4 w-4 text-placeholder" />}
@@ -92,13 +98,13 @@ export function HeaderColumn(props: Props) {
       <MenuContent side="bottom" align="start">
         <MenuItem
           icon={<Icon icon={SortDescendingOutline} />}
-          label={`${propertyDetails.ascendingOrderTitle} → ${propertyDetails.descendingOrderTitle}`}
+          label={`${sortOrderLabel(propertyDetails.ascendingOrderTitle)} → ${sortOrderLabel(propertyDetails.descendingOrderTitle)}`}
           selected={selectedMenuItem === ascendingMenuItemKey}
           onClick={() => handleOrderBy(propertyDetails.ascendingOrderKey, property)}
         />
         <MenuItem
           icon={<Icon icon={SortAscendingOutline} />}
-          label={`${propertyDetails.descendingOrderTitle} → ${propertyDetails.ascendingOrderTitle}`}
+          label={`${sortOrderLabel(propertyDetails.descendingOrderTitle)} → ${sortOrderLabel(propertyDetails.ascendingOrderTitle)}`}
           selected={selectedMenuItem === descendingMenuItemKey}
           onClick={() => handleOrderBy(propertyDetails.descendingOrderKey, property)}
         />

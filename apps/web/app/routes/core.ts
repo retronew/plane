@@ -28,6 +28,9 @@ export const coreRoutes: RouteConfigEntry[] = [
   layout("./(all)/accounts/set-password/layout.tsx", [
     route("accounts/set-password", "./(all)/accounts/set-password/page.tsx"),
   ]),
+  layout("./(all)/accounts/oidc-bind-email/layout.tsx", [
+    route("accounts/oidc/bind-email", "./(all)/accounts/oidc-bind-email/page.tsx"),
+  ]),
 
   // Create Workspace
   layout("./(all)/create-workspace/layout.tsx", [route("create-workspace", "./(all)/create-workspace/page.tsx")]),

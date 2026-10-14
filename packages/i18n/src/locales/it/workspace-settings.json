@@ -39,7 +39,6 @@
         "add_member": "Aggiungi membro",
         "pending_invites": "Inviti in sospeso",
         "invitations_sent_successfully": "Inviti inviati con successo",
-        "leave_confirmation": "Sei sicuro di voler lasciare lo spazio di lavoro? Non avrai più accesso a questo spazio. Questa azione non può essere annullata.",
         "details": {
           "full_name": "Nome completo",
           "display_name": "Nome visualizzato",

@@ -23,6 +23,7 @@ from plane.authentication.adapter.error import (
 from django.middleware.csrf import get_token
 from plane.utils.cache import invalidate_cache
 from plane.authentication.utils.host import base_host
+from plane.authentication.utils.password_management import can_manage_password, password_management_disabled
 
 
 class CSRFTokenEndpoint(APIView):
@@ -47,6 +48,10 @@ def csrf_failure(request, reason=""):
 class ChangePasswordEndpoint(APIView):
     def post(self, request):
         user = User.objects.get(pk=request.user.id)
+
+        if not can_manage_password(user):
+            exc = password_management_disabled()
+            return Response(exc.get_error_dict(), status=status.HTTP_400_BAD_REQUEST)
 
         # If the user password is not autoset then we need to check the old passwords
         if not user.is_password_autoset:
@@ -100,6 +105,10 @@ class SetUserPasswordEndpoint(APIView):
     def post(self, request):
         user = User.objects.get(pk=request.user.id)
         password = request.data.get("password", False)
+
+        if not can_manage_password(user):
+            exc = password_management_disabled()
+            return Response(exc.get_error_dict(), status=status.HTTP_400_BAD_REQUEST)
 
         # If the user password is not autoset then return error
         if not user.is_password_autoset:

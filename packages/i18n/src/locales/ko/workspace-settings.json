@@ -39,7 +39,6 @@
         "add_member": "멤버 추가",
         "pending_invites": "보류 중인 초대",
         "invitations_sent_successfully": "초대가 성공적으로 전송되었습니다",
-        "leave_confirmation": "작업 공간을 떠나시겠습니까? 더 이상 이 작업 공간에 접근할 수 없습니다. 이 작업은 되돌릴 수 없습니다.",
         "details": {
           "full_name": "전체 이름",
           "display_name": "표시 이름",

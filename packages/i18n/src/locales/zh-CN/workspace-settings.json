@@ -39,7 +39,6 @@
         "add_member": "添加成员",
         "pending_invites": "待处理邀请",
         "invitations_sent_successfully": "邀请已发送",
-        "leave_confirmation": "确定要离开此工作区吗？离开后您将无法再访问此工作区，此操作无法撤销。",
         "details": {
           "full_name": "姓名",
           "display_name": "显示名称",

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
 // plane imports
@@ -33,7 +33,12 @@ import { useUser } from "@/hooks/store/user";
 import { AuthService } from "@/services/auth.service";
 import userService from "@/services/user.service";
 
-type Props = { isOpen: boolean; onClose: () => void };
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+  // e.g. the email returned by the identity provider after linking SSO
+  defaultEmail?: string;
+};
 
 type TModalStep = "EMAIL" | "UNIQUE_CODE";
 type TUniqueCodeValuesForm = { email: string; code: string };
@@ -44,7 +49,7 @@ const defaultValues: TUniqueCodeValuesForm = { email: "", code: "" };
 const authService = new AuthService();
 
 export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props) {
-  const { isOpen, onClose } = props;
+  const { isOpen, onClose, defaultEmail } = props;
   // states
   const [currentStep, setCurrentStep] = useState<TModalStep>("EMAIL");
   // store hooks
@@ -61,6 +66,10 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
   } = useForm<TUniqueCodeValuesForm>({ defaultValues });
 
   const secondStep = currentStep === "UNIQUE_CODE";
+
+  useEffect(() => {
+    if (isOpen && defaultEmail) reset({ ...defaultValues, email: defaultEmail });
+  }, [isOpen, defaultEmail, reset]);
 
   const handleClose = () => {
     reset({ ...defaultValues });
@@ -214,7 +223,6 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
                             ref={ref}
                             placeholder={changeEmailT("form.code.placeholder")}
                             autoComplete="off"
-                            autoFocus
                           />
                         </InputGroup>
                       )}

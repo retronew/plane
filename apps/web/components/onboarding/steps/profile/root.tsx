@@ -19,6 +19,7 @@ import { cn, getFileURL, getPasswordStrength, validatePersonName } from "@plane/
 import { UserImageUploadModal } from "@/components/core/modals/user-image-upload-modal";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
+import { usePasswordManagement } from "@/hooks/use-password-management";
 import { useUser, useUserProfile } from "@/hooks/store/user";
 // services
 import { AuthService } from "@/services/auth.service";
@@ -54,6 +55,11 @@ const defaultValues: Partial<TProfileSetupFormValues> = {
   has_marketing_email_consent: true,
 };
 
+const handleSetPassword = async (password: string) => {
+  const token = await authService.requestCSRFToken().then((data) => data?.csrf_token);
+  await authService.setPassword(token, { password });
+};
+
 export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepChange }: Props) {
   // states
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
@@ -61,6 +67,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
   const { data: user, updateCurrentUser } = useUser();
   const { updateUserProfile } = useUserProfile();
   const { config: instanceConfig } = useInstance();
+  const { canManagePassword } = usePasswordManagement();
   // form info
   const {
     getValues,
@@ -80,11 +87,6 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
   });
   // derived values
   const userAvatar = watch("avatar_url");
-
-  const handleSetPassword = async (password: string) => {
-    const token = await authService.requestCSRFToken().then((data) => data?.csrf_token);
-    await authService.setPassword(token, { password });
-  };
 
   const handleSubmitUserDetail = async (formData: TProfileSetupFormValues) => {
     const userDetailsPayload: Partial<IUser> = {
@@ -176,10 +178,8 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
           onClick={() => setIsImageUploadModalOpen(true)}
         >
           {userAvatar ? (
-            // oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- pre-existing mouse-only interaction, kept as-is
             <img
               src={getFileURL(userAvatar ?? "")}
-              onClick={() => setIsImageUploadModalOpen(true)}
               alt={user?.display_name}
               className="h-full w-full rounded-full object-cover"
             />
@@ -246,7 +246,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
         </div>
 
         {/* setting up password for the first time */}
-        {!isPasswordAlreadySetup && (
+        {!isPasswordAlreadySetup && canManagePassword && (
           <SetPasswordRoot
             onPasswordChange={(password) => setValue("password", password)}
             onConfirmPasswordChange={(confirm_password) => setValue("confirm_password", confirm_password)}

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from plane.authentication.adapter.error import AUTHENTICATION_ERROR_CODES, AuthenticationException
-from plane.authentication.provider.oauth.oidc import OIDCOAuthProvider
+from plane.authentication.provider.oauth.oidc import OIDCEmailMissing, OIDCOAuthProvider, large_avatar_url
 
 ISSUER = "https://auth.example.com"
 DISCOVERY = {
@@ -32,6 +32,21 @@ def _discovery_response(payload=DISCOVERY):
     response = MagicMock()
     response.json.return_value = payload
     return response
+
+
+def _linked_account(email=None):
+    """Patch the Account lookup used to find an already linked OIDC identity."""
+    account = MagicMock()
+    account.user.email = email
+    queryset = MagicMock()
+    queryset.select_related.return_value.first.return_value = account if email else None
+    return patch("plane.authentication.provider.oauth.oidc.Account.objects.filter", return_value=queryset)
+
+
+@pytest.fixture(autouse=True)
+def no_linked_account():
+    with _linked_account() as mock_filter:
+        yield mock_filter
 
 
 @pytest.mark.unit
@@ -124,9 +139,60 @@ class TestOIDCOAuthProvider:
 
     @patch("plane.authentication.provider.oauth.oidc.requests.get")
     @patch("plane.authentication.provider.oauth.oidc.get_configuration_value")
-    def test_missing_email_rejected_even_when_trusted(self, mock_config, mock_get):
+    def test_missing_email_asks_user_to_bind_one(self, mock_config, mock_get):
         provider = self._provider(mock_config, mock_get, trust_email="1")
-        with patch.object(provider, "get_user_response", return_value={"sub": "user-1"}):
+        provider.token_data = {"access_token": "at"}
+        userinfo = {"sub": "user-1", "name": "孔维维"}
+        with patch.object(provider, "get_user_response", return_value=userinfo):
+            with pytest.raises(OIDCEmailMissing) as exc:
+                provider.set_user_data()
+        assert exc.value.user["provider_id"] == "user-1"
+        assert exc.value.user["display_name"] == "孔维维"
+        assert exc.value.token_data == {"access_token": "at"}
+
+    @patch("plane.authentication.provider.oauth.oidc.requests.get")
+    @patch("plane.authentication.provider.oauth.oidc.get_configuration_value")
+    def test_missing_email_and_sub_is_provider_error(self, mock_config, mock_get):
+        provider = self._provider(mock_config, mock_get)
+        with patch.object(provider, "get_user_response", return_value={}):
             with pytest.raises(AuthenticationException) as exc:
                 provider.set_user_data()
         assert exc.value.error_code == AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"]
+
+    @patch("plane.authentication.provider.oauth.oidc.requests.get")
+    @patch("plane.authentication.provider.oauth.oidc.get_configuration_value")
+    def test_linked_identity_uses_bound_email(self, mock_config, mock_get):
+        provider = self._provider(mock_config, mock_get)
+        # Neither a missing nor an unverified IdP email matters once the sub is linked
+        userinfo = {"sub": "user-1", "email": "other@example.com"}
+        with _linked_account("bound@example.com"):
+            with patch.object(provider, "get_user_response", return_value=userinfo):
+                provider.set_user_data()
+        assert provider.user_data["email"] == "bound@example.com"
+        assert provider.user_data["user"]["provider_id"] == "user-1"
+
+
+@pytest.mark.unit
+class TestLargeAvatarURL:
+    def test_lark_thumbnail_is_upsized(self):
+        url = (
+            "https://s3-imfile.feishucdn.com/static-resource/v1/v3_abc~"
+            "?image_size=72x72&cut_type=&quality=&format=image&sticker_format=.webp"
+        )
+        assert large_avatar_url(url) == (
+            "https://s3-imfile.feishucdn.com/static-resource/v1/v3_abc~"
+            "?image_size=640x640&cut_type=&quality=&format=image&sticker_format=.webp"
+        )
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            None,
+            "",
+            "https://cdn.example.com/a.png?image_size=72x72",
+            "https://s3-imfile.feishucdn.com/static-resource/v1/v3_abc~",
+            "https://evil-feishucdn.com/a.png?image_size=72x72",
+        ],
+    )
+    def test_other_urls_untouched(self, url):
+        assert large_avatar_url(url) == url

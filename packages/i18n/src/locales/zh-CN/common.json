@@ -714,7 +714,21 @@
     "developer": "开发者",
     "work_structure": "工作结构",
     "execution": "执行",
-    "administration": "管理"
+    "administration": "管理",
+    "sort_order": {
+      "a": "A",
+      "z": "Z",
+      "old": "最早",
+      "new": "最新",
+      "low": "低",
+      "high": "高",
+      "urgent": "紧急",
+      "none": "无",
+      "least": "最少",
+      "most": "最多",
+      "admin": "管理员",
+      "guest": "访客"
+    }
   },
   "chart": {
     "x_axis": "X 轴",

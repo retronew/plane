@@ -19,6 +19,7 @@ import { useTranslation } from "@plane/i18n";
 import type { ISvgIcons } from "@plane/blocks/icons";
 import type { TProfileSettingsTabs } from "@plane/types";
 // local imports
+import { usePasswordManagement } from "@/hooks/use-password-management";
 import { SettingsSidebarItem } from "../../sidebar/item";
 import { ProfileSettingsSidebarWorkspaceOptions } from "./workspace-options";
 
@@ -43,11 +44,15 @@ export const ProfileSettingsSidebarItemCategories = observer(function ProfileSet
   const { profileTabId } = useParams();
   // translation
   const { t } = useTranslation();
+  // the security tab only manages the password
+  const { canManagePassword } = usePasswordManagement();
 
   return (
     <div className="mt-4 flex flex-col gap-y-4">
       {PROFILE_SETTINGS_CATEGORIES.map((category) => {
-        const categoryItems = GROUPED_PROFILE_SETTINGS[category];
+        const categoryItems = GROUPED_PROFILE_SETTINGS[category].filter(
+          (item) => item.key !== "security" || canManagePassword
+        );
 
         if (categoryItems.length === 0) return null;
 
@@ -58,6 +63,7 @@ export const ProfileSettingsSidebarItemCategories = observer(function ProfileSet
             </div>
             <div className="flex flex-col">
               {categoryItems.map((item) => (
+                // oxlint-disable-next-line jsx-a11y/control-has-associated-label -- the item renders `label` as its text
                 <SettingsSidebarItem
                   key={item.key}
                   as="button"

@@ -45,6 +45,7 @@ const OIDC_FORM_SWITCH_FIELD: TControllerSwitchFormField<OIDCConfigFormValues> =
 
 const OIDC_CONFIG_KEYS: TInstanceOIDCAuthenticationConfigurationKeys[] = [
   "OIDC_PROVIDER_NAME",
+  "OIDC_PROVIDER_ICON_URL",
   "OIDC_ISSUER_URL",
   "OIDC_CLIENT_ID",
   "OIDC_CLIENT_SECRET",
@@ -67,6 +68,7 @@ export function InstanceOIDCConfigForm(props: Props) {
   } = useForm<OIDCConfigFormValues>({
     defaultValues: {
       OIDC_PROVIDER_NAME: config["OIDC_PROVIDER_NAME"] || "OIDC",
+      OIDC_PROVIDER_ICON_URL: config["OIDC_PROVIDER_ICON_URL"] || "",
       OIDC_ISSUER_URL: config["OIDC_ISSUER_URL"],
       OIDC_CLIENT_ID: config["OIDC_CLIENT_ID"],
       OIDC_CLIENT_SECRET: config["OIDC_CLIENT_SECRET"],
@@ -90,6 +92,15 @@ export function InstanceOIDCConfigForm(props: Props) {
       placeholder: "Casdoor",
       error: Boolean(errors.OIDC_PROVIDER_NAME),
       required: true,
+    },
+    {
+      key: "OIDC_PROVIDER_ICON_URL",
+      type: "text",
+      label: t("admin.authentication.oauth.oidc_provider_icon_url"),
+      description: <>{t("admin.authentication.oauth.oidc_provider_icon_url_description")}</>,
+      placeholder: "https://auth.example.com/logo.svg",
+      error: Boolean(errors.OIDC_PROVIDER_ICON_URL),
+      required: false,
     },
     {
       key: "OIDC_ISSUER_URL",

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { WarningTriangleOutline } from "@makeplane/propel/icons";
+import { TranslationWithNode } from "@/components/core/translation-with-node";
 // types
 import { Button } from "@makeplane/propel/components/button";
 import type { IUserLite } from "@plane/types";
@@ -79,7 +80,9 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <DialogHeading>
                   <DialogTitle>
-                    {isCurrentUser ? translate("web.leave_project_2") : `Remove ${data?.display_name}?`}
+                    {isCurrentUser
+                      ? translate("web.member_management.leave_project_title")
+                      : translate("web.member_management.remove_member_title", { name: data?.display_name ?? "" })}
                   </DialogTitle>
                 </DialogHeading>
               </div>
@@ -88,17 +91,15 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
           <DialogBody>
             <p className="text-13 text-secondary">
               {isCurrentUser ? (
-                <>
-                  {translate("web.are_you_sure_you_want_to_leave_the")}{" "}
-                  <span className="font-bold">{currentProjectDetails?.name}</span> project? You will be able to join the
-                  project if invited again or if it{"'"}s public.
-                </>
+                <TranslationWithNode
+                  render={(project) => translate("web.member_management.leave_project_description", { project })}
+                  node={<span className="font-bold">{currentProjectDetails?.name}</span>}
+                />
               ) : (
-                <>
-                  {translate("web.are_you_sure_you_want_to_remove_member")}{" "}
-                  <span className="font-bold">{data?.display_name}</span>? They will no longer have access to this
-                  project. This action cannot be undone.
-                </>
+                <TranslationWithNode
+                  render={(name) => translate("web.member_management.remove_project_member_description", { name })}
+                  node={<span className="font-bold">{data?.display_name}</span>}
+                />
               )}
             </p>
           </DialogBody>
@@ -112,8 +113,8 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
             label={
               isCurrentUser
                 ? isDeleteLoading
-                  ? translate("web.leaving")
-                  : translate("web.leave")
+                  ? translate("web.member_management.leaving")
+                  : translate("web.member_management.leave_project")
                 : isDeleteLoading
                   ? translate("web.removing_2")
                   : translate("web.remove")

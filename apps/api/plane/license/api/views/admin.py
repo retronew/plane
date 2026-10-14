@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import logout
 from django.db import transaction
+from django.db.models import Q
 
 # Third party imports
 from rest_framework.response import Response
@@ -31,7 +32,7 @@ from plane.license.api.serializers import (
 )
 from plane.license.models import Instance, InstanceAdmin
 from plane.db.models import User, Profile
-from plane.utils.cache import cache_response, invalidate_cache
+from plane.utils.cache import invalidate_cache
 from plane.authentication.utils.login import user_login
 from plane.authentication.utils.host import base_host, user_ip
 from plane.authentication.adapter.error import (
@@ -46,13 +47,18 @@ class InstanceAdminEndpoint(BaseAPIView):
     permission_classes = [InstanceAdminPermission]
 
     @invalidate_cache(path="/api/instances/", user=False)
-    # Create an instance admin
     def post(self, request):
-        email = request.data.get("email", False)
+        """Promote an existing Plane user to instance admin."""
+        email = str(request.data.get("email") or "").strip().lower()
         role = request.data.get("role", 20)
 
-        if not email:
-            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"error": "A valid email is required", "error_code": "INVALID_EMAIL"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         instance = Instance.objects.first()
         if instance is None:
@@ -61,30 +67,96 @@ class InstanceAdminEndpoint(BaseAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Fetch the user
-        user = User.objects.get(email=email)
+        # Only people who already have a Plane account (e.g. signed in once via SSO)
+        user = User.objects.filter(email=email, is_active=True, is_bot=False).first()
+        if user is None:
+            return Response(
+                {"error": "No active user with this email", "error_code": "USER_NOT_FOUND"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        instance_admin = InstanceAdmin.objects.create(instance=instance, user=user, role=role)
+        if InstanceAdmin.objects.filter(instance=instance, user=user).exists():
+            return Response(
+                {"error": "This user is already an admin", "error_code": "ALREADY_ADMIN"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        instance_admin = InstanceAdmin.objects.create(instance=instance, user=user, role=role, is_verified=True)
         serializer = InstanceAdminSerializer(instance_admin)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @cache_response(60 * 60 * 2, user=False)
     def get(self, request):
+        # Not cached: the list changes whenever an admin is added or removed
         instance = Instance.objects.first()
         if instance is None:
             return Response(
                 {"error": "Instance is not registered yet"},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        instance_admins = InstanceAdmin.objects.filter(instance=instance)
+        instance_admins = (
+            InstanceAdmin.objects.filter(instance=instance, user__isnull=False)
+            .select_related("user")
+            .order_by("created_at")
+        )
         serializer = InstanceAdminSerializer(instance_admins, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/instances/", user=False)
     def delete(self, request, pk):
         instance = Instance.objects.first()
-        InstanceAdmin.objects.filter(instance=instance, pk=pk).delete()
+        instance_admin = InstanceAdmin.objects.filter(instance=instance, pk=pk).first()
+        if instance_admin is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Never leave God mode without anyone who can sign in to it
+        if instance_admin.user_id == request.user.id:
+            return Response(
+                {"error": "You cannot remove yourself", "error_code": "CANNOT_REMOVE_SELF"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if InstanceAdmin.objects.filter(instance=instance, user__isnull=False).count() <= 1:
+            return Response(
+                {"error": "At least one admin is required", "error_code": "LAST_ADMIN"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        instance_admin.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InstanceUserSearchEndpoint(BaseAPIView):
+    """Lets God mode pick an existing user, e.g. to promote them to admin."""
+
+    permission_classes = [InstanceAdminPermission]
+    MAX_RESULTS = 10
+
+    def get(self, request):
+        search = str(request.query_params.get("search") or "").strip()
+        users = User.objects.filter(is_active=True, is_bot=False)
+        if search:
+            users = users.filter(
+                Q(email__icontains=search)
+                | Q(display_name__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+            )
+        instance = Instance.objects.first()
+        admin_ids = set(
+            InstanceAdmin.objects.filter(instance=instance, user__isnull=False).values_list("user_id", flat=True)
+        )
+        results = [
+            {
+                "id": str(user.id),
+                "email": user.email,
+                "display_name": user.display_name,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "avatar_url": user.avatar_url,
+                "is_instance_admin": user.id in admin_ids,
+            }
+            for user in users.order_by("first_name", "email")[: self.MAX_RESULTS]
+        ]
+        return Response(results, status=status.HTTP_200_OK)
 
 
 class InstanceAdminSignUpEndpoint(View):

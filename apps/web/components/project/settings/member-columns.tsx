@@ -91,11 +91,12 @@ export function NameColumn(props: NameProps) {
                 }
               />
             </div>
-            <MenuContent side="bottom" align="end">
+            {/* Single action: size to the content instead of the 204px default */}
+            <MenuContent side="bottom" align="end" sizing="anchor">
               <MenuItem
                 variant="danger"
                 icon={<Icon icon={CircleMinus} />}
-                label={rowData.member?.id === currentUser?.id ? t("leave") : t("remove")}
+                label={rowData.member?.id === currentUser?.id ? t("web.member_management.leave_project") : t("remove")}
                 onClick={() => setRemoveMemberModal(rowData)}
               />
             </MenuContent>

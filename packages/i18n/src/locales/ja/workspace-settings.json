@@ -39,7 +39,6 @@
         "add_member": "メンバーを追加",
         "pending_invites": "保留中の招待",
         "invitations_sent_successfully": "招待が正常に送信されました",
-        "leave_confirmation": "ワークスペースから退出してもよろしいですか？このワークスペースにアクセスできなくなります。この操作は取り消せません。",
         "details": {
           "full_name": "フルネーム",
           "display_name": "表示名",

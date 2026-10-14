@@ -102,10 +102,11 @@ export function NameColumn(props: NameProps) {
                   />
                 }
               />
-              <MenuContent side="bottom" align="end">
+              {/* Single action: size to the content instead of the 204px default */}
+              <MenuContent side="bottom" align="end" sizing="anchor">
                 <MenuItem
                   icon={<Icon icon={DeleteOutline} />}
-                  label={id === currentUser?.id ? t("leave") : t("remove")}
+                  label={id === currentUser?.id ? t("web.member_management.leave_workspace") : t("remove")}
                   onClick={() => setRemoveMemberModal(rowData)}
                 />
               </MenuContent>

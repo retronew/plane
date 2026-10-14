@@ -57,6 +57,7 @@ class InstanceEndpoint(BaseAPIView):
             IS_GITEA_ENABLED,
             IS_OIDC_ENABLED,
             OIDC_PROVIDER_NAME,
+            OIDC_PROVIDER_ICON_URL,
             EMAIL_HOST,
             ENABLE_MAGIC_LINK_LOGIN,
             ENABLE_EMAIL_PASSWORD,
@@ -100,6 +101,10 @@ class InstanceEndpoint(BaseAPIView):
                     "key": "OIDC_PROVIDER_NAME",
                     "default": os.environ.get("OIDC_PROVIDER_NAME", "OIDC"),
                 },
+                {
+                    "key": "OIDC_PROVIDER_ICON_URL",
+                    "default": os.environ.get("OIDC_PROVIDER_ICON_URL", ""),
+                },
                 {"key": "EMAIL_HOST", "default": os.environ.get("EMAIL_HOST", "")},
                 {
                     "key": "ENABLE_MAGIC_LINK_LOGIN",
@@ -130,6 +135,7 @@ class InstanceEndpoint(BaseAPIView):
         data["is_gitea_enabled"] = IS_GITEA_ENABLED == "1"
         data["is_oidc_enabled"] = IS_OIDC_ENABLED == "1"
         data["oidc_provider_name"] = str(OIDC_PROVIDER_NAME or "OIDC")
+        data["oidc_provider_icon_url"] = str(OIDC_PROVIDER_ICON_URL or "")
         data["is_magic_login_enabled"] = ENABLE_MAGIC_LINK_LOGIN == "1"
         data["is_email_password_enabled"] = ENABLE_EMAIL_PASSWORD == "1"
 

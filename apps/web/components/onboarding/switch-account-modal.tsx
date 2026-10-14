@@ -13,6 +13,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useUser } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { TranslationWithNode } from "@/components/core/translation-with-node";
 import { translate } from "@plane/i18n";
 
 type Props = {
@@ -65,10 +66,10 @@ export function SwitchAccountModal(props: Props) {
       title={translate("web.switch_account")}
       content={
         userData?.email ? (
-          <>
-            {translate("web.if_you_have_signed_up_via")} <span className="text-accent-primary">{userData.email}</span>{" "}
-            un-intentionally, you can switch your account to a different one from here.
-          </>
+          <TranslationWithNode
+            render={(email) => translate("web.switch_account_signed_up_unintentionally", { email })}
+            node={<span className="text-accent-primary">{userData.email}</span>}
+          />
         ) : null
       }
       primaryButtonText={{ loading: translate("web.switching"), default: translate("web.switch_account") }}

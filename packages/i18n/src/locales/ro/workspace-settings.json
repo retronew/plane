@@ -39,7 +39,6 @@
         "add_member": "Adaugă membru",
         "pending_invites": "Invitații în așteptare",
         "invitations_sent_successfully": "Invitațiile au fost trimise cu succes",
-        "leave_confirmation": "Ești sigur că vrei să părăsești spațiul de lucru? Nu vei mai avea acces la acest spațiu. Această acțiune este ireversibilă.",
         "details": {
           "full_name": "Nume complet",
           "display_name": "Nume afișat",

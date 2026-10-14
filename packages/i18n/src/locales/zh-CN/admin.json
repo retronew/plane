@@ -57,13 +57,23 @@
       "admin_user_deactivated": {
         "title": "用户账号已停用",
         "message": "用户账号已停用，请联系{contact}。"
+      },
+      "sso_not_admin": {
+        "title": "不是管理员",
+        "message": "该账号不是实例管理员，请联系现有管理员在「管理员」中添加你。"
+      },
+      "sso_failed": {
+        "title": "单点登录失败",
+        "message": "单点登录未成功，请重试或使用密码登录。"
       }
     },
     "sign_in": {
       "heading": "管理您的 Plane 实例",
       "sub_heading": "配置实例级设置，保障实例安全",
       "password_placeholder": "请输入密码",
-      "submit": "登录"
+      "submit": "登录",
+      "sso": "使用 {provider} 登录",
+      "sso_divider": "或使用密码登录"
     },
     "setup": {
       "heading": "设置您的 Plane 实例",
@@ -122,7 +132,8 @@
       "create": "创建",
       "settings": "设置",
       "toggle_sidebar": "切换侧边栏",
-      "breadcrumb": "面包屑导航"
+      "breadcrumb": "面包屑导航",
+      "admins": "管理员"
     },
     "sidebar": {
       "general": {
@@ -151,7 +162,11 @@
       "instance_admin_menu": "实例管理员菜单",
       "instance_admin": "实例管理员",
       "account_menu": "账号菜单",
-      "admin_user": "管理员用户"
+      "admin_user": "管理员用户",
+      "admins": {
+        "name": "管理员",
+        "description": "可以管理本实例的人员"
+      }
     },
     "help": {
       "documentation": "文档",
@@ -302,6 +317,8 @@
         "gitea_host_description": "填写您的 Gitea 实例 URL。如使用官方 Gitea，请填写“https://gitea.com”。",
         "oidc_provider_name": "按钮名称",
         "oidc_provider_name_description": "显示在登录按钮上，例如“使用 Casdoor 登录”。",
+        "oidc_provider_icon_url": "图标地址",
+        "oidc_provider_icon_url_description": "可选。显示在登录按钮上的图片地址，例如身份提供商的 Logo。留空则使用默认图标。",
         "oidc_issuer_url": "Issuer URL",
         "oidc_issuer_url_description": "身份提供商的 OIDC Issuer 地址。Plane 会读取 <issuer>/.well-known/openid-configuration 自动获取各接口地址。",
         "oidc_client_description": "可在身份提供商的 OAuth/OIDC 应用中获取。",
@@ -335,7 +352,8 @@
       "home": "管理后台 - 实例设置与登录",
       "home_description": "配置您的 Plane 实例，或登录管理后台。",
       "app_title": "Plane | 简单、可扩展的开源项目管理工具",
-      "app_description": "开源项目管理工具，轻松管理工作项、迭代和产品路线图。"
+      "app_description": "开源项目管理工具，轻松管理工作项、迭代和产品路线图。",
+      "admins": "管理员 - God Mode"
     },
     "ai": {
       "title": "AI 模型服务",
@@ -432,6 +450,31 @@
     "new_user": {
       "description": "实例设置完成！欢迎使用 Plane 实例管理后台。从创建第一个工作区开始吧。",
       "plane_icon": "Plane 图标"
+    },
+    "admins": {
+      "title": "实例管理员",
+      "description": "管理员可以登录 God Mode 并管理本实例的各项设置。",
+      "add_label": "添加管理员",
+      "add_button": "设为管理员",
+      "add_hint": "这里只列出已有 Plane 账号的用户（例如用单点登录登录过一次）。如需登录 God Mode，请对方在 Web 端「个人设置 → 安全」中设置密码。",
+      "list_title": "管理员",
+      "you": "（你）",
+      "remove": "移除",
+      "confirm_remove": "确认移除",
+      "cancel": "取消",
+      "added": "已添加管理员。",
+      "removed": "已移除管理员。",
+      "errors": {
+        "invalid_email": "请输入有效的邮箱地址。",
+        "user_not_found": "没有使用该邮箱的有效 Plane 账号，请先让对方登录一次。",
+        "already_admin": "该用户已经是管理员。",
+        "cannot_remove_self": "不能移除你自己。",
+        "last_admin": "至少需要保留一名管理员。",
+        "default": "出了点问题，请重试。"
+      },
+      "search_placeholder": "按姓名或邮箱搜索用户",
+      "no_users": "没有匹配的用户。",
+      "already_admin": "已是管理员"
     }
   }
 }

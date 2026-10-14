@@ -197,6 +197,12 @@ oidc_config_variables = [
         "is_encrypted": False,
     },
     {
+        "key": "OIDC_PROVIDER_ICON_URL",
+        "value": os.environ.get("OIDC_PROVIDER_ICON_URL", ""),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
         "key": "OIDC_ISSUER_URL",
         "value": os.environ.get("OIDC_ISSUER_URL"),
         "category": "OIDC",

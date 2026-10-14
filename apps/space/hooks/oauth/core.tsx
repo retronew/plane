@@ -5,9 +5,11 @@
  */
 
 // plane imports
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { API_BASE_URL } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import { LockOutline } from "@makeplane/propel/icons";
 import type { TOAuthConfigs, TOAuthOption } from "@plane/types";
 // assets
@@ -19,6 +21,24 @@ import googleLogo from "@/app/assets/logos/google-logo.svg?url";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
 
+// Falls back to the generic lock icon when no icon is configured or the image fails to load.
+function OIDCProviderIcon({ iconUrl, providerName }: { iconUrl?: string; providerName: string }) {
+  const [failedUrl, setFailedUrl] = useState<string | undefined>(undefined);
+
+  if (!iconUrl || failedUrl === iconUrl) return <LockOutline className="size-[18px] text-secondary" />;
+
+  return (
+    <img
+      src={iconUrl}
+      height={18}
+      width={18}
+      className="size-[18px] rounded-sm object-contain"
+      alt={`${providerName} Logo`}
+      onError={() => setFailedUrl(iconUrl)}
+    />
+  );
+}
+
 export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
   //router
   const searchParams = useSearchParams();
@@ -28,7 +48,10 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
   const { resolvedTheme } = useTheme();
   // store hooks
   const { config } = useInstance();
+  // translation
+  const { t } = useTranslation();
   // derived values
+  const withProvider = (provider: string) => t("web.oauth_action_with_provider", { action: oauthActionText, provider });
   const isOAuthEnabled =
     (config &&
       (config?.is_google_enabled ||
@@ -40,7 +63,7 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
   const oAuthOptions: TOAuthOption[] = [
     {
       id: "google",
-      text: `${oauthActionText} with Google`,
+      text: withProvider("Google"),
       icon: <img src={googleLogo} height={18} width={18} alt="Google Logo" />,
       onClick: () => {
         window.location.assign(`${API_BASE_URL}/auth/google/${next_path ? `?next_path=${next_path}` : ``}`);
@@ -49,7 +72,7 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     },
     {
       id: "github",
-      text: `${oauthActionText} with GitHub`,
+      text: withProvider("GitHub"),
       icon: (
         <img
           src={resolvedTheme === "dark" ? githubLightLogo : githubDarkLogo}
@@ -65,7 +88,7 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     },
     {
       id: "gitlab",
-      text: `${oauthActionText} with GitLab`,
+      text: withProvider("GitLab"),
       icon: <img src={gitlabLogo} height={18} width={18} alt="GitLab Logo" />,
       onClick: () => {
         window.location.assign(`${API_BASE_URL}/auth/gitlab/${next_path ? `?next_path=${next_path}` : ``}`);
@@ -74,7 +97,7 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     },
     {
       id: "gitea",
-      text: `${oauthActionText} with Gitea`,
+      text: withProvider("Gitea"),
       icon: <img src={giteaLogo} height={18} width={18} alt="Gitea Logo" />,
       onClick: () => {
         window.location.assign(`${API_BASE_URL}/auth/gitea/${next_path ? `?next_path=${next_path}` : ``}`);
@@ -83,8 +106,13 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     },
     {
       id: "oidc",
-      text: `${oauthActionText} with ${config?.oidc_provider_name || "OIDC"}`,
-      icon: <LockOutline className="size-[18px] text-secondary" />,
+      text: withProvider(config?.oidc_provider_name || "OIDC"),
+      icon: (
+        <OIDCProviderIcon
+          iconUrl={config?.oidc_provider_icon_url}
+          providerName={config?.oidc_provider_name || "OIDC"}
+        />
+      ),
       onClick: () => {
         window.location.assign(`${API_BASE_URL}/auth/oidc/${next_path ? `?next_path=${next_path}` : ``}`);
       },

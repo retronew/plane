@@ -10,7 +10,9 @@ from django.http import HttpResponseRedirect
 from django.views import View
 
 # Module imports
-from plane.authentication.provider.oauth.oidc import OIDCOAuthProvider
+from plane.authentication.provider.oauth.oidc import OIDCEmailMissing, OIDCOAuthProvider
+from plane.authentication.utils.oidc_email_bind import redirect_to_email_bind
+from plane.authentication.views.app.oidc_link import SESSION_KEY as OIDC_LINK_SESSION_KEY, complete_oidc_link
 from plane.authentication.utils.login import user_login
 from plane.authentication.utils.redirection_path import get_redirection_path
 from plane.authentication.utils.user_auth_workflow import post_user_auth_workflow
@@ -86,6 +88,9 @@ class OIDCCallbackEndpoint(View):
             url = urljoin(base_host, "?" + urlencode(params))
             return HttpResponseRedirect(url)
 
+        if request.session.get(OIDC_LINK_SESSION_KEY):
+            return complete_oidc_link(request, code, host=base_host)
+
         try:
             provider = OIDCOAuthProvider(request=request, code=code, callback=post_user_auth_workflow)
             user = provider.authenticate()
@@ -99,6 +104,8 @@ class OIDCCallbackEndpoint(View):
             # redirect to referer path
             url = urljoin(base_host, path)
             return HttpResponseRedirect(url)
+        except OIDCEmailMissing as e:
+            return redirect_to_email_bind(request, e, host=base_host, next_path=next_path)
         except AuthenticationException as e:
             params = e.get_error_dict()
             if next_path:

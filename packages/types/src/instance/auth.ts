@@ -60,6 +60,7 @@ export type TInstanceGiteaAuthenticationConfigurationKeys =
 
 export type TInstanceOIDCAuthenticationConfigurationKeys =
   | "OIDC_PROVIDER_NAME"
+  | "OIDC_PROVIDER_ICON_URL"
   | "OIDC_ISSUER_URL"
   | "OIDC_CLIENT_ID"
   | "OIDC_CLIENT_SECRET"

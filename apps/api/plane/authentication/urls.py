@@ -45,6 +45,10 @@ from .views import (
     GiteaCallbackSpaceEndpoint,
     GiteaOauthInitiateSpaceEndpoint,
     OIDCCallbackEndpoint,
+    OIDCEmailBindCodeEndpoint,
+    OIDCEmailBindEndpoint,
+    OIDCLinkInitiateEndpoint,
+    OIDCLinkStatusEndpoint,
     OIDCOauthInitiateEndpoint,
     OIDCCallbackSpaceEndpoint,
     OIDCOauthInitiateSpaceEndpoint,
@@ -157,6 +161,10 @@ urlpatterns = [
     ## OIDC Oauth
     path("oidc/", OIDCOauthInitiateEndpoint.as_view(), name="oidc-initiate"),
     path("oidc/callback/", OIDCCallbackEndpoint.as_view(), name="oidc-callback"),
+    path("oidc/bind-email/code/", OIDCEmailBindCodeEndpoint.as_view(), name="oidc-bind-email-code"),
+    path("oidc/bind-email/", OIDCEmailBindEndpoint.as_view(), name="oidc-bind-email"),
+    path("oidc/link/", OIDCLinkInitiateEndpoint.as_view(), name="oidc-link"),
+    path("oidc/link/status/", OIDCLinkStatusEndpoint.as_view(), name="oidc-link-status"),
     path(
         "spaces/oidc/",
         OIDCOauthInitiateSpaceEndpoint.as_view(),

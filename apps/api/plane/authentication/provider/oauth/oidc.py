@@ -4,12 +4,13 @@
 
 import os
 from datetime import datetime, timedelta
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse
 import pytz
 import requests
 
 # Module imports
 from plane.authentication.adapter.oauth import OauthAdapter
+from plane.db.models import Account
 from plane.license.utils.instance_value import get_configuration_value
 from plane.authentication.adapter.error import (
     AUTHENTICATION_ERROR_CODES,
@@ -17,6 +18,35 @@ from plane.authentication.adapter.error import (
 )
 
 DISCOVERY_TIMEOUT_SECONDS = 10
+
+# Lark/Feishu avatars come as small thumbnails (image_size=72x72); asking for
+# 640x640 returns the original image (capped at its real size).
+LARK_AVATAR_HOST_SUFFIXES = (".feishucdn.com", ".larksuitecdn.com")
+LARK_AVATAR_SIZE = "640x640"
+
+
+def large_avatar_url(url):
+    if not url:
+        return url
+    parsed = urlparse(url)
+    if not (parsed.hostname or "").endswith(LARK_AVATAR_HOST_SUFFIXES):
+        return url
+    query = parse_qsl(parsed.query, keep_blank_values=True)
+    if not any(key == "image_size" for key, _ in query):
+        return url
+    query = [(key, LARK_AVATAR_SIZE if key == "image_size" else value) for key, value in query]
+    return parsed._replace(query=urlencode(query)).geturl()
+
+
+class OIDCEmailMissing(Exception):
+    """The IdP authenticated the user but returned no email and the identity
+    is not linked to any Plane account yet. Carries what is needed to finish
+    the login once the user binds and verifies an email."""
+
+    def __init__(self, user, token_data):
+        super().__init__("OIDC_EMAIL_NOT_PROVIDED")
+        self.user = user
+        self.token_data = token_data
 
 
 class OIDCOAuthProvider(OauthAdapter):
@@ -28,7 +58,7 @@ class OIDCOAuthProvider(OauthAdapter):
     provider = "oidc"
     scope = "openid email profile"
 
-    def __init__(self, request, code=None, state=None, callback=None):
+    def __init__(self, request, code=None, state=None, callback=None, redirect_path="/auth/oidc/callback/"):
         (OIDC_ISSUER_URL, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_TRUST_EMAIL) = get_configuration_value(
             [
                 {
@@ -73,7 +103,8 @@ class OIDCOAuthProvider(OauthAdapter):
         client_id = OIDC_CLIENT_ID
         client_secret = OIDC_CLIENT_SECRET
 
-        redirect_uri = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}/auth/oidc/callback/"
+        # God mode uses its own callback so the flow stays on its session cookie
+        redirect_uri = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}{redirect_path}"
         url_params = {
             "client_id": client_id,
             "scope": self.scope,
@@ -146,34 +177,61 @@ class OIDCOAuthProvider(OauthAdapter):
     def set_user_data(self):
         user_info_response = self.get_user_response()
 
-        email = user_info_response.get("email")
-        if not email:
+        sub = str(user_info_response.get("sub") or "")
+        name = user_info_response.get("name") or user_info_response.get("preferred_username") or ""
+        user = {
+            "provider_id": sub,
+            "avatar": large_avatar_url(user_info_response.get("picture")),
+            "first_name": user_info_response.get("given_name") or name,
+            "last_name": user_info_response.get("family_name") or "",
+            "display_name": name,
+            "is_password_autoset": True,
+        }
+
+        # An identity that is already linked keeps signing in to the same Plane
+        # account, whatever email the IdP returns (or omits) this time.
+        linked = (
+            Account.objects.filter(provider=self.provider, provider_account_id=sub).select_related("user").first()
+            if sub
+            else None
+        )
+        if linked:
+            email = linked.user.email
+        else:
+            email = user_info_response.get("email")
+            if not email:
+                if not sub:
+                    raise AuthenticationException(
+                        error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
+                        error_message="OIDC_OAUTH_PROVIDER_ERROR",
+                    )
+                raise OIDCEmailMissing(user=user, token_data=self.token_data)
+            # Never accept an unverified email unless the admin explicitly trusts the
+            # IdP — otherwise an IdP user could assert any address and take over an
+            # existing account (GHSA-7j95-vh8g-f365).
+            if user_info_response.get("email_verified") is not True and not self.trust_email:
+                raise AuthenticationException(
+                    error_code=AUTHENTICATION_ERROR_CODES["OAUTH_PROVIDER_UNVERIFIED_EMAIL"],
+                    error_message="OAUTH_PROVIDER_UNVERIFIED_EMAIL",
+                )
+
+        super().set_user_data({"email": email, "user": {**user, "email": email}})
+
+    def fetch_identity(self):
+        """Exchange the code and return the IdP identity without signing anyone in.
+
+        Used to link the identity to an already signed-in Plane user.
+        Returns (sub, email) where email is only set when it can be trusted.
+        """
+        self.set_token_data()
+        user_info_response = self.get_user_response()
+        sub = str(user_info_response.get("sub") or "")
+        if not sub:
             raise AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
-                error_message="OIDC_OAUTH_PROVIDER_ERROR: No email returned",
+                error_message="OIDC_OAUTH_PROVIDER_ERROR",
             )
-        # Never accept an unverified email unless the admin explicitly trusts the
-        # IdP — otherwise an IdP user could assert any address and take over an
-        # existing account (GHSA-7j95-vh8g-f365).
-        if user_info_response.get("email_verified") is not True and not self.trust_email:
-            raise AuthenticationException(
-                error_code=AUTHENTICATION_ERROR_CODES["OAUTH_PROVIDER_UNVERIFIED_EMAIL"],
-                error_message="OAUTH_PROVIDER_UNVERIFIED_EMAIL",
-            )
-
-        name = user_info_response.get("name") or user_info_response.get("preferred_username") or ""
-
-        super().set_user_data(
-            {
-                "email": email,
-                "user": {
-                    "provider_id": str(user_info_response.get("sub")),
-                    "email": email,
-                    "avatar": user_info_response.get("picture"),
-                    "first_name": user_info_response.get("given_name") or name,
-                    "last_name": user_info_response.get("family_name") or "",
-                    "display_name": name,
-                    "is_password_autoset": True,
-                },
-            }
-        )
+        email = user_info_response.get("email")
+        if email and (user_info_response.get("email_verified") is True or self.trust_email):
+            return sub, str(email).strip().lower()
+        return sub, None

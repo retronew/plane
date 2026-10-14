@@ -10,6 +10,7 @@ import type {
   IFormattedInstanceConfiguration,
   IInstance,
   IInstanceAdmin,
+  IInstanceUserSearchResult,
   IInstanceConfiguration,
   IInstanceInfo,
   TInstanceAIConnectionPayload,
@@ -71,6 +72,48 @@ export class InstanceService extends APIService {
   async admins(): Promise<IInstanceAdmin[]> {
     return this.get("/api/instances/admins/", { validateStatus: null })
       .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Searches active users by name or email
+   * @param {string} search Text to match against name and email
+   * @returns {Promise<IInstanceUserSearchResult[]>} Up to 10 matching users
+   * @throws {Error} If the API request fails
+   */
+  async searchUsers(search: string): Promise<IInstanceUserSearchResult[]> {
+    return this.get("/api/instances/users/", { params: { search } })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Promotes an existing user to instance admin
+   * @param {string} email Email of the user to promote
+   * @returns {Promise<IInstanceAdmin>} Promise resolving to the created instance admin
+   * @throws {Error} If the API request fails
+   */
+  async addAdmin(email: string): Promise<IInstanceAdmin> {
+    return this.post("/api/instances/admins/", { email })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Revokes instance admin access
+   * @param {string} adminId Id of the instance admin record
+   * @returns {Promise<void>} Promise resolving when the admin is removed
+   * @throws {Error} If the API request fails
+   */
+  async removeAdmin(adminId: string): Promise<void> {
+    return this.delete(`/api/instances/admins/${adminId}/`)
+      .then(() => undefined)
       .catch((error) => {
         throw error?.response?.data;
       });

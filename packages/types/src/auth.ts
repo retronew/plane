@@ -16,6 +16,19 @@ export interface IEmailCheckResponse {
   is_password_autoset: boolean;
 }
 
+export type TOIDCEmailBindStatus =
+  | { pending: false }
+  | {
+      pending: true;
+      display_name: string;
+      is_smtp_configured: boolean;
+    };
+
+export type TOIDCLinkStatus = {
+  linked: boolean;
+  linked_at: string | null;
+};
+
 export interface ILoginTokenResponse {
   access_token: string;
   refresh_token: string;

@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
+import { TranslationWithNode } from "@/components/core/translation-with-node";
 // ui
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { useTranslation } from "@plane/i18n";
@@ -55,21 +56,25 @@ export const ConfirmWorkspaceMemberRemove = observer(function ConfirmWorkspaceMe
       handleClose={handleClose}
       handleSubmit={handleDeletion}
       isSubmitting={isRemoving}
-      title={isSelf ? t("web.leave_workspace") : `Remove ${userDetails?.display_name}?`}
+      title={
+        isSelf
+          ? t("web.member_management.leave_workspace_title")
+          : t("web.member_management.remove_member_title", { name: userDetails?.display_name ?? "" })
+      }
       content={
         isSelf ? (
-          t("workspace_settings.settings.members.leave_confirmation")
+          t("web.member_management.leave_workspace_description")
         ) : (
-          <>
-            {/* TODO: Add translation here */}
-            {t("web.are_you_sure_you_want_to_remove_member")}{" "}
-            <span className="font-bold">{userDetails?.display_name}</span>? They will no longer have access to this
-            workspace. This action cannot be undone.
-          </>
+          <TranslationWithNode
+            render={(name) => t("web.member_management.remove_workspace_member_description", { name })}
+            node={<span className="font-bold">{userDetails?.display_name}</span>}
+          />
         )
       }
       primaryButtonText={
-        isSelf ? { loading: t("leaving"), default: t("leave") } : { loading: t("removing"), default: t("remove") }
+        isSelf
+          ? { loading: t("web.member_management.leaving"), default: t("web.member_management.leave_workspace") }
+          : { loading: t("removing"), default: t("remove") }
       }
       secondaryButtonText={t("cancel")}
     />

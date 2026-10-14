@@ -39,7 +39,6 @@
         "add_member": "Mitglied hinzufügen",
         "pending_invites": "Ausstehende Einladungen",
         "invitations_sent_successfully": "Einladungen erfolgreich versendet",
-        "leave_confirmation": "Möchten Sie diesen Arbeitsbereich wirklich verlassen? Sie verlieren den Zugriff. Diese Aktion ist nicht umkehrbar.",
         "details": {
           "full_name": "Vollständiger Name",
           "display_name": "Anzeigename",

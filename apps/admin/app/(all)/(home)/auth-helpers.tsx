@@ -72,6 +72,14 @@ const errorCodeMessages: {
         contact: SUPPORT_EMAIL ? SUPPORT_EMAIL : t("admin.auth_errors.administrator"),
       }),
   },
+  [EAdminAuthErrorCodes.ADMIN_SSO_NOT_ADMIN]: {
+    title: "admin.auth_errors.sso_not_admin.title",
+    message: (t) => t("admin.auth_errors.sso_not_admin.message"),
+  },
+  [EAdminAuthErrorCodes.ADMIN_SSO_FAILED]: {
+    title: "admin.auth_errors.sso_failed.title",
+    message: (t) => t("admin.auth_errors.sso_failed.message"),
+  },
 };
 
 export const authErrorHandler = (
@@ -89,6 +97,8 @@ export const authErrorHandler = (
     EAdminAuthErrorCodes.ADMIN_USER_ALREADY_EXIST,
     EAdminAuthErrorCodes.ADMIN_USER_DOES_NOT_EXIST,
     EAdminAuthErrorCodes.ADMIN_USER_DEACTIVATED,
+    EAdminAuthErrorCodes.ADMIN_SSO_NOT_ADMIN,
+    EAdminAuthErrorCodes.ADMIN_SSO_FAILED,
   ];
 
   if (bannerAlertErrorCodes.includes(errorCode))

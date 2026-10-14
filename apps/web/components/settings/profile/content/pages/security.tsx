@@ -23,6 +23,7 @@ import { ProfileSettingsHeading } from "@/components/settings/profile/heading";
 import { authErrorHandler, EAuthenticationErrorCodes, passwordErrors } from "@/helpers/authentication.helper";
 // hooks
 import { useUser } from "@/hooks/store/user";
+import { usePasswordManagement } from "@/hooks/use-password-management";
 // services
 import { AuthService } from "@/services/auth.service";
 
@@ -49,6 +50,7 @@ const defaultShowPassword = {
 export const SecurityProfileSettings = observer(function SecurityProfileSettings() {
   // store
   const { data: currentUser, changePassword } = useUser();
+  const { canManagePassword, isLoading: isPasswordManagementLoading } = usePasswordManagement();
   // states
   const [showPassword, setShowPassword] = useState(defaultShowPassword);
   const [isPasswordInputFocused, setIsPasswordInputFocused] = useState(false);
@@ -131,6 +133,17 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
     );
 
   const renderPasswordMatchError = !isRetryPasswordInputFocused || confirmPassword.length >= password.length;
+
+  if (isPasswordManagementLoading) return null;
+
+  // Reached through a stale link or tab: explain instead of offering a form the API rejects
+  if (!canManagePassword)
+    return (
+      <div className="size-full">
+        <ProfileSettingsHeading title={t("auth.common.password.change_password.label.default")} />
+        <p className="mt-7 text-13 text-tertiary">{t("web.password_login_disabled_notice")}</p>
+      </div>
+    );
 
   return (
     <div className="size-full">

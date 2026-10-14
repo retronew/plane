@@ -6,7 +6,13 @@
 
 import { API_BASE_URL } from "@plane/constants";
 // types
-import type { ICsrfTokenData, IEmailCheckData, IEmailCheckResponse } from "@plane/types";
+import type {
+  ICsrfTokenData,
+  IEmailCheckData,
+  IEmailCheckResponse,
+  TOIDCEmailBindStatus,
+  TOIDCLinkStatus,
+} from "@plane/types";
 // services
 import { APIService } from "../api.service";
 
@@ -100,6 +106,47 @@ export class AuthService extends APIService {
   }
 
   /**
+   * Reports whether an OIDC login is waiting for the user to bind an email
+   * (the identity provider returned none)
+   * @returns {Promise<TOIDCEmailBindStatus>} Pending bind state for the current session
+   * @throws {Error} Throws response data if the request fails
+   */
+  async getOIDCEmailBindStatus(): Promise<TOIDCEmailBindStatus> {
+    return this.get("/auth/oidc/bind-email/code/")
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Mails a verification code to the email the user wants to bind to their OIDC identity
+   * @param {{ email: string }} data - Object containing the email address
+   * @returns {Promise<{ email: string }>} The normalized email the code was sent to
+   * @throws {Error} Throws response data if the request fails
+   */
+  async sendOIDCEmailBindCode(data: { email: string }): Promise<{ email: string }> {
+    return this.post("/auth/oidc/bind-email/code/", data, { headers: {} })
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Reports whether the signed-in user has linked an OIDC identity
+   * @returns {Promise<TOIDCLinkStatus>} Link state of the current user
+   * @throws {Error} Throws response data if the request fails
+   */
+  async getOIDCLinkStatus(): Promise<TOIDCLinkStatus> {
+    return this.get("/auth/oidc/link/status/")
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
    * Performs user sign out by submitting a form with CSRF token
    * Creates and submits a form dynamically to handle the sign-out process
    * @param {string} baseUrl - Base URL for the sign-out endpoint
@@ -126,6 +173,7 @@ export class AuthService extends APIService {
       document.body.appendChild(form);
 
       form.submit();
+      return undefined;
     });
   }
 }

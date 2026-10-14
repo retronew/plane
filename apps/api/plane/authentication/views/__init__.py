@@ -11,6 +11,8 @@ from .app.github import GitHubCallbackEndpoint, GitHubOauthInitiateEndpoint
 from .app.gitlab import GitLabCallbackEndpoint, GitLabOauthInitiateEndpoint
 from .app.gitea import GiteaCallbackEndpoint, GiteaOauthInitiateEndpoint
 from .app.oidc import OIDCCallbackEndpoint, OIDCOauthInitiateEndpoint
+from .app.oidc_email_bind import OIDCEmailBindCodeEndpoint, OIDCEmailBindEndpoint
+from .app.oidc_link import OIDCLinkInitiateEndpoint, OIDCLinkStatusEndpoint
 from .app.google import GoogleCallbackEndpoint, GoogleOauthInitiateEndpoint
 from .app.magic import MagicGenerateEndpoint, MagicSignInEndpoint, MagicSignUpEndpoint
 

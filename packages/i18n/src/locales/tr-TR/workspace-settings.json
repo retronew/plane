@@ -39,7 +39,6 @@
         "add_member": "Üye ekle",
         "pending_invites": "Bekleyen davetler",
         "invitations_sent_successfully": "Davetler başarıyla gönderildi",
-        "leave_confirmation": "Çalışma alanından ayrılmak istediğinizden emin misiniz? Artık bu çalışma alanına erişiminiz olmayacak. Bu işlem geri alınamaz.",
         "details": {
           "full_name": "Tam ad",
           "display_name": "Görünen ad",

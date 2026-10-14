@@ -97,6 +97,10 @@ export enum EAuthenticationErrorCodes {
   GITLAB_OAUTH_PROVIDER_ERROR = "5121",
   OAUTH_PROVIDER_UNVERIFIED_EMAIL = "5124",
   OIDC_OAUTH_PROVIDER_ERROR = "5126",
+  OIDC_EMAIL_NOT_PROVIDED = "5127",
+  OIDC_EMAIL_BIND_EXPIRED = "5128",
+  OIDC_EMAIL_BIND_INVALID_CODE = "5129",
+  OIDC_ACCOUNT_ALREADY_LINKED = "5131",
   // Reset Password
   INVALID_PASSWORD_TOKEN = "5125",
   EXPIRED_PASSWORD_TOKEN = "5130",
@@ -316,6 +320,23 @@ const errorCodeMessages: {
     title: `OIDC provider error`,
     message: () => `OIDC provider error. Please try again.`,
   },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_NOT_PROVIDED]: {
+    title: `Email not provided`,
+    message: () =>
+      `Your identity provider did not return an email address, and email verification is unavailable because SMTP is not configured. Please ask your administrator to add your email in the identity provider or configure SMTP.`,
+  },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED]: {
+    title: `Email binding expired`,
+    message: () => `Your email binding session has expired. Please sign in again.`,
+  },
+  [EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE]: {
+    title: `Invalid verification code`,
+    message: () => `The verification code is incorrect. Please check your email and try again.`,
+  },
+  [EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED]: {
+    title: `Account already linked`,
+    message: () => `This single sign-on account is already linked to another Plane account.`,
+  },
   [EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL]: {
     title: `Unverified email`,
     message: () => `Your identity provider did not return a verified email. Please contact your administrator.`,
@@ -449,6 +470,10 @@ export const authErrorHandler = (errorCode: EAuthenticationErrorCodes, email?: s
     EAuthenticationErrorCodes.GITLAB_OAUTH_PROVIDER_ERROR,
     EAuthenticationErrorCodes.OIDC_NOT_CONFIGURED,
     EAuthenticationErrorCodes.OIDC_OAUTH_PROVIDER_ERROR,
+    EAuthenticationErrorCodes.OIDC_EMAIL_NOT_PROVIDED,
+    EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED,
+    EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE,
+    EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED,
     EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL,
     EAuthenticationErrorCodes.INVALID_PASSWORD_TOKEN,
     EAuthenticationErrorCodes.EXPIRED_PASSWORD_TOKEN,

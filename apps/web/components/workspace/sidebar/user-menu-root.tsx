@@ -31,6 +31,7 @@ import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useUser } from "@/hooks/store/user";
+import { usePasswordManagement } from "@/hooks/use-password-management";
 
 // Mirrors the icons used by the profile settings sidebar.
 const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutline> = {
@@ -54,6 +55,7 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
   const { data: currentUser } = useUser();
   const { signOut } = useUser();
   const { toggleProfileSettingsModal } = useCommandPalette();
+  const { canManagePassword } = usePasswordManagement();
   // derived values
   const isUserInstanceAdmin = false;
   // translation
@@ -132,7 +134,9 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
               </div>
             </div>
             <div>
-              {MENU_TABS.filter((tab) => PROFILE_SETTINGS_TABS.includes(tab)).map((tab) => (
+              {MENU_TABS.filter(
+                (tab) => PROFILE_SETTINGS_TABS.includes(tab) && (tab !== "security" || canManagePassword)
+              ).map((tab) => (
                 <MenuItem
                   key={tab}
                   icon={<Icon icon={PROFILE_SETTINGS_ICONS[tab]} />}

@@ -11,7 +11,8 @@ from django.http import HttpResponseRedirect
 from django.views import View
 
 # Module imports
-from plane.authentication.provider.oauth.oidc import OIDCOAuthProvider
+from plane.authentication.provider.oauth.oidc import OIDCEmailMissing, OIDCOAuthProvider
+from plane.authentication.utils.oidc_email_bind import redirect_to_email_bind
 from plane.authentication.utils.login import user_login
 from plane.license.models import Instance
 from plane.authentication.utils.host import base_host
@@ -96,6 +97,10 @@ class OIDCCallbackSpaceEndpoint(View):
                 f"{base_host(request=request, is_space=True)}{str(validate_next_path(next_path)) if next_path else ''}"
             )
             return HttpResponseRedirect(url)
+        except OIDCEmailMissing as e:
+            return redirect_to_email_bind(
+                request, e, host=base_host(request=request, is_space=True), next_path=next_path
+            )
         except AuthenticationException as e:
             params = e.get_error_dict()
             if next_path:
