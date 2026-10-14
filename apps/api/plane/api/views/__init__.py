@@ -88,3 +88,12 @@ from .view import (
     WorkspaceViewDetailAPIEndpoint,
     WorkspaceViewWorkItemsAPIEndpoint,
 )
+
+from .work_item_lifecycle import (
+    WorkItemSubItemsAPIEndpoint,
+    WorkItemSubItemDetailAPIEndpoint,
+    WorkItemArchiveAPIEndpoint,
+    ArchivedWorkItemListAPIEndpoint,
+    WorkItemBulkArchiveAPIEndpoint,
+    WorkItemBulkDeleteAPIEndpoint,
+)

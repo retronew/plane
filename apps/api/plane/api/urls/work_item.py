@@ -5,6 +5,12 @@
 from django.urls import path
 
 from plane.api.views import (
+    WorkItemSubItemsAPIEndpoint,
+    WorkItemSubItemDetailAPIEndpoint,
+    WorkItemArchiveAPIEndpoint,
+    ArchivedWorkItemListAPIEndpoint,
+    WorkItemBulkArchiveAPIEndpoint,
+    WorkItemBulkDeleteAPIEndpoint,
     IssueListCreateAPIEndpoint,
     IssueDetailAPIEndpoint,
     IssueLinkListCreateAPIEndpoint,
@@ -153,4 +159,37 @@ new_url_patterns = [
     ),
 ]
 
-urlpatterns = old_url_patterns + new_url_patterns
+lifecycle_url_patterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:work_item_id>/sub-items/",
+        WorkItemSubItemsAPIEndpoint.as_view(http_method_names=["get", "post"]),
+        name="work-item-sub-items",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:work_item_id>/sub-items/<uuid:sub_item_id>/",
+        WorkItemSubItemDetailAPIEndpoint.as_view(http_method_names=["delete"]),
+        name="work-item-sub-item-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:work_item_id>/archive/",
+        WorkItemArchiveAPIEndpoint.as_view(http_method_names=["post", "delete"]),
+        name="work-item-archive",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/archived-work-items/",
+        ArchivedWorkItemListAPIEndpoint.as_view(http_method_names=["get"]),
+        name="archived-work-items",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/bulk-archive/",
+        WorkItemBulkArchiveAPIEndpoint.as_view(http_method_names=["post"]),
+        name="work-item-bulk-archive",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/bulk-delete/",
+        WorkItemBulkDeleteAPIEndpoint.as_view(http_method_names=["post"]),
+        name="work-item-bulk-delete",
+    ),
+]
+
+urlpatterns = old_url_patterns + new_url_patterns + lifecycle_url_patterns

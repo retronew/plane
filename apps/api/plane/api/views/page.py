@@ -88,7 +88,7 @@ class PageListCreateAPIEndpoint(PageAPIMixin, BaseAPIView):
             OpenApiParameter(name="search", type=OpenApiTypes.STR, location=OpenApiParameter.QUERY),
             OpenApiParameter(name="parent", type=OpenApiTypes.UUID, location=OpenApiParameter.QUERY),
         ],
-        responses={200: create_paginated_response(PageAPISerializer, "Page", "List of pages")},
+        responses={200: create_paginated_response(PageAPISerializer, "PaginatedPageResponse", "List of pages")},
     )
     def get(self, request, slug, project_id):
         queryset = self.get_page_queryset(slug, project_id)

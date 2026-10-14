@@ -160,7 +160,7 @@ class ProjectViewListCreateAPIEndpoint(ProjectViewAPIMixin, BaseAPIView):
         operation_id="list_project_views",
         summary="List project views",
         description="List the saved work item views in a project that the user can see.",
-        responses={200: create_paginated_response(IssueViewAPISerializer, "View", "List of views")},
+        responses={200: create_paginated_response(IssueViewAPISerializer, "PaginatedProjectViewResponse", "List of views")},
     )
     def get(self, request, slug, project_id):
         return self.paginate(
@@ -232,7 +232,7 @@ class ProjectViewWorkItemsAPIEndpoint(ProjectViewAPIMixin, BaseAPIView):
         summary="List work items in a project view",
         description="List the work items that match the view's filters.",
         parameters=[VIEW_ID_PARAMETER],
-        responses={200: create_paginated_response(IssueSerializer, "WorkItem", "Work items in the view")},
+        responses={200: create_paginated_response(IssueSerializer, "PaginatedProjectViewWorkItemResponse", "Work items in the view")},
     )
     def get(self, request, slug, project_id, view_id):
         queryset = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id)
@@ -278,7 +278,7 @@ class WorkspaceViewListCreateAPIEndpoint(WorkspaceViewAPIMixin, BaseAPIView):
         operation_id="list_workspace_views",
         summary="List workspace views",
         description="List the saved workspace-level work item views that the user can see.",
-        responses={200: create_paginated_response(IssueViewAPISerializer, "View", "List of views")},
+        responses={200: create_paginated_response(IssueViewAPISerializer, "PaginatedWorkspaceViewResponse", "List of views")},
     )
     def get(self, request, slug):
         return self.paginate(
@@ -348,7 +348,7 @@ class WorkspaceViewWorkItemsAPIEndpoint(WorkspaceViewAPIMixin, BaseAPIView):
         summary="List work items in a workspace view",
         description="List work items matching the view's filters across the projects the user is a member of.",
         parameters=[VIEW_ID_PARAMETER],
-        responses={200: create_paginated_response(IssueSerializer, "WorkItem", "Work items in the view")},
+        responses={200: create_paginated_response(IssueSerializer, "PaginatedWorkspaceViewWorkItemResponse", "Work items in the view")},
     )
     def get(self, request, slug, view_id):
         memberships = ProjectMember.objects.filter(
