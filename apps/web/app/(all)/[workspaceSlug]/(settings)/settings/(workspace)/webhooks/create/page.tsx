@@ -1,3 +1,4 @@
+import { useTranslation } from "@plane/i18n";
 import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useNavigate, useParams } from "react-router";
@@ -12,6 +13,7 @@ import { WebhooksWorkspaceSettingsHeader } from "../header";
 
 export default observer(function CreateWebhookPage() {
   const { workspaceSlug } = useParams();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { createWebhook, clearSecretKey } = useWebhook();
   const { currentWorkspace } = useWorkspace();
@@ -23,7 +25,7 @@ export default observer(function CreateWebhookPage() {
   if (!allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, workspaceSlug))
     return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
-    <SettingsContentWrapper compact header={<WebhooksWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper compact header={<WebhooksWorkspaceSettingsHeader currentPage={t("common.create")} />}>
       <CreateWebhookModal
         inline
         isOpen

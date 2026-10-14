@@ -6,6 +6,7 @@
 
 import { InputField } from "@makeplane/propel/components/input-field";
 import React from "react";
+import { normalizeWebhookEvents } from "./event-selection";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "@plane/i18n";
@@ -45,22 +46,25 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
     control,
     formState: { isSubmitting, errors },
   } = useForm<IWebhook>({
-    defaultValues: { ...initialWebhookPayload, ...data },
+    defaultValues: { ...initialWebhookPayload, ...data, events: normalizeWebhookEvents(data) },
   });
 
   const handleFormSubmit = async (formData: IWebhook) => {
-    await onSubmit(formData, "individual");
+    await onSubmit(
+      { ...formData, project: false, cycle: false, module: false, issue: false, issue_comment: false },
+      "individual"
+    );
   };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
-      <div className="space-y-5">
-        <div className="text-18 font-medium text-secondary">
+      <div className="flex flex-col gap-7">
+        <div className="mb-[-12px] border-b border-subtle pb-3 text-h3-medium text-primary">
           {data
             ? t("workspace_settings.settings.webhooks.modal.details")
             : t("workspace_settings.settings.webhooks.modal.title")}
         </div>
-        <div className="space-y-3">
+        <div className="flex flex-col gap-7">
           <Controller
             control={control}
             name="name"
@@ -69,16 +73,17 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
               <InputField
                 {...field}
                 value={field.value ?? ""}
-                size="md"
+                size="lg"
                 orientation="vertical"
                 label={t("web.webhook_name")}
+                required
                 placeholder={t("web.webhook_name_placeholder")}
                 maxLength={255}
               />
             )}
           />
           {errors.name && <p className="text-11 text-danger-primary">{errors.name.message}</p>}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Controller
               control={control}
               name="url"
@@ -93,9 +98,9 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
           </div>
           {data && <WebhookToggle control={control} />}
         </div>
-        <fieldset className="space-y-3 pb-5">
+        <fieldset className="space-y-5 pb-7">
           <legend className="text-13 font-medium">{t("workspace_settings.settings.webhooks.modal.question")}</legend>
-          <div className="rounded-lg border border-subtle p-4">
+          <div>
             <WebhookIndividualEventOptions control={control} />
           </div>
         </fieldset>

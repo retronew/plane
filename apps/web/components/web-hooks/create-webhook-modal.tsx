@@ -48,6 +48,7 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
     let payload: Partial<IWebhook> = {
       url: formData.url,
       name: formData.name,
+      events: formData.events ?? [],
     };
 
     if (webhookEventType === "all")

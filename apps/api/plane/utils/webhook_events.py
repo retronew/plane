@@ -1,0 +1,26 @@
+"""Supported webhook subscriptions shared by app and public API."""
+
+WEBHOOK_EVENTS = (
+    "project",
+    "project.created",
+    "project.updated",
+    "project.deleted",
+    "issue",
+    "issue.created",
+    "issue.updated",
+    "issue.deleted",
+    "issue.state_changed",
+    "issue.assigned",
+    "issue_comment",
+    "issue_comment.created",
+    "issue_comment.updated",
+    "issue_comment.deleted",
+    "cycle",
+    "cycle.created",
+    "cycle.updated",
+    "cycle.deleted",
+    "module",
+    "module.created",
+    "module.updated",
+    "module.deleted",
+)

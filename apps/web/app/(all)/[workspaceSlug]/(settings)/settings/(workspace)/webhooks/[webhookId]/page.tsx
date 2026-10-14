@@ -56,6 +56,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
     const payload = {
       url: formData.url,
       name: formData.name,
+      events: formData.events ?? [],
       is_active: formData.is_active,
       project: formData.project,
       cycle: formData.cycle,

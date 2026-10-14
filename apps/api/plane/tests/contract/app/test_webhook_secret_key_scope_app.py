@@ -104,3 +104,18 @@ class TestWebhookSecretKeyScope:
         assert "secret_key" not in WebhookSerializer(webhook, fields=("secret_key",)).data
         revealed = WebhookSerializer(webhook, context={"show_secret_key": True}).data
         assert revealed["secret_key"] == webhook.secret_key
+
+
+@pytest.mark.django_db
+@pytest.mark.contract
+def test_workspace_event_selection_round_trip(session_client, workspace):
+    webhook = _make_webhook(workspace)
+    url = _webhooks_url(workspace.slug, pk=webhook.id)
+    response = session_client.patch(url, {"events": ["issue.assigned", "project.created"]}, format="json")
+    assert response.status_code == 200
+    assert session_client.get(url).json()["events"] == ["issue.assigned", "project.created"]
+    assert session_client.patch(url, {"events": ["page.unsupported"]}, format="json").status_code == 400
+    webhook.refresh_from_db()
+    assert webhook.events == ["issue.assigned", "project.created"]
+    assert session_client.patch(url, {"events": []}, format="json").status_code == 200
+    assert session_client.get(url).json()["events"] == []

@@ -1810,6 +1810,11 @@
     "webhook_name_placeholder": "Enter a title for the webhook",
     "webhook_name_required": "Enter a webhook title",
     "webhook_update_failed": "Unable to update webhook. Please try again.",
-    "workspace_tokens_empty": "No workspace API tokens"
+    "workspace_tokens_empty": "No workspace API tokens",
+    "webhook_event_created": "Created",
+    "webhook_event_updated": "Updated",
+    "webhook_event_deleted": "Deleted",
+    "webhook_event_state_changed": "State changed",
+    "webhook_event_assigned": "Assignees changed"
   }
 }
