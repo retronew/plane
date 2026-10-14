@@ -11,7 +11,6 @@
         "upload_logo": "Nahrát logo",
         "edit_logo": "Upravit logo",
         "name": "Název pracovního prostoru",
-        "company_size": "Velikost společnosti",
         "url": "URL pracovního prostoru",
         "workspace_timezone": "Časové pásmo pracovního prostoru",
         "update_workspace": "Aktualizovat prostor",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Název je povinný",
             "max_length": "Název prostoru nesmí přesáhnout 80 znaků"
-          },
-          "company_size": {
-            "required": "Velikost společnosti je povinná",
-            "select_a_range": "Vyberte velikost organizace"
           }
         }
       },

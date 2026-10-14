@@ -32,10 +32,9 @@ const CreateWorkspacePage = observer(function CreateWorkspacePage() {
   const { data: currentUser } = useUser();
   const { updateUserProfile } = useUserProfile();
   // states
-  const [defaultValues, setDefaultValues] = useState<Pick<IWorkspace, "name" | "slug" | "organization_size">>({
+  const [defaultValues, setDefaultValues] = useState<Pick<IWorkspace, "name" | "slug">>({
     name: "",
     slug: "",
-    organization_size: "",
   });
   // derived values
   const isWorkspaceCreationDisabled = config?.is_workspace_creation_disabled ?? false;
@@ -108,8 +107,8 @@ const CreateWorkspacePage = observer(function CreateWorkspacePage() {
             </div>
           ) : (
             <div className="w-full space-y-7 sm:space-y-10">
-              <h4 className="text-20 font-semibold">{t("workspace_creation.heading")}</h4>
-              <div className="sm:w-3/4 md:w-2/5">
+              <h4 className="text-h4-semibold">{t("workspace_creation.heading")}</h4>
+              <div className="sm:w-3/4 md:w-2/5 md:max-w-96">
                 <CreateWorkspaceForm
                   onSubmit={onSubmit}
                   defaultValues={defaultValues}

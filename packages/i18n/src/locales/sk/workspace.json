@@ -11,10 +11,6 @@
         "label": "Nastavte URL vášho priestoru",
         "placeholder": "Zadajte alebo vložte URL",
         "edit_slug": "Môžete upraviť iba časť URL (slug)"
-      },
-      "organization_size": {
-        "label": "Koľko ľudí bude tento priestor používať?",
-        "placeholder": "Vyberte rozsah"
       }
     },
     "errors": {

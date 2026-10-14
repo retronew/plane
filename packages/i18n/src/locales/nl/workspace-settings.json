@@ -11,7 +11,6 @@
         "upload_logo": "Logo uploaden",
         "edit_logo": "Logo bewerken",
         "name": "Naam van werkruimte",
-        "company_size": "Bedrijfsgrootte",
         "url": "URL van werkruimte",
         "workspace_timezone": "Tijdzone van werkruimte",
         "update_workspace": "Werkruimte bijwerken",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Naam is verplicht",
             "max_length": "De naam van de werkruimte mag niet langer zijn dan 80 tekens"
-          },
-          "company_size": {
-            "required": "Bedrijfsgrootte is verplicht",
-            "select_a_range": "Selecteer de organisatiegrootte"
           }
         }
       },

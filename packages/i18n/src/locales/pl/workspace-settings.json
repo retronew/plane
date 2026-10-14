@@ -11,7 +11,6 @@
         "upload_logo": "Prześlij logo",
         "edit_logo": "Edytuj logo",
         "name": "Nazwa przestrzeni roboczej",
-        "company_size": "Rozmiar firmy",
         "url": "URL przestrzeni roboczej",
         "workspace_timezone": "Strefa czasowa przestrzeni roboczej",
         "update_workspace": "Zaktualizuj przestrzeń",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Nazwa jest wymagana",
             "max_length": "Nazwa przestrzeni nie może przekraczać 80 znaków"
-          },
-          "company_size": {
-            "required": "Rozmiar firmy jest wymagany",
-            "select_a_range": "Wybierz rozmiar organizacji"
           }
         }
       },

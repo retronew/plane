@@ -11,7 +11,6 @@
         "upload_logo": "로고 업로드",
         "edit_logo": "로고 편집",
         "name": "작업 공간 이름",
-        "company_size": "회사 규모",
         "url": "작업 공간 URL",
         "workspace_timezone": "작업 공간 시간대",
         "update_workspace": "작업 공간 업데이트",
@@ -32,10 +31,6 @@
           "name": {
             "required": "이름이 필요합니다",
             "max_length": "작업 공간 이름은 80자를 초과할 수 없습니다"
-          },
-          "company_size": {
-            "required": "회사 규모가 필요합니다",
-            "select_a_range": "조직 규모 선택"
           }
         }
       },

@@ -163,12 +163,13 @@
     },
     "general": {
       "title": "General settings",
-      "description": "Change the name of your instance and instance admin e-mail addresses.",
+      "description": "Change your instance name and view its admin and instance ID.",
       "toast_updated": "Settings updated successfully",
       "instance_details": "Instance details",
       "instance_name": "Name of instance",
       "instance_name_placeholder": "Instance name",
       "admin_email": "Admin email",
+      "admin_email_description": "The admin account that set up this instance. Read only.",
       "instance_id": "Instance ID"
     },
     "email": {
@@ -406,9 +407,6 @@
         "url": "Set your workspace's URL",
         "url_taken": "This URL is taken. Try something else.",
         "url_invalid": "URLs can contain only ( - ), ( _ ) and alphanumeric characters.",
-        "org_size": "How many people will use this workspace?",
-        "required": "This is a required field.",
-        "select_range": "Select a range",
         "creating": "Creating workspace"
       },
       "item": {

@@ -11,10 +11,6 @@
         "label": "Set your workspace's URL",
         "placeholder": "Type or paste a URL",
         "edit_slug": "You can only edit the slug of the URL"
-      },
-      "organization_size": {
-        "label": "How many people will use this workspace?",
-        "placeholder": "Select a range"
       }
     },
     "errors": {

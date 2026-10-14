@@ -11,7 +11,6 @@
         "upload_logo": "上传 Logo",
         "edit_logo": "编辑 Logo",
         "name": "工作区名称",
-        "company_size": "公司规模",
         "url": "工作区 URL",
         "workspace_timezone": "工作区时区",
         "update_workspace": "更新工作区",
@@ -32,10 +31,6 @@
           "name": {
             "required": "请输入名称",
             "max_length": "工作区名称不能超过 80 个字符"
-          },
-          "company_size": {
-            "required": "请选择公司规模",
-            "select_a_range": "选择组织规模"
           }
         }
       },

@@ -1,26 +1,22 @@
 {
   "workspace_creation": {
-    "heading": "创建您的工作区",
-    "subheading": "要开始使用 Plane，您需要创建或加入一个工作区。",
+    "heading": "创建工作区",
+    "subheading": "使用 Plane 前，需要先创建或加入一个工作区。",
     "form": {
       "name": {
-        "label": "为您的工作区命名",
-        "placeholder": "最好使用熟悉、易于识别的名称。"
+        "label": "工作区名称",
+        "placeholder": "例如：公司或团队名称"
       },
       "url": {
-        "label": "设置您的工作区 URL",
-        "placeholder": "输入或粘贴 URL",
-        "edit_slug": "您只能编辑 URL 的路径部分"
-      },
-      "organization_size": {
-        "label": "有多少人会使用此工作区？",
-        "placeholder": "选择一个范围"
+        "label": "工作区 URL",
+        "placeholder": "my-team",
+        "edit_slug": "只能修改 URL 的路径部分"
       }
     },
     "errors": {
       "creation_disabled": {
-        "title": "只有您的实例管理员可以创建工作区",
-        "description": "如果您知道实例管理员的邮箱地址，请点击下方按钮与其联系。",
+        "title": "只有实例管理员可以创建工作区",
+        "description": "可以点击下方按钮，联系实例管理员为您创建。",
         "request_button": "联系实例管理员"
       },
       "validation": {
@@ -28,7 +24,7 @@
         "name_length": "名称不能超过 80 个字符。",
         "url_alphanumeric": "URL 只能包含“-”和字母数字字符。",
         "url_length": "URL 不能超过 48 个字符。",
-        "url_already_taken": "工作区 URL 已被占用！"
+        "url_already_taken": "这个 URL 已被使用，换一个试试。"
       }
     },
     "request_email": {
@@ -46,7 +42,7 @@
       },
       "error": {
         "title": "错误",
-        "message": "创建工作区失败，请重试。"
+        "message": "工作区创建失败，请稍后重试。"
       }
     }
   },

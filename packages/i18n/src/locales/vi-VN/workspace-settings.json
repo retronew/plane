@@ -11,7 +11,6 @@
         "upload_logo": "Tải lên logo",
         "edit_logo": "Chỉnh sửa logo",
         "name": "Tên không gian làm việc",
-        "company_size": "Quy mô công ty",
         "url": "URL không gian làm việc",
         "workspace_timezone": "Múi giờ không gian làm việc",
         "update_workspace": "Cập nhật không gian làm việc",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Tên là bắt buộc",
             "max_length": "Tên không gian làm việc không nên vượt quá 80 ký tự"
-          },
-          "company_size": {
-            "required": "Quy mô công ty là bắt buộc",
-            "select_a_range": "Chọn quy mô tổ chức"
           }
         }
       },

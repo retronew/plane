@@ -11,7 +11,6 @@
         "upload_logo": "Logo yükle",
         "edit_logo": "Logoyu düzenle",
         "name": "Çalışma Alanı Adı",
-        "company_size": "Şirket Büyüklüğü",
         "url": "Çalışma Alanı URL'si",
         "workspace_timezone": "Çalışma Alanı Saat Dilimi",
         "update_workspace": "Çalışma Alanını Güncelle",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Ad gereklidir",
             "max_length": "Çalışma alanı adı 80 karakteri geçmemeli"
-          },
-          "company_size": {
-            "required": "Şirket büyüklüğü gereklidir",
-            "select_a_range": "Kuruluş büyüklüğünü seçin"
           }
         }
       },

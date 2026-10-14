@@ -11,10 +11,6 @@
         "label": "Legen Sie die URL Ihres Arbeitsbereichs fest",
         "placeholder": "Geben Sie eine URL ein oder fügen Sie sie ein",
         "edit_slug": "Sie können nur den Slug-Teil der URL bearbeiten"
-      },
-      "organization_size": {
-        "label": "Wie viele Personen werden diesen Bereich nutzen?",
-        "placeholder": "Wählen Sie einen Bereich"
       }
     },
     "errors": {

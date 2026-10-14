@@ -70,7 +70,7 @@ export const GeneralConfigurationForm = observer(function GeneralConfigurationFo
           />
 
           <div className="flex flex-col gap-1">
-            <h4 className="text-13 text-tertiary">{t("admin.common.email")}</h4>
+            <h4 className="text-13 text-tertiary">{t("admin.general.admin_email")}</h4>
             <div className="w-full">
               <InputGroup size="lg">
                 <Input
@@ -85,6 +85,7 @@ export const GeneralConfigurationForm = observer(function GeneralConfigurationFo
                 />
               </InputGroup>
             </div>
+            <p className="text-11 text-tertiary">{t("admin.general.admin_email_description")}</p>
           </div>
 
           <div className="flex flex-col gap-1">

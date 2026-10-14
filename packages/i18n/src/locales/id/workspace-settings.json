@@ -11,7 +11,6 @@
         "upload_logo": "Unggah logo",
         "edit_logo": "Edit logo",
         "name": "Nama ruang kerja",
-        "company_size": "Ukuran perusahaan",
         "url": "URL ruang kerja",
         "workspace_timezone": "Zona waktu ruang kerja",
         "update_workspace": "Perbarui ruang kerja",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Nama diperlukan",
             "max_length": "Nama ruang kerja tidak boleh lebih dari 80 karakter"
-          },
-          "company_size": {
-            "required": "Ukuran perusahaan diperlukan",
-            "select_a_range": "Pilih ukuran organisasi"
           }
         }
       },

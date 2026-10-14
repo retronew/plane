@@ -11,7 +11,6 @@
         "upload_logo": "ロゴをアップロード",
         "edit_logo": "ロゴを編集",
         "name": "ワークスペース名",
-        "company_size": "会社の規模",
         "url": "ワークスペースURL",
         "workspace_timezone": "ワークスペースのタイムゾーン",
         "update_workspace": "ワークスペースを更新",
@@ -32,10 +31,6 @@
           "name": {
             "required": "名前は必須です",
             "max_length": "ワークスペース名は80文字を超えることはできません"
-          },
-          "company_size": {
-            "required": "会社の規模は必須です",
-            "select_a_range": "組織の規模を選択"
           }
         }
       },

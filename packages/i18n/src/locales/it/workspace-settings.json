@@ -11,7 +11,6 @@
         "upload_logo": "Carica logo",
         "edit_logo": "Modifica logo",
         "name": "Nome dello spazio di lavoro",
-        "company_size": "Dimensione aziendale",
         "url": "URL dello spazio di lavoro",
         "workspace_timezone": "Fuso orario dello spazio di lavoro",
         "update_workspace": "Aggiorna spazio di lavoro",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Il nome è obbligatorio",
             "max_length": "Il nome dello spazio di lavoro non deve superare gli 80 caratteri"
-          },
-          "company_size": {
-            "required": "La dimensione aziendale è obbligatoria",
-            "select_a_range": "Seleziona la dimensione dell'organizzazione"
           }
         }
       },

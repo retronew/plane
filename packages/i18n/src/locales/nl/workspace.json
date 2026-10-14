@@ -11,10 +11,6 @@
         "label": "Stel de URL van je werkruimte in",
         "placeholder": "Typ of plak een URL",
         "edit_slug": "Je kunt alleen de slug van de URL bewerken"
-      },
-      "organization_size": {
-        "label": "Hoeveel mensen gaan deze werkruimte gebruiken?",
-        "placeholder": "Kies een bereik"
       }
     },
     "errors": {

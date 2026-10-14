@@ -11,10 +11,6 @@
         "label": "Thiết lập URL không gian làm việc của bạn",
         "placeholder": "Nhập hoặc dán URL",
         "edit_slug": "Bạn chỉ có thể chỉnh sửa phần định danh của URL"
-      },
-      "organization_size": {
-        "label": "Có bao nhiêu người sẽ sử dụng không gian làm việc này?",
-        "placeholder": "Chọn một phạm vi"
       }
     },
     "errors": {

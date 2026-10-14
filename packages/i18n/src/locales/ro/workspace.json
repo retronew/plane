@@ -11,10 +11,6 @@
         "label": "Setează URL-ul spațiului de lucru",
         "placeholder": "Tastează sau lipește un URL",
         "edit_slug": "Poți edita doar identificatorul URL-ului"
-      },
-      "organization_size": {
-        "label": "Câți oameni vor folosi acest spațiu de lucru?",
-        "placeholder": "Selectează un interval"
       }
     },
     "errors": {

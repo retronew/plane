@@ -9,10 +9,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 // plane imports
-import { WEB_BASE_URL, ORGANIZATION_SIZE, RESTRICTED_URLS } from "@plane/constants";
+import { WEB_BASE_URL, RESTRICTED_URLS } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
 import { InstanceWorkspaceService } from "@plane/services";
 import type { IWorkspace } from "@plane/types";
 import { validateSlug, validateWorkspaceName } from "@plane/utils";
@@ -34,7 +33,6 @@ export function WorkspaceCreateForm() {
   const [defaultValues, setDefaultValues] = useState<Partial<IWorkspace>>({
     name: "",
     slug: "",
-    organization_size: "",
   });
   // store hooks
   const { createWorkspace } = useWorkspace();
@@ -51,6 +49,8 @@ export function WorkspaceCreateForm() {
 
   useEffect(() => {
     if (!WEB_BASE_URL) {
+      // `window` is only readable after mount; reading it in the initializer would mismatch hydration
+      // oxlint-disable-next-line react/set-state-in-effect
       setWorkspaceBaseURL(encodeURI(window.location.origin + "/"));
     }
   }, []);
@@ -167,31 +167,6 @@ export function WorkspaceCreateForm() {
           {slugError && <p className="text-13 text-danger-primary">{t("admin.workspace.create_page.url_taken")}</p>}
           {invalidSlug && <p className="text-13 text-danger-primary">{t("admin.workspace.create_page.url_invalid")}</p>}
           {errors.slug && <span className="text-11 text-danger-primary">{errors.slug.message}</span>}
-        </div>
-        <div className="flex flex-col gap-1">
-          <h4 className="text-13 text-tertiary">{t("admin.workspace.create_page.org_size")}</h4>
-          <div className="w-full">
-            <Controller
-              name="organization_size"
-              control={control}
-              rules={{ required: t("admin.workspace.create_page.required") }}
-              render={({ field: { value, onChange } }) => (
-                <Select value={value} onValueChange={onChange}>
-                  <SelectTrigger size="lg" placeholder={t("admin.workspace.create_page.select_range")} />
-                  <SelectContent>
-                    <SelectList>
-                      {ORGANIZATION_SIZE.map((item) => (
-                        <SelectItem key={item} value={item} label={item} size="lg" />
-                      ))}
-                    </SelectList>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.organization_size && (
-              <span className="text-13 text-danger-primary">{errors.organization_size.message}</span>
-            )}
-          </div>
         </div>
       </div>
       <div className="flex max-w-4xl items-center gap-4 py-1">

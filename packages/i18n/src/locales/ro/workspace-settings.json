@@ -11,7 +11,6 @@
         "upload_logo": "Încarcă siglă",
         "edit_logo": "Editează siglă",
         "name": "Numele spațiului de lucru",
-        "company_size": "Dimensiunea companiei",
         "url": "URL-ul spațiului de lucru",
         "workspace_timezone": "Fusul orar al spațiului de lucru",
         "update_workspace": "Actualizează spațiul de lucru",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Numele este obligatoriu",
             "max_length": "Numele spațiului de lucru nu trebuie să depășească 80 de caractere"
-          },
-          "company_size": {
-            "required": "Dimensiunea companiei este obligatorie",
-            "select_a_range": "Selectează dimensiunea companiei"
           }
         }
       },

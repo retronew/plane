@@ -11,10 +11,6 @@
         "label": "Establece la URL de tu espacio de trabajo",
         "placeholder": "Escribe o pega una URL",
         "edit_slug": "Solo puedes editar el slug de la URL"
-      },
-      "organization_size": {
-        "label": "¿Cuántas personas usarán este espacio de trabajo?",
-        "placeholder": "Selecciona un rango"
       }
     },
     "errors": {

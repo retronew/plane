@@ -114,10 +114,10 @@
       "go_to_general": "前往常规设置"
     },
     "header": {
-      "general": "常规",
+      "general": "基本信息",
       "ai": "AI",
-      "email": "邮件",
-      "authentication": "身份认证",
+      "email": "邮件服务",
+      "authentication": "登录方式",
       "workspace": "工作区",
       "create": "创建",
       "settings": "设置",
@@ -126,24 +126,24 @@
     },
     "sidebar": {
       "general": {
-        "name": "常规",
-        "description": "标识您的实例并查看关键信息。"
+        "name": "基本信息",
+        "description": "实例名称与管理员信息"
       },
       "email": {
-        "name": "邮件",
-        "description": "配置 SMTP 设置。"
+        "name": "邮件服务",
+        "description": "配置 SMTP，用于发送通知和登录邮件"
       },
       "workspace": {
         "name": "工作区",
-        "description": "管理此实例上的所有工作区。"
+        "description": "查看和管理所有工作区"
       },
       "authentication": {
-        "name": "身份认证",
-        "description": "配置登录认证方式。"
+        "name": "登录方式",
+        "description": "邮箱、OAuth 与单点登录"
       },
       "ai": {
         "name": "AI",
-        "description": "接入大模型服务。"
+        "description": "接入大模型服务"
       },
       "switch_to_light": "切换到浅色模式",
       "switch_to_dark": "切换到深色模式",
@@ -162,13 +162,14 @@
       "version": "版本：v{version}"
     },
     "general": {
-      "title": "常规设置",
-      "description": "修改实例名称和实例管理员邮箱地址。",
+      "title": "基本信息",
+      "description": "修改实例名称，查看管理员和实例 ID。",
       "toast_updated": "设置已更新",
       "instance_details": "实例信息",
       "instance_name": "实例名称",
       "instance_name_placeholder": "实例名称",
       "admin_email": "管理员邮箱",
+      "admin_email_description": "创建实例的管理员账号，仅供查看。",
       "instance_id": "实例 ID"
     },
     "email": {
@@ -180,8 +181,8 @@
         "title": "关闭邮件功能失败",
         "message": "关闭邮件功能失败，请重试。"
       },
-      "title": "从您自己的实例安全地发送邮件",
-      "description": "Plane 可以直接从您自己的实例向您和用户发送邮件，无需连接互联网。",
+      "title": "邮件服务",
+      "description": "配置 SMTP 服务器后，Plane 可以发送通知、邀请和登录验证码等邮件。",
       "test_before_save": "请在下方完成设置，并在保存前进行测试。",
       "misconfig_warning": "配置错误可能导致邮件退信或发送失败。",
       "enable_smtp": "启用 SMTP 邮件",
@@ -218,8 +219,8 @@
       "saving_configuration": "正在保存配置",
       "configuration_saved": "配置已保存",
       "configuration_save_failed": "保存配置失败",
-      "title": "管理实例的认证方式",
-      "description": "为团队配置认证方式，并可限制为仅受邀用户才能注册。",
+      "title": "登录方式",
+      "description": "设置成员可以通过哪些方式登录，以及是否只允许受邀用户注册。",
       "allow_signup": "允许任何人无需邀请即可注册",
       "allow_signup_description": "关闭后，只有受邀用户才能注册。",
       "available_modes": "可用的认证方式",
@@ -325,11 +326,11 @@
     },
     "meta": {
       "create_workspace": "创建工作区 - God Mode",
-      "general": "常规设置 - God Mode",
-      "authentication": "认证设置 - God Mode",
-      "workspace": "工作区管理 - God Mode",
+      "general": "基本信息 - God Mode",
+      "authentication": "登录方式 - God Mode",
+      "workspace": "工作区 - God Mode",
       "ai": "AI 设置 - God Mode",
-      "email": "邮件设置 - God Mode",
+      "email": "邮件服务 - God Mode",
       "home": "管理后台 - 实例设置与登录",
       "home_description": "配置您的 Plane 实例，或登录管理后台。",
       "app_title": "Plane | 简单、可扩展的开源项目管理工具",
@@ -387,8 +388,8 @@
       "toast_updated": "AI 设置已更新"
     },
     "workspace": {
-      "title": "此实例上的工作区",
-      "description": "查看所有工作区，并控制谁可以创建工作区。",
+      "title": "工作区",
+      "description": "查看实例中的所有工作区，并设置谁可以创建工作区。",
       "restrict_creation": "禁止其他人创建工作区。",
       "restrict_creation_description": "开启后只有您可以创建工作区，新工作区需要由您邀请用户加入。",
       "all_workspaces": "此实例上的所有工作区",
@@ -396,19 +397,16 @@
       "create": "创建工作区",
       "load_more": "加载更多",
       "create_page": {
-        "title": "在此实例上创建新工作区。",
+        "title": "创建新工作区",
         "description": "创建工作区后，需要在工作区设置中邀请用户。",
         "toast_created": "工作区已创建。",
         "toast_create_failed": "无法创建工作区，请重试。",
         "toast_create_error": "创建工作区时出错，请重试。",
-        "name": "为工作区命名",
-        "name_placeholder": "最好使用熟悉、易于识别的名称。",
-        "url": "设置工作区 URL",
-        "url_taken": "此 URL 已被占用，请换一个。",
+        "name": "工作区名称",
+        "name_placeholder": "例如：公司或团队名称",
+        "url": "工作区 URL",
+        "url_taken": "这个 URL 已被使用，换一个试试。",
         "url_invalid": "URL 只能包含“-”、“_”和字母数字字符。",
-        "org_size": "有多少人会使用此工作区？",
-        "required": "此项为必填项。",
-        "select_range": "选择人数范围",
         "creating": "正在创建工作区"
       },
       "item": {

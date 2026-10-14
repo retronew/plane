@@ -11,10 +11,6 @@
         "label": "設定您的工作區網址",
         "placeholder": "輸入或貼上網址",
         "edit_slug": "您只能編輯網址的片段"
-      },
-      "organization_size": {
-        "label": "有多少人會使用這個工作區？",
-        "placeholder": "選擇一個範圍"
       }
     },
     "errors": {

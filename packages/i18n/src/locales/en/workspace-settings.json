@@ -11,7 +11,6 @@
         "upload_logo": "Upload logo",
         "edit_logo": "Edit logo",
         "name": "Workspace name",
-        "company_size": "Company size",
         "url": "Workspace URL",
         "workspace_timezone": "Workspace Timezone",
         "update_workspace": "Update workspace",
@@ -32,10 +31,6 @@
           "name": {
             "required": "Name is required",
             "max_length": "Workspace name should not exceed 80 characters"
-          },
-          "company_size": {
-            "required": "Company size is required",
-            "select_a_range": "Select organization size"
           }
         }
       },

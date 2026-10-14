@@ -11,10 +11,6 @@
         "label": "Skonfiguruj adres URL swojej przestrzeni",
         "placeholder": "Wpisz lub wklej adres URL",
         "edit_slug": "Możesz edytować tylko fragment adresu URL (slug)"
-      },
-      "organization_size": {
-        "label": "Ile osób będzie używać tej przestrzeni?",
-        "placeholder": "Wybierz zakres"
       }
     },
     "errors": {

@@ -11,10 +11,6 @@
         "label": "Çalışma Alanı URL'nizi Belirleyin",
         "placeholder": "URL yazın veya yapıştırın",
         "edit_slug": "Yalnızca URL'nin kısa adını düzenleyebilirsiniz"
-      },
-      "organization_size": {
-        "label": "Bu çalışma alanını kaç kişi kullanacak?",
-        "placeholder": "Bir aralık seçin"
       }
     },
     "errors": {
