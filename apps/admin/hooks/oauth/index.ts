@@ -15,11 +15,11 @@ export const useAuthenticationModes = (props: TGetAuthenticationModeProps): TIns
   const availableAuthenticationModes: TInstanceAuthenticationModes[] = [
     authenticationModes["unique-codes"],
     authenticationModes["passwords-login"],
+    authenticationModes["oidc"],
     authenticationModes["google"],
     authenticationModes["github"],
     authenticationModes["gitlab"],
     authenticationModes["gitea"],
-    authenticationModes["oidc"],
   ];
 
   return availableAuthenticationModes;

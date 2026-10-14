@@ -28,7 +28,7 @@ import { ControllerInput } from "@/components/common/controller-input";
 import type { TControllerSwitchFormField } from "@/components/common/controller-switch";
 import { ControllerSwitch } from "@/components/common/controller-switch";
 import type { TCopyField } from "@/components/common/copy-field";
-import { CopyField } from "@/components/common/copy-field";
+import { PlaneDetailsPanel } from "./plane-details-panel";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
@@ -197,16 +197,10 @@ export function InstanceGiteaConfigForm(props: Props) {
               ))}
               <ControllerSwitch control={control} field={GITEA_FORM_SWITCH_FIELD} />
             </div>
-            <div className="flex flex-col">
-              <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 pt-1.5 pb-4">
-                <div className="text-14 font-medium">
-                  {t("admin.authentication.oauth.plane_details_for_provider", { provider: "Gitea" })}
-                </div>
-                {GITEA_SERVICE_FIELD.map((field) => (
-                  <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
-                ))}
-              </div>
-            </div>
+            <PlaneDetailsPanel
+              title={t("admin.authentication.oauth.plane_details_for_provider", { provider: "Gitea" })}
+              fields={GITEA_SERVICE_FIELD}
+            />
           </div>
         </DialogBody>
       </DialogMain>

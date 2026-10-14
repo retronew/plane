@@ -29,7 +29,7 @@ import { ControllerInput } from "@/components/common/controller-input";
 import type { TControllerSwitchFormField } from "@/components/common/controller-switch";
 import { ControllerSwitch } from "@/components/common/controller-switch";
 import type { TCopyField } from "@/components/common/copy-field";
-import { CopyField } from "@/components/common/copy-field";
+import { PlaneDetailsPanel } from "./plane-details-panel";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
@@ -186,7 +186,7 @@ export function InstanceOIDCConfigForm(props: Props) {
               <ControllerSwitch control={control} field={OIDC_FORM_SWITCH_FIELD} />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-1">
-                  <h4 id={trustEmailLabelId} className="text-sm text-custom-text-300">
+                  <h4 id={trustEmailLabelId} className="text-13 text-tertiary">
                     {t("admin.authentication.oauth.oidc_trust_email")}
                   </h4>
                   <Controller
@@ -205,16 +205,10 @@ export function InstanceOIDCConfigForm(props: Props) {
                 <p className="text-11 text-tertiary">{t("admin.authentication.oauth.oidc_trust_email_description")}</p>
               </div>
             </div>
-            <div className="flex flex-col">
-              <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 pt-1.5 pb-4">
-                <div className="text-14 font-medium">
-                  {t("admin.authentication.oauth.plane_details_for_provider", { provider: "OIDC" })}
-                </div>
-                {OIDC_SERVICE_FIELD.map((field) => (
-                  <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
-                ))}
-              </div>
-            </div>
+            <PlaneDetailsPanel
+              title={t("admin.authentication.oauth.plane_details_for_provider", { provider: "OIDC" })}
+              fields={OIDC_SERVICE_FIELD}
+            />
           </div>
         </DialogBody>
       </DialogMain>

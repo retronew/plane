@@ -31,7 +31,7 @@ export function ControllerSwitch<T extends FieldValues>(props: Props<T>) {
 
   return (
     <div className="flex items-center justify-between gap-1">
-      <h4 id={labelId} className="text-sm text-custom-text-300">
+      <h4 id={labelId} className="text-13 text-tertiary">
         {t("admin.authentication.oauth.refresh_attributes", { provider: label })}
       </h4>
       <div className="relative">

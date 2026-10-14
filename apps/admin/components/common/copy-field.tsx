@@ -31,7 +31,7 @@ export function CopyField(props: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      <h4 className="text-13 text-secondary">{label}</h4>
+      <h4 className="text-13 text-tertiary">{label}</h4>
       <Button
         variant="secondary"
         size="md"

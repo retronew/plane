@@ -7,7 +7,6 @@
 import { useEffect } from "react";
 import { isEmpty } from "lodash-es";
 import { useForm } from "react-hook-form";
-import { MonitorOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
@@ -29,7 +28,7 @@ import type { TControllerSwitchFormField } from "@/components/common/controller-
 import { ControllerSwitch } from "@/components/common/controller-switch";
 import { ControllerInput } from "@/components/common/controller-input";
 import type { TCopyField } from "@/components/common/copy-field";
-import { CopyField } from "@/components/common/copy-field";
+import { PlaneDetailsPanel } from "./plane-details-panel";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
@@ -222,33 +221,10 @@ export function InstanceGithubConfigForm(props: Props) {
               ))}
               <ControllerSwitch control={control} field={GITHUB_FORM_SWITCH_FIELD} />
             </div>
-            <div className="flex flex-col gap-y-4">
-              <div className="text-14 font-medium">
-                {t("admin.authentication.oauth.plane_details_for_provider", { provider: "GitHub" })}
-              </div>
-
-              <div className="flex flex-col gap-y-4">
-                {/* common service details */}
-                <div className="flex flex-col gap-y-4 rounded-lg bg-layer-1 px-6 py-4">
-                  {GITHUB_COMMON_SERVICE_DETAILS.map((field) => (
-                    <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
-                  ))}
-                </div>
-
-                {/* web service details */}
-                <div className="flex flex-col overflow-hidden rounded-lg">
-                  <div className="flex items-center gap-x-3 bg-layer-3 px-6 py-3 text-11 font-medium text-secondary uppercase">
-                    <MonitorOutline className="h-3 w-3" />
-                    {t("admin.authentication.oauth.web")}
-                  </div>
-                  <div className="flex flex-col gap-y-4 bg-layer-1 px-6 py-4">
-                    {GITHUB_SERVICE_DETAILS.map((field) => (
-                      <CopyField key={field.key} label={field.label} url={field.url} description={field.description} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PlaneDetailsPanel
+              title={t("admin.authentication.oauth.plane_details_for_provider", { provider: "GitHub" })}
+              fields={[...GITHUB_COMMON_SERVICE_DETAILS, ...GITHUB_SERVICE_DETAILS]}
+            />
           </div>
         </DialogBody>
       </DialogMain>
