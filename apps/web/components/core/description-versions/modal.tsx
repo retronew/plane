@@ -21,7 +21,8 @@ import {
   DialogTitle,
   DialogToolbar,
 } from "@makeplane/propel/components/dialog";
-import { ChevronLeftOutline, ChevronRightOutline, CopyOutline } from "@makeplane/propel/icons";
+import { ChevronLeftOutline, ChevronRightOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TDescriptionVersion } from "@plane/types";
@@ -194,7 +195,7 @@ export const DescriptionVersionsModal = observer(function DescriptionVersionsMod
                 variant="ghost"
                 size="sm"
                 onClick={handleCopyMarkdown}
-                icon={<Icon icon={CopyOutline} />}
+                icon={<Icon icon={Copy} />}
                 aria-label={t("common.actions.copy_markdown")}
               />
             </Tooltip>

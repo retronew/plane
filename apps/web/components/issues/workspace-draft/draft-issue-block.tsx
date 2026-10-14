@@ -7,7 +7,8 @@
 import React, { useRef, useState } from "react";
 import { omit } from "lodash-es";
 import { observer } from "mobx-react";
-import { CopyOutline, DeleteOutline, EditOutline, SquareStackOutline } from "@makeplane/propel/icons";
+import { DeleteOutline, EditOutline, SquareStackOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 // plane utils
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TWorkspaceDraftIssue } from "@plane/types";
@@ -72,7 +73,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
     {
       key: "make-a-copy",
       title: "make_a_copy",
-      icon: CopyOutline,
+      icon: Copy,
       action: () => {
         setCreateUpdateIssueModal(true);
       },
@@ -179,8 +180,8 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
             <DraftIssueProperties
               className={`relative flex flex-wrap ${isSidebarCollapsed ? "md:flex-shrink-0 md:flex-grow" : "lg:flex-shrink-0 lg:flex-grow"} items-center gap-2 whitespace-nowrap`}
               issue={issue}
-              updateIssue={async (projectId, issueId, data) => {
-                await updateIssue(workspaceSlug, issueId, data);
+              updateIssue={async (_projectId, draftIssueId, data) => {
+                await updateIssue(workspaceSlug, draftIssueId, data);
               }}
             />
             <div

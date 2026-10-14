@@ -7,7 +7,8 @@
 import { observer } from "mobx-react";
 
 import { useTranslation } from "@plane/i18n";
-import { CopyOutline, DeleteOutline, EditOutline, LinkOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { DeleteOutline, EditOutline, LinkOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssueServiceType } from "@plane/types";
@@ -97,7 +98,7 @@ export const IssueLinkItem = observer(function IssueLinkItem(props: TIssueLinkIt
             }}
             className="relative grid cursor-pointer place-items-center rounded-sm p-1 text-placeholder outline-none group-hover:text-secondary hover:bg-layer-1"
           >
-            <CopyOutline className="h-3.5 w-3.5 stroke-[1.5]" />
+            <Copy className="h-3.5 w-3.5 stroke-[1.5]" />
           </button>
           <Menu>
             {/* Icon-only trigger, so it needs an explicit accessible name. */}

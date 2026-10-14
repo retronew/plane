@@ -9,7 +9,6 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import {
   ArchiveOutline,
-  CopyOutline,
   DeleteOutline,
   ExportOutline,
   GlobeOutline,
@@ -21,6 +20,7 @@ import {
   RestoreOutline,
   UnlockedOutline,
 } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 // constants
 import { EPageAccess } from "@plane/constants";
 // plane ui
@@ -134,7 +134,7 @@ export const PageActions = observer(function PageActions(props: Props) {
             pageOperations.duplicate();
           },
           title: t("web.make_a_copy"),
-          icon: CopyOutline,
+          icon: Copy,
           shouldRender: canCurrentUserDuplicatePage,
         },
         {

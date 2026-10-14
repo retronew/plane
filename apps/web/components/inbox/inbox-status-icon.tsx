@@ -4,13 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import {
-  ClockOutline,
-  CloseCircleOutline,
-  CopyOutline,
-  TickCircleOutline,
-  WarningTriangleOutline,
-} from "@makeplane/propel/icons";
+import { ClockOutline, CloseCircleOutline, TickCircleOutline, WarningTriangleOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 import type { TInboxIssueStatus } from "@plane/types";
 import { EInboxIssueStatus } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -37,7 +32,7 @@ export const ICON_PROPERTIES = {
     bgColor: (snoozeDatePassed: boolean = false) => (snoozeDatePassed ? "" : "bg-success-subtle"),
   },
   [EInboxIssueStatus.DUPLICATE]: {
-    icon: CopyOutline,
+    icon: Copy,
     textColor: (snoozeDatePassed: boolean = false) => (snoozeDatePassed ? "" : "text-secondary"),
     bgColor: (snoozeDatePassed: boolean = false) => (snoozeDatePassed ? "" : "bg-layer-3"),
   },

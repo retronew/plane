@@ -6,7 +6,7 @@
 
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { CopyOutline } from "@makeplane/propel/icons";
+
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IApiToken } from "@plane/types";
@@ -25,6 +25,7 @@ import { renderFormattedDate, renderFormattedTime, copyTextToClipboard } from "@
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
 import { ApiTokenMcpSetup } from "../mcp-setup";
+import { Copy } from "lucide-react";
 
 type Props = {
   handleClose: () => void;
@@ -62,7 +63,7 @@ export function GeneratedTokenDetails(props: Props) {
           >
             <span className="truncate pr-2">{tokenDetails.token}</span>
             <Tooltip label={t("web.copy_secret_key")} disabled={isMobile}>
-              <CopyOutline className="h-4 w-4 flex-shrink-0 text-placeholder" />
+              <Copy className="h-4 w-4 flex-shrink-0 text-placeholder" />
             </Tooltip>
           </button>
           {tokenDetails.token && <ApiTokenMcpSetup token={tokenDetails.token} />}

@@ -6,7 +6,8 @@
 
 import { observer } from "mobx-react";
 
-import { CopyOutline, DeleteOutline, EditOutline } from "@makeplane/propel/icons";
+import { DeleteOutline, EditOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 // plane types
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -27,6 +28,15 @@ type Props = {
   link: ILinkDetails;
 };
 
+const copyToClipboard = (text: string) =>
+  copyTextToClipboard(text).then(() =>
+    setToast({
+      type: "success",
+      title: translate("web.copied_to_clipboard"),
+      message: translate("web.the_url_has_been_successfully_copied_to_your_clipboard"),
+    })
+  );
+
 export const ModulesLinksListItem = observer(function ModulesLinksListItem(props: Props) {
   const { handleDeleteLink, handleEditLink, isEditingAllowed, link } = props;
   // store hooks
@@ -37,16 +47,6 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
   const { isMobile } = usePlatformOS();
 
   const Icon = getIconForLink(link.url);
-
-  const copyToClipboard = (text: string) => {
-    copyTextToClipboard(text).then(() =>
-      setToast({
-        type: "success",
-        title: translate("web.copied_to_clipboard"),
-        message: translate("web.the_url_has_been_successfully_copied_to_your_clipboard"),
-      })
-    );
-  };
 
   return (
     <div className="relative flex flex-col rounded-md bg-layer-3 p-2.5">
@@ -81,7 +81,7 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
             onClick={() => copyToClipboard(link.url)}
             className="grid place-items-center rounded-sm p-1 text-secondary hover:bg-layer-transparent-hover"
           >
-            <CopyOutline className="size-3 stroke-[1.5]" />
+            <Copy className="size-3 stroke-[1.5]" />
           </button>
           {isEditingAllowed && (
             <button

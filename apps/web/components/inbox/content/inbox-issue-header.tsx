@@ -13,7 +13,6 @@ import {
   ChevronUpOutline,
   ClockOutline,
   CloseCircleFilled,
-  CopyOutline,
   DeleteOutline,
   DuplicateOfOutline,
   LinkOutline,
@@ -21,6 +20,7 @@ import {
   NewTabOutline,
   TickCircleFilled,
 } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -442,7 +442,7 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
                         />
                       )}
                       <MenuItem
-                        icon={<Icon icon={CopyOutline} />}
+                        icon={<Icon icon={Copy} />}
                         label={t("inbox_issue.actions.copy")}
                         onClick={() => handleCopyIssueLink(workItemLink)}
                       />

@@ -9,7 +9,8 @@ import { range } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
-import { CopyOutline, HideOutline, RefreshOutline, ShowOutline } from "@makeplane/propel/icons";
+import { HideOutline, RefreshOutline, ShowOutline } from "@makeplane/propel/icons";
+import { Copy } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -101,7 +102,7 @@ export const WebhookSecretKey = observer(function WebhookSecretKey(props: Props)
       onClick: toggleShowKey,
       key: "eye",
     },
-    { label: t("web.copy_secret_key"), Icon: CopyOutline, onClick: handleCopySecretKey, key: "copy" },
+    { label: t("web.copy_secret_key"), Icon: Copy, onClick: handleCopySecretKey, key: "copy" },
   ];
 
   return (
@@ -129,7 +130,12 @@ export const WebhookSecretKey = observer(function WebhookSecretKey(props: Props)
                 <div className="flex items-center gap-2">
                   {SECRET_KEY_OPTIONS.map((option) => (
                     <Tooltip key={option.key} label={option.label} layout="stacked" disabled={isMobile}>
-                      <button type="button" className="grid flex-shrink-0 place-items-center" onClick={option.onClick}>
+                      <button
+                        type="button"
+                        className="grid flex-shrink-0 place-items-center"
+                        onClick={option.onClick}
+                        aria-label={option.label}
+                      >
                         <option.Icon className="h-3 w-3 text-placeholder" />
                       </button>
                     </Tooltip>

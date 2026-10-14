@@ -5,7 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { CopyOutline } from "@makeplane/propel/icons";
+
 import { setToast } from "@plane/blocks/toast";
 import { API_BASE_URL } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -13,6 +13,7 @@ import { copyTextToClipboard } from "@plane/utils";
 // hooks
 import { useUser } from "@/hooks/store/user";
 import { useWorkspace } from "@/hooks/store/use-workspace";
+import { Copy } from "lucide-react";
 
 type Props = {
   token: string;
@@ -75,7 +76,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
             <pre className="font-mono max-h-32 min-w-0 flex-1 overflow-auto text-11 break-all whitespace-pre-wrap">
               {snippet.value}
             </pre>
-            <CopyOutline className="mt-0.5 h-4 w-4 flex-shrink-0 text-placeholder" />
+            <Copy className="mt-0.5 h-4 w-4 flex-shrink-0 text-placeholder" />
           </button>
         </div>
       ))}
