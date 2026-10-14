@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    "plane-ai": {
+      "source": {
+        "source": "github",
+        "repo": "retronew/plane",
+        "sparsePaths": [".claude-plugin", "plugins"]
+      }
+    }
+  },
+  "enabledPlugins": {
+    "plane-workflow@plane-ai": true
+  }
+}
