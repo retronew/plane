@@ -5,16 +5,8 @@
  */
 
 import React, { useMemo, useState } from "react";
-import {
-  CartesianGrid,
-  LineChart as CoreLineChart,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { CartesianGrid, LineChart as CoreLineChart, Legend, Line, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
 import type { TLineChartProps } from "@plane/types";
@@ -94,7 +86,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
 
   return (
     <div className={className}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <CoreLineChart
           data={data}
           margin={{
@@ -107,9 +99,9 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
           <XAxis
             dataKey={xAxis.key}
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickLine={false}
             axisLine={false}
@@ -136,20 +128,19 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
                 className: AXIS_LABEL_CLASSNAME,
               }
             }
-            tick={(props) => {
+            tick={(tickProps) => {
               const TickComponent = customTicks?.y || CustomYAxisTick;
-              return <TickComponent {...props} />;
+              return <TickComponent {...tickProps} />;
             }}
             tickCount={tickCount.y}
             allowDecimals={!!yAxis.allowDecimals}
           />
           {legend && (
-            // @ts-expect-error recharts types are not up to date
             <Legend
-              onMouseEnter={(payload) => setActiveLegend(payload.value)}
+              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
               onMouseLeave={() => setActiveLegend(null)}
               formatter={(value) => itemLabels[value]}
-              {...getLegendProps(legend)}
+              {...getLegendProps(legend, itemKeys)}
             />
           )}
           {showTooltip && (
@@ -179,7 +170,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           )}
           {renderLines}
         </CoreLineChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 });

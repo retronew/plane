@@ -6,7 +6,7 @@
 
 import { isPast, isToday } from "date-fns";
 import { sortBy, set, isEmpty } from "lodash-es";
-import { action, computed, observable, makeObservable, runInAction } from "mobx";
+import { action, computed, observable, makeObservable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // types
 import type {
@@ -116,7 +116,7 @@ export class CycleStore implements ICycleStore {
   constructor(_rootStore: CoreRootStore) {
     makeObservable(this, {
       // observables
-      loader: observable.ref,
+      loader: observableRef,
       progressLoader: observable,
       cycleMap: observable,
       plotType: observable,
@@ -624,6 +624,7 @@ export class CycleStore implements ICycleStore {
         delete this.activeCycleIdMap[cycleId];
         if (this.rootStore.favorite.entityMap[cycleId]) this.rootStore.favorite.removeFavoriteFromStore(cycleId);
       });
+      return undefined;
     });
 
   /**
@@ -695,6 +696,7 @@ export class CycleStore implements ICycleStore {
           set(this.cycleMap, [cycleId, "archived_at"], response.archived_at);
           if (this.rootStore.favorite.entityMap[cycleId]) this.rootStore.favorite.removeFavoriteFromStore(cycleId);
         });
+        return undefined;
       })
       .catch((error) => {
         console.error("Failed to archive cycle in cycle store", error);
@@ -717,6 +719,7 @@ export class CycleStore implements ICycleStore {
         runInAction(() => {
           set(this.cycleMap, [cycleId, "archived_at"], null);
         });
+        return undefined;
       })
       .catch((error) => {
         console.error("Failed to restore cycle in cycle store", error);

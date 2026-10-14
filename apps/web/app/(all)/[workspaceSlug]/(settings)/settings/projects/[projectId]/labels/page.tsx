@@ -6,7 +6,7 @@
 
 import { translate } from "@plane/i18n";
 import { useEffect, useRef } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 // components

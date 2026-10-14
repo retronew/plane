@@ -5,7 +5,7 @@
  */
 
 import { isEmpty, set } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 // base class
 import { computedFn } from "mobx-utils";
 import type { TSupportedFilterTypeForUpdate } from "@plane/constants";
@@ -67,7 +67,7 @@ export class ProfileIssuesFilter extends IssueFilterHelperStore implements IProf
     super();
     makeObservable(this, {
       // observables
-      userId: observable.ref,
+      userId: observableRef,
       filters: observable,
       // computed
       issueFilters: computed,

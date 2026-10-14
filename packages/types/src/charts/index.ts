@@ -33,7 +33,11 @@ export type TBaseChartProps<K extends string, T extends string> = {
   legend?: TChartLegend;
   margin?: TChartMargin;
   showTooltip?: boolean;
-  customTooltipContent?: (props: { active?: boolean; label: string; payload: any }) => React.ReactNode;
+  customTooltipContent?: (props: {
+    active?: boolean;
+    label: string | number | undefined;
+    payload: any;
+  }) => React.ReactNode;
 };
 
 // Props specific to charts with X and Y axes

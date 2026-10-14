@@ -6,9 +6,10 @@
 
 import React from "react";
 import { Sector } from "recharts";
-import type { PieSectorDataItem } from "recharts/types/polar/Pie";
+import type { PieSectorDataItem } from "recharts";
 
-export const CustomActiveShape = React.memo(function CustomActiveShape(props: PieSectorDataItem) {
+// recharts clones the element given as `activeShape` with the sector props, so they arrive at render.
+export const CustomActiveShape = React.memo(function CustomActiveShape(props: Partial<PieSectorDataItem>) {
   const { cx, cy, cornerRadius, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
 
   return (

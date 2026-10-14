@@ -5,7 +5,7 @@
  */
 
 import { unset, orderBy, set } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // types
 import type { IEstimate as IEstimateType, IEstimateFormData, TEstimateSystemKeys } from "@plane/types";
@@ -63,7 +63,7 @@ export class ProjectEstimateStore implements IProjectEstimateStore {
   constructor(private store: CoreRootStore) {
     makeObservable(this, {
       // observables
-      loader: observable.ref,
+      loader: observableRef,
       estimates: observable,
       error: observable,
       // computed

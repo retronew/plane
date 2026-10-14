@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 
 type UseLayoutStateProps =

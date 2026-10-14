@@ -8,13 +8,14 @@ import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@makeplane/propel/components/table";
 import { Loader } from "@plane/blocks/skeleton";
+import type { TInsightTableFeatures } from "./table-features";
 
 interface TableSkeletonProps {
-  columns: ColumnDef<any>[];
+  columns: ColumnDef<TInsightTableFeatures, any>[];
   rows: number;
 }
 
-const getColumnKey = (column: ColumnDef<any>) => column.id ?? String(column.header ?? "");
+const getColumnKey = (column: ColumnDef<TInsightTableFeatures, any>) => column.id ?? String(column.header ?? "");
 
 export function TableLoader({ columns, rows }: TableSkeletonProps) {
   const rowKeys = Array.from({ length: rows }, (_, rowIndex) => `skeleton-row-${rowIndex}`);

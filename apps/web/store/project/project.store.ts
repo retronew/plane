@@ -5,7 +5,7 @@
  */
 
 import { sortBy, cloneDeep, update, set } from "lodash-es";
-import { observable, action, computed, makeObservable, runInAction } from "mobx";
+import { observable, action, computed, makeObservable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane imports
 import type { TFetchStatus, TLoader, TProjectAnalyticsCount, TProjectAnalyticsCountParams } from "@plane/types";
@@ -99,12 +99,12 @@ export class ProjectStore implements IProjectStore {
     makeObservable(this, {
       // observables
       isUpdatingProject: observable,
-      loader: observable.ref,
-      fetchStatus: observable.ref,
+      loader: observableRef,
+      fetchStatus: observableRef,
       projectMap: observable,
       projectAnalyticsCountMap: observable,
-      openCollapsibleSection: observable.ref,
-      lastCollapsibleAction: observable.ref,
+      openCollapsibleSection: observableRef,
+      lastCollapsibleAction: observableRef,
       // computed
       isInitializingProjects: computed,
       filteredProjectIds: computed,
@@ -607,6 +607,7 @@ export class ProjectStore implements IProjectStore {
           set(this.projectMap, [projectId, "archived_at"], response.archived_at);
           this.rootStore.favorite.removeFavoriteFromStore(projectId);
         });
+        return undefined;
       })
       .catch((error) => {
         console.log("Failed to archive project from project store");
@@ -627,6 +628,7 @@ export class ProjectStore implements IProjectStore {
         runInAction(() => {
           set(this.projectMap, [projectId, "archived_at"], null);
         });
+        return undefined;
       })
       .catch((error) => {
         console.log("Failed to restore project from project store");

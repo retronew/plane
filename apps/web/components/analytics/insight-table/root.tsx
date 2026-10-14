@@ -12,14 +12,15 @@ import { Icon } from "@makeplane/propel/components/icon";
 import type { AnalyticsTableDataMap, TAnalyticsTabsBase } from "@plane/types";
 import { DataTable } from "./data-table";
 import { TableLoader } from "./loader";
+import type { TInsightTableFeatures } from "./table-features";
 interface InsightTableProps<T extends Exclude<TAnalyticsTabsBase, "overview">> {
   analyticsType: T;
   data?: AnalyticsTableDataMap[T][];
   isLoading?: boolean;
-  columns: ColumnDef<AnalyticsTableDataMap[T]>[];
+  columns: ColumnDef<TInsightTableFeatures, AnalyticsTableDataMap[T]>[];
   columnsLabels?: Record<string, string>;
   headerText: string;
-  onExport?: (rows: Row<AnalyticsTableDataMap[T]>[]) => void;
+  onExport?: (rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[]) => void;
 }
 
 export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(
@@ -37,7 +38,7 @@ export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(
         columns={columns}
         data={data || []}
         searchPlaceholder={`${data?.length || 0} ${headerText}`}
-        actions={(table: Table<AnalyticsTableDataMap[T]>) => (
+        actions={(table: Table<TInsightTableFeatures, AnalyticsTableDataMap[T]>) => (
           <Button
             variant="secondary"
             size="sm"

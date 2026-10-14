@@ -5,7 +5,7 @@
  */
 
 import { clone, update, unset, orderBy, set } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane imports
 import { EDraftIssuePaginationType } from "@plane/constants";
@@ -123,7 +123,7 @@ export class WorkspaceDraftIssues implements IWorkspaceDraftIssues {
 
   constructor(public issueStore: IIssueRootStore) {
     makeObservable(this, {
-      loader: observable.ref,
+      loader: observableRef,
       paginationInfo: observable,
       issuesMap: observable,
       issueMapIds: observable,
@@ -237,7 +237,7 @@ export class WorkspaceDraftIssues implements IWorkspaceDraftIssues {
           const newIssueIds = issueIds.filter((issueId) => !existingIssueIds.includes(issueId));
           this.addIssue(results);
           // issue map update
-          update(this.issueMapIds, [workspaceSlug], (existingIssueIds = []) => [...newIssueIds, ...existingIssueIds]);
+          update(this.issueMapIds, [workspaceSlug], (storedIssueIds = []) => [...newIssueIds, ...storedIssueIds]);
           this.loader = undefined;
         } else {
           this.loader = "empty-state";

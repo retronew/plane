@@ -5,15 +5,8 @@
  */
 
 import { useMemo, useState } from "react";
-import {
-  PolarGrid,
-  Radar,
-  RadarChart as CoreRadarChart,
-  ResponsiveContainer,
-  PolarAngleAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { PolarGrid, Radar, RadarChart as CoreRadarChart, PolarAngleAxis, Tooltip, Legend } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 import type { TRadarChartProps } from "@plane/types";
 import { getLegendProps } from "../components/legend";
 import { CustomRadarAxisTick } from "../components/tick";
@@ -41,10 +34,10 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
 
   return (
     <div className={className}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <CoreRadarChart cx="50%" cy="50%" outerRadius="80%" data={data} margin={margin}>
           <PolarGrid stroke="var(--border-color-subtle)" />
-          <PolarAngleAxis dataKey={angleAxis.key} tick={(props) => <CustomRadarAxisTick {...props} />} />
+          <PolarAngleAxis dataKey={angleAxis.key} tick={(tickProps) => <CustomRadarAxisTick {...tickProps} />} />
           {showTooltip && (
             <Tooltip
               cursor={{
@@ -68,17 +61,15 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
             />
           )}
           {legend && (
-            // @ts-expect-error recharts types are not up to date
             <Legend
               onMouseEnter={(payload) => {
-                // @ts-expect-error recharts types are not up to date
-                const key: string | undefined = payload.payload?.key;
+                const key = (payload.payload as { key?: string } | undefined)?.key;
                 if (!key) return;
                 setActiveLegend(key);
                 setActiveIndex(null);
               }}
               onMouseLeave={() => setActiveLegend(null)}
-              {...getLegendProps(legend)}
+              {...getLegendProps(legend, itemKeys)}
             />
           )}
           {radars.map((radar) => (
@@ -93,7 +84,7 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
             />
           ))}
         </CoreRadarChart>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 }

@@ -5,7 +5,7 @@
  */
 
 import { set } from "lodash-es";
-import { makeObservable, observable } from "mobx";
+import { makeObservable, observable, observableRef } from "mobx";
 // types
 import type { IUserAccount } from "@plane/types";
 // services
@@ -36,11 +36,11 @@ export class AccountStore implements IAccountStore {
   ) {
     makeObservable(this, {
       // observables
-      isLoading: observable.ref,
+      isLoading: observableRef,
       error: observable,
       // model observables
-      provider_account_id: observable.ref,
-      provider: observable.ref,
+      provider_account_id: observableRef,
+      provider: observableRef,
     });
     // service
     this.userService = new UserService();

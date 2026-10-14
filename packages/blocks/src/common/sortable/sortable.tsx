@@ -5,7 +5,7 @@
  */
 
 // Same entry point as `./draggable`: a monitor only sees drags registered on its own adapter instance.
-import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import React, { Fragment, useEffect, useEffectEvent, useId, useMemo } from "react";
 import { Draggable } from "./draggable";
 

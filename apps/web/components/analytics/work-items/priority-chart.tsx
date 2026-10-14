@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from "react";
-import type { ColumnDef, Row, RowData, Table } from "@tanstack/react-table";
+import type { ColumnDef, Table } from "@tanstack/react-table";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -28,19 +28,9 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { AnalyticsService } from "@/services/analytics.service";
 import { exportCSV } from "../export";
 import { DataTable } from "../insight-table/data-table";
+import type { TInsightTableFeatures } from "../insight-table/table-features";
 import { ChartLoader } from "../loaders";
 import { generateBarColor } from "./utils";
-
-declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    export: {
-      key: string;
-      value: (row: Row<TData>) => string | number;
-      label?: string;
-    };
-  }
-}
 
 interface Props {
   x_axis: ChartXAxisProperty;
@@ -149,7 +139,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
     [props.x_axis]
   );
 
-  const defaultColumns: ColumnDef<TChartDatum>[] = useMemo(
+  const defaultColumns: ColumnDef<TInsightTableFeatures, TChartDatum>[] = useMemo(
     () => [
       {
         accessorKey: "name",
@@ -178,7 +168,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
     [xAxisLabel, t]
   );
 
-  const columns: ColumnDef<TChartDatum>[] = useMemo(
+  const columns: ColumnDef<TInsightTableFeatures, TChartDatum>[] = useMemo(
     () =>
       parsedData
         ? Object.keys(parsedData?.schema ?? {}).map((key) => ({
@@ -226,7 +216,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
             data={parsedData.data}
             columns={[...defaultColumns, ...columns]}
             searchPlaceholder={`${parsedData.data.length} ${xAxisLabel}`}
-            actions={(table: Table<TChartDatum>) => (
+            actions={(table: Table<TInsightTableFeatures, TChartDatum>) => (
               <Button
                 variant="secondary"
                 size="sm"

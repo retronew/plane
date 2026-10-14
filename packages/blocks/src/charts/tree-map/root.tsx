@@ -5,7 +5,8 @@
  */
 
 import React from "react";
-import { Treemap, ResponsiveContainer, Tooltip } from "recharts";
+import { Treemap, Tooltip } from "recharts";
+import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import type { TreeMapChartProps } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -17,7 +18,7 @@ export const TreeMapChart = React.memo(function TreeMapChart(props: TreeMapChart
   const { data, className = "w-full h-96", isAnimationActive = false, showTooltip = true } = props;
   return (
     <div className={cn(className)}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ChartContainer>
         <Treemap
           data={data}
           nameKey="name"
@@ -43,7 +44,7 @@ export const TreeMapChart = React.memo(function TreeMapChart(props: TreeMapChart
             />
           )}
         </Treemap>
-      </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 });

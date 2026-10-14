@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 // plane constants
@@ -160,6 +160,8 @@ export const CalendarChart = observer(function CalendarChart(props: Props) {
                         setSelectedDate={setSelectedDate}
                         handleDragAndDrop={handleDragAndDrop}
                         issuesFilterStore={issuesFilterStore}
+                        // A week's position is its identity here: the grid always renders the same rows.
+                        // oxlint-disable-next-line react/no-array-index-key
                         key={weekIndex}
                         week={week}
                         issues={issues}
