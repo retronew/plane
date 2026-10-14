@@ -8,19 +8,12 @@ import * as React from "react";
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
+  RowData,
   SortingState,
-  VisibilityState,
   Table as TanstackTable,
 } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 
 import { useTranslation } from "@plane/i18n";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
@@ -29,25 +22,29 @@ import { CloseOutline, SearchOutline } from "@makeplane/propel/icons";
 import { Table, TableBody, TableHeader, TableRow } from "@makeplane/propel/components/table";
 import { TableCell, TableHead } from "@makeplane/propel/elements/table";
 import { cn } from "@plane/utils";
+import type { TInsightTableFeatures } from "./table-features";
+import { insightTableFeatures } from "./table-features";
 // plane web components
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData extends RowData> {
+  // `any` value type: one table's columns hold different cell types, and useTable takes them as one array.
+  columns: ColumnDef<TInsightTableFeatures, TData, any>[];
   data: TData[];
   searchPlaceholder: string;
-  actions?: (table: TanstackTable<TData>) => React.ReactNode;
+  actions?: (table: TanstackTable<TInsightTableFeatures, TData>) => React.ReactNode;
 }
 
-export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, actions }: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends RowData>({ columns, data, searchPlaceholder, actions }: DataTableProps<TData>) {
   const [rowSelection, _setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, _setSorting] = React.useState<SortingState>([]);
   const { t } = useTranslation();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: insightTableFeatures,
     data,
     columns,
     state: {
@@ -58,11 +55,6 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, act
     },
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
   return (
@@ -141,6 +133,8 @@ export function DataTable<TData, TValue>({ columns, data, searchPlaceholder, act
                     colSpan={header.colSpan}
                     variant="table"
                     pinned="none"
+                    // The <th> is only the render template; TableHead fills it with the header below.
+                    // oxlint-disable-next-line jsx-a11y/control-has-associated-label
                     render={<th className="whitespace-nowrap" />}
                   >
                     {header.isPlaceholder

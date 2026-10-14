@@ -57,7 +57,7 @@
       }
     },
     {
-      "files": ["packages/blocks/src/charts/**"],
+      "files": ["packages/blocks/src/charts/**", "apps/web/components/analytics/**"],
       "rules": {
         "react/no-unstable-nested-components": [
           "warn",
