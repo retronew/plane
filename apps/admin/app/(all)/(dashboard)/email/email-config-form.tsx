@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 // types
 import { Button } from "@makeplane/propel/components/button";
 import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
@@ -45,8 +45,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
   // form data
   const {
     handleSubmit,
-    watch,
     setValue,
+    reset,
     control,
     formState: { errors, isValid, isDirty, isSubmitting },
   } = useForm<EmailFormValues>({
@@ -69,7 +69,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
       key: "EMAIL_HOST",
       type: "text",
       label: t("admin.email.form.host"),
-      placeholder: "email.google.com",
+      placeholder: "smtp.example.com",
       error: Boolean(errors.EMAIL_HOST),
       required: true,
     },
@@ -77,7 +77,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
       key: "EMAIL_PORT",
       type: "text",
       label: t("admin.email.form.port"),
-      placeholder: "8080",
+      placeholder: "465",
       error: Boolean(errors.EMAIL_PORT),
       required: true,
     },
@@ -115,18 +115,21 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     const payload: Partial<EmailFormValues> = { ...formData, ENABLE_SMTP: "1" };
 
     await updateInstanceConfigurations(payload)
-      .then(() =>
+      .then(() => {
+        // Saved values become the new baseline so the form is clean again
+        reset(formData);
         setToast({
           type: "success",
           title: t("admin.common.success"),
           message: t("admin.email.form.toast_updated"),
-        })
-      )
+        });
+        return undefined;
+      })
       .catch((err) => console.error(err));
   };
 
-  const useTLSValue = watch("EMAIL_USE_TLS");
-  const useSSLValue = watch("EMAIL_USE_SSL");
+  const useTLSValue = useWatch({ control, name: "EMAIL_USE_TLS" });
+  const useSSLValue = useWatch({ control, name: "EMAIL_USE_SSL" });
   const emailSecurityKey: TEmailSecurityKeys = useMemo(() => {
     if (useTLSValue === "1") return "EMAIL_USE_TLS";
     if (useSSLValue === "1") return "EMAIL_USE_SSL";
@@ -134,18 +137,11 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
   }, [useTLSValue, useSSLValue]);
 
   const handleEmailSecurityChange = (key: TEmailSecurityKeys) => {
-    if (key === "EMAIL_USE_SSL") {
-      setValue("EMAIL_USE_TLS", "0");
-      setValue("EMAIL_USE_SSL", "1");
-    }
-    if (key === "EMAIL_USE_TLS") {
-      setValue("EMAIL_USE_TLS", "1");
-      setValue("EMAIL_USE_SSL", "0");
-    }
-    if (key === "NONE") {
-      setValue("EMAIL_USE_TLS", "0");
-      setValue("EMAIL_USE_SSL", "0");
-    }
+    // shouldDirty: these fields have no input of their own, so without it the
+    // change never marks the form dirty and "Save changes" stays disabled
+    const options = { shouldDirty: true };
+    setValue("EMAIL_USE_TLS", key === "EMAIL_USE_TLS" ? "1" : "0", options);
+    setValue("EMAIL_USE_SSL", key === "EMAIL_USE_SSL" ? "1" : "0", options);
   };
 
   return (
@@ -228,7 +224,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           stretch="auto"
           onClick={() => setIsSendTestEmailModalOpen(true)}
           loading={isSubmitting}
-          disabled={!isValid}
+          // The test email is sent with the saved configuration
+          disabled={!isValid || isDirty}
           label={t("admin.email.form.send_test_email")}
         />
       </div>
