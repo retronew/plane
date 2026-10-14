@@ -54,3 +54,18 @@ def generate_operation_summary(method, path, tag):
         return f"Transfer {tag.rstrip('s')}"
 
     return method_summaries.get(method, f"{method} {resource}")
+
+
+def postprocess_mark_legacy_issue_paths(result, generator, request, public):
+    """Mark the legacy `/issues/` work item routes as deprecated in favour of `/work-items/`."""
+    for path, operations in result.get("paths", {}).items():
+        if "/issues/" not in path:
+            continue
+        for operation in operations.values():
+            if isinstance(operation, dict):
+                operation["deprecated"] = True
+                successor = path.replace("/issues/", "/work-items/").replace("/issue-attachments/", "/attachments/")
+                operation["description"] = (
+                    f"{operation.get('description', '')}\n\nDeprecated: use `{successor}` instead."
+                ).strip()
+    return result

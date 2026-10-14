@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from functools import wraps
+
 from django.urls import path
 
 from plane.api.views import (
@@ -33,6 +35,22 @@ from plane.api.views import (
     IssueSearchEndpoint,
     IssueRelationListCreateAPIEndpoint,
 )
+
+
+def deprecated(view):
+    """Serve a legacy `/issues/` route unchanged, pointing clients at its `/work-items/` successor."""
+
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        response = view(request, *args, **kwargs)
+        successor = request.path.replace("/issues/", "/work-items/").replace("/issue-attachments/", "/attachments/")
+        response["Deprecation"] = "true"
+        if successor != request.path:
+            response["Link"] = f'<{successor}>; rel="successor-version"'
+        return response
+
+    return wrapper
+
 
 # Deprecated url patterns
 old_url_patterns = [
@@ -242,5 +260,8 @@ engagement_url_patterns = [
         name="work-item-description-version-detail",
     ),
 ]
+
+# Every legacy route keeps working but advertises its successor
+old_url_patterns = [path(str(p.pattern), deprecated(p.callback), name=p.name) for p in old_url_patterns]
 
 urlpatterns = old_url_patterns + new_url_patterns + lifecycle_url_patterns + engagement_url_patterns
