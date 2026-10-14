@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -23,7 +24,7 @@ import type {
 import { EIssuesStoreType } from "@plane/types";
 // ui
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 // components
 import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
 import { IssueLayoutIcon } from "@/components/issues/issue-layouts/layout-icon";
@@ -88,7 +89,13 @@ export const ProfileIssuesMobileHeader = observer(function ProfileIssuesMobileHe
     <div className="flex justify-evenly border-b border-subtle py-2 md:hidden">
       <Menu>
         <MenuTrigger
-          render={<button type="button" className="flex grow items-center justify-center text-13 text-secondary" />}
+          render={
+            <button
+              aria-label={t("common.layout")}
+              type="button"
+              className="flex grow items-center justify-center text-13 text-secondary"
+            />
+          }
         >
           {t("common.layout")}
           <ChevronDownOutline className="my-auto ml-2 h-4 w-4 text-secondary" />

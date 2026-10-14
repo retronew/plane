@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -17,7 +18,7 @@ import {
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 
 type Props = {
   workspaceSlug: string;

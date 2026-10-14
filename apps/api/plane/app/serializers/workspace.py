@@ -41,6 +41,7 @@ import re
 
 
 class WorkSpaceSerializer(DynamicBaseSerializer):
+    project_states_enabled = serializers.BooleanField(read_only=True)
     total_members = serializers.IntegerField(read_only=True)
     logo_url = serializers.CharField(read_only=True)
     role = serializers.IntegerField(read_only=True)
@@ -53,9 +54,7 @@ class WorkSpaceSerializer(DynamicBaseSerializer):
         # digit. Mirrors the frontend HAS_ALPHANUMERIC_REGEX check so the rule
         # cannot be bypassed via a direct API call.
         if not has_alphanumeric(value):
-            raise serializers.ValidationError(
-                "Name must contain at least one letter or number"
-            )
+            raise serializers.ValidationError("Name must contain at least one letter or number")
         return value
 
     def validate_slug(self, value):

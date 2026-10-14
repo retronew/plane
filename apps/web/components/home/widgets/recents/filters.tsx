@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -5,7 +6,7 @@
  */
 
 import { observer } from "mobx-react";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import type { TRecentActivityFilterKeys } from "@plane/types";

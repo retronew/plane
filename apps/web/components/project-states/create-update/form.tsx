@@ -51,7 +51,7 @@ export function StateForm(props: TStateForm) {
   const formSubmit = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
 
-    const name = formData?.name || undefined;
+    const name = formData?.name?.trim() || undefined;
     if (!formData || !name) {
       let currentErrors: Partial<Record<keyof IState, string>> = {};
       if (!name) currentErrors = { ...currentErrors, name: t("web.name_is_required") };
@@ -60,7 +60,7 @@ export function StateForm(props: TStateForm) {
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit({ ...formData, name });
     } catch (error) {
       console.log("error", error);
     }
@@ -83,7 +83,11 @@ export function StateForm(props: TStateForm) {
             }
           />
           <PopoverContent variant="rich" side="bottom" align="start">
-            <ColorSwatchPicker value={formData?.color} onChange={(hex) => handleFormData("color", hex)} />
+            <ColorSwatchPicker
+              className="w-88"
+              value={formData?.color}
+              onChange={(hex) => handleFormData("color", hex)}
+            />
           </PopoverContent>
         </Popover>
       </div>
@@ -115,6 +119,7 @@ export function StateForm(props: TStateForm) {
               surface="field"
               autoResize
               maxRows={8}
+              maxLength={1000}
               id="description"
               name="description"
               placeholder={t("web.describe_this_state_for_your_members")}

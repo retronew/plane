@@ -3,6 +3,13 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.workspace.configuration import (
+    ProjectCategoryEndpoint,
+    ProjectStateSettingsEndpoint,
+    WorkspaceTemplateEndpoint,
+    TemplateOptionsEndpoint,
+    ProjectCategoryOrderEndpoint,
+)
 
 
 from plane.app.views import (
@@ -40,6 +47,13 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path("workspaces/<str:slug>/project-state-settings/", ProjectStateSettingsEndpoint.as_view()),
+    path("workspaces/<str:slug>/project-categories/<str:kind>/order/", ProjectCategoryOrderEndpoint.as_view()),
+    path("workspaces/<str:slug>/template-options/", TemplateOptionsEndpoint.as_view()),
+    path("workspaces/<str:slug>/project-categories/<str:kind>/", ProjectCategoryEndpoint.as_view()),
+    path("workspaces/<str:slug>/project-categories/<str:kind>/<uuid:pk>/", ProjectCategoryEndpoint.as_view()),
+    path("workspaces/<str:slug>/templates/", WorkspaceTemplateEndpoint.as_view()),
+    path("workspaces/<str:slug>/templates/<uuid:pk>/", WorkspaceTemplateEndpoint.as_view()),
     path(
         "workspace-slug-check/",
         WorkSpaceAvailabilityCheckEndpoint.as_view(),

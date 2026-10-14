@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -33,7 +34,7 @@ import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ControlLink } from "@plane/blocks/layout";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { DropIndicator, DragHandle } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // components

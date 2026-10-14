@@ -1,3 +1,4 @@
+import { StateGroupPanel } from "./group-panel";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -7,10 +8,6 @@
 import { useState, useRef } from "react";
 import { observer } from "mobx-react";
 
-import { Collapsible } from "@makeplane/propel/components/collapsible";
-import { Icon } from "@makeplane/propel/components/icon";
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { AddOutline, ChevronDownOutline } from "@makeplane/propel/icons";
 // plane imports
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
@@ -63,48 +60,16 @@ export const GroupItem = observer(function GroupItem(props: TGroupItem) {
       className={cn("rounded-sm border border-subtle bg-surface-2 transition-all", groupItemClassName)}
       ref={dropElementRef}
     >
-      <Collapsible
+      <StateGroupPanel
         open={currentStateExpanded}
         onOpenChange={(open) => (open ? handleExpand(groupKey) : handleGroupCollapse(groupKey))}
-        indicator={false}
-        icon={
-          <Icon
-            icon={
-              <ChevronDownOutline
-                className={cn("transition-transform", {
-                  "rotate-0": currentStateExpanded,
-                  "-rotate-90": !currentStateExpanded,
-                })}
-              />
-            }
-          />
-        }
-        trigger={
-          <span className="flex w-full items-center gap-1">
-            <StateGroupIcon stateGroup={groupKey} size={EIconSize.XL} className="shrink-0" />
-            <span className="px-1 text-14 font-medium text-secondary capitalize">{groupKey}</span>
-          </span>
-        }
-        trailing={
-          <IconButton
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label={t("common.add")}
-            disabled={isCreateDisabled}
-            onClick={() => {
-              if (!createState) {
-                handleExpand(groupKey);
-                setCreateState(true);
-              }
-            }}
-            icon={
-              <Icon
-                icon={<AddOutline className={isCreateDisabled ? "text-placeholder" : "text-accent-primary/80"} />}
-              />
-            }
-          />
-        }
+        title={groupKey}
+        icon={<StateGroupIcon stateGroup={groupKey} size={EIconSize.XL} className="shrink-0" />}
+        addDisabled={isCreateDisabled}
+        onAdd={() => {
+          handleExpand(groupKey);
+          setCreateState(true);
+        }}
       >
         {shouldShowEmptyState && (
           <div className="flex h-full flex-col items-center justify-center py-4 text-13 text-tertiary">
@@ -123,7 +88,7 @@ export const GroupItem = observer(function GroupItem(props: TGroupItem) {
             stateItemClassName={stateItemClassName}
           />
         </div>
-      </Collapsible>
+      </StateGroupPanel>
 
       {/* Rendered outside the collapsible panel (as in legacy) so the create form, and whatever the user typed
           into it, survives collapsing the group — the panel unmounts its children when closed. */}

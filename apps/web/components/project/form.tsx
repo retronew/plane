@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { ProjectCategoryFields } from "@/components/settings/workspace/configuration/project-fields";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { InfoOutline, LockOutline } from "@makeplane/propel/icons";
@@ -172,6 +173,8 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
       logo_props: formData.logo_props,
       timezone: formData.timezone,
+      status: formData.status,
+      labels: formData.labels,
     };
 
     // Handle cover image changes
@@ -453,6 +456,14 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
             {errors.timezone && <span className="text-11 text-danger-primary">{errors.timezone.message}</span>}
           </div>
         </div>
+        <ProjectCategoryFields
+          workspaceSlug={workspaceSlug}
+          status={watch("status")}
+          labels={watch("labels")}
+          disabled={!isAdmin}
+          onStatus={(id) => setValue("status", id, { shouldDirty: true })}
+          onLabels={(ids) => setValue("labels", ids, { shouldDirty: true })}
+        />
         <div className="flex items-center justify-between py-2">
           <>
             <Button

@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -12,7 +13,7 @@ import { GridOutline, ListOutline, TimelineOutline } from "@makeplane/propel/ico
 // plane package imports
 import type { TCycleLayoutOptions } from "@plane/types";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 // hooks
 import { useCycleFilter } from "@/hooks/store/use-cycle-filter";
 import { useProject } from "@/hooks/store/use-project";
@@ -56,7 +57,11 @@ export const CyclesListMobileHeader = observer(function CyclesListMobileHeader()
         <div className="flex flex-grow justify-center border-b border-subtle bg-surface-1 py-2 text-13 text-secondary">
           <MenuTrigger
             render={
-              <button type="button" className="flex flex-grow items-center justify-center text-13 text-secondary" />
+              <button
+                aria-label={translate("common.layout")}
+                type="button"
+                className="flex flex-grow items-center justify-center text-13 text-secondary"
+              />
             }
           >
             <span className="flex items-center gap-2">

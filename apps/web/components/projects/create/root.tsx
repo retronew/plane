@@ -1,9 +1,12 @@
+import { ProjectCategoryFields } from "@/components/settings/workspace/configuration/project-fields";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
+import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
+import type { TemplateConfiguration } from "@/services/workspace-configuration.service";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -40,13 +43,14 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   const { t } = useTranslation();
   const { addProjectToFavorites, createProject, updateProject } = useProject();
   // states
+  const [templateConfiguration, setTemplateConfiguration] = useState<TemplateConfiguration | null>(null);
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
   // form info
   const methods = useForm<TProject>({
     defaultValues: { ...getProjectFormValues(), ...data },
     reValidateMode: "onChange",
   });
-  const { handleSubmit, reset, setValue } = methods;
+  const { handleSubmit, reset, setValue, watch } = methods;
   const { isMobile } = usePlatformOS();
   const handleAddToFavorites = (projectId: string) => {
     if (!workspaceSlug) return;
@@ -92,7 +96,12 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
       }
     }
 
-    return createProject(workspaceSlug.toString(), formData)
+    return createProject(workspaceSlug.toString(), {
+      ...formData,
+      ...(templateConfiguration
+        ? { template_configuration: templateConfiguration, intake_view: templateConfiguration.intake_view }
+        : {}),
+    })
       .then(async (res) => {
         if (uploadedAssetUrl) {
           await updateCoverImageStatus(res.id, uploadedAssetUrl);
@@ -178,6 +187,21 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
 
       <form onSubmit={handleSubmit(onSubmit)} className="px-3">
         <div className="mt-9 space-y-6 pb-5">
+          <TemplatePicker
+            workspaceSlug={workspaceSlug}
+            kind="project"
+            disabled={methods.formState.isSubmitting}
+            onApply={(template) => {
+              const config = template.configuration;
+              setValue("name", template.title, { shouldDirty: true });
+              setValue("description", config.description ?? "", { shouldDirty: true });
+              setValue("network", config.network ?? 2, { shouldDirty: true });
+              setValue("project_lead", config.project_lead ?? null, { shouldDirty: true });
+              for (const field of ["cycle_view", "module_view", "page_view", "issue_views_view"] as const)
+                if (config[field] !== undefined) setValue(field, config[field], { shouldDirty: true });
+              setTemplateConfiguration(config);
+            }}
+          />
           <ProjectCommonAttributes
             setValue={setValue}
             isMobile={isMobile}
@@ -185,6 +209,13 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
             setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
           />
           <ProjectAttributes isMobile={isMobile} />
+          <ProjectCategoryFields
+            workspaceSlug={workspaceSlug}
+            status={watch("status")}
+            labels={watch("labels")}
+            onStatus={(id) => setValue("status", id)}
+            onLabels={(ids) => setValue("labels", ids)}
+          />
         </div>
         <ProjectCreateButtons handleClose={handleClose} />
       </form>

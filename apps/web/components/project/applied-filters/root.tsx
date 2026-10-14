@@ -1,3 +1,5 @@
+import { useParams } from "react-router";
+import { useProjectCategories } from "@/components/settings/workspace/configuration/project-fields";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -38,6 +40,8 @@ const DATE_FILTERS = new Set(["created_at"]);
 
 export function ProjectAppliedFiltersList(props: Props) {
   const { t } = useTranslation();
+  const { workspaceSlug = "" } = useParams();
+  const categories = useProjectCategories(workspaceSlug);
   const {
     appliedFilters,
     appliedDisplayFilters,
@@ -61,12 +65,38 @@ export function ProjectAppliedFiltersList(props: Props) {
         {Object.entries(appliedFilters ?? {}).map(([key, value]) => {
           const filterKey = key as keyof TProjectFilters;
 
-          if (!value) return;
+          if (!value || (filterKey === "status" && !categories.statesEnabled)) return;
           if (Array.isArray(value) && value.length === 0) return;
 
           return (
             <div key={filterKey} className={FILTER_GROUP_CLASSNAME}>
-              <span className="text-11 text-tertiary">{replaceUnderscoreIfSnakeCase(filterKey)}</span>
+              <span className="text-11 text-tertiary">
+                {filterKey === "status"
+                  ? t("web.project_statuses")
+                  : filterKey === "labels"
+                    ? t("web.project_labels")
+                    : replaceUnderscoreIfSnakeCase(filterKey)}
+              </span>
+              {(filterKey === "status" || filterKey === "labels") &&
+                value.map((id) => {
+                  const entry = (filterKey === "status" ? categories.statuses : categories.labels).find(
+                    (item) => item.id === id
+                  );
+                  return (
+                    <span key={id} className="flex items-center gap-1 rounded-sm bg-layer-1 px-1.5 py-1">
+                      <span>{entry?.name ?? t("web.configuration_deleted_filter")}</span>
+                      {isEditingAllowed && (
+                        <button
+                          type="button"
+                          aria-label={t("remove")}
+                          onClick={() => handleRemoveFilter(filterKey, id)}
+                        >
+                          <CloseOutline className="size-3" />
+                        </button>
+                      )}
+                    </span>
+                  );
+                })}
               {filterKey === "access" && (
                 <AppliedAccessFilters
                   editable={isEditingAllowed}
@@ -91,6 +121,7 @@ export function ProjectAppliedFiltersList(props: Props) {
               {isEditingAllowed && (
                 <button
                   type="button"
+                  aria-label={t("remove")}
                   className="grid place-items-center text-tertiary hover:text-secondary"
                   onClick={() => handleRemoveFilter(filterKey, null)}
                 >

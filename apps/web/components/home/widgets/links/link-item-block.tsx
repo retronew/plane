@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -7,7 +9,7 @@
 // plane imports
 import { Icon as PropelIcon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { MoreVerticalOutline } from "@makeplane/propel/icons";
 import { getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
@@ -38,7 +40,7 @@ export function LinkItemBlock(props: TLinkItemBlockProps) {
         className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-4 pl-4 text-left"
       >
         <span className="grid size-8 flex-shrink-0 place-items-center rounded-sm bg-surface-2 p-2">
-          <Icon className="size-4 stroke-2 text-tertiary group-hover:text-primary" />
+          {createElement(Icon, { className: "size-4 stroke-2 text-tertiary group-hover:text-primary" })}
         </span>
         <span className="block flex-1 truncate">
           <span className="block truncate text-13 font-medium">{title}</span>

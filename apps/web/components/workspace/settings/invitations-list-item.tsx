@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -13,7 +14,7 @@ import { useTranslation } from "@plane/i18n";
 import { ChevronDownOutline, DeleteOutline, LinkOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
 import { Select, SelectDropdownPlacementContext } from "@plane/blocks/select";

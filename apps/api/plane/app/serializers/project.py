@@ -15,6 +15,8 @@ from plane.app.serializers.workspace import WorkspaceLiteSerializer
 from plane.app.serializers.user import UserLiteSerializer, UserAdminLiteSerializer
 from plane.db.models import (
     Project,
+    Workspace,
+    ProjectCategory,
     ProjectMember,
     ProjectMemberInvite,
     ProjectIdentifier,
@@ -28,6 +30,10 @@ from plane.utils.content_validator import (
 
 
 class ProjectSerializer(BaseSerializer):
+    from plane.app.serializers.template_configuration import ProjectTemplateConfigurationSerializer
+
+    template_configuration = ProjectTemplateConfigurationSerializer(write_only=True, required=False)
+
     workspace_detail = WorkspaceLiteSerializer(source="workspace", read_only=True)
     inbox_view = serializers.BooleanField(read_only=True, source="intake_view")
 
@@ -75,6 +81,13 @@ class ProjectSerializer(BaseSerializer):
         return identifier
 
     def validate(self, data):
+        if self.instance and "template_configuration" in data:
+            raise serializers.ValidationError({"template_configuration": "Only supported when creating a project."})
+        workspace_id = self.context.get("workspace_id") or (self.instance.workspace_id if self.instance else None)
+        if data.get("status") and (data["status"].workspace_id != workspace_id or data["status"].kind != "status"):
+            raise serializers.ValidationError({"status": "Invalid workspace project status."})
+        if any(label.workspace_id != workspace_id or label.kind != "label" for label in data.get("labels", [])):
+            raise serializers.ValidationError({"labels": "Invalid workspace project labels."})
         # Validate description content for security
         if "description_html" in data and data["description_html"]:
             is_valid, error_msg, sanitized_html = validate_html_content(str(data["description_html"]))
@@ -90,7 +103,18 @@ class ProjectSerializer(BaseSerializer):
     def create(self, validated_data):
         workspace_id = self.context["workspace_id"]
 
+        template_configuration = validated_data.pop("template_configuration", None)
+        labels = validated_data.pop("labels", [])
+        if (
+            not validated_data.get("status")
+            and Workspace.objects.filter(id=workspace_id, project_states_enabled=True).exists()
+        ):
+            validated_data["status"] = ProjectCategory.objects.filter(
+                workspace_id=workspace_id, kind="status", is_default=True
+            ).first()
         project = Project.objects.create(**validated_data, workspace_id=workspace_id)
+        project.labels.set(labels)
+        project.template_configuration = template_configuration
 
         ProjectIdentifier.objects.create(name=project.identifier, project=project, workspace_id=workspace_id)
 

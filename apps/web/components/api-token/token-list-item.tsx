@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -7,7 +8,7 @@ import { useState } from "react";
 import { DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuTrigger, MenuContent, MenuItem } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger, MenuItem } from "@makeplane/propel/components/menu";
 import type { IApiToken } from "@plane/types";
 import { renderFormattedDate, renderFormattedTime, calculateTimeAgo } from "@plane/utils";
 import { translate } from "@plane/i18n";

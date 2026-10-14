@@ -1,3 +1,4 @@
+import { StateSummary } from "./state-summary";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -55,15 +56,13 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
             <DragDropOutline className="h-3 w-3" />
           </div>
         )}
-        {/* state icon */}
-        <div className="flex-shrink-0">
-          <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.XL} percentage={percentage} />
-        </div>
-        {/* state title and description */}
-        <div className="min-h-5 px-2 text-13">
-          <h6 className="text-13 font-medium">{state.name}</h6>
-          {shouldShowDescription && <p className="text-11 text-secondary">{state.description}</p>}
-        </div>
+        <StateSummary
+          icon={
+            <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.XL} percentage={percentage} />
+          }
+          name={state.name}
+          description={shouldShowDescription ? state.description : undefined}
+        />
       </div>
       {!disabled && (
         <div className="hidden items-center gap-2 group-hover:flex">
@@ -71,7 +70,7 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
           <div className="flex-shrink-0 text-11 transition-all">
             <StateMarksAsDefault
               stateId={state.id}
-              isDefault={state.default ? true : false}
+              isDefault={Boolean(state.default)}
               markStateAsDefaultCallback={props.stateOperationsCallbacks.markStateAsDefault}
             />
           </div>

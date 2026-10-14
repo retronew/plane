@@ -1,3 +1,4 @@
+import { cn } from "@plane/utils";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "react-router";
@@ -14,11 +15,16 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { WORKSPACE_SETTINGS_ICONS } from "./sidebar/item-icon";
 
 type Props = {
+  children?: React.ReactNode;
   feature: "projects" | "ai";
   field: "allow_member_project_creation" | "ai_enabled";
 };
 
-export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettings({ feature, field }: Props) {
+export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettings({
+  feature,
+  field,
+  children,
+}: Props) {
   const { workspaceSlug } = useParams();
   const { getWorkspaceBySlug, updateWorkspace } = useWorkspace();
   const { allowPermissions } = useUserPermissions();
@@ -57,9 +63,14 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
         />
       }
     >
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <SettingsHeading title={title} description={t(`web.workspace_${feature}_description`)} />
-        <div className="flex items-center justify-between gap-6">
+        <div
+          className={cn(
+            "flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between md:gap-8",
+            "rounded-lg border border-subtle bg-layer-2 px-4 py-3"
+          )}
+        >
           <div className="flex flex-col gap-1">
             <label htmlFor={`workspace-${field}`} className="text-13 font-medium text-primary">
               {t(`web.workspace_${feature}_toggle`)}
@@ -74,6 +85,7 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
             onCheckedChange={(enabled) => void save(enabled)}
           />
         </div>
+        {children}
       </div>
     </SettingsContentWrapper>
   );

@@ -23,6 +23,8 @@ export type ColorSwatchPickerLabels = {
 export type ColorSwatchPickerProps = {
   /** The current colour as a hex string (with or without the leading `#`). */
   value?: string;
+  /** Optional layout width for wider settings palettes. */
+  className?: string;
   /** The preset swatches. @default DEFAULT_SWATCH_COLORS */
   colors?: readonly string[];
   /** Fires with a normalised `#rrggbb` when a swatch is picked or a complete hex is typed. */
@@ -39,7 +41,7 @@ export type ColorSwatchPickerProps = {
  * Propel `Popover` (or inline in a form) and let that own the surface.
  */
 export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
-  const { value = "", colors = DEFAULT_SWATCH_COLORS, onChange, labels } = props;
+  const { value = "", colors = DEFAULT_SWATCH_COLORS, onChange, labels, className } = props;
   // plane hooks
   const { t } = useTranslation();
   const swatchesLabel = labels?.swatches ?? t("aria_labels.color_picker.swatches");
@@ -83,8 +85,8 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
   };
 
   return (
-    <div className="flex w-56 flex-col gap-3">
-      <div role="group" aria-label={swatchesLabel} className="flex flex-wrap gap-2">
+    <div className={cn("flex w-56 max-w-full flex-col gap-3", className)}>
+      <fieldset aria-label={swatchesLabel} className="flex flex-wrap gap-2">
         {colors.map((color) => {
           const hex = normalizeHex(color).toLowerCase();
           const isSelected = hex === selected;
@@ -104,7 +106,7 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
             />
           );
         })}
-      </div>
+      </fieldset>
       {/* propel: the bare Input is transparent; InputGroup draws the box around the "#" prefix and the field. */}
       <InputGroup size="lg">
         <span aria-hidden="true" className="ps-2 text-body-sm-regular text-tertiary select-none">

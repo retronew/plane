@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +10,7 @@ import { SortAscendingOutline, SortDescendingOutline } from "@makeplane/propel/i
 import { VIEW_SORT_BY_OPTIONS, VIEW_SORTING_KEY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TViewFiltersSortBy, TViewFiltersSortKey } from "@plane/types";
 
 type Props = {
@@ -45,7 +46,11 @@ export function ViewOrderByDropdown(props: Props) {
         <MenuTrigger
           render={
             isMobile ? (
-              <button type="button" className="flex w-full items-center gap-2 text-13 text-secondary" />
+              <button
+                aria-label={t("web.order_by")}
+                type="button"
+                className="flex w-full items-center gap-2 text-13 text-secondary"
+              />
             ) : (
               <ButtonElement variant="secondary" size="md" stretch="auto" />
             )

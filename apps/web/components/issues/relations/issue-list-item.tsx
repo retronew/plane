@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -11,7 +12,7 @@ import { CloseOutline, DeleteOutline, EditOutline, LinkOutline, MoreHorizontalOu
 // plane imports
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssueRelationTypes } from "@plane/types";
 import type { TIssue, TIssueServiceType } from "@plane/types";
@@ -86,13 +87,13 @@ export const RelationIssueListItem = observer(function RelationIssueListItem(pro
   });
 
   // handlers
-  const handleIssuePeekOverview = (issue: TIssue) => {
-    if (issue.is_epic) {
+  const handleIssuePeekOverview = (targetIssue: TIssue) => {
+    if (targetIssue.is_epic) {
       // open epics in new tab
       window.open(workItemLink, "_blank");
       return;
     }
-    handleRedirection(workspaceSlug, issue, isMobile);
+    handleRedirection(workspaceSlug, targetIssue, isMobile);
   };
 
   const handleEditIssue = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {

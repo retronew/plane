@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -10,7 +11,7 @@ import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import { AddOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 import type { TIssue, TIssueServiceType } from "@plane/types";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 // components
 import { handleTriggerClick, handleTriggerKeyDown } from "@/components/common/trigger-guard";
 // hooks
@@ -46,14 +47,14 @@ export const SubIssuesActionButton = observer(function SubIssuesActionButton(pro
   const handleIssueCrudState = (
     key: "create" | "existing",
     _parentIssueId: string | null,
-    issue: TIssue | null = null
+    targetIssue: TIssue | null = null
   ) => {
     setIssueCrudOperationState({
       ...issueCrudOperationState,
       [key]: {
         toggle: !issueCrudOperationState[key].toggle,
         parentIssueId: _parentIssueId,
-        issue: issue,
+        issue: targetIssue,
       },
     });
   };

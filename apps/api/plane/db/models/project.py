@@ -67,6 +67,10 @@ def get_default_preferences():
 
 class Project(BaseModel):
     NETWORK_CHOICES = ((0, "Secret"), (2, "Public"))
+    status = models.ForeignKey(
+        "db.ProjectCategory", null=True, blank=True, on_delete=models.SET_NULL, related_name="status_projects"
+    )
+    labels = models.ManyToManyField("db.ProjectCategory", blank=True, related_name="label_projects")
     name = models.CharField(max_length=255, verbose_name="Project Name")
     description = models.TextField(verbose_name="Project Description", blank=True)
     description_text = models.JSONField(verbose_name="Project Description RT", blank=True, null=True)

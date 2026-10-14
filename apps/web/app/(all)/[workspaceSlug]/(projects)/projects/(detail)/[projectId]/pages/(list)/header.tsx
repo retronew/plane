@@ -4,6 +4,13 @@
  * See the LICENSE file for details.
  */
 
+import useSWR from "swr";
+import { useCommandPalette } from "@/hooks/store/use-command-palette";
+import {
+  configurationKey,
+  workspaceConfigurationService,
+  type WorkspaceTemplate,
+} from "@/services/workspace-configuration.service";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -33,6 +40,11 @@ export const PagesListHeader = observer(function PagesListHeader() {
   // router
   const router = useRouter();
   const { workspaceSlug, projectId } = useParams();
+  const { toggleCreatePageModal } = useCommandPalette();
+  const slug = workspaceSlug?.toString() ?? "";
+  const { data: templates } = useSWR(slug ? configurationKey(slug, "templates") : null, () =>
+    workspaceConfigurationService.list<WorkspaceTemplate>(slug, "templates")
+  );
   const projectCrumb = useProjectCrumbProps(workspaceSlug?.toString(), projectId?.toString());
   const searchParams = useSearchParams();
   const pageType = searchParams.get("type");
@@ -87,6 +99,20 @@ export const PagesListHeader = observer(function PagesListHeader() {
       </Header.LeftItem>
       {canCurrentUserCreatePage && (
         <Header.RightItem>
+          {templates?.some((template) => template.kind === "page") && (
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={translate("web.create_from_template")}
+              onClick={() =>
+                toggleCreatePageModal({
+                  isOpen: true,
+                  pageAccess: pageType === "private" ? EPageAccess.PRIVATE : EPageAccess.PUBLIC,
+                })
+              }
+            />
+          )}
           <Button
             variant="primary"
             size="md"

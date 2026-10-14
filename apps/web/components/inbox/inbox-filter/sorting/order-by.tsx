@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +10,7 @@ import { ChevronDownOutline, SortAscendingOutline, SortDescendingOutline } from 
 import { INBOX_ISSUE_ORDER_BY_OPTIONS, INBOX_ISSUE_SORT_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TInboxIssueSortingOrderByKeys, TInboxIssueSortingSortByKeys } from "@plane/types";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
@@ -36,7 +37,7 @@ export const InboxIssueOrderByDropdown = observer(function InboxIssueOrderByDrop
         variant="secondary"
         size="sm"
         stretch="auto"
-        render={<button type="button" className="px-2 text-tertiary" />}
+        render={<button aria-label={t("web.order_by")} type="button" className="px-2 text-tertiary" />}
       >
         {sortIcon}
         {orderByLabel}

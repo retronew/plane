@@ -34,6 +34,7 @@ export interface IWorkspace {
   role: number;
   timezone: string;
   allow_member_project_creation: boolean;
+  project_states_enabled: boolean;
   ai_enabled: boolean;
 }
 

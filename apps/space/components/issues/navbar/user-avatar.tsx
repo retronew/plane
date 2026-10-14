@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -13,7 +14,7 @@ import { API_BASE_URL } from "@plane/constants";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { LogOutOutline } from "@makeplane/propel/icons";
 import { AuthService } from "@plane/services";
 import { getFileURL } from "@plane/utils";
@@ -94,7 +95,7 @@ export const UserAvatar = observer(function UserAvatar() {
                 />
               }
             />
-            <MenuContent side="bottom" align="end" sizing="auto">
+            <MenuContent side="bottom" align="end" sizing="anchor">
               {csrfToken && (
                 <MenuItem
                   icon={<Icon icon={LogOutOutline} tint="danger" />}

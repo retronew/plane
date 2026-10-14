@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -10,7 +11,7 @@ import type { LucideIcon } from "lucide-react";
 // plane helpers
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { CloseOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
@@ -97,7 +98,7 @@ export function LabelItemBlock(props: ILabelItemBlock) {
                 />
               }
             />
-            <MenuContent>
+            <MenuContent align="end">
               {customMenuItems.map(
                 ({ isVisible, onClick, CustomIcon, text, key }) =>
                   isVisible && (

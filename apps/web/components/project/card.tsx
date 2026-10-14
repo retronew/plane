@@ -1,9 +1,11 @@
+import { ProjectStatusSelect } from "@/components/settings/workspace/configuration/project-status-select";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
+import { ProjectCategoryBadges } from "@/components/settings/workspace/configuration/project-fields";
 import React, { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
@@ -288,7 +290,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         </div>
 
         <div
-          className={cn("flex h-[104px] w-full flex-col justify-between rounded-b-sm p-4", {
+          className={cn("flex min-h-[104px] w-full flex-col justify-between gap-2 rounded-b-sm p-4", {
             "opacity-90": isArchived,
           })}
         >
@@ -297,6 +299,16 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
               ? project.description
               : translate("web.runtime.created_on", { date: renderFormattedDate(project.created_at) ?? "" })}
           </p>
+          <ProjectStatusSelect
+            workspaceSlug={workspaceSlug?.toString() ?? ""}
+            projectId={project.id}
+            value={project.status}
+            disabled={
+              isArchived ||
+              !(hasAdminRole || allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE))
+            }
+          />
+          <ProjectCategoryBadges workspaceSlug={workspaceSlug?.toString() ?? ""} labels={project.labels} />
           <div className="item-center flex justify-between">
             <div className="flex items-center justify-center gap-2">
               <Tooltip

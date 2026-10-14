@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -12,7 +13,7 @@ import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
@@ -65,6 +66,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
         title: t("common.link_copied"),
         message: t("common.link_copied_to_clipboard"),
       });
+      return undefined;
     });
   const handleOpenInNewTab = () => window.open(`/${cycleLink}`, "_blank");
 
@@ -76,7 +78,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
           title: t("project_cycles.action.restore.success.title"),
           message: t("project_cycles.action.restore.success.description"),
         });
-        router.push(`/${workspaceSlug}/projects/${projectId}/archives/cycles`);
+        return router.push(`/${workspaceSlug}/projects/${projectId}/archives/cycles`);
       })
       .catch(() => {
         setToast({

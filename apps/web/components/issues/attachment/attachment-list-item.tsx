@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -14,7 +15,7 @@ import { EIssueServiceType } from "@plane/types";
 // ui
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { convertBytesToSize, getFileExtension, getFileName, getFileURL, renderFormattedDate } from "@plane/utils";
 // components
 //
@@ -56,6 +57,7 @@ export const IssueAttachmentsListItem = observer(function IssueAttachmentsListIt
   return (
     <>
       <button
+        aria-label={`${fileName}.${fileExtension}`}
         type="button"
         onClick={(e) => {
           e.preventDefault();
