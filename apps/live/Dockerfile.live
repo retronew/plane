@@ -4,7 +4,10 @@ FROM node:22-alpine AS base
 # Setup pnpm package manager with corepack and configure global bin directory for caching
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PNPM_HOME/bin:$PATH"
-RUN corepack enable
+# Keep in sync with "packageManager" in the root package.json. Pinned here because
+# corepack runs before the repo is copied in and would otherwise fetch the latest pnpm.
+ARG PNPM_VERSION=11.10.0
+RUN corepack prepare pnpm@${PNPM_VERSION} --activate && corepack enable pnpm
 
 # *****************************************************************************
 # STAGE 1: Prune the project
@@ -15,7 +18,8 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 # Set working directory
 WORKDIR /app
-ARG TURBO_VERSION=2.10.11
+# Keep in sync with the turbo version in pnpm-workspace.yaml (catalog)
+ARG TURBO_VERSION=2.11.7
 RUN corepack enable pnpm && pnpm add -g turbo@${TURBO_VERSION}
 COPY . .
 RUN turbo prune --scope=live --docker

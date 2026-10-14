@@ -4,7 +4,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY . .
-RUN corepack enable pnpm && pnpm add -g turbo
+# Keep in sync with the turbo version in pnpm-workspace.yaml (catalog)
+ARG TURBO_VERSION=2.11.7
+RUN corepack enable pnpm && pnpm add -g turbo@${TURBO_VERSION}
 RUN pnpm install
 EXPOSE 3003
 
