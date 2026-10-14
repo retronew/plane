@@ -107,3 +107,14 @@ from .notification import (
 )
 from .search import WorkspaceSearchAPIEndpoint
 from .my_work import MyWorkItemsAPIEndpoint, MyWorkSummaryAPIEndpoint, MyActivityAPIEndpoint
+
+from .work_item_engagement import (
+    WorkItemSubscriberListAPIEndpoint,
+    WorkItemSubscribeAPIEndpoint,
+    WorkItemReactionAPIEndpoint,
+    WorkItemReactionDetailAPIEndpoint,
+    WorkItemCommentReactionAPIEndpoint,
+    WorkItemCommentReactionDetailAPIEndpoint,
+    WorkItemDescriptionVersionListAPIEndpoint,
+    WorkItemDescriptionVersionDetailAPIEndpoint,
+)

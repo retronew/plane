@@ -403,6 +403,27 @@ workitem_tool = Tool(
             required=("work_item",),
         ),
         Action(
+            "subscribe",
+            "关注工作项（有变化时收到通知）",
+            lambda ctx, a: ctx.api("POST", _work_item_path(ctx, a, "subscribe/")),
+            params={"work_item": P_WORK_ITEM},
+            required=("work_item",),
+        ),
+        Action(
+            "unsubscribe",
+            "取消关注",
+            lambda ctx, a: ctx.api("DELETE", _work_item_path(ctx, a, "subscribe/")),
+            params={"work_item": P_WORK_ITEM},
+            required=("work_item",),
+        ),
+        Action(
+            "react",
+            "给工作项加表情回应",
+            lambda ctx, a: ctx.api("POST", _work_item_path(ctx, a, "reactions/"), body={"reaction": a["reaction"]}),
+            params={"work_item": P_WORK_ITEM, "reaction": {"type": "string", "description": "表情，如 👍"}},
+            required=("work_item", "reaction"),
+        ),
+        Action(
             "bulk_archive",
             "批量归档，最多 100 条；有一条不满足条件就全部不执行",
             _bulk_archive,
