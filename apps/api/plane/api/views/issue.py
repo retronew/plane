@@ -38,9 +38,12 @@ from drf_spectacular.utils import (
     OpenApiResponse,
     OpenApiExample,
     OpenApiRequest,
+    OpenApiParameter,
+    OpenApiTypes,
 )
 
 # Module imports
+from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.api.serializers import (
     IssueAttachmentSerializer,
     IssueActivitySerializer,
@@ -176,6 +179,26 @@ def user_has_issue_permission(user_id, project_id, issue=None, allowed_roles=Non
     return qs.exists()
 
 
+WORK_ITEM_FILTERS_PARAMETER = OpenApiParameter(
+    name="filters",
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    required=False,
+    description=(
+        "JSON filter tree combining conditions with `and` / `or` / `not`. Fields: state_id, state_group, "
+        "priority, assignee_id, label_id, cycle_id, module_id, parent_id, mention_id, created_by_id, "
+        "subscriber_id, start_date, target_date, created_at, updated_at, is_archived; suffix `__in` for "
+        "comma-separated lists and `__range` for `YYYY-MM-DD,YYYY-MM-DD` date ranges."
+    ),
+    examples=[
+        OpenApiExample(
+            name="Started and due this month",
+            value='{"and": [{"state_group__in": "started"}, {"target_date__range": "2026-10-01,2026-10-31"}]}',
+        )
+    ],
+)
+
+
 class WorkspaceIssueAPIEndpoint(BaseAPIView):
     """
     This viewset provides `retrieveByIssueId` on workspace level
@@ -267,6 +290,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
     serializer_class = IssueSerializer
     use_read_replica = True
+    filterset_class = IssueFilterSet
 
     def get_queryset(self):
         return (
@@ -299,6 +323,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
             ORDER_BY_PARAMETER,
             FIELDS_PARAMETER,
             EXPAND_PARAMETER,
+            WORK_ITEM_FILTERS_PARAMETER,
         ],
         responses={
             200: create_paginated_response(
@@ -318,16 +343,14 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
         Supports filtering, ordering, and field selection through query parameters.
         """
 
-        unsupported_filters = [param for param in ("pql", "filters") if request.GET.get(param)]
-        if unsupported_filters:
+        if request.GET.get("pql"):
             return Response(
                 {
                     "pql": (
-                        "PQL and structured filters are not supported on this Plane edition. "
-                        "Remove the pql/filters parameter and filter results client-side, or use "
-                        "a Plane edition that supports work item query filtering."
+                        "PQL is not supported on this Plane edition. Use the `filters` parameter "
+                        "(a JSON filter tree) instead."
                     ),
-                    "unsupported_parameters": unsupported_filters,
+                    "unsupported_parameters": ["pql"],
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -385,6 +408,16 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
         )
 
         total_issue_queryset = Issue.issue_objects.filter(project_id=project_id, workspace__slug=slug)
+
+        # Structured filters: the same JSON filter tree the web app and saved views use,
+        # e.g. {"and": [{"state_group__in": "started"}, {"target_date__range": "2026-10-01,2026-10-31"}]}
+        filter_string = request.GET.get("filters")
+        if filter_string:
+            filter_backend = ComplexFilterBackend()
+            issue_queryset = filter_backend.filter_queryset(request, issue_queryset, self, filter_data=filter_string)
+            total_issue_queryset = filter_backend.filter_queryset(
+                request, total_issue_queryset, self, filter_data=filter_string
+            )
 
         # Priority Ordering
         if order_by_param == "priority" or order_by_param == "-priority":
