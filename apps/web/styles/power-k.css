@@ -25,3 +25,56 @@
     }
   }
 }
+
+/* Rows extend beyond the input's text gutter while labels share its baseline. */
+.top-nav-command-search [cmdk-group] {
+  padding-inline: 0;
+  margin-top: 4px;
+}
+.top-nav-command-search [cmdk-group-heading] {
+  padding-inline: 10px;
+  margin-bottom: 4px;
+}
+.top-nav-command-search [cmdk-item] {
+  min-height: 30px;
+  padding: 5px 10px;
+}
+
+.top-nav-command-search [data-search-content] {
+  opacity: 0;
+  filter: blur(3px);
+  transition:
+    opacity 160ms ease-out,
+    filter 160ms ease-out;
+}
+.top-nav-command-search [data-search-content][data-open] {
+  opacity: 1;
+  filter: blur(0);
+  transition-duration: 240ms;
+  transition-delay: 45ms;
+}
+@starting-style {
+  .top-nav-command-search [data-search-content][data-open] {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-nav-command-search [data-search-content] {
+    transition: none;
+    filter: none;
+  }
+}
+
+.top-nav-command-search {
+  transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.top-nav-command-search[data-open] {
+  transition-duration: 360ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-nav-command-search {
+    transition: none;
+  }
+}

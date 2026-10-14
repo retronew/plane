@@ -12,6 +12,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ISvgIcons } from "@plane/blocks/icons";
 
 type Props = {
+  className?: string;
   isActive: boolean;
   label: string;
 } & ({ as: "button"; onClick: () => void } | { as: "link"; href: string }) &
@@ -30,7 +31,8 @@ export function SettingsSidebarItem(props: Props) {
     {
       "bg-layer-transparent-selected text-primary": isActive,
       "hover:bg-layer-transparent-hover": !isActive,
-    }
+    },
+    props.className
   );
   // common content
   const content = (

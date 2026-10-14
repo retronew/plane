@@ -78,6 +78,13 @@ export function Logo({ logo, size = 16, type = "material" }: LogoProps) {
       <span
         className="material-symbols-rounded"
         style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size,
+          height: size,
+          flexShrink: 0,
+          lineHeight: 1,
           fontSize: size,
           color,
           scale: "115%",

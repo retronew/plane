@@ -82,6 +82,8 @@ export class ForceCloseHandler implements Extension {
       });
 
       logger.info(`[FORCE_CLOSE_HANDLER] Closed ${closed}/${connectionCount} connections for ${docId}`);
+      // A moved document must reload with the destination project service context.
+      if (data.originServer === "api-page-move") await instance.unloadDocument(document);
     });
 
     logger.info("[FORCE_CLOSE_HANDLER] Registered with Redis extension");

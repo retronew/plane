@@ -5,6 +5,8 @@
  */
 
 import { useState } from "react";
+import { getCalendarLocale } from "./calendar-locale";
+import { useTranslation } from "@plane/i18n";
 import { Calendar } from "@makeplane/propel/components/calendar";
 import {
   formatLocalizedDate,
@@ -112,6 +114,7 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
     clearable = false,
     onClose,
   } = props;
+  const { currentLocale } = useTranslation();
   // states
   const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false);
   // react-day-picker answers the FIRST click of a range with `{ from: day, to: day }`, which is
@@ -154,6 +157,7 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
       }}
     >
       <Calendar
+        {...getCalendarLocale(currentLocale)}
         formatters={getCalendarFormatters()}
         mode="range"
         selected={shown.from ? { from: shown.from, to: shown.to ?? undefined } : undefined}

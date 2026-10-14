@@ -59,14 +59,6 @@
           }
         }
       },
-      "billing_and_plans": {
-        "heading": "账单与套餐",
-        "description": "选择套餐、管理订阅，并随需求增长轻松升级。",
-        "title": "账单与套餐",
-        "current_plan": "当前套餐",
-        "free_plan": "您当前使用的是免费套餐",
-        "view_plans": "查看套餐"
-      },
       "exports": {
         "heading": "导出",
         "description": "以多种格式导出项目数据，并通过下载链接查看导出记录。",
@@ -81,14 +73,23 @@
           "title": "导出为",
           "toasts": {
             "success": {
-              "title": "导出成功",
-              "message": "可以在导出记录中下载导出的{entity}。"
+              "title": "已开始导出",
+              "message": "文件生成后，可在导出记录中下载 {entity}。"
             },
             "error": {
               "title": "导出失败",
               "message": "导出失败，请重试。"
             }
           }
+        },
+        "start_export": "开始导出",
+        "submitting": "正在提交…",
+        "status_labels": {
+          "completed": "已完成",
+          "processing": "生成中",
+          "failed": "失败",
+          "expired": "已过期",
+          "queued": "排队中"
         }
       },
       "webhooks": {

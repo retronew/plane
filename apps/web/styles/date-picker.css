@@ -1,0 +1,31 @@
+/* Compact property calendars; keep Propel's focus, range and selected states. */
+[data-date-picker] {
+  min-width: 0;
+  padding: 8px;
+}
+[data-date-picker] td,
+[data-date-picker] td button,
+[data-date-picker] th {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+[data-date-picker] .gap-3 {
+  gap: 8px;
+}
+[data-date-picker] .w-70 {
+  width: 224px;
+}
+[data-date-picker] .grid {
+  height: 160px;
+  grid-template-rows: repeat(4, 32px);
+}
+[data-date-picker] .grid button {
+  height: 32px;
+}
+
+/* Reserve room inside both grid edges for hover rounding and keyboard focus rings. */
+[data-date-picker] .grid {
+  width: calc(100% - 4px);
+  margin-inline: 2px;
+}

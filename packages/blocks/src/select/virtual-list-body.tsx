@@ -104,9 +104,9 @@ function SelectOptionRow(props: SelectOptionRowProps) {
             href ? (
               // base-ui supplies the anchor's content through `render`, which this rule cannot see.
               // eslint-disable-next-line jsx-a11y/anchor-has-content
-              <a href={href} style={rowStyle} />
+              <a href={href} style={rowStyle} aria-label={label} />
             ) : rowStyle ? (
-              <div style={rowStyle} />
+              <div style={rowStyle} aria-label={label} />
             ) : undefined
           }
         />
@@ -173,6 +173,7 @@ type VirtualListBodyProps<T> = {
  * hand-drawn content in the bare styled row instead, and no mark: that row draws its own.
  */
 export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
+  "use no memo"; // TanStack Virtual exposes mutable functions; this boundary must not be compiled.
   const {
     items,
     estimateItemSize,
@@ -223,6 +224,8 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
   // append — so the append is tracked here, off the promise `onLoadMore` hands back.
   const [isAppending, setIsAppending] = useState(false);
 
+  // Explicitly opted out above: TanStack Virtual is intentionally used without compiler memoization.
+  // oxlint-disable-next-line react/incompatible-library
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
@@ -234,7 +237,9 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
     // A row that measures 0 has not been laid out yet (the panel is still animating in, or the
     // row's content loaded late). Keeping the estimate for those beats collapsing the list to zero
     // height, which strands the scroller with nothing to scroll and no way back.
-    measureElement: (element) => element.getBoundingClientRect().height || estimateItemSize,
+    // Layout height excludes ancestor popup scale animations. Measuring the transformed
+    // rectangle caches undersized rows and creates scrollbars even for two options.
+    measureElement: (element) => (element instanceof HTMLElement ? element.offsetHeight : 0) || estimateItemSize,
   });
 
   // In virtualized mode base-ui skips its `CompositeList`, so only the rows we actually render
@@ -316,7 +321,12 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
                     aria-setsize={items.length}
                     aria-posinset={row.optionIndex + 1}
                     // eslint-disable-next-line jsx-a11y/anchor-has-content
-                    render={<ComboboxItemRow variant="neutral" render={href ? <a href={href} /> : undefined} />}
+                    render={
+                      <ComboboxItemRow
+                        variant="neutral"
+                        render={href ? <a href={href} aria-label={getOptionLabel(item)} /> : undefined}
+                      />
+                    }
                   >
                     {renderOption(item)}
                   </BaseCombobox.Item>

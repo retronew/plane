@@ -6,7 +6,7 @@
 
 import type React from "react";
 import type { LucideIcon } from "lucide-react";
-import { KeyOutline, LockOutline, SettingsOutline, SubscribeOutline, UserOutline } from "@makeplane/propel/icons";
+import { KeyOutline, LockOutline, PreferencesOutline, SubscribeOutline, UserOutline } from "@makeplane/propel/icons";
 import { observer } from "mobx-react";
 import { useParams } from "react-router";
 // plane imports
@@ -26,7 +26,7 @@ import { ProfileSettingsSidebarWorkspaceOptions } from "./workspace-options";
 const ICONS: Record<TProfileSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
   general: UserOutline,
   security: LockOutline,
-  preferences: SettingsOutline,
+  preferences: PreferencesOutline,
   notifications: SubscribeOutline,
   "api-tokens": KeyOutline,
 };
@@ -61,12 +61,13 @@ export const ProfileSettingsSidebarItemCategories = observer(function ProfileSet
             <div className="p-2 text-caption-md-medium text-tertiary capitalize">
               {t(PROFILE_SETTINGS_CATEGORY_LABELS[category])}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-px">
               {categoryItems.map((item) => (
                 // oxlint-disable-next-line jsx-a11y/control-has-associated-label -- the item renders `label` as its text
                 <SettingsSidebarItem
                   key={item.key}
                   as="button"
+                  className="h-8 py-0 [&_svg]:size-4"
                   onClick={() => updateActiveTab(item.key)}
                   isActive={activeTab === item.key}
                   icon={ICONS[item.key]}

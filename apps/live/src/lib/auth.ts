@@ -10,6 +10,7 @@ import type { TUserDetails } from "@plane/editor";
 import { logger } from "@plane/logger";
 import { AppError } from "@/lib/errors";
 // services
+import { getPageService } from "@/services/page/handler";
 import { UserService } from "@/services/user.service";
 // types
 import type { HocusPocusServerContext, TDocumentTypes } from "@/types";
@@ -26,11 +27,13 @@ export const onAuthenticate = async ({
   requestParameters,
   context,
   token,
+  documentName,
 }: {
   requestHeaders: IncomingHttpHeaders;
   context: HocusPocusServerContext;
   requestParameters: URLSearchParams;
   token: string;
+  documentName: string;
 }) => {
   let cookie: string | undefined = undefined;
   let userId: string | undefined = undefined;
@@ -66,10 +69,14 @@ export const onAuthenticate = async ({
   context.userId = userId;
   context.workspaceSlug = requestParameters.get("workspaceSlug");
 
-  return await handleAuthentication({
+  const authentication = await handleAuthentication({
     cookie: context.cookie,
     userId: context.userId,
   });
+  // Validate the project-page association on EVERY connection, including cached documents.
+  // After a move, a source-project URL must never reuse an in-memory document.
+  await getPageService(context.documentType, context).fetchDetails(documentName);
+  return authentication;
 };
 
 export const handleAuthentication = async ({ cookie, userId }: { cookie: string; userId: string }) => {

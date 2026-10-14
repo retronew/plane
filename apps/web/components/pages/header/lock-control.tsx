@@ -83,10 +83,10 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
           <button
             type="button"
             onClick={toggleLock}
-            className="grid size-6 flex-shrink-0 place-items-center rounded-sm text-secondary transition-colors hover:bg-layer-1 hover:text-primary"
+            className="grid size-7 flex-shrink-0 place-items-center rounded-sm text-secondary transition-colors hover:bg-layer-1 hover:text-primary"
             aria-label={translate("web.lock")}
           >
-            <LockedOutline className="size-3.5" />
+            <LockedOutline className="size-4" />
           </button>
         </Tooltip>
       )}
@@ -95,10 +95,10 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
         <button
           type="button"
           onClick={toggleLock}
-          className="flex h-6 items-center gap-1 rounded-sm bg-accent-primary/20 px-2 text-accent-primary transition-colors hover:bg-accent-primary/30"
+          className="flex h-7 items-center gap-1 rounded-sm bg-accent-primary/20 px-2 text-accent-primary transition-colors hover:bg-accent-primary/30"
           aria-label={translate("web.locked")}
         >
-          <LockedOutline className="animate-lock-icon size-3.5 flex-shrink-0" />
+          <LockedOutline className="animate-lock-icon size-4 flex-shrink-0" />
           <span className="animate-text-slide-in overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">
             {translate("web.locked")}
           </span>
@@ -107,10 +107,10 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
 
       {displayState === "unlocked" && (
         <div
-          className="flex h-6 animate-fade-out items-center gap-1 rounded-sm px-2 text-secondary"
+          className="flex h-7 animate-fade-out items-center gap-1 rounded-sm px-2 text-secondary"
           aria-label={translate("web.unlocked")}
         >
-          <UnlockedOutline className="animate-unlock-icon size-3.5 flex-shrink-0" />
+          <UnlockedOutline className="animate-unlock-icon size-4 flex-shrink-0" />
           <span className="animate-text-slide-in animate-text-fade-out overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">
             {translate("web.unlocked")}
           </span>

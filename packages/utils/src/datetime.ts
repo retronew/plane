@@ -104,10 +104,17 @@ export const formatLocalizedDateRange = (startDate: Date, endDate: Date, formatT
  * language, or undefined for English (keeps the picker's own defaults)
  */
 export const getCalendarFormatters = ():
-  | { formatCaption: (month: Date) => string; formatWeekdayName: (weekday: Date) => string }
+  | {
+      formatCaption: (month: Date) => string;
+      formatWeekdayName: (weekday: Date) => string;
+      formatMonthDropdown: (month: Date) => string;
+      formatYearDropdown: (year: Date) => string;
+    }
   | undefined => {
   if (isEnglishLocale()) return;
   return {
+    formatMonthDropdown: (month) => getDateTimeFormatter({ month: "long" }).format(month),
+    formatYearDropdown: (year) => getDateTimeFormatter({ year: "numeric" }).format(year),
     formatCaption: (month) => getDateTimeFormatter({ year: "numeric", month: "long" }).format(month),
     formatWeekdayName: (weekday) => getDateTimeFormatter({ weekday: "short" }).format(weekday),
   };

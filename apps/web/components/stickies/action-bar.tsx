@@ -43,8 +43,16 @@ export const StickyActionBar = observer(function StickyActionBar() {
   });
 
   return (
-    <div ref={ref} className="relative flex flex-col items-center rounded-full border border-subtle bg-surface-1 p-1">
+    <div
+      ref={ref}
+      className={cn(
+        "relative flex flex-col items-center rounded-full border p-1 transition-colors duration-150 motion-reduce:transition-none",
+        isExpanded ? "border-subtle bg-surface-1" : "border-transparent bg-transparent"
+      )}
+    >
       <div
+        inert={!isExpanded}
+        aria-hidden={!isExpanded}
         className={cn(
           "grid transition-[grid-template-rows] duration-[180ms] ease-out motion-reduce:transition-none",
           isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"

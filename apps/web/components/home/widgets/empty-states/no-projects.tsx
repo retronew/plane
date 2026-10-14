@@ -9,12 +9,14 @@ import React from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CloseOutline, MembersOutline, ProjectsOutline, TickOutline } from "@makeplane/propel/icons";
+import { Avatar } from "@makeplane/propel/components/avatar";
+import { CloseOutline } from "@makeplane/propel/icons";
+import { ArrowRight, Check, FolderPlus, Settings2, Users } from "lucide-react";
 // plane ui
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
-import { cn, getFileURL } from "@plane/utils";
+import { getFileURL } from "@plane/utils";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useProject } from "@/hooks/store/use-project";
@@ -28,8 +30,8 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { toggleCreateProjectModal } = useCommandPalette();
-  const { data: currentUser } = useUser();
   const { joinedProjectIds } = useProject();
+  const { data: currentUser } = useUser();
   const { currentWorkspace: activeWorkspace } = useWorkspace();
   // local storage
   const { storedValue, setValue } = useLocalStorage(`quickstart-guide-${workspaceSlug}`, {
@@ -51,7 +53,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
       id: "create-project",
       title: "home.empty.create_project.title",
       description: "home.empty.create_project.description",
-      icon: <ProjectsOutline className="size-4" />,
+      icon: <FolderPlus className="size-4" />,
       flag: "projects",
       cta: {
         text: "home.empty.create_project.cta",
@@ -68,7 +70,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
       id: "invite-team",
       title: "home.empty.invite_team.title",
       description: "home.empty.invite_team.description",
-      icon: <MembersOutline className="size-4" />,
+      icon: <Users className="size-4" />,
       flag: "visited_members",
       cta: {
         text: "home.empty.invite_team.cta",
@@ -80,7 +82,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
       id: "configure-workspace",
       title: "home.empty.configure_workspace.title",
       description: "home.empty.configure_workspace.description",
-      icon: <ProjectsOutline className="size-4" />,
+      icon: <Settings2 className="size-4" />,
       flag: "visited_workspace",
       cta: {
         text: "home.empty.configure_workspace.cta",
@@ -92,24 +94,16 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
       id: "personalize-account",
       title: "home.empty.personalize_account.title",
       description: "home.empty.personalize_account.description",
-      icon:
-        currentUser?.avatar_url && currentUser?.avatar_url.trim() !== "" ? (
-          <Link href={`/${workspaceSlug}/profile/${currentUser?.id}`}>
-            <span className="relative flex size-4 items-center justify-center rounded-full p-4 text-on-color capitalize">
-              <img
-                src={getFileURL(currentUser?.avatar_url)}
-                className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
-                alt={currentUser?.display_name || currentUser?.email}
-              />
-            </span>
-          </Link>
-        ) : (
-          <Link href={`/${workspaceSlug}/profile/${currentUser?.id}`}>
-            <span className="relative flex size-4 items-center justify-center rounded-full bg-[#028375] p-4 text-13 text-on-color capitalize">
-              {(currentUser?.email ?? currentUser?.display_name ?? "?")[0]}
-            </span>
-          </Link>
-        ),
+      icon: (
+        <Link href={`/${workspaceSlug}/profile/${currentUser?.id}`} aria-label={currentUser?.display_name}>
+          <Avatar
+            size="lg"
+            src={getFileURL(currentUser?.avatar_url ?? "")}
+            alt={currentUser?.display_name ?? ""}
+            fallback={(currentUser?.display_name ?? currentUser?.email ?? "?")[0]}
+          />
+        </Link>
+      ),
       flag: "visited_profile",
       cta: {
         text: "home.empty.personalize_account.cta",
@@ -144,29 +138,33 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
             setValue({ ...storedValue, hide: true });
           }}
         >
-          <CloseOutline className="size-4" />
+          <CloseOutline className="size-3.5" />
           {t("home.empty.not_right_now")}
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {EMPTY_STATE_DATA.map((item) => {
           const isStateComplete = isComplete(item.flag);
           return (
-            <div key={item.id} className="flex flex-col rounded-xl border border-subtle bg-layer-2 p-4">
-              <div
-                className={cn("mb-3 grid size-9 place-items-center rounded-full bg-surface-2 text-placeholder", {
-                  "bg-accent-primary/10 text-accent-primary": !isStateComplete,
-                })}
-              >
-                <span className="my-auto text-24">{item.icon}</span>
-              </div>
-              <h3 className="mb-2 text-13 font-medium text-primary">{t(item.title)}</h3>
-              <p className="mb-2 text-11 text-tertiary">{t(item.description)}</p>
-              {isStateComplete ? (
-                <div className="flex w-fit items-center gap-2 rounded-full bg-[#17a34a] p-1">
-                  <TickOutline className="size-3 text-accent-primary text-on-color" />
+            <div
+              key={item.id}
+              className="group flex min-h-36 flex-col rounded-xl border border-subtle bg-surface-1 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[background-color,box-shadow] duration-200 hover:bg-layer-1 hover:shadow-[0_1px_3px_rgba(0,0,0,0.06)] motion-reduce:transition-none"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div
+                  className={
+                    item.id === "personalize-account"
+                      ? "grid size-8 shrink-0 place-items-center"
+                      : "grid size-8 shrink-0 place-items-center rounded-lg border border-subtle bg-layer-1 text-secondary"
+                  }
+                >
+                  {item.icon}
                 </div>
-              ) : (
+                {isStateComplete && <Check className="size-3.5 text-tertiary" aria-label={t("common.completed")} />}
+              </div>
+              <h3 className="mb-1 text-13 font-medium text-primary">{t(item.title)}</h3>
+              <p className="mb-4 text-12 leading-5 text-tertiary">{t(item.description)}</p>
+              {!isStateComplete &&
                 !item.cta.disabled &&
                 (item.cta.link ? (
                   <Link
@@ -182,20 +180,21 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
                         [item.flag]: true,
                       });
                     }}
-                    className={cn("text-13 font-medium text-accent-primary hover:text-accent-secondary", {})}
+                    className="mt-auto flex w-fit items-center gap-1.5 rounded-sm text-12 font-medium text-secondary outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-accent-strong"
                   >
                     {t(item.cta.text)}
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
                   </Link>
                 ) : (
                   <button
                     type="button"
-                    className="text-left text-13 font-medium text-accent-primary hover:text-accent-secondary"
+                    className="mt-auto flex w-fit items-center gap-1.5 rounded-sm text-left text-12 font-medium text-secondary outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-accent-strong"
                     onClick={item.cta.onClick}
                   >
                     {t(item.cta.text)}
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
                   </button>
-                ))
-              )}
+                ))}
             </div>
           );
         })}

@@ -18,7 +18,7 @@ import {
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { GOD_MODE_URL, PROFILE_SETTINGS, PROFILE_SETTINGS_TABS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
@@ -105,35 +105,33 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
           }
         />
         <MenuContent side="bottom" align="end">
-          <div className="flex w-72 max-w-full flex-col gap-y-3 p-2">
-            <div className="relative h-29 w-full rounded-lg">
+          <div className="flex w-70 max-w-full flex-col">
+            <div className="relative flex flex-col items-center gap-2 overflow-hidden rounded-md px-2 py-4">
               <CoverImage
                 src={currentUser?.cover_image_url ?? undefined}
-                alt={currentUser?.display_name}
-                className="h-29 w-full rounded-lg"
+                alt=""
+                className="absolute inset-0 size-full"
                 showDefaultWhenEmpty
               />
-              <div className="absolute inset-0 bg-layer-1/50" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="flex flex-col items-center gap-y-2">
-                  <div>
-                    <Avatar
-                      alt={currentUser?.display_name}
-                      fallback={currentUser?.display_name?.[0]?.toUpperCase()}
-                      src={getFileURL(currentUser?.avatar_url ?? "")}
-                      size="xl"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-body-sm-medium">
-                      {currentUser?.first_name} {currentUser?.last_name}
-                    </p>
-                    <p className="text-caption-md-regular">{currentUser?.email}</p>
-                  </div>
-                </div>
+              <div className="absolute inset-0 bg-black/50" />
+              <div className="relative flex">
+                <Avatar
+                  alt={currentUser?.display_name}
+                  fallback={currentUser?.display_name?.[0]?.toUpperCase()}
+                  src={getFileURL(currentUser?.avatar_url ?? "")}
+                  size="xl"
+                />
+              </div>
+              <div className="relative w-full min-w-0 text-center text-on-color">
+                <p className="truncate text-body-sm-medium">
+                  {currentUser?.first_name} {currentUser?.last_name}
+                </p>
+                <p className="truncate text-caption-md-regular" title={currentUser?.email}>
+                  {currentUser?.email}
+                </p>
               </div>
             </div>
-            <div>
+            <div className="mt-1">
               {MENU_TABS.filter(
                 (tab) => PROFILE_SETTINGS_TABS.includes(tab) && (tab !== "security" || canManagePassword)
               ).map((tab) => (
@@ -145,8 +143,14 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                 />
               ))}
             </div>
+            <MenuSeparator />
             <div>
-              <MenuItem icon={<Icon icon={LogOutOutline} />} label={t("sign_out")} onClick={handleSignOut} />
+              <MenuItem
+                variant="danger"
+                icon={<Icon icon={LogOutOutline} />}
+                label={t("sign_out")}
+                onClick={handleSignOut}
+              />
               {isUserInstanceAdmin && (
                 <MenuItem variant="accent" label={t("enter_god_mode")} onClick={() => router.push(GOD_MODE_URL)} />
               )}

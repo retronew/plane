@@ -99,7 +99,7 @@ export const RecentActivityWidget = observer(function RecentActivityWidget(props
         <div className="text-14 font-semibold text-tertiary">{t("home.recents.title")}</div>
         {showFilterSelect && <FiltersDropdown filters={filters} activeFilter={filter} setActiveFilter={setFilter} />}
       </div>
-      <div className="flex min-h-[250px] flex-col">
+      <div className="-mx-2 flex min-h-[250px] flex-col">
         {isLoading && <WidgetLoader widgetKey={WIDGET_KEY} />}
         {!isLoading &&
           recents

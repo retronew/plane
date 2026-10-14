@@ -359,9 +359,9 @@ export class ProjectPageStore implements IProjectPageStore {
    */
   movePage = async (workspaceSlug: string, projectId: string, pageId: string, newProjectId: string) => {
     try {
-      await this.service.move(workspaceSlug, projectId, pageId, newProjectId);
+      const result = await this.service.move(workspaceSlug, projectId, pageId, newProjectId);
       runInAction(() => {
-        unset(this.data, [pageId]);
+        for (const movedId of result.page_ids) unset(this.data, [movedId]);
       });
     } catch (error) {
       console.error("Unable to move page", error);

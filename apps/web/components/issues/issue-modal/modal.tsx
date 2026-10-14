@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -36,23 +36,42 @@ export interface IssuesModalProps {
 }
 
 export const CreateUpdateIssueModal = observer(function CreateUpdateIssueModal(props: IssuesModalProps) {
+  const lastOpenProps = useRef(props);
+  const [opening, setOpening] = useState({ open: props.isOpen, generation: 0 });
+  if (opening.open !== props.isOpen) {
+    setOpening({ open: props.isOpen, generation: opening.generation + (props.isOpen ? 1 : 0) });
+  }
+  if (props.isOpen) lastOpenProps.current = props;
+  const displayedProps = props.isOpen ? props : lastOpenProps.current;
+  const [isMounted, setIsMounted] = useState(props.isOpen);
+  if (props.isOpen && !isMounted) setIsMounted(true);
+  useEffect(() => {
+    if (props.isOpen) return;
+    const timer = setTimeout(() => setIsMounted(false), 450);
+    return () => clearTimeout(timer);
+  }, [props.isOpen]);
   // router params
   const { cycleId, moduleId } = useParams();
   // derived values
   const dataForPreload = {
-    ...props.data,
-    cycle_id: props.data?.cycle_id ? props.data?.cycle_id : cycleId ? cycleId.toString() : null,
-    module_ids: props.data?.module_ids ? props.data?.module_ids : moduleId ? [moduleId.toString()] : null,
+    ...displayedProps.data,
+    cycle_id: displayedProps.data?.cycle_id ? displayedProps.data?.cycle_id : cycleId ? cycleId.toString() : null,
+    module_ids: displayedProps.data?.module_ids
+      ? displayedProps.data?.module_ids
+      : moduleId
+        ? [moduleId.toString()]
+        : null,
   };
 
-  if (!props.isOpen) return null;
+  if (!props.isOpen && !isMounted) return null;
   return (
     <IssueModalProvider
-      templateId={props.templateId}
+      key={opening.generation}
+      templateId={displayedProps.templateId}
       dataForPreload={dataForPreload}
-      allowedProjectIds={props.allowedProjectIds}
+      allowedProjectIds={displayedProps.allowedProjectIds}
     >
-      <CreateUpdateIssueModalBase {...props} />
+      <CreateUpdateIssueModalBase {...displayedProps} isOpen={props.isOpen} />
     </IssueModalProvider>
   );
 });

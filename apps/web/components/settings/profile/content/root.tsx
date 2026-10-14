@@ -23,9 +23,9 @@ export const ProfileSettingsContent = observer(function ProfileSettingsContent(p
   const PageComponent = PROFILE_SETTINGS_PAGES_MAP[activeTab];
 
   return (
-    <div className={cn("flex shrink-0 flex-col overflow-hidden bg-surface-1", className)}>
+    <div className={cn("flex min-w-0 flex-col overflow-hidden bg-surface-1 p-4", className)}>
       <ScrollArea orientation="vertical">
-        <div className="px-8 py-9">
+        <div className="@container p-4">
           <Suspense>
             <PageComponent />
           </Suspense>

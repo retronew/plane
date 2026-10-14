@@ -230,12 +230,9 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     [currentUser?.display_name, currentUser?.id]
   );
 
-  const blockWidthClassName = cn(
-    "mx-auto block w-full max-w-[720px] bg-transparent transition-all duration-200 ease-in-out",
-    {
-      "max-w-[1152px]": isFullWidth,
-    }
-  );
+  const blockWidthClassName = cn("mx-auto block w-full max-w-[720px] bg-transparent", {
+    "max-w-[1152px]": isFullWidth,
+  });
 
   const isPageLoading = pageId === undefined || !realtimeConfig;
 
@@ -276,7 +273,7 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
           </div>
         )}
         <div>
-          <div className="page-header-container group/page-header">
+          <div className={cn("page-header-container group/page-header", { "wide-layout": isFullWidth })}>
             <div className={blockWidthClassName}>
               <PageEditorHeaderRoot page={page} projectId={projectId} />
             </div>

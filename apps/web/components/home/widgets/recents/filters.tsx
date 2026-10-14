@@ -5,9 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { Pill } from "@makeplane/propel/components/pill";
 import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import type { TRecentActivityFilterKeys } from "@plane/types";
@@ -30,7 +28,13 @@ export const FiltersDropdown = observer(function FiltersDropdown(props: TFilters
       <Menu>
         <MenuTrigger
           render={
-            <Pill size="md" variant="outline" label={t(title || "")} endIcon={<Icon icon={ChevronDownOutline} />} />
+            <button
+              type="button"
+              className="inline-flex h-6 shrink-0 items-center justify-center gap-1 rounded-md border border-subtle bg-layer-2 px-2 text-caption-md-regular text-secondary outline-none hover:border-strong hover:bg-layer-2-hover focus-visible:ring-2 focus-visible:ring-accent-strong data-popup-open:bg-layer-2-active"
+            >
+              <span className="min-w-0 truncate">{t(title || "")}</span>
+              <ChevronDownOutline className="size-3.5" />
+            </button>
           }
         />
         <MenuContent side="bottom" align="start">

@@ -123,19 +123,26 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
     onClose();
   };
 
+  const handleDiscard = () => {
+    onChange(null);
+    setIssueDiscardModal(false);
+    onClose();
+  };
+
   return (
     <>
       <ConfirmIssueDiscard
         isOpen={issueDiscardModal}
         handleClose={() => setIssueDiscardModal(false)}
         onConfirm={handleCreateDraftIssue}
-        onDiscard={() => {
-          onChange(null);
-          setIssueDiscardModal(false);
-          onClose();
-        }}
+        onDiscard={handleDiscard}
       />
-      <IssueFormRoot {...props} onClose={handleClose} handleDraftAndClose={handleDraftAndClose} />
+      <IssueFormRoot
+        {...props}
+        onClose={handleClose}
+        onDiscard={handleDiscard}
+        handleDraftAndClose={handleDraftAndClose}
+      />
     </>
   );
 });

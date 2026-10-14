@@ -59,14 +59,6 @@
           }
         }
       },
-      "billing_and_plans": {
-        "heading": "Billing & Plans",
-        "description": "Choose your plan, manage subscriptions, and easily upgrade as your needs grow.",
-        "title": "Billing & Plans",
-        "current_plan": "Current plan",
-        "free_plan": "You are currently using the free plan",
-        "view_plans": "View plans"
-      },
       "exports": {
         "heading": "Exports",
         "description": "Export your project data in various formats and access your export history with download links.",
@@ -81,14 +73,23 @@
           "title": "Export to",
           "toasts": {
             "success": {
-              "title": "Export successful",
-              "message": "You will be able to download the exported {entity} from the previous export."
+              "title": "Export started",
+              "message": "Download the {entity} file from export history once it is ready."
             },
             "error": {
               "title": "Export failed",
               "message": "Export was unsuccessful. Please try again."
             }
           }
+        },
+        "start_export": "Start export",
+        "submitting": "Submitting…",
+        "status_labels": {
+          "completed": "Completed",
+          "processing": "Generating",
+          "failed": "Failed",
+          "expired": "Expired",
+          "queued": "Queued"
         }
       },
       "webhooks": {

@@ -4,28 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import type { IPaymentProduct, TBillingFrequency, TProductBillingFrequency } from "@plane/types";
+import type { IPaymentProduct, TBillingFrequency } from "@plane/types";
 import { EProductSubscriptionEnum } from "@plane/types";
-
-/**
- * Default billing frequency for each product subscription type
- */
-export const DEFAULT_PRODUCT_BILLING_FREQUENCY: TProductBillingFrequency = {
-  [EProductSubscriptionEnum.FREE]: undefined,
-  [EProductSubscriptionEnum.ONE]: undefined,
-  [EProductSubscriptionEnum.PRO]: "month",
-  [EProductSubscriptionEnum.BUSINESS]: "month",
-  [EProductSubscriptionEnum.ENTERPRISE]: "month",
-};
-
-/**
- * Subscription types that support billing frequency toggle (monthly/yearly)
- */
-export const SUBSCRIPTION_WITH_BILLING_FREQUENCY = [
-  EProductSubscriptionEnum.PRO,
-  EProductSubscriptionEnum.BUSINESS,
-  EProductSubscriptionEnum.ENTERPRISE,
-];
 
 /**
  * Mapping of product subscription types to their respective payment product details

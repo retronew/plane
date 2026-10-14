@@ -8,7 +8,7 @@
 // oxlint-disable-next-line import/no-unassigned-import
 import "./composer.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isEqual, xor } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -25,6 +25,9 @@ import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useModule } from "@/hooks/store/use-module";
+import { useUser } from "@/hooks/store/user";
+import { prepareComposerMotion, COMPOSER_RESTORE_DURATION, COMPOSER_MOTION_EASING } from "./composer-motion";
+import { saveComposerDraft, readComposerDraft, composerCacheKey, hasComposerContent } from "./composer-cache";
 import { useProject } from "@/hooks/store/use-project";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
@@ -63,6 +66,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     storeType = EIssuesStoreType.PROJECT;
   }
   // ref
+  const closeRequestRef = useRef<(() => void) | null>(null);
   const issueTitleRef = useRef<HTMLInputElement>(null);
   // states
   const [changesMade, setChangesMade] = useState<Partial<TIssue> | null>(null);
@@ -73,6 +77,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   // store hooks
   const { t } = useTranslation();
+  const { data: currentUser } = useUser();
   const { workspaceSlug, projectId: routerProjectId, cycleId, moduleId, workItem } = useParams();
   const { fetchCycleDetails } = useCycle();
   const { fetchModuleDetails } = useModule();
@@ -91,13 +96,45 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const projectIdFromRouter = getProjectByIdentifier(routerProjectIdentifier)?.id;
   const projectId = data?.project_id ?? routerProjectId?.toString() ?? projectIdFromRouter;
 
+  const canCacheDraft = !data?.id && !data?.sourceIssueId && !props.templateId;
+  const cacheKey =
+    currentUser?.id && workspaceSlug && canCacheDraft
+      ? composerCacheKey(
+          currentUser.id,
+          workspaceSlug.toString(),
+          data?.parent_id || isDraft ? JSON.stringify([projectId, data?.parent_id, isDraft]) : "new"
+        )
+      : undefined;
+  const cachedDraft = cacheKey ? readComposerDraft(cacheKey) : undefined;
+  const motionInitialized = useRef(false);
+  const composerRef = useCallback(
+    (popup: HTMLDivElement | null) => {
+      if (!popup || motionInitialized.current) return;
+      motionInitialized.current = true;
+      if (!cacheKey || !readComposerDraft(cacheKey)) return;
+      const travel = prepareComposerMotion(popup);
+      if (!travel) return;
+      popup.animate(
+        [
+          { translate: travel, scale: "0.2", opacity: 0 },
+          { translate: "0px 0px", scale: "1", opacity: 1 },
+        ],
+        { duration: COMPOSER_RESTORE_DURATION, easing: COMPOSER_MOTION_EASING }
+      );
+    },
+    [cacheKey]
+  );
+  const clearCachedDraft = () => {
+    if (cacheKey) saveComposerDraft(cacheKey);
+  };
+
   const fetchIssueDetail = async (issueId: string | undefined) => {
     setDescription(undefined);
     if (!workspaceSlug) return;
 
     if (!projectId || issueId === undefined || !fetchIssueDetails) {
       // Set description to the issue description from the props if available
-      setDescription(data?.description_html || "<p></p>");
+      setDescription(cachedDraft?.values.description_html ?? data?.description_html ?? "<p></p>");
       return;
     }
     const response = await fetchIssue(workspaceSlug.toString(), projectId.toString(), issueId);
@@ -108,12 +145,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     // fetching issue details
     if (isOpen) fetchIssueDetail(data?.id ?? data?.sourceIssueId);
 
-    // if modal is closed, reset active project to null
-    // and return to avoid activeProjectId being set to some other project
-    if (!isOpen) {
-      setActiveProjectId(null);
-      return;
-    }
+    // Preserve the current project and description while the dialog exits.
+    if (!isOpen) return;
 
     // if data is present, set active project to the project of the
     // issue. This has more priority than the project in the url.
@@ -124,10 +157,12 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
 
     // if data is not present, set active project to the first project in the allowedProjectIds array
     if (allowedProjectIds && allowedProjectIds.length > 0 && !activeProjectId)
-      setActiveProjectId(projectId?.toString() ?? allowedProjectIds?.[0]);
+      setActiveProjectId(
+        cachedDraft?.values.project_id && allowedProjectIds.includes(cachedDraft.values.project_id)
+          ? cachedDraft.values.project_id
+          : (projectId?.toString() ?? allowedProjectIds?.[0])
+      );
 
-    // clearing up the description state when we leave the component
-    return () => setDescription(undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.project_id, data?.id, data?.sourceIssueId, projectId, isOpen, activeProjectId]);
 
@@ -159,10 +194,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       handleCreateIssue(changesMade, true);
     }
 
-    setActiveProjectId(null);
-    setChangesMade(null);
+    // Keep the rendered form intact until the closing transition has finished.
     onClose();
-    handleDuplicateIssueModal(false);
   };
 
   const handleCreateIssue = async (
@@ -191,13 +224,13 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       }
 
       // update uploaded assets' status
-      if (uploadedAssetIds.length > 0) {
+      if (uploadedAssetIds.length > 0 || cachedDraft?.assetIds.length) {
         await fileService.updateBulkProjectAssetsUploadStatus(
           workspaceSlug?.toString() ?? "",
           response?.project_id ?? "",
           response?.id ?? "",
           {
-            asset_ids: uploadedAssetIds,
+            asset_ids: [...new Set([...(cachedDraft?.assetIds ?? []), ...uploadedAssetIds])],
           }
         );
         setUploadedAssetIds([]);
@@ -250,6 +283,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
             ? buildCreateIssueToastActions({ workspaceSlug: workspaceSlug.toString(), issueId: response.id })
             : undefined,
       });
+      clearCachedDraft();
       if (!createMore) handleClose();
       if (createMore && issueTitleRef) issueTitleRef?.current?.focus();
       setDescription("<p></p>");
@@ -381,7 +415,10 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     }
   };
 
-  const handleFormChange = (formData: Partial<TIssue> | null) => setChangesMade(formData);
+  const handleFormChange = (formData: Partial<TIssue> | null) => {
+    if (formData === null) clearCachedDraft();
+    setChangesMade(formData);
+  };
 
   const handleUpdateUploadedAssetIds = (assetId: string) => setUploadedAssetIds((prev) => [...prev, assetId]);
 
@@ -397,9 +434,26 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       description_html: description,
       cycle_id: data?.cycle_id ? data?.cycle_id : cycleId ? cycleId.toString() : null,
       module_ids: data?.module_ids ? data?.module_ids : moduleId ? [moduleId.toString()] : null,
+      ...cachedDraft?.values,
     },
     onAssetUpload: handleUpdateUploadedAssetIds,
     onClose: handleClose,
+    closeRequestRef,
+    onKeepDraft: cacheKey
+      ? (values, hasChanges) => {
+          const draft = {
+            values,
+            hasChanges: hasChanges || cachedDraft?.hasChanges,
+            assetIds: [...new Set([...(cachedDraft?.assetIds ?? []), ...uploadedAssetIds])],
+          };
+          saveComposerDraft(cacheKey, hasComposerContent(draft) ? draft : undefined);
+          const popup = document.querySelector<HTMLElement>("[data-issue-composer]");
+          if (popup && hasComposerContent(draft) && prepareComposerMotion(popup)) {
+            popup.dataset.minimizing = "true";
+          }
+          handleClose();
+        }
+      : undefined,
     onSubmit: (payload) => handleFormSubmit(payload, isDraft),
     projectId: activeProjectId,
     isCreateMoreToggleEnabled: createMore,
@@ -415,8 +469,18 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
 
   return (
     /* The modal it replaces passed no `handleClose`, so only its own form dismisses it. */
-    <Dialog open={isOpen} disablePointerDismissal onOpenChange={() => {}}>
-      <DialogContent size="lg" data-issue-composer="" {...getDialogInitialFocusProps("[data-composer-title]")}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) closeRequestRef.current?.();
+      }}
+    >
+      <DialogContent
+        ref={composerRef}
+        size="lg"
+        data-issue-composer=""
+        {...getDialogInitialFocusProps("[data-composer-title]")}
+      >
         {withDraftIssueWrapper ? (
           <DraftIssueLayout {...commonIssueModalProps} changesMade={changesMade} onChange={handleFormChange} />
         ) : (

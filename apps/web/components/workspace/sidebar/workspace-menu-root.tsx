@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 // icons
-import { ChevronDownOutline, LogOutOutline, MailOutline, PlusCircleOutline } from "@makeplane/propel/icons";
+import { ChevronDownOutline, LogOutOutline, MailsOutline, PlusCircleOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
@@ -37,7 +37,6 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
   // store hooks
   const { toggleSidebar, toggleAnySidebarDropdown } = useAppTheme();
   const { config } = useInstance();
-  const { data: currentUser } = useUser();
   const { signOut } = useUser();
   const { updateUserProfile } = useUserProfile();
   const { currentWorkspace: activeWorkspace, workspaces } = useWorkspace();
@@ -139,10 +138,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
           />
         )}
         <MenuContent side="bottom" align="start">
-          <div className="flex w-[19rem] max-w-full flex-col items-start justify-start">
-            <span className="sticky top-0 z-1 w-full flex-shrink-0 truncate bg-layer-2 px-4 pt-3 pb-1 text-left text-13 font-medium text-placeholder">
-              {currentUser?.email}
-            </span>
+          <div className="flex w-[312px] max-w-full flex-col items-start justify-start">
             {workspacesList ? (
               <div className="flex size-full flex-col items-start justify-start">
                 {(activeWorkspace
@@ -178,11 +174,12 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
               />
             )}
             <MenuItem
-              icon={<Icon icon={MailOutline} />}
+              icon={<Icon icon={MailsOutline} />}
               label={t("workspace_invites")}
               render={<Link href="/invitations" />}
               onClick={handleItemClick}
             />
+            <MenuSeparator />
             <MenuItem
               variant="danger"
               icon={<Icon icon={LogOutOutline} />}

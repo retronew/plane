@@ -53,9 +53,19 @@ export const TopNavPowerK = observer(() => {
     handleMouseDown,
     handleFocus,
     openPanel,
-  } = useExpandableSearch({
-    onClose: handleOnClose,
-  });
+  } = useExpandableSearch();
+  const [panelMounted, setPanelMounted] = useState(false);
+  useEffect(() => {
+    if (isOpen) {
+      setPanelMounted(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPanelMounted(false);
+      handleOnClose();
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [isOpen, handleOnClose]);
 
   // derived values
   const {
@@ -209,13 +219,13 @@ export const TopNavPowerK = observer(() => {
   );
 
   return (
-    <div ref={containerRef} className="relative">
-      <div
-        className={cn("relative z-30 flex w-[364px] items-center transition-all duration-300 ease-in-out", {
-          "w-[554px]": isOpen,
-        })}
-      >
-        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
+    <div
+      ref={containerRef}
+      data-open={isOpen || undefined}
+      className={cn("top-nav-command-search relative w-[364px]", isOpen && "w-[554px]")}
+    >
+      <div className="relative z-30 flex w-full items-center">
+        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- wrapper forwards clicks to its keyboard-accessible input */}
         <div
           className={cn(
             "flex h-7 w-full items-center rounded-lg border border-subtle-1 bg-layer-2 p-2 transition-colors duration-200",
@@ -224,7 +234,10 @@ export const TopNavPowerK = observer(() => {
             }
           )}
           // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- clicking the wrapper only forwards focus to the input inside it
-          onClick={() => inputRef.current?.focus()}
+          onClick={() => {
+            openPanel();
+            inputRef.current?.focus();
+          }}
         >
           <SearchOutline className="mr-2 size-3.5 shrink-0 text-placeholder" />
           <input
@@ -250,14 +263,17 @@ export const TopNavPowerK = observer(() => {
       </div>
       <div
         className={cn(
-          "shadow-lg absolute -top-[6px] left-1/2 z-20 flex -translate-x-1/2 flex-col overflow-hidden rounded-md border border-subtle bg-surface-1 px-0 pt-10 transition-all duration-300 ease-in-out",
+          "shadow-lg absolute -top-[6px] -right-2.5 -left-2.5 z-20 flex max-h-[80vh] flex-col overflow-hidden rounded-lg border border-subtle bg-surface-1 px-0 pt-10 transition-opacity duration-150 motion-reduce:transition-none",
           {
-            "max-h-[80vh] w-[574px] opacity-100": isOpen,
-            "h-0 w-0 opacity-0": !isOpen,
+            "visible opacity-100": isOpen,
+            "pointer-events-none opacity-0": !isOpen,
+            invisible: !isOpen && !panelMounted,
           }
         )}
+        inert={!isOpen}
+        aria-hidden={!isOpen}
       >
-        {isOpen && (
+        {(isOpen || panelMounted) && (
           <Command
             filter={(i18nValue: string, search: string) => {
               if (i18nValue === "no-results") return 1;
@@ -265,6 +281,8 @@ export const TopNavPowerK = observer(() => {
               return 0;
             }}
             shouldFilter={searchTerm.length > 0}
+            data-search-content=""
+            data-open={isOpen || undefined}
             className="flex h-full w-full flex-col"
           >
             <Command.Input value={searchTerm} hidden />
@@ -272,7 +290,7 @@ export const TopNavPowerK = observer(() => {
                      but we might need the context indicator if we want that feature.
                      For now, let's just render the list. */}
 
-            <Command.List className="vertical-scrollbar scrollbar-sm max-h-[60vh] overflow-y-auto px-2 pb-4 outline-none">
+            <Command.List className="vertical-scrollbar scrollbar-sm max-h-[60vh] overflow-y-auto px-2 pb-2 outline-none">
               <ProjectsAppPowerKCommandsList
                 activePage={activePage}
                 context={context}

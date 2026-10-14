@@ -42,6 +42,12 @@
   padding: 12px 20px 16px;
 }
 
+/* Inline button baselines differ between emoji and icon fonts. */
+[data-issue-composer] [data-composer-pill-group] {
+  display: flex;
+  align-items: center;
+}
+
 /* Keep the stronger hover/open/keyboard-focus states of the property controls. */
 [data-issue-composer] [data-composer-pill-group] button.border-subtle-1 {
   border-radius: 8px;
@@ -57,4 +63,55 @@
 
 [data-issue-composer] [data-composer-pill-group] button.border-subtle-1:focus-visible {
   border-color: var(--border-color-accent-strong);
+}
+
+[data-issue-composer] {
+  transition:
+    opacity 180ms ease-out,
+    scale 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-issue-composer][data-starting-style],
+[data-issue-composer][data-ending-style] {
+  opacity: 0;
+  scale: 0.98;
+  translate: 0 -6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-issue-composer] {
+    transition: none;
+  }
+}
+
+[data-issue-composer][data-minimizing] {
+  transform-origin: center;
+  /* Damped motion: gradual acceleration, quick travel, then a soft landing. */
+  transition-duration: 400ms;
+  transition-timing-function: linear(
+    0,
+    0.08,
+    0.24,
+    0.41,
+    0.56,
+    0.68,
+    0.77,
+    0.84,
+    0.89,
+    0.925,
+    0.95,
+    0.966,
+    0.977,
+    0.985,
+    0.99,
+    0.993,
+    0.996,
+    0.998,
+    0.999,
+    1
+  );
+}
+[data-issue-composer][data-minimizing][data-ending-style] {
+  scale: 0.2;
+  translate: var(--composer-travel, 0px -6px);
+  opacity: 0;
 }
