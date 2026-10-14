@@ -7,6 +7,7 @@ from uuid import uuid4
 from urllib.parse import urlparse
 
 # Django imports
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -42,6 +43,13 @@ class Webhook(BaseModel):
     cycle = models.BooleanField(default=False)
     issue_comment = models.BooleanField(default=False)
     is_internal = models.BooleanField(default=False)
+    # Personal webhooks belong to one member and only receive events that member can see;
+    # workspace webhooks (owner null) are managed by admins and receive everything
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name="personal_webhooks"
+    )
+    # Fine-grained subscriptions such as "issue.state_changed"; empty means "use the boolean toggles"
+    events = models.JSONField(default=list, blank=True)
     version = models.CharField(default="v1", max_length=50)
 
     def __str__(self):

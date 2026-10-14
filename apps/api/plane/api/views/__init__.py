@@ -118,3 +118,11 @@ from .work_item_engagement import (
     WorkItemDescriptionVersionListAPIEndpoint,
     WorkItemDescriptionVersionDetailAPIEndpoint,
 )
+
+from .webhook import (
+    WebhookListCreateAPIEndpoint,
+    WebhookDetailAPIEndpoint,
+    WebhookSecretAPIEndpoint,
+    WebhookLogListAPIEndpoint,
+    WebhookTestAPIEndpoint,
+)

@@ -769,5 +769,90 @@ notification_tool = Tool(
 )
 
 
-TOOLS = [workspace_tool, project_tool, workitem_tool, cycle_tool, module_tool, page_tool, view_tool, notification_tool]
+# -- webhook -----------------------------------------------------------------------
+
+P_WEBHOOK = {"type": "string", "description": "Webhook ID"}
+P_EVENTS = {
+    "type": "array",
+    "items": {"type": "string"},
+    "description": (
+        "订阅的事件，如 issue、issue.created、issue.updated、issue.state_changed、issue.assigned、"
+        "issue_comment.created、cycle、module、project"
+    ),
+}
+
+webhook_tool = Tool(
+    name="webhook",
+    title="Webhook",
+    description="管理我的个人 Webhook：Plane 中我能看到的变化会推送到指定 URL。工作区级 Webhook 仅管理员可建。",
+    actions=[
+        Action("list", "我的 Webhook", lambda ctx, a: compact(ctx.api("GET", "webhooks/")), read_only=True),
+        Action(
+            "create",
+            "新建 Webhook（返回的 secret_key 只显示这一次，用于校验签名）",
+            lambda ctx, a: compact(
+                ctx.api("POST", "webhooks/", body={"url": a["url"], "events": as_list(a.get("events")) or ["issue"]})
+            ),
+            params={"url": {"type": "string", "description": "接收地址（https）"}, "events": P_EVENTS},
+            required=("url",),
+        ),
+        Action(
+            "update",
+            "修改地址、订阅事件，或用 is_active=false 暂停",
+            lambda ctx, a: compact(
+                ctx.api(
+                    "PATCH",
+                    f"webhooks/{a['webhook']}/",
+                    body={
+                        **pick(a, "url", "is_active"),
+                        **({"events": as_list(a["events"])} if "events" in a else {}),
+                    },
+                )
+            ),
+            params={
+                "webhook": P_WEBHOOK,
+                "url": {"type": "string"},
+                "events": P_EVENTS,
+                "is_active": {"type": "boolean"},
+            },
+            required=("webhook",),
+        ),
+        Action(
+            "delete",
+            "删除 Webhook",
+            lambda ctx, a: ctx.api("DELETE", f"webhooks/{a['webhook']}/") or {"deleted": a["webhook"]},
+            params={"webhook": P_WEBHOOK},
+            required=("webhook",),
+            destructive=True,
+        ),
+        Action(
+            "logs",
+            "最近的投递记录",
+            lambda ctx, a: ctx.list_page(f"webhooks/{a['webhook']}/logs/", a),
+            params={"webhook": P_WEBHOOK, **PAGING},
+            required=("webhook",),
+            read_only=True,
+        ),
+        Action(
+            "test",
+            "发送一条 ping 测试事件",
+            lambda ctx, a: ctx.api("POST", f"webhooks/{a['webhook']}/test/"),
+            params={"webhook": P_WEBHOOK},
+            required=("webhook",),
+        ),
+    ],
+)
+
+
+TOOLS = [
+    workspace_tool,
+    project_tool,
+    workitem_tool,
+    cycle_tool,
+    module_tool,
+    page_tool,
+    view_tool,
+    notification_tool,
+    webhook_tool,
+]
 TOOLS_BY_NAME = {tool.name: tool for tool in TOOLS}

@@ -17,6 +17,7 @@ from .sticky import urlpatterns as sticky_patterns
 from .page import urlpatterns as page_patterns
 from .view import urlpatterns as view_patterns
 from .my_work import urlpatterns as my_work_patterns
+from .webhook import urlpatterns as webhook_patterns
 
 urlpatterns = [
     *asset_patterns,
@@ -34,4 +35,5 @@ urlpatterns = [
     *page_patterns,
     *view_patterns,
     *my_work_patterns,
+    *webhook_patterns,
 ]

@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import logging
+import time
 import uuid
 
 import requests
@@ -48,6 +49,7 @@ from plane.db.models import (
     IntakeIssue,
     IssueLabel,
     IssueAssignee,
+    ProjectMember,
 )
 from plane.license.utils.instance_value import get_email_configuration
 from plane.utils.email import generate_plain_text_from_html
@@ -81,6 +83,78 @@ MODEL_MAPPER = {
 
 
 logger = logging.getLogger("plane.worker")
+
+# Base event names as configured by the boolean toggles on a webhook
+EVENT_TOGGLES = {
+    "project": "project",
+    "issue": "issue",
+    "module": "module",
+    "module_issue": "module",
+    "cycle": "cycle",
+    "cycle_issue": "cycle",
+    "issue_comment": "issue_comment",
+}
+STATE_FIELDS = {"state", "state_id"}
+ASSIGNEE_FIELDS = {"assignees", "assignee_ids", "assignee_id"}
+
+
+def derive_event_types(event: str, verb: str, field: Optional[str]) -> List[str]:
+    """Names a webhook can subscribe to for this activity, from broad ("issue") to specific ("issue.assigned")."""
+    base = EVENT_TOGGLES.get(event, event)
+    types = [base, f"{base}.{verb}"]
+    if base == "issue" and verb == "updated":
+        if field in STATE_FIELDS:
+            types.append("issue.state_changed")
+        if field in ASSIGNEE_FIELDS:
+            types.append("issue.assigned")
+    return types
+
+
+def webhook_wants(webhook: Webhook, event: str, event_types: List[str]) -> bool:
+    if webhook.events:
+        return any(event_type in webhook.events for event_type in event_types)
+    toggle = EVENT_TOGGLES.get(event)
+    return bool(toggle and getattr(webhook, toggle, False))
+
+
+def event_project_id(event: str, event_id) -> Optional[str]:
+    if event == "project":
+        return str(event_id)
+    model = MODEL_MAPPER.get(event)
+    if model is None:
+        return None
+    manager = getattr(model, "all_objects", model.objects)
+    project_id = manager.filter(pk=event_id).values_list("project_id", flat=True).first()
+    return str(project_id) if project_id else None
+
+
+def owner_can_see(owner_id, event: str, event_id) -> bool:
+    """A personal webhook only receives events of projects its owner is an active member of."""
+    project_id = event_project_id(event, event_id)
+    if project_id is None:
+        return False
+    membership = (
+        ProjectMember.objects.filter(project_id=project_id, member_id=owner_id, is_active=True)
+        .select_related("project")
+        .first()
+    )
+    if membership is None:
+        return False
+    # Guests of projects that do not open all features only see their own work items
+    if membership.role == 5 and not membership.project.guest_view_all_features and event == "issue":
+        return Issue.all_objects.filter(pk=event_id, created_by_id=owner_id).exists()
+    return True
+
+
+def sign_payload(secret: str, body: str, timestamp: int) -> Dict[str, str]:
+    """Legacy body signature plus a timestamped one that receivers can use to reject replays."""
+    key = secret.encode("utf-8")
+    return {
+        "X-Plane-Signature": hmac.new(key, body.encode("utf-8"), hashlib.sha256).hexdigest(),
+        "X-Plane-Timestamp": str(timestamp),
+        "X-Plane-Signature-256": "sha256="
+        + hmac.new(key, f"{timestamp}.{body}".encode("utf-8"), hashlib.sha256).hexdigest(),
+    }
 
 
 def get_issue_prefetches():
@@ -248,6 +322,7 @@ def webhook_send_task(
     action: str,
     current_site: str,
     activity: Optional[Dict[str, Any]],
+    event_types: Optional[List[str]] = None,
 ) -> None:
     """
     Send webhook notifications to configured endpoints.
@@ -292,16 +367,13 @@ def webhook_send_task(
             "data": event_data,
             "activity": activity,
         }
+        if event_types:
+            payload["event_types"] = event_types
 
-        # Use HMAC for generating signature
+        # Sign exactly the bytes that are sent
+        body = json.dumps(payload)
         if webhook.secret_key:
-            hmac_signature = hmac.new(
-                webhook.secret_key.encode("utf-8"),
-                json.dumps(payload).encode("utf-8"),
-                hashlib.sha256,
-            )
-            signature = hmac_signature.hexdigest()
-            headers["X-Plane-Signature"] = signature
+            headers.update(sign_payload(webhook.secret_key, body, int(time.time())))
     except Exception as e:
         log_exception(e)
         logger.error(f"Failed to send webhook: {e}")
@@ -320,7 +392,7 @@ def webhook_send_task(
             allowed_ips=settings.WEBHOOK_ALLOWED_IPS,
             allowed_hosts=settings.WEBHOOK_ALLOWED_HOSTS,
             headers=headers,
-            json=payload,
+            data=body.encode("utf-8"),
             timeout=30,
         )
 
@@ -430,22 +502,13 @@ def webhook_activity(
         race conditions where objects might have been deleted.
     """
     try:
-        webhooks = Webhook.objects.filter(workspace__slug=slug, is_active=True)
-
-        if event == "project":
-            webhooks = webhooks.filter(project=True)
-
-        if event == "issue":
-            webhooks = webhooks.filter(issue=True)
-
-        if event == "module" or event == "module_issue":
-            webhooks = webhooks.filter(module=True)
-
-        if event == "cycle" or event == "cycle_issue":
-            webhooks = webhooks.filter(cycle=True)
-
-        if event == "issue_comment":
-            webhooks = webhooks.filter(issue_comment=True)
+        event_types = derive_event_types(event, verb, field)
+        webhooks = [
+            webhook
+            for webhook in Webhook.objects.filter(workspace__slug=slug, is_active=True)
+            if webhook_wants(webhook, event, event_types)
+            and (webhook.owner_id is None or owner_can_see(webhook.owner_id, event, event_id))
+        ]
 
         for webhook in webhooks:
             webhook_send_task.delay(
@@ -463,6 +526,7 @@ def webhook_activity(
                     "old_identifier": old_identifier,
                     "new_identifier": new_identifier,
                 },
+                event_types=event_types,
             )
         return
     except Exception as e:
