@@ -496,11 +496,8 @@
       },
       "badges": {
         "admin": "管理员",
-        "sso": "单点登录",
         "deactivated": "已停用"
       },
-      "workspaces": "{count, plural, other{# 个工作区}}",
-      "last_login": "最近登录 {time}",
       "never_signed_in": "从未登录",
       "login_medium": {
         "oidc": "单点登录",
@@ -519,6 +516,12 @@
         "cannot_deactivate_self": "不能停用你自己。",
         "user_is_admin": "该用户是管理员，请先在「管理员」页面移除其管理员权限。",
         "default": "出了点问题，请重试。"
+      },
+      "columns": {
+        "user": "用户",
+        "workspaces": "工作区",
+        "last_login": "最近登录",
+        "actions": "操作"
       }
     }
   }

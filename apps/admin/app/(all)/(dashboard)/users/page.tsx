@@ -13,7 +13,7 @@ import { setToast } from "@plane/blocks/toast";
 import { translate, useTranslation } from "@plane/i18n";
 import { InstanceService } from "@plane/services";
 import type { IInstanceUser, TInstanceUserStatus } from "@plane/types";
-import { cn, renderFormattedDate } from "@plane/utils";
+import { cn, renderFormattedDate, renderFormattedTime } from "@plane/utils";
 // components
 import { PageWrapper } from "@/components/common/page-wrapper";
 import { Skeleton } from "@/components/common/skeleton";
@@ -26,6 +26,9 @@ import type { Route } from "./+types/page";
 const instanceService = new InstanceService();
 
 const PER_PAGE = 50;
+
+// Fixed columns keep every row aligned whatever actions it shows
+const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 md:grid-cols-[minmax(0,1fr)_5rem_10rem_15rem]";
 
 const STATUS_FILTERS: { key: TInstanceUserStatus | "all"; label: string }[] = [
   { key: "all", label: "admin.users.filters.all" },
@@ -167,19 +170,30 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
             </p>
           ) : (
             <div className="overflow-hidden rounded-lg border border-subtle">
+              <div className={cn(ROW_GRID, "border-b border-subtle bg-layer-1 px-4 py-2 text-12 text-tertiary")}>
+                <span>{t("admin.users.columns.user")}</span>
+                <span className="hidden md:block">{t("admin.users.columns.workspaces")}</span>
+                <span className="hidden md:block">{t("admin.users.columns.last_login")}</span>
+                <span className="text-right">{t("admin.users.columns.actions")}</span>
+              </div>
               {data.results.map((user) => {
                 const name = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.display_name;
                 const isSelf = user.id === currentUser?.id;
                 const isBusy = busyUserId === user.id;
-                const lastLogin = renderFormattedDate(user.last_login_time, "yyyy-MM-dd HH:mm");
-                const medium = loginMediumLabel(user.last_login_medium);
+                // renderFormattedDate only keeps the date part of a string, so add the time separately
+                const lastLogin = user.last_login_time
+                  ? `${renderFormattedDate(user.last_login_time)} ${renderFormattedTime(user.last_login_time)}`
+                  : undefined;
+                // One sign-in label per user: a linked SSO identity wins over the last method used
+                const signInMethod = user.has_sso
+                  ? t("admin.users.login_medium.oidc")
+                  : loginMediumLabel(user.last_login_medium);
                 return (
                   <div
                     key={user.id}
-                    className={cn(
-                      "flex flex-wrap items-center justify-between gap-4 border-b border-subtle px-4 py-3 last:border-b-0",
-                      { "opacity-60": !user.is_active }
-                    )}
+                    className={cn(ROW_GRID, "border-b border-subtle px-4 py-3 last:border-b-0", {
+                      "opacity-60": !user.is_active,
+                    })}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <UserAvatar name={name || user.email} avatarUrl={user.avatar_url} />
@@ -188,89 +202,80 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
                           <span className="truncate text-14 font-medium">{name}</span>
                           {isSelf && <span className="text-11 text-tertiary">{t("admin.admins.you")}</span>}
                           {user.is_instance_admin && <Badge tone="accent">{t("admin.users.badges.admin")}</Badge>}
-                          {user.has_sso && <Badge>{t("admin.users.badges.sso")}</Badge>}
+                          {signInMethod && <Badge>{signInMethod}</Badge>}
                           {!user.is_active && <Badge tone="danger">{t("admin.users.badges.deactivated")}</Badge>}
                         </div>
                         <div className="truncate text-13 text-tertiary">{user.email}</div>
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-6">
-                      <div className="hidden text-right text-12 text-tertiary md:block">
-                        <div>
-                          {t("admin.users.workspaces", { count: user.workspace_count })}
-                          {medium && <span> · {medium}</span>}
-                        </div>
-                        <div>
-                          {lastLogin
-                            ? t("admin.users.last_login", { time: lastLogin })
-                            : t("admin.users.never_signed_in")}
-                        </div>
-                      </div>
+                    <span className="hidden text-13 text-secondary md:block">{user.workspace_count}</span>
+                    <span className="hidden text-13 text-secondary md:block">
+                      {lastLogin ?? <span className="text-tertiary">{t("admin.users.never_signed_in")}</span>}
+                    </span>
 
-                      <div className="flex items-center gap-2">
-                        {user.is_active && !user.is_instance_admin && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            stretch="auto"
-                            disabled={isBusy}
-                            onClick={() =>
-                              void runAction(user, () => instanceService.addAdmin(user.email), "admin.admins.added")
-                            }
-                            label={t("admin.admins.add_button")}
-                          />
-                        )}
-                        {user.is_active ? (
-                          !isSelf &&
-                          !user.is_instance_admin &&
-                          (pendingDeactivationId === user.id ? (
-                            <>
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                stretch="auto"
-                                onClick={() => setPendingDeactivationId(undefined)}
-                                label={t("admin.admins.cancel")}
-                              />
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                stretch="auto"
-                                loading={isBusy}
-                                onClick={() =>
-                                  void runAction(
-                                    user,
-                                    () => instanceService.deactivateUser(user.id),
-                                    "admin.users.deactivated"
-                                  )
-                                }
-                                label={t("admin.users.confirm_deactivate")}
-                              />
-                            </>
-                          ) : (
+                    <div className="flex items-center justify-end gap-2">
+                      {user.is_active && !user.is_instance_admin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          stretch="auto"
+                          disabled={isBusy}
+                          onClick={() =>
+                            void runAction(user, () => instanceService.addAdmin(user.email), "admin.admins.added")
+                          }
+                          label={t("admin.admins.add_button")}
+                        />
+                      )}
+                      {user.is_active ? (
+                        !isSelf &&
+                        !user.is_instance_admin &&
+                        (pendingDeactivationId === user.id ? (
+                          <>
                             <Button
                               variant="secondary"
                               size="sm"
                               stretch="auto"
-                              disabled={isBusy}
-                              onClick={() => setPendingDeactivationId(user.id)}
-                              label={t("admin.users.deactivate")}
+                              onClick={() => setPendingDeactivationId(undefined)}
+                              label={t("admin.admins.cancel")}
                             />
-                          ))
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              stretch="auto"
+                              loading={isBusy}
+                              onClick={() =>
+                                void runAction(
+                                  user,
+                                  () => instanceService.deactivateUser(user.id),
+                                  "admin.users.deactivated"
+                                )
+                              }
+                              label={t("admin.users.confirm_deactivate")}
+                            />
+                          </>
                         ) : (
                           <Button
                             variant="secondary"
                             size="sm"
                             stretch="auto"
-                            loading={isBusy}
-                            onClick={() =>
-                              void runAction(user, () => instanceService.activateUser(user.id), "admin.users.activated")
-                            }
-                            label={t("admin.users.activate")}
+                            disabled={isBusy}
+                            onClick={() => setPendingDeactivationId(user.id)}
+                            label={t("admin.users.deactivate")}
                           />
-                        )}
-                      </div>
+                        ))
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          stretch="auto"
+                          loading={isBusy}
+                          onClick={() =>
+                            void runAction(user, () => instanceService.activateUser(user.id), "admin.users.activated")
+                          }
+                          label={t("admin.users.activate")}
+                        />
+                      )}
                     </div>
                   </div>
                 );

@@ -496,11 +496,8 @@
       },
       "badges": {
         "admin": "Admin",
-        "sso": "SSO",
         "deactivated": "Deactivated"
       },
-      "workspaces": "{count, plural, one{# workspace} other{# workspaces}}",
-      "last_login": "Last sign-in {time}",
       "never_signed_in": "Never signed in",
       "login_medium": {
         "oidc": "SSO",
@@ -519,6 +516,12 @@
         "cannot_deactivate_self": "You cannot deactivate yourself.",
         "user_is_admin": "This user is an admin. Remove their admin access on the Admins page first.",
         "default": "Something went wrong. Please try again."
+      },
+      "columns": {
+        "user": "User",
+        "workspaces": "Workspaces",
+        "last_login": "Last sign-in",
+        "actions": "Actions"
       }
     }
   }
