@@ -1,0 +1,35 @@
+{
+  "name": "plane-workflow",
+  "displayName": "Plane Workflow",
+  "version": "0.1.0",
+  "description": "连接我们的 Plane 实例（远程 MCP），并提供团队统一的工作流技能：今日待办、拆需求、迭代规划、开工、提交 PR、站会汇总",
+  "author": {
+    "name": "Moondrop",
+    "url": "https://github.com/retronew/plane"
+  },
+  "homepage": "https://github.com/retronew/plane/tree/preview/plugins/plane-workflow",
+  "repository": "https://github.com/retronew/plane",
+  "license": "AGPL-3.0-only",
+  "keywords": ["plane", "project-management", "mcp", "workflow"],
+  "userConfig": {
+    "plane_url": {
+      "type": "string",
+      "title": "Plane 地址",
+      "description": "你们 Plane 实例的地址，例如 https://plane.example.com（不要带 /mcp）",
+      "required": true
+    },
+    "api_key": {
+      "type": "string",
+      "title": "Plane API Key",
+      "description": "在 Plane「个人设置 → API 令牌」中创建的个人 Key；只读 Key 只能查询不能修改",
+      "sensitive": true,
+      "required": true
+    },
+    "workspace_slug": {
+      "type": "string",
+      "title": "工作区 slug",
+      "description": "Plane 网址中工作区那一段，例如 https://plane.example.com/moondrop/ 中的 moondrop；留空则使用你最近访问的工作区",
+      "default": ""
+    }
+  }
+}

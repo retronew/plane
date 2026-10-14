@@ -1,0 +1,18 @@
+{
+  "name": "plane-ai",
+  "owner": {
+    "name": "Moondrop",
+    "url": "https://github.com/retronew/plane"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for working with our Plane instance"
+  },
+  "plugins": [
+    {
+      "name": "plane-workflow",
+      "source": "./plugins/plane-workflow",
+      "description": "Plane 工作流：连接 Plane MCP，提供站会、拆需求、迭代规划、开工与提交等技能",
+      "version": "0.1.0"
+    }
+  ]
+}
