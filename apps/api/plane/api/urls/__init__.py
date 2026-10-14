@@ -18,8 +18,10 @@ from .page import urlpatterns as page_patterns
 from .view import urlpatterns as view_patterns
 from .my_work import urlpatterns as my_work_patterns
 from .webhook import urlpatterns as webhook_patterns
+from .p1 import urlpatterns as p1_patterns
 
 urlpatterns = [
+    *p1_patterns,
     *asset_patterns,
     *cycle_patterns,
     *intake_patterns,

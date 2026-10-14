@@ -92,6 +92,13 @@ def _project_body(args):
     return body
 
 
+def _set_default_state(ctx, args):
+    project_id = ctx.project_id(args.get("project"))
+    state_id = ctx.state_id(project_id, args["state"])
+    ctx.api("POST", f"projects/{project_id}/states/{state_id}/mark-default/")
+    return {"default_state": args["state"]}
+
+
 project_tool = Tool(
     name="project",
     title="项目",
@@ -155,6 +162,40 @@ project_tool = Tool(
                 "color": {"type": "string", "description": "颜色，如 #FF5733"},
             },
             required=("project", "name"),
+        ),
+        Action(
+            "check_identifier",
+            "检查项目标识是否已被占用（创建项目前用）",
+            lambda ctx, a: {
+                "identifier": a["identifier"].upper(),
+                "available": not ctx.api("GET", "project-identifiers/", {"name": a["identifier"].upper()})["exists"],
+            },
+            params={"identifier": {"type": "string", "description": "拟用的项目标识"}},
+            required=("identifier",),
+            read_only=True,
+        ),
+        Action(
+            "set_default_state",
+            "设为新工作项的默认状态（仅项目管理员）",
+            _set_default_state,
+            params={"project": P_PROJECT, "state": {"type": "string", "description": "状态名称或 ID"}},
+            required=("project", "state"),
+        ),
+        Action(
+            "create_labels",
+            "批量创建标签（已存在的同名标签会跳过），最多 100 个",
+            lambda ctx, a: compact(
+                ctx.api(
+                    "POST",
+                    _project_path(ctx, a, "labels/bulk/"),
+                    body={"labels": [{"name": n} for n in as_list(a["names"])]},
+                )
+            ),
+            params={
+                "project": P_PROJECT,
+                "names": {"type": "array", "items": {"type": "string"}, "description": "标签名列表"},
+            },
+            required=("project", "names"),
         ),
         Action(
             "members",
@@ -538,6 +579,65 @@ cycle_tool = _container_tool(
 module_tool = _container_tool(
     "module", "模块", "modules", "module-issues", lambda ctx, p, v: ctx.module_id(p, v), ("start_date", "target_date")
 )
+
+
+def _cycle_path(ctx, args, suffix):
+    project_id = ctx.project_id(args.get("project"))
+    return f"projects/{project_id}/cycles/{ctx.cycle_id(project_id, args.get('cycle'))}/{suffix}"
+
+
+def _module_path(ctx, args, suffix):
+    project_id = ctx.project_id(args.get("project"))
+    return f"projects/{project_id}/modules/{ctx.module_id(project_id, args.get('module'))}/{suffix}"
+
+
+P_CYCLE = {"type": "string", "description": "周期名称或 ID"}
+P_MODULE = {"type": "string", "description": "模块名称或 ID"}
+
+cycle_tool.actions += [
+    Action(
+        "progress",
+        "周期进度：各状态组的工作项数与估算点数",
+        lambda ctx, a: ctx.api("GET", _cycle_path(ctx, a, "progress/")),
+        params={"project": P_PROJECT, "cycle": P_CYCLE},
+        required=("project", "cycle"),
+        read_only=True,
+    ),
+    Action(
+        "burndown",
+        "燃尽数据（completion_chart，每日剩余量）及按负责人、标签的分布",
+        lambda ctx, a: compact(
+            ctx.api("GET", _cycle_path(ctx, a, "analytics/"), {"type": "points" if a.get("points") else "issues"})
+        ),
+        params={
+            "project": P_PROJECT,
+            "cycle": P_CYCLE,
+            "points": {"type": "boolean", "description": "true 按估算点数统计，默认按工作项数"},
+        },
+        required=("project", "cycle"),
+        read_only=True,
+    ),
+]
+
+module_tool.actions += [
+    Action(
+        "links",
+        "模块的外部链接",
+        lambda ctx, a: compact(ctx.api("GET", _module_path(ctx, a, "links/"))),
+        params={"project": P_PROJECT, "module": P_MODULE},
+        required=("project", "module"),
+        read_only=True,
+    ),
+    Action(
+        "add_link",
+        "给模块添加外部链接",
+        lambda ctx, a: compact(
+            ctx.api("POST", _module_path(ctx, a, "links/"), body={"url": a["url"], "title": a.get("title") or a["url"]})
+        ),
+        params={"project": P_PROJECT, "module": P_MODULE, "url": {"type": "string"}, "title": {"type": "string"}},
+        required=("project", "module", "url"),
+    ),
+]
 
 
 # -- page --------------------------------------------------------------------------

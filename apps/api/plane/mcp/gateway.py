@@ -70,6 +70,8 @@ class ApiGateway:
         except Resolver404:
             return ApiResult(404, {"error": f"Unknown API path {path}"})
 
+        # Django's URL handler normally sets this; some views (e.g. cache invalidation) read it
+        request.resolver_match = match
         response = match.func(request, *match.args, **match.kwargs)
         if hasattr(response, "render"):
             response.render()

@@ -227,3 +227,33 @@ class TestMCPTools:
 
         is_error, results = mcp.tool("workspace", action="search", query="spec", entities="page")
         assert [p["name"] for p in results["page"]] == ["Spec"]
+
+
+@pytest.mark.contract
+class TestMCPProjectInsights:
+    @pytest.mark.django_db
+    def test_labels_identifier_default_state_and_cycle_progress(self, mcp, project, workspace, create_user):
+        from datetime import date, timedelta
+
+        from plane.db.models import Cycle
+
+        is_error, result = mcp.tool("project", action="create_labels", project="WEB", names=["bug", "Docs"])
+        assert not is_error and result["skipped"] == ["bug"]
+        assert [label["name"] for label in result["created"]] == ["Docs"]
+
+        is_error, result = mcp.tool("project", action="check_identifier", identifier="free")
+        assert result == {"identifier": "FREE", "available": True}
+
+        is_error, result = mcp.tool("project", action="set_default_state", project="WEB", state="Doing")
+        assert not is_error and State.objects.get(project=project, name="Doing").default
+
+        Cycle.objects.create(
+            name="Sprint 1",
+            project=project,
+            workspace=workspace,
+            owned_by=create_user,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=7),
+        )
+        is_error, progress = mcp.tool("cycle", action="progress", project="WEB", cycle="sprint 1")
+        assert not is_error and progress["total_issues"] == 0
