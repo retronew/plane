@@ -115,7 +115,7 @@
     },
     "header": {
       "general": "常规",
-      "ai": "人工智能",
+      "ai": "AI",
       "email": "邮件",
       "authentication": "身份认证",
       "image": "图片",
@@ -143,8 +143,8 @@
         "description": "配置登录认证方式。"
       },
       "ai": {
-        "name": "人工智能",
-        "description": "配置 OpenAI 凭据。"
+        "name": "AI",
+        "description": "接入大模型服务。"
       },
       "image": {
         "name": "图片",
@@ -334,7 +334,7 @@
       "authentication": "认证设置 - God Mode",
       "workspace": "工作区管理 - God Mode",
       "image": "图片设置 - God Mode",
-      "ai": "人工智能设置 - God Mode",
+      "ai": "AI 设置 - God Mode",
       "email": "邮件设置 - God Mode",
       "home": "管理后台 - 实例设置与登录",
       "home_description": "配置您的 Plane 实例，或登录管理后台。",
@@ -342,18 +342,55 @@
       "app_description": "开源项目管理工具，轻松管理工作项、迭代和产品路线图。"
     },
     "ai": {
-      "title": "为所有工作区启用 AI 功能",
-      "description": "配置 AI API 凭据，为所有工作区开启 Plane AI 功能。",
-      "llm_model": "LLM 模型",
-      "llm_model_description": "选择一个 OpenAI 模型。",
-      "models_docs": "OpenAI 模型文档",
+      "title": "AI 模型服务",
+      "description": "接入大模型服务，为所有工作区开启 AI 功能。支持 OpenAI、Anthropic、Gemini 以及任何 OpenAI 兼容服务。",
+      "provider": "服务商",
+      "provider_description": "选择预设会自动填写接口协议和 API 地址，之后仍可手动修改。",
+      "custom_provider": "自定义",
+      "search_provider": "搜索服务商",
+      "no_matching_providers": "没有匹配的服务商",
+      "provider_names": {
+        "dashscope": "阿里云百炼（通义千问）",
+        "deepseek": "深度求索 DeepSeek",
+        "minimax": "MiniMax 稀宇科技",
+        "moonshot": "月之暗面 Kimi（国际站）",
+        "moonshot-cn": "月之暗面 Kimi",
+        "qiniu": "七牛云",
+        "siliconflow": "硅基流动 SiliconFlow",
+        "volcengine": "火山引擎方舟（豆包）",
+        "zai": "智谱 Z.ai（国际站）",
+        "zhipu": "智谱 AI（GLM）"
+      },
+      "protocol": "接口协议",
+      "protocol_description": "大多数第三方和自部署服务（DeepSeek、通义千问、Kimi、Ollama、vLLM 等）都使用 OpenAI 兼容（Chat Completions）协议。只支持新版 Responses API 的模型请选择 OpenAI Responses。",
+      "protocols": {
+        "openai": "OpenAI 兼容（Chat Completions）",
+        "openai_responses": "OpenAI Responses",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini"
+      },
+      "base_url": "API 地址",
+      "base_url_description": "留空则使用官方地址。只填域名时会自动补全版本路径（/v1）；以 # 结尾则按原样使用，不做补全。",
+      "base_url_preview": "实际请求地址：",
       "api_key": "API 密钥",
-      "api_key_description": "您可以在这里找到 API 密钥：",
-      "api_keys_page": "OpenAI API 密钥页面",
-      "toast_updated": "AI 设置已更新",
-      "openai_description": "如果您使用 ChatGPT，请配置这里。",
-      "vendor_prefix": "如果您有偏好的 AI 模型供应商，请",
-      "vendor_link": "联系我们。"
+      "api_key_description": "模型服务商提供的密钥，将加密保存。",
+      "api_key_saved_description": "已保存密钥（{key}）。留空则保持不变，填写新密钥将替换原密钥。",
+      "llm_model": "模型",
+      "llm_model_description": "手动填写模型 ID，或从服务商获取模型列表。",
+      "fetch_models": "获取模型",
+      "models_available": "{count, plural, one {共 # 个可用模型} other {共 # 个可用模型}}",
+      "models_fetched": "{count, plural, one {已获取 # 个模型。} other {已获取 # 个模型。}}",
+      "models_fetch_failed": "获取模型失败",
+      "no_matching_models": "没有匹配的模型",
+      "search_model": "搜索或输入模型 ID",
+      "type_model_id": "输入模型 ID，或先获取模型列表",
+      "use_custom_model": "使用“{model}”",
+      "test_connection": "测试连接",
+      "test_succeeded": "连接正常",
+      "test_failed": "连接失败",
+      "test_result": "{model} 已响应，耗时 {latency} 毫秒。",
+      "request_failed": "请求失败，请检查 API 地址和 API 密钥。",
+      "toast_updated": "AI 设置已更新"
     },
     "image": {
       "title": "第三方图片库",

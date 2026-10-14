@@ -12,6 +12,10 @@ import type {
   IInstanceAdmin,
   IInstanceConfiguration,
   IInstanceInfo,
+  TInstanceAIConnectionPayload,
+  TInstanceAIModelsResponse,
+  TInstanceAIProviderPreset,
+  TInstanceAITestResponse,
   TPage,
 } from "@plane/types";
 // api service
@@ -136,6 +140,47 @@ export class InstanceService extends APIService {
    */
   async disableEmail(): Promise<void> {
     return this.delete("/api/instances/configurations/disable-email-feature/")
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Lists the AI provider presets (label, protocol and base URL) known to the backend
+   * @returns {Promise<TInstanceAIProviderPreset[]>} The provider presets
+   * @throws {Error} If the API request fails
+   */
+  async listAIProviders(): Promise<TInstanceAIProviderPreset[]> {
+    return this.get("/api/instances/ai/providers/")
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Lists the models available on an AI provider using the (unsaved) form values
+   * @param {TInstanceAIConnectionPayload} data Protocol, base URL and API key (an empty key falls back to the saved one)
+   * @returns {Promise<TInstanceAIModelsResponse>} The resolved API root and the model IDs
+   * @throws {Error} If the API request fails
+   */
+  async listAIModels(data: TInstanceAIConnectionPayload): Promise<TInstanceAIModelsResponse> {
+    return this.post("/api/instances/ai/models/", data)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  /**
+   * Sends a short prompt to the AI provider to check the connection
+   * @param {TInstanceAIConnectionPayload} data Protocol, base URL, API key and model
+   * @returns {Promise<TInstanceAITestResponse>} The model's reply and the round-trip latency
+   * @throws {Error} If the API request fails
+   */
+  async testAIConnection(data: TInstanceAIConnectionPayload): Promise<TInstanceAITestResponse> {
+    return this.post("/api/instances/ai/test/", data)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

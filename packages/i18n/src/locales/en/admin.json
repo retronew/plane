@@ -115,7 +115,7 @@
     },
     "header": {
       "general": "General",
-      "ai": "Artificial Intelligence",
+      "ai": "AI",
       "email": "Email",
       "authentication": "Authentication",
       "image": "Image",
@@ -143,8 +143,8 @@
         "description": "Configure authentication modes."
       },
       "ai": {
-        "name": "Artificial intelligence",
-        "description": "Configure your OpenAI creds."
+        "name": "AI",
+        "description": "Connect a model provider."
       },
       "image": {
         "name": "Images in Plane",
@@ -334,7 +334,7 @@
       "authentication": "Authentication Settings - God Mode",
       "workspace": "Workspace Management - God Mode",
       "image": "Images Settings - God Mode",
-      "ai": "Artificial Intelligence Settings - God Mode",
+      "ai": "AI Settings - God Mode",
       "email": "Email Settings - God Mode",
       "home": "Admin – Instance Setup & Sign-In",
       "home_description": "Configure your Plane instance or sign in to the admin portal.",
@@ -342,18 +342,55 @@
       "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind."
     },
     "ai": {
-      "title": "AI features for all your workspaces",
-      "description": "Configure your AI API credentials so Plane AI features are turned on for all your workspaces.",
-      "llm_model": "LLM Model",
-      "llm_model_description": "Choose an OpenAI engine.",
-      "models_docs": "OpenAI models documentation",
+      "title": "AI model provider",
+      "description": "Connect a large language model provider to turn on AI features for all your workspaces. Works with OpenAI, Anthropic, Gemini and any OpenAI-compatible service.",
+      "provider": "Provider",
+      "provider_description": "Pick a preset to fill in the protocol and base URL, then adjust them if needed.",
+      "custom_provider": "Custom",
+      "search_provider": "Search providers",
+      "no_matching_providers": "No matching providers",
+      "provider_names": {
+        "dashscope": "Alibaba Cloud Model Studio (DashScope)",
+        "deepseek": "DeepSeek",
+        "minimax": "MiniMax",
+        "moonshot": "Moonshot AI (Kimi)",
+        "moonshot-cn": "Moonshot AI (Kimi, China)",
+        "qiniu": "Qiniu",
+        "siliconflow": "SiliconFlow",
+        "volcengine": "Volcengine Ark",
+        "zai": "Z.ai (GLM)",
+        "zhipu": "Zhipu AI (BigModel)"
+      },
+      "protocol": "API protocol",
+      "protocol_description": "Most third-party and self-hosted services (DeepSeek, Qwen, Moonshot, Ollama, vLLM, etc.) use the OpenAI-compatible (Chat Completions) protocol. Choose OpenAI Responses for models that only support the newer Responses API.",
+      "protocols": {
+        "openai": "OpenAI-compatible (Chat Completions)",
+        "openai_responses": "OpenAI Responses",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini"
+      },
+      "base_url": "API base URL",
+      "base_url_description": "Leave empty to use the official endpoint. A bare host gets the version path (/v1) appended automatically; end the URL with # to use it exactly as typed.",
+      "base_url_preview": "Requests go to:",
       "api_key": "API key",
-      "api_key_description": "You will find your API key",
-      "api_keys_page": "OpenAI API keys page",
-      "toast_updated": "AI Settings updated successfully",
-      "openai_description": "If you use ChatGPT, this is for you.",
-      "vendor_prefix": "If you have a preferred AI models vendor, please get in",
-      "vendor_link": "touch with us."
+      "api_key_description": "The key issued by your model provider. Stored encrypted.",
+      "api_key_saved_description": "A key is saved ({key}). Leave empty to keep it, or enter a new key to replace it.",
+      "llm_model": "Model",
+      "llm_model_description": "Type a model ID, or fetch the list from the provider.",
+      "fetch_models": "Fetch models",
+      "models_available": "{count, plural, one {# model available} other {# models available}}",
+      "models_fetched": "{count, plural, one {Fetched # model.} other {Fetched # models.}}",
+      "models_fetch_failed": "Couldn't fetch models",
+      "no_matching_models": "No matching models",
+      "search_model": "Search or type a model ID",
+      "type_model_id": "Type a model ID, or fetch the list first",
+      "use_custom_model": "Use \"{model}\"",
+      "test_connection": "Test connection",
+      "test_succeeded": "Connection works",
+      "test_failed": "Connection failed",
+      "test_result": "{model} replied in {latency} ms.",
+      "request_failed": "The request failed. Check the base URL and API key.",
+      "toast_updated": "AI settings updated"
     },
     "image": {
       "title": "Third-party image libraries",

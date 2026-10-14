@@ -25,6 +25,25 @@ import { AIService } from "@/services/ai.service";
 import { translate } from "@plane/i18n";
 const aiService = new AIService();
 
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** The editor takes HTML: escape the model's plain text and keep its paragraphs and line breaks. */
+const textToHtml = (text: string) =>
+  text
+    .trim()
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+
+const handleInvalidTask = () => {
+  setToast({
+    type: "error",
+    title: translate("toast.error"),
+    message: translate("web.please_enter_some_task_to_get_ai_assistance"),
+  });
+};
+
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
@@ -61,19 +80,14 @@ export function GptAssistantPopover(props: Props) {
   // states
   const [response, setResponse] = useState("");
   const [invalidResponse, setInvalidResponse] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   // refs
   const editorRef = useRef<EditorRefApi>(null);
-  const responseRef = useRef<EditorRefApi>(null);
+  const abortRef = useRef<AbortController | null>(null);
   // derived values
   const { side, align } = toSideAndAlign(placement ?? "auto");
   // form
-  const {
-    handleSubmit,
-    control,
-    reset,
-    setFocus,
-    formState: { isSubmitting },
-  } = useForm<FormData>({
+  const { handleSubmit, control, reset, setFocus } = useForm<FormData>({
     defaultValues: {
       prompt: prompt || "",
       task: "",
@@ -81,6 +95,7 @@ export function GptAssistantPopover(props: Props) {
   });
 
   const onClose = () => {
+    abortRef.current?.abort();
     handleClose();
     setResponse("");
     setInvalidResponse(false);
@@ -104,27 +119,28 @@ export function GptAssistantPopover(props: Props) {
   };
 
   const callAIService = async (formData: FormData) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setResponse("");
+    setInvalidResponse(false);
+    setIsStreaming(true);
     try {
-      const res = await aiService.createGptTask(workspaceSlug.toString(), {
-        prompt: prompt || "",
-        task: formData.task,
-      });
-
-      setResponse(res.response_html);
+      const text = await aiService.streamGptTask(
+        workspaceSlug.toString(),
+        { prompt: prompt || "", task: formData.task },
+        (delta) => setResponse((prev) => prev + delta),
+        controller.signal
+      );
       setFocus("task");
-
-      setInvalidResponse(res.response === "");
+      setInvalidResponse(text.trim() === "");
     } catch (err) {
+      if (controller.signal.aborted) return;
       handleServiceError(err);
+    } finally {
+      if (abortRef.current === controller) setIsStreaming(false);
     }
-  };
-
-  const handleInvalidTask = () => {
-    setToast({
-      type: "error",
-      title: translate("toast.error"),
-      message: translate("web.please_enter_some_task_to_get_ai_assistance"),
-    });
   };
 
   const handleAIResponse = async (formData: FormData) => {
@@ -146,10 +162,6 @@ export function GptAssistantPopover(props: Props) {
     editorRef.current?.setEditorValue(prompt || "");
   }, [editorRef, prompt]);
 
-  useEffect(() => {
-    responseRef.current?.setEditorValue(`<p>${response}</p>`);
-  }, [response, responseRef]);
-
   // Read the latest submit handler (it closes over `prompt` and the workspace props) without
   // re-subscribing the Enter listener on every render.
   const onEnterKey = useEffectEvent(() => void handleSubmit(handleAIResponse)());
@@ -170,20 +182,20 @@ export function GptAssistantPopover(props: Props) {
     };
   }, [isOpen]);
 
-  const responseActionButton = response !== "" && (
+  const responseActionButton = response !== "" && !isStreaming && (
     <Button
       variant="primary"
       size="sm"
       stretch="auto"
       label={translate("web.use_this_response")}
       onClick={() => {
-        onResponse(response);
+        onResponse(textToHtml(response));
         onClose();
       }}
     />
   );
 
-  const generateResponseButtonText = isSubmitting
+  const generateResponseButtonText = isStreaming
     ? translate("web.generating_response")
     : response === ""
       ? translate("web.generate_response")
@@ -232,17 +244,11 @@ export function GptAssistantPopover(props: Props) {
                   </div>
                 )}
                 {response !== "" && (
-                  <div className="page-block-section max-h-[8rem] text-13">
+                  <div className="text-13">
                     {translate("web.response")}
-                    <RichTextEditor
-                      editable={false}
-                      id="ai-assistant-response"
-                      initialValue={`<p>${response}</p>`}
-                      ref={responseRef}
-                      workspaceId={workspaceId}
-                      workspaceSlug={workspaceSlug}
-                      projectId={projectId}
-                    />
+                    <div className="mt-2 text-14 break-words whitespace-pre-wrap text-primary" aria-live="polite">
+                      {response}
+                    </div>
                   </div>
                 )}
                 {invalidResponse && (
@@ -292,8 +298,8 @@ export function GptAssistantPopover(props: Props) {
                   size="sm"
                   stretch="auto"
                   label={generateResponseButtonText}
-                  onClick={handleSubmit(handleAIResponse)}
-                  loading={isSubmitting}
+                  onClick={() => void handleSubmit(handleAIResponse)()}
+                  loading={isStreaming}
                 />
               </div>
             </div>
