@@ -13,6 +13,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from plane.mcp.views import MCPEndpoint
+
 handler404 = "plane.app.views.error_404.custom_404_view"
 
 urlpatterns = [
@@ -21,6 +23,9 @@ urlpatterns = [
     path("api/instances/", include("plane.license.urls")),
     path("api/v1/", include("plane.api.urls")),
     path("auth/", include("plane.authentication.urls")),
+    # Remote MCP endpoint for AI clients; accepted with and without the trailing slash
+    path("mcp", MCPEndpoint.as_view(), name="mcp-no-slash"),
+    path("mcp/", MCPEndpoint.as_view(), name="mcp"),
     path("", include("plane.web.urls")),
 ]
 

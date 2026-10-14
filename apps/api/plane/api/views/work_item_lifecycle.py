@@ -259,7 +259,9 @@ class ArchivedWorkItemListAPIEndpoint(WorkItemLifecycleMixin, BaseAPIView):
         operation_id="list_archived_work_items",
         summary="List archived work items",
         description="List the archived work items in a project, most recently archived first.",
-        responses={200: create_paginated_response(IssueSerializer, "PaginatedArchivedWorkItemResponse", "Archived work items")},
+        responses={
+            200: create_paginated_response(IssueSerializer, "PaginatedArchivedWorkItemResponse", "Archived work items")
+        },
     )
     def get(self, request, slug, project_id):
         queryset = self.restrict_for_guest(
