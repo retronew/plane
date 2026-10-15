@@ -80,12 +80,24 @@ export function ResizableSidebar({
 
   const startResizing = useCallback(
     (e: React.MouseEvent) => {
+      e.preventDefault();
       setIsResizing(true);
       initialWidthRef.current = width;
       initialMouseXRef.current = e.clientX;
     },
     [width]
   );
+
+  const handleResizeKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    let next = width;
+    if (event.key === "ArrowLeft") next -= 10;
+    else if (event.key === "ArrowRight") next += 10;
+    else if (event.key === "Home") next = minWidth;
+    else if (event.key === "End") next = maxWidth;
+    else return;
+    event.preventDefault();
+    setWidth(Math.min(maxWidth, Math.max(minWidth, next)));
+  };
 
   const stopResizing = useCallback(() => {
     setIsResizing(false);
@@ -180,12 +192,12 @@ export function ResizableSidebar({
   return (
     <>
       {/* Main Sidebar */}
-      <div
+      <aside
         id="main-sidebar"
         className={cn(
           "z-20 h-full border-r border-subtle bg-surface-1",
           !isResizing && "transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-0 translate-x-[-100%] opacity-0" : "translate-x-0 opacity-100",
+          isCollapsed ? "w-0 translate-x-[-100%] border-r-0 opacity-0" : "translate-x-0 opacity-100",
           isMobile && "absolute",
           className
         )}
@@ -194,21 +206,26 @@ export function ResizableSidebar({
           minWidth: `${isCollapsed ? 0 : width}px`,
           maxWidth: `${isCollapsed ? 0 : width}px`,
         }}
-        role="complementary"
         aria-label={translate("web.main_sidebar")}
         data-prevent-outside-click={isMobile}
       >
-        <aside
+        <div
           className={cn(
-            "group/sidebar relative flex h-full w-full flex-col overflow-hidden bg-surface-1 pt-3",
+            "group/sidebar relative flex h-full w-full flex-col overflow-hidden bg-surface-1",
             isAnyExtendedSidebarExpanded && "rounded-none"
           )}
         >
           {children}
 
           {/* Resize Handle */}
-          <div
+          <input
+            type="range"
+            min={minWidth}
+            max={maxWidth}
+            value={width}
+            onChange={(event) => setWidth(Number(event.target.value))}
             className={cn(
+              "m-0 appearance-none rounded-none border-0 p-0 [&::-moz-range-thumb]:size-0 [&::-moz-range-thumb]:border-0 [&::-webkit-slider-thumb]:size-0 [&::-webkit-slider-thumb]:appearance-none",
               "absolute z-[20] h-full w-1 cursor-ew-resize transition-all duration-200",
               !isResizing && "hover:bg-surface-2",
               isResizing && "w-1.5 bg-layer-1",
@@ -217,13 +234,15 @@ export function ResizableSidebar({
             // onDoubleClick toggle sidebar
             onDoubleClick={() => toggleCollapsed()}
             onMouseDown={(e) => startResizing(e)}
-            role="separator"
+            tabIndex={isCollapsed ? -1 : 0}
+            aria-orientation="horizontal"
+            onKeyDown={handleResizeKeyDown}
             aria-label={translate("web.resize_sidebar")}
           />
-        </aside>
-      </div>
+        </div>
+      </aside>
       {/* Peek View */}
-      <div
+      <aside
         className={cn(
           "shadow-sm absolute left-0 z-20 h-full bg-surface-1",
           !isResizing && "transition-all duration-300 ease-in-out",
@@ -235,22 +254,28 @@ export function ResizableSidebar({
         style={{
           width: `${width}px`,
         }}
-        onMouseEnter={handlePeekEnter}
-        onMouseLeave={handlePeekLeave}
-        role="complementary"
         aria-label={translate("web.sidebar_peek_view")}
       >
-        <aside
+        <div
+          role="presentation"
+          onMouseEnter={handlePeekEnter}
+          onMouseLeave={handlePeekLeave}
           className={cn(
-            "group/sidebar relative z-20 flex h-full w-full flex-col overflow-hidden bg-surface-1 pt-4",
+            "group/sidebar relative z-20 flex h-full w-full flex-col overflow-hidden bg-surface-1",
             "self-center rounded-md rounded-tl-none rounded-bl-none border-r border-subtle",
             isAnyExtendedSidebarExpanded && "rounded-none"
           )}
         >
           {children}
           {/* Resize Handle */}
-          <div
+          <input
+            type="range"
+            min={minWidth}
+            max={maxWidth}
+            value={width}
+            onChange={(event) => setWidth(Number(event.target.value))}
             className={cn(
+              "m-0 appearance-none rounded-none border-0 p-0 [&::-moz-range-thumb]:size-0 [&::-moz-range-thumb]:border-0 [&::-webkit-slider-thumb]:size-0 [&::-webkit-slider-thumb]:appearance-none",
               "absolute z-[20] h-full w-1 cursor-ew-resize transition-all duration-200",
               !isResizing && "hover:bg-surface-2",
               isResizing && "bg-layer-1",
@@ -259,11 +284,13 @@ export function ResizableSidebar({
             // onDoubleClick toggle sidebar
             onDoubleClick={() => toggleCollapsed()}
             onMouseDown={(e) => startResizing(e)}
-            role="separator"
+            tabIndex={isCollapsed && showPeek ? 0 : -1}
+            aria-orientation="horizontal"
+            onKeyDown={handleResizeKeyDown}
             aria-label={translate("web.resize_sidebar")}
           />
-        </aside>
-      </div>
+        </div>
+      </aside>
 
       {/* Extended Sidebar */}
       {extendedSidebar}

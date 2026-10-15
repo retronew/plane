@@ -169,9 +169,11 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
             </DialogHeader>
             <DialogBody tabIndex={0}>
               <div className="space-y-4">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   {secondStep && (
-                    <h4 className="text-13 font-medium text-secondary">{changeEmailT("form.email.label")}</h4>
+                    <label htmlFor="email" className="text-13 font-medium text-secondary">
+                      {changeEmailT("form.email.label")}
+                    </label>
                   )}
                   <Controller
                     control={control}
@@ -206,8 +208,10 @@ export const ChangeEmailModal = observer(function ChangeEmailModal(props: Props)
                 </div>
 
                 {secondStep && (
-                  <div className="flex flex-col gap-1">
-                    <h4 className="text-13 font-medium text-secondary">{changeEmailT("form.code.label")}</h4>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="code" className="text-13 font-medium text-secondary">
+                      {changeEmailT("form.code.label")}
+                    </label>
                     <Controller
                       control={control}
                       name="code"

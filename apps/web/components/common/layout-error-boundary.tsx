@@ -19,7 +19,7 @@ type State = {
   retryKey: number;
 };
 
-function LayoutErrorFallback({ onRetry }: { onRetry: () => void }) {
+export function LayoutErrorFallback({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation();
 
   return (

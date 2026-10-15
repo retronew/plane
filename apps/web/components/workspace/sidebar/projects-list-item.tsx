@@ -1,4 +1,3 @@
-import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -16,17 +15,8 @@ import { observer } from "mobx-react";
 import { useParams, useRouter } from "next/navigation";
 import { createRoot } from "react-dom/client";
 import scrollIntoView from "smooth-scroll-into-view-if-needed";
-import {
-  ArchiveOutline,
-  ChevronRightOutline,
-  LinkOutline,
-  LogOutOutline,
-  MoreHorizontalOutline,
-  SettingsOutline,
-  ShareAltOutline,
-} from "@makeplane/propel/icons";
+import { ChevronRightOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
-import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
@@ -34,14 +24,12 @@ import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ControlLink } from "@plane/blocks/layout";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 import { DropIndicator, DragHandle } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // components
 import { DEFAULT_TAB_KEY, getTabUrl } from "@/components/navigation/tab-navigation-utils";
 import { useTabPreferences } from "@/components/navigation/use-tab-preferences";
-import { LeaveProjectModal } from "@/components/project/leave-project-modal";
-import { PublishProjectModal } from "@/components/project/publish-project/modal";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
@@ -52,6 +40,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
 import { HIGHLIGHT_CLASS, highlightIssueOnDrop } from "../../issues/issue-layouts/utils";
 import { ProjectNavigation } from "./project-navigation";
+import { SidebarProjectQuickActions } from "./project-quick-actions";
 import { useNavigationItems } from "@/components/navigation/use-navigation-items";
 
 type Props = {
@@ -90,8 +79,6 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
   const { isExtendedProjectSidebarOpened, toggleExtendedProjectSidebar, toggleAnySidebarDropdown } = useAppTheme();
 
   // states
-  const [leaveProjectModalOpen, setLeaveProjectModal] = useState(false);
-  const [publishModalOpen, setPublishModal] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const isProjectListOpen = getIsProjectListOpen(projectId);
@@ -126,24 +113,6 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
     (value: boolean) => toggleProjectListOpen(projectId, value),
     [projectId, toggleProjectListOpen]
   );
-  // auth
-  const isAdmin = allowPermissions(
-    [EUserPermissions.ADMIN],
-    EUserPermissionsLevel.PROJECT,
-    workspaceSlug.toString(),
-    project?.id
-  );
-  const isAuthorized = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
-    EUserPermissionsLevel.PROJECT,
-    workspaceSlug.toString(),
-    project?.id
-  );
-
-  const handleLeaveProject = () => {
-    setLeaveProjectModal(true);
-  };
-
   useEffect(() => {
     const element = projectRef.current;
     const dragHandleElement = dragHandleRef.current;
@@ -288,8 +257,6 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
 
   return (
     <>
-      <PublishProjectModal isOpen={publishModalOpen} projectId={projectId} onClose={() => setPublishModal(false)} />
-      <LeaveProjectModal project={project} isOpen={leaveProjectModalOpen} onClose={() => setLeaveProjectModal(false)} />
       <div key={`${project.id}_${URLProjectId}`}>
         <div
           id={`sidebar-${projectId}-${projectListType}`}
@@ -361,13 +328,20 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
               <div className="flex items-center gap-1">
                 <div
                   className={cn(
-                    "pointer-events-none flex-shrink-0 opacity-0 group-hover/project-item:pointer-events-auto group-hover/project-item:opacity-100",
+                    "pointer-events-none flex shrink-0 items-center opacity-0 group-focus-within/project-item:pointer-events-auto group-focus-within/project-item:opacity-100 group-hover/project-item:pointer-events-auto group-hover/project-item:opacity-100",
                     {
                       "pointer-events-auto opacity-100": isMenuActive,
                     }
                   )}
                 >
-                  <Menu onOpenChange={setIsMenuActive}>
+                  <Menu
+                    onOpenChange={(open) => {
+                      if (open) setIsMenuActive(true);
+                    }}
+                    onOpenChangeComplete={(open) => {
+                      if (!open) setIsMenuActive(false);
+                    }}
+                  >
                     <MenuTrigger
                       render={
                         <IconButton
@@ -381,49 +355,21 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                         />
                       }
                     />
-                    <MenuContent side="bottom" align="start">
-                      {/* TODO: Removed is_favorite logic due to the optimization in projects API */}
-                      {/* publish project settings */}
-                      {isAdmin && (
-                        <MenuItem
-                          icon={<Icon icon={ShareAltOutline} />}
-                          label={t("publish_project")}
-                          onClick={() => setPublishModal(true)}
-                        />
-                      )}
-                      <MenuItem icon={<Icon icon={LinkOutline} />} label={t("copy_link")} onClick={handleCopyText} />
-                      {isAuthorized && (
-                        <MenuItem
-                          icon={<Icon icon={ArchiveOutline} />}
-                          label={t("archives")}
-                          onClick={() => {
-                            router.push(`/${workspaceSlug}/projects/${project?.id}/archives/issues`);
-                          }}
-                        />
-                      )}
-                      <MenuItem
-                        icon={<Icon icon={SettingsOutline} />}
-                        label={t("settings")}
-                        onClick={() => {
-                          router.push(`/${workspaceSlug}/settings/projects/${project?.id}`);
-                        }}
-                      />
-                      {/* leave project */}
-                      {!isAuthorized && (
-                        <MenuItem
-                          icon={<Icon icon={LogOutOutline} />}
-                          label={t("leave_project")}
-                          onClick={handleLeaveProject}
-                        />
-                      )}
-                    </MenuContent>
+                    <SidebarProjectQuickActions
+                      workspaceSlug={workspaceSlug.toString()}
+                      project={project}
+                      onCopyLink={handleCopyText}
+                    />
                   </Menu>
                 </div>
                 {isAccordionMode && (
                   <span
-                    className={cn("hidden text-placeholder group-hover/project-item:inline-flex", {
-                      "inline-flex": isMenuActive,
-                    })}
+                    className={cn(
+                      "hidden text-placeholder group-focus-within/project-item:inline-flex group-hover/project-item:inline-flex",
+                      {
+                        "inline-flex": isMenuActive,
+                      }
+                    )}
                   >
                     <IconButton
                       variant="ghost"

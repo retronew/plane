@@ -66,6 +66,7 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
   return (
     <StateForm
       data={{ name: "", description: "", color: STATE_GROUPS[groupKey].color }}
+      stateGroup={groupKey}
       onSubmit={onSubmit}
       onCancel={onCancel}
       buttonDisabled={loader}

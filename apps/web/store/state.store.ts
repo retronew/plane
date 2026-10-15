@@ -351,20 +351,17 @@ export class StateStore implements IStateStore {
    * @param groupIndex
    */
   moveStatePosition = async (workspaceSlug: string, projectId: string, stateId: string, payload: Partial<IState>) => {
-    const originalStates = this.stateMap;
+    const originalState = this.stateMap[stateId] ? { ...this.stateMap[stateId] } : undefined;
     try {
-      Object.entries(payload).forEach(([key, value]) => {
-        runInAction(() => {
-          set(this.stateMap, [stateId, key], value);
-        });
-      });
-      // updating using api
-      await this.stateService.patchState(workspaceSlug, projectId, stateId, payload);
-    } catch {
-      // reverting back to old state group if api fails
       runInAction(() => {
-        this.stateMap = originalStates;
+        this.stateMap[stateId] = { ...this.stateMap[stateId], ...payload };
       });
+      await this.stateService.patchState(workspaceSlug, projectId, stateId, payload);
+    } catch (error) {
+      runInAction(() => {
+        if (originalState) this.stateMap[stateId] = originalState;
+      });
+      throw error;
     }
   };
 

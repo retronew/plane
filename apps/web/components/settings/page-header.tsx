@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { WorkspaceSettingsSidebarToggle } from "./workspace/sidebar/collapse";
+import { SettingsSidebarToggle } from "./sidebar/collapse";
 import { Header } from "@plane/blocks/layout";
 
 type Props = {
@@ -18,7 +18,7 @@ export function SettingsPageHeader(props: Props) {
   return (
     <Header>
       <Header.LeftItem>
-        <WorkspaceSettingsSidebarToggle onlyWhenCollapsed />
+        <SettingsSidebarToggle onlyWhenCollapsed />
         {leftItem}
       </Header.LeftItem>
       {rightItem && <Header.RightItem>{rightItem}</Header.RightItem>}

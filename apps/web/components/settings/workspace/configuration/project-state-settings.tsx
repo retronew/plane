@@ -5,6 +5,7 @@ import { useParams } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 import { Switch } from "@makeplane/propel/components/switch";
 import { Button } from "@makeplane/propel/components/button";
+import { SettingsHeading } from "@/components/settings/heading";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import { useTranslation } from "@plane/i18n";
 import { configurationKey, workspaceConfigurationService as service } from "@/services/workspace-configuration.service";
@@ -21,13 +22,13 @@ export function ProjectStateSettings() {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-subtle p-4">
-        <div>
-          <label htmlFor="project-states-enabled" className="text-13 font-medium">
+    <div className="flex flex-col gap-12">
+      <div className="flex flex-col items-start gap-4 rounded-lg border border-subtle bg-layer-2 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-8">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor="project-states-enabled" className="text-body-sm-medium text-primary">
             {t("web.project_states_enable")}
           </label>
-          <p className="mt-1 text-13 text-tertiary">{t("web.project_states_enable_hint")}</p>
+          <p className="text-body-2xs-regular text-tertiary">{t("web.project_states_enable_hint")}</p>
         </div>
         <Switch
           size="md"
@@ -61,22 +62,33 @@ export function ProjectStateSettings() {
           />
         </div>
       )}
-      {data?.enabled
-        ? PROJECT_PHASES.map((group) => (
-            <div key={group} className="rounded-lg border border-subtle bg-surface-2">
-              <div>
-                <CategoryManager kind="status" group={group} />
+      <section className="space-y-3" aria-label={t("web.project_states_heading")}>
+        <SettingsHeading
+          variant="h6"
+          title={t("web.project_states_heading")}
+          description={t("web.project_statuses_description")}
+        />
+        {data?.enabled ? (
+          <div className="rounded-xl border border-subtle bg-layer-2 p-3">
+            {PROJECT_PHASES.map((group) => (
+              <div key={group}>
+                <div>
+                  <CategoryManager kind="status" group={group} />
+                </div>
               </div>
-            </div>
-          ))
-        : !error && (
+            ))}
+          </div>
+        ) : (
+          !error && (
             <EmptyStateCompact
               assetKey="state"
-              assetClassName="size-20"
+              rootClassName="rounded-lg border border-subtle bg-surface-1 py-10"
               title={t("web.project_states_enable")}
               description={t("web.project_states_disabled_description")}
             />
-          )}
+          )
+        )}
+      </section>
     </div>
   );
 }

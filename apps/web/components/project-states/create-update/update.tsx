@@ -10,6 +10,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState, TStateOperationsCallbacks } from "@plane/types";
 // components
 import { StateForm } from "@/components/project-states";
+import { useProjectState } from "@/hooks/store/use-project-state";
 import { translate } from "@plane/i18n";
 
 type TStateUpdate = {
@@ -20,6 +21,8 @@ type TStateUpdate = {
 
 export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
   const { state, updateStateCallback, handleClose } = props;
+  const { getStatePercentageInGroup } = useProjectState();
+  const percentage = getStatePercentageInGroup(state.id);
   // states
   const [loader, setLoader] = useState(false);
 
@@ -63,6 +66,7 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
   return (
     <StateForm
       data={state}
+      percentage={percentage ? percentage / 100 : undefined}
       onSubmit={onSubmit}
       onCancel={onCancel}
       buttonDisabled={loader}

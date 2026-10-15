@@ -60,12 +60,12 @@ export const MemberHeaderColumn = observer(function MemberHeaderColumn(props: Pr
           <button
             type="button"
             aria-label={t(propertyDetails.i18n_title)}
-            className="clickable flex h-5 w-fit cursor-pointer items-center justify-between gap-1.5 py-0 text-13 text-secondary hover:text-primary"
+            className="-mx-1 inline-flex h-5 w-fit cursor-pointer items-center gap-1.5 rounded-sm px-1 py-0 text-caption-md-semibold text-tertiary outline-none hover:bg-layer-transparent-hover hover:text-secondary focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-inset"
           />
         }
       >
-        <span>{t(propertyDetails.i18n_title)}</span>
-        <div className="ml-3 flex">
+        <span className="truncate">{t(propertyDetails.i18n_title)}</span>
+        <div className="flex shrink-0 items-center gap-0.5">
           {(activeSortingProperty === propertyDetails.ascendingOrderKey ||
             activeSortingProperty === propertyDetails.descendingOrderKey) && (
             <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full">

@@ -20,7 +20,7 @@ export class ModuleArchiveService extends APIService {
     return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/archived-modules/`)
       .then((response) => response?.data)
       .catch((error) => {
-        throw error?.response?.data;
+        throw error?.response?.data ?? error;
       });
   }
 

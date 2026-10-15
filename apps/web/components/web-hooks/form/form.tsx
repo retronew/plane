@@ -64,7 +64,7 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
             ? t("workspace_settings.settings.webhooks.modal.details")
             : t("workspace_settings.settings.webhooks.modal.title")}
         </div>
-        <div className="flex flex-col gap-7">
+        <div className="flex flex-col gap-4">
           <Controller
             control={control}
             name="name"

@@ -9,7 +9,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
-import { ROLE, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { ROLE_DETAILS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { ChevronDownOutline, DeleteOutline, LinkOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -63,8 +63,8 @@ export const WorkspaceInvitationsListItem = observer(function WorkspaceInvitatio
     EUserPermissionsLevel.WORKSPACE
   );
   // non-admins can only assign roles up to their own
-  const roleOptions: TRoleOption[] = Object.entries(ROLE)
-    .map(([key, label]) => ({ key: parseInt(key, 10), label }))
+  const roleOptions: TRoleOption[] = Object.entries(ROLE_DETAILS)
+    .map(([key, details]) => ({ key: parseInt(key, 10), label: t(details.i18n_title) }))
     .filter(
       (role) =>
         !(currentWorkspaceRole && Number(currentWorkspaceRole) !== 20 && Number(currentWorkspaceRole) < role.key)
@@ -179,7 +179,7 @@ export const WorkspaceInvitationsListItem = observer(function WorkspaceInvitatio
                 variant="pill-sm"
                 appendIcon={hasRoleChangeAccess ? <ChevronDownOutline /> : undefined}
               >
-                <span className="min-w-0 truncate">{ROLE[invitationDetails.role]}</span>
+                <span className="min-w-0 truncate">{t(ROLE_DETAILS[invitationDetails.role].i18n_title)}</span>
               </Select.Trigger>
             </Select>
           </SelectDropdownPlacementContext.Provider>

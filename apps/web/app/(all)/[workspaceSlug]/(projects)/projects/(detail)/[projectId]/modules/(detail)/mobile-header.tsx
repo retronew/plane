@@ -108,6 +108,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
         </Menu>
         <div className="flex flex-grow items-center justify-center border-l border-subtle text-13 text-secondary">
           <FiltersDropdown
+            displayMenu
             title={t("web.display")}
             placement="bottom-end"
             menuButton={

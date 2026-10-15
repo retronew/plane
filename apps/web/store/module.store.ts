@@ -23,6 +23,7 @@ export interface IModuleStore {
   //Loaders
   loader: boolean;
   fetchedMap: Record<string, boolean>;
+  archivedFetchedMap: Record<string, boolean>;
   plotType: Record<string, TModulePlotType>;
   // observables
   moduleMap: Record<string, IModule>;
@@ -86,6 +87,7 @@ export class ModulesStore implements IModuleStore {
   plotType: Record<string, TModulePlotType> = {};
   //loaders
   fetchedMap: Record<string, boolean> = {};
+  archivedFetchedMap: Record<string, boolean> = {};
   // root store
   rootStore;
   // services
@@ -100,6 +102,7 @@ export class ModulesStore implements IModuleStore {
       moduleMap: observable,
       plotType: observableRef,
       fetchedMap: observable,
+      archivedFetchedMap: observable,
       // computed
       projectModuleIds: computed,
       projectArchivedModuleIds: computed,
@@ -148,7 +151,7 @@ export class ModulesStore implements IModuleStore {
    */
   get projectArchivedModuleIds() {
     const projectId = this.rootStore.router.projectId;
-    if (!projectId || !this.fetchedMap[projectId]) return null;
+    if (!projectId || !this.archivedFetchedMap[projectId]) return null;
     let archivedModules = Object.values(this.moduleMap).filter((m) => m.project_id === projectId && !!m?.archived_at);
     archivedModules = sortBy(archivedModules, [(m) => m.sort_order]);
     const projectModuleIds = archivedModules.map((m) => m.id);
@@ -194,7 +197,7 @@ export class ModulesStore implements IModuleStore {
     const displayFilters = this.rootStore.moduleFilter.getDisplayFiltersByProjectId(projectId);
     const filters = this.rootStore.moduleFilter.getArchivedFiltersByProjectId(projectId);
     const searchQuery = this.rootStore.moduleFilter.archivedModulesSearchQuery;
-    if (!this.fetchedMap[projectId]) return null;
+    if (!this.archivedFetchedMap[projectId]) return null;
     let modules = Object.values(this.moduleMap ?? {}).filter(
       (m) =>
         m.project_id === projectId &&
@@ -341,22 +344,14 @@ export class ModulesStore implements IModuleStore {
    * @returns IModule[]
    */
   fetchArchivedModules = async (workspaceSlug: string, projectId: string) => {
-    this.loader = true;
-    return await this.moduleArchiveService
-      .getArchivedModules(workspaceSlug, projectId)
-      .then((response) => {
-        runInAction(() => {
-          response.forEach((module) => {
-            set(this.moduleMap, [module.id], { ...this.moduleMap[module.id], ...module });
-          });
-          this.loader = false;
-        });
-        return response;
-      })
-      .catch(() => {
-        this.loader = false;
-        return undefined;
+    const response = await this.moduleArchiveService.getArchivedModules(workspaceSlug, projectId);
+    runInAction(() => {
+      response.forEach((module) => {
+        set(this.moduleMap, [module.id], { ...this.moduleMap[module.id], ...module });
       });
+      this.archivedFetchedMap[projectId] = true;
+    });
+    return response;
   };
 
   /**

@@ -37,3 +37,34 @@ it("validates blank names and submits a trimmed name with the description", asyn
     )
   );
 });
+
+it("uses form submission, blocks duplicate saves and retains edits on failure", async () => {
+  let finish!: (result: { status: string }) => void;
+  const submit = vi.fn(
+    () =>
+      new Promise<{ status: string }>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const cancel = vi.fn();
+  render(
+    <StateForm
+      data={{ name: "Ready", color: "#60646c" }}
+      onSubmit={submit}
+      onCancel={cancel}
+      buttonDisabled={false}
+      buttonTitle="Save"
+    />
+  );
+  const name = screen.getByRole("textbox", { name: "web.name" });
+  const form = name.closest("form")!;
+  fireEvent.submit(form);
+  fireEvent.submit(form);
+  expect(submit).toHaveBeenCalledTimes(1);
+  expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
+  finish({ status: "error" });
+  await screen.findByRole("alert");
+  expect((name as HTMLInputElement).value).toBe("Ready");
+  fireEvent.keyDown(name, { key: "Escape" });
+  expect(cancel).toHaveBeenCalledTimes(1);
+});

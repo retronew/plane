@@ -53,7 +53,7 @@ export const ProjectSettingsSidebarItemCategories = observer(function ProjectSet
             <div className="p-2 text-caption-md-medium text-tertiary capitalize">
               {t(PROJECT_SETTINGS_CATEGORY_LABELS[category])}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-0.5">
               {accessibleItems.map((item) => {
                 const isItemActive =
                   item.href === ""
@@ -62,6 +62,7 @@ export const ProjectSettingsSidebarItemCategories = observer(function ProjectSet
 
                 return (
                   <SettingsSidebarItem
+                    className="h-8 rounded-md py-0 text-13 [&_svg]:size-4"
                     key={item.key}
                     as="link"
                     href={`/${workspaceSlug}/settings/projects/${projectId}${item.href}/`}

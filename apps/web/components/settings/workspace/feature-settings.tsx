@@ -63,7 +63,7 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
         />
       }
     >
-      <div className="flex flex-col gap-6">
+      <div className={cn("flex flex-col gap-6", feature === "projects" && "py-1")}>
         <SettingsHeading title={title} description={t(`web.workspace_${feature}_description`)} />
         <div
           className={cn(
@@ -71,11 +71,11 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
             "rounded-lg border border-subtle bg-layer-2 px-4 py-3"
           )}
         >
-          <div className="flex flex-col gap-1">
-            <label htmlFor={`workspace-${field}`} className="text-13 font-medium text-primary">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor={`workspace-${field}`} className="text-body-sm-medium text-primary">
               {t(`web.workspace_${feature}_toggle`)}
             </label>
-            <p className="text-13 text-tertiary">{t(`web.workspace_${feature}_hint`)}</p>
+            <p className="text-body-2xs-regular text-tertiary">{t(`web.workspace_${feature}_hint`)}</p>
           </div>
           <Switch
             id={`workspace-${field}`}

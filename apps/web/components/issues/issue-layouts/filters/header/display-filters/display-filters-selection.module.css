@@ -1,0 +1,29 @@
+.menu {
+  width: 288px;
+  max-width: calc(100vw - 48px);
+}
+
+.choices {
+  min-width: 150px;
+}
+
+.menu :global(.group\/item),
+.choices :global(.group\/item) {
+  min-height: 32px;
+  padding-block: 0;
+}
+
+.menu :global([data-display-property][data-checked]) {
+  border-color: var(--border-accent-strong);
+  background: var(--bg-accent-subtle);
+  color: var(--txt-accent-primary);
+  font-weight: 500;
+}
+
+.menu :global([data-display-property][data-checked]:hover) {
+  background: var(--bg-accent-subtle-hover);
+}
+
+.menu :global([data-display-property]) {
+  font-weight: 500;
+}

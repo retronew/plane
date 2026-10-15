@@ -102,7 +102,7 @@ export const ProfileIssuesMobileHeader = observer(function ProfileIssuesMobileHe
         </MenuTrigger>
         <MenuContent side="bottom" align="start">
           {ISSUE_LAYOUTS.map((layout) => {
-            if (layout.key === "spreadsheet" || layout.key === "gantt_chart" || layout.key === "calendar") return null;
+            if (layout.key === "gantt_chart") return null;
             return (
               <MenuItem
                 key={layout.key}
@@ -118,6 +118,7 @@ export const ProfileIssuesMobileHeader = observer(function ProfileIssuesMobileHe
       </Menu>
       <div className="flex grow items-center justify-center border-l border-subtle text-13 text-secondary">
         <FiltersDropdown
+          displayMenu
           title={t("common.display")}
           placement="bottom-end"
           menuButton={

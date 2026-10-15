@@ -46,11 +46,10 @@ const GROUP_HEADING_CLASSNAME = "px-2 py-1.5 text-caption-md-medium text-tertiar
 const DESCRIPTION_CLASSNAME = "text-caption-md-regular whitespace-normal text-tertiary";
 
 /**
- * Propel's row is a fixed single-line `h-7`, which clips a description. A height utility would not
- * reliably win — two height classes resolve by stylesheet order, not source order — so the override
- * is an inline style.
+ * Allow descriptions to wrap while keeping the shared compact menu inset. An inline height also
+ * keeps this row safe when blocks is rendered without the app's shared stylesheet.
  */
-const TWO_LINE_ROW_STYLE = { height: "auto", paddingBlock: "0.375rem", alignItems: "flex-start" } as const;
+const TWO_LINE_ROW_STYLE = { height: "auto", paddingBlock: "0.25rem", alignItems: "flex-start" } as const;
 
 type SelectOptionRowProps = {
   value: string;

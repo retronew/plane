@@ -2,6 +2,11 @@
   "stickies": {
     "title": "Your stickies",
     "placeholder": "click to type here",
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "todo": "To-do list"
+    },
     "all": "All stickies",
     "no-data": "Jot down an idea, capture an aha, or record a brainwave. Add a sticky to get started.",
     "add": "Add sticky",
@@ -28,7 +33,8 @@
     "toasts": {
       "errors": {
         "wrong_name": "The sticky name cannot be longer than 100 characters.",
-        "already_exists": "There already exists a sticky with no description"
+        "already_exists": "Fill in the existing blank sticky before adding another.",
+        "empty_title": "Fill in the existing sticky first"
       },
       "created": {
         "title": "Sticky created",

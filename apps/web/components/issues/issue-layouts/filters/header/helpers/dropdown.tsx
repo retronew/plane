@@ -6,6 +6,7 @@
 
 import { translate } from "@plane/i18n";
 import type React from "react";
+import { Menu, MenuContent, MenuTrigger } from "@makeplane/propel/components/menu";
 // ui
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -16,6 +17,7 @@ import type { IconElement } from "@plane/blocks/types";
 
 type Props = {
   children: React.ReactNode;
+  displayMenu?: boolean;
   icon?: IconElement;
   miniIcon?: React.ReactNode;
   title?: string;
@@ -29,6 +31,7 @@ type Props = {
 export function FiltersDropdown(props: Props) {
   const {
     children,
+    displayMenu = false,
     miniIcon,
     icon,
     title = translate("web.ui.dropdown"),
@@ -39,11 +42,37 @@ export function FiltersDropdown(props: Props) {
     isFiltersApplied = false,
   } = props;
 
+  if (displayMenu) {
+    return (
+      <Menu>
+        <MenuTrigger
+          disabled={disabled}
+          render={
+            menuButton ? (
+              <button type="button" aria-label={title}>
+                {menuButton}
+              </button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="md"
+                stretch="auto"
+                label={title}
+                icon={icon ?? miniIcon}
+                tabIndex={tabIndex}
+              />
+            )
+          }
+        />
+        <MenuContent {...toSideAndAlign(placement ?? "bottom-end")}>{children}</MenuContent>
+      </Menu>
+    );
+  }
   return (
     <div>
       <Popover>
         {menuButton ? (
-          <PopoverTrigger render={<button type="button" />}>{menuButton}</PopoverTrigger>
+          <PopoverTrigger render={<button type="button" aria-label={title} />}>{menuButton}</PopoverTrigger>
         ) : (
           <>
             {/* Base UI anchors the panel to whichever trigger opened it, so each breakpoint gets its own trigger. */}

@@ -1,3 +1,4 @@
+import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +10,7 @@ import { observer } from "mobx-react";
 import { useParams, useLocation, useNavigate } from "react-router";
 import { EUserPermissionsLevel, EUserPermissions } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { Tabs, TabsList } from "@makeplane/propel/components/tabs";
+import { TabsList } from "@makeplane/propel/components/tabs";
 import type { EUserProjectRoles } from "@plane/types";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -195,7 +196,7 @@ export const TabNavigationRoot = observer(function TabNavigationRoot(props: TTab
         <div className="h-5 w-1 shrink-0 border-l border-subtle" />
 
         <div ref={containerRef} className="flex h-full min-w-0 flex-1 items-center overflow-hidden">
-          <Tabs variant="underline" value={activeItem?.key ?? null}>
+          <AnimatedUnderlineTabs value={activeItem?.key ?? null}>
             <div className="-mb-3">
               <TabsList>
                 {/* Render visible tab items */}
@@ -228,11 +229,11 @@ export const TabNavigationRoot = observer(function TabNavigationRoot(props: TTab
                 )}
               </TabsList>
             </div>
-          </Tabs>
+          </AnimatedUnderlineTabs>
 
           {hasOverflow && (
             <div className="pointer-events-none absolute -z-10 opacity-0">
-              <Tabs variant="underline" value={activeItem?.key ?? null}>
+              <AnimatedUnderlineTabs value={activeItem?.key ?? null}>
                 <div className="-mb-3">
                   <TabsList>
                     {visibleNavigationItems.map((item: TNavigationItem) => {
@@ -251,7 +252,7 @@ export const TabNavigationRoot = observer(function TabNavigationRoot(props: TTab
                     })}
                   </TabsList>
                 </div>
-              </Tabs>
+              </AnimatedUnderlineTabs>
             </div>
           )}
         </div>

@@ -1,3 +1,6 @@
+import { cn } from "@plane/utils";
+import { STATE_ROW_CLASS_NAME, STATE_ROW_DIVIDER_CLASS_NAME } from "@/components/project-states/row-layout";
+import { SortableItem, SortableProvider } from "@plane/blocks/sortable";
 import { StateSummary } from "@/components/project-states/state-summary";
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
@@ -9,8 +12,9 @@ import { CategoryColorPicker } from "./category-color-picker";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
-import { GripVertical, MoreHorizontal, Pencil, Trash2, Tag, Circle } from "lucide-react";
+import { GripVertical, MoreHorizontal, Pencil, Trash2, Tag, Circle, Check } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { Menu, MenuTrigger, MenuItem } from "@makeplane/propel/components/menu";
 import {
@@ -48,10 +52,8 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
   const { data, error, mutate } = useSWR(configurationKey(workspaceSlug, resource), () =>
     service.list<ProjectCategory>(workspaceSlug, resource)
   );
-  const [expanded, setExpanded] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [deleting, setDeleting] = useState<ProjectCategory | null>(null);
-  const [dragged, setDragged] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
@@ -101,12 +103,12 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
         entries.map((e) => e.id)
       );
       await mutate(entries, false);
-    } catch {
+    } catch (reorderError) {
       setMessage(t("web.category_order_error"));
       await mutate();
+      throw reorderError;
     } finally {
       setBusy(false);
-      setDragged(null);
     }
   };
   const editor =
@@ -115,6 +117,7 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
       <StateForm
         key={draft.id ?? "new"}
         data={{ name: draft.name, color: draft.color, description: draft.description }}
+        stateGroup={phaseIcons[group ?? draft.group ?? "draft"]}
         buttonTitle={t(draft.id ? "web.update" : "web.create")}
         buttonDisabled={busy}
         onCancel={() => setDraft(null)}
@@ -233,123 +236,138 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
       ) : !data ? (
         <p aria-busy="true">{t("loading")}</p>
       ) : (
-        <div className="flex flex-col gap-2">
-          {draft && !draft.id && editor}
+        <div className={cn("flex flex-col", label ? "gap-2" : "gap-0")}>
+          {label && draft && !draft.id && editor}
           {data
             .filter((entry) => !group || entry.group === group)
-            .map((entry) =>
+            .map((entry, sortableIndex) =>
               draft?.id === entry.id ? (
-                <div key={entry.id}>{editor}</div>
-              ) : (
-                <div
-                  key={entry.id}
-                  data-category-id={entry.id}
-                  className="group flex min-h-12 items-center gap-3 rounded-lg border border-subtle bg-surface-1 px-3 py-2"
-                  onDragOver={(e) => {
-                    if (dragged) e.preventDefault();
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (dragged) void reorder(dragged, entry.id);
-                  }}
-                >
-                  <button
-                    type="button"
-                    draggable={!busy && !draft}
-                    aria-label={`${t("web.reorder_category")} ${entry.name}`}
-                    title={t("web.reorder_category_hint")}
-                    className="cursor-grab rounded text-tertiary focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing"
-                    onDragStart={(e) => {
-                      setDragged(entry.id);
-                      e.dataTransfer.setData("text/plain", entry.id);
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragEnd={() => setDragged(null)}
-                    onKeyDown={(e) => {
-                      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
-                        e.preventDefault();
-                        const siblings = data.filter((item) => !group || item.group === group);
-                        const index = siblings.findIndex((item) => item.id === entry.id);
-                        const target = siblings[index + (e.key === "ArrowUp" ? -1 : 1)];
-                        if (target) void reorder(entry.id, target.id);
-                      }
-                    }}
-                  >
-                    <GripVertical className="size-4" />
-                  </button>
-                  {label && <Glyph className="size-4 shrink-0" style={{ color: entry.color }} />}
-                  <button
-                    type="button"
-                    data-category-name={entry.name}
-                    className="min-w-0 flex-1 truncate text-left text-13 font-medium"
-                    disabled={busy || !!draft}
-                    onClick={() => begin(entry)}
-                  >
-                    {label ? (
-                      entry.name
-                    ) : (
-                      <StateSummary
-                        icon={
-                          <StateGroupIcon
-                            stateGroup={phaseIcons[entry.group]}
-                            color={entry.color}
-                            size={EIconSize.XL}
-                          />
-                        }
-                        name={entry.name}
-                        description={entry.description}
-                        badge={
-                          entry.is_default ? (
-                            <span className="rounded bg-layer-2 px-1 text-11 text-tertiary">
-                              {t("web.project_status_default")}
-                            </span>
-                          ) : undefined
-                        }
-                      />
-                    )}
-                  </button>
-                  <Menu>
-                    <MenuTrigger
-                      render={
-                        <button
-                          type="button"
-                          aria-label={`${t("web.category_actions")} ${entry.name}`}
-                          className="grid size-7 place-items-center rounded text-tertiary hover:bg-layer-2"
-                          disabled={busy || !!draft}
-                        />
-                      }
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </MenuTrigger>
-                    <MenuContent align="end" sizing="anchor">
-                      {!label && !entry.is_default && (
-                        <MenuItem
-                          label={t("web.project_status_make_default")}
-                          onClick={async () => {
-                            try {
-                              await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
-                              await mutate();
-                            } catch {
-                              setMessage(t("web.configuration_save_error"));
-                            }
-                          }}
-                        />
-                      )}
-                      <MenuItem label={t("edit")} icon={<Pencil className="size-4" />} onClick={() => begin(entry)} />
-                      <MenuItem
-                        label={t("delete")}
-                        variant="danger"
-                        icon={<Trash2 className="size-4" />}
-                        disabled={
-                          !label && (entry.is_default || data.filter((item) => item.group === entry.group).length <= 1)
-                        }
-                        onClick={() => setDeleting(entry)}
-                      />
-                    </MenuContent>
-                  </Menu>
+                <div key={entry.id} className={label ? undefined : STATE_ROW_DIVIDER_CLASS_NAME}>
+                  {editor}
                 </div>
+              ) : (
+                <SortableItem
+                  key={entry.id}
+                  id={entry.id}
+                  index={sortableIndex}
+                  group={group ?? kind}
+                  disabled={busy || !!draft}
+                  className={cn(
+                    label
+                      ? "group relative flex min-h-12 items-center gap-3 rounded-lg border border-subtle bg-surface-1 px-3 py-2"
+                      : cn(STATE_ROW_CLASS_NAME, STATE_ROW_DIVIDER_CLASS_NAME, "gap-2")
+                  )}
+                >
+                  {({ handleRef }) => (
+                    <>
+                      <button
+                        type="button"
+                        ref={handleRef}
+                        disabled={busy || !!draft}
+                        aria-label={`${t("web.reorder_category")} ${entry.name}`}
+                        title={t("web.reorder_category_hint")}
+                        className={cn(
+                          "cursor-grab touch-none rounded focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing",
+                          label
+                            ? "text-tertiary"
+                            : "absolute -left-2.5 text-placeholder opacity-0 transition-opacity group-focus-within:opacity-80 group-hover:opacity-60 hover:text-tertiary hover:opacity-100"
+                        )}
+                      >
+                        <GripVertical className={label ? "size-4" : "size-3"} />
+                      </button>
+                      {label && <Glyph className="size-4 shrink-0" style={{ color: entry.color }} />}
+                      <button
+                        type="button"
+                        data-category-name={entry.name}
+                        className="min-w-0 flex-1 truncate text-left text-13 font-medium"
+                        disabled={busy || !!draft}
+                        onClick={() => begin(entry)}
+                      >
+                        {label ? (
+                          entry.name
+                        ) : (
+                          <StateSummary
+                            icon={
+                              <StateGroupIcon
+                                stateGroup={phaseIcons[entry.group]}
+                                color={entry.color}
+                                size={EIconSize.XL}
+                              />
+                            }
+                            name={entry.name}
+                            color={entry.color}
+                            description={entry.description}
+                            badge={
+                              entry.is_default ? (
+                                <span className="font-normal shrink-0 text-12 text-tertiary">
+                                  ·{t("web.project_status_default")}
+                                </span>
+                              ) : undefined
+                            }
+                          />
+                        )}
+                      </button>
+                      <div
+                        className={cn(
+                          "flex shrink-0 items-center self-center",
+                          !label &&
+                            "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-popup-open]]:opacity-100 [@media(hover:none)]:opacity-100"
+                        )}
+                      >
+                        <Menu>
+                          <MenuTrigger
+                            render={
+                              <IconButton
+                                icon={<MoreHorizontal className="size-4 group-hover:text-primary" />}
+                                aria-label={`${t("web.category_actions")} ${entry.name}`}
+                                variant="ghost"
+                                size="xs"
+                                showTooltip={false}
+                                disabled={busy || !!draft}
+                              />
+                            }
+                          />
+                          <MenuContent align="end" sizing="anchor">
+                            <div className="min-w-30">
+                              {!label && !entry.is_default && (
+                                <MenuItem
+                                  label={t("web.project_status_make_default")}
+                                  icon={<Check className="size-4" />}
+                                  onClick={async () => {
+                                    try {
+                                      await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
+                                      await mutate();
+                                    } catch {
+                                      setMessage(t("web.configuration_save_error"));
+                                    }
+                                  }}
+                                />
+                              )}
+                              <MenuItem
+                                label={t("edit")}
+                                icon={<Pencil className="size-4" />}
+                                onClick={() => begin(entry)}
+                              />
+                              <MenuItem
+                                label={t("delete")}
+                                variant="danger"
+                                icon={<Trash2 className="size-4" />}
+                                disabled={
+                                  !label &&
+                                  (entry.is_default || data.filter((item) => item.group === entry.group).length <= 1)
+                                }
+                                onClick={() => setDeleting(entry)}
+                              />
+                            </div>
+                          </MenuContent>
+                        </Menu>
+                      </div>
+                    </>
+                  )}
+                </SortableItem>
               )
             )}
+          {!label && draft && !draft.id && editor}
           {!data.length && !draft && !group && (
             <EmptyStateCompact
               rootClassName="rounded-lg border border-subtle bg-surface-1 px-4 py-10"
@@ -417,19 +435,31 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
   );
   return group ? (
     <StateGroupPanel
-      open={expanded}
-      onOpenChange={setExpanded}
       title={t(`web.project_phase_${group}`)}
-      icon={<StateGroupIcon stateGroup={phaseIcons[group]} size={EIconSize.XL} />}
       addDisabled={busy || !!draft}
       onAdd={() => {
-        setExpanded(true);
         begin();
       }}
     >
-      {content}
+      <SortableProvider
+        disabled={busy || !!draft}
+        onSortEnd={async ({ id, index }) => {
+          const target = data?.filter((item) => !group || item.group === group)[index];
+          if (target) await reorder(id, target.id);
+        }}
+      >
+        {content}
+      </SortableProvider>
     </StateGroupPanel>
   ) : (
-    content
+    <SortableProvider
+      disabled={busy || !!draft}
+      onSortEnd={async ({ id, index }) => {
+        const target = data?.[index];
+        if (target) await reorder(id, target.id);
+      }}
+    >
+      {content}
+    </SortableProvider>
   );
 }

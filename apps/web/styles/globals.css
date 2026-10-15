@@ -170,11 +170,6 @@
   will-change: transform, opacity;
 }
 
-/*
- * While a modal dialog is open the page behind it is scroll-locked, but its scrollbars stay
- * visible (always-on with macOS "show scroll bars: always") and look broken. Hide every scrollbar
- * outside the dialog while the dialog's backdrop is mounted.
- */
-html:has([role="presentation"][data-open]) *:not([role="dialog"], [role="dialog"] *) {
-  scrollbar-width: none;
-}
+/* Scroll locking belongs to Base UI. Keep scrollbar geometry unchanged when
+ * overlays open: presentation popups also include tooltips, and hiding their
+ * background scrollbars changes the available content width. */

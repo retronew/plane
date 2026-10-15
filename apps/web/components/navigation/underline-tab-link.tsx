@@ -21,5 +21,12 @@ type TUnderlineTabLinkProps = Omit<TabProps, "nativeButton" | "render"> & {
 export function UnderlineTabLink({ to, linkProps, ...props }: TUnderlineTabLinkProps) {
   if (props.disabled) return <Tab {...props} />;
 
-  return <Tab {...props} nativeButton={false} render={<Link to={to} {...linkProps} />} />;
+  return (
+    <Tab
+      {...props}
+      data-motion-value={String(props.value)}
+      nativeButton={false}
+      render={<Link to={to} {...linkProps} />}
+    />
+  );
 }

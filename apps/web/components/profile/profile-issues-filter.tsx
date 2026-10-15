@@ -66,12 +66,17 @@ export const ProfileIssuesFilter = observer(function ProfileIssuesFilter() {
   return (
     <div className="relative flex items-center justify-end gap-2">
       <LayoutSelection
-        layouts={[EIssueLayoutTypes.LIST, EIssueLayoutTypes.KANBAN]}
+        layouts={[
+          EIssueLayoutTypes.LIST,
+          EIssueLayoutTypes.KANBAN,
+          EIssueLayoutTypes.CALENDAR,
+          EIssueLayoutTypes.SPREADSHEET,
+        ]}
         onChange={(layout) => handleLayoutChange(layout)}
         selectedLayout={activeLayout}
       />
       {userId && <WorkItemFiltersToggle entityType={EIssuesStoreType.PROFILE} entityId={userId} />}
-      <FiltersDropdown title={t("common.display")} placement="bottom-end">
+      <FiltersDropdown displayMenu title={t("common.display")} placement="bottom-end">
         <DisplayFiltersSelection
           layoutDisplayFiltersOptions={
             activeLayout ? ISSUE_DISPLAY_FILTERS_BY_PAGE.profile_issues.layoutOptions[activeLayout] : undefined

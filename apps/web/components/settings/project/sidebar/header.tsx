@@ -5,6 +5,8 @@
  */
 
 import { ArrowNarrowLeftOutline } from "@makeplane/propel/icons";
+import { SettingsSidebarToggle } from "../../sidebar/collapse";
+import { SettingsSidebarHeaderRow } from "../../sidebar/header-row";
 import { observer } from "mobx-react";
 // plane imports
 import { ROLE_DETAILS } from "@plane/constants";
@@ -42,16 +44,17 @@ export const ProjectSettingsSidebarHeader = observer(function ProjectSettingsSid
 
   return (
     <div className="shrink-0">
-      <div className="flex items-center gap-1 py-3 pr-5 pl-4 text-body-md-medium">
+      <SettingsSidebarHeaderRow>
         <IconButton
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           icon={<Icon icon={ArrowNarrowLeftOutline} />}
           aria-label={t("web.back_to_project")}
           onClick={() => router.push(`/${currentWorkspace?.slug}/projects/${projectId}/issues/`)}
         />
-        <p>{t("web.project_settings")}</p>
-      </div>
+        <p className="min-w-0 flex-1 truncate">{t("web.project_settings")}</p>
+        <SettingsSidebarToggle />
+      </SettingsSidebarHeaderRow>
       <div className="mt-1.5 flex items-center gap-2 truncate px-5 py-0.5">
         <div className="grid size-8 shrink-0 place-items-center rounded bg-layer-2">
           <Logo logo={projectDetails?.logo_props} size={20} />

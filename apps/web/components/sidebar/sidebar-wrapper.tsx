@@ -18,6 +18,7 @@ import { useAppTheme } from "@/hooks/store/use-app-theme";
 import useSize from "@/hooks/use-window-size";
 // plane web components
 import { AppSidebarToggleButton } from "./sidebar-toggle-button";
+import styles from "./sidebar-layout.module.css";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 
@@ -53,12 +54,14 @@ export const SidebarWrapper = observer(function SidebarWrapper(props: TSidebarWr
   return (
     <>
       <CustomizeNavigationDialog isOpen={isCustomizeNavDialogOpen} onClose={() => setIsCustomizeNavDialogOpen(false)} />
-      <div ref={ref} className="flex h-full w-full animate-fade-in flex-col">
-        <div className="flex flex-col gap-3 px-3">
+      <div ref={ref} className={`flex h-full w-full flex-col ${styles.enter}`}>
+        <div className="flex flex-col gap-2 px-3">
           {/* Workspace switcher and settings */}
 
-          <div className="flex items-center justify-between gap-2 px-2">
-            <span className="pt-1 text-16 font-medium text-primary">{title}</span>
+          <div
+            className={`flex shrink-0 items-center justify-between gap-2 border-b border-transparent px-2 ${styles.headerRow}`}
+          >
+            <span className="relative top-px text-body-md-medium text-primary">{title}</span>
             <div className="flex items-center gap-2">
               {title === "Projects" && (
                 <IconButton

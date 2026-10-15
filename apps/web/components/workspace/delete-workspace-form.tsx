@@ -10,7 +10,7 @@ import { WarningTriangleOutline } from "@makeplane/propel/icons";
 // Plane Imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { useTranslation, translate } from "@plane/i18n";
+import { Translation, useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import {
   DialogActions,
@@ -114,10 +114,10 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
               <span className="text-body-xs-semibold break-words">{data?.name}</span>
               {translate("web.delete_workspace_suffix")}
             </p>
-            <div className="text-secondary">
-              <p className="text-body-xs-regular break-words">
+            <div className="flex flex-col gap-2 text-secondary">
+              <label htmlFor="workspaceName" className="text-body-xs-regular break-words">
                 {t("web.type_in_this_workspace_apos_s_name_to_continue")}
-              </p>
+              </label>
               <Controller
                 control={control}
                 name="workspaceName"
@@ -140,12 +140,19 @@ export const DeleteWorkspaceForm = observer(function DeleteWorkspaceForm(props: 
                 )}
               />
             </div>
-            <div className="text-secondary">
-              <p className="text-body-xs-regular">
-                {translate("web.final_confirmation_type")}{" "}
-                <span className="text-body-xs-medium text-primary">delete my workspace </span>
-                {translate("web.below")}
-              </p>
+            <div className="flex flex-col gap-2 text-secondary">
+              <label htmlFor="confirmDelete" className="text-body-xs-regular">
+                <Translation
+                  translationKey="web.ui.confirm_phrase"
+                  components={{
+                    phrase: (
+                      <code className="font-mono rounded-md bg-danger-subtle/60 px-1 py-0.5 text-12 text-danger-primary">
+                        delete my workspace
+                      </code>
+                    ),
+                  }}
+                />
+              </label>
               <Controller
                 control={control}
                 name="confirmDelete"
