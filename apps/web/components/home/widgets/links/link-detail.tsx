@@ -48,7 +48,7 @@ export const ProjectLinkDetail = observer(function ProjectLinkDetail(props: TPro
   const handleCopyText = useCallback(() => {
     if (!linkUrl) return;
     copyTextToClipboard(linkUrl).then(() => {
-      setToast({
+      return setToast({
         type: "success",
         title: t("link_copied"),
         message: t("view_link_copied_to_clipboard"),
@@ -87,6 +87,7 @@ export const ProjectLinkDetail = observer(function ProjectLinkDetail(props: TPro
       },
       {
         key: "delete",
+        variant: "danger",
         action: handleDelete,
         title: t("delete"),
         icon: DeleteOutline,

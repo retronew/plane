@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { debounce } from "lodash-es";
 import { observer } from "mobx-react";
 import { ArrowCollapseOutline } from "@makeplane/propel/icons";
@@ -19,6 +20,7 @@ import { STICKY_COLORS_LIST } from "../../editor/sticky-editor/color-palette";
 import { StickyDeleteModal } from "../delete-modal";
 import { StickyInput } from "./inputs";
 import { getRandomStickyColor, useStickyOperations } from "./use-operations";
+import styles from "./sticky.module.css";
 
 type TProps = {
   onClose?: () => void;
@@ -82,10 +84,13 @@ export const StickyNote = observer(function StickyNote(props: TProps) {
         handleClose={() => setIsDeleteModalOpen(false)}
       />
       <div
-        className={cn("group/sticky flex h-fit w-full flex-col overflow-y-auto rounded-sm", className)}
-        style={{
-          backgroundColor,
-        }}
+        className={cn("group/sticky flex h-fit w-full min-w-0 flex-col", styles.card, className)}
+        data-sticky-card={stickyId ?? "new"}
+        style={
+          {
+            "--sticky-color": backgroundColor,
+          } as CSSProperties
+        }
       >
         {/* {isStickiesPage && <StickyItemDragHandle isDragging={false} />}{" "} */}
         {onClose && (
@@ -94,7 +99,7 @@ export const StickyNote = observer(function StickyNote(props: TProps) {
           </button>
         )}
         {/* inputs */}
-        <div className="-mt-2">
+        <div>
           <StickyInput
             stickyData={stickyData}
             workspaceSlug={workspaceSlug}

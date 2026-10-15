@@ -27,10 +27,8 @@ type Props = {
   workspaceSlug: string;
   itemWidth: string;
   isLastChild: boolean;
-  isInFirstRow: boolean;
-  isInLastRow: boolean;
   handleDrop: (self: DropTargetRecord, source: ElementDragPayload, location: DragLocationHistory) => void;
-  handleLayout: () => void;
+  handleLayout?: () => void;
 };
 
 export const StickyDNDWrapper = observer(function StickyDNDWrapper(props: Props) {
@@ -119,7 +117,7 @@ export const StickyDNDWrapper = observer(function StickyDNDWrapper(props: Props)
 
   return (
     <div
-      className="box-border flex flex-col p-[8px]"
+      className="box-border flex min-w-0 flex-col"
       style={{
         width: itemWidth,
       }}

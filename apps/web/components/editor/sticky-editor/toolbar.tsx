@@ -4,111 +4,113 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { DeleteOutline, PaletteOutline } from "@makeplane/propel/icons";
 // editor
 import type { EditorRefApi } from "@plane/editor";
 // ui
-import { useOutsideClickDetector } from "@plane/hooks";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TSticky } from "@plane/types";
 // constants
-import { cn } from "@plane/utils";
 import type { ToolbarMenuItem } from "@plane/editor";
 import { TOOLBAR_ITEMS } from "@plane/editor";
 // helpers
 import { ColorPalette } from "./color-palette";
-import { translate } from "@plane/i18n";
+import { translate, useTranslation } from "@plane/i18n";
 
 type Props = {
   executeCommand: (item: ToolbarMenuItem) => void;
   editorRef: EditorRefApi | null;
   handleColorChange: (data: Partial<TSticky>) => Promise<void>;
   handleDelete: () => void;
+  selectedColor?: string;
 };
 
 const toolbarItems = TOOLBAR_ITEMS.sticky;
+const formattingItems = Object.values(toolbarItems).flat();
+const getServerSnapshot = () => "";
 
 export function StickyEditorToolbar(props: Props) {
-  const { executeCommand, editorRef, handleColorChange, handleDelete } = props;
+  const { executeCommand, editorRef, handleColorChange, handleDelete, selectedColor } = props;
 
-  // State to manage active states of toolbar items
-  const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
   const [showColorPalette, setShowColorPalette] = useState(false);
-  const colorPaletteRef = React.useRef<HTMLDivElement>(null);
-  // Function to update active states
-  const updateActiveStates = useCallback(() => {
-    if (!editorRef) return;
-    const newActiveStates: Record<string, boolean> = {};
-    Object.values(toolbarItems)
-      .flat()
-      .forEach((item) => {
-        // TODO: update this while toolbar homogenization
-        // @ts-expect-error type mismatch here
-        newActiveStates[item.renderKey] = editorRef.isMenuItemActive({
-          itemKey: item.itemKey,
-          ...item.extraProps,
-        });
-      });
-    setActiveStates(newActiveStates);
-  }, [editorRef]);
-
-  // useEffect to call updateActiveStates when isActive prop changes
-  useEffect(() => {
-    if (!editorRef) return;
-    const unsubscribe = editorRef.onStateChange(updateActiveStates);
-    updateActiveStates();
-    return () => unsubscribe();
-  }, [editorRef, updateActiveStates]);
-
-  useOutsideClickDetector(colorPaletteRef, () => setShowColorPalette(false));
+  const { t } = useTranslation();
+  const labels: Record<string, string> = {
+    bold: t("stickies.toolbar.bold"),
+    italic: t("stickies.toolbar.italic"),
+    "to-do-list": t("stickies.toolbar.todo"),
+  };
+  const subscribe = useCallback(
+    (onChange: () => void) => editorRef?.onStateChange(onChange) ?? (() => {}),
+    [editorRef]
+  );
+  const getSnapshot = useCallback(
+    () =>
+      formattingItems
+        .map((item) => {
+          // @ts-expect-error dynamic toolbar item keys include command-specific props
+          return editorRef?.isMenuItemActive({
+            itemKey: item.itemKey,
+            ...item.extraProps,
+          })
+            ? "1"
+            : "0";
+        })
+        .join(""),
+    [editorRef]
+  );
+  const activeStates = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   return (
-    <div className="flex h-full w-full justify-between">
-      <div className="my-auto flex gap-4" ref={colorPaletteRef}>
-        {/* color palette */}
-        {showColorPalette && <ColorPalette handleUpdate={handleColorChange} />}
-        <Tooltip label={translate("web.background_color")}>
-          <button type="button" onClick={() => setShowColorPalette(!showColorPalette)} className="flex text-primary/50">
-            <PaletteOutline className="my-auto size-4" />
-          </button>
-        </Tooltip>
-
-        <div className="my-auto flex w-fit items-stretch justify-between gap-4 rounded-sm p-1">
-          <div className="my-auto flex items-stretch gap-4">
-            {Object.keys(toolbarItems).map((key) => (
-              <div key={key} className={cn("flex items-stretch gap-4", {})}>
-                {toolbarItems[key].map((item) => {
-                  const isItemActive = activeStates[item.renderKey];
-
-                  return (
-                    <Tooltip key={item.renderKey} label={item.name} shortcut={item.shortcut?.join(" + ")}>
-                      <button
-                        type="button"
-                        onClick={() => executeCommand(item)}
-                        className={cn("grid aspect-square place-items-center rounded-xs p-0.5 text-primary/50", {})}
-                      >
-                        <item.icon
-                          className={cn("h-3.5 w-3.5", {
-                            "font-heavy": isItemActive,
-                          })}
-                          strokeWidth={2.5}
-                        />
-                      </button>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="flex h-full w-full items-center justify-between border-t border-subtle/60 pt-2">
+      <div className="flex items-center gap-1">
+        <Popover open={showColorPalette} onOpenChange={setShowColorPalette}>
+          <PopoverTrigger
+            render={
+              <IconButton
+                variant="ghost"
+                size="sm"
+                aria-label={translate("web.background_color")}
+                icon={<PaletteOutline />}
+              />
+            }
+          />
+          <PopoverContent
+            side="top"
+            align="start"
+            aria-label={translate("web.background_colors")}
+            data-sticky-color-popover=""
+          >
+            <ColorPalette
+              handleUpdate={handleColorChange}
+              selectedColor={selectedColor}
+              onSelect={() => setShowColorPalette(false)}
+            />
+          </PopoverContent>
+        </Popover>
+        {formattingItems.map((item, index) => (
+          <Tooltip key={item.renderKey} label={labels[item.itemKey] ?? item.name} shortcut={item.shortcut?.join(" + ")}>
+            <IconButton
+              variant={activeStates[index] === "1" ? "tertiary" : "ghost"}
+              size="sm"
+              aria-label={labels[item.itemKey] ?? item.name}
+              aria-pressed={activeStates[index] === "1"}
+              showTooltip={false}
+              onClick={() => executeCommand(item)}
+              icon={<item.icon />}
+            />
+          </Tooltip>
+        ))}
       </div>
-      {/* delete action */}
-      <Tooltip label={translate("web.delete")}>
-        <button type="button" onClick={handleDelete} className="my-auto text-primary/50">
-          <DeleteOutline className="size-4" />
-        </button>
-      </Tooltip>
+      <IconButton
+        variant="ghost"
+        size="sm"
+        aria-label={translate("stickies.delete")}
+        onClick={handleDelete}
+        icon={<DeleteOutline />}
+      />
     </div>
   );
 }

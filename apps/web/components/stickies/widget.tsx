@@ -36,7 +36,9 @@ export const StickiesWidget = observer(function StickiesWidget() {
         <div className="text-14 font-semibold text-tertiary">{t("stickies.title")}</div>
         {/* actions */}
         <div className="flex items-center gap-2">
-          <StickySearch />
+          <div className="flex h-6 items-center [--control-height-md:24px] [--control-height-sm:20px]">
+            <StickySearch />
+          </div>
           <Button
             variant="secondary"
             size="sm"

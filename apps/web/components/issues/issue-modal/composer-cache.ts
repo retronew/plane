@@ -1,6 +1,8 @@
 import type { TIssue } from "@plane/types";
 export type ComposerDraft = { values: Partial<TIssue>; assetIds: string[]; hasChanges?: boolean };
 const drafts = new Map<string, ComposerDraft>();
+export const composerDraftContext = (projectId?: string, parentId?: string | null, isDraft = false) =>
+  parentId || isDraft ? JSON.stringify([projectId, parentId, isDraft]) : "new";
 export const composerCacheKey = (user: string, workspace: string, context: string) =>
   `issue-composer:${user}:${workspace}:${context}`;
 export function readComposerDraft(key: string): ComposerDraft | undefined {

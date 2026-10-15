@@ -146,7 +146,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
           return (
             <div
               key={item.id}
-              className="group flex min-h-36 flex-col rounded-xl border border-subtle bg-surface-1 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[background-color,box-shadow] duration-200 hover:bg-layer-1 hover:shadow-[0_1px_3px_rgba(0,0,0,0.06)] motion-reduce:transition-none"
+              className="group flex min-h-36 flex-col rounded-xl border border-subtle bg-surface-1 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[background-color,box-shadow] duration-200 hover:bg-layer-1 hover:shadow-[0_1px_3px_rgba(0,0,0,0.06)] motion-reduce:transition-none dark:border-subtle-1 dark:bg-layer-1 dark:shadow-none dark:hover:bg-layer-1-hover dark:hover:shadow-none"
             >
               <div className="mb-3 flex items-center justify-between">
                 <div

@@ -6,6 +6,7 @@
 
 import type { TSticky } from "@plane/types";
 import { translate } from "@plane/i18n";
+import { TickOutline } from "@makeplane/propel/icons";
 
 export const STICKY_COLORS_LIST: {
   key: string;
@@ -72,28 +73,35 @@ export const STICKY_COLORS_LIST: {
 
 type TProps = {
   handleUpdate: (data: Partial<TSticky>) => Promise<void>;
+  selectedColor?: string;
+  onSelect?: () => void;
 };
 
 export function ColorPalette(props: TProps) {
-  const { handleUpdate } = props;
+  const { handleUpdate, selectedColor, onSelect } = props;
   return (
-    <div className="shadow absolute bottom-5 left-0 z-10 mb-2 w-56 rounded-md bg-surface-1 p-2">
-      <div className="mb-2 text-13 font-semibold text-placeholder">{translate("web.background_colors")}</div>
-      <div className="flex flex-wrap gap-2">
+    <div className="w-fit">
+      <div className="mb-3 text-12 font-medium text-tertiary">{translate("web.background_colors")}</div>
+      <div className="grid grid-cols-4 gap-2">
         {STICKY_COLORS_LIST.map((color) => (
           <button
             key={color.key}
             type="button"
+            aria-label={color.label}
+            aria-pressed={selectedColor === color.key}
             onClick={() => {
-              handleUpdate({
+              void handleUpdate({
                 background_color: color.key,
               });
+              onSelect?.();
             }}
-            className="h-6 w-6 rounded-md transition-all hover:ring-2 hover:ring-accent-strong focus:ring-2 focus:ring-accent-strong focus:outline-none"
+            className="grid size-7 place-items-center rounded-md border border-subtle-1 text-secondary transition-shadow outline-none hover:ring-2 hover:ring-accent-strong/40 focus-visible:ring-2 focus-visible:ring-accent-strong"
             style={{
               backgroundColor: color.backgroundColor,
             }}
-          />
+          >
+            {selectedColor === color.key && <TickOutline className="size-3.5" />}
+          </button>
         ))}
       </div>
     </div>
