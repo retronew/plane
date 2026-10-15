@@ -13,7 +13,7 @@ import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import { IconButton as IconButtonElement } from "@makeplane/propel/elements/icon-button";
 import { useTranslation } from "@plane/i18n";
 import type { IFilterInstance } from "@plane/shared-state";
-import type { TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
+import type { SingleOrArray, TFilterValue, TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
 import { LOGICAL_OPERATOR } from "@plane/types";
 import { cn } from "@plane/utils";
 // local imports
@@ -53,13 +53,18 @@ export const AddFilterButton = observer(function AddFilterButton<P extends TFilt
   const FilterIcon = iconConfig.iconComponent || FilterOutline;
   const iconSizeClassName = size === "xs" || size === "sm" ? "size-3.5" : "size-4";
 
-  const handleFilterSelect = (property: P, operator: TSupportedOperators, isNegation: boolean) => {
+  const handleFilterSelect = (
+    property: P,
+    operator: TSupportedOperators,
+    isNegation: boolean,
+    value?: SingleOrArray<TFilterValue>
+  ) => {
     filter.addCondition(
       LOGICAL_OPERATOR.AND,
       {
         property,
         operator,
-        value: undefined,
+        value,
       },
       isNegation
     );

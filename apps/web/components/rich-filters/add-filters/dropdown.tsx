@@ -6,33 +6,27 @@
 
 import React, { useState } from "react";
 import { observer } from "mobx-react";
-import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
-// plane imports
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxSearch,
-} from "@makeplane/propel/components/combobox";
+import { Popover as BasePopover } from "@base-ui/react/popover";
+import { MenuPanel, MenuRow, MenuSearchInput, NestedSubmenu } from "@plane/blocks/select";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
 import type { IFilterInstance } from "@plane/shared-state";
-import type { TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
+import type { SingleOrArray, TFilterValue, TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
+import { FILTER_FIELD_TYPE } from "@plane/types";
 import { cn, getOperatorForPayload } from "@plane/utils";
+import { QuickFilterOptions } from "./quick-options";
 
 export type TAddFilterDropdownProps<P extends TFilterProperty, E extends TExternalFilter> = {
   customButton: React.ReactNode;
-  /** Names the trigger when `customButton` has no visible text (the icon-only add-filter button). */
   triggerAriaLabel?: string;
-  buttonConfig?: {
-    className?: string;
-    defaultOpen?: boolean;
-    isDisabled?: boolean;
-  };
+  buttonConfig?: { className?: string; defaultOpen?: boolean; isDisabled?: boolean };
   filter: IFilterInstance<P, E>;
-  handleFilterSelect: (property: P, operator: TSupportedOperators, isNegation: boolean) => void;
+  handleFilterSelect: (
+    property: P,
+    operator: TSupportedOperators,
+    isNegation: boolean,
+    value?: SingleOrArray<TFilterValue>
+  ) => void;
 };
 
 export const AddFilterDropdown = observer(function AddFilterDropdown<
@@ -41,85 +35,121 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
 >(props: TAddFilterDropdownProps<P, E>) {
   const { filter, customButton, triggerAriaLabel, buttonConfig } = props;
   const { className, defaultOpen = false, isDisabled = false } = buttonConfig || {};
-  // states
+  const [open, setOpen] = useState(defaultOpen);
   const [searchQuery, setSearchQuery] = useState("");
-  // plane hooks
   const { t } = useTranslation();
-  // derived values
   const availableConfigs = filter.configManager.allAvailableConfigs;
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const visibleConfigs = normalizedQuery
-    ? availableConfigs.filter((config) => config.label.toLowerCase().includes(normalizedQuery))
-    : availableConfigs;
-  // Every filter already applied reads differently from a search that matched nothing.
-  const emptyLabel =
-    availableConfigs.length === 0 ? t("web.all_filters_applied") : t("common.search.no_matching_results");
-
-  const handleFilterSelect = (property: P) => {
+  const query = searchQuery.trim().toLowerCase();
+  const visibleConfigs = availableConfigs.filter((config) => config.label.toLowerCase().includes(query));
+  const select = (property: P, value?: TFilterValue) => {
     const config = filter.configManager.getConfigByProperty(property);
     if (config?.firstOperator) {
       const { operator, isNegation } = getOperatorForPayload(config.firstOperator);
-      props.handleFilterSelect(property, operator, isNegation);
-    } else {
+      const field = config.getOperatorConfig(config.firstOperator);
+      props.handleFilterSelect(
+        property,
+        operator,
+        isNegation,
+        value === undefined
+          ? undefined
+          : field?.type === FILTER_FIELD_TYPE.MULTI_SELECT
+            ? ([value] as SingleOrArray<TFilterValue>)
+            : value
+      );
+      setOpen(false);
+    } else
       setToast({
         title: t("web.filter_configuration_error"),
         message: t("web.this_filter_is_not_properly_configured_and_cannot_be_applied"),
         type: "error",
       });
-    }
   };
-
   return (
-    <div className="relative flex-shrink-0 text-left transition-all duration-200 ease-in-out">
-      <Combobox
-        value=""
-        onValueChange={(value) => {
-          if (typeof value === "string" && value) handleFilterSelect(value as P);
-        }}
-        defaultOpen={defaultOpen}
+    <BasePopover.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setSearchQuery("");
+      }}
+    >
+      <BasePopover.Trigger
         disabled={isDisabled}
-        onOpenChange={(open) => {
-          if (!open) setSearchQuery("");
-        }}
+        aria-label={triggerAriaLabel}
+        className={cn(
+          "flex h-full items-center gap-1 text-body-xs-regular outline-none",
+          isDisabled ? "cursor-not-allowed text-secondary" : "cursor-pointer hover:bg-layer-transparent-hover",
+          className
+        )}
       >
-        {/* The caller's button is content, not a button: the trigger stays the one interactive element. */}
-        <BaseCombobox.Trigger
-          aria-label={triggerAriaLabel}
-          className={cn(
-            "flex w-full items-center justify-between gap-1 text-11 outline-none",
-            isDisabled ? "cursor-not-allowed text-secondary" : "cursor-pointer hover:bg-layer-transparent-hover",
-            className
-          )}
-        >
-          {customButton}
-        </BaseCombobox.Trigger>
-        <ComboboxContent
-          sizing="auto"
-          aria-label={t("common.filters")}
-          search={
-            <ComboboxSearch
-              placeholder={t("search")}
-              aria-label={t("search")}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
-          }
-        >
-          <ComboboxList aria-label={t("common.filters")}>
-            {visibleConfigs.map((config) => (
-              <ComboboxItem
-                key={config.id}
-                value={config.id}
-                label={config.label}
-                icon={config.icon ? <config.icon className="size-4 text-tertiary" /> : undefined}
-                trailing={config.rightContent ? <>{config.rightContent}</> : undefined}
+        {customButton}
+      </BasePopover.Trigger>
+      <BasePopover.Portal>
+        <BasePopover.Positioner side="bottom" align="start" sideOffset={4} collisionPadding={16} className="z-60">
+          <BasePopover.Popup
+            aria-label={t("common.filters")}
+            render={
+              <MenuPanel
+                flush
+                className="flex max-h-[var(--available-height,calc(100dvh-2rem))] w-56 flex-col overflow-hidden"
               />
-            ))}
-            {/* Stays mounted, children conditional: a polite live region announces unreliably when swapped in and out. */}
-            <ComboboxEmpty>{visibleConfigs.length === 0 ? emptyLabel : null}</ComboboxEmpty>
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-    </div>
+            }
+            onKeyDownCapture={(event) => {
+              // Keep field navigation predictable without interfering with nested value search.
+              if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+              if (!event.currentTarget.contains(document.activeElement)) return;
+              const rows = [
+                ...event.currentTarget.querySelectorAll<HTMLElement>(
+                  "[data-filter-field] > button, [data-filter-field] > [role='button']"
+                ),
+              ];
+              const current = rows.indexOf(document.activeElement as HTMLElement);
+              if (rows.length && (current >= 0 || document.activeElement instanceof HTMLInputElement)) {
+                event.preventDefault();
+                rows[(current + (event.key === "ArrowDown" ? 1 : rows.length - 1)) % rows.length].focus();
+              }
+            }}
+          >
+            <MenuSearchInput placeholder={t("search")} value={searchQuery} onChange={setSearchQuery} />
+            <div className="min-h-0 overflow-y-auto p-1">
+              <NestedSubmenu.Group>
+                {visibleConfigs.map((config) => {
+                  const field = config.firstOperator ? config.getOperatorConfig(config.firstOperator) : undefined;
+                  const content = (
+                    <>
+                      {config.icon && <config.icon className="size-4 shrink-0 text-icon-tertiary" />}
+                      <span className="truncate">{config.label}</span>
+                    </>
+                  );
+                  return (
+                    <div key={config.id} data-filter-field>
+                      {field && "getOptions" in field ? (
+                        <NestedSubmenu id={config.id} trigger={content}>
+                          <QuickFilterOptions config={field} onSelect={(value) => select(config.id, value)} />
+                        </NestedSubmenu>
+                      ) : (
+                        <MenuRow
+                          render={<button type="button" aria-label={config.label} />}
+                          className="h-8 text-body-xs-regular text-primary"
+                          onClick={() => select(config.id)}
+                        >
+                          <span className="flex items-center gap-2">{content}</span>
+                        </MenuRow>
+                      )}
+                    </div>
+                  );
+                })}
+              </NestedSubmenu.Group>
+              {visibleConfigs.length === 0 && (
+                <p className="px-2 py-2 text-body-xs-regular text-tertiary">
+                  {availableConfigs.length === 0
+                    ? t("web.all_filters_applied")
+                    : t("common.search.no_matching_results")}
+                </p>
+              )}
+            </div>
+          </BasePopover.Popup>
+        </BasePopover.Positioner>
+      </BasePopover.Portal>
+    </BasePopover.Root>
   );
 });

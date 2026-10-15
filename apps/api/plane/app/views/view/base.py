@@ -21,6 +21,7 @@ from django.db import transaction
 # Third party imports
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.exceptions import ParseError
 
 # Module imports
 from plane.app.permissions import allow_permission, ROLE
@@ -40,8 +41,15 @@ from plane.db.models import (
     IssueLabel,
     ModuleIssue,
 )
+from plane.utils.grouper import issue_group_values, issue_on_results, issue_queryset_grouper
+from plane.utils.paginator import GroupedOffsetPaginator, SubGroupedOffsetPaginator
 from plane.utils.issue_filters import issue_filters
-from plane.utils.order_queryset import VIEW_ORDER_BY_ALLOWLIST, order_issue_queryset, sanitize_order_by
+from plane.utils.order_queryset import (
+    ISSUE_GROUP_BY_ALLOWLIST,
+    VIEW_ORDER_BY_ALLOWLIST,
+    order_issue_queryset,
+    sanitize_order_by,
+)
 from plane.bgtasks.recent_visited_task import recent_visited_task
 from .. import BaseViewSet
 from plane.db.models import UserFavorite
@@ -248,6 +256,42 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         issue_queryset, order_by_param = order_issue_queryset(
             issue_queryset=issue_queryset, order_by_param=order_by_param
         )
+
+        group_by = request.GET.get("group_by")
+        sub_group_by = request.GET.get("sub_group_by")
+        if group_by and group_by not in ISSUE_GROUP_BY_ALLOWLIST:
+            raise ParseError("Invalid group_by field")
+        if sub_group_by and (not group_by or sub_group_by not in ISSUE_GROUP_BY_ALLOWLIST or sub_group_by == group_by):
+            raise ParseError("Invalid sub_group_by field")
+
+        if group_by:
+            issue_queryset = issue_queryset_grouper(issue_queryset, group_by, sub_group_by)
+
+            def group_values(field):
+                # Enumerate project/member/label IDs only from the permission-filtered result.
+                if field in {"project_id", "assignees__id", "labels__id", "created_by"}:
+                    return list(total_issue_count_queryset.order_by().values_list(field, flat=True).distinct())
+                return issue_group_values(field=field, slug=slug, filters=filters, queryset=total_issue_count_queryset)
+
+            pagination_options = {
+                "paginator_cls": GroupedOffsetPaginator,
+                "group_by_field_name": group_by,
+                "group_by_fields": group_values(group_by),
+            }
+            if sub_group_by:
+                pagination_options.update(
+                    paginator_cls=SubGroupedOffsetPaginator,
+                    sub_group_by_field_name=sub_group_by,
+                    sub_group_by_fields=group_values(sub_group_by),
+                )
+            return self.paginate(
+                order_by=order_by_param,
+                request=request,
+                queryset=issue_queryset,
+                total_count_queryset=total_issue_count_queryset,
+                on_results=lambda issues: issue_on_results(issues, group_by, sub_group_by),
+                **pagination_options,
+            )
 
         # List Paginate
         return self.paginate(

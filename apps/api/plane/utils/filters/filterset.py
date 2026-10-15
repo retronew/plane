@@ -133,6 +133,15 @@ class BaseFilterSet(FilterSet):
 
 
 class IssueFilterSet(BaseFilterSet):
+    name__icontains = filters.CharFilter(field_name="name", lookup_expr="icontains")
+    text__icontains = filters.CharFilter(method="filter_text")
+
+    def filter_text(self, queryset, name, value):
+        # Search user content, not HTML markup or attributes.
+        if not value:
+            return Q()
+        return Q(name__icontains=value) | Q(description_stripped__icontains=value)
+
     # Custom filter methods to handle soft delete exclusion for relations
 
     assignee_id = filters.UUIDFilter(method="filter_assignee_id")
@@ -162,6 +171,7 @@ class IssueFilterSet(BaseFilterSet):
     state_id = filters.UUIDFilter(field_name="state_id")
     state_id__in = UUIDInFilter(field_name="state_id", lookup_expr="in")
 
+    parent_id__isnull = filters.BooleanFilter(field_name="parent_id", lookup_expr="isnull")
     parent_id = filters.UUIDFilter(field_name="parent_id")
     parent_id__in = UUIDInFilter(field_name="parent_id", lookup_expr="in")
 

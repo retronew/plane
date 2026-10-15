@@ -57,10 +57,14 @@ export function FilterItemContainer(props: FilterItemContainerProps) {
     <Tooltip label={tooltipContent ?? ""} layout="stacked" side="bottom" disabled={!tooltipContent}>
       <div
         ref={itemRef}
-        className={cn("flex h-7 items-stretch overflow-hidden rounded-sm border transition-all duration-200", {
-          "border-subtle bg-surface-1": variant === "default",
-          "border-danger-strong bg-surface-2": variant === "error",
-        })}
+        data-filter-condition
+        className={cn(
+          "flex h-7 items-stretch overflow-hidden rounded-lg border text-body-xs-regular transition-all duration-200",
+          {
+            "border-subtle-1 bg-layer-2": variant === "default",
+            "border-danger-strong bg-surface-2": variant === "error",
+          }
+        )}
       >
         {children}
       </div>

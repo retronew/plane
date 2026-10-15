@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 import type { IFilterInstance } from "@plane/shared-state";
-import type { TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
+import type { SingleOrArray, TFilterValue, TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
 // local imports
 import { AddFilterDropdown } from "../add-filters/dropdown";
 import { COMMON_FILTER_ITEM_BORDER_CLASSNAME } from "../shared";
@@ -33,8 +33,13 @@ export const FilterItemProperty = observer(function FilterItemProperty<
     return <PropertyButton {...props} />;
   }
 
-  const handleFilterSelect = (property: P, operator: TSupportedOperators, isNegation: boolean) => {
-    filter.updateConditionProperty(conditionId, property, operator, isNegation);
+  const handleFilterSelect = (
+    property: P,
+    operator: TSupportedOperators,
+    isNegation: boolean,
+    value?: SingleOrArray<TFilterValue>
+  ) => {
+    filter.updateConditionProperty(conditionId, property, operator, isNegation, value);
   };
 
   return (
@@ -57,7 +62,7 @@ function PropertyButton<P extends TFilterProperty, E extends TExternalFilter>(pr
     <Tooltip label={tooltipContent ?? ""} layout="stacked" side="bottom" align="start" disabled={!tooltipContent}>
       <div
         className={cn(
-          "flex h-full min-w-0 items-center gap-1 px-2 py-[5px] text-11 text-tertiary",
+          "flex h-full min-w-0 items-center gap-1 px-2 py-[5px] text-body-xs-regular text-secondary",
           COMMON_FILTER_ITEM_BORDER_CLASSNAME,
           className
         )}

@@ -7,11 +7,8 @@
 import { observer } from "mobx-react";
 // plane imports
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import { Icon } from "@makeplane/propel/components/icon";
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { FilterOutline, SelectedFilterOutline } from "@makeplane/propel/icons";
+import { FilterToggleButton } from "@/components/common/filter-toggle-button";
 import { useTranslation } from "@plane/i18n";
-import { cn } from "@plane/utils";
 import type { IFilterInstance } from "@plane/shared-state";
 import type { TExternalFilter, TFilterProperty } from "@plane/types";
 // components
@@ -42,10 +39,6 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
     filter.toggleVisibility();
   };
 
-  const iconClassName = cn({
-    "text-accent-primary [&_path]:fill-current": showFilterRowChangesPill,
-  });
-
   // Show the add filter button when there are no active conditions, the filter row is hidden, and no unsaved changes exist
   if (filter && showAddFilterButton) {
     return (
@@ -65,19 +58,17 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
     );
   }
 
-  const FilterIcon = showFilterRowChangesPill ? SelectedFilterOutline : FilterOutline;
-
   return (
     <Tooltip label={t("common.filters")} side="bottom">
-      <IconButton
-        size="md"
-        // Active filters: a filled chrome plus an accent glyph (Propel has no tinted-accent variant).
-        variant={showFilterRowChangesPill ? "tertiary" : "secondary"}
-        icon={<Icon icon={<FilterIcon className={iconClassName} />} />}
-        onClick={handleToggleFilter}
-        aria-label={t("common.filters")}
-        aria-pressed={isFilterRowVisible}
-      />
+      <span className="inline-flex">
+        <FilterToggleButton
+          size="md"
+          active={showFilterRowChangesPill}
+          onClick={handleToggleFilter}
+          aria-label={t("common.filters")}
+          aria-pressed={isFilterRowVisible}
+        />
+      </span>
     </Tooltip>
   );
 });

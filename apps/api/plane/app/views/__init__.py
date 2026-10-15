@@ -222,7 +222,7 @@ from .notification.base import (
     UserNotificationPreferenceEndpoint,
 )
 
-from .exporter.base import ExportIssuesEndpoint
+from .exporter.base import ExportIssuesEndpoint, ExportIssuesDownloadEndpoint
 
 
 from .webhook.base import (

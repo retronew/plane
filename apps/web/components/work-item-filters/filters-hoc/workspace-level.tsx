@@ -5,17 +5,19 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { isEqual, cloneDeep } from "lodash-es";
+import { isEqual } from "lodash-es";
 import { observer } from "mobx-react";
 // plane imports
 import { DEFAULT_GLOBAL_VIEWS_LIST, EUserPermissionsLevel } from "@plane/constants";
 import { setToast } from "@plane/blocks/toast";
 import type { IWorkspaceView, TWorkItemFilterExpression } from "@plane/types";
-import { EUserProjectRoles, EViewAccess } from "@plane/types";
+import { EUserProjectRoles, EViewAccess, EIssuesStoreType } from "@plane/types";
 // components
 import { removeNillKeys } from "@/components/issues/issue-layouts/utils";
 import { CreateUpdateWorkspaceViewModal } from "@/components/workspace/views/modal";
 // hooks
+import { useIssues } from "@/hooks/store/use-issues";
+import { getWorkspaceViewFilterSnapshot } from "@/components/workspace/views/display-settings";
 import { useGlobalView } from "@/hooks/store/use-global-view";
 import { useLabel } from "@/hooks/store/use-label";
 import { useMember } from "@/hooks/store/use-member";
@@ -39,6 +41,7 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
   const [isCreateViewModalOpen, setIsCreateViewModalOpen] = useState(false);
   const [createViewPayload, setCreateViewPayload] = useState<Partial<IWorkspaceView> | undefined>(undefined);
   // hooks
+  const { issuesFilter } = useIssues(EIssuesStoreType.GLOBAL);
   const { getViewDetailsById, updateGlobalView } = useGlobalView();
   const { data: currentUser } = useUser();
   const { allowPermissions } = useUserPermissions();
@@ -100,12 +103,18 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
   );
 
   const getViewFilterPayload: (filterExpression: TWorkItemFilterExpression) => Partial<IWorkspaceView> = useCallback(
-    (filterExpression: TWorkItemFilterExpression) => ({
-      rich_filters: cloneDeep(filterExpression),
-      display_filters: cloneDeep(initialWorkItemFilters?.displayFilters),
-      display_properties: cloneDeep(initialWorkItemFilters?.displayProperties),
-    }),
-    [initialWorkItemFilters]
+    (filterExpression: TWorkItemFilterExpression) => {
+      const current =
+        (entityId && !props.isTemporary ? issuesFilter.filters[entityId] : undefined) ?? initialWorkItemFilters;
+      const requestedLayout = entityId && !props.isTemporary ? issuesFilter.requestedLayouts[entityId] : undefined;
+      return getWorkspaceViewFilterSnapshot(
+        filterExpression,
+        current?.displayFilters,
+        current?.displayProperties,
+        requestedLayout
+      );
+    },
+    [entityId, props.isTemporary, issuesFilter, initialWorkItemFilters]
   );
 
   const handleViewSave = useCallback(

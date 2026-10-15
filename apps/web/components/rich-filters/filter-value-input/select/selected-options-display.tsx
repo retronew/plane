@@ -48,8 +48,17 @@ export function SelectedOptionsDisplay<V extends TFilterValue>(props: TSelectedO
         {selectedOptions.slice(0, displayCount).map((option, index) => (
           <React.Fragment key={String(option.value)}>
             <div className="flex min-w-0 items-center whitespace-nowrap">
-              {option?.icon && <span className={cn("mr-1 shrink-0", option.iconClassName)}>{option.icon}</span>}
-              <span className="max-w-24 truncate">{option?.label}</span>
+              {option?.icon && (
+                <span
+                  className={cn(
+                    "mr-1 inline-flex shrink-0 items-center justify-center leading-none",
+                    option.iconClassName
+                  )}
+                >
+                  {option.icon}
+                </span>
+              )}
+              <span className="block max-w-24 truncate leading-5">{option?.label}</span>
             </div>
             {index < Math.min(displayCount, selectedOptions.length) - 1 && (
               <span className="mx-1 shrink-0 text-tertiary">,</span>

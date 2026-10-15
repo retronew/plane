@@ -10,6 +10,7 @@ import { useParams } from "next/navigation";
 // plane imports
 import { EIssueFilterType, ISSUE_DISPLAY_FILTERS_BY_PAGE, DEFAULT_GLOBAL_VIEWS_LIST } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { Badge } from "@makeplane/propel/components/badge";
 import { Button } from "@makeplane/propel/components/button";
 import { ViewsOutline } from "@makeplane/propel/icons";
 import type { IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
@@ -19,8 +20,12 @@ import { Breadcrumbs, BreadcrumbNavigationSelect } from "@plane/blocks/breadcrum
 import { Header } from "@plane/blocks/layout";
 // components
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
-import { SwitcherLabel } from "@/components/common/switcher-label";
-import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
+import {
+  DisplayFiltersSelection,
+  FiltersDropdown,
+  LayoutSelection,
+  MobileLayoutSelection,
+} from "@/components/issues/issue-layouts/filters";
 import { WorkItemFiltersToggle } from "@/components/work-item-filters/filters-toggle";
 import { DefaultWorkspaceViewQuickActions } from "@/components/workspace/views/default-view-quick-action";
 import { CreateUpdateWorkspaceViewModal } from "@/components/workspace/views/modal";
@@ -39,14 +44,19 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
   const globalViewId = routerGlobalViewId ? routerGlobalViewId.toString() : undefined;
   // store hooks
   const {
-    issuesFilter: { filters, updateFilters },
+    issuesFilter: { filters, updateFilters, requestedLayouts, requestLayout },
+    issues: { getGroupIssueCount, getIssueLoader },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { getViewDetailsById, currentWorkspaceViews } = useGlobalView();
   const { t } = useTranslation();
 
   const issueFilters = globalViewId ? filters[globalViewId.toString()] : undefined;
 
-  const activeLayout = issueFilters?.displayFilters?.layout;
+  const activeLayout =
+    (globalViewId ? requestedLayouts[globalViewId] : undefined) ??
+    issueFilters?.displayFilters?.layout ??
+    EIssueLayoutTypes.SPREADSHEET;
+  const issueCount = getGroupIssueCount(undefined, undefined, false);
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
 
   const handleDisplayFilters = useCallback(
@@ -80,7 +90,7 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
   const defaultOptions = DEFAULT_GLOBAL_VIEWS_LIST.map<BreadcrumbNavigationItem>((view) => ({
     key: view.key,
     label: t(view.i18n_label),
-    content: <SwitcherLabel name={t(view.i18n_label)} LabelIcon={ViewsOutline} />,
+    icon: <ViewsOutline className="size-4 shrink-0" />,
   }));
 
   const workspaceOptions = (currentWorkspaceViews || []).map<BreadcrumbNavigationItem | undefined>((view) => {
@@ -89,7 +99,7 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
     return {
       key: _view.id,
       label: _view.name,
-      content: <SwitcherLabel name={_view.name} LabelIcon={ViewsOutline} />,
+      icon: <ViewsOutline className="size-4 shrink-0" />,
     };
   });
 
@@ -98,15 +108,18 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
   );
   const currentLayoutFilters = useMemo(() => {
     const layout = activeLayout ?? EIssueLayoutTypes.SPREADSHEET;
-    return ISSUE_DISPLAY_FILTERS_BY_PAGE.my_issues.layoutOptions[layout];
+    return ISSUE_DISPLAY_FILTERS_BY_PAGE.workspace_issues.layoutOptions[layout];
   }, [activeLayout]);
 
   return (
     <>
       <CreateUpdateWorkspaceViewModal isOpen={createViewModal} onClose={() => setCreateViewModal(false)} />
       <Header>
-        <Header.LeftItem>
-          <Breadcrumbs>
+        <Header.LeftItem className="max-w-none min-w-0 flex-1 flex-nowrap">
+          <Breadcrumbs
+            collapseBreakpoint={1024}
+            className="[&_li:last-child]:min-w-0 [&_li:not(:last-child)]:shrink-0 [&>nav]:max-w-full [&>nav]:min-w-0"
+          >
             <Breadcrumbs.Item
               component={
                 <BreadcrumbLink label={t("views")} icon={<ViewsOutline className="h-4 w-4 text-tertiary" />} />
@@ -114,26 +127,63 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
             />
             <Breadcrumbs.Item
               component={
-                <BreadcrumbNavigationSelect
-                  selectedItemKey={globalViewId || ""}
-                  navigationItems={switcherOptions}
-                  onChange={(value: string) => {
-                    router.push(`/${workspaceSlug}/workspace-views/${value}`);
-                  }}
-                  label={viewDetails?.name ?? t(defaultViewDetails?.i18n_label ?? "")}
-                  icon={<ViewsOutline className="size-4 shrink-0 text-tertiary" />}
-                  placeholder={t("views")}
-                  searchPlaceholder={t("common.search.label")}
-                  emptyMessage={t("common.search.no_matches_found")}
-                  isLast
-                />
+                <div className="flex min-w-0 items-center gap-1 [&>div]:w-auto">
+                  <BreadcrumbNavigationSelect
+                    selectedItemKey={globalViewId || ""}
+                    navigationItems={switcherOptions}
+                    onChange={(value: string) => {
+                      router.push(`/${workspaceSlug}/workspace-views/${value}`);
+                    }}
+                    label={viewDetails?.name ?? t(defaultViewDetails?.i18n_label ?? "")}
+                    icon={<ViewsOutline className="size-4 shrink-0 text-tertiary" />}
+                    placeholder={t("views")}
+                    searchPlaceholder={t("common.search.label")}
+                    emptyMessage={t("common.search.no_matches_found")}
+                    triggerClassName="min-w-0 max-w-full gap-2 [&>.line-clamp-1]:min-w-0 [&>.line-clamp-1]:max-w-none"
+                    fitOptionLabels
+                    isLast
+                  />
+                  {issueCount !== undefined && getIssueLoader() !== "init-loader" && (
+                    <Badge size="xs" variant="brand" label={String(issueCount)} />
+                  )}
+                </div>
               }
               isLast
             />
           </Breadcrumbs>
         </Header.LeftItem>
 
-        <Header.RightItem className="items-center">
+        <Header.RightItem className="shrink-0 items-center">
+          <div className="hidden md:block">
+            <LayoutSelection
+              layouts={[
+                EIssueLayoutTypes.LIST,
+                EIssueLayoutTypes.KANBAN,
+                EIssueLayoutTypes.CALENDAR,
+                EIssueLayoutTypes.SPREADSHEET,
+                EIssueLayoutTypes.GANTT,
+              ]}
+              selectedLayout={activeLayout}
+              onChange={(layout) => {
+                if (globalViewId) requestLayout(globalViewId, layout);
+              }}
+            />
+          </div>
+          <div className="flex md:hidden">
+            <MobileLayoutSelection
+              layouts={[
+                EIssueLayoutTypes.LIST,
+                EIssueLayoutTypes.KANBAN,
+                EIssueLayoutTypes.CALENDAR,
+                EIssueLayoutTypes.SPREADSHEET,
+                EIssueLayoutTypes.GANTT,
+              ]}
+              activeLayout={activeLayout}
+              onChange={(layout) => {
+                if (globalViewId) requestLayout(globalViewId, layout);
+              }}
+            />
+          </div>
           {globalViewId && <WorkItemFiltersToggle entityType={EIssuesStoreType.GLOBAL} entityId={globalViewId} />}
           {!isLocked && (
             <FiltersDropdown displayMenu title={t("common.display")} placement="bottom-end">

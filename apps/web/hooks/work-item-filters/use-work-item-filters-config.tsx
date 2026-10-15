@@ -18,6 +18,7 @@ import {
   StartDateOutline,
   StateOutline,
   UserOutline,
+  AlignLeftOutline,
 } from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
@@ -32,8 +33,11 @@ import type {
   IModule,
   IProject,
   TWorkItemFilterProperty,
+  IFilterOption,
 } from "@plane/types";
 
+import { COMPARISON_OPERATOR, FILTER_FIELD_TYPE } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 import {
   getAssigneeFilterConfig,
   getCreatedAtFilterConfig,
@@ -93,9 +97,10 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     props;
   // store hooks
   const { loader: projectLoader, getProjectById } = useProject();
-  const { getCycleById } = useCycle();
+  const { getCycleById, fetchWorkspaceCycles } = useCycle();
   const { getLabelById } = useLabel();
-  const { getModuleById } = useModule();
+  const { getModuleById, fetchWorkspaceModules } = useModule();
+  const { t } = useTranslation();
   const { getStateById } = useProjectState();
   const { getUserDetails } = useMember();
   // derived values
@@ -131,10 +136,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [moduleIds, getModuleById]
   );
   const projects = useMemo(
-    () =>
-      projectIds
-        ? (projectIds.map((projectId) => getProjectById(projectId)).filter((project) => project) as IProject[])
-        : [],
+    () => (projectIds ? (projectIds.map((id) => getProjectById(id)).filter((item) => item) as IProject[]) : []),
     [projectIds, getProjectById]
   );
   const areAllConfigsInitialized = useMemo(() => isLoaderReady(projectLoader), [projectLoader]);
@@ -191,26 +193,26 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
   const cycleFilterConfig = useMemo(
     () =>
       getCycleFilterConfig<TWorkItemFilterProperty>("cycle_id")({
-        isEnabled: isFilterEnabled("cycle_id") && project?.cycle_view === true && cycles !== undefined,
+        isEnabled: isFilterEnabled("cycle_id") && (!projectId || project?.cycle_view === true),
         filterIcon: CyclesOutline,
         getOptionIcon: (cycleGroup) => <CycleGroupIcon cycleGroup={cycleGroup} className="h-3.5 w-3.5 flex-shrink-0" />,
         cycles: cycles ?? [],
         ...operatorConfigs,
       }),
-    [isFilterEnabled, project?.cycle_view, cycles, operatorConfigs]
+    [isFilterEnabled, projectId, project?.cycle_view, cycles, operatorConfigs]
   );
 
   // module filter config
   const moduleFilterConfig = useMemo(
     () =>
       getModuleFilterConfig<TWorkItemFilterProperty>("module_id")({
-        isEnabled: isFilterEnabled("module_id") && project?.module_view === true && modules !== undefined,
+        isEnabled: isFilterEnabled("module_id") && (!projectId || project?.module_view === true),
         filterIcon: ModuleOutline,
         getOptionIcon: () => <ModuleOutline className="h-3 w-3 flex-shrink-0" />,
         modules: modules ?? [],
         ...operatorConfigs,
       }),
-    [isFilterEnabled, project?.module_view, modules, operatorConfigs]
+    [isFilterEnabled, projectId, project?.module_view, modules, operatorConfigs]
   );
 
   // assignee filter config
@@ -356,15 +358,83 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
         isEnabled: isFilterEnabled("project_id") && projects !== undefined,
         filterIcon: ProjectsOutline,
         projects: projects,
-        getOptionIcon: (project) => <Logo logo={project.logo_props} size={12} />,
+        getOptionIcon: (item) => <Logo logo={item.logo_props} size={12} />,
         ...operatorConfigs,
       }),
     [isFilterEnabled, projects, operatorConfigs]
   );
 
+  // Keep the source cache independent of config registration and changing allowed-filter arrays.
+  const workspaceRelationLoaders = useMemo(() => {
+    const cached = (load: () => Promise<IFilterOption<string>[]>) => {
+      let pending: Promise<IFilterOption<string>[]> | undefined;
+      return () =>
+        (pending ??= load().catch((error) => {
+          pending = undefined;
+          throw error;
+        }));
+    };
+    return {
+      cycle: cached(async () =>
+        (await fetchWorkspaceCycles(workspaceSlug)).map((cycle) => ({
+          id: cycle.id,
+          value: cycle.id,
+          label: cycle.name,
+          description: getProjectById(cycle.project_id)?.name,
+          icon: <CycleGroupIcon cycleGroup={cycle.status || "draft"} className="size-3.5" />,
+        }))
+      ),
+      module: cached(async () =>
+        (await fetchWorkspaceModules(workspaceSlug)).map((module) => ({
+          id: module.id,
+          value: module.id,
+          label: module.name,
+          description: getProjectById(module.project_id)?.name,
+          icon: <ModuleOutline className="size-3.5" />,
+        }))
+      ),
+    };
+  }, [workspaceSlug, fetchWorkspaceCycles, fetchWorkspaceModules, getProjectById]);
+  const workspaceRelationConfigs = useMemo(() => {
+    if (projectId) return [cycleFilterConfig, moduleFilterConfig];
+    const lazy = (config: TFilterConfig<TWorkItemFilterProperty>, load: () => Promise<IFilterOption<string>[]>) => ({
+      ...config,
+      supportedOperatorConfigsMap: new Map(
+        [...config.supportedOperatorConfigsMap].map(([operator, field]) => [
+          operator,
+          "getOptions" in field ? { ...field, getOptions: load } : field,
+        ])
+      ),
+    });
+    return [
+      lazy(cycleFilterConfig, workspaceRelationLoaders.cycle),
+      lazy(moduleFilterConfig, workspaceRelationLoaders.module),
+    ];
+  }, [projectId, cycleFilterConfig, moduleFilterConfig, workspaceRelationLoaders]);
+  const textConfigs = useMemo(
+    () =>
+      (["name", "text"] as const).map((id): TFilterConfig<TWorkItemFilterProperty> => ({
+        id,
+        label: t(id === "name" ? "common.filter_fields.title" : "common.filter_fields.text"),
+        icon: AlignLeftOutline,
+        isEnabled: true,
+        supportedOperatorConfigsMap: new Map([
+          [
+            COMPARISON_OPERATOR.CONTAINS,
+            {
+              type: FILTER_FIELD_TYPE.TEXT,
+              isOperatorEnabled: true,
+            },
+          ],
+        ]),
+      })),
+    [t]
+  );
+
   return {
     areAllConfigsInitialized,
     configs: [
+      ...textConfigs,
       stateFilterConfig,
       stateGroupFilterConfig,
       assigneeFilterConfig,
@@ -372,8 +442,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       projectFilterConfig,
       mentionFilterConfig,
       labelFilterConfig,
-      cycleFilterConfig,
-      moduleFilterConfig,
+      ...workspaceRelationConfigs,
       startDateFilterConfig,
       targetDateFilterConfig,
       createdAtFilterConfig,
@@ -386,8 +455,10 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       state_group: stateGroupFilterConfig,
       state_id: stateFilterConfig,
       label_id: labelFilterConfig,
-      cycle_id: cycleFilterConfig,
-      module_id: moduleFilterConfig,
+      cycle_id: workspaceRelationConfigs[0],
+      module_id: workspaceRelationConfigs[1],
+      name: textConfigs[0],
+      text: textConfigs[1],
       assignee_id: assigneeFilterConfig,
       mention_id: mentionFilterConfig,
       created_by_id: createdByFilterConfig,

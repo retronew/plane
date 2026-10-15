@@ -48,6 +48,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
 
   const modalButtonConfig: Partial<TAddFilterButtonProps<K, E>["buttonConfig"]> = {
     label: !hasAnyConditions ? translate("web.filters") : null,
+    className: "rounded-lg [--control-radius-md:0.5rem]",
   };
 
   const handleUpdate = useCallback(async () => {
@@ -86,7 +87,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
       <ElementTransition show={filter.canClearFilters}>
         <Button
           variant="secondary"
-          size="sm"
+          size="md"
           stretch="auto"
           label={filter.clearFilterOptions?.label ?? translate("web.clear_all")}
           onClick={filter.clearFilters}
@@ -95,7 +96,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
       <ElementTransition show={filter.canSaveView}>
         <Button
           variant="secondary"
-          size="sm"
+          size="md"
           stretch="auto"
           label={filter.saveViewOptions?.label ?? translate("web.save_view")}
           onClick={filter.saveView}
@@ -104,7 +105,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
       <ElementTransition show={filter.canUpdateView}>
         <Button
           variant="secondary"
-          size="sm"
+          size="md"
           stretch="auto"
           label={
             isUpdating ? translate("web.confirming") : (filter.updateViewOptions?.label ?? translate("web.update_view"))
@@ -118,9 +119,13 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
   );
 
   const mainContent = (
-    <div className="flex w-full items-start gap-2 rounded-lg bg-layer-1 px-4 py-2">
-      <div className="flex w-full flex-wrap items-center gap-2">{leftContent}</div>
+    <div
+      data-filter-toolbar
+      className={cn("flex w-full items-center gap-2 rounded-lg bg-layer-1", variant === "modal" ? "p-2" : "px-4 py-2")}
+    >
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{leftContent}</div>
       <div
+        data-filter-actions
         className={cn("flex shrink-0 items-center gap-2 border-l border-subtle pl-4", {
           "border-l-transparent pl-0": !hasAvailableOperations,
         })}
@@ -130,7 +135,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
           <Tooltip label={translate("close")}>
             <IconButton
               variant="ghost"
-              size="sm"
+              size="md"
               icon={<CloseOutline />}
               aria-label={translate("close")}
               onClick={() => filter.toggleVisibility(false)}
@@ -139,10 +144,6 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
         )}
       </div>
     </div>
-  );
-
-  const ModalVariant = (
-    <div className="flex min-h-11 w-full flex-wrap items-center gap-2 rounded-lg bg-layer-1 p-2">{mainContent}</div>
   );
 
   const HeaderVariant = (
@@ -161,5 +162,5 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
     );
   }
 
-  return <RowTransition show={filter.isVisible}>{variant === "modal" ? ModalVariant : HeaderVariant}</RowTransition>;
+  return <RowTransition show={filter.isVisible}>{variant === "modal" ? mainContent : HeaderVariant}</RowTransition>;
 });

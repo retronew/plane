@@ -4,8 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -20,6 +21,8 @@ import { getComputedDisplayFilters, getComputedDisplayProperties } from "@plane/
 import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
 // plane web imports
+import { LayoutDropDown } from "@/components/dropdowns/layout";
+import { getWorkspaceViewDisplayFilters } from "./display-settings";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 
 type Props = {
@@ -46,30 +49,32 @@ export const WorkspaceViewForm = observer(function WorkspaceViewForm(props: Prop
   // i18n
   const { t } = useTranslation();
   // form info
-  const defaultValues = {
-    ...DEFAULT_VALUES,
-    ...preLoadedData,
-    ...data,
-  };
+  const defaultValues = useMemo(() => {
+    const initial = { ...DEFAULT_VALUES, ...preLoadedData, ...data };
+    return { ...initial, display_filters: getWorkspaceViewDisplayFilters(initial.display_filters) };
+  }, [preLoadedData, data]);
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
     control,
     reset,
-    getValues,
   } = useForm<IWorkspaceView>({
     defaultValues,
   });
-  // derived values
-  const workItemFilters: IIssueFilters = {
-    richFilters: getValues("rich_filters"),
-    displayFilters: getValues("display_filters"),
-    displayProperties: getValues("display_properties"),
-    kanbanFilters: undefined,
-  };
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
+  const [richFilters, displayFilters, displayProperties] = useWatch({
+    control,
+    name: ["rich_filters", "display_filters", "display_properties"],
+  });
+  const workItemFilters: IIssueFilters = useMemo(
+    () => ({ richFilters, displayFilters, displayProperties, kanbanFilters: undefined }),
+    [richFilters, displayFilters, displayProperties]
+  );
 
   const handleCreateUpdateView = async (formData: Partial<IWorkspaceView>) => {
-    await handleFormSubmit(formData);
+    await handleFormSubmit({ ...formData, display_filters: getWorkspaceViewDisplayFilters(formData.display_filters) });
     reset({
       ...defaultValues,
     });
@@ -138,32 +143,50 @@ export const WorkspaceViewForm = observer(function WorkspaceViewForm(props: Prop
             <Controller
               control={control}
               name="display_filters"
-              render={({ field: { onChange: onDisplayFiltersChange, value: displayFilters } }) => (
-                <Controller
-                  control={control}
-                  name="display_properties"
-                  render={({ field: { onChange: onDisplayPropertiesChange, value: displayProperties } }) => (
-                    <FiltersDropdown displayMenu title={t("common.display")}>
-                      <DisplayFiltersSelection
-                        layoutDisplayFiltersOptions={ISSUE_DISPLAY_FILTERS_BY_PAGE.my_issues.layoutOptions.spreadsheet}
-                        displayFilters={displayFilters ?? {}}
-                        handleDisplayFiltersUpdate={(updatedDisplayFilter: Partial<IIssueDisplayFilterOptions>) => {
-                          onDisplayFiltersChange({
-                            ...displayFilters,
-                            ...updatedDisplayFilter,
-                          });
-                        }}
-                        displayProperties={displayProperties ?? {}}
-                        handleDisplayPropertiesUpdate={(updatedDisplayProperties: Partial<IIssueDisplayProperties>) => {
-                          onDisplayPropertiesChange({
-                            ...displayProperties,
-                            ...updatedDisplayProperties,
-                          });
-                        }}
-                      />
-                    </FiltersDropdown>
-                  )}
-                />
+              render={({ field: { onChange: onDisplayFiltersChange, value: currentDisplayFilters } }) => (
+                <>
+                  <LayoutDropDown
+                    value={currentDisplayFilters?.layout ?? EIssueLayoutTypes.SPREADSHEET}
+                    onChange={(layout) =>
+                      onDisplayFiltersChange(getWorkspaceViewDisplayFilters(currentDisplayFilters, layout))
+                    }
+                  />
+                  <Controller
+                    control={control}
+                    name="display_properties"
+                    render={({ field: { onChange: onDisplayPropertiesChange, value: currentDisplayProperties } }) => (
+                      <FiltersDropdown
+                        displayMenu
+                        title={t("common.display")}
+                        buttonClassName="rounded-lg border-subtle-1! hover:border-strong! active:border-strong!"
+                      >
+                        <DisplayFiltersSelection
+                          layoutDisplayFiltersOptions={
+                            ISSUE_DISPLAY_FILTERS_BY_PAGE.workspace_issues.layoutOptions[
+                              currentDisplayFilters?.layout ?? EIssueLayoutTypes.SPREADSHEET
+                            ]
+                          }
+                          displayFilters={currentDisplayFilters ?? {}}
+                          handleDisplayFiltersUpdate={(updatedDisplayFilter: Partial<IIssueDisplayFilterOptions>) => {
+                            onDisplayFiltersChange({
+                              ...currentDisplayFilters,
+                              ...updatedDisplayFilter,
+                            });
+                          }}
+                          displayProperties={currentDisplayProperties ?? {}}
+                          handleDisplayPropertiesUpdate={(
+                            updatedDisplayProperties: Partial<IIssueDisplayProperties>
+                          ) => {
+                            onDisplayPropertiesChange({
+                              ...currentDisplayProperties,
+                              ...updatedDisplayProperties,
+                            });
+                          }}
+                        />
+                      </FiltersDropdown>
+                    )}
+                  />
+                </>
               )}
             />
           </div>
@@ -176,7 +199,7 @@ export const WorkspaceViewForm = observer(function WorkspaceViewForm(props: Prop
                 <WorkspaceLevelWorkItemFiltersHOC
                   entityId={data?.id}
                   entityType={EIssuesStoreType.GLOBAL}
-                  filtersToShowByLayout={ISSUE_DISPLAY_FILTERS_BY_PAGE.my_issues.filters}
+                  filtersToShowByLayout={ISSUE_DISPLAY_FILTERS_BY_PAGE.workspace_issues.filters}
                   initialWorkItemFilters={workItemFilters}
                   isTemporary
                   updateFilters={(updateFilters) => onFiltersChange(updateFilters)}

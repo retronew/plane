@@ -24,6 +24,7 @@ import type { TFilterValueInputProps } from "../shared";
 import { DateRangeFilterValueInput } from "./date/range";
 import { SingleDateFilterValueInput } from "./date/single";
 import { MultiSelectFilterValueInput } from "./select/multi";
+import { TextFilterValueInput } from "./text";
 import { SingleSelectFilterValueInput } from "./select/single";
 import { translate } from "@plane/i18n";
 
@@ -31,6 +32,17 @@ export const FilterValueInput = observer(function FilterValueInput<P extends TFi
   props: TFilterValueInputProps<P, V>
 ) {
   const { condition, filterFieldConfig, isDisabled = false, onChange } = props;
+
+  if (filterFieldConfig?.type === FILTER_FIELD_TYPE.TEXT) {
+    return (
+      <TextFilterValueInput
+        value={condition.value}
+        titleOnly={condition.property === "name"}
+        disabled={isDisabled}
+        onChange={(value) => onChange(value as SingleOrArray<V>)}
+      />
+    );
+  }
 
   // Single select input
   if (filterFieldConfig?.type === FILTER_FIELD_TYPE.SINGLE_SELECT) {

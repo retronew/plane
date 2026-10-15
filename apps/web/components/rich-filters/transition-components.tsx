@@ -19,7 +19,15 @@ type TransitionPhase = "entering" | "entered" | "leaving" | "left";
  * the DOM for the length of the leave transition so the exit is visible, then unmounts.
  */
 function useTransitionPhase(show: boolean, leaveDurationMs: number): TransitionPhase {
-  const [phase, setPhase] = useState<TransitionPhase>(show ? "entered" : "left");
+  const [state, setState] = useState<{ show: boolean; phase: TransitionPhase }>({
+    show,
+    phase: show ? "entered" : "left",
+  });
+  let phase = state.phase;
+  if (state.show !== show) {
+    phase = show ? "entering" : state.phase === "left" ? "left" : "leaving";
+    setState({ show, phase });
+  }
   const frameRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -32,15 +40,13 @@ function useTransitionPhase(show: boolean, leaveDurationMs: number): TransitionP
     };
     clearPending();
     if (show) {
-      setPhase((current) => (current === "entered" ? current : "entering"));
       // Two frames: the element has to paint in its "from" state before the classes flip, or the
       // browser coalesces both styles into one and no transition runs at all.
       frameRef.current = requestAnimationFrame(() => {
-        frameRef.current = requestAnimationFrame(() => setPhase("entered"));
+        frameRef.current = requestAnimationFrame(() => setState({ show: true, phase: "entered" }));
       });
     } else {
-      setPhase((current) => (current === "left" ? current : "leaving"));
-      timerRef.current = setTimeout(() => setPhase("left"), leaveDurationMs);
+      timerRef.current = setTimeout(() => setState({ show: false, phase: "left" }), leaveDurationMs);
     }
     return clearPending;
   }, [show, leaveDurationMs]);
@@ -103,7 +109,7 @@ export const ElementTransition = observer(function ElementTransition(props: Elem
   return (
     <CssTransition
       show={props.show}
-      transitionClassName="transition"
+      transitionClassName="inline-flex items-center transition"
       enterClassName="duration-200 ease-out"
       leaveClassName="duration-150 ease-in"
       fromClassName="scale-95 opacity-0"

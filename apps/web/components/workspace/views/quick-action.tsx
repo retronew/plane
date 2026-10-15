@@ -10,6 +10,8 @@ import { observer } from "mobx-react";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { Download } from "lucide-react";
+import { WorkspaceViewExportModal } from "./export-modal";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
@@ -33,6 +35,7 @@ type Props = {
 
 export const WorkspaceViewQuickActions = observer(function WorkspaceViewQuickActions(props: Props) {
   const { workspaceSlug, view } = props;
+  const [exportOpen, setExportOpen] = useState(false);
   // states
   const [updateViewModal, setUpdateViewModal] = useState(false);
   const [deleteViewModal, setDeleteViewModal] = useState(false);
@@ -68,8 +71,19 @@ export const WorkspaceViewQuickActions = observer(function WorkspaceViewQuickAct
     view,
   });
 
+  const canExport = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.WORKSPACE
+  );
+
   return (
     <>
+      <WorkspaceViewExportModal
+        open={exportOpen}
+        workspaceSlug={workspaceSlug}
+        viewId={view.id}
+        onClose={() => setExportOpen(false)}
+      />
       <CreateUpdateWorkspaceViewModal data={view} isOpen={updateViewModal} onClose={() => setUpdateViewModal(false)} />
       <DeleteGlobalViewModal data={view} isOpen={deleteViewModal} onClose={() => setDeleteViewModal(false)} />
       <Menu>
@@ -97,6 +111,9 @@ export const WorkspaceViewQuickActions = observer(function WorkspaceViewQuickAct
               }}
             />
           ))}
+          {canExport && (
+            <MenuItem label={t("export")} icon={<Icon icon={Download} />} onClick={() => setExportOpen(true)} />
+          )}
         </MenuContent>
       </Menu>
     </>

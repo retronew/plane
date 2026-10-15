@@ -19,7 +19,7 @@ import { cn, toFilterArray } from "@plane/utils";
 // local imports
 import { COMMON_FILTER_ITEM_BORDER_CLASSNAME } from "../../shared";
 import { SelectedOptionsDisplay } from "./selected-options-display";
-import { loadOptions } from "./shared";
+import { loadOptions, renderFilterOptionIcon } from "./shared";
 
 type TSingleSelectFilterValueInputProps<P extends TFilterProperty> = {
   config: TSingleSelectFilterFieldConfig<string>;
@@ -52,7 +52,19 @@ export const SingleSelectFilterValueInput = observer(function SingleSelectFilter
   }, [condition.value, options]);
 
   useEffect(() => {
-    loadOptions({ config, setOptions, setLoading });
+    let active = true;
+    loadOptions({
+      config,
+      setOptions: (values) => {
+        if (active) setOptions(values);
+      },
+      setLoading: (value) => {
+        if (active) setLoading(value);
+      },
+    });
+    return () => {
+      active = false;
+    };
   }, [config]);
 
   const handleSelectChange = (value: string) => {
@@ -71,9 +83,7 @@ export const SingleSelectFilterValueInput = observer(function SingleSelectFilter
         onChange={handleSelectChange}
         getOptionValue={(option) => option.value}
         getOptionLabel={(option) => option.label}
-        getOptionIcon={(option) =>
-          option.icon ? <span className={cn("shrink-0", option.iconClassName)}>{option.icon}</span> : undefined
-        }
+        getOptionIcon={renderFilterOptionIcon}
         getOptionDescription={(option) => option.description}
         getOptionDisabled={(option) => !!option.disabled}
         disabled={isDisabled}
@@ -81,7 +91,11 @@ export const SingleSelectFilterValueInput = observer(function SingleSelectFilter
         defaultOpen={!condition.value}
       >
         {/* A flat segment of the filter chip, like the operator segment beside it. */}
-        <Select.Trigger variant="select-ghost-md" appendIcon={null} className="h-full min-h-0 rounded-none">
+        <Select.Trigger
+          variant="select-ghost-md"
+          appendIcon={null}
+          className="h-full min-h-0 rounded-none text-body-xs-regular text-secondary"
+        >
           <SelectedOptionsDisplay<string> selectedValue={condition.value} options={options} displayCount={1} />
         </Select.Trigger>
       </Select>

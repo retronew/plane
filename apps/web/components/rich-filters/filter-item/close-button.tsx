@@ -30,7 +30,7 @@ export const FilterItemCloseButton = observer(function FilterItemCloseButton<
   return (
     <button
       onClick={handleRemoveFilter}
-      className="bg-layer-transparent px-1.5 text-placeholder hover:bg-layer-transparent-hover hover:text-tertiary focus:outline-none"
+      className="inline-flex h-full items-center justify-center bg-layer-transparent px-1.5 text-placeholder hover:bg-layer-transparent-hover hover:text-tertiary focus:outline-none"
       type="button"
       aria-label={translate("web.remove_filter")}
     >

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
 import { v4 as uuidv4 } from "uuid";
 // plane imports
@@ -91,13 +91,22 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
     [entityType, workItemEntityID, saveViewOptions, updateViewOptions, updateFilters]
   );
 
-  // delete filter instance when component unmounts
-  useEffect(
-    () => () => {
-      deleteFilter(entityType, workItemEntityID);
-    },
-    [deleteFilter, entityType, workItemEntityID]
-  );
+  // StrictMode replays effect cleanup/setup. Do not delete a live instance during
+  // that replay; real unmounts and entity changes still release their own key.
+  const cleanupRevisions = useRef(new Map<string, number>());
+  useEffect(() => {
+    const key = `${entityType}:${workItemEntityID}`;
+    const revisions = cleanupRevisions.current;
+    const revision = (revisions.get(key) ?? 0) + 1;
+    revisions.set(key, revision);
+    return () => {
+      queueMicrotask(() => {
+        if (revisions.get(key) !== revision) return;
+        deleteFilter(entityType, workItemEntityID);
+        revisions.delete(key);
+      });
+    };
+  }, [deleteFilter, entityType, workItemEntityID]);
 
   useEffect(() => {
     workItemLayoutFilter.configManager.setAreConfigsReady(workItemFiltersConfig.areAllConfigsInitialized);

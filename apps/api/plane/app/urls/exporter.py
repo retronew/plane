@@ -4,10 +4,15 @@
 
 from django.urls import path
 
-from plane.app.views import ExportIssuesEndpoint
+from plane.app.views import ExportIssuesEndpoint, ExportIssuesDownloadEndpoint
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/export-issues/<uuid:pk>/download/",
+        ExportIssuesDownloadEndpoint.as_view(),
+        name="export-issues-download",
+    ),
     path(
         "workspaces/<str:slug>/export-issues/",
         ExportIssuesEndpoint.as_view(),

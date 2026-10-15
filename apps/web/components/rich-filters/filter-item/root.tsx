@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { useTranslation } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane imports
 import type { IFilterInstance } from "@plane/shared-state";
@@ -37,6 +38,8 @@ export interface IFilterItemProps<P extends TFilterProperty, E extends TExternal
 export const FilterItem = observer(function FilterItem<P extends TFilterProperty, E extends TExternalFilter>(
   props: IFilterItemProps<P, E>
 ) {
+  // Operator labels follow language changes even when the condition itself is unchanged.
+  useTranslation();
   const { condition, filter, isDisabled = false, showTransition = true } = props;
   // derived values
   const filterConfig = condition?.property ? filter.configManager.getConfigByProperty(condition.property) : undefined;
@@ -107,7 +110,11 @@ export const FilterItem = observer(function FilterItem<P extends TFilterProperty
         >
           {/* A flat segment of the filter chip: no chevron and no own radius, so it sits flush between
               the property and value segments like the legacy custom button did. */}
-          <Select.Trigger variant="select-ghost-md" appendIcon={null} className="h-full min-h-0 rounded-none">
+          <Select.Trigger
+            variant="select-ghost-md"
+            appendIcon={null}
+            className="h-full min-h-0 rounded-none text-body-xs-regular text-secondary"
+          >
             {filterConfig.getLabelForOperator(selectedOperatorOption)}
           </Select.Trigger>
         </Select>

@@ -5,10 +5,15 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { useUserPermissions } from "@/hooks/store/user";
 import { observer } from "mobx-react";
 
 import { useTranslation } from "@plane/i18n";
 // plane imports
+import { Download } from "lucide-react";
+import { WorkspaceViewExportModal } from "./export-modal";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
@@ -30,8 +35,10 @@ type Props = {
 
 export const DefaultWorkspaceViewQuickActions = observer(function DefaultWorkspaceViewQuickActions(props: Props) {
   const { workspaceSlug, view } = props;
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { t } = useTranslation();
+  const { allowPermissions } = useUserPermissions();
 
   const viewLink = `${workspaceSlug}/workspace-views/${view.key}`;
   const handleCopyText = async () => {
@@ -63,33 +70,49 @@ export const DefaultWorkspaceViewQuickActions = observer(function DefaultWorkspa
     },
   ];
 
+  const canExport = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.WORKSPACE
+  );
+
   return (
-    <Menu>
-      <MenuTrigger
-        render={
-          <IconButton
-            variant="ghost"
-            size="sm"
-            aria-label={t("aria_labels.common.more_actions")}
-            icon={<Icon icon={MoreHorizontalOutline} />}
-          />
-        }
+    <>
+      <WorkspaceViewExportModal
+        open={exportOpen}
+        workspaceSlug={workspaceSlug}
+        viewId={view.key}
+        onClose={() => setExportOpen(false)}
       />
-      <MenuContent side="bottom" align="end">
-        {getRenderableItems(MENU_ITEMS).map((item) => (
-          <MenuItem
-            key={item.key}
-            variant={resolveItemVariant(item)}
-            icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-            label={t(item.title || "")}
-            description={item.description}
-            disabled={item.disabled}
-            onClick={() => {
-              item.action();
-            }}
-          />
-        ))}
-      </MenuContent>
-    </Menu>
+      <Menu>
+        <MenuTrigger
+          render={
+            <IconButton
+              variant="ghost"
+              size="sm"
+              aria-label={t("aria_labels.common.more_actions")}
+              icon={<Icon icon={MoreHorizontalOutline} />}
+            />
+          }
+        />
+        <MenuContent side="bottom" align="end">
+          {getRenderableItems(MENU_ITEMS).map((item) => (
+            <MenuItem
+              key={item.key}
+              variant={resolveItemVariant(item)}
+              icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+              label={t(item.title || "")}
+              description={item.description}
+              disabled={item.disabled}
+              onClick={() => {
+                item.action();
+              }}
+            />
+          ))}
+          {canExport && (
+            <MenuItem label={t("export")} icon={<Icon icon={Download} />} onClick={() => setExportOpen(true)} />
+          )}
+        </MenuContent>
+      </Menu>
+    </>
   );
 });
