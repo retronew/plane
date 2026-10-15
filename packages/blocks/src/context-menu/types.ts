@@ -17,6 +17,8 @@ export type TContextMenuItemVariant = "neutral" | "accent" | "danger";
 export type TContextMenuItem = {
   /** Stable identity for the row. */
   key: string;
+  /** Consecutive rows in the same section share one group, separated from adjacent sections. */
+  section?: string;
   /**
    * Arbitrary content rendered in place of the row's icon + label pair. Rendered in the row's
    * leading slot, so pair it with `title` when the row still needs an accessible name.

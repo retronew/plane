@@ -12,7 +12,9 @@ import { useTranslation } from "@plane/i18n";
 import type { TGanttViews } from "@plane/types";
 import { Row } from "@plane/blocks/layout";
 // components
-import { cn } from "@plane/utils";
+import { Tabs, TabsList, Tab } from "@makeplane/propel/components/tabs";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Button } from "@makeplane/propel/components/button";
 import { VIEWS_LIST } from "@/components/gantt-chart/data";
 // helpers
 // hooks
@@ -39,55 +41,42 @@ export const GanttChartHeader = observer(function GanttChartHeader(props: Props)
 
   return (
     <Row
-      className="relative flex w-full flex-shrink-0 flex-wrap items-center gap-2 bg-surface-1 py-2 whitespace-nowrap"
+      className="relative flex w-full flex-shrink-0 flex-nowrap items-center gap-2 bg-surface-1 py-2 whitespace-nowrap"
       style={{ height: `${GANTT_BREADCRUMBS_HEIGHT}px` }}
     >
       <div className="ml-auto">
-        <div className="ml-auto text-11 font-medium text-tertiary">
+        <div className="ml-auto text-13 text-secondary">
           {blockIds
             ? translate("web.ui.gantt_item_count", { count: blockIds.length, type: loaderTitle })
             : t("common.loading")}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {VIEWS_LIST.map((chartView: any) => (
-          <button
-            type="button"
-            key={chartView?.key}
-            className={cn(
-              "cursor-pointer rounded-md bg-layer-transparent p-1 px-2 text-11 hover:bg-layer-transparent-hover",
-              {
-                "bg-layer-transparent-selected": currentView === chartView?.key,
-              }
-            )}
-            aria-pressed={currentView === chartView?.key}
-            onClick={() => handleChartView(chartView?.key)}
-          >
-            {t(chartView?.i18n_title)}
-          </button>
-        ))}
+      <div className="w-fit shrink-0">
+        <Tabs
+          variant="contained"
+          value={currentView}
+          onValueChange={(value) => {
+            if (value === "week" || value === "month" || value === "quarter") handleChartView(value);
+          }}
+        >
+          <TabsList>
+            {VIEWS_LIST.map((view) => (
+              <Tab key={view.key} value={view.key} label={t(view.i18n_title)} />
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
-      {showToday && (
-        <button
-          type="button"
-          className="rounded-md bg-layer-transparent p-1 px-2 text-11 hover:bg-layer-transparent-hover"
-          onClick={handleToday}
-        >
-          {t("common.today")}
-        </button>
-      )}
-
-      <button
-        type="button"
-        className="flex items-center justify-center rounded-md border border-subtle bg-layer-transparent p-1 transition-all hover:bg-layer-transparent-hover"
+      {showToday && <Button variant="ghost" size="sm" stretch="auto" label={t("common.today")} onClick={handleToday} />}
+      <IconButton
+        variant="secondary"
+        size="md"
         aria-label={t("common.full_screen")}
         aria-pressed={fullScreenMode}
+        icon={fullScreenMode ? <ArrowCollapseOutline className="size-4" /> : <FullScreenOutline className="size-4" />}
         onClick={toggleFullScreenMode}
-      >
-        {fullScreenMode ? <ArrowCollapseOutline className="h-4 w-4" /> : <FullScreenOutline className="h-4 w-4" />}
-      </button>
+      />
     </Row>
   );
 });

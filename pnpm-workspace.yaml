@@ -144,6 +144,8 @@ catalog:
   "postcss-cli": "^11.0.0"
   "postcss-nested": "^6.0.1"
   "prosemirror-codemark": "^0.4.2"
+  "overlayscrollbars": "2.16.0"
+  "overlayscrollbars-react": "0.5.6"
   "react": "19.3.0"
   "react-dom": "19.3.0"
   "react-dropzone": "^14.2.3"

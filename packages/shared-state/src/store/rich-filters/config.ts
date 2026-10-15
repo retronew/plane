@@ -118,7 +118,7 @@ export class FilterConfig<P extends TFilterProperty> implements IFilterConfig<P>
    * @param operator - The operator.
    * @returns The label for the operator.
    */
-  getLabelForOperator: IFilterConfig<P>["getLabelForOperator"] = computedFn((operator) => {
+  getLabelForOperator: IFilterConfig<P>["getLabelForOperator"] = (operator) => {
     if (!operator) return EMPTY_OPERATOR_LABEL;
 
     const operatorConfig = this.getOperatorConfig(operator);
@@ -132,7 +132,7 @@ export class FilterConfig<P extends TFilterProperty> implements IFilterConfig<P>
     }
 
     return getOperatorLabel(operator);
-  });
+  };
 
   /**
    * Returns the operator for a value.
@@ -155,7 +155,7 @@ export class FilterConfig<P extends TFilterProperty> implements IFilterConfig<P>
    * @param value - The current filter value used to determine the appropriate operator variant
    * @returns Array of operator options with their display labels and values
    */
-  getAllDisplayOperatorOptionsByValue: IFilterConfig<P>["getAllDisplayOperatorOptionsByValue"] = computedFn((value) => {
+  getAllDisplayOperatorOptionsByValue: IFilterConfig<P>["getAllDisplayOperatorOptionsByValue"] = (value) => {
     const operatorOptions: TOperatorOptionForDisplay[] = [];
 
     // Process each supported operator to build display options
@@ -174,7 +174,7 @@ export class FilterConfig<P extends TFilterProperty> implements IFilterConfig<P>
     }
 
     return operatorOptions;
-  });
+  };
 
   // ------------ actions ------------
 

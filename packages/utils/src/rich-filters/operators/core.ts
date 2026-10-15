@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { get } from "lodash-es";
+import { translate } from "@plane/i18n";
 // plane imports
 import { DATE_OPERATOR_LABELS_MAP, EMPTY_OPERATOR_LABEL, OPERATOR_LABELS_MAP } from "@plane/constants";
 import type {
@@ -22,7 +22,8 @@ import type {
  */
 export const getOperatorLabel = (operator: TAllAvailableOperatorsForDisplay | undefined): string => {
   if (!operator) return EMPTY_OPERATOR_LABEL;
-  return get(OPERATOR_LABELS_MAP, operator, EMPTY_OPERATOR_LABEL);
+  const key = OPERATOR_LABELS_MAP[operator];
+  return key ? translate(key) : EMPTY_OPERATOR_LABEL;
 };
 
 /**
@@ -32,7 +33,8 @@ export const getOperatorLabel = (operator: TAllAvailableOperatorsForDisplay | un
  */
 export const getDateOperatorLabel = (operator: TAllAvailableDateFilterOperatorsForDisplay | undefined): string => {
   if (!operator) return EMPTY_OPERATOR_LABEL;
-  return get(DATE_OPERATOR_LABELS_MAP, operator, EMPTY_OPERATOR_LABEL);
+  const key = DATE_OPERATOR_LABELS_MAP[operator];
+  return key ? translate(key) : EMPTY_OPERATOR_LABEL;
 };
 
 // -------- OPERATOR TYPE GUARDS --------

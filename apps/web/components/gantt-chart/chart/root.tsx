@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { createPortal } from "react-dom";
 // plane imports
@@ -53,6 +53,30 @@ const timelineViewHelpers = {
   quarter: quarterView,
 };
 
+const updateCurrentLeftScrollPosition = (width: number) => {
+  const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
+  if (!scrollContainer) return;
+
+  scrollContainer.scrollLeft = width + scrollContainer?.scrollLeft;
+};
+
+const handleScrollToCurrentSelectedDate = (currentState: ChartDataType, date: Date) => {
+  const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
+  if (!scrollContainer) return;
+
+  const clientVisibleWidth: number = scrollContainer?.clientWidth;
+  let scrollWidth: number = 0;
+  let daysDifference: number = 0;
+  daysDifference = getNumberOfDaysBetweenTwoDates(currentState.data.startDate, date);
+
+  scrollWidth =
+    Math.abs(daysDifference) * currentState.data.dayWidth -
+    (clientVisibleWidth / 2 - currentState.data.dayWidth) +
+    SIDEBAR_WIDTH / 2;
+
+  scrollContainer.scrollLeft = scrollWidth;
+};
+
 export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRootProps) {
   const {
     border,
@@ -81,6 +105,19 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
   // states
   const [itemsContainerWidth, setItemsContainerWidth] = useState(0);
   const [fullScreenMode, setFullScreenMode] = useState(false);
+  const savedScroll = useRef<{ left: number; top: number } | null>(null);
+  const toggleFullScreenMode = () => {
+    const element = document.getElementById("gantt-container");
+    if (element) savedScroll.current = { left: element.scrollLeft, top: element.scrollTop };
+    setFullScreenMode((value) => !value);
+  };
+  useLayoutEffect(() => {
+    const element = document.getElementById("gantt-container");
+    if (element && savedScroll.current) {
+      element.scrollLeft = savedScroll.current.left;
+      element.scrollTop = savedScroll.current.top;
+    }
+  }, [fullScreenMode]);
   // hooks
   const {
     currentView,
@@ -152,30 +189,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     setItemsContainerWidth(width + scrollContainer?.scrollLeft);
   };
 
-  const updateCurrentLeftScrollPosition = (width: number) => {
-    const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
-    if (!scrollContainer) return;
-
-    scrollContainer.scrollLeft = width + scrollContainer?.scrollLeft;
-  };
-
-  const handleScrollToCurrentSelectedDate = (currentState: ChartDataType, date: Date) => {
-    const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
-    if (!scrollContainer) return;
-
-    const clientVisibleWidth: number = scrollContainer?.clientWidth;
-    let scrollWidth: number = 0;
-    let daysDifference: number = 0;
-    daysDifference = getNumberOfDaysBetweenTwoDates(currentState.data.startDate, date);
-
-    scrollWidth =
-      Math.abs(daysDifference) * currentState.data.dayWidth -
-      (clientVisibleWidth / 2 - currentState.data.dayWidth) +
-      SIDEBAR_WIDTH / 2;
-
-    scrollContainer.scrollLeft = scrollWidth;
-  };
-
   const portalContainer = document.getElementById("full-screen-portal") as HTMLElement;
 
   const content = (
@@ -188,7 +201,7 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
       <GanttChartHeader
         blockIds={blockIds}
         fullScreenMode={fullScreenMode}
-        toggleFullScreenMode={() => setFullScreenMode((prevData) => !prevData)}
+        toggleFullScreenMode={toggleFullScreenMode}
         handleChartView={(key) => updateCurrentViewRenderPayload(null, key)}
         handleToday={handleToday}
         loaderTitle={loaderTitle}

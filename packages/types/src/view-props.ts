@@ -94,6 +94,8 @@ export type TCalendarLayouts = "month" | "week";
  * Keys for the work item filter properties
  */
 export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
+  "name",
+  "text",
   "state_group",
   "priority",
   "start_date",

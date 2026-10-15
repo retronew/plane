@@ -1291,6 +1291,32 @@ describe("Select on Propel combobox", () => {
     expect(document.querySelector("[data-select-popup]")?.className).toContain("--popup-width-min");
   });
 
+  it("fits virtualized long labels beyond the default cap without shrinking when searching", async () => {
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      measureText: (text: string) => ({ width: text.length * 10 }),
+    } as unknown as CanvasRenderingContext2D);
+    try {
+      const user = userEvent.setup();
+      renderSelect({
+        fitOptionLabels: true,
+        getValues: () => [
+          { id: "long", name: "A very long workspace view name that should fit when there is room" },
+          { id: "short", name: "Short" },
+        ],
+      });
+      await openSelect(user);
+      const panel = document.querySelector<HTMLElement>("[data-select-popup]")!;
+      const width = panel.style.getPropertyValue("--popup-width-min");
+      expect(parseFloat(width)).toBeGreaterThan(400);
+      expect(panel.style.getPropertyValue("--popup-width-max")).toContain("--available-width");
+      await user.type(search(), "Short");
+      expect(panel.style.getPropertyValue("--popup-width-min")).toBe(width);
+      expect(popup().getByRole("option", { name: "Short" })).toBeDefined();
+    } finally {
+      canvas.mockRestore();
+    }
+  });
+
   it("puts the trigger id on the search-input variant's own field", () => {
     render(
       <Select<Option>

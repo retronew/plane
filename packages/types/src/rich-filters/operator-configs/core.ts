@@ -6,6 +6,7 @@
 
 import type { TFilterValue } from "../expression";
 import type {
+  TTextFilterFieldConfig,
   TDateFilterFieldConfig,
   TDateRangeFilterFieldConfig,
   TSingleSelectFilterFieldConfig,
@@ -29,4 +30,5 @@ export type TCoreOperatorSpecificConfigs = {
   [CORE_EQUALITY_OPERATOR.EXACT]: TCoreExactOperatorConfigs;
   [CORE_COLLECTION_OPERATOR.IN]: TCoreInOperatorConfigs;
   [CORE_COMPARISON_OPERATOR.RANGE]: TCoreRangeOperatorConfigs;
+  [CORE_COMPARISON_OPERATOR.CONTAINS]: TTextFilterFieldConfig;
 };

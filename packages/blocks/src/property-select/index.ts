@@ -6,6 +6,7 @@
 
 export { CycleSelect } from "./cycle-select";
 export type { CycleOption, CycleSelectProps } from "./cycle-select";
+export { getCalendarLocale } from "./calendar-locale";
 export { DateSelect } from "./date-select";
 export type { DateSelectProps } from "./date-select";
 export { DateRangeSelect } from "./date-range-select";

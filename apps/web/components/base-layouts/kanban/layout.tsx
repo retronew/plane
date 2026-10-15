@@ -5,9 +5,10 @@
  */
 
 import { observer } from "mobx-react";
+import { useRef } from "react";
 import type { IBaseLayoutsKanbanItem, IBaseLayoutsKanbanProps } from "@plane/types";
 import { cn } from "@plane/utils";
-import { useLayoutState } from "../hooks/use-layout-state";
+import { LayoutScrollArea } from "../scroll-area";
 import { BaseKanbanGroup } from "./group";
 
 export const BaseKanbanLayout = observer(function BaseKanbanLayout<T extends IBaseLayoutsKanbanItem>(
@@ -26,28 +27,19 @@ export const BaseKanbanLayout = observer(function BaseKanbanLayout<T extends IBa
     showEmptyGroups = true,
     enableDragDrop = false,
     loadMoreItems,
-    collapsedGroups: externalCollapsedGroups,
-    onToggleGroup: externalOnToggleGroup,
   } = props;
 
-  const useExternalMode = externalCollapsedGroups !== undefined && externalOnToggleGroup !== undefined;
-  const { containerRef, collapsedGroups, onToggleGroup } = useLayoutState(
-    useExternalMode
-      ? {
-          mode: "external",
-          externalCollapsedGroups,
-          externalOnToggleGroup,
-        }
-      : {
-          mode: "internal",
-        }
-  );
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   return (
-    <div ref={containerRef} className={cn("relative flex h-full w-full gap-2 overflow-x-auto p-3", className)}>
+    <LayoutScrollArea
+      axis="horizontal"
+      viewportRef={containerRef}
+      className={cn("h-full w-full bg-surface-2", className)}
+      contentClassName="flex h-full w-max min-w-full gap-4 p-4"
+    >
       {groups.map((group) => {
         const itemIds = groupedItemIds[group.id] || [];
-        const isCollapsed = collapsedGroups.includes(group.id);
 
         if (!showEmptyGroups && itemIds.length === 0) return null;
 
@@ -59,8 +51,6 @@ export const BaseKanbanLayout = observer(function BaseKanbanLayout<T extends IBa
             items={items}
             renderItem={renderItem}
             renderGroupHeader={renderGroupHeader}
-            isCollapsed={isCollapsed}
-            onToggleGroup={onToggleGroup}
             enableDragDrop={enableDragDrop}
             onDrop={onDrop}
             canDrag={canDrag}
@@ -69,6 +59,6 @@ export const BaseKanbanLayout = observer(function BaseKanbanLayout<T extends IBa
           />
         );
       })}
-    </div>
+    </LayoutScrollArea>
   );
 });

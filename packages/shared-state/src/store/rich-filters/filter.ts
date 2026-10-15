@@ -113,7 +113,8 @@ export interface IFilterInstance<P extends TFilterProperty, E extends TExternalF
     conditionId: string,
     property: P,
     operator: TSupportedOperators,
-    isNegation: boolean
+    isNegation: boolean,
+    initialValue?: SingleOrArray<TFilterValue>
   ) => void;
   updateConditionOperator: (conditionId: string, operator: TSupportedOperators, isNegation: boolean) => void;
   updateConditionValue: <V extends TFilterValue>(
@@ -384,7 +385,13 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
    * @param property - The new property for the condition.
    */
   updateConditionProperty: IFilterInstance<P, E>["updateConditionProperty"] = action(
-    (conditionId: string, property: P, operator: TSupportedOperators, isNegation: boolean) => {
+    (
+      conditionId: string,
+      property: P,
+      operator: TSupportedOperators,
+      isNegation: boolean,
+      initialValue?: SingleOrArray<TFilterValue>
+    ) => {
       if (!this.expression) return;
       const conditionBeforeUpdate = cloneDeep(findNodeById(this.expression, conditionId));
       if (!conditionBeforeUpdate || conditionBeforeUpdate.type !== FILTER_NODE_TYPE.CONDITION) return;
@@ -399,6 +406,9 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
       );
 
       if (updatedExpression) {
+        const updatedCondition = findNodeById(updatedExpression, conditionId);
+        if (initialValue !== undefined && updatedCondition?.type === FILTER_NODE_TYPE.CONDITION)
+          updatedCondition.value = initialValue;
         this.expression = updatedExpression;
         this._notifyExpressionChange();
       }

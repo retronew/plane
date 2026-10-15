@@ -71,7 +71,13 @@ export const BaseGanttLayout = observer(function BaseGanttLayout<T extends IBase
   );
 
   // Block renderer - wraps the user's render function
-  const blockToRender = useCallback((item: T) => renderBlock(item), [renderBlock]);
+  const blockToRender = useCallback(
+    (block: { id: string }) => {
+      const item = items[block.id];
+      return item ? renderBlock(item) : null;
+    },
+    [items, renderBlock]
+  );
 
   // Sidebar renderer - uses custom or default
   const sidebarToRender = useCallback(

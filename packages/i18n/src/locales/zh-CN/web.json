@@ -1537,6 +1537,8 @@
       "date_until": "截至 {date}",
       "date_range": "{start} 至 {end}",
       "week_number": "第 {count} 周",
+      "gantt_jump_left": "跳转到左侧时间段",
+      "gantt_jump_right": "跳转到右侧时间段",
       "gantt_item_count": "{count} 个{type}",
       "gantt_items": "条目",
       "page_deleted_by": "{name}删除了页面。",
@@ -1905,6 +1907,30 @@
     "project_phase_cancelled": "已取消",
     "toggle_sub_issues": "展开或收起子工作项",
     "project_status_delete_error": "此状态正在被项目使用、是默认状态，或是阶段中的最后一个状态。请先将项目移至其他状态再删除。",
-    "configuration_deleted_filter": "已删除的选项"
+    "configuration_deleted_filter": "已删除的选项",
+    "project_page": {
+      "access": "可见性",
+      "search": "搜索项目",
+      "layouts": {
+        "gallery": "卡片视图",
+        "board": "看板视图",
+        "list": "列表视图",
+        "timeline": "时间线视图"
+      },
+      "no_dates": "未设置日期",
+      "all_projects": "所有项目",
+      "your_projects": "我的项目",
+      "group_create_unavailable": "无法在创建项目时指定此分组",
+      "group_by": "分组方式",
+      "unknown_creator": "未知创建者",
+      "no_labels": "无标签",
+      "groupings": {
+        "status": "状态",
+        "state_group": "状态分组",
+        "priority": "优先级",
+        "created_by": "创建者",
+        "labels": "标签"
+      }
+    }
   }
 }

@@ -448,6 +448,12 @@
     "updated_at": "Updated at",
     "completed_at": "Completed at",
     "layout": "Layout",
+    "filter_operators": {
+      "exact": "is",
+      "in": "is any of",
+      "range": "between",
+      "contains": "contains"
+    },
     "filters": "Filters",
     "display": "Display",
     "load_more": "Load more",
@@ -523,11 +529,13 @@
       "updated_on": "Updated on"
     },
     "sort": {
+      "direction": "Sort direction",
       "label": "Sort",
       "asc": "Ascending",
       "desc": "Descending",
       "created_on": "Created on",
-      "updated_on": "Updated on"
+      "updated_on": "Updated on",
+      "field": "Sort field"
     },
     "comments": "Comments",
     "updates": "Updates",
@@ -735,6 +743,13 @@
       "most": "Most",
       "admin": "Admin",
       "guest": "Guest"
+    },
+    "filter_fields": {
+      "title": "Title",
+      "text": "Text",
+      "text_placeholder": "Search title and description",
+      "title_placeholder": "Search title",
+      "load_error": "Unable to load options"
     }
   },
   "chart": {

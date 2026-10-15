@@ -96,9 +96,11 @@ export const BaseGanttSidebar = observer(function BaseGanttSidebar<T extends IBa
                   onDrop={handleOnDrop}
                 >
                   {(isDragging: boolean) => {
-                    const block = getBlockById(blockId);
-                    const isBlockComplete = !!block?.start_date && !!block?.target_date;
-                    const duration = isBlockComplete ? getNumberOfDaysFromPosition(block?.position?.width) : undefined;
+                    const currentBlock = getBlockById(blockId);
+                    const isBlockComplete = !!currentBlock?.start_date && !!currentBlock?.target_date;
+                    const duration = isBlockComplete
+                      ? getNumberOfDaysFromPosition(currentBlock?.position?.width)
+                      : undefined;
                     const isBlockHoveredOn = isBlockActive(blockId);
 
                     return (
@@ -121,7 +123,7 @@ export const BaseGanttSidebar = observer(function BaseGanttSidebar<T extends IBa
                           }}
                         >
                           <div className="flex h-full flex-grow items-center justify-between gap-2 truncate">
-                            <div className="flex-grow truncate">{renderItem(item)}</div>
+                            <div className="h-full min-w-0 flex-grow truncate">{renderItem(item)}</div>
                             {duration && (
                               <div className="flex-shrink-0 text-13 text-secondary">
                                 <span>

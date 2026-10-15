@@ -104,6 +104,7 @@ export const handleIssuesMutation: THandleIssuesMutation = (
 export const handleIssueQueryParamsByLayout = (
   layout: EIssueLayoutTypes | undefined,
   viewType:
+    | "workspace_issues"
     | "my_issues"
     | "issues"
     | "profile_issues"

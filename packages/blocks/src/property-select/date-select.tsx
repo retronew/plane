@@ -18,6 +18,8 @@ export type DateSelectProps = DateSelectCommonProps & {
   value: Date | null;
   /** Emits the newly picked day, or `null` when cleared. */
   onChange: (date: Date | null) => void;
+  /** Customize the trigger label while preserving the full formatted date in its tooltip. */
+  formatLabel?: (date: Date, formatted: string) => string;
 };
 
 /**
@@ -55,7 +57,7 @@ export function DateSelect(props: DateSelectProps) {
       {...props}
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      label={formatted || placeholder}
+      label={value && props.formatLabel ? props.formatLabel(value, formatted) : formatted || placeholder}
       isEmpty={!value}
       tooltipContent={props.tooltipContent ?? formatted}
       canClear={clearable && value !== null}

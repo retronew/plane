@@ -140,6 +140,7 @@ export function DateSelectShell(props: DateSelectShellProps) {
           className={className}
           prependIcon={icon}
           label={label}
+          aria-label={split.variant === "icon" ? tooltipHeading || label || placeholder || t("date") : undefined}
           isEmpty={isEmpty}
           tabIndex={tabIndex}
         >

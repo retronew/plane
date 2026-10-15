@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { Collapsible } from "@base-ui/react/collapsible";
+import { CollapsiblePanel } from "@makeplane/propel/components/collapsible";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import type { IBaseLayoutsListItem, IBaseLayoutsListGroupProps } from "@plane/types";
@@ -37,7 +39,8 @@ export const BaseListGroup = observer(function BaseListGroup<T extends IBaseLayo
   });
 
   return (
-    <div
+    <Collapsible.Root
+      open={!isCollapsed}
       ref={groupRef}
       className={cn("relative flex flex-shrink-0 flex-col", {
         "bg-layer-1": isDraggingOver,
@@ -58,7 +61,7 @@ export const BaseListGroup = observer(function BaseListGroup<T extends IBaseLayo
       </div>
 
       {/* Group Items */}
-      {!isCollapsed && (
+      <Collapsible.Panel className="motion-reduce:transition-none" render={<CollapsiblePanel />}>
         <div className="relative">
           {itemIds.map((itemId: string, index: number) => {
             const item = items[itemId];
@@ -79,7 +82,7 @@ export const BaseListGroup = observer(function BaseListGroup<T extends IBaseLayo
             );
           })}
         </div>
-      )}
+      </Collapsible.Panel>
 
       {isDraggingOver && enableDragDrop && (
         <div className="absolute top-0 left-0 z-[2] flex h-full w-full items-center justify-center rounded-sm border-[1px] border-strong bg-layer-1/85 text-13 font-medium text-tertiary">
@@ -88,6 +91,6 @@ export const BaseListGroup = observer(function BaseListGroup<T extends IBaseLayo
           </div>
         </div>
       )}
-    </div>
+    </Collapsible.Root>
   );
 });

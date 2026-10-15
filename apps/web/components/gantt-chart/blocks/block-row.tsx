@@ -7,6 +7,8 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { ArrowNarrowRightOutline } from "@makeplane/propel/icons";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { useTranslation } from "@plane/i18n";
 // helpers
 import type { IBlockUpdateData, IGanttBlock } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -36,6 +38,8 @@ export const BlockRow = observer(function BlockRow(props: Props) {
   // store hooks
   const { getBlockById, updateActiveBlockId, isBlockActive } = useTimeLineChartStore();
   const { getIsIssuePeeked } = useIssueDetail();
+  const { t } = useTranslation();
+  const jumpLabel = t(isBlockHiddenOnLeft ? "web.ui.gantt_jump_left" : "web.ui.gantt_jump_right");
 
   const block = getBlockById(blockId);
 
@@ -44,18 +48,22 @@ export const BlockRow = observer(function BlockRow(props: Props) {
     const timelineBlock = document.getElementById(`gantt-block-${block?.id}`);
     if (!timelineBlock || !intersectionRoot) return;
 
-    setIsBlockHiddenOnLeft(
-      !!block.position?.marginLeft &&
-        !!block.position?.width &&
-        intersectionRoot.scrollLeft > block.position.marginLeft + block.position.width
-    );
+    // A fast scroll can move a block from one offscreen side to the other without
+    // changing intersection status, so the observer alone cannot keep the arrow current.
+    const updateHiddenSide = () => {
+      setIsBlockHiddenOnLeft(
+        timelineBlock.getBoundingClientRect().right <= intersectionRoot.getBoundingClientRect().left + SIDEBAR_WIDTH
+      );
+    };
+    updateHiddenSide();
+    intersectionRoot.addEventListener("scroll", updateHiddenSide, { passive: true });
 
     // Observe if the block is visible on the chart
-    const observer = new IntersectionObserver(
+    const visibilityObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           setIsHidden(!entry.isIntersecting);
-          setIsBlockHiddenOnLeft(entry.boundingClientRect.right < (entry.rootBounds?.left ?? 0));
+          updateHiddenSide();
         });
       },
       {
@@ -64,10 +72,11 @@ export const BlockRow = observer(function BlockRow(props: Props) {
       }
     );
 
-    observer.observe(timelineBlock);
+    visibilityObserver.observe(timelineBlock);
 
     return () => {
-      observer.unobserve(timelineBlock);
+      visibilityObserver.unobserve(timelineBlock);
+      intersectionRoot.removeEventListener("scroll", updateHiddenSide);
     };
   }, [block]);
 
@@ -99,20 +108,23 @@ export const BlockRow = observer(function BlockRow(props: Props) {
       >
         {isBlockVisibleOnChart
           ? isHidden && (
-              <button
-                type="button"
-                className="sticky z-[5] grid h-8 w-8 translate-y-1.5 cursor-pointer place-items-center rounded-sm border border-strong bg-layer-1 text-secondary hover:text-primary"
-                style={{
-                  left: `${SIDEBAR_WIDTH + 4}px`,
-                }}
-                onClick={() => handleScrollToBlock(block)}
-              >
-                <ArrowNarrowRightOutline
-                  className={cn("h-3.5 w-3.5", {
-                    "rotate-180": isBlockHiddenOnLeft,
-                  })}
-                />
-              </button>
+              <Tooltip label={jumpLabel}>
+                <button
+                  type="button"
+                  aria-label={jumpLabel}
+                  className="sticky z-[5] grid h-8 w-8 translate-y-1.5 cursor-pointer place-items-center rounded-lg border border-strong bg-layer-1 text-secondary hover:text-primary"
+                  style={{
+                    left: `${SIDEBAR_WIDTH + 4}px`,
+                  }}
+                  onClick={() => handleScrollToBlock(block)}
+                >
+                  <ArrowNarrowRightOutline
+                    className={cn("h-3.5 w-3.5", {
+                      "rotate-180": isBlockHiddenOnLeft,
+                    })}
+                  />
+                </button>
+              </Tooltip>
             )
           : enableAddBlock && <ChartAddBlock block={block} blockUpdateHandler={blockUpdateHandler} />}
       </div>

@@ -5,6 +5,7 @@
  */
 
 import type * as React from "react";
+import { useCallback } from "react";
 // plane imports
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ChevronDownOutline, TickOutline } from "@makeplane/propel/icons";
@@ -55,6 +56,10 @@ export type BreadcrumbNavigationItem = {
 };
 
 export type BreadcrumbNavigationSelectProps = {
+  /** Optional trigger geometry for headers that can show longer names. */
+  triggerClassName?: string;
+  /** Let long navigation names determine the popup width, within available screen space. */
+  fitOptionLabels?: boolean;
   /** The switchable destinations, in order. */
   navigationItems: BreadcrumbNavigationItem[];
   /** `key` of the destination the crumb currently shows. */
@@ -103,6 +108,10 @@ const PAIR_CLASSNAME = "inline-flex h-6 min-w-0 items-center";
  * The hand-drawn dropdown row, used only when an item brings its own `content`. Every other list
  * gets the Select's standard row: glyph, label, description, trailing check.
  */
+function getNavigationIcon(item: BreadcrumbNavigationItem) {
+  return item.icon ? <span className="grid size-4 shrink-0 place-items-center">{item.icon}</span> : undefined;
+}
+
 function NavigationRow({ item, isSelected }: { item: BreadcrumbNavigationItem; isSelected: boolean }) {
   return (
     <>
@@ -148,6 +157,8 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
     searchPlaceholder,
     emptyMessage,
     placeholder,
+    triggerClassName,
+    fitOptionLabels,
   } = props;
   const isLast = useBreadcrumbCurrent(isLastProp);
   // derived values
@@ -156,6 +167,10 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
   const triggerLabel = label ?? selectedItem?.label;
   const triggerIcon = icon ?? selectedItem?.icon;
   const hasCustomContent = items.some((item) => item.content !== undefined);
+  const renderNavigationOption = useCallback(
+    (item: BreadcrumbNavigationItem) => <NavigationRow item={item} isSelected={item.key === selectedItemKey} />,
+    [selectedItemKey]
+  );
 
   // Nothing to show and nothing to name the crumb with — matching the legacy dropdown, which
   // returned null when `selectedItemKey` matched no item.
@@ -228,20 +243,17 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
       // `onClick` wins: base-ui skips selection entirely on an anchor row, so a row that has to run
       // a callback must not be one.
       getOptionHref={(item) => (item.onClick ? undefined : item.href)}
-      getOptionIcon={(item) =>
-        item.icon ? <span className="grid size-4 shrink-0 place-items-center">{item.icon}</span> : undefined
-      }
+      getOptionIcon={getNavigationIcon}
       getOptionDescription={(item) => item.description || undefined}
       // `content` replaces a row's markup wholesale, and the standard row has no slot for that — so
       // only a list carrying one falls back to hand-drawn rows.
-      renderOption={
-        hasCustomContent ? (item) => <NavigationRow item={item} isSelected={item.key === selectedItemKey} /> : undefined
-      }
+      renderOption={hasCustomContent ? renderNavigationOption : undefined}
       placeholder={placeholder}
       searchPlaceholder={searchPlaceholder}
       showSearch={showSearch}
       emptyMessage={emptyMessage}
       pinSelected={false}
+      fitOptionLabels={fitOptionLabels}
     >
       {/* Siblings, not nested: the label navigates, the chevron opens the list. Each control owns
           its hover surface; the wrapper only aligns them. */}
@@ -253,6 +265,7 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
                 variant="breadcrumb"
                 prependIcon={triggerIcon}
                 label={triggerLabel}
+                className={triggerClassName}
               />
             </span>
           </Tooltip>

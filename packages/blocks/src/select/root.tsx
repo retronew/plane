@@ -96,6 +96,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     modal = false,
     pinSelected: shouldPinSelected = false,
     contentSizing = "auto",
+    fitOptionLabels = false,
     defaultOpen = false,
     open: controlledOpen,
     onOpenChange,
@@ -437,6 +438,26 @@ export function SelectRoot<T>(props: SelectProps<T>) {
   );
 
   const searchLabel = t("common.search.label");
+  const fitPopupToLabels = useCallback(
+    (node: HTMLSpanElement | null) => {
+      if (!fitOptionLabels || !node) return;
+      const popup = node.closest<HTMLElement>("[data-select-popup]");
+      const context = document.createElement("canvas").getContext("2d");
+      if (!popup || !context) return;
+      const font = getComputedStyle(node);
+      context.font = `${font.fontWeight} ${font.fontSize} ${font.fontFamily}`;
+      const labelWidth = baseItems.reduce(
+        (width, item) => Math.max(width, context.measureText(labelOf(item)).width),
+        0
+      );
+      // Panel/row insets, trailing selection mark, and the optional 16px icon with 8px gaps.
+      const chromeWidth = 58 + (getOptionIcon ? 24 : 0) + (multiple ? 24 : 0);
+      popup.style.setProperty("--control-gap-md", "8px");
+      popup.style.setProperty("--popup-width-min", `${Math.max(204, Math.ceil(labelWidth + chromeWidth))}px`);
+      popup.style.setProperty("--popup-width-max", "var(--available-width,calc(100vw - 2rem))");
+    },
+    [fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple]
+  );
   const popupLabel = searchPlaceholder ?? placeholder ?? t("common.options");
   const resolvedEmptyMessage =
     typeof emptyMessage === "function" ? emptyMessage(query) : (emptyMessage ?? t("web.no_results_found"));
@@ -491,6 +512,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
         footer={footer}
       >
         {positionerZIndex === undefined ? null : <span hidden ref={applyPositionerZIndex} />}
+        {fitOptionLabels ? <span hidden className="text-body-xs-regular" ref={fitPopupToLabels} /> : null}
         {/* Both regions stay mounted (base-ui announces their content politely); their chrome
             collapses while childless. */}
         {/* One line for every fetch that replaces the list — the first open and each new query

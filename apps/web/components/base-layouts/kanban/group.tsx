@@ -9,6 +9,7 @@ import { useTranslation } from "@plane/i18n";
 import type { IBaseLayoutsKanbanItem, IBaseLayoutsKanbanGroupProps } from "@plane/types";
 import { cn } from "@plane/utils";
 import { useGroupDropTarget } from "../hooks/use-group-drop-target";
+import { LayoutScrollArea } from "../scroll-area";
 import { GroupHeader } from "./group-header";
 import { BaseKanbanItem } from "./item";
 
@@ -21,8 +22,6 @@ export const BaseKanbanGroup = observer(function BaseKanbanGroup<T extends IBase
     items,
     renderItem,
     renderGroupHeader,
-    isCollapsed,
-    onToggleGroup,
     enableDragDrop = false,
     onDrop,
     canDrag,
@@ -39,9 +38,10 @@ export const BaseKanbanGroup = observer(function BaseKanbanGroup<T extends IBase
 
   return (
     <div
+      data-kanban-column={group.id}
       ref={groupRef}
       className={cn(
-        "relative flex max-h-full w-[350px] flex-shrink-0 flex-col overflow-y-auto rounded-md border-[1px] border-transparent bg-layer-1 p-2 pt-0",
+        "relative flex h-full min-h-0 w-[336px] shrink-0 flex-col overflow-hidden rounded-xl bg-layer-1 p-2",
         {
           "bg-layer-1": isDraggingOver,
         },
@@ -49,21 +49,16 @@ export const BaseKanbanGroup = observer(function BaseKanbanGroup<T extends IBase
       )}
     >
       {/* Group Header */}
-      <div className="sticky top-0 z-[2] w-full flex-shrink-0 cursor-pointer px-1 py-2">
+      <div data-kanban-header="" className="relative z-[2] w-full shrink-0 bg-layer-1 px-1">
         {renderGroupHeader ? (
-          renderGroupHeader({ group, itemCount: itemIds.length, isCollapsed, onToggleGroup })
+          renderGroupHeader({ group, itemCount: itemIds.length })
         ) : (
-          <GroupHeader
-            group={group}
-            itemCount={itemIds.length}
-            isCollapsed={isCollapsed}
-            onToggleGroup={onToggleGroup}
-          />
+          <GroupHeader group={group} itemCount={itemIds.length} />
         )}
       </div>
 
       {/* Group Items */}
-      {!isCollapsed && (
+      <LayoutScrollArea axis="vertical" className="-mr-2 flex-1" contentClassName="pr-2">
         <div className="flex flex-col gap-2 py-2">
           {itemIds.map((itemId, index) => {
             const item = items[itemId];
@@ -90,10 +85,10 @@ export const BaseKanbanGroup = observer(function BaseKanbanGroup<T extends IBase
             </div>
           )}
         </div>
-      )}
+      </LayoutScrollArea>
 
       {isDraggingOver && enableDragDrop && (
-        <div className="absolute top-0 left-0 z-[2] flex h-full w-full items-center justify-center rounded-sm border-[1px] border-strong bg-layer-1/85 text-13 font-medium text-tertiary">
+        <div className="absolute top-0 left-0 z-[2] flex h-full w-full items-center justify-center rounded-xl border-[1px] border-strong bg-layer-1/85 text-13 font-medium text-tertiary">
           <div className="my-8 flex flex-col items-center rounded-sm p-3 text-secondary">
             {t("common.drop_here_to_move")}
           </div>

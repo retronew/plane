@@ -45,7 +45,7 @@ export const MonthChartView = observer(function MonthChartView(_props: any) {
             }}
           >
             {/** Main Month Title */}
-            <div className="flex h-7" style={{ marginLeft: `${marginLeftDays * currentViewData.data.dayWidth}px` }}>
+            <div className="flex h-6" style={{ marginLeft: `${marginLeftDays * currentViewData.data.dayWidth}px` }}>
               {months?.map((monthBlock) => (
                 <div
                   key={`month-${monthBlock?.month}-${monthBlock?.year}`}
@@ -53,7 +53,7 @@ export const MonthChartView = observer(function MonthChartView(_props: any) {
                   style={{ width: `${monthBlock.days * currentViewData?.data.dayWidth}px` }}
                 >
                   <div
-                    className="sticky z-[1] m-1 flex items-center bg-surface-1 px-3 py-1 text-14 font-regular whitespace-nowrap text-secondary capitalize"
+                    className="sticky z-[1] m-0 flex h-6 items-center bg-surface-1 px-3 py-0 text-13 font-regular whitespace-nowrap text-secondary capitalize"
                     style={{
                       left: `${SIDEBAR_WIDTH}px`,
                     }}

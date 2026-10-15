@@ -222,6 +222,8 @@
     }
   },
   "workspace_views": {
+    "export_description": "导出完成后，可在工作区设置的导出页面下载。",
+    "export_history": "查看导出记录",
     "add_view": "添加视图",
     "empty_state": {
       "all-issues": {

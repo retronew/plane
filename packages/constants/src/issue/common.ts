@@ -238,6 +238,21 @@ export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
   "sub_issue_count",
 ];
 
+export type TSpreadsheetPropertyIcon =
+  | "MembersOutline"
+  | "CalendarOutline"
+  | "DueDateOutline"
+  | "EstimateOutline"
+  | "LabelsOutline"
+  | "ModuleOutline"
+  | "CyclesOutline"
+  | "PriorityOutline"
+  | "StartDateOutline"
+  | "StateOutline"
+  | "LinkOutline"
+  | "AttachOutline"
+  | "WorkItemsOutline";
+
 export const SPREADSHEET_PROPERTY_DETAILS: {
   [key in keyof IIssueDisplayProperties]: {
     i18n_title: string;
@@ -245,7 +260,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: string;
     descendingOrderKey: TIssueOrderByOptions;
     descendingOrderTitle: string;
-    icon: string;
+    icon: TSpreadsheetPropertyIcon;
   };
 } = {
   assignee: {
@@ -254,7 +269,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "A",
     descendingOrderKey: "-assignees__first_name",
     descendingOrderTitle: "Z",
-    icon: "MembersPropertyIcon",
+    icon: "MembersOutline",
   },
   created_on: {
     i18n_title: "common.sort.created_on",
@@ -262,7 +277,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "New",
     descendingOrderKey: "created_at",
     descendingOrderTitle: "Old",
-    icon: "CalendarDays",
+    icon: "CalendarOutline",
   },
   due_date: {
     i18n_title: "common.order_by.due_date",
@@ -270,7 +285,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "New",
     descendingOrderKey: "target_date",
     descendingOrderTitle: "Old",
-    icon: "DueDatePropertyIcon",
+    icon: "DueDateOutline",
   },
   estimate: {
     i18n_title: "common.estimate",
@@ -278,7 +293,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "Low",
     descendingOrderKey: "-estimate_point__key",
     descendingOrderTitle: "High",
-    icon: "EstimatePropertyIcon",
+    icon: "EstimateOutline",
   },
   labels: {
     i18n_title: "common.labels",
@@ -286,7 +301,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "A",
     descendingOrderKey: "-labels__name",
     descendingOrderTitle: "Z",
-    icon: "LabelPropertyIcon",
+    icon: "LabelsOutline",
   },
   modules: {
     i18n_title: "common.modules",
@@ -294,7 +309,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "A",
     descendingOrderKey: "-issue_module__module__name",
     descendingOrderTitle: "Z",
-    icon: "DiceIcon",
+    icon: "ModuleOutline",
   },
   cycle: {
     i18n_title: "common.cycle",
@@ -302,7 +317,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "A",
     descendingOrderKey: "-issue_cycle__cycle__name",
     descendingOrderTitle: "Z",
-    icon: "ContrastIcon",
+    icon: "CyclesOutline",
   },
   priority: {
     i18n_title: "common.priority",
@@ -310,7 +325,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "None",
     descendingOrderKey: "-priority",
     descendingOrderTitle: "Urgent",
-    icon: "PriorityPropertyIcon",
+    icon: "PriorityOutline",
   },
   start_date: {
     i18n_title: "common.order_by.start_date",
@@ -318,7 +333,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "New",
     descendingOrderKey: "start_date",
     descendingOrderTitle: "Old",
-    icon: "StartDatePropertyIcon",
+    icon: "StartDateOutline",
   },
   state: {
     i18n_title: "common.state",
@@ -326,7 +341,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "A",
     descendingOrderKey: "-state__name",
     descendingOrderTitle: "Z",
-    icon: "StatePropertyIcon",
+    icon: "StateOutline",
   },
   updated_on: {
     i18n_title: "common.sort.updated_on",
@@ -334,7 +349,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "New",
     descendingOrderKey: "updated_at",
     descendingOrderTitle: "Old",
-    icon: "CalendarDays",
+    icon: "CalendarOutline",
   },
   link: {
     i18n_title: "common.link",
@@ -342,7 +357,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "Most",
     descendingOrderKey: "link_count",
     descendingOrderTitle: "Least",
-    icon: "Link2",
+    icon: "LinkOutline",
   },
   attachment_count: {
     i18n_title: "common.attachment",
@@ -350,7 +365,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "Most",
     descendingOrderKey: "attachment_count",
     descendingOrderTitle: "Least",
-    icon: "Paperclip",
+    icon: "AttachOutline",
   },
   sub_issue_count: {
     i18n_title: "issue.display.properties.sub_issue",
@@ -358,7 +373,7 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderTitle: "Most",
     descendingOrderKey: "sub_issues_count",
     descendingOrderTitle: "Least",
-    icon: "LayersIcon",
+    icon: "WorkItemsOutline",
   },
 };
 

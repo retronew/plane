@@ -13,7 +13,13 @@ export type TProjectOrderByOptions =
   | "members_length"
   | "-members_length";
 
+export type TProjectLayout = "gallery" | "board" | "list" | "timeline";
+
+export type TProjectGrouping = "status" | "state_group" | "priority" | "created_by" | "labels";
+
 export type TProjectDisplayFilters = {
+  group_by?: TProjectGrouping;
+  layout?: TProjectLayout;
   my_projects?: boolean;
   archived_projects?: boolean;
   order_by?: TProjectOrderByOptions;
@@ -22,6 +28,7 @@ export type TProjectDisplayFilters = {
 export type TProjectAppliedDisplayFilterKeys = "my_projects" | "archived_projects";
 
 export type TProjectFilters = {
+  priority?: string[];
   status?: string[];
   labels?: string[];
   access?: string[] | null;

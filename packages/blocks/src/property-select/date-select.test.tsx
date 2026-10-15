@@ -354,3 +354,31 @@ describe("DateRangeSelect", () => {
     expect(last.to?.getDate()).toBe(15);
   });
 });
+
+it("names an icon-only range picker by its property heading", () => {
+  render(
+    <DateRangeSelect
+      variant="icon-md"
+      value={{ from: null, to: null }}
+      onChange={vi.fn()}
+      tooltipHeading="Project dates"
+    />
+  );
+  expect(screen.getByRole("button", { name: "Project dates" })).toBeTruthy();
+});
+
+it("customizes a single-date label while retaining the full date in the tooltip", async () => {
+  const user = userEvent.setup();
+  render(
+    <DateSelect
+      value={new Date(2025, 5, 10)}
+      onChange={vi.fn()}
+      variant="select-md"
+      showTooltip
+      formatLabel={(date) => `${date.getMonth() + 1}/${date.getDate()}`}
+    />
+  );
+  const trigger = screen.getByRole("button", { name: "6/10" });
+  await user.hover(trigger);
+  expect((await popup().findByRole("tooltip")).textContent).toBe("Jun 10, 2025");
+});

@@ -61,3 +61,16 @@ describe("label color slots", () => {
     expect(onChange).toHaveBeenCalledWith(["a"]);
   });
 });
+
+it("keeps the tag glyph visible in icon mode after selecting a label", () => {
+  render(
+    <LabelSelect
+      variant="icon-md"
+      value={[{ id: "a", name: "Backend", color: "#123456" }]}
+      placeholder="Labels"
+      getValues={getValues}
+      onChange={vi.fn()}
+    />
+  );
+  expect(screen.getByRole("button", { name: /Backend/ }).querySelector("svg")).not.toBeNull();
+});

@@ -64,6 +64,7 @@ export const shouldFilterProject = (
   filters: TProjectFilters
 ): boolean => {
   let fallsInFilters =
+    (!filters.priority?.length || filters.priority.includes(project.priority ?? "none")) &&
     (!filters.status?.length || filters.status.includes(project.status ?? "")) &&
     (!filters.labels?.length || filters.labels.some((id) => project.labels?.includes(id)));
   Object.keys(filters).forEach((key) => {
@@ -104,7 +105,7 @@ export const orderProjects = (projects: TProject[], orderByKey: TProjectOrderByO
   if (orderByKey === "name") orderedProjects = sortBy(projects, [(p) => p.name.toLowerCase()]);
   if (orderByKey === "-name") orderedProjects = sortBy(projects, [(p) => p.name.toLowerCase()]).toReversed();
   if (orderByKey === "created_at") orderedProjects = sortBy(projects, [(p) => p.created_at]);
-  if (orderByKey === "-created_at") orderedProjects = sortBy(projects, [(p) => !p.created_at]);
+  if (orderByKey === "-created_at") orderedProjects = sortBy(projects, [(p) => p.created_at]).toReversed();
   if (orderByKey === "members_length") orderedProjects = sortBy(projects, [(p) => p.members?.length]);
   if (orderByKey === "-members_length") orderedProjects = sortBy(projects, [(p) => p.members?.length]).toReversed();
 

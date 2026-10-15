@@ -6,9 +6,11 @@
 
 import type { IGroupHeaderProps } from "@plane/types";
 
-export function GroupHeader({ group, itemCount, onToggleGroup }: IGroupHeaderProps) {
+export function GroupHeader({ group, itemCount, onToggleGroup, isCollapsed }: IGroupHeaderProps) {
   return (
     <button
+      type="button"
+      aria-expanded={!isCollapsed}
       onClick={() => onToggleGroup(group.id)}
       className="flex w-full items-center gap-2 py-2 text-13 font-medium text-secondary"
     >

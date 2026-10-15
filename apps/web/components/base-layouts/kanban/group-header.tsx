@@ -6,17 +6,12 @@
 
 import type { IGroupHeaderProps } from "@plane/types";
 
-export function GroupHeader({ group, itemCount, onToggleGroup }: IGroupHeaderProps) {
+export function GroupHeader({ group, itemCount }: Pick<IGroupHeaderProps, "group" | "itemCount">) {
   return (
-    <button
-      onClick={() => onToggleGroup(group.id)}
-      className="flex w-full items-center gap-2 text-13 font-medium text-secondary"
-    >
-      <div className="flex items-center gap-2">
-        {group.icon}
-        <span>{group.name}</span>
-      </div>
-      <span className="text-11 text-tertiary">{itemCount}</span>
-    </button>
+    <div className="flex w-full items-center gap-1 py-1.5 text-body-sm-medium text-primary">
+      <span className="flex size-5 shrink-0 items-center justify-center">{group.icon}</span>
+      <span className="min-w-0 truncate">{group.name}</span>
+      <span className="pl-2 text-13 font-medium text-tertiary">{itemCount}</span>
+    </div>
   );
 }

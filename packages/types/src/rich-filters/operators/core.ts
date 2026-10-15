@@ -30,6 +30,7 @@ export const CORE_COLLECTION_OPERATOR = {
  */
 export const CORE_COMPARISON_OPERATOR = {
   RANGE: "range",
+  CONTAINS: "icontains",
 } as const;
 
 /**

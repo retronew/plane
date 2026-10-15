@@ -80,6 +80,26 @@ export const formatLocalizedDate = (date: Date, formatToken: string): string => 
   return getDateTimeFormatter(options).format(date);
 };
 
+/** Omit the year only for dates in the user's current local year. */
+export function formatCompactDate(date: Date): string {
+  return formatLocalizedDate(date, date.getFullYear() === new Date().getFullYear() ? "MM/dd" : "yyyy/MM/dd");
+}
+
+/** Compact property labels; full dates remain available in the caller's tooltip. */
+export function formatCompactDateRange({ from, to }: { from: Date | null; to: Date | null }): string {
+  const crossesYear = from && to && from.getFullYear() !== to.getFullYear();
+  const start = from ? (crossesYear ? formatLocalizedDate(from, "yyyy/MM/dd") : formatCompactDate(from)) : "";
+  const sameMonth = from && to && !crossesYear && from.getMonth() === to.getMonth();
+  const end = to
+    ? crossesYear
+      ? formatLocalizedDate(to, "yyyy/MM/dd")
+      : !from
+        ? formatCompactDate(to)
+        : formatLocalizedDate(to, sameMonth ? "dd" : "MM/dd")
+    : "";
+  return start && end ? `${start}–${end}` : start || end;
+}
+
 const NUMERIC_RANGE_LOCALES = ["zh", "ja"];
 
 /**

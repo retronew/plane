@@ -9,19 +9,31 @@ import type {
   IBaseLayoutsBaseProps,
   IBaseLayoutsBaseGroupProps,
   IBaseLayoutsBaseItemProps,
+  IGroupHeaderProps,
 } from "./base";
+import type { ReactNode } from "react";
+
+type KanbanHeaderProps = Omit<IGroupHeaderProps, "isCollapsed" | "onToggleGroup">;
 
 export type IBaseLayoutsKanbanItem = IBaseLayoutsBaseItem;
 
 // Main Kanban Layout Props
 
-export interface IBaseLayoutsKanbanProps<T extends IBaseLayoutsKanbanItem> extends IBaseLayoutsBaseProps<T> {
+export interface IBaseLayoutsKanbanProps<T extends IBaseLayoutsKanbanItem> extends Omit<
+  IBaseLayoutsBaseProps<T>,
+  "collapsedGroups" | "onToggleGroup" | "renderGroupHeader"
+> {
+  renderGroupHeader?: (props: KanbanHeaderProps) => ReactNode;
   groupClassName?: string;
 }
 
 // Kanban Column/Group Props
 
-export interface IBaseLayoutsKanbanGroupProps<T extends IBaseLayoutsKanbanItem> extends IBaseLayoutsBaseGroupProps<T> {
+export interface IBaseLayoutsKanbanGroupProps<T extends IBaseLayoutsKanbanItem> extends Omit<
+  IBaseLayoutsBaseGroupProps<T>,
+  "isCollapsed" | "onToggleGroup" | "renderGroupHeader"
+> {
+  renderGroupHeader?: (props: KanbanHeaderProps) => ReactNode;
   groupClassName?: string;
 }
 

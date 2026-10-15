@@ -222,6 +222,8 @@
     }
   },
   "workspace_views": {
+    "export_description": "Once ready, download the export from Workspace settings → Exports.",
+    "export_history": "View export history",
     "add_view": "Add view",
     "empty_state": {
       "all-issues": {

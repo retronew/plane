@@ -204,6 +204,8 @@ type SelectBaseProps<T> = {
    * 24rem, `anchor` matches the trigger). Defaults to `auto`.
    */
   contentSizing?: ComboboxContentSizing;
+  /** Size a virtualized popup from its full option labels, capped by available screen space. */
+  fitOptionLabels?: boolean;
   /**
    * Opens the dropdown on mount (and mounts the engine, whatever `lazyMount` says) — for a picker
    * that IS the surface, e.g. a filter row that appears already open. Uncontrolled after that: the

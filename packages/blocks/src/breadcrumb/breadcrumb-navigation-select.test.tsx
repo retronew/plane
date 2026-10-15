@@ -132,6 +132,25 @@ describe("BreadcrumbNavigationSelect", () => {
     expect(handleOnClick).not.toHaveBeenCalled();
   });
 
+  it("keeps full long names searchable and selectable with an adaptive current trigger", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const name = "A long workspace view name that exceeds forty characters and ends with unique-search-tail";
+    const { onChange } = renderCrumb({
+      isLast: true,
+      triggerClassName: "min-w-0 max-w-full gap-2 [&>.line-clamp-1]:max-w-none",
+      navigationItems: [
+        { key: "plane", label: "Plane" },
+        { key: "long", label: name },
+      ],
+    });
+    await open(user);
+    await user.type(search(), "unique-search-tail");
+    const option = await popup().findByRole("option", { name });
+    expect(option.textContent).toBe(name);
+    await user.click(option);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("long");
+  });
+
   it("opens the current trigger with Space and restores focus after Escape", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { handleOnClick } = renderCrumb({ isLast: true });

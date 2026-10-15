@@ -5,13 +5,17 @@
  */
 
 import type * as React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 // plane imports
-import { ContextMenu as PropelContextMenu, ContextMenuContent } from "@makeplane/propel/components/context-menu";
+import {
+  ContextMenu as PropelContextMenu,
+  ContextMenuContent,
+  ContextMenuSeparator,
+} from "@makeplane/propel/components/context-menu";
 import { usePlatformOS } from "@plane/hooks";
 // local imports
 import { ContextMenuItem } from "./context-menu-item";
-import { getRenderableItems, stopClickPropagation } from "./helpers";
+import { getRenderableItems, hasMenuSeparatorBefore, stopClickPropagation } from "./helpers";
 import type { TContextMenuItem } from "./types";
 
 export type ContextMenuProps = {
@@ -73,8 +77,11 @@ export function ContextMenu(props: ContextMenuProps) {
   return (
     <PropelContextMenu open={isOpen} onOpenChange={setIsOpen}>
       <ContextMenuContent anchor={anchor} side="bottom" align="start" sideOffset={0} onClick={stopClickPropagation}>
-        {renderedItems.map((item) => (
-          <ContextMenuItem key={item.key} item={item} />
+        {renderedItems.map((item, index) => (
+          <Fragment key={item.key}>
+            {hasMenuSeparatorBefore(renderedItems, index) && <ContextMenuSeparator />}
+            <ContextMenuItem item={item} />
+          </Fragment>
         ))}
       </ContextMenuContent>
     </PropelContextMenu>

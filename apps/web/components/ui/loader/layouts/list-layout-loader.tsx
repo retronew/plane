@@ -4,98 +4,78 @@
  * See the LICENSE file for details.
  */
 
-import { Fragment, forwardRef } from "react";
-import { range } from "lodash-es";
-// plane ui
+import { forwardRef } from "react";
 import { Row } from "@plane/blocks/layout";
-// plane utils
 import { cn } from "@plane/utils";
-import { getRandomInt, getRandomLength } from "../utils";
 
+const titleWidths = ["38%", "56%", "28%", "48%", "34%", "62%"];
 export const ListLoaderItemRow = forwardRef(function ListLoaderItemRow(
   {
     shouldAnimate = true,
     renderForPlaceHolder = false,
     defaultPropertyCount = 6,
-  }: { shouldAnimate?: boolean; renderForPlaceHolder?: boolean; defaultPropertyCount?: number },
+    index = 0,
+  }: { shouldAnimate?: boolean; renderForPlaceHolder?: boolean; defaultPropertyCount?: number; index?: number },
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
   return (
     <Row
       ref={ref}
-      className={cn("flex h-11 items-center justify-between py-3", {
+      className={cn("flex h-12 min-w-0 items-center gap-3 py-0", {
         "bg-surface-1": renderForPlaceHolder,
-        "border-t border-subtle": !renderForPlaceHolder,
+        "box-content border-b border-subtle": !renderForPlaceHolder,
+        "motion-safe:animate-pulse": shouldAnimate,
       })}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="w-20 shrink-0 sm:w-22">
+          <span className="block h-3 w-16 rounded-sm bg-layer-1" />
+        </span>
         <span
-          className={cn("h-5 w-10 rounded-sm bg-[var(--illustration-fill-tertiary)]", {
-            "animate-pulse": shouldAnimate,
-            "bg-surface-2": renderForPlaceHolder,
-          })}
-        />
-        <span
-          className={cn(
-            `h-5 w-${getRandomLength(["32", "52", "72"])} rounded-sm bg-[var(--illustration-fill-tertiary)]`,
-            {
-              "animate-pulse": shouldAnimate,
-              "bg-surface-2": renderForPlaceHolder,
-            }
-          )}
+          className="h-3.5 min-w-16 rounded-sm bg-layer-1"
+          style={{ width: titleWidths[index % titleWidths.length] }}
         />
       </div>
-      <div className="flex items-center gap-2">
-        {range(defaultPropertyCount).map((index) => (
-          <Fragment key={index}>
-            {getRandomInt(1, 2) % 2 === 0 ? (
-              <span
-                key={index}
-                className={cn("h-5 w-5 rounded-sm bg-[var(--illustration-fill-tertiary)]", {
-                  "animate-pulse": shouldAnimate,
-                  "bg-surface-2": renderForPlaceHolder,
-                })}
-              />
-            ) : (
-              <span
-                className={cn("h-5 w-16 rounded-sm bg-[var(--illustration-fill-tertiary)]", {
-                  "animate-pulse": shouldAnimate,
-                  "bg-surface-2": renderForPlaceHolder,
-                })}
-              />
-            )}
-          </Fragment>
+      <div className="flex shrink-0 items-center gap-2">
+        {Array.from({ length: defaultPropertyCount }, (_, propertyIndex) => (
+          <span key={propertyIndex} className={cn("h-6 rounded-lg bg-layer-1", propertyIndex < 3 ? "w-16" : "w-6")} />
         ))}
+        <span className="size-6 rounded-md bg-layer-1" />
       </div>
     </Row>
   );
 });
 
-ListLoaderItemRow.displayName = "ListLoaderItemRow";
-
-function ListSection({ itemCount }: { itemCount: number }) {
+function ListSection({
+  itemCount,
+  grouped,
+  propertyCount,
+}: {
+  itemCount: number;
+  grouped: boolean;
+  propertyCount?: number;
+}) {
   return (
-    <div className="flex flex-shrink-0 flex-col">
-      <Row className="sticky top-0 z-[2] w-full flex-shrink-0 border-b border-subtle bg-surface-2 py-1">
-        <div className="flex w-full items-center gap-2 py-1.5">
-          <span className="h-6 w-6 animate-pulse rounded-sm bg-layer-1" />
-          <span className="h-6 w-24 animate-pulse rounded-sm bg-layer-1" />
-        </div>
-      </Row>
-      <div className="relative h-full w-full">
-        {range(itemCount).map((index) => (
-          <ListLoaderItemRow key={index} />
-        ))}
-      </div>
+    <div className="flex shrink-0 flex-col">
+      {grouped && (
+        <Row className="flex h-[42px] shrink-0 items-center gap-2 border-b border-subtle bg-layer-1">
+          <span className="size-4 rounded-full bg-layer-2" />
+          <span className="h-3.5 w-16 rounded-sm bg-layer-2" />
+          <span className="ml-1 h-3 w-4 rounded-sm bg-layer-2" />
+        </Row>
+      )}
+      {Array.from({ length: itemCount }, (_, index) => (
+        <ListLoaderItemRow key={index} index={index} shouldAnimate={false} defaultPropertyCount={propertyCount} />
+      ))}
     </div>
   );
 }
 
-export function ListLayoutLoader() {
+export function ListLayoutLoader({ grouped = true, propertyCount }: { grouped?: boolean; propertyCount?: number }) {
   return (
-    <div className="flex flex-shrink-0 flex-col">
-      {[6, 5, 2].map((itemCount, index) => (
-        <ListSection key={index} itemCount={itemCount} />
+    <div className="flex size-full flex-col overflow-hidden bg-surface-1 motion-safe:animate-pulse">
+      {(grouped ? [6, 4, 2] : [12]).map((itemCount) => (
+        <ListSection key={itemCount} itemCount={itemCount} grouped={grouped} propertyCount={propertyCount} />
       ))}
     </div>
   );

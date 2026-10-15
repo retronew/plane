@@ -12,6 +12,10 @@ export function getRenderableItems(items: TContextMenuItem[] | undefined): TCont
   return items?.filter((item) => item.shouldRender !== false) ?? [];
 }
 
+export function hasMenuSeparatorBefore(items: TContextMenuItem[], index: number): boolean {
+  return index > 0 && items[index].section !== items[index - 1].section;
+}
+
 /**
  * The row's look. `variant` wins; failing that, a legacy `className` carrying a `text-danger` token
  * still resolves to `danger`, which is how the ~15 quick-action files currently paint their Delete

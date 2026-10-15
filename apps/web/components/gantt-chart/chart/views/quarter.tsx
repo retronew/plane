@@ -40,9 +40,9 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
               }}
             >
               {/** Main Quarter Title */}
-              <div className="inline-flex h-7 w-full justify-between">
+              <div className="inline-flex h-6 w-full justify-between">
                 <div
-                  className="sticky z-[1] my-1 flex items-center bg-surface-1 px-3 py-1 text-14 font-regular whitespace-nowrap text-secondary capitalize"
+                  className="sticky z-[1] my-0 flex h-6 items-center bg-surface-1 px-3 py-0 text-13 font-regular whitespace-nowrap text-secondary capitalize"
                   style={{
                     left: `${SIDEBAR_WIDTH}px`,
                   }}
@@ -57,7 +57,7 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                     </span>
                   )}
                 </div>
-                <div className="sticky px-3 py-2 text-11 whitespace-nowrap text-placeholder capitalize">
+                <div className="sticky flex h-6 items-center px-3 text-11 whitespace-nowrap text-placeholder capitalize">
                   {t("web.ui.quarter_number", { count: quarterBlock.quarterNumber + 1 })}
                 </div>
               </div>

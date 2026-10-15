@@ -4,6 +4,9 @@
 @import "./power-k.css";
 @import "./emoji.css";
 @import "./dialogs.css";
+@import "overlayscrollbars/overlayscrollbars.css";
+@import "./layout-scroll-area.css";
+@import "./project-layout.css";
 @plugin "@tailwindcss/typography";
 
 /* stickies and editor colors

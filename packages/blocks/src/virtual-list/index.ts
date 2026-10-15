@@ -7,3 +7,4 @@
 export * from "./virtual-list";
 export * from "./infinite-virtual-list";
 export * from "./list-skeleton";
+export * from "./use-windowed-rows";

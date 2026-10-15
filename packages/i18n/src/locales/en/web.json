@@ -1537,6 +1537,8 @@
       "date_until": "Till {date}",
       "date_range": "{start} to {end}",
       "week_number": "Week {count}",
+      "gantt_jump_left": "Jump to the time range on the left",
+      "gantt_jump_right": "Jump to the time range on the right",
       "gantt_item_count": "{count} {type}",
       "gantt_items": "Items",
       "page_deleted_by": "{name} deleted the page.",
@@ -1905,6 +1907,30 @@
     "project_phase_cancelled": "Cancelled",
     "toggle_sub_issues": "Toggle sub-work items",
     "project_status_delete_error": "This state is in use, is the default, or is the last state in its phase. Move projects to another state before deleting it.",
-    "configuration_deleted_filter": "Deleted option"
+    "configuration_deleted_filter": "Deleted option",
+    "project_page": {
+      "access": "Access",
+      "search": "Search projects",
+      "layouts": {
+        "gallery": "Gallery layout",
+        "board": "Board layout",
+        "list": "List layout",
+        "timeline": "Timeline layout"
+      },
+      "no_dates": "No dates set",
+      "all_projects": "All projects",
+      "your_projects": "Your projects",
+      "group_create_unavailable": "This group cannot be assigned when creating a project",
+      "group_by": "Group by",
+      "unknown_creator": "Unknown creator",
+      "no_labels": "No labels",
+      "groupings": {
+        "status": "States",
+        "state_group": "State groups",
+        "priority": "Priority",
+        "created_by": "Created by",
+        "labels": "Labels"
+      }
+    }
   }
 }

@@ -128,7 +128,7 @@ export function LabelSelect(props: LabelSelectProps) {
         tabIndex={tabIndex}
         className={className}
         data-testid={testId}
-        prependIcon={getEmptyLabelIcon}
+        prependIcon={splitSelectVariant(variant).variant === "icon" ? <LabelPropertyIcon /> : getEmptyLabelIcon}
         label={(labels) =>
           labels.length === 0
             ? (placeholder ?? "")

@@ -5,10 +5,21 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { getRenderableItems, resolveItemVariant } from "./helpers";
+import { getRenderableItems, hasMenuSeparatorBefore, resolveItemVariant } from "./helpers";
 import type { TContextMenuItem } from "./types";
 
 const noop = () => {};
+
+it("separates visible sections without leading or duplicate lifecycle separators", () => {
+  const items = getRenderableItems([
+    { key: "edit", action: noop },
+    { key: "archive", section: "lifecycle", shouldRender: false, action: noop },
+    { key: "delete", section: "lifecycle", action: noop },
+    { key: "delete-related", section: "lifecycle", action: noop },
+  ]);
+  expect(items.map((_, index) => hasMenuSeparatorBefore(items, index))).toEqual([false, true, false]);
+  expect(hasMenuSeparatorBefore(items.slice(1), 0)).toBe(false);
+});
 
 function item(overrides: Partial<TContextMenuItem> & Pick<TContextMenuItem, "key">): TContextMenuItem {
   return { action: noop, ...overrides };

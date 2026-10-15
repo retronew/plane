@@ -255,7 +255,7 @@
     },
     "quick_actions": {
       "archive_module": "归档模块",
-      "archive_module_description": "只有已完成或已取消的\n模块才能归档。",
+      "archive_module_description": "仅已完成或已取消的模块可归档",
       "delete_module": "删除模块"
     },
     "toast": {
