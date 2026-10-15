@@ -11,6 +11,7 @@ import {
 import { InputField } from "@makeplane/propel/components/input-field";
 import { SearchOutline } from "@makeplane/propel/icons";
 import { Avatar } from "@makeplane/propel/components/avatar";
+import { PriorityIcon } from "@plane/blocks/icons";
 import { NETWORK_CHOICES, PROJECT_CREATED_AT_FILTER_OPTIONS, ISSUE_PRIORITIES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectDisplayFilters, TProjectFilters } from "@plane/types";
@@ -127,6 +128,7 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
             <MenuCheckboxItem
               key={choice.key}
               label={choice.title}
+              icon={<PriorityIcon priority={choice.key} className="size-3.5" />}
               checked={filters.priority?.includes(choice.key) ?? false}
               onCheckedChange={() => handleFiltersUpdate("priority", choice.key)}
               closeOnClick={false}
