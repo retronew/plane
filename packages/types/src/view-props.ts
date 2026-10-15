@@ -35,6 +35,8 @@ export type TIssueOrderByOptions =
   | "sort_order"
   | "state__name"
   | "-state__name"
+  | "created_by__display_name"
+  | "-created_by__display_name"
   | "assignees__first_name"
   | "-assignees__first_name"
   | "labels__name"
@@ -172,6 +174,7 @@ export interface IIssueDisplayProperties {
   link?: boolean;
   attachment_count?: boolean;
   estimate?: boolean;
+  created_by?: boolean;
   created_on?: boolean;
   updated_on?: boolean;
   modules?: boolean;

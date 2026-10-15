@@ -306,6 +306,7 @@ export const getComputedDisplayProperties = (
   link: displayProperties?.link ?? true,
   estimate: displayProperties?.estimate ?? true,
   key: displayProperties?.key ?? true,
+  created_by: displayProperties?.created_by ?? false,
   created_on: displayProperties?.created_on ?? true,
   updated_on: displayProperties?.updated_on ?? true,
   modules: displayProperties?.modules ?? true,

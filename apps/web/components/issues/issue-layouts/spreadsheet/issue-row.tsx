@@ -155,6 +155,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
             virtualized={virtualized}
           />
         ))}
+      <td aria-hidden="true" className="w-12 min-w-12 border-b-[0.5px] border-subtle" />
     </>
   );
 });
@@ -396,6 +397,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
           isEstimateEnabled={isEstimateEnabled}
         />
       ))}
+      <td aria-hidden="true" className="w-12 min-w-12 border-b-[0.5px] border-subtle" />
     </>
   );
 });

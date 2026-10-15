@@ -151,6 +151,8 @@ const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
   sort_order: "sort_order",
   state__name: "state_id",
   "-state__name": "state_id",
+  created_by__display_name: "created_by",
+  "-created_by__display_name": "created_by",
   assignees__first_name: "assignee_ids",
   "-assignees__first_name": "assignee_ids",
   labels__name: "label_ids",

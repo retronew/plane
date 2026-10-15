@@ -46,6 +46,7 @@ import {
   SpreadsheetAssigneeColumn,
   SpreadsheetAttachmentColumn,
   SpreadsheetCreatedOnColumn,
+  SpreadsheetCreatedByColumn,
   SpreadsheetDueDateColumn,
   SpreadsheetEstimateColumn,
   SpreadsheetLabelColumn,
@@ -810,6 +811,7 @@ export const getTeamProjectColumns = (): IGroupByColumn[] | undefined => undefin
 export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpreadsheetColumn } = {
   assignee: SpreadsheetAssigneeColumn,
   created_on: SpreadsheetCreatedOnColumn,
+  created_by: SpreadsheetCreatedByColumn,
   due_date: SpreadsheetDueDateColumn,
   estimate: SpreadsheetEstimateColumn,
   labels: SpreadsheetLabelColumn,

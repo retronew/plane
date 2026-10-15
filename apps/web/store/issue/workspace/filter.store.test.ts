@@ -194,3 +194,20 @@ it("does not fetch stale calendar bounds when switching month/week, or refetch o
   expect(refetch).not.toHaveBeenCalled();
   expect(filter.handleIssuesLocalFilters.set).toHaveBeenCalledTimes(2);
 });
+
+it("preserves creator visibility when restoring saved display properties", async () => {
+  const filter = makeFilter();
+  await filter.updateFilters(
+    "workspace",
+    undefined,
+    EIssueFilterType.DISPLAY_PROPERTIES,
+    { created_by: true },
+    "all-issues"
+  );
+  expect(filter.computedDisplayProperties(filter.filters["all-issues"].displayProperties!)).toMatchObject({
+    created_by: true,
+  });
+  expect(filter.computedDisplayProperties({ created_by: false }).created_by).toBe(false);
+  expect(filter.computedDisplayProperties({}).created_by).toBe(false);
+  expect(refetch).not.toHaveBeenCalled();
+});

@@ -29,6 +29,7 @@ import { SpreadsheetHeader } from "./spreadsheet-header";
 type Props = {
   displayProperties: IIssueDisplayProperties;
   displayFilters: IIssueDisplayFilterOptions;
+  handleDisplayPropertiesUpdate: (data: Partial<IIssueDisplayProperties>) => void;
   handleDisplayFilterUpdate: (data: Partial<IIssueDisplayFilterOptions>) => void;
   issueIds: string[];
   isEstimateEnabled: boolean;
@@ -49,6 +50,7 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
     displayProperties,
     displayFilters,
     handleDisplayFilterUpdate,
+    handleDisplayPropertiesUpdate,
     issueIds,
     isEstimateEnabled,
     portalElement,
@@ -177,7 +179,7 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
         <tr data-virtual-spacer>
           <td
             aria-label="Virtual spacer"
-            colSpan={displayPropertiesCount + 1}
+            colSpan={displayPropertiesCount + 2}
             style={{ height, padding: 0, border: 0 }}
           />
         </tr>
@@ -199,6 +201,7 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
           displayProperties={displayProperties}
           displayFilters={displayFilters}
           handleDisplayFilterUpdate={handleDisplayFilterUpdate}
+          handleDisplayPropertiesUpdate={handleDisplayPropertiesUpdate}
           canEditProperties={canEditProperties}
           isEstimateEnabled={isEstimateEnabled}
           spreadsheetColumnsList={spreadsheetColumnsList}
@@ -223,7 +226,7 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
         {canLoadMoreIssues && (
           <tfoot ref={setIntersectionElement}>
             {["first", "second", "third"].map((key) => (
-              <SpreadsheetIssueRowLoader key={key} columnCount={displayPropertiesCount} />
+              <SpreadsheetIssueRowLoader key={key} columnCount={displayPropertiesCount + 1} />
             ))}
           </tfoot>
         )}

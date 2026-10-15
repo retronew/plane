@@ -48,3 +48,18 @@ it("does not clear loaded issues when an unchanged layout only normalizes empty 
   expect(clear).not.toHaveBeenCalled();
   expect(refetch).not.toHaveBeenCalled();
 });
+
+it("persists creator visibility together with existing hidden columns without refetching issues", async () => {
+  const { filter, refetch, persist } = setup();
+  filter.filters.project.displayProperties = { priority: false, state: true, created_by: false };
+  await filter.updateFilters("workspace", "project", EIssueFilterType.DISPLAY_PROPERTIES, { created_by: true });
+  expect(persist).toHaveBeenLastCalledWith("workspace", "project", {
+    display_properties: { priority: false, state: true, created_by: true },
+  });
+  expect(filter.computedDisplayProperties(filter.filters.project.displayProperties!)).toMatchObject({
+    priority: false,
+    state: true,
+    created_by: true,
+  });
+  expect(refetch).not.toHaveBeenCalled();
+});

@@ -28,6 +28,7 @@ ISSUE_ORDER_BY_ALLOWLIST = frozenset({
     "state__name",
     "state__group",
     "assignees__first_name",
+    "created_by__display_name",
     "labels__name",
     "issue_module__module__name",
 })

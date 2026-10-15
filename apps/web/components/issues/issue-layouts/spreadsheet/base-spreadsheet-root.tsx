@@ -131,6 +131,9 @@ export const BaseSpreadsheetRoot = observer(function BaseSpreadsheetRoot(props: 
         displayProperties={issuesFilter.issueFilters?.displayProperties ?? {}}
         displayFilters={issuesFilter.issueFilters?.displayFilters ?? {}}
         handleDisplayFilterUpdate={handleDisplayFiltersUpdate}
+        handleDisplayPropertiesUpdate={(data) => {
+          void updateFilters(projectId?.toString() ?? "", EIssueFilterType.DISPLAY_PROPERTIES, data);
+        }}
         issueIds={issueIds}
         quickActions={renderQuickActions}
         updateIssue={updateIssue}

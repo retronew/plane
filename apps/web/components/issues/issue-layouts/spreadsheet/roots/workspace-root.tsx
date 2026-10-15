@@ -121,6 +121,9 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
         displayProperties={issueFilters?.displayProperties ?? {}}
         displayFilters={issueFilters?.displayFilters ?? {}}
         handleDisplayFilterUpdate={handleDisplayFiltersUpdate}
+        handleDisplayPropertiesUpdate={(data) => {
+          void updateFilters(workspaceSlug, undefined, EIssueFilterType.DISPLAY_PROPERTIES, data, globalViewId);
+        }}
         issueIds={Array.isArray(issueIds) ? issueIds : []}
         quickActions={renderQuickActions}
         updateIssue={updateIssue}

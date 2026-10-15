@@ -25,6 +25,7 @@ import { SpreadsheetTable } from "./spreadsheet-table";
 type Props = {
   displayProperties: IIssueDisplayProperties;
   displayFilters: IIssueDisplayFilterOptions;
+  handleDisplayPropertiesUpdate: (data: Partial<IIssueDisplayProperties>) => void;
   handleDisplayFilterUpdate: (data: Partial<IIssueDisplayFilterOptions>) => void;
   issueIds: string[] | undefined;
   quickActions: TRenderQuickActions;
@@ -45,6 +46,7 @@ export const SpreadsheetView = observer(function SpreadsheetView(props: Props) {
     displayProperties,
     displayFilters,
     handleDisplayFilterUpdate,
+    handleDisplayPropertiesUpdate,
     issueIds,
     quickActions,
     updateIssue,
@@ -93,6 +95,7 @@ export const SpreadsheetView = observer(function SpreadsheetView(props: Props) {
                 displayProperties={displayProperties}
                 displayFilters={displayFilters}
                 handleDisplayFilterUpdate={handleDisplayFilterUpdate}
+                handleDisplayPropertiesUpdate={handleDisplayPropertiesUpdate}
                 issueIds={issueIds}
                 isEstimateEnabled={isEstimateEnabled}
                 portalElement={portalRef}

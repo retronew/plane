@@ -63,3 +63,15 @@ class TestSanitizeOrderByStillWorks:
     def test_invalid_field_falls_back_to_default(self):
         allowed = frozenset({"created_at"})
         assert sanitize_order_by("not_a_field", allowed, default="-created_at") == "-created_at"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("direction", ["", "-"])
+def test_creator_column_orders_by_public_display_name(direction):
+    from unittest.mock import Mock
+    from plane.utils.order_queryset import order_issue_queryset
+
+    queryset = Mock()
+    order = f"{direction}created_by__display_name"
+    order_issue_queryset(queryset, order)
+    queryset.order_by.assert_called_once_with(order, "-created_at")

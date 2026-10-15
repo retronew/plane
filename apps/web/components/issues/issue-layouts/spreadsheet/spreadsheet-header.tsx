@@ -16,11 +16,13 @@ import { cn } from "@plane/utils";
 import { MultipleSelectGroupAction } from "@/components/core/multiple-select";
 // hooks
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
+import { SpreadsheetPropertiesMenu } from "./properties-menu";
 import { SpreadsheetHeaderColumn } from "./spreadsheet-header-column";
 
 interface Props {
   displayProperties: IIssueDisplayProperties;
   displayFilters: IIssueDisplayFilterOptions;
+  handleDisplayPropertiesUpdate: (data: Partial<IIssueDisplayProperties>) => void;
   handleDisplayFilterUpdate: (data: Partial<IIssueDisplayFilterOptions>) => void;
   canEditProperties: (projectId: string | undefined) => boolean;
   isEstimateEnabled: boolean;
@@ -34,6 +36,7 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
     displayProperties,
     displayFilters,
     handleDisplayFilterUpdate,
+    handleDisplayPropertiesUpdate,
     canEditProperties,
     isEstimateEnabled,
     spreadsheetColumnsList,
@@ -89,6 +92,19 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
             isEpic={isEpic}
           />
         ))}
+        <th className="sticky right-0 z-[16] h-11 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-layer-1">
+          <div className="flex justify-center">
+            <SpreadsheetPropertiesMenu
+              displayProperties={displayProperties}
+              properties={[
+                "key",
+                ...spreadsheetColumnsList.filter((property) => property !== "estimate" || isEstimateEnabled),
+              ]}
+              onChange={handleDisplayPropertiesUpdate}
+              isEpic={isEpic}
+            />
+          </div>
+        </th>
       </tr>
     </thead>
   );
