@@ -7,8 +7,9 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { MODULE_ORDER_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 import { ChevronDownOutline, SortDescendingOutline, SortAscendingOutline } from "@makeplane/propel/icons";
 import type { TModuleOrderByOptions } from "@plane/types";
 
@@ -24,8 +25,9 @@ export function ModuleOrderByDropdown(props: Props) {
 
   const orderByDetails = MODULE_ORDER_BY_OPTIONS.find((option) => value?.includes(option.key));
 
-  const isDescending = value?.[0] === "-";
-  const isManual = value?.includes("sort_order");
+  const activeValue = value ?? "created_at";
+  const field = activeValue.replace(/^-/, "");
+  const isDescending = activeValue.startsWith("-");
 
   return (
     <Menu>
@@ -37,36 +39,16 @@ export function ModuleOrderByDropdown(props: Props) {
         <ChevronDownOutline className="size-3" />
       </MenuTrigger>
       <MenuContent side="bottom" align="end">
-        {MODULE_ORDER_BY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={t(option.i18n_label)}
-            selected={value?.includes(option.key) ?? false}
-            onClick={() => {
-              if (isDescending && !isManual) onChange(`-${option.key}` as TModuleOrderByOptions);
-              else onChange(option.key);
-            }}
-          />
-        ))}
-        {!isManual && (
-          <>
-            <MenuSeparator />
-            <MenuItem
-              label={t("common.sort.asc")}
-              selected={!isDescending}
-              onClick={() => {
-                if (isDescending) onChange(value.slice(1) as TModuleOrderByOptions);
-              }}
-            />
-            <MenuItem
-              label={t("common.sort.desc")}
-              selected={isDescending ?? false}
-              onClick={() => {
-                if (!isDescending) onChange(`-${value}` as TModuleOrderByOptions);
-              }}
-            />
-          </>
-        )}
+        <SortMenuItems
+          field={field}
+          direction={isDescending ? "desc" : "asc"}
+          options={MODULE_ORDER_BY_OPTIONS.map((option) => ({ value: option.key, label: t(option.i18n_label) }))}
+          directionDisabled={field === "sort_order"}
+          onFieldChange={(next) =>
+            onChange((next === "sort_order" ? next : `${isDescending ? "-" : ""}${next}`) as TModuleOrderByOptions)
+          }
+          onDirectionChange={(next) => onChange(`${next === "desc" ? "-" : ""}${field}` as TModuleOrderByOptions)}
+        />
       </MenuContent>
     </Menu>
   );

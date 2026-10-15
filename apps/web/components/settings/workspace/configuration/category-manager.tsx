@@ -229,7 +229,7 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
             stretch="auto"
             size="md"
             variant="secondary"
-            label={t("common.actions.retry")}
+            label={t("common.retry")}
             onClick={() => void mutate()}
           />
         </div>

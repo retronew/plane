@@ -7,10 +7,11 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { observer } from "mobx-react";
 import { ChevronDownOutline, SortAscendingOutline, SortDescendingOutline } from "@makeplane/propel/icons";
-import { INBOX_ISSUE_ORDER_BY_OPTIONS, INBOX_ISSUE_SORT_BY_OPTIONS } from "@plane/constants";
+import { INBOX_ISSUE_ORDER_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TInboxIssueSortingOrderByKeys, TInboxIssueSortingSortByKeys } from "@plane/types";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
@@ -37,7 +38,7 @@ export const InboxIssueOrderByDropdown = observer(function InboxIssueOrderByDrop
         variant="secondary"
         size="sm"
         stretch="auto"
-        render={<button aria-label={t("web.order_by")} type="button" className="px-2 text-tertiary" />}
+        render={<button aria-label={t("common.order_by.label")} type="button" className="px-2 text-tertiary" />}
       >
         {sortIcon}
         {orderByLabel}
@@ -52,23 +53,15 @@ export const InboxIssueOrderByDropdown = observer(function InboxIssueOrderByDrop
     <Menu>
       <MenuTrigger render={triggerButton} />
       <MenuContent side="bottom" align="end">
-        {INBOX_ISSUE_ORDER_BY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={t(option.i18n_label)}
-            selected={!!inboxSorting?.order_by?.includes(option.key)}
-            onClick={() => handleInboxIssueSorting("order_by", option.key as TInboxIssueSortingOrderByKeys)}
-          />
-        ))}
-        <MenuSeparator />
-        {INBOX_ISSUE_SORT_BY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={t(option.i18n_label)}
-            selected={!!inboxSorting?.sort_by?.includes(option.key)}
-            onClick={() => handleInboxIssueSorting("sort_by", option.key as TInboxIssueSortingSortByKeys)}
-          />
-        ))}
+        <SortMenuItems
+          field={inboxSorting?.order_by ?? "created_at"}
+          direction={inboxSorting?.sort_by ?? "desc"}
+          options={INBOX_ISSUE_ORDER_BY_OPTIONS.map((option) => ({ value: option.key, label: t(option.i18n_label) }))}
+          onFieldChange={(key) => handleInboxIssueSorting("order_by", key as TInboxIssueSortingOrderByKeys)}
+          onDirectionChange={(direction) =>
+            handleInboxIssueSorting("sort_by", direction as TInboxIssueSortingSortByKeys)
+          }
+        />
       </MenuContent>
     </Menu>
   );

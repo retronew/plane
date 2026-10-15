@@ -7,8 +7,9 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 // plane imports
 import { useTranslation, translate } from "@plane/i18n";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 // types
 import type { TPageFiltersSortBy, TPageFiltersSortKey } from "@plane/types";
 import { SortDescendingOutline, SortAscendingOutline } from "@makeplane/propel/icons";
@@ -46,7 +47,7 @@ const PAGE_SORTING_KEY_OPTIONS: {
 export function PageOrderByDropdown(props: Props) {
   const { onChange, sortBy, sortKey } = props;
   // plane hooks
-  const { t } = useTranslation();
+  useTranslation();
 
   const orderByDetails = PAGE_SORTING_KEY_OPTIONS.find((option) => sortKey === option.key);
   const isDescending = sortBy === "desc";
@@ -60,38 +61,15 @@ export function PageOrderByDropdown(props: Props) {
         {orderByDetails?.label}
       </MenuTrigger>
       <MenuContent side="bottom" align="end">
-        {PAGE_SORTING_KEY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={option.label}
-            selected={sortKey === option.key}
-            onClick={() =>
-              onChange({
-                key: option.key,
-              })
-            }
-          />
-        ))}
-        <MenuSeparator />
-        <MenuItem
-          label={t("common.sort.asc")}
-          selected={!isDescending}
-          onClick={() => {
-            if (isDescending)
-              onChange({
-                order: "asc",
-              });
-          }}
-        />
-        <MenuItem
-          label={t("common.sort.desc")}
-          selected={isDescending}
-          onClick={() => {
-            if (!isDescending)
-              onChange({
-                order: "desc",
-              });
-          }}
+        <SortMenuItems
+          field={sortKey}
+          direction={sortBy}
+          options={PAGE_SORTING_KEY_OPTIONS.map((option) => ({
+            value: option.key as TPageFiltersSortKey,
+            label: option.label,
+          }))}
+          onFieldChange={(key) => onChange({ key })}
+          onDirectionChange={(order) => onChange({ order: order as TPageFiltersSortBy })}
         />
       </MenuContent>
     </Menu>

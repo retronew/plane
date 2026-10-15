@@ -7,10 +7,11 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { SortAscendingOutline, SortDescendingOutline } from "@makeplane/propel/icons";
 // plane imports
-import { VIEW_SORT_BY_OPTIONS, VIEW_SORTING_KEY_OPTIONS } from "@plane/constants";
+import { VIEW_SORTING_KEY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TViewFiltersSortBy, TViewFiltersSortKey } from "@plane/types";
 
 type Props = {
@@ -47,7 +48,7 @@ export function ViewOrderByDropdown(props: Props) {
           render={
             isMobile ? (
               <button
-                aria-label={t("web.order_by")}
+                aria-label={t("common.order_by.label")}
                 type="button"
                 className="flex w-full items-center gap-2 text-13 text-secondary"
               />
@@ -60,35 +61,16 @@ export function ViewOrderByDropdown(props: Props) {
         </MenuTrigger>
       </div>
       <MenuContent side="bottom" align="end">
-        {VIEW_SORTING_KEY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={t(option.i18n_label)}
-            selected={sortKey === option.key}
-            onClick={() =>
-              onChange({
-                key: option.key as TViewFiltersSortKey,
-              })
-            }
-          />
-        ))}
-        <MenuSeparator />
-        {VIEW_SORT_BY_OPTIONS.map((option) => {
-          const isSelected = (option.key === "asc" && !isDescending) || (option.key === "desc" && isDescending);
-          return (
-            <MenuItem
-              key={option.key}
-              label={t(option.i18n_label)}
-              selected={isSelected}
-              onClick={() => {
-                if (!isSelected)
-                  onChange({
-                    order: option.key as TViewFiltersSortBy,
-                  });
-              }}
-            />
-          );
-        })}
+        <SortMenuItems
+          field={sortKey}
+          direction={sortBy}
+          options={VIEW_SORTING_KEY_OPTIONS.map((option) => ({
+            value: option.key as TViewFiltersSortKey,
+            label: t(option.i18n_label),
+          }))}
+          onFieldChange={(key) => onChange({ key })}
+          onDirectionChange={(order) => onChange({ order: order as TViewFiltersSortBy })}
+        />
       </MenuContent>
     </Menu>
   );

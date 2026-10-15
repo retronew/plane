@@ -55,7 +55,7 @@ export function ProjectStateSettings() {
           {t("web.configuration_save_error")}
           <Button
             stretch="auto"
-            label={t("common.actions.retry")}
+            label={t("common.retry")}
             variant="secondary"
             size="sm"
             onClick={() => void mutate()}

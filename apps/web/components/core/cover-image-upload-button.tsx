@@ -53,7 +53,9 @@ export function CoverImageUploadButton({
         type: "error",
         title: t("web.image_not_uploaded"),
         message: t(
-          file.size > MAX_FILE_SIZE ? "web.the_image_size_cannot_exceed_5_mb" : "web.upload_a_file_in_a_valid_format"
+          file.size > MAX_FILE_SIZE
+            ? "web.the_image_size_cannot_exceed_5_mb"
+            : "web.please_upload_a_file_in_a_valid_format"
         ),
       });
       return;

@@ -202,7 +202,7 @@ export function TemplateEditor() {
               stretch="auto"
               size="md"
               variant="secondary"
-              label={t("common.actions.retry")}
+              label={t("common.retry")}
               onClick={() => void mutate(`template:${workspaceSlug}:${templateId}`)}
             />
           </div>
@@ -240,7 +240,7 @@ export function TemplateEditor() {
                   <div className="w-60">
                     <ConfigurationSelect
                       value={draft.project ?? ""}
-                      placeholder={t("project")}
+                      placeholder={t("common.project")}
                       options={(options?.projects ?? []).map((p) => ({ value: p.id, label: p.name }))}
                       onChange={(project) => update({ project, configuration: { children: config.children ?? [] } })}
                     />

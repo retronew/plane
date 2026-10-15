@@ -9,7 +9,7 @@ import { computedFn } from "mobx-utils";
 // plane imports
 import type { TCreateModalStoreTypes, TCreatePageModal } from "@plane/constants";
 import { DEFAULT_CREATE_PAGE_MODAL_DATA, EPageAccess } from "@plane/constants";
-import type { TProfileSettingsTabs } from "@plane/types";
+import type { TProfileSettingsTabs, TProject } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 // lib
 import { store } from "@/lib/store-context";
@@ -19,6 +19,7 @@ export interface IBaseCommandPaletteStore {
   isAnyModalOpen: boolean;
   // observables
   isCreateProjectModalOpen: boolean;
+  createProjectModalData: Partial<TProject> | undefined;
   isCreateCycleModalOpen: boolean;
   isCreateModuleModalOpen: boolean;
   isCreateViewModalOpen: boolean;
@@ -36,7 +37,7 @@ export interface IBaseCommandPaletteStore {
   projectListOpenMap: Record<string, boolean>;
   getIsProjectListOpen: (projectId: string) => boolean;
   // toggle actions
-  toggleCreateProjectModal: (value?: boolean) => void;
+  toggleCreateProjectModal: (value?: boolean, data?: Partial<TProject>) => void;
   toggleCreateCycleModal: (value?: boolean) => void;
   toggleCreateViewModal: (value?: boolean) => void;
   toggleCreatePageModal: (value?: TCreatePageModal) => void;
@@ -52,6 +53,7 @@ export interface IBaseCommandPaletteStore {
 export class BaseCommandPaletteStore implements IBaseCommandPaletteStore {
   // observables
   isCreateProjectModalOpen: boolean = false;
+  createProjectModalData: Partial<TProject> | undefined = undefined;
   isCreateCycleModalOpen: boolean = false;
   isCreateModuleModalOpen: boolean = false;
   isCreateViewModalOpen: boolean = false;
@@ -72,6 +74,7 @@ export class BaseCommandPaletteStore implements IBaseCommandPaletteStore {
     makeObservable(this, {
       // observable
       isCreateProjectModalOpen: observableRef,
+      createProjectModalData: observableRef,
       isCreateCycleModalOpen: observableRef,
       isCreateModuleModalOpen: observableRef,
       isCreateViewModalOpen: observableRef,
@@ -140,12 +143,10 @@ export class BaseCommandPaletteStore implements IBaseCommandPaletteStore {
    * @param value
    * @returns
    */
-  toggleCreateProjectModal = (value?: boolean) => {
-    if (value !== undefined) {
-      this.isCreateProjectModalOpen = value;
-    } else {
-      this.isCreateProjectModalOpen = !this.isCreateProjectModalOpen;
-    }
+  toggleCreateProjectModal = (value?: boolean, data?: Partial<TProject>) => {
+    const open = value ?? !this.isCreateProjectModalOpen;
+    if (open) this.createProjectModalData = data;
+    this.isCreateProjectModalOpen = open;
   };
 
   /**

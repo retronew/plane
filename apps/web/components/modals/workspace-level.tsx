@@ -17,7 +17,7 @@ export type TWorkspaceLevelModalsProps = {
 export const WorkspaceLevelModals = observer(function WorkspaceLevelModals(props: TWorkspaceLevelModalsProps) {
   const { workspaceSlug } = props;
   // store hooks
-  const { isCreateProjectModalOpen, toggleCreateProjectModal } = useCommandPalette();
+  const { isCreateProjectModalOpen, createProjectModalData, toggleCreateProjectModal } = useCommandPalette();
 
   return (
     <>
@@ -25,6 +25,7 @@ export const WorkspaceLevelModals = observer(function WorkspaceLevelModals(props
         isOpen={isCreateProjectModalOpen}
         onClose={() => toggleCreateProjectModal(false)}
         workspaceSlug={workspaceSlug.toString()}
+        data={createProjectModalData}
       />
     </>
   );
