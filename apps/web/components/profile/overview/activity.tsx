@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import { Translation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -16,7 +15,7 @@ import { Card } from "@plane/blocks/card";
 import { Loader } from "@plane/blocks/skeleton";
 import { calculateTimeAgo, getFileURL } from "@plane/utils";
 // components
-import { ActivityMessage, IssueLink } from "@/components/core/activity";
+import { ActivityMessage } from "@/components/core/activity";
 // constants
 import { USER_PROFILE_ACTIVITY } from "@plane/constants";
 // helpers
@@ -45,8 +44,8 @@ export const ProfileActivity = observer(function ProfileActivity() {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-16 font-medium">{t("profile.stats.recent_activity.title")}</h3>
-      <Card>
+      <h3 className="text-h6-medium">{t("profile.stats.recent_activity.title")}</h3>
+      <Card className="rounded-xl border border-subtle-1 bg-layer-2 p-5">
         {!userProfileActivity ? (
           <Loader className="space-y-5">
             <Loader.Item height="40px" />
@@ -56,7 +55,7 @@ export const ProfileActivity = observer(function ProfileActivity() {
             <Loader.Item height="40px" />
           </Loader>
         ) : Array.isArray(userProfileActivity.results) && userProfileActivity.results.length > 0 ? (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {userProfileActivity.results.map((activity) => (
               <div key={activity.id} className="flex gap-3">
                 <Avatar
@@ -65,23 +64,14 @@ export const ProfileActivity = observer(function ProfileActivity() {
                   src={getFileURL(activity.actor_detail?.avatar_url)}
                   size="sm"
                 />
-                <div className="-mt-1 w-4/5 break-words">
-                  <p className="inline text-13 text-secondary">
+                <div className="min-w-0 flex-1 space-y-1 break-words">
+                  <p className="text-body-xs-regular leading-relaxed text-secondary">
                     <span className="font-medium text-primary">
                       {currentUser?.id === activity.actor_detail?.id
                         ? t("web.you")
                         : activity.actor_detail?.display_name}{" "}
                     </span>
-                    {activity.field ? (
-                      <ActivityMessage activity={activity} showIssue />
-                    ) : (
-                      <span>
-                        <Translation
-                          translationKey="web.activity.created"
-                          components={{ issue: <IssueLink activity={activity} /> }}
-                        />
-                      </span>
-                    )}
+                    <ActivityMessage activity={activity} showIssue />
                   </p>
                   <p className="text-11 whitespace-nowrap text-secondary">{calculateTimeAgo(activity.created_at)}</p>
                 </div>

@@ -11,12 +11,19 @@ import { PieChart } from "@plane/blocks/charts/pie-chart";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import type { IUserProfileData, IUserStateDistribution } from "@plane/types";
 import { Card } from "@plane/blocks/card";
-import { capitalizeFirstLetter } from "@plane/utils";
+
+import { ProfileChartTooltip } from "./chart-tooltip";
+import type { ProfileChartTooltipContentProps } from "./chart-tooltip";
 
 type Props = {
   stateDistribution: IUserStateDistribution[];
   userProfile: IUserProfileData | undefined;
 };
+
+function renderStateTooltip({ active, payload }: ProfileChartTooltipContentProps) {
+  if (!active || !payload?.length) return null;
+  return <ProfileChartTooltip label={payload[0].name} value={payload[0].value} color={payload[0].payload.color} />;
+}
 
 export function ProfileStateDistribution({ stateDistribution, userProfile }: Props) {
   const { t } = useTranslation();
@@ -24,25 +31,25 @@ export function ProfileStateDistribution({ stateDistribution, userProfile }: Pro
 
   return (
     <div className="flex flex-col space-y-2">
-      <h3 className="text-16 font-medium">{t("profile.stats.state_distribution.title")}</h3>
-      <Card className="h-full">
+      <h3 className="text-h6-medium">{t("profile.stats.state_distribution.title")}</h3>
+      <Card className="h-full rounded-xl border border-subtle-1 bg-layer-2 p-3">
         {userProfile.state_distribution.length > 0 ? (
-          <div className="grid h-[300px] w-full grid-cols-1 gap-x-6 md:grid-cols-2">
+          <div className="grid h-[200px] w-full grid-cols-1 gap-x-3 md:grid-cols-2">
             <PieChart
               className="size-full"
               dataKey="value"
               margin={{
-                top: 0,
-                right: -10,
-                bottom: 12,
-                left: -10,
+                top: 8,
+                right: 0,
+                bottom: 8,
+                left: 0,
               }}
               data={
                 userProfile.state_distribution.map((group) => ({
                   id: group.state_group,
                   key: group.state_group,
                   value: group.state_count,
-                  name: capitalizeFirstLetter(group.state_group),
+                  name: STATE_GROUPS[group.state_group].label,
                   color: STATE_GROUPS[group.state_group]?.color,
                 })) ?? []
               }
@@ -51,14 +58,15 @@ export function ProfileStateDistribution({ stateDistribution, userProfile }: Pro
                 fill: STATE_GROUPS[group.state_group]?.color,
               }))}
               showTooltip
-              tooltipLabel="Count"
+              tooltipLabel={t("web.count")}
+              customTooltipContent={renderStateTooltip}
               paddingAngle={5}
               cornerRadius={4}
               innerRadius="50%"
               showLabel={false}
             />
             <div className="flex items-center">
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-1.5">
                 {stateDistribution.map((group) => (
                   <div key={group.state_group} className="flex items-center justify-between gap-2 text-11">
                     <div className="flex items-center gap-1.5">
@@ -79,9 +87,9 @@ export function ProfileStateDistribution({ stateDistribution, userProfile }: Pro
           </div>
         ) : (
           <EmptyStateCompact
-            assetKey="priority"
+            assetKey="state"
             assetClassName="size-20"
-            title={t("workspace_empty_state.your_work_by_priority.title")}
+            title={t("workspace_empty_state.your_work_by_state.title")}
           />
         )}
       </Card>

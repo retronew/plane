@@ -39,6 +39,7 @@ interface IHeaderGroupByCard {
   selectionHelpers: TSelectionHelper;
   handleCollapsedGroups: (value: string) => void;
   isEpic?: boolean;
+  isExpanded: boolean;
 }
 
 export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHeaderGroupByCard) {
@@ -53,6 +54,7 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
     addIssuesToView,
     selectionHelpers,
     handleCollapsedGroups,
+    isExpanded,
     isEpic = false,
   } = props;
   // plane hooks
@@ -110,19 +112,20 @@ export const HeaderGroupByCard = observer(function HeaderGroupByCard(props: IHea
             />
           </div>
         )}
-        <div className="grid flex-shrink-0 place-items-center overflow-hidden">
-          {icon ?? <CircleDashed className="size-3.5" strokeWidth={2} />}
-        </div>
-
-        {/* eslint-disable-next-line jsx_a11y/click-events-have-key-events eslint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div
-          className="relative flex w-full cursor-pointer flex-row items-center gap-1 overflow-hidden"
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          className="relative -my-2.5 flex w-full min-w-0 cursor-pointer items-center gap-2 overflow-hidden py-2.5 text-start outline-none focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-inset"
           onClick={() => handleCollapsedGroups(groupID)}
         >
-          <div className="line-clamp-1 inline-block truncate font-medium text-primary">{title}</div>
-          <div className="pl-2 text-13 font-medium text-tertiary">{count || 0}</div>
-          <div className="px-2.5"></div>
-        </div>
+          <span className="grid shrink-0 place-items-center overflow-hidden">
+            {icon ?? <CircleDashed className="size-3.5" strokeWidth={2} />}
+          </span>
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="line-clamp-1 inline-block truncate text-body-sm-medium text-primary">{title}</span>
+            <span className="pl-2 text-13 font-medium text-tertiary">{count || 0}</span>
+          </span>
+        </button>
 
         {!disableIssueCreation &&
           (renderExistingIssueModal ? (

@@ -54,7 +54,7 @@ function ProfileActivityPage() {
 
   return (
     <>
-      <PageHead title={t("web.profile_activity")} />
+      <PageHead title={t("profile.page_title", { tab: t("profile.tabs.activity") })} />
       <div className="flex h-full w-full flex-col overflow-hidden py-5">
         <div className="flex items-center justify-between gap-2 px-5 md:px-9">
           <h3 className="text-16 font-medium">{t("profile.stats.recent_activity.title")}</h3>

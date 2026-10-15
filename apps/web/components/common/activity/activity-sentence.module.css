@@ -1,0 +1,13 @@
+.message :global([data-activity-part]) {
+  margin-inline: 3px;
+  vertical-align: baseline;
+}
+
+.message :global([data-activity-part] [data-activity-part]) {
+  margin-inline: 0;
+}
+
+.message :global([data-activity-part].inline-flex),
+.message :global([data-activity-part] > .inline-flex) {
+  vertical-align: middle;
+}

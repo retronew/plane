@@ -82,7 +82,13 @@ function projectMessage(key: string, value?: ReactNode) {
   return (
     <Translation
       translationKey={`web.project_activity.${key}`}
-      components={{ value: <span className="font-medium text-primary">{value}</span> }}
+      components={{
+        value: (
+          <span data-activity-part="" className="font-medium text-primary">
+            {value}
+          </span>
+        ),
+      }}
     />
   );
 }

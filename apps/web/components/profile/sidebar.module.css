@@ -1,0 +1,3 @@
+.project :global(div:has(> button[aria-expanded="true"])) {
+  background: var(--bg-layer-transparent-selected);
+}

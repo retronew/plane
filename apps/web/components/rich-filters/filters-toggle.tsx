@@ -6,6 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { FilterOutline, SelectedFilterOutline } from "@makeplane/propel/icons";
@@ -48,29 +49,35 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
   // Show the add filter button when there are no active conditions, the filter row is hidden, and no unsaved changes exist
   if (filter && showAddFilterButton) {
     return (
-      <AddFilterButton
-        filter={filter}
-        buttonConfig={{
-          variant: "secondary",
-          size: "md",
-          label: null,
-        }}
-        onFilterSelect={() => filter?.toggleVisibility(true)}
-      />
+      <Tooltip label={t("common.filters")} side="bottom">
+        <span className="inline-flex">
+          <AddFilterButton
+            filter={filter}
+            buttonConfig={{
+              variant: "secondary",
+              size: "md",
+              label: null,
+            }}
+            onFilterSelect={() => filter?.toggleVisibility(true)}
+          />
+        </span>
+      </Tooltip>
     );
   }
 
   const FilterIcon = showFilterRowChangesPill ? SelectedFilterOutline : FilterOutline;
 
   return (
-    <IconButton
-      size="md"
-      // Active filters: a filled chrome plus an accent glyph (Propel has no tinted-accent variant).
-      variant={showFilterRowChangesPill ? "tertiary" : "secondary"}
-      icon={<Icon icon={<FilterIcon className={iconClassName} />} />}
-      onClick={handleToggleFilter}
-      aria-label={t("common.filters")}
-      aria-pressed={isFilterRowVisible}
-    />
+    <Tooltip label={t("common.filters")} side="bottom">
+      <IconButton
+        size="md"
+        // Active filters: a filled chrome plus an accent glyph (Propel has no tinted-accent variant).
+        variant={showFilterRowChangesPill ? "tertiary" : "secondary"}
+        icon={<Icon icon={<FilterIcon className={iconClassName} />} />}
+        onClick={handleToggleFilter}
+        aria-label={t("common.filters")}
+        aria-pressed={isFilterRowVisible}
+      />
+    </Tooltip>
   );
 });

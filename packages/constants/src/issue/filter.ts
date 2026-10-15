@@ -137,6 +137,19 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
           values: ["show_empty_groups"],
         },
       },
+      calendar: {
+        display_properties: ["key", "issue_type"],
+        display_filters: { type: ["active", "backlog"] },
+        extra_options: { access: true, values: ["sub_issue"] },
+      },
+      spreadsheet: {
+        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_filters: {
+          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
+          type: ["active", "backlog"],
+        },
+        extra_options: { access: true, values: ["sub_issue"] },
+      },
     },
   },
   archived_issues: {

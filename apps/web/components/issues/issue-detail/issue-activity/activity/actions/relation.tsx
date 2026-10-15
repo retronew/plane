@@ -37,9 +37,13 @@ export const IssueRelationActivity = observer(function IssueRelationActivity(pro
     >
       {activityContent}
       {activity.old_value === "" ? (
-        <span className="font-medium text-primary">{activity.new_value}.</span>
+        <span data-activity-part="" className="font-medium text-primary">
+          {activity.new_value}.
+        </span>
       ) : (
-        <span className="font-medium text-primary">{activity.old_value}.</span>
+        <span data-activity-part="" className="font-medium text-primary">
+          {activity.old_value}.
+        </span>
       )}
     </IssueActivityBlockComponent>
   );

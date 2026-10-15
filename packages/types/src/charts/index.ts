@@ -160,7 +160,7 @@ export type TCellItem<T extends string> = {
 
 export type TPieChartProps<K extends string, T extends string> = Pick<
   TBaseChartProps<K, T>,
-  "className" | "data" | "showTooltip" | "legend" | "margin"
+  "className" | "data" | "showTooltip" | "legend" | "margin" | "customTooltipContent"
 > & {
   dataKey: T;
   cells: TCellItem<T>[];

@@ -36,7 +36,9 @@ export const IssueStartDateActivity = observer(function IssueStartDateActivity(p
         {activity.new_value ? translate("web.set_the_start_date_to") : translate("web.removed_the_start_date_2")}
         {activity.new_value && (
           <>
-            <span className="font-medium text-primary">{renderFormattedDate(activity.new_value)}</span>
+            <span data-activity-part="" className="font-medium text-primary">
+              {renderFormattedDate(activity.new_value)}
+            </span>
           </>
         )}
         {showIssue && (activity.new_value ? ` for ` : ` from `)}

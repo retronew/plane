@@ -8,6 +8,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { differenceInCalendarDays } from "date-fns/differenceInCalendarDays";
+import type { IBaseIssueFilterStore } from "@/store/issue/helpers/issue-filter-helper.store";
 import { observer } from "mobx-react";
 import { setToast } from "@plane/blocks/toast";
 import type { TGroupedIssues, TIssue, TIssueMap, TPaginationData, ICalendarDate } from "@plane/types";
@@ -20,16 +21,12 @@ import { highlightIssueOnDrop } from "@/components/issues/issue-layouts/utils";
 import { MONTHS_LIST } from "@plane/constants";
 // helpers
 // types
-import type { ICycleIssuesFilter } from "@/store/issue/cycle";
-import type { IModuleIssuesFilter } from "@/store/issue/module";
-import type { IProjectIssuesFilter } from "@/store/issue/project";
-import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { CalendarIssueBlocks } from "./issue-blocks";
 import { translate } from "@plane/i18n";
 
 type Props = {
-  issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
+  issuesFilterStore: Pick<IBaseIssueFilterStore, "issueFilters">;
   date: ICalendarDate;
   issues: TIssueMap | undefined;
   groupedIssueIds: TGroupedIssues;

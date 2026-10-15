@@ -29,6 +29,8 @@ import { useUser } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // components
 import { ProfileSidebarTime } from "./time";
+import { ProfileProjectProgress } from "./project-progress";
+import styles from "./sidebar.module.css";
 
 type TProfileSidebar = {
   userProjectsData: IUserProfileProjectSegregation | undefined;
@@ -89,14 +91,14 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
   return (
     <div
       className={cn(
-        `vertical-scrollbar fixed z-5 scrollbar-md h-full w-full shrink-0 overflow-hidden overflow-y-auto border-l border-subtle bg-surface-1 shadow-raised-200 transition-all md:relative md:w-[300px]`,
+        `vertical-scrollbar fixed z-5 flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-subtle bg-surface-1 transition-[margin-left] motion-reduce:transition-none md:relative md:w-[300px]`,
         className
       )}
       style={profileSidebarCollapsed ? { marginLeft: "100vw" } : {}}
     >
       {userProjectsData ? (
         <>
-          <div className="relative h-[110px]">
+          <div className="relative h-[110px] shrink-0">
             {currentUser?.id === userId && (
               <div className="absolute top-3.5 right-3.5">
                 <IconButton
@@ -118,37 +120,42 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
               alt={userData?.display_name}
               className="h-[110px] w-full"
             />
-            <div className="absolute -bottom-[26px] left-5 h-[52px] w-[52px] rounded-sm">
+            <div className="absolute -bottom-[26px] left-5 size-[52px] overflow-hidden rounded-full">
               {userData?.avatar_url && userData?.avatar_url !== "" ? (
                 <img
                   src={getFileURL(userData?.avatar_url)}
                   alt={userData?.display_name}
-                  className="h-full w-full rounded-sm object-cover"
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-sm bg-accent-primary text-on-color capitalize">
+                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-accent-primary text-on-color capitalize">
                   {userData?.first_name?.[0]}
                 </div>
               )}
             </div>
           </div>
-          <div className="px-5">
+          <div className="shrink-0 px-5">
             <div className="mt-[38px]">
-              <h4 className="text-16 font-semibold">
+              <h4 className="text-h6-semibold">
                 {userData?.first_name} {userData?.last_name}
               </h4>
               <h6 className="text-13 text-secondary">({userData?.display_name})</h6>
             </div>
-            <div className="mt-6 space-y-5">
+            <div className="mt-6 space-y-4">
               {userDetails.map((detail) => (
-                <div key={detail.i18n_label} className="flex items-center gap-4 text-13">
-                  <div className="w-2/5 flex-shrink-0 text-secondary">{t(detail.i18n_label)}</div>
-                  <div className="w-3/5 font-medium break-words">{detail.value}</div>
+                <div
+                  key={detail.i18n_label}
+                  className="grid grid-cols-[2fr_3fr] items-center gap-4 text-body-xs-regular"
+                >
+                  <div className="min-w-0 text-secondary">{t(detail.i18n_label)}</div>
+                  <div className="min-w-0 font-medium break-words">{detail.value}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-9 divide-y divide-subtle">
-              {userProjectsData.project_data.map((project, index) => {
+          </div>
+          <div className="vertical-scrollbar mt-9 min-h-0 flex-1 overflow-y-auto px-5">
+            <div className="space-y-1">
+              {userProjectsData.project_data.map((project) => {
                 const projectDetails = getProjectById(project.id);
 
                 const totalIssues =
@@ -162,66 +169,45 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
                 if (!projectDetails) return null;
 
                 return (
-                  <div key={project.id} className={index === 0 ? "pb-3" : "py-3"}>
+                  <div key={project.id} className={cn("-mx-2", styles.project)}>
                     <Collapsible
+                      placement="sidebar"
                       icon={
-                        <span className="grid h-7 w-7 flex-shrink-0 place-items-center">
+                        <span className="grid size-4 shrink-0 place-items-center">
                           <Logo logo={projectDetails.logo_props} />
                         </span>
                       }
-                      trigger={<span className="truncate text-13 font-medium break-words">{projectDetails.name}</span>}
-                      trailing={
-                        project.assigned_issues > 0 ? (
-                          <Tooltip label={t("web.completion_percentage")} side="left" disabled={isMobile}>
-                            <div
-                              className={`rounded-sm px-1 py-0.5 text-11 font-medium ${
-                                completedIssuePercentage <= 35
-                                  ? "bg-danger-subtle text-danger-primary"
-                                  : completedIssuePercentage <= 70
-                                    ? "bg-yellow-500/10 text-yellow-500"
-                                    : "bg-success-subtle text-success-primary"
-                              }`}
-                            >
-                              {completedIssuePercentage}%
-                            </div>
-                          </Tooltip>
-                        ) : undefined
+                      trigger={
+                        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                          <span className="truncate text-body-xs-medium break-words">{projectDetails.name}</span>
+                          {project.assigned_issues > 0 && (
+                            <Tooltip label={t("web.completion_percentage")} side="left" disabled={isMobile}>
+                              <span
+                                className={`rounded-sm px-1 py-0.5 text-11 font-medium ${
+                                  completedIssuePercentage <= 35
+                                    ? "bg-danger-subtle text-danger-primary"
+                                    : completedIssuePercentage <= 70
+                                      ? "bg-yellow-500/10 text-yellow-500"
+                                      : "bg-success-subtle text-success-primary"
+                                }`}
+                              >
+                                {completedIssuePercentage}%
+                              </span>
+                            </Tooltip>
+                          )}
+                        </span>
                       }
                     >
-                      <div className="mt-5 pl-9">
+                      <div className="mt-3 px-2 pb-2">
                         {totalIssues > 0 && (
-                          <div className="flex items-center gap-0.5">
-                            <div
-                              className="h-1 rounded-sm"
-                              style={{
-                                backgroundColor: "#203b80",
-                                width: `${(project.created_issues / totalIssues) * 100}%`,
-                              }}
-                            />
-                            <div
-                              className="h-1 rounded-sm"
-                              style={{
-                                backgroundColor: "#3f76ff",
-                                width: `${(project.assigned_issues / totalIssues) * 100}%`,
-                              }}
-                            />
-                            <div
-                              className="h-1 rounded-sm"
-                              style={{
-                                backgroundColor: "#f59e0b",
-                                width: `${(project.pending_issues / totalIssues) * 100}%`,
-                              }}
-                            />
-                            <div
-                              className="h-1 rounded-sm"
-                              style={{
-                                backgroundColor: "#16a34a",
-                                width: `${(project.completed_issues / totalIssues) * 100}%`,
-                              }}
-                            />
-                          </div>
+                          <ProfileProjectProgress
+                            created={project.created_issues}
+                            assigned={project.assigned_issues}
+                            pending={project.pending_issues}
+                            completed={project.completed_issues}
+                          />
                         )}
-                        <div className="mt-7 space-y-5 text-13 text-secondary">
+                        <div className="mt-2 space-y-2.5 text-body-xs-regular text-secondary">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <div className="h-2.5 w-2.5 rounded-xs bg-[#203b80]" />

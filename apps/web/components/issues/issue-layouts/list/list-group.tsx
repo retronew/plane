@@ -6,6 +6,8 @@
 
 import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
+import { Collapsible } from "@base-ui/react/collapsible";
+import { CollapsiblePanel } from "@makeplane/propel/components/collapsible";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
@@ -260,9 +262,11 @@ export const ListGroup = observer(function ListGroup(props: Props) {
   const shouldExpand = (!!groupIssueCount && isExpanded) || !group_by;
 
   return validateEmptyIssueGroups(groupIssueCount) ? (
-    <div
+    <Collapsible.Root
+      open={shouldExpand}
       ref={groupRef}
       className={cn(`relative flex flex-shrink-0 flex-col`, {
+        "border-b border-subtle": shouldExpand,
         "border-accent-strong": isDraggingOverColumn,
         "border-danger-subtle": isDraggingOverColumn && isDropDisabled,
       })}
@@ -273,6 +277,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
         })}
       >
         <HeaderGroupByCard
+          isExpanded={isExpanded}
           groupID={group.id}
           groupBy={group_by}
           icon={group.icon}
@@ -289,7 +294,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           isEpic={isEpic}
         />
       </Row>
-      {shouldExpand && (
+      <Collapsible.Panel className="motion-reduce:transition-none" render={<CollapsiblePanel />}>
         <div className="relative">
           <GroupDragOverlay
             dragColumnOrientation={dragColumnOrientation}
@@ -348,7 +353,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
               </div>
             )}
         </div>
-      )}
-    </div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
   ) : null;
 });

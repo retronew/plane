@@ -5,15 +5,16 @@
  */
 
 import React from "react";
+import { useTranslation } from "@plane/i18n";
 // components
 import { PageHead } from "@/components/core/page-title";
 import { ProfileIssuesPage } from "@/components/profile/profile-issues";
 import type { Route } from "./+types/page";
 
 const ProfilePageHeader = {
-  assigned: "Profile - Assigned",
-  created: "Profile - Created",
-  subscribed: "Profile - Subscribed",
+  assigned: "profile.tabs.assigned",
+  created: "profile.tabs.created",
+  subscribed: "profile.tabs.subscribed",
 };
 
 function isValidProfileViewId(viewId: string): viewId is keyof typeof ProfilePageHeader {
@@ -22,10 +23,11 @@ function isValidProfileViewId(viewId: string): viewId is keyof typeof ProfilePag
 
 function ProfileIssuesTypePage({ params }: Route.ComponentProps) {
   const { profileViewId } = params;
+  const { t } = useTranslation();
 
   if (!isValidProfileViewId(profileViewId)) return null;
 
-  const header = ProfilePageHeader[profileViewId];
+  const header = t("profile.page_title", { tab: t(ProfilePageHeader[profileViewId]) });
 
   return (
     <>

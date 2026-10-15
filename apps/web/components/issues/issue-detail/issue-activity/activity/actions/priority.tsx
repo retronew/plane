@@ -35,7 +35,7 @@ export const IssuePriorityActivity = observer(function IssuePriorityActivity(pro
           translationKey="web.activity.priority"
           components={{
             value: (
-              <span className="font-medium text-primary">
+              <span data-activity-part="" className="font-medium text-primary">
                 <Translation translationKey={activity.new_value || "none"} />
               </span>
             ),
