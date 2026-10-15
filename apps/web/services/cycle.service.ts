@@ -14,6 +14,7 @@ import type {
   TCycleDistribution,
   TProgressSnapshot,
   TCycleEstimateDistribution,
+  TCycleDailySnapshot,
 } from "@plane/types";
 import { APIService } from "@/services/api.service";
 
@@ -53,7 +54,7 @@ export class CycleService extends APIService {
     workspaceSlug: string,
     projectId: string,
     cycleId: string
-  ): Promise<TProgressSnapshot> {
+  ): Promise<TCycleDailySnapshot[]> {
     return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/cycles/${cycleId}/cycle-progress/`)
       .then((res) => res?.data)
       .catch((err) => {
@@ -67,6 +68,7 @@ export class CycleService extends APIService {
     per_page: number
   ): Promise<IWorkspaceActiveCyclesResponse> {
     return this.get(`/api/workspaces/${workspaceSlug}/active-cycles/`, {
+      timeout: 15000,
       params: {
         per_page,
         cursor,
@@ -74,7 +76,7 @@ export class CycleService extends APIService {
     })
       .then((res) => res?.data)
       .catch((err) => {
-        throw err?.response?.data;
+        throw err;
       });
   }
 

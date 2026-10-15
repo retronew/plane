@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.workspace.cycle import CycleProgressHistoryEndpoint
 
 
 from plane.app.views import (
@@ -19,6 +20,11 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/cycles/<uuid:cycle_id>/cycle-progress/",
+        CycleProgressHistoryEndpoint.as_view(),
+        name="cycle-progress-history",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/cycles/",
         CycleViewSet.as_view({"get": "list", "post": "create"}),

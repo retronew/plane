@@ -13,7 +13,6 @@ import { Header } from "@plane/blocks/layout";
 // components
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 // plane web components
-import { UpgradeBadge } from "@/components/workspace/upgrade-badge";
 
 export const WorkspaceActiveCycleHeader = observer(function WorkspaceActiveCycleHeader() {
   const { t } = useTranslation();
@@ -24,13 +23,12 @@ export const WorkspaceActiveCycleHeader = observer(function WorkspaceActiveCycle
           <Breadcrumbs.Item
             component={
               <BreadcrumbLink
-                label={t("active_cycles")}
+                label={t("workspace_cycles.title")}
                 icon={<CyclesOutline className="h-4 w-4 rotate-180 text-tertiary" />}
               />
             }
           />
         </Breadcrumbs>
-        <UpgradeBadge size="md" />
       </Header.LeftItem>
     </Header>
   );

@@ -459,7 +459,9 @@
         "title": "没有进行中的周期",
         "description": "日期范围包含今天的项目周期会显示在这里，您可以查看所有进行中周期的进度和详情。"
       }
-    }
+    },
+    "scope": "有效范围",
+    "started": "进行中"
   },
   "workspace": {
     "members_import": {

@@ -7,7 +7,7 @@
 import type { TPaginationInfo } from "./common";
 import type { ICycle } from "./cycle";
 import type { TUserPermissions } from "./enums";
-import type { TProjectMembership } from "./project";
+import type { TProject, TProjectMembership } from "./project";
 import type { IUser, IUserLite } from "./users";
 import type { TLoginMediums } from "./instance";
 import type { IWorkspaceViewProps } from "./view-props";
@@ -225,9 +225,43 @@ export interface IWorkspaceActiveCyclesResponse {
   next_page_results: boolean;
   prev_cursor: string;
   prev_page_results: boolean;
-  results: ICycle[];
+  results: TWorkspaceActiveCycle[];
   total_pages: number;
 }
+
+export type TCycleDailySnapshot = Pick<
+  ICycle,
+  "total_issues" | "backlog_issues" | "unstarted_issues" | "started_issues" | "completed_issues" | "cancelled_issues"
+> & {
+  progress_date: string;
+  observed_at: string;
+  timezone: string;
+};
+
+export type TWorkspaceActiveCycle = Pick<
+  ICycle,
+  | "id"
+  | "name"
+  | "project_id"
+  | "start_date"
+  | "end_date"
+  | "total_issues"
+  | "backlog_issues"
+  | "unstarted_issues"
+  | "started_issues"
+  | "completed_issues"
+  | "cancelled_issues"
+> & {
+  project_detail: Pick<TProject, "id" | "name" | "identifier" | "logo_props">;
+  owned_by_detail: { display_name: string; avatar_url: string | null };
+  completion_chart: Record<string, number | null>;
+  progress_chart: Record<string, TCycleDailySnapshot | null>;
+  chart_start_date: string;
+  chart_end_date: string;
+  history_source?: "observed" | "manual_test";
+  today: string;
+  days_remaining: number;
+};
 
 export interface IWorkspaceProgressResponse {
   completed_issues: number;

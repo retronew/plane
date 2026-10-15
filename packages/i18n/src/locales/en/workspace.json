@@ -459,7 +459,9 @@
         "title": "No active cycles",
         "description": "Cycles of your projects that includes any period that encompasses today's date within its range. Find the progress and details of all your active cycle here."
       }
-    }
+    },
+    "scope": "Scope",
+    "started": "Started"
   },
   "workspace": {
     "members_import": {

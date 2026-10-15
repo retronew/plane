@@ -155,3 +155,35 @@ class CycleUserProperties(ProjectBaseModel):
 
     def __str__(self):
         return f"{self.cycle.name} {self.user.email}"
+
+
+class CycleProgressSnapshot(ProjectBaseModel):
+    """Last real observation on a project-local calendar day; never a backfill."""
+
+    cycle = models.ForeignKey(Cycle, on_delete=models.CASCADE, related_name="daily_progress")
+    progress_date = models.DateField()
+    observed_at = models.DateTimeField()
+    timezone = models.CharField(max_length=255)
+    total_issues = models.PositiveIntegerField(default=0)
+    backlog_issues = models.PositiveIntegerField(default=0)
+    unstarted_issues = models.PositiveIntegerField(default=0)
+    started_issues = models.PositiveIntegerField(default=0)
+    completed_issues = models.PositiveIntegerField(default=0)
+    cancelled_issues = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "cycle_progress_snapshots"
+        ordering = ("progress_date",)
+        constraints = [
+            models.UniqueConstraint(fields=["cycle", "progress_date"], name="cycle_progress_snapshot_day_unique"),
+            models.CheckConstraint(
+                condition=models.Q(
+                    total_issues=models.F("backlog_issues")
+                    + models.F("unstarted_issues")
+                    + models.F("started_issues")
+                    + models.F("completed_issues")
+                    + models.F("cancelled_issues")
+                ),
+                name="cycle_progress_snapshot_counts_match",
+            ),
+        ]

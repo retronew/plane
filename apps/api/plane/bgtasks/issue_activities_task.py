@@ -17,6 +17,7 @@ from django.utils import timezone
 # Module imports
 from plane.app.serializers import IssueActivitySerializer
 from plane.bgtasks.notification_task import notifications
+from plane.bgtasks.cycle_snapshot_task import capture_cycle_progress
 from plane.db.models import (
     CommentReaction,
     Cycle,
@@ -1598,6 +1599,10 @@ def issue_activity(
                 current_instance=current_instance,
             )
 
+        if type.startswith(("issue.activity.", "cycle.activity.")):
+            # Reuse activity delivery to observe state/scope changes promptly;
+            # the periodic collector also covers edits without activity events.
+            capture_cycle_progress.delay(str(project_id))
         return
     except Exception as e:
         log_exception(e)
