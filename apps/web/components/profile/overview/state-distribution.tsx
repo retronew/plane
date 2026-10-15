@@ -5,6 +5,8 @@
  */
 
 // plane imports
+import { AsyncContent } from "@/components/common/async-content";
+import { ChartLoader } from "@/components/analytics/loaders";
 import { STATE_GROUPS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { PieChart } from "@plane/blocks/charts/pie-chart";
@@ -27,72 +29,74 @@ function renderStateTooltip({ active, payload }: ProfileChartTooltipContentProps
 
 export function ProfileStateDistribution({ stateDistribution, userProfile }: Props) {
   const { t } = useTranslation();
-  if (!userProfile) return null;
+  const distribution = userProfile?.state_distribution ?? [];
 
   return (
     <div className="flex flex-col space-y-2">
       <h3 className="text-h6-medium">{t("profile.stats.state_distribution.title")}</h3>
-      <Card className="h-full rounded-xl border border-subtle-1 bg-layer-2 p-3">
-        {userProfile.state_distribution.length > 0 ? (
-          <div className="grid h-[200px] w-full grid-cols-1 gap-x-3 md:grid-cols-2">
-            <PieChart
-              className="size-full"
-              dataKey="value"
-              margin={{
-                top: 8,
-                right: 0,
-                bottom: 8,
-                left: 0,
-              }}
-              data={
-                userProfile.state_distribution.map((group) => ({
-                  id: group.state_group,
+      <AsyncContent loading={!userProfile} minHeight={225} skeleton={<ChartLoader height={225} />}>
+        <Card className="h-full rounded-xl border border-subtle-1 bg-layer-2 p-3">
+          {distribution.length > 0 ? (
+            <div className="grid h-[200px] w-full grid-cols-1 gap-x-3 md:grid-cols-2">
+              <PieChart
+                className="size-full"
+                dataKey="value"
+                margin={{
+                  top: 8,
+                  right: 0,
+                  bottom: 8,
+                  left: 0,
+                }}
+                data={
+                  distribution.map((group) => ({
+                    id: group.state_group,
+                    key: group.state_group,
+                    value: group.state_count,
+                    name: STATE_GROUPS[group.state_group].label,
+                    color: STATE_GROUPS[group.state_group]?.color,
+                  })) ?? []
+                }
+                cells={distribution.map((group) => ({
                   key: group.state_group,
-                  value: group.state_count,
-                  name: STATE_GROUPS[group.state_group].label,
-                  color: STATE_GROUPS[group.state_group]?.color,
-                })) ?? []
-              }
-              cells={userProfile.state_distribution.map((group) => ({
-                key: group.state_group,
-                fill: STATE_GROUPS[group.state_group]?.color,
-              }))}
-              showTooltip
-              tooltipLabel={t("web.count")}
-              customTooltipContent={renderStateTooltip}
-              paddingAngle={5}
-              cornerRadius={4}
-              innerRadius="50%"
-              showLabel={false}
-            />
-            <div className="flex items-center">
-              <div className="w-full space-y-1.5">
-                {stateDistribution.map((group) => (
-                  <div key={group.state_group} className="flex items-center justify-between gap-2 text-11">
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="h-2.5 w-2.5 rounded-xs"
-                        style={{
-                          backgroundColor:
-                            STATE_GROUPS[group.state_group]?.color ?? "var(--background-color-accent-primary)",
-                        }}
-                      />
-                      <div className="whitespace-nowrap">{STATE_GROUPS[group.state_group].label}</div>
+                  fill: STATE_GROUPS[group.state_group]?.color,
+                }))}
+                showTooltip
+                tooltipLabel={t("web.count")}
+                customTooltipContent={renderStateTooltip}
+                paddingAngle={5}
+                cornerRadius={4}
+                innerRadius="50%"
+                showLabel={false}
+              />
+              <div className="flex items-center">
+                <div className="w-full space-y-1.5">
+                  {stateDistribution.map((group) => (
+                    <div key={group.state_group} className="flex items-center justify-between gap-2 text-11">
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className="h-2.5 w-2.5 rounded-xs"
+                          style={{
+                            backgroundColor:
+                              STATE_GROUPS[group.state_group]?.color ?? "var(--background-color-accent-primary)",
+                          }}
+                        />
+                        <div className="whitespace-nowrap">{STATE_GROUPS[group.state_group].label}</div>
+                      </div>
+                      <div>{group.state_count}</div>
                     </div>
-                    <div>{group.state_count}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <EmptyStateCompact
-            assetKey="state"
-            assetClassName="size-20"
-            title={t("workspace_empty_state.your_work_by_state.title")}
-          />
-        )}
-      </Card>
+          ) : (
+            <EmptyStateCompact
+              assetKey="state"
+              assetClassName="size-20"
+              title={t("workspace_empty_state.your_work_by_state.title")}
+            />
+          )}
+        </Card>
+      </AsyncContent>
     </div>
   );
 }

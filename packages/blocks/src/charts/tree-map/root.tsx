@@ -6,6 +6,7 @@
 
 import React from "react";
 import { Treemap, Tooltip } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import type { TreeMapChartProps } from "@plane/types";
@@ -16,6 +17,7 @@ import { TreeMapTooltip } from "./tooltip";
 
 export const TreeMapChart = React.memo(function TreeMapChart(props: TreeMapChartProps) {
   const { data, className = "w-full h-96", isAnimationActive = false, showTooltip = true } = props;
+  const motion = useChartMotion();
   return (
     <div className={cn(className)}>
       <ChartContainer>
@@ -26,10 +28,9 @@ export const TreeMapChart = React.memo(function TreeMapChart(props: TreeMapChart
           stroke="transparent"
           className="cursor-pointer bg-layer-1"
           content={<CustomTreeMapContent />}
-          animationEasing="ease-out"
-          isUpdateAnimationActive={isAnimationActive}
-          animationBegin={100}
-          animationDuration={500}
+          {...motion}
+          isAnimationActive={isAnimationActive && motion.isAnimationActive}
+          isUpdateAnimationActive={isAnimationActive && motion.isAnimationActive}
         >
           {showTooltip && (
             <Tooltip
@@ -39,7 +40,7 @@ export const TreeMapChart = React.memo(function TreeMapChart(props: TreeMapChart
                 className: "bg-layer-1 cursor-pointer",
               }}
               wrapperStyle={{
-                pointerEvents: "auto",
+                pointerEvents: "none",
               }}
             />
           )}

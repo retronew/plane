@@ -12,6 +12,7 @@
     "./auth": "./dist/auth/index.js",
     "./breadcrumb": "./dist/breadcrumb/index.js",
     "./card": "./dist/card/index.js",
+    "./charts": "./dist/charts/index.js",
     "./charts/area-chart": "./dist/charts/area-chart/index.js",
     "./charts/bar-chart": "./dist/charts/bar-chart/index.js",
     "./charts/line-chart": "./dist/charts/line-chart/index.js",

@@ -6,6 +6,7 @@
 
 import React, { useMemo, useState } from "react";
 import { Area, Legend, Tooltip, XAxis, YAxis, Line, ComposedChart, CartesianGrid } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
@@ -28,12 +29,13 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
     margin,
     tickCount = {
       x: undefined,
-      y: 10,
+      y: 5,
     },
     customTicks,
     showTooltip = true,
     comparisonLine,
   } = props;
+  const motion = useChartMotion();
   // states
   const [activeArea, setActiveArea] = useState<string | null>(null);
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
     for (const area of areas) {
       keys.push(area.key);
       labels[area.key] = area.label;
-      colors[area.key] = area.fill;
+      colors[area.key] = area.strokeColor || area.fill;
     }
 
     return { itemKeys: keys, itemLabels: labels, itemDotColors: colors };
@@ -57,6 +59,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
     () =>
       areas.map((area) => (
         <Area
+          {...motion}
           key={area.key}
           type={area.smoothCurves ? "monotone" : "linear"}
           dataKey={area.key}
@@ -77,14 +80,17 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
               : false
           }
           activeDot={{
-            stroke: area.fill,
+            r: 3,
+            fill: area.strokeColor,
+            stroke: "var(--bg-surface-1)",
+            strokeWidth: 2,
           }}
           onMouseEnter={() => setActiveArea(area.key)}
           onMouseLeave={() => setActiveArea(null)}
           className="[&_path]:transition-opacity [&_path]:duration-200"
         />
       )),
-    [activeLegend, areas]
+    [activeLegend, areas, motion]
   );
 
   // create comparison line data for straight line from origin to last point
@@ -98,7 +104,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
     return data.map((item, index) => {
       // calculate the y value for this point on the straight line
       // using linear interpolation between (0,0) and (last_x, last_y)
-      const ratio = index / (data.length - 1);
+      const ratio = data.length === 1 ? 1 : index / (data.length - 1);
       const interpolatedValue = ratio * lastYValue;
 
       return {
@@ -111,15 +117,16 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
     <div className={className}>
       <ChartContainer>
         <ComposedChart
+          accessibilityLayer
           data={data}
           margin={{
             top: margin?.top === undefined ? 5 : margin.top,
-            right: margin?.right === undefined ? 30 : margin.right,
+            right: margin?.right === undefined ? 16 : margin.right,
             bottom: margin?.bottom === undefined ? 5 : margin.bottom,
-            left: margin?.left === undefined ? 20 : margin.left,
+            left: margin?.left === undefined ? 0 : margin.left,
           }}
         >
-          <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
+          <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
           <XAxis
             dataKey={xAxis.key}
             tick={(tickProps) => {
@@ -138,6 +145,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
             tickCount={tickCount.x}
           />
           <YAxis
+            width={yAxis.label ? 54 : 40}
             domain={yAxis.domain}
             tickLine={false}
             axisLine={false}
@@ -170,10 +178,10 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
             <Tooltip
               cursor={{
                 stroke: "var(--text-color-tertiary)",
-                strokeDasharray: "4 4",
+                strokeWidth: 1,
               }}
               wrapperStyle={{
-                pointerEvents: "auto",
+                pointerEvents: "none",
               }}
               content={({ active, label, payload }) => (
                 <CustomTooltip
@@ -191,6 +199,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
           {renderAreas}
           {comparisonLine && (
             <Line
+              {...motion}
               data={comparisonLineData}
               type="linear"
               dataKey="comparisonLine"

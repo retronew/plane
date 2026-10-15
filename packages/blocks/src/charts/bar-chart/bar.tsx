@@ -16,7 +16,7 @@ const BAR_TOP_BORDER_RADIUS = 4; // Border radius for the top of bars
 const BAR_BOTTOM_BORDER_RADIUS = 4; // Border radius for the bottom of bars
 const DEFAULT_LOLLIPOP_LINE_WIDTH = 2; // Width of lollipop stick
 const DEFAULT_LOLLIPOP_CIRCLE_RADIUS = 8; // Radius of lollipop circle
-const DEFAULT_BAR_FILL_COLOR = "#000000"; // Default color when fill is a function - black
+const DEFAULT_BAR_FILL_COLOR = "light-dark(#6866b9, #a19bdf)";
 
 // Types
 interface TShapeProps {
@@ -165,7 +165,8 @@ const CustomBarLollipop = React.memo(function CustomBarLollipop(props: TBarProps
 const createShapeVariant =
   (Component: React.ComponentType<TBarProps>, factoryProps?: Partial<TBarProps>) =>
   (shapeProps: TShapeProps, bar: TBarItem<string>, stackKeys: string[]): React.ReactNode => {
-    const showTopBorderRadius = bar.showTopBorderRadius?.(shapeProps.dataKey, shapeProps.payload);
+    const showTopBorderRadius =
+      bar.showTopBorderRadius?.(shapeProps.dataKey, shapeProps.payload) ?? stackKeys.length === 1;
     const showBottomBorderRadius = bar.showBottomBorderRadius?.(shapeProps.dataKey, shapeProps.payload);
 
     return (

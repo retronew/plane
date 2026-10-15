@@ -18,7 +18,7 @@ export function ChartContainer({ className, ...props }: ComponentProps<typeof Re
     <ResponsiveContainer
       width="100%"
       height="100%"
-      className={cn("[&_:focus:not(:focus-visible)]:outline-none", className)}
+      className={cn("min-w-0 [&_:focus:not(:focus-visible)]:outline-none", className)}
       {...props}
     />
   );

@@ -6,6 +6,7 @@
 
 import React, { useMemo, useState } from "react";
 import { CartesianGrid, LineChart as CoreLineChart, Legend, Line, Tooltip, XAxis, YAxis } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
@@ -27,13 +28,14 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
     className,
     tickCount = {
       x: undefined,
-      y: 10,
+      y: 5,
     },
     customTicks,
     legend,
     showTooltip = true,
     customTooltipContent,
   } = props;
+  const motion = useChartMotion();
   // states
   const [activeLine, setActiveLine] = useState<string | null>(null);
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
     () =>
       lines.map((line) => (
         <Line
+          {...motion}
           key={line.key}
           dataKey={line.key}
           type={line.smoothCurves ? "monotone" : "linear"}
@@ -81,22 +84,23 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           onMouseLeave={() => setActiveLine(null)}
         />
       )),
-    [activeLegend, lines]
+    [activeLegend, lines, motion]
   );
 
   return (
     <div className={className}>
       <ChartContainer>
         <CoreLineChart
+          accessibilityLayer
           data={data}
           margin={{
             top: margin?.top === undefined ? 5 : margin.top,
-            right: margin?.right === undefined ? 30 : margin.right,
+            right: margin?.right === undefined ? 16 : margin.right,
             bottom: margin?.bottom === undefined ? 5 : margin.bottom,
-            left: margin?.left === undefined ? 20 : margin.left,
+            left: margin?.left === undefined ? 0 : margin.left,
           }}
         >
-          <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
+          <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
           <XAxis
             dataKey={xAxis.key}
             tick={(tickProps) => {
@@ -115,6 +119,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
             tickCount={tickCount.x}
           />
           <YAxis
+            width={yAxis.label ? 54 : 40}
             domain={yAxis.domain}
             tickLine={false}
             axisLine={false}
@@ -147,10 +152,10 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
             <Tooltip
               cursor={{
                 stroke: "var(--text-color-tertiary)",
-                strokeDasharray: "4 4",
+                strokeWidth: 1,
               }}
               wrapperStyle={{
-                pointerEvents: "auto",
+                pointerEvents: "none",
               }}
               content={({ active, label, payload }) => {
                 if (customTooltipContent) return customTooltipContent({ active, label, payload });

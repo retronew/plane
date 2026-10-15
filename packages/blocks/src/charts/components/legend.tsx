@@ -60,7 +60,7 @@ const CustomLegend = React.forwardRef(function CustomLegend(
   return (
     <div
       ref={ref}
-      className={cn("vertical-scrollbar scrollbar-sm flex items-center overflow-scroll px-4", {
+      className={cn("flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 py-2", {
         "max-h-full flex-col items-start py-4": layout === "vertical",
       })}
     >
@@ -70,11 +70,9 @@ const CustomLegend = React.forwardRef(function CustomLegend(
         // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
           key={item.value}
-          className={cn("flex items-center gap-1.5 text-13 font-medium whitespace-nowrap text-tertiary", {
-            "px-2": layout === "horizontal",
-            "py-2": layout === "vertical",
-            "pt-0 pl-0": index === 0,
-            "pr-0 pb-0": index === payload.length - 1,
+          className={cn("flex items-center gap-1.5 text-12 whitespace-nowrap text-tertiary", {
+            "py-1": layout === "vertical",
+
             "cursor-pointer": !!props.onClick,
           })}
           onClick={(e) => onClick?.(item, index, e)}
@@ -87,7 +85,7 @@ const CustomLegend = React.forwardRef(function CustomLegend(
               backgroundColor: item.color,
             }}
           />
-          {formatter?.(item.value, item, index) ?? (item.payload as { name?: string } | undefined)?.name}
+          {formatter?.(item.value, item, index) ?? (item.payload as { name?: string } | undefined)?.name ?? item.value}
         </div>
       ))}
     </div>

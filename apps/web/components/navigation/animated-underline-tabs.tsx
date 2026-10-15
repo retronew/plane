@@ -9,10 +9,18 @@ type Props = Omit<ComponentProps<typeof Tabs>, "variant"> & {
   className?: string;
   motionKey?: string;
   fillHeight?: boolean;
+  animatePanels?: boolean;
 };
 
 /** Shared moving background and underline, including route tabs whose headers remount. */
-export function AnimatedUnderlineTabs({ className, motionKey, value, fillHeight = false, ...props }: Props) {
+export function AnimatedUnderlineTabs({
+  className,
+  motionKey,
+  value,
+  fillHeight = false,
+  animatePanels = true,
+  ...props
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const lastSelection = useRef({ key: motionKey, value: motionKey ? previousValues.get(motionKey) : undefined });
   useLayoutEffect(() => {
@@ -72,7 +80,16 @@ export function AnimatedUnderlineTabs({ className, motionKey, value, fillHeight 
     };
   }, [motionKey, value]);
   return (
-    <div ref={ref} className={cn("w-full max-w-full min-w-0", styles.tabs, fillHeight && styles.fillHeight, className)}>
+    <div
+      ref={ref}
+      className={cn(
+        "w-full max-w-full min-w-0",
+        styles.tabs,
+        !animatePanels && styles.asyncPanels,
+        fillHeight && styles.fillHeight,
+        className
+      )}
+    >
       <Tabs {...props} variant="underline" value={value} />
     </div>
   );

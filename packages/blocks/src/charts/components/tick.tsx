@@ -4,60 +4,61 @@
  * See the LICENSE file for details.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
+import { memo } from "react";
 
-// Common classnames
-const AXIS_TICK_CLASSNAME = "fill-tertiary text-13";
-
-export const CustomXAxisTick = React.memo(function CustomXAxisTick({ x, y, payload, getLabel }: any) {
+type TickProps = {
+  x?: number | string;
+  y?: number | string;
+  payload?: { value?: string | number };
+  getLabel?: (value: string | number) => string;
+  cx?: number | string;
+  cy?: number | string;
+  offset?: number;
+};
+const tickClassName = "fill-tertiary text-11";
+const labelFor = ({ payload, getLabel }: TickProps) => {
+  const value = payload?.value ?? "";
+  return getLabel ? getLabel(value) : String(value);
+};
+export const CustomXAxisTick = memo(function CustomXAxisTick(props: TickProps) {
+  const label = labelFor(props);
+  return (
+    <g transform={`translate(${props.x ?? 0},${props.y ?? 0})`}>
+      <text dy={14} textAnchor="middle" className={tickClassName}>
+        <title>{label}</title>
+        {label.length > 12 ? `${label.slice(0, 11)}…` : label}
+      </text>
+    </g>
+  );
+});
+export const CustomYAxisTick = memo(function CustomYAxisTick({ x = 0, y = 0, payload }: TickProps) {
+  const value = payload?.value ?? "";
+  const label =
+    typeof value === "number"
+      ? new Intl.NumberFormat(undefined, {
+          notation: Math.abs(value) >= 10000 ? "compact" : "standard",
+          maximumFractionDigits: 1,
+        }).format(value)
+      : value;
   return (
     <g transform={`translate(${x},${y})`}>
-      <text y={0} dy={16} textAnchor="middle" className={AXIS_TICK_CLASSNAME}>
-        {getLabel ? getLabel(payload.value) : payload.value}
+      <text dx={-6} dy={4} textAnchor="end" className={tickClassName}>
+        <title>{String(value)}</title>
+        {label}
       </text>
     </g>
   );
 });
-CustomXAxisTick.displayName = "CustomXAxisTick";
-
-export const CustomYAxisTick = React.memo(function CustomYAxisTick({ x, y, payload }: any) {
+export const CustomRadarAxisTick = memo(function CustomRadarAxisTick(props: TickProps) {
+  const { x = 0, y = 0, cx = 0, cy = 0, offset = 12 } = props;
+  const dx = Number(x) - Number(cx),
+    dy = Number(y) - Number(cy);
+  const length = Math.hypot(dx, dy) || 1;
   return (
-    <g transform={`translate(${x},${y})`}>
-      <text dx={-10} textAnchor="middle" className={AXIS_TICK_CLASSNAME}>
-        {payload.value}
+    <g transform={`translate(${Number(x) + (dx / length) * offset},${Number(y) + (dy / length) * offset})`}>
+      <text dy={4} textAnchor="middle" className={tickClassName}>
+        {labelFor(props)}
       </text>
     </g>
   );
 });
-
-CustomYAxisTick.displayName = "CustomYAxisTick";
-
-export const CustomRadarAxisTick = React.memo(function CustomRadarAxisTick({
-  x,
-  y,
-  payload,
-  getLabel,
-  cx,
-  cy,
-  offset = 16,
-}: any) {
-  // Calculate direction vector from center to tick
-  const dx = x - cx;
-  const dy = y - cy;
-  // Normalize and apply offset
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const normX = dx / length;
-  const normY = dy / length;
-  const labelX = x + normX * offset;
-  const labelY = y + normY * offset;
-
-  return (
-    <g transform={`translate(${labelX},${labelY})`}>
-      <text y={0} textAnchor="middle" className={AXIS_TICK_CLASSNAME}>
-        {getLabel ? getLabel(payload.value) : payload.value}
-      </text>
-    </g>
-  );
-});
-CustomRadarAxisTick.displayName = "CustomRadarAxisTick";

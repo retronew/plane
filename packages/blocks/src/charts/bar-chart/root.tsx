@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useMemo, useState } from "react";
 import { BarChart as CoreBarChart, Bar, Tooltip, XAxis, YAxis, Legend, CartesianGrid } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import { AXIS_LABEL_CLASSNAME } from "@plane/constants";
@@ -29,12 +30,13 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
     margin,
     tickCount = {
       x: undefined,
-      y: 10,
+      y: 5,
     },
     customTicks,
     showTooltip = true,
     customTooltipContent,
   } = props;
+  const motion = useChartMotion();
   // states
   const [activeBar, setActiveBar] = useState<string | null>(null);
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
@@ -93,6 +95,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
     () =>
       bars.map((bar) => (
         <Bar
+          {...motion}
           key={bar.key}
           dataKey={bar.key}
           stackId={bar.stackId}
@@ -108,24 +111,25 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           fill={getBarColor(data, bar.key)}
         />
       )),
-    [activeLegend, stackKeys, bars, getBarColor, data]
+    [activeLegend, stackKeys, bars, getBarColor, data, motion]
   );
 
   return (
     <div className={className}>
       <ChartContainer>
         <CoreBarChart
+          accessibilityLayer
           data={data}
           margin={{
             top: margin?.top === undefined ? 5 : margin.top,
-            right: margin?.right === undefined ? 30 : margin.right,
+            right: margin?.right === undefined ? 16 : margin.right,
             bottom: margin?.bottom === undefined ? 5 : margin.bottom,
-            left: margin?.left === undefined ? 20 : margin.left,
+            left: margin?.left === undefined ? 0 : margin.left,
           }}
           barSize={barSize}
           className="recharts-wrapper"
         >
-          <CartesianGrid stroke="var(--border-color-subtle)" vertical={false} />
+          <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
           <XAxis
             dataKey={xAxis.key}
             tick={(tickProps) => {
@@ -142,6 +146,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
             tickCount={tickCount.x}
           />
           <YAxis
+            width={yAxis.label ? 54 : 40}
             domain={yAxis.domain}
             tickLine={false}
             axisLine={false}
@@ -171,11 +176,11 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           {showTooltip && (
             <Tooltip
               cursor={{
-                fill: "var(--alpha-black-300)",
+                fill: "var(--bg-layer-transparent-hover)",
                 className: "bg-layer-1 cursor-pointer",
               }}
               wrapperStyle={{
-                pointerEvents: "auto",
+                pointerEvents: "none",
               }}
               content={({ active, label, payload }) => {
                 if (customTooltipContent) return customTooltipContent({ active, label, payload });

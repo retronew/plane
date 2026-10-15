@@ -7,8 +7,8 @@
 import type { TChartColorScheme } from "@plane/types";
 import { ChartXAxisProperty } from "@plane/types";
 
-export const LABEL_CLASSNAME = "uppercase text-tertiary/60 text-13 tracking-wide";
-export const AXIS_LABEL_CLASSNAME = "uppercase text-tertiary/60 text-13 tracking-wide";
+export const LABEL_CLASSNAME = "fill-tertiary text-11";
+export const AXIS_LABEL_CLASSNAME = "fill-tertiary text-11";
 
 export enum ChartXAxisDateGrouping {
   DAY = "DAY",
@@ -129,3 +129,20 @@ export const CHART_COLOR_PALETTES: {
     ],
   },
 ];
+
+/** Restrained, theme-aware defaults; business state and priority colors remain caller-owned. */
+export const CHART_SERIES_COLORS = [
+  "light-dark(#6866b9, #a19bdf)",
+  "light-dark(#48897d, #80b8a8)",
+  "light-dark(#b68b4d, #d0ad78)",
+  "light-dark(#558ca9, #85b1c8)",
+  "light-dark(#aa6f8d, #ca9ab1)",
+] as const;
+
+export const CHART_PRIORITY_COLORS = {
+  urgent: "light-dark(#b2515e, #d6818b)",
+  high: "light-dark(#bd7d50, #d8a57e)",
+  medium: "light-dark(#ad9146, #cdb370)",
+  low: "light-dark(#598c70, #88b69b)",
+  none: "light-dark(#989da8, #858b99)",
+};

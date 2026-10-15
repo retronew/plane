@@ -4,33 +4,27 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
+import { memo } from "react";
 import type { TooltipPayload } from "recharts";
-// plane imports
-import { Card } from "../../card/card";
-
-interface TreeMapTooltipProps {
-  active: boolean | undefined;
-  payload: TooltipPayload | undefined;
-}
-
-export const TreeMapTooltip = React.memo(function TreeMapTooltip({ active, payload }: TreeMapTooltipProps) {
-  if (!active || !payload || !payload[0]?.payload) return null;
-
-  const data = payload[0].payload;
-
+import { ChartTooltipContent } from "../components/tooltip";
+export const TreeMapTooltip = memo(function TreeMapTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload;
+}) {
+  const data = payload?.[0]?.payload;
+  if (!active || !data || typeof data.value !== "number") return null;
   return (
-    <Card className="flex flex-col space-y-1.5" spacing="sm">
-      <div className="flex items-center gap-2 border-b border-subtle pb-2.5">
-        {data?.icon}
-        <p className="text-11 font-medium text-primary capitalize">{data?.name}</p>
-      </div>
-      <span className="text-11 font-medium text-secondary">
-        {data?.value.toLocaleString()}
-        {data.label && ` ${data.label}`}
-      </span>
-    </Card>
+    <ChartTooltipContent
+      label={
+        <span className="flex items-center gap-2">
+          {data.icon}
+          {data.name}
+        </span>
+      }
+      rows={[{ key: "value", label: data.label ?? data.name, value: data.value, color: data.fillColor }]}
+    />
   );
 });
-
-TreeMapTooltip.displayName = "TreeMapTooltip";

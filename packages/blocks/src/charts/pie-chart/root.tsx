@@ -6,6 +6,7 @@
 
 import React, { useMemo, useState } from "react";
 import { Cell, PieChart as CorePieChart, Label, Legend, Pie, Tooltip } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 // plane imports
 import type { TPieChartProps } from "@plane/types";
@@ -28,11 +29,12 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
     showLabel,
     customLabel,
     centerLabel,
-    cornerRadius,
-    paddingAngle,
+    cornerRadius = 4,
+    paddingAngle = 2,
     tooltipLabel,
     customTooltipContent,
   } = props;
+  const motion = useChartMotion();
   // states
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
 
@@ -59,12 +61,13 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
           data={data}
           margin={{
             top: margin?.top === undefined ? 5 : margin.top,
-            right: margin?.right === undefined ? 30 : margin.right,
+            right: margin?.right === undefined ? 16 : margin.right,
             bottom: margin?.bottom === undefined ? 5 : margin.bottom,
-            left: margin?.left === undefined ? 20 : margin.left,
+            left: margin?.left === undefined ? 0 : margin.left,
           }}
         >
           <Pie
+            {...motion}
             data={data}
             dataKey={dataKey}
             cx="50%"

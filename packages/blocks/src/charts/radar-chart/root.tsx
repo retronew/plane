@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from "react";
 import { PolarGrid, Radar, RadarChart as CoreRadarChart, PolarAngleAxis, Tooltip, Legend } from "recharts";
+import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
 import type { TRadarChartProps } from "@plane/types";
 import { getLegendProps } from "../components/legend";
@@ -15,6 +16,7 @@ import { CustomTooltip } from "../components/tooltip";
 function RadarChart<T extends string, K extends string>(props: TRadarChartProps<T, K>) {
   const { data, radars, margin, showTooltip, legend, className, angleAxis } = props;
 
+  const motion = useChartMotion();
   // states
   const [, setActiveIndex] = useState<number | null>(null);
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
@@ -42,10 +44,10 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
             <Tooltip
               cursor={{
                 stroke: "var(--text-color-tertiary)",
-                strokeDasharray: "4 4",
+                strokeWidth: 1,
               }}
               wrapperStyle={{
-                pointerEvents: "auto",
+                pointerEvents: "none",
               }}
               content={({ active, label, payload }) => (
                 <CustomTooltip
@@ -74,6 +76,7 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
           )}
           {radars.map((radar) => (
             <Radar
+              {...motion}
               key={radar.key}
               name={radar.name}
               dataKey={radar.key}

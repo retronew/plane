@@ -89,3 +89,8 @@
 .fillHeight :global([role="tablist"] > [role="presentation"])::before {
   top: calc((6px - var(--active-tab-height) - 1.75rem) / 2);
 }
+
+/* Async sections own their entrance after data is ready. */
+.asyncPanels :global([role="tabpanel"] > div) {
+  animation: none;
+}
