@@ -7,19 +7,21 @@
 import { useCallback } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { FilterOutline } from "@makeplane/propel/icons";
+import { FilterToggleButton } from "@/components/common/filter-toggle-button";
+
+import { ProjectLayoutSwitch } from "./layout-switch";
+import { ProjectDisplayMenu } from "./dropdowns/display";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import type { TProjectFilters } from "@plane/types";
 import { cn, calculateTotalFilters } from "@plane/utils";
 // components
-import { FiltersDropdown } from "@/components/issues/issue-layouts/filters";
+import { Menu, MenuContent, MenuTrigger } from "@makeplane/propel/components/menu";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useProjectFilter } from "@/hooks/store/use-project-filter";
 // local imports
 import { ProjectFiltersSelection } from "./dropdowns/filters";
-import { ProjectOrderByDropdown } from "./dropdowns/order-by";
 
 type Props = {
   filterMenuButton?: React.ReactNode;
@@ -30,7 +32,6 @@ type Props = {
 
 const HeaderFilters = observer(function HeaderFilters({
   filterMenuButton,
-  isMobile,
   classname = "",
   filterClassname = "",
 }: Props) {
@@ -69,40 +70,55 @@ const HeaderFilters = observer(function HeaderFilters({
     },
     [filters, updateFilters, workspaceSlug]
   );
-  const isFiltersApplied = calculateTotalFilters(filters ?? {}) !== 0;
 
+  const active = calculateTotalFilters(filters ?? {}) > 0;
   return (
-    <div className={cn("flex gap-3", classname)}>
-      <ProjectOrderByDropdown
-        value={displayFilters?.order_by}
-        onChange={(val) => {
-          if (!workspaceSlug || val === displayFilters?.order_by) return;
-          updateDisplayFilters(workspaceSlug.toString(), {
-            order_by: val,
-          });
-        }}
-        isMobile={isMobile}
-      />
+    <div className={cn("flex items-center gap-2", classname)}>
+      <ProjectLayoutSwitch />
       <div className={cn(filterClassname)}>
-        <FiltersDropdown
-          icon={<FilterOutline className="h-3 w-3" />}
-          title={t("common.filters")}
-          placement="bottom-end"
-          isFiltersApplied={isFiltersApplied}
-          menuButton={filterMenuButton || null}
-        >
-          <ProjectFiltersSelection
-            displayFilters={displayFilters ?? {}}
-            filters={filters ?? {}}
-            handleFiltersUpdate={handleFilters}
-            handleDisplayFiltersUpdate={(val) => {
-              if (!workspaceSlug) return;
-              updateDisplayFilters(workspaceSlug.toString(), val);
-            }}
-            memberIds={workspaceMemberIds ?? undefined}
+        <Menu>
+          <MenuTrigger
+            render={
+              filterMenuButton ? (
+                <button type="button" aria-label={t("common.filters")}>
+                  {filterMenuButton}
+                </button>
+              ) : (
+                <FilterToggleButton
+                  active={active}
+                  size="md"
+                  showTooltip
+                  aria-pressed={active}
+                  aria-label={t("common.filters")}
+                />
+              )
+            }
           />
-        </FiltersDropdown>
+          <MenuContent side="bottom" align="end">
+            <ProjectFiltersSelection
+              displayFilters={displayFilters ?? {}}
+              filters={filters ?? {}}
+              handleFiltersUpdate={handleFilters}
+              handleDisplayFiltersUpdate={(val) => {
+                if (!workspaceSlug) return;
+                updateDisplayFilters(workspaceSlug.toString(), val);
+              }}
+              memberIds={workspaceMemberIds ?? undefined}
+            />
+          </MenuContent>
+        </Menu>
       </div>
+      <ProjectDisplayMenu
+        layout={displayFilters?.layout}
+        groupBy={displayFilters?.group_by}
+        onGroupChange={(group_by) => {
+          if (workspaceSlug) updateDisplayFilters(String(workspaceSlug), { group_by });
+        }}
+        value={displayFilters?.order_by}
+        onChange={(order_by) => {
+          if (workspaceSlug) updateDisplayFilters(String(workspaceSlug), { order_by });
+        }}
+      />
     </div>
   );
 });

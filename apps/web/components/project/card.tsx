@@ -5,7 +5,11 @@ import { ProjectStatusSelect } from "@/components/settings/workspace/configurati
  * See the LICENSE file for details.
  */
 
-import { ProjectCategoryBadges } from "@/components/settings/workspace/configuration/project-fields";
+import { Menu, MenuTrigger, MenuItem } from "@makeplane/propel/components/menu";
+import { MoreHorizontal } from "lucide-react";
+import { ActionMenuContent } from "@plane/blocks/common";
+import { SidebarProjectQuickActions } from "@/components/workspace/sidebar/project-quick-actions";
+import { ProjectCardProperties } from "./card-properties";
 import React, { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
@@ -17,14 +21,11 @@ import {
   NewTabOutline,
   RestoreOutline,
   SettingsOutline,
-  TickOutline,
   UserPlusOutline,
 } from "@makeplane/propel/icons";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
-import { Avatar } from "@makeplane/propel/components/avatar";
-import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -35,14 +36,12 @@ import type { IProject } from "@plane/types";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { ContextMenu } from "@plane/blocks/context-menu";
 import { FavoriteStar } from "@plane/blocks/common";
-import { copyUrlToClipboard, cn, getFileURL, renderFormattedDate } from "@plane/utils";
+import { copyUrlToClipboard, cn } from "@plane/utils";
 // components
 // hooks
-import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
-import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
 import { CoverImage } from "@/components/common/cover-image";
 import { DeleteProjectModal } from "./delete-project-modal";
@@ -52,30 +51,27 @@ import { translate } from "@plane/i18n";
 
 type Props = {
   project: IProject;
+  compact?: boolean;
+  hideProperties?: boolean;
+  className?: string;
+  wrapProperties?: boolean;
 };
 
 export const ProjectCard = observer(function ProjectCard(props: Props) {
-  const { project } = props;
+  const { project, compact = false, hideProperties = false, className, wrapProperties = false } = props;
   // states
   const [deleteProjectModalOpen, setDeleteProjectModal] = useState(false);
   const [joinProjectModalOpen, setJoinProjectModal] = useState(false);
   const [restoreProject, setRestoreProject] = useState(false);
+  const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   // refs
   const projectCardRef = useRef(null);
   // router
   const router = useAppRouter();
   const { workspaceSlug } = useParams();
   // store hooks
-  const { getUserDetails } = useMember();
   const { addProjectToFavorites, removeProjectFromFavorites } = useProject();
   const { allowPermissions } = useUserPermissions();
-  // hooks
-  const { isMobile } = usePlatformOS();
-  // derived values
-  const projectMembers = (project.members ?? []).flatMap((memberId) => {
-    const member = getUserDetails(memberId);
-    return member ? [member] : [];
-  });
   const shouldRenderFavorite = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.WORKSPACE
@@ -100,7 +96,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
       loading: translate("web.adding_project_to_favorites"),
       success: {
         title: translate("toast.success"),
-        message: () => "Project added to favorites.",
+        message: () => translate("project_added_to_favorites"),
         // propel: the callback exists for its side effect; a toast action is data, and there is
         // none here, so it returns an empty list rather than an empty fragment.
         actionItems: () => {
@@ -110,7 +106,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
       },
       error: {
         title: translate("toast.error"),
-        message: () => "Couldn't add the project to favorites. Please try again.",
+        message: () => translate("couldnt_add_the_project_to_favorites"),
       },
     });
   };
@@ -123,11 +119,11 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
       loading: translate("web.removing_project_from_favorites"),
       success: {
         title: translate("toast.success"),
-        message: () => "Project removed from favorites.",
+        message: () => translate("project_removed_from_favorites"),
       },
       error: {
         title: translate("toast.error"),
-        message: () => "Couldn't remove the project from favorites. Please try again.",
+        message: () => translate("couldnt_remove_the_project_from_favorites"),
       },
     });
   };
@@ -226,184 +222,152 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
           }
         }}
         data-prevent-progress={!isMemberOfProject || isArchived}
+        data-project-card={project.id}
+        data-compact={compact}
         className={cn(
-          "group/project-card flex w-full flex-col justify-between overflow-hidden rounded-lg border border-subtle bg-layer-2 transition-all duration-300 hover:border-strong hover:shadow-raised-200"
+          "group/project-card focus-visible:outline-accent-primary relative flex w-full min-w-0 flex-col rounded-xl border border-subtle bg-layer-1 p-1 shadow-none transition-colors hover:bg-layer-1-hover focus-visible:outline-2",
+          compact &&
+            "flex-row! items-center gap-3 rounded-none border-x-0 border-t-0 border-b border-subtle bg-layer-2 px-3 py-1 hover:bg-layer-1",
+          className
         )}
       >
         <ContextMenu parentRef={projectCardRef} items={MENU_ITEMS} />
-        <div className="relative h-[118px] w-full rounded-t">
-          <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/60 to-transparent" />
-
-          <CoverImage
-            src={project.cover_image_url}
-            alt={project.name}
-            className="absolute top-0 left-0 h-full w-full rounded-t"
-          />
-
-          <div className="absolute bottom-4 z-[1] flex h-10 w-full items-center justify-between gap-3 px-4">
-            <div className="flex flex-grow items-center gap-2.5 truncate">
-              <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-sm bg-white/10">
-                <Logo logo={project.logo_props} size={18} />
-              </div>
-
-              <div className="flex w-full flex-col justify-between gap-0.5 truncate">
-                <h3 className="truncate font-semibold text-on-color">{project.name}</h3>
-                <span className="flex items-center gap-1.5">
-                  <p className="text-11 font-medium text-on-color">{project.identifier} </p>
-                  {project.network === 0 && <LockOutline className="h-2.5 w-2.5 text-on-color" />}
-                </span>
-              </div>
-            </div>
-
-            {!isArchived && (
-              <div data-prevent-progress className="flex h-full flex-shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  aria-label={translate("web.copy_link")}
-                  className="flex h-6 w-6 items-center justify-center rounded-sm bg-white/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    void handleCopyText();
-                  }}
-                >
-                  <LinkOutline className="h-3 w-3 text-on-color" />
-                </button>
-                {shouldRenderFavorite && (
-                  <FavoriteStar
-                    buttonClassName="h-6 w-6 bg-white/10 rounded-sm"
-                    iconClassName={cn("h-3 w-3", {
-                      "text-on-color": !project.is_favorite,
-                    })}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (project.is_favorite) handleRemoveFromFavorites();
-                      else handleAddToFavorites();
-                    }}
-                    selected={!!project.is_favorite}
-                  />
-                )}
-              </div>
+        <div
+          className={cn(
+            "relative h-[108px] shrink-0 overflow-hidden rounded-lg bg-[#262626]",
+            compact && "size-9! rounded-md bg-layer-1"
+          )}
+        >
+          {project.cover_image_url && !compact && (
+            <CoverImage
+              src={project.cover_image_url}
+              alt=""
+              className="absolute inset-0 h-full w-full scale-[1.02] opacity-95 blur-[1px]"
+            />
+          )}
+          <div
+            className={cn(
+              "absolute top-3 left-3 grid size-9 place-items-center rounded-md bg-white/10",
+              compact && "inset-0"
             )}
+          >
+            <Logo logo={project.logo_props} size={20} />
           </div>
         </div>
-
+        <div className={cn("min-w-0 px-2 pt-1.5", compact && "flex-1 p-0!")}>
+          <Tooltip label={project.description || project.name} disabled={!project.description}>
+            <h3 className="truncate text-14 font-medium text-primary">{project.name}</h3>
+          </Tooltip>
+          <span className="flex items-center gap-1.5 text-12 text-tertiary">
+            {project.identifier}
+            {project.network === 0 && <LockOutline className="size-3" />}
+          </span>
+        </div>
         <div
-          className={cn("flex min-h-[104px] w-full flex-col justify-between gap-2 rounded-b-sm p-4", {
-            "opacity-90": isArchived,
-          })}
+          role="presentation"
+          data-project-actions
+          className={cn(
+            "absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-md bg-layer-2/80 opacity-0 transition-opacity group-focus-within/project-card:opacity-100 group-hover/project-card:opacity-100 [@media(hover:none)]:opacity-100",
+            isActionMenuOpen && "opacity-100",
+            compact && "static order-last opacity-100"
+          )}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onKeyDown={(e) => e.stopPropagation()}
         >
-          <p className="line-clamp-2 text-13 break-words text-tertiary">
-            {project.description && project.description.trim() !== ""
-              ? project.description
-              : translate("web.runtime.created_on", { date: renderFormattedDate(project.created_at) ?? "" })}
-          </p>
-          <ProjectStatusSelect
-            workspaceSlug={workspaceSlug?.toString() ?? ""}
-            projectId={project.id}
-            value={project.status}
+          <Menu open={isActionMenuOpen} onOpenChange={setActionMenuOpen}>
+            <MenuTrigger
+              render={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  aria-label={translate("aria_labels.common.more_actions")}
+                  icon={<MoreHorizontal className="size-4" />}
+                />
+              }
+            />
+            {isMemberOfProject && !isArchived ? (
+              <SidebarProjectQuickActions
+                workspaceSlug={String(workspaceSlug)}
+                project={project}
+                onCopyLink={() => void handleCopyText()}
+              />
+            ) : (
+              <ActionMenuContent side="bottom" align="end">
+                {MENU_ITEMS.filter((item) => item.shouldRender !== false).map((item) => (
+                  <MenuItem
+                    key={item.key}
+                    label={item.title ?? ""}
+                    icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+                    onClick={item.action}
+                  />
+                ))}
+              </ActionMenuContent>
+            )}
+          </Menu>
+          {!isArchived && shouldRenderFavorite && (
+            <FavoriteStar
+              aria-label={translate(project.is_favorite ? "remove_from_favorites" : "add_to_favorites")}
+              buttonClassName="size-6 rounded-md hover:bg-layer-1"
+              iconClassName="size-4"
+              selected={!!project.is_favorite}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (project.is_favorite) handleRemoveFromFavorites();
+                else handleAddToFavorites();
+              }}
+            />
+          )}
+        </div>
+        <div
+          className={cn(
+            "flex min-w-0 items-center gap-1 px-2 py-1.5",
+            wrapProperties && "flex-wrap gap-2",
+            hideProperties && "hidden!",
+            compact && "ml-auto shrink-0 justify-end p-0! max-sm:hidden"
+          )}
+        >
+          <div className={cn("flex min-w-0 items-center", !wrapProperties && "max-w-20 shrink-0")}>
+            <ProjectStatusSelect
+              workspaceSlug={String(workspaceSlug)}
+              projectId={project.id}
+              value={project.status}
+              disabled={
+                isArchived ||
+                !(hasAdminRole || allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE))
+              }
+            />
+          </div>
+          <ProjectCardProperties
+            project={project}
+            wrap={wrapProperties}
+            stretch={!compact}
             disabled={
               isArchived ||
               !(hasAdminRole || allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE))
             }
           />
-          <ProjectCategoryBadges workspaceSlug={workspaceSlug?.toString() ?? ""} labels={project.labels} />
-          <div className="item-center flex justify-between">
-            <div className="flex items-center justify-center gap-2">
-              <Tooltip
-                label={
-                  project.members?.length
-                    ? translate("web.runtime.members_count", { count: project.members.length ?? 0 })
-                    : translate("web.no_members")
-                }
-                layout="stacked"
-                disabled={isMobile}
-              >
-                {projectMembers.length > 0 ? (
-                  <div className="flex cursor-pointer items-center gap-2 text-secondary">
-                    <AvatarGroup size="xs" max={2}>
-                      {projectMembers.map((member) => (
-                        <Avatar
-                          key={member.id}
-                          alt={member.display_name}
-                          fallback={member.display_name?.[0]?.toUpperCase()}
-                          src={getFileURL(member.avatar_url)}
-                        />
-                      ))}
-                    </AvatarGroup>
-                  </div>
-                ) : (
-                  <span className="text-13 text-placeholder italic">{translate("web.no_member_yet")}</span>
-                )}
-              </Tooltip>
-              {isArchived && <div className="text-11 font-medium text-placeholder">{translate("web.archived")}</div>}
-            </div>
-            {isArchived ? (
-              hasAdminRole && (
-                <div className="flex items-center justify-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    stretch="auto"
-                    label={translate("web.restore")}
-                    icon={<Icon icon={RestoreOutline} />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setRestoreProject(true);
-                    }}
-                  />
-                  <IconButton
-                    variant="ghost"
-                    size="xs"
-                    aria-label={translate("web.delete")}
-                    icon={<Icon icon={DeleteOutline} />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDeleteProjectModal(true);
-                    }}
-                  />
-                </div>
-              )
-            ) : (
-              <>
-                {isMemberOfProject &&
-                  (hasAdminRole || hasMemberRole ? (
-                    <Link
-                      className="flex items-center justify-center rounded-sm p-1 text-placeholder hover:bg-layer-1 hover:text-secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      href={`/${workspaceSlug}/settings/projects/${project.id}`}
-                    >
-                      <SettingsOutline className="h-3.5 w-3.5" />
-                    </Link>
-                  ) : (
-                    <span className="flex items-center gap-1 text-13 text-placeholder">
-                      <TickOutline className="h-3.5 w-3.5" />
-                      {translate("web.joined")}
-                    </span>
-                  ))}
-                {!isMemberOfProject && (
-                  <div className="flex items-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      stretch="auto"
-                      label={translate("web.join")}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setJoinProjectModal(true);
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+
+          {isArchived ? (
+            <span className="text-12 text-tertiary">{translate("web.archived")}</span>
+          ) : (
+            !isMemberOfProject && (
+              <Button
+                variant="ghost"
+                size="xs"
+                stretch="auto"
+                label={translate("web.join")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setJoinProjectModal(true);
+                }}
+              />
+            )
+          )}
         </div>
       </Link>
     </>

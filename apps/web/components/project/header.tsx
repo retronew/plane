@@ -5,12 +5,17 @@
  */
 
 import { observer } from "mobx-react";
-import { usePathname } from "next/navigation";
+import { useProjectFilter } from "@/hooks/store/use-project-filter";
+import { useProject } from "@/hooks/store/use-project";
+import { Menu, MenuContent, MenuRadioGroup, MenuRadioItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { ChevronDown } from "lucide-react";
+import { useParams, usePathname } from "next/navigation";
 // i18n
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 // ui
 import { Button } from "@makeplane/propel/components/button";
+import { Badge } from "@makeplane/propel/components/badge";
 import { ProjectsOutline } from "@makeplane/propel/icons";
 import { Breadcrumbs } from "@plane/blocks/breadcrumb";
 import { Header } from "@plane/blocks/layout";
@@ -32,6 +37,9 @@ export const ProjectsBaseHeader = observer(function ProjectsBaseHeader() {
   const { allowPermissions } = useUserPermissions();
 
   const pathname = usePathname();
+  const { workspaceSlug } = useParams();
+  const { currentWorkspaceDisplayFilters, updateDisplayFilters } = useProjectFilter();
+  const { filteredProjectIds } = useProject();
   // auth
   const isAuthorizedUser = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
@@ -51,6 +59,45 @@ export const ProjectsBaseHeader = observer(function ProjectsBaseHeader() {
               />
             }
           />
+          {!isArchived && (
+            <Breadcrumbs.Item
+              component={
+                <div className="flex items-center gap-1 [&>div]:w-auto">
+                  <Menu>
+                    <MenuTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          stretch="auto"
+                          label={t(
+                            currentWorkspaceDisplayFilters?.my_projects
+                              ? "web.project_page.your_projects"
+                              : "web.project_page.all_projects"
+                          )}
+                          iconPosition="end"
+                          icon={<ChevronDown className="size-3" />}
+                        />
+                      }
+                    />
+                    <MenuContent side="bottom" align="start">
+                      <MenuRadioGroup
+                        value={currentWorkspaceDisplayFilters?.my_projects ? "mine" : "all"}
+                        onValueChange={(value) => {
+                          if (workspaceSlug)
+                            updateDisplayFilters(String(workspaceSlug), { my_projects: value === "mine" });
+                        }}
+                      >
+                        <MenuRadioItem value="mine" label={t("web.project_page.your_projects")} />
+                        <MenuRadioItem value="all" label={t("web.project_page.all_projects")} />
+                      </MenuRadioGroup>
+                    </MenuContent>
+                  </Menu>
+                  <Badge size="xs" variant="brand" label={String(filteredProjectIds?.length ?? 0)} />
+                </div>
+              }
+            />
+          )}
           {isArchived && <Breadcrumbs.Item component={<BreadcrumbLink label={t("web.archived")} />} />}
         </Breadcrumbs>
       </Header.LeftItem>

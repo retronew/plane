@@ -1,135 +1,208 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
-import { useParams } from "react-router";
-import { useProjectCategories } from "@/components/settings/workspace/configuration/project-fields";
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { CloseOutline, SearchOutline } from "@makeplane/propel/icons";
-// plane imports
+import { useParams } from "next/navigation";
+import {
+  MenuCheckboxItem,
+  MenuItem,
+  MenuSubmenu,
+  MenuSubmenuContent,
+  MenuSubmenuTrigger,
+} from "@makeplane/propel/components/menu";
+import { InputField } from "@makeplane/propel/components/input-field";
+import { SearchOutline } from "@makeplane/propel/icons";
+import { Avatar } from "@makeplane/propel/components/avatar";
+import { NETWORK_CHOICES, PROJECT_CREATED_AT_FILTER_OPTIONS, ISSUE_PRIORITIES } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 import type { TProjectDisplayFilters, TProjectFilters } from "@plane/types";
-// components
-import { FilterOption } from "@/components/issues/issue-layouts/filters";
-// hooks
-import { usePlatformOS } from "@/hooks/use-platform-os";
-// local imports
-import { FilterAccess } from "./access";
-import { FilterCreatedDate } from "./created-at";
-import { FilterLead } from "./lead";
-import { FilterMembers } from "./members";
-import { translate } from "@plane/i18n";
+import { getFileURL, isInDateFormat } from "@plane/utils";
+import { DateFilterModal } from "@/components/core/filters/date-filter-modal";
+import { useMember } from "@/hooks/store/use-member";
+import { useProjectCategories } from "@/components/settings/workspace/configuration/project-fields";
+import { ProjectNetworkIcon } from "../../project-network-icon";
+import { ProjectStatusIcon } from "../../project-status-icon";
+
+const EMPTY_MEMBER_IDS: string[] = [];
 
 type Props = {
   displayFilters: TProjectDisplayFilters;
   filters: TProjectFilters;
   handleFiltersUpdate: (key: keyof TProjectFilters, value: string | string[]) => void;
-  handleDisplayFiltersUpdate: (updatedDisplayProperties: Partial<TProjectDisplayFilters>) => void;
-  memberIds?: string[] | undefined;
+  handleDisplayFiltersUpdate: (updated: Partial<TProjectDisplayFilters>) => void;
+  memberIds?: string[];
 };
 
-export const ProjectFiltersSelection = observer(function ProjectFiltersSelection(props: Props) {
-  const { displayFilters, filters, handleFiltersUpdate, handleDisplayFiltersUpdate, memberIds } = props;
-  const { workspaceSlug = "" } = useParams();
-  const categories = useProjectCategories(workspaceSlug);
-  // states
-  const [filtersSearchQuery, setFiltersSearchQuery] = useState("");
-  // store
-  const { isMobile } = usePlatformOS();
-
+function MemberFilter({
+  label,
+  ids,
+  selected,
+  onChange,
+}: {
+  label: string;
+  ids: string[];
+  selected: string[];
+  onChange: (id: string) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const { getUserDetails } = useMember();
+  const { t } = useTranslation();
+  const members = ids
+    .map((id) => getUserDetails(id))
+    .filter((member) => member && member.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="bg-surface-1 p-2.5 pb-0">
-        <div className="flex items-center gap-1.5 rounded-sm border-[0.5px] border-subtle bg-surface-2 px-1.5 py-1 text-11">
-          <SearchOutline className="text-placeholder" width={12} height={12} />
-          <input
-            type="text"
-            className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder={translate("web.search")}
-            value={filtersSearchQuery}
-            onChange={(e) => setFiltersSearchQuery(e.target.value)}
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-            autoFocus={!isMobile}
-          />
-          {filtersSearchQuery !== "" && (
-            <button type="button" className="grid place-items-center" onClick={() => setFiltersSearchQuery("")}>
-              <CloseOutline className="text-tertiary" height={12} width={12} />
-            </button>
-          )}
+    <MenuSubmenu>
+      <MenuSubmenuTrigger label={label} trailing={selected.length ? String(selected.length) : undefined} />
+      <MenuSubmenuContent>
+        <div className="w-56 max-w-[calc(100vw-32px)]">
+          <div className="px-1 pb-1">
+            <InputField
+              size="md"
+              orientation="vertical"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("search")}
+              aria-label={t("search")}
+              startIcon={<SearchOutline />}
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {members.map(
+              (member) =>
+                member && (
+                  <MenuCheckboxItem
+                    key={member.id}
+                    label={member.display_name}
+                    checked={selected.includes(member.id)}
+                    onCheckedChange={() => onChange(member.id)}
+                    closeOnClick={false}
+                    icon={
+                      <Avatar
+                        size="xs"
+                        alt={member.display_name}
+                        src={getFileURL(member.avatar_url)}
+                        fallback={member.display_name[0]}
+                      />
+                    }
+                  />
+                )
+            )}
+            {!members.length && <p className="px-2 py-2 text-12 text-tertiary">{t("web.no_matches_found")}</p>}
+          </div>
         </div>
-      </div>
-      <div className="vertical-scrollbar scrollbar-sm h-full w-full divide-y divide-subtle-1 overflow-y-auto px-2.5">
-        <div className="py-2">
-          <FilterOption
-            isChecked={!!displayFilters.my_projects}
-            onClick={() =>
-              handleDisplayFiltersUpdate({
-                my_projects: !displayFilters.my_projects,
-              })
-            }
-            title={translate("web.my_projects")}
-          />
-        </div>
+      </MenuSubmenuContent>
+    </MenuSubmenu>
+  );
+}
 
-        {(["status", "labels"] as const)
-          .filter((key) => key !== "status" || categories.statesEnabled)
-          .map((key) => (
-            <div className="py-2" key={key}>
-              <p className="px-2 py-1 text-12 text-tertiary">
-                {translate(key === "status" ? "web.project_statuses" : "web.project_labels")}
-              </p>
-              {(key === "status" ? categories.statuses : categories.labels)
-                .filter((entry) => entry.name.toLocaleLowerCase().includes(filtersSearchQuery.toLocaleLowerCase()))
-                .map((entry) => (
-                  <FilterOption
+export const ProjectFiltersSelection = observer(function ProjectFiltersSelection({
+  filters,
+  handleFiltersUpdate,
+  memberIds = EMPTY_MEMBER_IDS,
+}: Props) {
+  const { workspaceSlug } = useParams();
+  const { t } = useTranslation();
+  const categories = useProjectCategories(String(workspaceSlug));
+  const [customDateOpen, setCustomDateOpen] = useState(false);
+  const customSelected = (filters.created_at ?? []).filter((value) => isInDateFormat(value.split(";")[0]));
+  return (
+    <div className="w-48 max-w-[calc(100vw-32px)]">
+      <MenuSubmenu>
+        <MenuSubmenuTrigger label={t("web.project_page.access")} />
+        <MenuSubmenuContent>
+          {NETWORK_CHOICES.map((choice) => (
+            <MenuCheckboxItem
+              key={choice.key}
+              label={t(choice.i18n_label)}
+              icon={<ProjectNetworkIcon iconKey={choice.iconKey} />}
+              checked={filters.access?.includes(String(choice.key)) ?? false}
+              onCheckedChange={() => handleFiltersUpdate("access", String(choice.key))}
+              closeOnClick={false}
+            />
+          ))}
+        </MenuSubmenuContent>
+      </MenuSubmenu>
+      <MenuSubmenu>
+        <MenuSubmenuTrigger label={t("priority")} />
+        <MenuSubmenuContent>
+          {ISSUE_PRIORITIES.map((choice) => (
+            <MenuCheckboxItem
+              key={choice.key}
+              label={choice.title}
+              checked={filters.priority?.includes(choice.key) ?? false}
+              onCheckedChange={() => handleFiltersUpdate("priority", choice.key)}
+              closeOnClick={false}
+            />
+          ))}
+        </MenuSubmenuContent>
+      </MenuSubmenu>
+      {(["status", "labels"] as const)
+        .filter((key) => key !== "status" || categories.statesEnabled)
+        .map((key) => (
+          <MenuSubmenu key={key}>
+            <MenuSubmenuTrigger label={t(key === "status" ? "web.project_statuses" : "web.project_labels")} />
+            <MenuSubmenuContent>
+              <div className="max-h-64 min-w-36 overflow-y-auto">
+                {(key === "status" ? categories.statuses : categories.labels).map((entry) => (
+                  <MenuCheckboxItem
                     key={entry.id}
-                    title={entry.name}
-                    isChecked={!!filters[key]?.includes(entry.id)}
-                    onClick={() => handleFiltersUpdate(key, entry.id)}
+                    label={entry.name}
+                    checked={filters[key]?.includes(entry.id) ?? false}
+                    onCheckedChange={() => handleFiltersUpdate(key, entry.id)}
+                    closeOnClick={false}
+                    icon={
+                      key === "status" ? (
+                        <ProjectStatusIcon group={entry.group} color={entry.color} />
+                      ) : (
+                        <span className="size-2 rounded-full" style={{ background: entry.color }} />
+                      )
+                    }
                   />
                 ))}
-            </div>
+                {!(key === "status" ? categories.statuses : categories.labels).length && (
+                  <p className="px-2 py-2 text-12 text-tertiary">{t("web.configuration_empty")}</p>
+                )}
+              </div>
+            </MenuSubmenuContent>
+          </MenuSubmenu>
+        ))}
+      <MemberFilter
+        label={t("lead")}
+        ids={memberIds}
+        selected={filters.lead ?? []}
+        onChange={(id) => handleFiltersUpdate("lead", id)}
+      />
+      <MemberFilter
+        label={t("common.members")}
+        ids={memberIds}
+        selected={filters.members ?? []}
+        onChange={(id) => handleFiltersUpdate("members", id)}
+      />
+      <MenuSubmenu>
+        <MenuSubmenuTrigger label={t("web.created_date")} />
+        <MenuSubmenuContent>
+          {PROJECT_CREATED_AT_FILTER_OPTIONS.map((option) => (
+            <MenuCheckboxItem
+              key={option.value}
+              checked={filters.created_at?.includes(option.value) ?? false}
+              label={option.name}
+              onCheckedChange={() => handleFiltersUpdate("created_at", option.value)}
+              closeOnClick={false}
+            />
           ))}
-        {/* access */}
-        <div className="py-2">
-          <FilterAccess
-            appliedFilters={filters.access ?? null}
-            handleUpdate={(val) => handleFiltersUpdate("access", val)}
-            searchQuery={filtersSearchQuery}
+          <MenuItem
+            label={t("web.custom")}
+            onClick={() =>
+              customSelected.length ? handleFiltersUpdate("created_at", customSelected) : setCustomDateOpen(true)
+            }
+            closeOnClick={false}
           />
-        </div>
-
-        {/* lead */}
-        <div className="py-2">
-          <FilterLead
-            appliedFilters={filters.lead ?? null}
-            handleUpdate={(val) => handleFiltersUpdate("lead", val)}
-            searchQuery={filtersSearchQuery}
-            memberIds={memberIds}
-          />
-        </div>
-
-        {/* members */}
-        <div className="py-2">
-          <FilterMembers
-            appliedFilters={filters.members ?? null}
-            handleUpdate={(val) => handleFiltersUpdate("members", val)}
-            searchQuery={filtersSearchQuery}
-            memberIds={memberIds}
-          />
-        </div>
-
-        {/* created date */}
-        <div className="py-2">
-          <FilterCreatedDate
-            appliedFilters={filters.created_at ?? null}
-            handleUpdate={(val) => handleFiltersUpdate("created_at", val)}
-            searchQuery={filtersSearchQuery}
-          />
-        </div>
-      </div>
+        </MenuSubmenuContent>
+      </MenuSubmenu>
+      <DateFilterModal
+        isOpen={customDateOpen}
+        handleClose={() => setCustomDateOpen(false)}
+        onSelect={(value) => handleFiltersUpdate("created_at", value)}
+        title={t("web.created_date")}
+      />
     </div>
   );
 });

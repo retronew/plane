@@ -10,7 +10,7 @@ import { PrioritySelect } from "@/components/dropdowns/priority/priority-select"
 import { useUserProfile } from "@/hooks/store/user";
 import { Controller, useFormContext } from "react-hook-form";
 // plane imports
-import { Select, SelectTrigger, SelectContent, SelectList, SelectItem } from "@makeplane/propel/components/select";
+import { Select } from "@plane/blocks/select";
 import { NETWORK_CHOICES, ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { IProject } from "@plane/types";
@@ -19,6 +19,10 @@ import { getDate, renderFormattedPayloadDate, getTabIndex } from "@plane/utils";
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
 import { ProjectNetworkIcon } from "@/components/project/project-network-icon";
 import { PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME } from "@/components/project/create/attribute-styles";
+
+const projectNetworkOptionIcon = (network: (typeof NETWORK_CHOICES)[number]) => (
+  <ProjectNetworkIcon iconKey={network.iconKey} className="size-3.5" />
+);
 
 type Props = {
   isMobile?: boolean;
@@ -39,37 +43,31 @@ function ProjectAttributes(props: Props) {
           const currentNetwork = NETWORK_CHOICES.find((n) => n.key === value);
 
           return (
-            <Select<number>
-              items={NETWORK_CHOICES.map((network) => ({ value: network.key, label: t(network.i18n_label) }))}
-              value={value ?? 2}
-              onValueChange={(next) => {
-                if (next !== null) onChange(next);
+            <Select<(typeof NETWORK_CHOICES)[number]>
+              getValues={() => NETWORK_CHOICES}
+              value={currentNetwork ?? null}
+              getOptionValue={(network) => String(network.key)}
+              getOptionLabel={(network) => t(network.i18n_label)}
+              getOptionDescription={(network) => t(network.description)}
+              getOptionIcon={projectNetworkOptionIcon}
+              onChange={(next) => {
+                if (next !== null) onChange(Number(next));
               }}
+              showSearch={false}
             >
-              <SelectTrigger
-                variant="pill"
-                size="sm"
+              <Select.Trigger
+                variant="pill-md"
+                className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
                 tabIndex={getIndex("network")}
                 aria-label={`${t("select_network")}, ${currentNetwork ? t(currentNetwork.i18n_label) : ""}`}
-                icon={
+                prependIcon={
                   currentNetwork ? (
                     <ProjectNetworkIcon iconKey={currentNetwork.iconKey} className="size-3.5" />
                   ) : undefined
                 }
-              />
-              <SelectContent sizing="auto" alignItemWithTrigger={false}>
-                <SelectList>
-                  {NETWORK_CHOICES.map((network) => (
-                    <SelectItem
-                      key={network.key}
-                      value={network.key}
-                      label={t(network.i18n_label)}
-                      description={t(network.description)}
-                      icon={<ProjectNetworkIcon iconKey={network.iconKey} className="size-4" />}
-                    />
-                  ))}
-                </SelectList>
-              </SelectContent>
+              >
+                <span className="truncate">{currentNetwork ? t(currentNetwork.i18n_label) : t("select_network")}</span>
+              </Select.Trigger>
             </Select>
           );
         }}

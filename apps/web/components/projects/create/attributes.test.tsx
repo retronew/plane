@@ -31,6 +31,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1024);
   vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(768);
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(240);
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(320);
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(100, 100, 320, 32));
   vi.stubGlobal(
     "ResizeObserver",
@@ -46,7 +48,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 it("saves the private network value zero instead of treating it as empty", async () => {
   render(<Form />);
-  fireEvent.click(screen.getByRole("combobox", { name: /select_network/ }));
+  fireEvent.click(screen.getByRole("button", { name: /network.public.title/ }));
   const option = await screen.findByRole("option", { name: /network.private.title/ });
   fireEvent.pointerDown(option, { pointerType: "mouse", button: 0 });
   fireEvent.click(option);

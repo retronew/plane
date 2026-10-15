@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { lazy, Suspense } from "react";
 // plane imports
 import { EUserPermissionsLevel, EUserPermissions } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -13,13 +14,16 @@ import { ContentWrapper } from "@plane/blocks/layout";
 // components
 import { calculateTotalFilters } from "@plane/utils";
 import { ProjectsLoader } from "@/components/ui/loader/projects-loader";
+import { LayoutTransitionContent } from "@/components/common/layout-transition";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectFilter } from "@/hooks/store/use-project-filter";
 import { useUserPermissions } from "@/hooks/store/user";
 // local imports
-import { ProjectCard } from "./card";
+import { ProjectLayoutTransition } from "./layout-transition";
+import type { IProject } from "@plane/types";
+const ProjectLayouts = lazy(() => import("./layouts").then((module) => ({ default: module.ProjectLayouts })));
 
 type TProjectCardListProps = {
   totalProjectIds?: string[];
@@ -53,7 +57,7 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
   );
 
   if (!filteredProjectIds || !workspaceProjectIds || loader === "init-loader" || fetchStatus !== "complete")
-    return <ProjectsLoader />;
+    return <ProjectsLoader layout={currentWorkspaceDisplayFilters?.layout ?? "gallery"} />;
 
   if (workspaceProjectIds?.length === 0 && !currentWorkspaceDisplayFilters?.archived_projects)
     return (
@@ -101,14 +105,22 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
     );
 
   return (
-    <ContentWrapper>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProjectIds.map((projectId) => {
-          const projectDetails = getProjectById(projectId);
-          if (!projectDetails) return;
-          return <ProjectCard key={projectDetails.id} project={projectDetails} />;
-        })}
-      </div>
-    </ContentWrapper>
+    <ProjectLayoutTransition layout={currentWorkspaceDisplayFilters?.layout ?? "gallery"} waitForReady>
+      {(layout) => (
+        <Suspense fallback={<ProjectsLoader layout={layout} />}>
+          <LayoutTransitionContent>
+            <ContentWrapper className={["list", "board", "timeline"].includes(layout) ? "p-0!" : "p-4!"}>
+              <ProjectLayouts
+                key={layout}
+                layout={layout}
+                projects={filteredProjectIds
+                  .map((id) => getProjectById(id))
+                  .filter((project): project is IProject => !!project)}
+              />
+            </ContentWrapper>
+          </LayoutTransitionContent>
+        </Suspense>
+      )}
+    </ProjectLayoutTransition>
   );
 });

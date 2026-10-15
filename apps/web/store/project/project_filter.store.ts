@@ -66,7 +66,8 @@ export class ProjectFilterStore implements IProjectFilterStore {
         if (!workspaceSlug) return;
         this.initWorkspaceFilters(workspaceSlug);
         this.searchQuery = "";
-      }
+      },
+      { fireImmediately: true }
     );
   }
 
@@ -87,7 +88,7 @@ export class ProjectFilterStore implements IProjectFilterStore {
   get currentWorkspaceAppliedDisplayFilters() {
     const workspaceSlug = this.rootStore.router.workspaceSlug;
     if (!workspaceSlug) return;
-    const displayFilters = this.displayFilters[workspaceSlug];
+    const displayFilters = this.displayFilters[workspaceSlug] ?? {};
     return Object.keys(displayFilters).filter(
       (key): key is TProjectAppliedDisplayFilterKeys =>
         ["my_projects", "archived_projects"].includes(key) && !!displayFilters[key as keyof TProjectDisplayFilters]
@@ -122,7 +123,16 @@ export class ProjectFilterStore implements IProjectFilterStore {
   initWorkspaceFilters = (workspaceSlug: string) => {
     const displayFilters = this.getDisplayFiltersByWorkspaceSlug(workspaceSlug);
     runInAction(() => {
+      let layout = displayFilters?.layout ?? "gallery";
+      try {
+        const saved = localStorage.getItem(`project-layout:${workspaceSlug}`);
+        if (saved === "gallery" || saved === "board" || saved === "list" || saved === "timeline") layout = saved;
+      } catch {
+        /* A blocked preference store must not prevent project browsing. */
+      }
       this.displayFilters[workspaceSlug] = {
+        ...displayFilters,
+        layout,
         order_by: displayFilters?.order_by || "created_at",
       };
       this.filters[workspaceSlug] = this.filters[workspaceSlug] ?? {};
@@ -135,6 +145,13 @@ export class ProjectFilterStore implements IProjectFilterStore {
    * @param {TProjectDisplayFilters} displayFilters
    */
   updateDisplayFilters = (workspaceSlug: string, displayFilters: TProjectDisplayFilters) => {
+    if (displayFilters.layout) {
+      try {
+        localStorage.setItem(`project-layout:${workspaceSlug}`, displayFilters.layout);
+      } catch {
+        /* Session-only fallback. */
+      }
+    }
     runInAction(() => {
       Object.keys(displayFilters).forEach((key) => {
         set(this.displayFilters, [workspaceSlug, key], displayFilters[key as keyof TProjectDisplayFilters]);

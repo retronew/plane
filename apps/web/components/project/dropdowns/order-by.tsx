@@ -5,7 +5,8 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  * See the LICENSE file for details.
  */
 
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import { SortDescendingOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -19,16 +20,15 @@ type Props = {
   isMobile?: boolean;
 };
 
-const DISABLED_ORDERING_OPTIONS = new Set(["sort_order"]);
-
 export function ProjectOrderByDropdown(props: Props) {
   const { onChange, value, isMobile = false } = props;
   const { t } = useTranslation();
 
   const orderByDetails = PROJECT_ORDER_BY_OPTIONS.find((option) => value?.includes(option.key));
 
-  const isDescending = value?.[0] === "-";
-  const isOrderingDisabled = !!value && DISABLED_ORDERING_OPTIONS.has(value);
+  const activeValue = value ?? "created_at";
+  const field = activeValue.replace(/^-/, "");
+  const isDescending = activeValue.startsWith("-");
 
   return (
     <Menu>
@@ -44,34 +44,15 @@ export function ProjectOrderByDropdown(props: Props) {
         </MenuTrigger>
       </div>
       <MenuContent side="bottom" align="end">
-        {PROJECT_ORDER_BY_OPTIONS.map((option) => (
-          <MenuItem
-            key={option.key}
-            label={t(option.i18n_label)}
-            selected={!!value?.includes(option.key)}
-            onClick={() => {
-              if (isDescending)
-                onChange(option.key == "sort_order" ? option.key : (`-${option.key}` as TProjectOrderByOptions));
-              else onChange(option.key);
-            }}
-          />
-        ))}
-        <MenuSeparator />
-        <MenuItem
-          label={t("common.sort.asc")}
-          selected={!isOrderingDisabled && !isDescending}
-          disabled={isOrderingDisabled}
-          onClick={() => {
-            if (isDescending) onChange(value.slice(1) as TProjectOrderByOptions);
-          }}
-        />
-        <MenuItem
-          label={t("common.sort.desc")}
-          selected={!isOrderingDisabled && isDescending}
-          disabled={isOrderingDisabled}
-          onClick={() => {
-            if (!isDescending) onChange(`-${value}` as TProjectOrderByOptions);
-          }}
+        <SortMenuItems
+          field={field}
+          direction={isDescending ? "desc" : "asc"}
+          options={PROJECT_ORDER_BY_OPTIONS.map((option) => ({ value: option.key, label: t(option.i18n_label) }))}
+          directionDisabled={field === "sort_order"}
+          onFieldChange={(next) =>
+            onChange((next === "sort_order" ? next : `${isDescending ? "-" : ""}${next}`) as TProjectOrderByOptions)
+          }
+          onDirectionChange={(next) => onChange(`${next === "desc" ? "-" : ""}${field}` as TProjectOrderByOptions)}
         />
       </MenuContent>
     </Menu>

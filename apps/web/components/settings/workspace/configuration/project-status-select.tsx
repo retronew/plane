@@ -1,3 +1,4 @@
+import { ProjectStatusIcon } from "@/components/project/project-status-icon";
 import { useState } from "react";
 import { Select } from "@plane/blocks/select";
 import { useTranslation } from "@plane/i18n";
@@ -5,9 +6,7 @@ import { setToast } from "@plane/blocks/toast";
 import { useProject } from "@/hooks/store/use-project";
 import type { ProjectCategory } from "@/services/workspace-configuration.service";
 import { useProjectCategories } from "./project-fields";
-const stateIcon = (state: ProjectCategory) => (
-  <span className="size-2 rounded-full" style={{ backgroundColor: state.color }} />
-);
+const stateIcon = (state: ProjectCategory) => <ProjectStatusIcon group={state.group} color={state.color} />;
 export function ProjectStatusSelect({
   workspaceSlug,
   projectId,
@@ -23,11 +22,15 @@ export function ProjectStatusSelect({
   const { statuses, statesEnabled } = useProjectCategories(workspaceSlug);
   const { updateProject } = useProject();
   const [busy, setBusy] = useState(false);
-  const selected = statuses.find((state) => state.id === value) ?? null;
+  const selected =
+    statuses.find((state) => state.id === value) ??
+    (!value ? statuses.find((state) => state.is_default) : null) ??
+    null;
   if (!statesEnabled) return null;
   return (
     <div
       role="presentation"
+      className="flex max-w-full min-w-0 items-center"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -56,8 +59,8 @@ export function ProjectStatusSelect({
           }
         }}
       >
-        <Select.Trigger variant="pill-sm" className="w-auto" aria-label={t("web.project_statuses")}>
-          <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: selected?.color }} />
+        <Select.Trigger variant="pill-md" className="max-w-full" tooltip aria-label={t("web.project_statuses")}>
+          {selected && stateIcon(selected)}
           <span className="truncate">{selected?.name ?? t("web.no_project_status")}</span>
         </Select.Trigger>
       </Select>
