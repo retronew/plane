@@ -7,8 +7,8 @@
 import type { TChartColorScheme } from "@plane/types";
 import { ChartXAxisProperty } from "@plane/types";
 
-export const LABEL_CLASSNAME = "fill-tertiary text-11";
-export const AXIS_LABEL_CLASSNAME = "fill-tertiary text-11";
+export const LABEL_CLASSNAME = "fill-secondary text-11";
+export const AXIS_LABEL_CLASSNAME = "fill-secondary text-11";
 
 export enum ChartXAxisDateGrouping {
   DAY = "DAY",
@@ -38,6 +38,40 @@ export enum EChartModels {
   PROGRESS = "PROGRESS",
 }
 
+/** Apple HIG system color specifications, verified 2026-10-16.
+ * https://developer.apple.com/design/human-interface-guidelines/color#Specifications
+ * Web sRGB equivalents; native Apple colors remain dynamically managed by the OS.
+ */
+export const APPLE_CHART_COLORS = {
+  blue: ["#0088ff", "#0091ff"],
+  green: ["#34c759", "#30d158"],
+  orange: ["#ff8d28", "#ff9230"],
+  red: ["#ff383c", "#ff4245"],
+  indigo: ["#6155f5", "#6d7cff"],
+  mint: ["#00c8b3", "#00dac3"],
+  teal: ["#00c3d0", "#00d2e0"],
+  purple: ["#cb30e0", "#db34f2"],
+  pink: ["#ff2d55", "#ff375f"],
+  gray: ["#8e8e93", "#8e8e93"],
+  gray2: ["#aeaeb2", "#636366"],
+} as const;
+const appleChartColor = (key: keyof typeof APPLE_CHART_COLORS) => {
+  const [light, dark] = APPLE_CHART_COLORS[key];
+  return `light-dark(${light}, ${dark})`;
+};
+const appleSeriesOrder = [
+  "blue",
+  "green",
+  "indigo",
+  "orange",
+  "red",
+  "mint",
+  "teal",
+  "purple",
+  "pink",
+  "gray",
+] as const;
+
 export const CHART_COLOR_PALETTES: {
   key: TChartColorScheme;
   i18n_label: string;
@@ -47,30 +81,8 @@ export const CHART_COLOR_PALETTES: {
   {
     key: "modern",
     i18n_label: "dashboards.widget.color_palettes.modern",
-    light: [
-      "#6172E8",
-      "#8B6EDB",
-      "#E05F99",
-      "#29A383",
-      "#CB8A37",
-      "#3AA7C1",
-      "#F1B24A",
-      "#E84855",
-      "#50C799",
-      "#B35F9E",
-    ],
-    dark: [
-      "#6B7CDE",
-      "#8E9DE6",
-      "#D45D9E",
-      "#2EAF85",
-      "#D4A246",
-      "#29A7C1",
-      "#B89F6A",
-      "#D15D64",
-      "#4ED079",
-      "#A169A4",
-    ],
+    light: appleSeriesOrder.map((key) => APPLE_CHART_COLORS[key][0]),
+    dark: appleSeriesOrder.map((key) => APPLE_CHART_COLORS[key][1]),
   },
   {
     key: "horizon",
@@ -130,19 +142,37 @@ export const CHART_COLOR_PALETTES: {
   },
 ];
 
-/** Restrained, theme-aware defaults; business state and priority colors remain caller-owned. */
+/** Chart-only semantic tokens. Do not change user-defined workflow state colors. */
+export const CHART_SEMANTIC_COLORS = {
+  primary: appleChartColor("blue"),
+  completed: appleChartColor("green"),
+  warning: appleChartColor("orange"),
+  danger: appleChartColor("red"),
+  neutral: appleChartColor("gray"),
+  cancelled: appleChartColor("gray2"),
+  secondary: appleChartColor("indigo"),
+} as const;
+
 export const CHART_SERIES_COLORS = [
-  "light-dark(#6866b9, #a19bdf)",
-  "light-dark(#48897d, #80b8a8)",
-  "light-dark(#b68b4d, #d0ad78)",
-  "light-dark(#558ca9, #85b1c8)",
-  "light-dark(#aa6f8d, #ca9ab1)",
+  CHART_SEMANTIC_COLORS.primary,
+  CHART_SEMANTIC_COLORS.completed,
+  CHART_SEMANTIC_COLORS.secondary,
+  CHART_SEMANTIC_COLORS.warning,
+  CHART_SEMANTIC_COLORS.danger,
 ] as const;
 
+export const CHART_STATE_COLORS = {
+  backlog: CHART_SEMANTIC_COLORS.neutral,
+  unstarted: CHART_SEMANTIC_COLORS.primary,
+  started: CHART_SEMANTIC_COLORS.warning,
+  completed: CHART_SEMANTIC_COLORS.completed,
+  cancelled: CHART_SEMANTIC_COLORS.cancelled,
+} as const;
+
 export const CHART_PRIORITY_COLORS = {
-  urgent: "light-dark(#b2515e, #d6818b)",
-  high: "light-dark(#bd7d50, #d8a57e)",
-  medium: "light-dark(#ad9146, #cdb370)",
-  low: "light-dark(#598c70, #88b69b)",
-  none: "light-dark(#989da8, #858b99)",
-};
+  urgent: CHART_SEMANTIC_COLORS.danger,
+  high: CHART_SEMANTIC_COLORS.warning,
+  medium: CHART_SEMANTIC_COLORS.primary,
+  low: CHART_SEMANTIC_COLORS.completed,
+  none: CHART_SEMANTIC_COLORS.neutral,
+} as const;

@@ -5,6 +5,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CHART_SERIES_COLORS } from "@plane/constants";
 import React from "react";
 // plane imports
 import type { TBarChartShapeVariant, TBarItem, TChartData } from "@plane/types";
@@ -16,7 +17,7 @@ const BAR_TOP_BORDER_RADIUS = 4; // Border radius for the top of bars
 const BAR_BOTTOM_BORDER_RADIUS = 4; // Border radius for the bottom of bars
 const DEFAULT_LOLLIPOP_LINE_WIDTH = 2; // Width of lollipop stick
 const DEFAULT_LOLLIPOP_CIRCLE_RADIUS = 8; // Radius of lollipop circle
-const DEFAULT_BAR_FILL_COLOR = "light-dark(#6866b9, #a19bdf)";
+const DEFAULT_BAR_FILL_COLOR = CHART_SERIES_COLORS[0];
 
 // Types
 interface TShapeProps {

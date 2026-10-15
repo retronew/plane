@@ -44,6 +44,10 @@ export type TBaseChartProps<K extends string, T extends string> = {
 export type TAxisChartProps<K extends string, T extends string> = TBaseChartProps<K, T> & {
   xAxis: {
     key: keyof TChartData<K, T>;
+    type?: "number" | "category";
+    scale?: "time" | "auto";
+    domain?: [number, number];
+    tickFormatter?: (value: number) => string;
     label?: string;
     strokeColor?: string;
     dy?: number;
@@ -87,6 +91,7 @@ export type TBarItem<T extends string> = {
 
 export type TBarChartProps<K extends string, T extends string> = TAxisChartProps<K, T> & {
   bars: TBarItem<T>[];
+  layout?: "horizontal" | "vertical";
   barSize?: number;
 };
 
@@ -141,7 +146,8 @@ export type TAreaItem<T extends string> = {
   style?: Record<string, string | number>;
 };
 
-export type TAreaChartProps<K extends string, T extends string> = TAxisChartProps<K, T> & {
+export type TAreaChartProps<K extends string, T extends string> = Omit<TAxisChartProps<K, T>, "data"> & {
+  data: (Record<K, string | number | null> & Record<T, any>)[];
   areas: TAreaItem<T>[];
   comparisonLine?: {
     dashedLine: boolean;

@@ -102,6 +102,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
         >
           <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
           <XAxis
+            height={xAxis.label ? 52 : 30}
             dataKey={xAxis.key}
             tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
@@ -112,7 +113,8 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
             label={
               xAxis.label && {
                 value: xAxis.label,
-                dy: 28,
+                position: "insideBottom",
+                offset: 0,
                 className: AXIS_LABEL_CLASSNAME,
               }
             }
@@ -127,9 +129,10 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
               yAxis.label && {
                 value: yAxis.label,
                 angle: -90,
-                position: "bottom",
-                offset: -24,
-                dx: yAxis.dx ?? -16,
+                position: "insideLeft",
+                offset: 12,
+                textAnchor: "middle",
+                dx: 0,
                 className: AXIS_LABEL_CLASSNAME,
               }
             }

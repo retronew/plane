@@ -16,6 +16,7 @@ import type { TBarChartProps } from "@plane/types";
 import { getLegendProps } from "../components/legend";
 import { CustomXAxisTick, CustomYAxisTick } from "../components/tick";
 import { CustomTooltip } from "../components/tooltip";
+import { truncateCategoryLabel } from "../components/layout";
 import { barShapeVariants, DEFAULT_BAR_FILL_COLOR } from "./bar";
 
 export const BarChart = React.memo(function BarChart<K extends string, T extends string>(props: TBarChartProps<K, T>) {
@@ -25,6 +26,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
     xAxis,
     yAxis,
     barSize = 40,
+    layout = "horizontal",
     className,
     legend,
     margin,
@@ -100,18 +102,22 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           dataKey={bar.key}
           stackId={bar.stackId}
           opacity={!!activeLegend && activeLegend !== bar.key ? 0.1 : 1}
-          shape={(shapeProps: any) => {
-            const shapeVariant = barShapeVariants[bar.shapeVariant ?? "bar"];
-            const node = shapeVariant(shapeProps, bar, stackKeys);
-            return React.isValidElement(node) ? node : <>{node}</>;
-          }}
+          shape={
+            layout === "vertical"
+              ? undefined
+              : (shapeProps: any) => {
+                  const shapeVariant = barShapeVariants[bar.shapeVariant ?? "bar"];
+                  const node = shapeVariant(shapeProps, bar, stackKeys);
+                  return React.isValidElement(node) ? node : <>{node}</>;
+                }
+          }
           className="[&_path]:transition-opacity [&_path]:duration-200"
           onMouseEnter={() => setActiveBar(bar.key)}
           onMouseLeave={() => setActiveBar(null)}
           fill={getBarColor(data, bar.key)}
         />
       )),
-    [activeLegend, stackKeys, bars, getBarColor, data, motion]
+    [activeLegend, stackKeys, bars, getBarColor, data, motion, layout]
   );
 
   return (
@@ -119,6 +125,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
       <ChartContainer>
         <CoreBarChart
           accessibilityLayer
+          layout={layout}
           data={data}
           margin={{
             top: margin?.top === undefined ? 5 : margin.top,
@@ -129,9 +136,18 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           barSize={barSize}
           className="recharts-wrapper"
         >
-          <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
+          <CartesianGrid
+            stroke="var(--border-color-subtle)"
+            strokeOpacity={0.65}
+            vertical={layout === "vertical"}
+            horizontal={layout !== "vertical"}
+          />
           <XAxis
-            dataKey={xAxis.key}
+            height={(layout === "vertical" ? yAxis.label : xAxis.label) ? 52 : 30}
+            dataKey={layout === "vertical" ? undefined : xAxis.key}
+            type={layout === "vertical" ? "number" : "category"}
+            domain={layout === "vertical" ? [0, "auto"] : undefined}
+            allowDecimals={layout === "vertical" ? !!yAxis.allowDecimals : undefined}
             tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
               return <TickComponent {...tickProps} />;
@@ -139,26 +155,42 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
             tickLine={false}
             axisLine={false}
             label={{
-              value: xAxis.label,
-              dy: xAxis.dy ?? 28,
+              value: layout === "vertical" ? yAxis.label : xAxis.label,
+              position: "insideBottom",
+              offset: 0,
               className: AXIS_LABEL_CLASSNAME,
             }}
             tickCount={tickCount.x}
           />
           <YAxis
-            width={yAxis.label ? 54 : 40}
+            width={layout === "vertical" ? 140 : yAxis.label ? 54 : 40}
+            type={layout === "vertical" ? "category" : "number"}
+            dataKey={layout === "vertical" ? xAxis.key : undefined}
+            interval={layout === "vertical" ? 0 : undefined}
             domain={yAxis.domain}
             tickLine={false}
             axisLine={false}
             label={{
-              value: yAxis.label,
+              value: layout === "vertical" ? undefined : yAxis.label,
               angle: -90,
-              position: "bottom",
-              offset: yAxis.offset ?? -24,
-              dx: yAxis.dx ?? -16,
+              position: "insideLeft",
+              offset: 12,
+              textAnchor: "middle",
+              dx: 0,
               className: AXIS_LABEL_CLASSNAME,
             }}
             tick={(tickProps) => {
+              if (layout === "vertical") {
+                const name = String(tickProps.payload.value);
+                return (
+                  <g transform={`translate(${tickProps.x},${tickProps.y})`}>
+                    <title>{name}</title>
+                    <text textAnchor="end" dominantBaseline="middle" fill="var(--text-color-secondary)" fontSize={12}>
+                      {truncateCategoryLabel(name)}
+                    </text>
+                  </g>
+                );
+              }
               const TickComponent = customTicks?.y || CustomYAxisTick;
               return <TickComponent {...tickProps} />;
             }}

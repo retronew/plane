@@ -128,17 +128,30 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
         >
           <CartesianGrid stroke="var(--border-color-subtle)" strokeOpacity={0.65} vertical={false} />
           <XAxis
+            height={xAxis.label ? 52 : 30}
             dataKey={xAxis.key}
+            type={xAxis.type}
+            scale={xAxis.scale}
+            domain={xAxis.domain}
             tick={(tickProps) => {
               const TickComponent = customTicks?.x || CustomXAxisTick;
-              return <TickComponent {...tickProps} />;
+              return (
+                <TickComponent
+                  {...tickProps}
+                  payload={{
+                    ...tickProps.payload,
+                    value: xAxis.tickFormatter ? xAxis.tickFormatter(tickProps.payload.value) : tickProps.payload.value,
+                  }}
+                />
+              );
             }}
             tickLine={false}
             axisLine={false}
             label={
               xAxis.label && {
                 value: xAxis.label,
-                dy: 28,
+                position: "insideBottom",
+                offset: 0,
                 className: AXIS_LABEL_CLASSNAME,
               }
             }
@@ -153,9 +166,10 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
               yAxis.label && {
                 value: yAxis.label,
                 angle: -90,
-                position: "bottom",
-                offset: yAxis.offset ?? -24,
-                dx: yAxis.dx ?? -16,
+                position: "insideLeft",
+                offset: 12,
+                textAnchor: "middle",
+                dx: 0,
                 className: AXIS_LABEL_CLASSNAME,
               }
             }
@@ -183,17 +197,23 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
               wrapperStyle={{
                 pointerEvents: "none",
               }}
-              content={({ active, label, payload }) => (
-                <CustomTooltip
-                  active={active}
-                  activeKey={activeArea}
-                  label={label}
-                  payload={payload}
-                  itemKeys={itemKeys}
-                  itemLabels={itemLabels}
-                  itemDotColors={itemDotColors}
-                />
-              )}
+              content={({ active, label, payload }) =>
+                active && payload?.length ? (
+                  <CustomTooltip
+                    active={active}
+                    activeKey={activeArea}
+                    label={
+                      xAxis.tickFormatter && label != null && Number.isFinite(Number(label))
+                        ? xAxis.tickFormatter(Number(label))
+                        : label
+                    }
+                    payload={payload}
+                    itemKeys={itemKeys}
+                    itemLabels={itemLabels}
+                    itemDotColors={itemDotColors}
+                  />
+                ) : null
+              }
             />
           )}
           {renderAreas}

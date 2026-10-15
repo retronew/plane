@@ -15,7 +15,7 @@ type TickProps = {
   cy?: number | string;
   offset?: number;
 };
-const tickClassName = "fill-tertiary text-11";
+const tickClassName = "fill-secondary text-11";
 const labelFor = ({ payload, getLabel }: TickProps) => {
   const value = payload?.value ?? "";
   return getLabel ? getLabel(value) : String(value);

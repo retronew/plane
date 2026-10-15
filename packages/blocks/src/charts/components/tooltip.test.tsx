@@ -64,3 +64,19 @@ it("shares the same accessible content for pie and treemap tooltips", () => {
   rerender(<TreeMapTooltip active={false} payload={[]} />);
   expect(screen.queryByRole("tooltip")).toBeNull();
 });
+it("preserves all series colors when one series is hovered", () => {
+  render(
+    <CustomTooltip
+      {...config}
+      activeKey="created"
+      payload={[
+        { graphicalItemId: "series", dataKey: "created", value: 2 },
+        { graphicalItemId: "series", dataKey: "done", value: 1 },
+      ]}
+    />
+  );
+  const doneRow = screen.getByText("Done").parentElement?.parentElement;
+  expect(doneRow?.className).not.toMatch(/opacity-/);
+  const dot = screen.getByText("Done").previousElementSibling as HTMLElement;
+  expect(dot.style.backgroundColor).toBe("green");
+});

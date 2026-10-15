@@ -7,7 +7,6 @@
 import { memo } from "react";
 import type { ReactNode } from "react";
 import type { TooltipPayload } from "recharts";
-import { cn } from "@plane/utils";
 
 export type ChartTooltipRow = {
   key: string;
@@ -23,24 +22,26 @@ export function ChartTooltipContent({ label, rows }: { label?: ReactNode; rows: 
   return (
     <div
       role="tooltip"
-      className="pointer-events-none grid w-max max-w-[min(20rem,80vw)] min-w-32 gap-2 rounded-lg border border-subtle-1 bg-surface-1 px-3 py-2.5 text-12 shadow-raised-100"
+      className="pointer-events-none grid w-max max-w-[min(20rem,80vw)] min-w-28 gap-1.5 rounded-lg border border-subtle-1 bg-surface-1 px-2.5 py-2 text-12 shadow-raised-100"
     >
       {label !== undefined && label !== null && label !== "" && (
         <div className="font-medium break-words text-primary">{label}</div>
       )}
-      {rows.map((row) => (
-        <div key={row.key} className={cn("flex min-w-0 items-center justify-between gap-5", row.muted && "opacity-40")}>
-          <span className="flex min-w-0 items-center gap-2 text-tertiary">
-            {row.color && <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: row.color }} />}
-            <span className="break-words">{row.label}</span>
-          </span>
-          <span className="shrink-0 font-medium text-primary tabular-nums">
-            {typeof row.value === "number"
-              ? row.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : row.value}
-          </span>
-        </div>
-      ))}
+      <div className="grid gap-0.5">
+        {rows.map((row) => (
+          <div key={row.key} className="flex min-w-0 items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-1.5 text-secondary">
+              {row.color && <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: row.color }} />}
+              <span className="break-words">{row.label}</span>
+            </span>
+            <span className="shrink-0 font-medium text-primary tabular-nums">
+              {typeof row.value === "number"
+                ? row.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                : row.value}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
