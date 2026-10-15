@@ -1,3 +1,5 @@
+import { ActionSubmenuContent as MenuSubmenuContent } from "@plane/blocks/common";
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -13,15 +15,7 @@ import { EIssuesStoreType } from "@plane/types";
 import { useTranslation } from "@plane/i18n";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import {
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuSubmenu,
-  MenuSubmenuContent,
-  MenuSubmenuTrigger,
-  MenuTrigger,
-} from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSubmenu, MenuSubmenuTrigger, MenuTrigger } from "@makeplane/propel/components/menu";
 import { MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { toSideAndAlign } from "@plane/blocks/common";
 import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
@@ -132,7 +126,7 @@ export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickAct
                     label={item.title ?? ""}
                     disabled={item.disabled}
                   />
-                  <MenuSubmenuContent sizing="auto">
+                  <MenuSubmenuContent>
                     {nestedItems.map((nestedItem) => (
                       <MenuItem
                         key={nestedItem.key}

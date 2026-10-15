@@ -264,6 +264,30 @@ export const coreRoutes: RouteConfigEntry[] = [
         // --------------------------------------------------------------------
 
         layout("./(all)/[workspaceSlug]/(settings)/settings/(workspace)/layout.tsx", [
+          route(
+            ":workspaceSlug/settings/templates/:templateKind/:templateId?",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/templates/editor/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/templates",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/templates/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/project-configuration",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/project-configuration/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/plane-intelligence",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/plane-intelligence/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/access-tokens",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/access-tokens/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/webhooks/create",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/webhooks/create/page.tsx"
+          ),
           route(":workspaceSlug/settings", "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/page.tsx"),
           route(
             ":workspaceSlug/settings/members",

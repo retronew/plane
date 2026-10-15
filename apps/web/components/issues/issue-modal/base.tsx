@@ -27,7 +27,13 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useModule } from "@/hooks/store/use-module";
 import { useUser } from "@/hooks/store/user";
 import { prepareComposerMotion, COMPOSER_RESTORE_DURATION, COMPOSER_MOTION_EASING } from "./composer-motion";
-import { saveComposerDraft, readComposerDraft, composerCacheKey, hasComposerContent } from "./composer-cache";
+import {
+  saveComposerDraft,
+  readComposerDraft,
+  composerCacheKey,
+  composerDraftContext,
+  hasComposerContent,
+} from "./composer-cache";
 import { useProject } from "@/hooks/store/use-project";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
@@ -102,7 +108,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       ? composerCacheKey(
           currentUser.id,
           workspaceSlug.toString(),
-          data?.parent_id || isDraft ? JSON.stringify([projectId, data?.parent_id, isDraft]) : "new"
+          composerDraftContext(projectId, data?.parent_id, isDraft)
         )
       : undefined;
   const cachedDraft = cacheKey ? readComposerDraft(cacheKey) : undefined;
@@ -112,7 +118,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       if (!popup || motionInitialized.current) return;
       motionInitialized.current = true;
       if (!cacheKey || !readComposerDraft(cacheKey)) return;
-      const travel = prepareComposerMotion(popup);
+      const travel = prepareComposerMotion(popup, isDraft ? "draft" : "new");
       if (!travel) return;
       popup.animate(
         [
@@ -122,7 +128,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
         { duration: COMPOSER_RESTORE_DURATION, easing: COMPOSER_MOTION_EASING }
       );
     },
-    [cacheKey]
+    [cacheKey, isDraft]
   );
   const clearCachedDraft = () => {
     if (cacheKey) saveComposerDraft(cacheKey);
@@ -448,7 +454,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
           };
           saveComposerDraft(cacheKey, hasComposerContent(draft) ? draft : undefined);
           const popup = document.querySelector<HTMLElement>("[data-issue-composer]");
-          if (popup && hasComposerContent(draft) && prepareComposerMotion(popup)) {
+          if (popup && hasComposerContent(draft) && prepareComposerMotion(popup, isDraft ? "draft" : "new")) {
             popup.dataset.minimizing = "true";
           }
           handleClose();

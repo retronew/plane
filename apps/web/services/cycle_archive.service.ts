@@ -20,7 +20,7 @@ export class CycleArchiveService extends APIService {
     return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/archived-cycles/`)
       .then((response) => response?.data)
       .catch((error) => {
-        throw error?.response?.data;
+        throw error?.response?.data ?? error;
       });
   }
 

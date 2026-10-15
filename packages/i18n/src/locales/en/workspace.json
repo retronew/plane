@@ -260,6 +260,7 @@
     }
   },
   "workspace_draft_issues": {
+    "temporarily_saved": "Unfinished draft saved temporarily",
     "draft_an_issue": "Draft a work item",
     "empty_state": {
       "title": "Half-written work items, and soon, comments will show up here.",

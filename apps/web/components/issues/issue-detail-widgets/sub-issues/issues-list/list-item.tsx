@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -17,7 +18,7 @@ import {
 // plane imports
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssue, TIssueServiceType, TSubIssueOperations } from "@plane/types";
 import { EIssueServiceType, EIssuesStoreType } from "@plane/types";
@@ -97,7 +98,7 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
   const displayProperties = subIssueFilters?.displayProperties ?? {};
 
   //
-  const handleIssuePeekOverview = (issue: TIssue) => handleRedirection(workspaceSlug, issue, isMobile);
+  const handleIssuePeekOverview = (targetIssue: TIssue) => handleRedirection(workspaceSlug, targetIssue, isMobile);
 
   if (!issue) return <></>;
 
@@ -134,7 +135,9 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
                       <LinkOutline width={14} height={14} className="animate-spin" />
                     </div>
                   ) : (
-                    <div
+                    <button
+                      type="button"
+                      aria-label={t("web.toggle_sub_issues")}
                       className="flex h-full w-full cursor-pointer items-center justify-center text-placeholder hover:text-tertiary"
                       onClick={async (e) => {
                         e.preventDefault();
@@ -152,7 +155,7 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
                           "rotate-90": subIssueHelpers.issue_visibility.includes(issue.id),
                         })}
                       />
-                    </div>
+                    </button>
                   )}
                 </>
               )}
@@ -179,6 +182,10 @@ export const SubIssuesListItem = observer(function SubIssuesListItem(props: Prop
             </div>
 
             <div
+              role="presentation"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") e.stopPropagation();
+              }}
               className="flex-shrink-0 text-13"
               onClick={(e) => {
                 e.preventDefault();

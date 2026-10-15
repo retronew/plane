@@ -8,12 +8,14 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setLanguage } from "@plane/i18n";
 import type { IIssueActivity } from "@plane/types";
-import { ActivityMessage } from "./activity";
+import { ActivityMessage, IssueLink } from "./activity";
+
+const labels = vi.hoisted(() => ({ values: [{ id: "label", color: "red" }] }));
 
 vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "workspace" }) }));
 vi.mock("@/hooks/use-platform-os", () => ({ usePlatformOS: () => ({ isMobile: false }) }));
 vi.mock("@/hooks/store/use-label", () => ({
-  useLabel: () => ({ workspaceLabels: [{ id: "label", color: "red" }], fetchWorkspaceLabels: vi.fn() }),
+  useLabel: () => ({ workspaceLabels: labels.values, fetchWorkspaceLabels: vi.fn() }),
 }));
 
 // Only fields used to display an activity are needed for these rendering fixtures.
@@ -65,5 +67,55 @@ describe("activity sentence localization", () => {
       await setLanguage("en");
     });
     expect(container.textContent).toBe("set the priority of this work item to High");
+  });
+});
+
+describe("activity labels", () => {
+  it.each(["", "   "])("does not reserve a color dot for an empty color %j", (color) => {
+    labels.values = [{ id: "label", color }];
+    const { container } = render(
+      <ActivityMessage
+        activity={activity({ field: "labels", new_identifier: "label", new_value: "QA label" })}
+        showIssue
+      />
+    );
+    expect(screen.getByText("QA label")).toBeTruthy();
+    expect(container.querySelector('[aria-hidden="true"].rounded-full')).toBeNull();
+    expect(container.querySelectorAll("[data-activity-part]")).toHaveLength(2);
+  });
+  it("keeps an available label color", () => {
+    labels.values = [{ id: "label", color: "red" }];
+    const { container } = render(
+      <ActivityMessage activity={activity({ field: "labels", new_identifier: "label", new_value: "QA color" })} />
+    );
+    expect(container.querySelector<HTMLElement>('[aria-hidden="true"].rounded-full')?.style.backgroundColor).toBe(
+      "red"
+    );
+  });
+});
+
+describe("removed work items", () => {
+  const issue = activity({
+    field: "issue",
+    verb: "deleted",
+    issue: "issue-1",
+    project_detail: { identifier: "QA" } as IIssueActivity["project_detail"],
+    issue_detail: {
+      id: "issue-1",
+      name: "Removed title",
+      sequence_id: "4",
+      description_html: "",
+      priority: null,
+      type_id: "type-1",
+    },
+  });
+  it("strikes through a deleted title without leaving a navigation link", () => {
+    const { container } = render(<IssueLink activity={issue} />);
+    expect(container.querySelector("del")?.textContent).toBe("Removed title");
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+  it("still links an existing work item when only its label was removed", () => {
+    render(<IssueLink activity={{ ...issue, field: "labels" }} />);
+    expect(screen.getByRole("link").textContent).toContain("Removed title");
   });
 });

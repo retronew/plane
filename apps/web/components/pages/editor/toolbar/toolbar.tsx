@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -8,7 +9,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import type { EditorRefApi } from "@plane/editor";
 // plane imports
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem } from "@makeplane/propel/components/menu";
 import {
   Toolbar,
   ToolbarButton,

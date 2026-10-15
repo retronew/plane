@@ -4,6 +4,11 @@
  * See the LICENSE file for details.
  */
 
+import { observer } from "mobx-react";
+import { useCanCreateProject } from "@/hooks/use-can-create-project";
+import { useTranslation } from "@plane/i18n";
+import { DialogTitle } from "@makeplane/propel/components/dialog";
+import { Button } from "@makeplane/propel/components/button";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 import { getAssetIdFromUrl, checkURLValidity } from "@plane/utils";
@@ -32,8 +37,10 @@ enum EProjectCreationSteps {
   FEATURE_SELECTION = "FEATURE_SELECTION",
 }
 
-export function CreateProjectModal(props: Props) {
+export const CreateProjectModal = observer(function CreateProjectModal(props: Props) {
   const { isOpen, onClose, setToFavorite = false, workspaceSlug, data, templateId } = props;
+  const canCreate = useCanCreateProject(workspaceSlug);
+  const { t } = useTranslation();
   // states
   const [currentStep, setCurrentStep] = useState<EProjectCreationSteps>(EProjectCreationSteps.CREATE_PROJECT);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
@@ -68,10 +75,15 @@ export function CreateProjectModal(props: Props) {
       }}
     >
       <DialogContent size="lg">
-        {currentStep === EProjectCreationSteps.CREATE_PROJECT && (
-          // CreateProjectForm has no DialogBody scroller of its own yet, so this wrapper keeps the
-          // whole form (including the submit footer) reachable on short viewports.
-          <div className="min-h-0 flex-1 overflow-y-auto">
+        {!canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
+          <div className="p-6">
+            <DialogTitle>{t("create_project")}</DialogTitle>
+            <p className="my-4 text-13 text-secondary">{t("web.workspace_project_creation_restricted")}</p>
+            <Button size="md" stretch="auto" variant="secondary" label={t("close")} onClick={onClose} />
+          </div>
+        )}
+        {canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
+          <div className="flex min-h-0 flex-1 flex-col">
             <CreateProjectForm
               setToFavorite={setToFavorite}
               workspaceSlug={workspaceSlug}
@@ -89,4 +101,4 @@ export function CreateProjectModal(props: Props) {
       </DialogContent>
     </Dialog>
   );
-}
+});

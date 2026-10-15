@@ -13,6 +13,8 @@ from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 
 # Third party imports
+from plane.utils.workspace_features import check_project_creation
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
@@ -229,6 +231,7 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
         """
         try:
             workspace = Workspace.objects.get(slug=slug)
+            check_project_creation(workspace, request.user)
 
             serializer = ProjectCreateSerializer(data={**request.data}, context={"workspace_id": workspace.id})
 
@@ -303,6 +306,8 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
                 serializer = ProjectSerializer(project)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied:
+            raise
         except IntegrityError as e:
             if "already exists" in str(e):
                 return Response(
@@ -595,6 +600,8 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
                 serializer = ProjectSerializer(project)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied:
+            raise
         except IntegrityError as e:
             if "already exists" in str(e):
                 return Response(

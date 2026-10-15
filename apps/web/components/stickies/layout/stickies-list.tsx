@@ -4,13 +4,11 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useRef, useState } from "react";
 import type { DropTargetRecord, DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/types";
 import type { ElementDragPayload } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import Masonry from "react-masonry-component";
 
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
@@ -40,12 +38,8 @@ type TStickiesLayout = {
   intersectionElement?: React.ReactNode | null;
 };
 
-type TProps = TStickiesLayout & {
-  columnCount: number;
-};
-
-export const StickiesList = observer(function StickiesList(props: TProps) {
-  const { workspaceSlug, intersectionElement, columnCount } = props;
+export const StickiesList = observer(function StickiesList(props: TStickiesLayout) {
+  const { workspaceSlug, intersectionElement } = props;
   // navigation
   const pathname = usePathname();
   // theme hook
@@ -59,8 +53,6 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
   const { stickyOperations } = useStickyOperations({ workspaceSlug: workspaceSlug?.toString() });
   // derived values
   const workspaceStickyIds = getWorkspaceStickyIds(workspaceSlug?.toString());
-  const itemWidth = `${100 / columnCount}%`;
-  const totalRows = Math.ceil(workspaceStickyIds.length / columnCount);
   const isStickiesPage = pathname?.includes("stickies");
   const hasGuestLevelPermissions = allowPermissions(
     [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER, EUserWorkspaceRoles.GUEST],
@@ -68,23 +60,6 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
   );
   const stickiesResolvedPath = resolvedTheme === "light" ? lightStickiesAsset : darkStickiesAsset;
   const stickiesSearchResolvedPath = resolvedTheme === "light" ? lightStickiesSearchAsset : darkStickiesSearchAsset;
-  const masonryRef = useRef<any>(null);
-
-  const handleLayout = () => {
-    if (masonryRef.current) {
-      // Force reflow
-      masonryRef.current.performLayout();
-    }
-  };
-
-  // Function to determine if an item is in first or last row
-  const getRowPositions = (index: number) => {
-    const currentRow = Math.floor(index / columnCount);
-    return {
-      isInFirstRow: currentRow === 0,
-      isInLastRow: currentRow === totalRows - 1 || index >= workspaceStickyIds.length - columnCount,
-    };
-  };
 
   const handleDrop = (self: DropTargetRecord, source: ElementDragPayload, location: DragLocationHistory) => {
     const dropTargets = location?.current?.dropTargets ?? [];
@@ -145,67 +120,29 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
   }
 
   return (
-    <div className="transition-opacity duration-300 ease-in-out">
-      {/* @ts-expect-error type mismatch here */}
-      <Masonry elementType="div" ref={masonryRef}>
-        {workspaceStickyIds.map((stickyId, index) => {
-          const { isInFirstRow, isInLastRow } = getRowPositions(index);
-          return (
-            <StickyDNDWrapper
-              key={stickyId}
-              stickyId={stickyId}
-              workspaceSlug={workspaceSlug.toString()}
-              itemWidth={itemWidth}
-              handleDrop={handleDrop}
-              isLastChild={index === workspaceStickyIds.length - 1}
-              isInFirstRow={isInFirstRow}
-              isInLastRow={isInLastRow}
-              handleLayout={handleLayout}
-            />
-          );
-        })}
-        {intersectionElement && <div style={{ width: itemWidth }}>{intersectionElement}</div>}
-      </Masonry>
+    <div
+      data-stickies-grid=""
+      className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] items-start gap-4"
+    >
+      {workspaceStickyIds.map((stickyId, index) => (
+        <StickyDNDWrapper
+          key={stickyId}
+          stickyId={stickyId}
+          workspaceSlug={workspaceSlug.toString()}
+          itemWidth="100%"
+          handleDrop={handleDrop}
+          isLastChild={index === workspaceStickyIds.length - 1}
+        />
+      ))}
+      {intersectionElement}
     </div>
   );
 });
 
-const getColumnCount = (width: number | null): number => {
-  if (width === null) return 4;
-
-  if (width < 640) return 2; // sm
-  if (width < 850) return 3; // md
-  if (width < 1024) return 4; // lg
-  if (width < 1280) return 5; // xl
-  return 6; // 2xl and above
-};
-
 export function StickiesLayout(props: TStickiesLayout) {
-  // states
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
-  // refs
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!ref?.current) return;
-
-    setContainerWidth(ref?.current.offsetWidth);
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-
-    resizeObserver.observe(ref?.current);
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  const columnCount = getColumnCount(containerWidth);
-
   return (
-    <div ref={ref} className="size-full">
-      <StickiesList {...props} columnCount={columnCount} />
+    <div className="size-full">
+      <StickiesList {...props} />
     </div>
   );
 }

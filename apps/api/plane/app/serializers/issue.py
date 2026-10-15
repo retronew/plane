@@ -1,3 +1,4 @@
+from django.db import transaction
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -80,6 +81,10 @@ class IssueProjectLiteSerializer(BaseSerializer):
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
 class IssueCreateSerializer(BaseSerializer):
+    from plane.app.serializers.template_configuration import TemplateChildSerializer
+
+    template_children = TemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
+
     # ids
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.all_state_objects.all(), required=False, allow_null=True
@@ -122,6 +127,8 @@ class IssueCreateSerializer(BaseSerializer):
         return data
 
     def validate(self, attrs):
+        if self.instance and "template_children" in attrs:
+            raise serializers.ValidationError({"template_children": "Only supported when creating a work item."})
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
 
@@ -196,7 +203,9 @@ class IssueCreateSerializer(BaseSerializer):
 
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
+        children = validated_data.pop("template_children", [])
         assignees = validated_data.pop("assignee_ids", None)
         labels = validated_data.pop("label_ids", None)
 
@@ -271,6 +280,8 @@ class IssueCreateSerializer(BaseSerializer):
             except IntegrityError:
                 pass
 
+        for child in children:
+            Issue.objects.create(parent=issue, project_id=project_id, workspace_id=workspace_id, **child)
         return issue
 
     def update(self, instance, validated_data):

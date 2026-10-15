@@ -196,7 +196,7 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
             )}
           />
           <div className="z-10 flex items-center justify-end gap-2 pt-1">
-            {config?.has_llm_configured && projectId && (
+            {config?.has_llm_configured && getWorkspaceBySlug(workspaceSlug)?.ai_enabled !== false && projectId && (
               <GptAssistantPopover
                 isOpen={gptAssistantModal}
                 handleClose={() => {

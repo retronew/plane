@@ -10,6 +10,7 @@ import { Controller, useForm } from "react-hook-form";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
 import type { TSticky } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 import { cn, isCommentEmpty } from "@plane/utils";
 import { StickyEditor } from "@/components/editor/sticky-editor";
 // hooks
@@ -31,6 +32,7 @@ type TProps = {
 
 export function StickyInput(props: TProps) {
   const { stickyData, workspaceSlug, handleUpdate, stickyId, handleDelete, handleChange, showToolbar } = props;
+  const { t } = useTranslation();
   // refs
   const editorRef = useRef<EditorRefApi>(null);
   // navigation
@@ -83,10 +85,10 @@ export function StickyInput(props: TProps) {
             placeholder={(_, value) => {
               const isContentEmpty = isCommentEmpty(value);
               if (!isContentEmpty) return "";
-              return "Click to type here";
+              return t("stickies.placeholder");
             }}
             containerClassName={cn(
-              "vertical-scrollbar scrollbar-sm max-h-[540px] min-h-[256px] w-full overflow-y-auto p-4 text-14",
+              "vertical-scrollbar scrollbar-sm max-h-[360px] min-h-[144px] w-full overflow-y-auto p-3 text-13",
               {
                 "max-h-[588px]": isStickiesPage,
               }
@@ -97,6 +99,7 @@ export function StickyInput(props: TProps) {
             parentClassName="border-none p-0"
             handleDelete={handleDelete}
             handleColorChange={handleChange}
+            selectedColor={stickyData?.background_color ?? undefined}
             ref={editorRef}
           />
         )}

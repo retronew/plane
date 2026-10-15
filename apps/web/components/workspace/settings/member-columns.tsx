@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -8,13 +9,13 @@ import { observer } from "mobx-react";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 // plane imports
-import { ROLE, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { ROLE_DETAILS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
 import { DeactivatedUserOutline, DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Badge } from "@makeplane/propel/components/badge";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, IWorkspaceMember } from "@plane/types";
 // plane ui
@@ -39,11 +40,11 @@ type NameProps = {
   setRemoveMemberModal: (rowData: RowData) => void;
 };
 
-type TRoleOption = { key: EUserPermissions; label: string };
+type TRoleOption = { key: EUserPermissions; labelKey: string };
 
-const ROLE_OPTIONS: TRoleOption[] = Object.entries(ROLE).map(([key, label]) => ({
+const ROLE_OPTIONS: TRoleOption[] = Object.entries(ROLE_DETAILS).map(([key, details]) => ({
   key: Number(key) as EUserPermissions,
-  label,
+  labelKey: details.i18n_title,
 }));
 
 type AccountTypeProps = {
@@ -61,14 +62,14 @@ export function NameColumn(props: NameProps) {
 
   return (
     <div className="group relative">
-      <div className="flex w-72 items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex flex-1 items-center gap-x-2 gap-y-2">
+      <div className="flex w-44 items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2">
           {isSuspended ? (
             <div className="rounded-full bg-layer-1">
               <DeactivatedUserOutline className="size-6 text-placeholder" />
             </div>
           ) : avatar_url && avatar_url.trim() !== "" ? (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
               <span className="relative flex size-6 items-center justify-center rounded-full text-on-color capitalize">
                 <img
                   src={getFileURL(avatar_url)}
@@ -78,19 +79,22 @@ export function NameColumn(props: NameProps) {
               </span>
             </Link>
           ) : (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
               <span className="relative flex size-6 items-center justify-center rounded-full bg-layer-3 text-11 text-tertiary capitalize">
                 {(email ?? display_name ?? "?")[0]}
               </span>
             </Link>
           )}
-          <span className={isSuspended ? "text-placeholder" : ""}>
+          <span
+            title={`${first_name ?? ""} ${last_name ?? ""}`.trim()}
+            className={`truncate ${isSuspended ? "text-placeholder" : ""}`}
+          >
             {first_name} {last_name}
           </span>
         </div>
 
         {!isSuspended && (isAdmin || id === currentUser?.id) && (
-          <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100">
+          <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100">
             <Menu>
               <MenuTrigger
                 render={
@@ -122,6 +126,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
   const { rowData, workspaceSlug } = props;
   // form info
   const { control } = useForm();
+  const { t } = useTranslation();
   // store hooks
   const { allowPermissions } = useUserPermissions();
 
@@ -135,6 +140,8 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
   const isAdminRole = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
   const isRoleNonEditable = isCurrentUser || !isAdminRole;
   const isSuspended = rowData.is_active === false;
+  const roleOption = ROLE_OPTIONS.find((role) => role.key === rowData.role);
+  const roleLabel = roleOption ? t(roleOption.labelKey) : "—";
 
   return (
     <>
@@ -144,7 +151,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
         </div>
       ) : isRoleNonEditable ? (
         <div className="flex w-32">
-          <span>{ROLE[rowData.role]}</span>
+          <span>{roleLabel}</span>
         </div>
       ) : (
         <Controller
@@ -154,7 +161,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
           render={() => (
             <div className="w-32">
               <Select<TRoleOption>
-                value={ROLE_OPTIONS.find((role) => role.key === rowData.role) ?? null}
+                value={roleOption ?? null}
                 onChange={(val) => {
                   if (!workspaceSlug) return;
                   updateMember(workspaceSlug.toString(), rowData.member.id, {
@@ -173,12 +180,12 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
                 }}
                 getValues={() => ROLE_OPTIONS}
                 getOptionValue={(role) => String(role.key)}
-                getOptionLabel={(role) => role.label}
+                getOptionLabel={(role) => t(role.labelKey)}
                 showSearch={false}
                 pinSelected={false}
               >
                 <Select.Trigger<TRoleOption> variant="select-ghost-md">
-                  <span className="min-w-0 flex-1 truncate text-left">{ROLE[rowData.role]}</span>
+                  <span className="min-w-0 flex-1 truncate text-left">{roleLabel}</span>
                 </Select.Trigger>
               </Select>
             </div>

@@ -115,13 +115,13 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                   <span className="font-semibold break-words">{project?.name}</span>
                   {translate("web.delete_project_confirm_suffix")}
                 </p>
-                <div className="text-secondary">
-                  <p className="text-13 break-words">
+                <div className="flex flex-col gap-2 text-secondary">
+                  <label htmlFor="projectName" className="text-13 break-words">
                     <Translation
                       translationKey="web.ui.confirm_project_name"
                       components={{ name: <span className="font-medium text-primary">{project?.name}</span> }}
                     />
-                  </p>
+                  </label>
                   <Controller
                     control={control}
                     name="projectName"
@@ -144,13 +144,19 @@ export function DeleteProjectModal(props: DeleteProjectModal) {
                     )}
                   />
                 </div>
-                <div className="text-secondary">
-                  <p className="text-13">
+                <div className="flex flex-col gap-2 text-secondary">
+                  <label htmlFor="confirmDelete" className="text-13">
                     <Translation
                       translationKey="web.ui.confirm_phrase"
-                      components={{ phrase: <span className="font-medium text-primary">delete my project</span> }}
+                      components={{
+                        phrase: (
+                          <code className="font-mono rounded-md bg-danger-subtle/60 px-1 py-0.5 text-12 text-danger-primary">
+                            delete my project
+                          </code>
+                        ),
+                      }}
                     />
-                  </p>
+                  </label>
                   <Controller
                     control={control}
                     name="confirmDelete"

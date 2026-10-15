@@ -43,6 +43,13 @@ export interface IPartialProject {
 }
 
 export interface IProject extends IPartialProject {
+  status?: string | null;
+  priority?: "urgent" | "high" | "medium" | "low" | "none";
+  start_date?: string | null;
+  target_date?: string | null;
+  /** Initial members for project creation; responses expose the existing members roster. */
+  member_ids?: string[];
+  labels?: string[];
   archive_in?: number;
   close_in?: number;
   // only for uploading the cover image

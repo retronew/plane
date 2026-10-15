@@ -3,147 +3,167 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-
-import { useState } from "react";
+import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { StateGroupIcon } from "@plane/blocks/icons";
+import { EIconSize } from "@plane/constants";
+import { StateIconFrame } from "../state-icon-frame";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
-import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
 import { Button } from "@makeplane/propel/components/button";
 import { ColorSwatchPicker } from "@plane/blocks/common";
 import { useTranslation } from "@plane/i18n";
-import type { IState } from "@plane/types";
+import type { IState, TStateGroups } from "@plane/types";
 
 type TStateForm = {
   data: Partial<IState>;
+  stateGroup?: TStateGroups;
+  percentage?: number;
   onSubmit: (formData: Partial<IState>) => Promise<{ status: string }>;
   onCancel: () => void;
   buttonDisabled: boolean;
   buttonTitle: string;
 };
 
-function PopoverButton({ color }: { color?: string }) {
-  return (
-    <span
-      className="group inline-flex h-5 w-5 items-center rounded-sm text-14 font-medium transition-all"
-      style={{
-        backgroundColor: color ?? "black",
-      }}
-    />
-  );
-}
-
-export function StateForm(props: TStateForm) {
-  const { data, onSubmit, onCancel, buttonDisabled, buttonTitle } = props;
-  // plane hooks
+export function StateForm({
+  data,
+  stateGroup = data.group ?? "backlog",
+  percentage,
+  onSubmit,
+  onCancel,
+  buttonDisabled,
+  buttonTitle,
+}: TStateForm) {
   const { t } = useTranslation();
-  // states
-  const [formData, setFromData] = useState<Partial<IState> | undefined>(data);
-  const [errors, setErrors] = useState<Partial<Record<keyof IState, string>> | undefined>(undefined);
-
-  if (data && !formData) setFromData(data);
-
-  const handleFormData = <T extends keyof IState>(key: T, value: IState[T]) => {
-    setFromData((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: "" }));
-  };
-
-  const formSubmit = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const nameId = useId();
+  const [formData, setFormData] = useState<Partial<IState>>(data);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
+  const disabled = buttonDisabled || submitting;
+  const color = formData.color || "#60646C";
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
-
-    const name = formData?.name || undefined;
-    if (!formData || !name) {
-      let currentErrors: Partial<Record<keyof IState, string>> = {};
-      if (!name) currentErrors = { ...currentErrors, name: t("web.name_is_required") };
-      setErrors(currentErrors);
+    if (buttonDisabled || inFlight.current) return;
+    const name = formData.name?.trim();
+    if (!name) {
+      setError(t("web.name_is_required"));
       return;
     }
-
+    inFlight.current = true;
+    setSubmitting(true);
+    setError("");
     try {
-      await onSubmit(formData);
-    } catch (error) {
-      console.log("error", error);
+      const result = await onSubmit({ ...formData, name });
+      if (result.status !== "success") setError(t("web.configuration_save_error"));
+    } catch {
+      setError(t("web.configuration_save_error"));
+    } finally {
+      inFlight.current = false;
+      setSubmitting(false);
     }
   };
-
+  const cancelOnEscape = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && !event.defaultPrevented && !disabled) {
+      event.preventDefault();
+      event.stopPropagation();
+      onCancel();
+    }
+  };
   return (
-    <div className="relative flex space-x-2 rounded-sm bg-surface-1 p-3">
-      {/* color */}
-      <div className="mt-2 h-full flex-shrink-0">
+    <form className="flex min-h-14 flex-col justify-center rounded-md bg-layer-2 px-2 py-2.5" onSubmit={submit}>
+      <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
         <Popover>
           <PopoverTrigger
             render={
               <button
                 type="button"
-                className="flex items-center justify-center rounded-sm focus:outline-none"
+                disabled={disabled}
                 aria-label={t("aria_labels.color_picker.open")}
+                className="flex size-7 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               >
-                <PopoverButton color={formData?.color} />
+                <StateIconFrame color={color}>
+                  <StateGroupIcon stateGroup={stateGroup} color={color} size={EIconSize.XL} percentage={percentage} />
+                </StateIconFrame>
               </button>
             }
           />
           <PopoverContent variant="rich" side="bottom" align="start">
-            <ColorSwatchPicker value={formData?.color} onChange={(hex) => handleFormData("color", hex)} />
+            <ColorSwatchPicker
+              className="w-88"
+              value={color}
+              onChange={(hex) => setFormData((previous) => ({ ...previous, color: hex }))}
+            />
           </PopoverContent>
         </Popover>
-      </div>
-
-      <div className="w-full space-y-2">
-        {/* title */}
-        <Field name="name" invalid={(errors && Boolean(errors.name)) || false}>
-          <InputGroup size="lg">
-            <Input
-              size="lg"
-              id="name"
-              type="text"
-              name="name"
-              placeholder={t("web.name")}
-              value={formData?.name}
-              onChange={(e) => handleFormData("name", e.target.value)}
-              maxLength={100}
-              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-              autoFocus
-            />
-          </InputGroup>
-        </Field>
-
-        {/* description */}
-        <Field name="description" invalid={(errors && Boolean(errors.description)) || false}>
-          <TextAreaGroup resize="none">
-            <TextArea
-              size="lg"
-              surface="field"
-              autoResize
-              maxRows={8}
-              id="description"
-              name="description"
-              placeholder={t("web.describe_this_state_for_your_members")}
-              value={formData?.description ?? ""}
-              onChange={(e) => handleFormData("description", e.target.value)}
-            />
-          </TextAreaGroup>
-        </Field>
-
-        <div className="flex items-center space-x-2">
+        <div className="min-w-0 flex-1 sm:w-36 sm:flex-none">
+          <Field name="name" invalid={Boolean(error)}>
+            <InputGroup size="lg">
+              <Input
+                size="lg"
+                id={nameId}
+                name="name"
+                aria-label={t("web.name")}
+                onKeyDown={cancelOnEscape}
+                aria-describedby={error ? `${nameId}-error` : undefined}
+                placeholder={t("web.name")}
+                value={formData.name ?? ""}
+                maxLength={100}
+                disabled={disabled}
+                onChange={(event) => {
+                  setFormData({ ...formData, name: event.target.value });
+                  setError("");
+                }}
+                // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the inline editor when opened
+                autoFocus
+              />
+            </InputGroup>
+          </Field>
+        </div>
+        <div className="order-3 w-full min-w-0 sm:order-none sm:flex-1">
+          <Field name="description">
+            <InputGroup size="lg">
+              <Input
+                size="lg"
+                name="description"
+                aria-label={t("description")}
+                onKeyDown={cancelOnEscape}
+                placeholder={t("web.describe_this_state_for_your_members")}
+                value={formData.description ?? ""}
+                maxLength={1000}
+                disabled={disabled}
+                onChange={(event) => setFormData({ ...formData, description: event.target.value })}
+              />
+            </InputGroup>
+          </Field>
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-1 self-center">
           <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            stretch="auto"
+            label={t("web.cancel")}
+            disabled={disabled}
+            onClick={onCancel}
+            onKeyDown={cancelOnEscape}
+          />
+          <Button
+            onKeyDown={cancelOnEscape}
+            type="submit"
             variant="primary"
             size="md"
             stretch="auto"
             label={buttonTitle}
-            onClick={formSubmit}
-            disabled={buttonDisabled}
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            stretch="auto"
-            label={t("web.cancel")}
-            disabled={buttonDisabled}
-            onClick={onCancel}
+            disabled={disabled}
           />
         </div>
       </div>
-    </div>
+      {error && (
+        <p id={`${nameId}-error`} role="alert" className="mt-2 pl-10 text-12 text-danger-primary">
+          {error}
+        </p>
+      )}
+    </form>
   );
 }

@@ -9,7 +9,8 @@ import { observer } from "mobx-react";
 import useSWR from "swr";
 // plane imports
 import { ENotificationLoader, ENotificationQueryParamType } from "@plane/constants";
-import { EmptyStateCompact } from "@plane/blocks/empty-state";
+import { useTranslation } from "@plane/i18n";
+import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { cn } from "@plane/utils";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
@@ -27,6 +28,7 @@ type NotificationsRootProps = {
 };
 
 export const NotificationsRoot = observer(function NotificationsRoot({ workspaceSlug }: NotificationsRootProps) {
+  const { t } = useTranslation();
   // hooks
   const { currentWorkspace } = useWorkspace();
   const {
@@ -86,7 +88,13 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
     <div className={cn("h-full w-full overflow-hidden", isWorkItem && "overflow-y-auto")}>
       {!currentSelectedNotificationId ? (
         <div className="flex size-full items-center justify-center">
-          <EmptyStateCompact assetKey="unknown" assetClassName="size-20" />
+          <EmptyStateDetailed
+            assetKey="inbox"
+            assetClassName="size-40"
+            align="center"
+            title={t("web.inbox_filters.empty_title")}
+            description={t("web.inbox_filters.empty_description")}
+          />
         </div>
       ) : (
         <>

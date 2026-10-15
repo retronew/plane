@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -15,7 +16,7 @@ import { AddOutline } from "@makeplane/propel/icons";
 import { setPromiseToast } from "@plane/blocks/toast";
 import type { ISearchIssueResponse, TIssue } from "@plane/types";
 import { EIssueLayoutTypes } from "@plane/types";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { cn } from "@plane/utils";
 // components
 import { ExistingIssuesListModal } from "@/components/core/modals/existing-issues-list-modal";
@@ -104,7 +105,7 @@ export const CalendarQuickAddIssueActions = observer(function CalendarQuickAddIs
       )}
       <QuickAddIssueRoot
         isQuickAddOpen={isOpen}
-        setIsQuickAddOpen={(isOpen) => setIsOpen(isOpen)}
+        setIsQuickAddOpen={setIsOpen}
         layout={EIssueLayoutTypes.CALENDAR}
         prePopulatedData={prePopulatedData}
         quickAddCallback={quickAddCallback}

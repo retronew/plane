@@ -31,6 +31,7 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
     cornerRadius,
     paddingAngle,
     tooltipLabel,
+    customTooltipContent,
   } = props;
   // states
   const [activeLegend, setActiveLegend] = useState<string | null>(null);
@@ -133,8 +134,9 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
               wrapperStyle={{
                 pointerEvents: "none",
               }}
-              content={({ active, payload }) => {
+              content={({ active, label: chartLabel, payload }) => {
                 if (!active || !payload || !payload.length) return null;
+                if (customTooltipContent) return customTooltipContent({ active, label: chartLabel, payload });
                 const cellData = cells.find((c) => c.key === payload[0].payload.key);
                 if (!cellData) return null;
                 const label = tooltipLabel

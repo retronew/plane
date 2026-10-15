@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
 // plane types
 // plane ui
-import { Field } from "@makeplane/propel/components/field";
+import { Field, FieldLabel } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
 import type { TLinkOperations } from "./use-links";
+import styles from "./quick-links.module.css";
 
 export type TLinkOperationsModal = Exclude<TLinkOperations, "remove">;
 
@@ -86,8 +87,8 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
       }}
     >
       <DialogContent size="md">
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex min-h-0 flex-1 flex-col">
-          <DialogMain>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className={`${styles.form} flex min-h-0 flex-1 flex-col`}>
+          <DialogMain render={<div data-link-main="" />}>
             <DialogHeader>
               <DialogHeading>
                 <DialogTitle>
@@ -96,12 +97,8 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
               </DialogHeading>
             </DialogHeader>
             <DialogBody tabIndex={0}>
-              <div className="space-y-3">
+              <div className="space-y-5">
                 <div>
-                  <label htmlFor="url" className="mb-2 text-14 font-medium text-secondary">
-                    {t("link.modal.url.text")}
-                    <span className="block text-10">{t("required")}</span>
-                  </label>
                   <Controller
                     control={control}
                     name="url"
@@ -110,10 +107,14 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                     }}
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="url" invalid={Boolean(errors.url)}>
+                        <FieldLabel size="lg" inset={false} required>
+                          {t("link.modal.url.text")}
+                        </FieldLabel>
                         <InputGroup size="lg">
                           <Input
                             size="lg"
                             id="url"
+                            aria-required="true"
                             type="text"
                             value={value}
                             onChange={onChange}
@@ -127,15 +128,14 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                   {errors.url && <span className="text-11 text-danger-primary">{t("link.modal.url.required")}</span>}
                 </div>
                 <div>
-                  <label htmlFor="title" className="mb-2 text-14 font-medium text-secondary">
-                    {t("link.modal.title.text")}
-                    <span className="block text-10">{t("optional")}</span>
-                  </label>
                   <Controller
                     control={control}
                     name="title"
                     render={({ field: { value, onChange, ref } }) => (
                       <Field name="title" invalid={Boolean(errors.title)}>
+                        <FieldLabel size="lg" inset={false}>
+                          {t("link.modal.title.text")}
+                        </FieldLabel>
                         <InputGroup size="lg">
                           <Input
                             size="lg"
@@ -154,7 +154,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
               </div>
             </DialogBody>
           </DialogMain>
-          <DialogActions>
+          <DialogActions render={<div data-link-actions="" />}>
             <Button variant="secondary" size="md" stretch="auto" onClick={onClose} label={t("cancel")} />
             <Button
               variant="primary"

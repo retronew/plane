@@ -92,8 +92,8 @@
       "recent_activity": {
         "title": "Recent activity",
         "empty": "We couldn't find data. Kindly view your inputs",
-        "button": "Download today's activity",
-        "button_loading": "Downloading"
+        "button": "Export today's activity",
+        "button_loading": "Exporting"
       }
     },
     "actions": {
@@ -129,7 +129,8 @@
         "title": "No work items yet",
         "description": "Subscribe to work items you are interested in, track all of them here."
       }
-    }
+    },
+    "page_title": "My work - {tab}"
   },
   "themes": {
     "theme_options": {

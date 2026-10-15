@@ -34,6 +34,8 @@ class APITokenReadSerializer(BaseSerializer):
         exclude = ("token",)
 
     def get_is_active(self, obj: APIToken) -> bool:
+        if not obj.is_active:
+            return False
         if obj.expired_at is None:
             return True
         return timezone.now() < obj.expired_at
@@ -43,3 +45,15 @@ class APIActivityLogSerializer(BaseSerializer):
     class Meta:
         model = APIActivityLog
         fields = "__all__"
+
+
+class WorkspaceAPITokenCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = APIToken
+        fields = ["label", "description", "expired_at", "scope"]
+        extra_kwargs = {"label": {"required": True, "allow_blank": False}}
+
+    def validate_expired_at(self, value):
+        if value is not None and value <= timezone.now():
+            raise serializers.ValidationError("Expiration must be in the future.")
+        return value

@@ -9,7 +9,10 @@ import type { IApiToken } from "@plane/types";
 import { APIService } from "../api.service";
 
 export class APITokenService extends APIService {
-  constructor(BASE_URL?: string) {
+  constructor(
+    BASE_URL?: string,
+    private workspaceSlug?: string
+  ) {
     super(BASE_URL || API_BASE_URL);
   }
 
@@ -18,8 +21,14 @@ export class APITokenService extends APIService {
    * @returns {Promise<IApiToken[]>} Array of API tokens associated with the workspace
    * @throws {Error} Throws response data if the request fails
    */
+  private get endpoint() {
+    return this.workspaceSlug
+      ? `/api/workspaces/${encodeURIComponent(this.workspaceSlug)}/api-tokens/`
+      : "/api/users/api-tokens/";
+  }
+
   async list(): Promise<IApiToken[]> {
-    return this.get(`/api/users/api-tokens/`)
+    return this.get(this.endpoint)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -33,7 +42,7 @@ export class APITokenService extends APIService {
    * @throws {Error} Throws response data if the request fails
    */
   async retrieve(tokenId: string): Promise<IApiToken> {
-    return this.get(`/api/users/api-tokens/${tokenId}`)
+    return this.get(`${this.endpoint}${tokenId}/`)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -47,7 +56,7 @@ export class APITokenService extends APIService {
    * @throws {Error} Throws response data if the request fails
    */
   async create(data: Partial<IApiToken>): Promise<IApiToken> {
-    return this.post(`/api/users/api-tokens/`, data)
+    return this.post(this.endpoint, data)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
@@ -61,7 +70,7 @@ export class APITokenService extends APIService {
    * @throws {Error} Throws response data if the request fails
    */
   async destroy(tokenId: string): Promise<IApiToken> {
-    return this.delete(`/api/users/api-tokens/${tokenId}`)
+    return this.delete(`${this.endpoint}${tokenId}/`)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

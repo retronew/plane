@@ -1,3 +1,5 @@
+import { ActionSubmenuContent as MenuSubmenuContent } from "@plane/blocks/common";
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -28,12 +30,10 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import {
   Menu,
-  MenuContent,
   MenuItem,
   MenuSeparator,
   MenuTrigger,
   MenuSubmenu,
-  MenuSubmenuContent,
   MenuSubmenuTrigger,
 } from "@makeplane/propel/components/menu";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
@@ -242,7 +242,7 @@ export const PageActions = observer(function PageActions(props: Props) {
                     icon={item.icon && <Icon icon={item.icon} />}
                     disabled={item.disabled}
                   />
-                  <MenuSubmenuContent sizing="auto" onClick={(event) => event.stopPropagation()}>
+                  <MenuSubmenuContent onClick={(event) => event.stopPropagation()}>
                     {nestedItems.map((nestedItem) => (
                       <MenuItem
                         key={nestedItem.key}

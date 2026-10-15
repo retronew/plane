@@ -4,13 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 // plane imports
 import { PROFILE_VIEWER_TAB, PROFILE_ADMINS_TAB } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
-import { cn } from "@plane/utils";
+import { TabsList } from "@makeplane/propel/components/tabs";
+import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
+import { UnderlineTabLink } from "@/components/navigation/underline-tab-link";
 
 type Props = {
   isAuthorized: boolean;
@@ -24,25 +25,30 @@ export function ProfileNavbar(props: Props) {
 
   const tabsList = isAuthorized ? [...PROFILE_VIEWER_TAB, ...PROFILE_ADMINS_TAB] : PROFILE_VIEWER_TAB;
 
+  const basePath = `/${workspaceSlug}/profile/${userId}`;
+  const activeTab =
+    tabsList.find((tab) => pathname.replace(/\/$/, "") === `${basePath}/${tab.route}`.replace(/\/$/, ""))?.key ??
+    "summary";
+
   return (
-    <Header variant={EHeaderVariant.SECONDARY} showOnMobile={false}>
-      <div className="flex items-center overflow-x-scroll">
-        {tabsList.map((tab) => (
-          <Link key={tab.route} href={`/${workspaceSlug}/profile/${userId}/${tab.route}`}>
-            <span
-              className={cn(
-                `flex border-b-2 p-4 text-13 font-medium whitespace-nowrap text-tertiary outline-none hover:text-primary ${
-                  pathname === `/${workspaceSlug}/profile/${userId}${tab.selected}`
-                    ? "border-accent-strong text-accent-primary hover:text-accent-primary"
-                    : "border-transparent"
-                }`
-              )}
-            >
-              {t(tab.i18n_label)}
-            </span>
-          </Link>
-        ))}
-      </div>
+    <Header
+      variant={EHeaderVariant.SECONDARY}
+      showOnMobile={false}
+      setHeight={false}
+      className="h-12 shrink-0 items-center"
+    >
+      <AnimatedUnderlineTabs fillHeight value={activeTab} motionKey={basePath}>
+        <TabsList>
+          {tabsList.map((tab) => (
+            <UnderlineTabLink
+              key={tab.key}
+              value={tab.key}
+              label={t(tab.i18n_label)}
+              to={`${basePath}/${tab.route}${tab.route ? "/" : ""}`}
+            />
+          ))}
+        </TabsList>
+      </AnimatedUnderlineTabs>
     </Header>
   );
 }

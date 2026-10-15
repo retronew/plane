@@ -6,9 +6,9 @@
 
 import { Fragment } from "react";
 import type { ReactNode } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@makeplane/propel/components/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@makeplane/propel/components/table";
 import type { TableRowProps, TableVariant } from "@makeplane/propel/components/table";
-import { TableHead as TableHeadElement } from "@makeplane/propel/elements/table";
+import { TableHead as TableHeadElement, TableHeadTitle } from "@makeplane/propel/elements/table";
 import { Loader } from "@plane/blocks/skeleton";
 
 export type DataTableColumn<T> = {
@@ -16,8 +16,8 @@ export type DataTableColumn<T> = {
   /** Column title. The header label unless `thRender` supplies richer content. */
   content: string;
   /**
-   * Custom header content (a sort menu, a right-aligned numeric title). Rendered through the
-   * elements-tier `TableHead`, which takes children; the ready-made one takes a string label only.
+   * Custom header content (such as a sort menu). Shares the plain title's cell and vertically
+   * centered content frame, so interactive and static column labels align.
    */
   thRender?: () => ReactNode;
   tdRender: (rowData: T) => ReactNode;
@@ -53,8 +53,8 @@ export type DataTableProps<T> = {
 /**
  * The `columns` / `data` / `keyExtractor` table of the legacy `@plane/blocks/tables` `Table`, rendered with
  * propel's table parts. Chrome (dividers, header fill, cell padding, the rounded scroll frame) is
- * propel's; there is no className axis. Headers are `TableHead label` unless a column brings its
- * own `thRender`, and every cell is `TableCell padding="cell"` unless the column opts into
+ * propel's; there is no className axis. Headers share a centered content frame around either
+ * `TableHeadTitle` or `thRender`. Every body cell uses `padding="cell"` unless the column opts into
  * `padding: "trigger"`.
  */
 export function DataTable<T>(props: DataTableProps<T>) {
@@ -64,15 +64,13 @@ export function DataTable<T>(props: DataTableProps<T>) {
     <Table variant={variant}>
       <TableHeader>
         <TableRow>
-          {columns.map((column) =>
-            column.thRender ? (
-              <TableHeadElement key={column.key} variant={variant} pinned="none">
-                {column.thRender()}
-              </TableHeadElement>
-            ) : (
-              <TableHead key={column.key} label={column.content} pinned="none" />
-            )
-          )}
+          {columns.map((column) => (
+            <TableHeadElement key={column.key} variant={variant} pinned="none">
+              <div className="flex min-h-5 items-center">
+                {column.thRender ? column.thRender() : <TableHeadTitle>{column.content}</TableHeadTitle>}
+              </div>
+            </TableHeadElement>
+          ))}
         </TableRow>
       </TableHeader>
       <TableBody>

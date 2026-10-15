@@ -17,11 +17,12 @@ import { getTabIndex } from "@plane/utils";
 type Props = {
   handleClose: () => void;
   isMobile?: boolean;
+  disabled?: boolean;
 };
 
 function ProjectCreateButtons(props: Props) {
   const { t } = useTranslation();
-  const { handleClose, isMobile = false } = props;
+  const { handleClose, isMobile = false, disabled = false } = props;
   const {
     formState: { isSubmitting },
   } = useFormContext<IProject>();
@@ -29,7 +30,7 @@ function ProjectCreateButtons(props: Props) {
   const { getIndex } = getTabIndex(ETabIndices.PROJECT_CREATE, isMobile);
 
   return (
-    <div className="flex justify-end gap-2 border-t border-subtle py-4">
+    <div className="flex shrink-0 justify-end gap-3 border-t border-subtle px-4 py-4">
       <Button
         variant="secondary"
         size="md"
@@ -45,6 +46,7 @@ function ProjectCreateButtons(props: Props) {
         type="submit"
         label={isSubmitting ? t("creating") : t("create_project")}
         loading={isSubmitting}
+        disabled={disabled}
         tabIndex={getIndex("submit")}
       />
     </div>

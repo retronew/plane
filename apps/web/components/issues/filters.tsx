@@ -110,6 +110,7 @@ export const HeaderFilters = observer(function HeaderFilters(props: Props) {
       </div>
       <WorkItemFiltersToggle entityType={storeType} entityId={projectId} />
       <FiltersDropdown
+        displayMenu
         miniIcon={<PreferencesOutline className="size-3.5" />}
         title={t("common.display")}
         placement="bottom-end"

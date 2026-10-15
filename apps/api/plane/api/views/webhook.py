@@ -32,30 +32,8 @@ from plane.db.models.webhook import generate_token
 from plane.utils.host import base_host
 from plane.utils.openapi import WORKSPACE_SLUG_PARAMETER
 
-WEBHOOK_EVENTS = (
-    "project",
-    "project.created",
-    "project.updated",
-    "project.deleted",
-    "issue",
-    "issue.created",
-    "issue.updated",
-    "issue.deleted",
-    "issue.state_changed",
-    "issue.assigned",
-    "issue_comment",
-    "issue_comment.created",
-    "issue_comment.updated",
-    "issue_comment.deleted",
-    "cycle",
-    "cycle.created",
-    "cycle.updated",
-    "cycle.deleted",
-    "module",
-    "module.created",
-    "module.updated",
-    "module.deleted",
-)
+from plane.utils.webhook_events import WEBHOOK_EVENTS
+
 WEBHOOK_ID_PARAMETER = OpenApiParameter(
     name="webhook_id", required=True, type=OpenApiTypes.UUID, location=OpenApiParameter.PATH
 )

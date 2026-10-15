@@ -25,7 +25,7 @@ export function LucideIconsList(props: LucideIconsListProps) {
           key={icon.name}
           type="button"
           aria-label={icon.name}
-          className="grid h-9 w-9 place-items-center rounded-sm text-body-md-regular select-none hover:bg-layer-1"
+          className="grid size-8 place-items-center rounded-sm text-body-md-regular select-none hover:bg-layer-1"
           onClick={() => {
             onChange({
               name: icon.name,

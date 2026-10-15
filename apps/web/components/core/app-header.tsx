@@ -11,6 +11,7 @@ import { Row } from "@plane/blocks/layout";
 // components
 import { cn } from "@plane/utils";
 import { ExtendedAppHeader } from "@/components/common/extended-app-header";
+import sidebarStyles from "@/components/sidebar/sidebar-layout.module.css";
 
 export interface AppHeaderProps {
   header: ReactNode;
@@ -24,7 +25,13 @@ export const AppHeader = observer(function AppHeader(props: AppHeaderProps) {
 
   return (
     <div className={cn("z-[18]", className)}>
-      <Row className={cn("flex h-11 w-full items-center gap-2 border-b border-subtle bg-surface-1", rowClassName)}>
+      <Row
+        className={cn(
+          "flex h-11 w-full items-center gap-2 border-b border-subtle bg-surface-1",
+          sidebarStyles.pageHeader,
+          rowClassName
+        )}
+      >
         <ExtendedAppHeader header={header} />
       </Row>
       {/* eslint-disable-next-line oxc/const-comparisons */}

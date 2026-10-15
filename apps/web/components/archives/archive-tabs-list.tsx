@@ -5,8 +5,10 @@
  */
 
 import { observer } from "mobx-react";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, useLocation } from "react-router";
+import { TabsList } from "@makeplane/propel/components/tabs";
+import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
+import { UnderlineTabLink } from "@/components/navigation/underline-tab-link";
 // types
 import type { IProject } from "@plane/types";
 // hooks
@@ -44,7 +46,7 @@ const ARCHIVES_TAB_LIST: {
 export const ArchiveTabsList = observer(function ArchiveTabsList() {
   // router
   const { workspaceSlug, projectId } = useParams();
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   // store hooks
   const { getProjectById } = useProject();
 
@@ -53,24 +55,21 @@ export const ArchiveTabsList = observer(function ArchiveTabsList() {
   const projectDetails = getProjectById(projectId?.toString());
   if (!projectDetails) return null;
 
+  const basePath = `/${workspaceSlug}/projects/${projectId}/archives`;
+  const visibleTabs = ARCHIVES_TAB_LIST.filter((tab) => tab.shouldRender(projectDetails));
+  const activeTab =
+    visibleTabs.find((tab) => pathname === `${basePath}/${tab.key}` || pathname.startsWith(`${basePath}/${tab.key}/`))
+      ?.key ?? "issues";
+
   return (
-    <>
-      {ARCHIVES_TAB_LIST.map(
-        (tab) =>
-          tab.shouldRender(projectDetails) && (
-            <Link key={tab.key} href={`/${workspaceSlug}/projects/${projectId}/archives/${tab.key}`}>
-              <span
-                className={`flex min-w-min flex-shrink-0 border-b-2 px-4 py-4 text-13 font-medium whitespace-nowrap outline-none ${
-                  pathname.includes(tab.key)
-                    ? "border-accent-strong text-accent-primary"
-                    : "border-transparent text-tertiary hover:border-subtle hover:text-placeholder"
-                }`}
-              >
-                {tab.label}
-              </span>
-            </Link>
-          )
-      )}
-    </>
+    <div className="max-w-full min-w-0 pt-3">
+      <AnimatedUnderlineTabs value={activeTab} motionKey={`${basePath}`}>
+        <TabsList>
+          {visibleTabs.map((tab) => (
+            <UnderlineTabLink key={tab.key} value={tab.key} label={tab.label} to={`${basePath}/${tab.key}/`} />
+          ))}
+        </TabsList>
+      </AnimatedUnderlineTabs>
+    </div>
   );
 });

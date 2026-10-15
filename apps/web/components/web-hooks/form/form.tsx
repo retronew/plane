@@ -4,20 +4,16 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect, useState } from "react";
+import { InputField } from "@makeplane/propel/components/input-field";
+import React from "react";
+import { normalizeWebhookEvents } from "./event-selection";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import type { IWebhook, TWebhookEventTypes } from "@plane/types";
 // hooks
-import {
-  WebhookIndividualEventOptions,
-  WebhookInput,
-  WebhookOptions,
-  WebhookSecretKey,
-  WebhookToggle,
-} from "@/components/web-hooks";
+import { WebhookIndividualEventOptions, WebhookInput, WebhookSecretKey, WebhookToggle } from "@/components/web-hooks";
 import { useWebhook } from "@/hooks/store/use-webhook";
 // components
 // ui
@@ -36,12 +32,11 @@ const initialWebhookPayload: Partial<IWebhook> = {
   module: true,
   project: true,
   url: "",
+  name: "",
 };
 
 export const WebhookForm = observer(function WebhookForm(props: Props) {
   const { data, onSubmit, handleClose } = props;
-  // states
-  const [webhookEventType, setWebhookEventType] = useState<TWebhookEventTypes>("all");
   // store hooks
   const { webhookSecretKey } = useWebhook();
   const { t } = useTranslation();
@@ -51,30 +46,44 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
     control,
     formState: { isSubmitting, errors },
   } = useForm<IWebhook>({
-    defaultValues: { ...initialWebhookPayload, ...data },
+    defaultValues: { ...initialWebhookPayload, ...data, events: normalizeWebhookEvents(data) },
   });
 
   const handleFormSubmit = async (formData: IWebhook) => {
-    await onSubmit(formData, webhookEventType);
+    await onSubmit(
+      { ...formData, project: false, cycle: false, module: false, issue: false, issue_comment: false },
+      "individual"
+    );
   };
-
-  useEffect(() => {
-    if (!data) return;
-
-    if (data.project && data.cycle && data.module && data.issue && data.issue_comment) setWebhookEventType("all");
-    else setWebhookEventType("individual");
-  }, [data]);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
-      <div className="space-y-5">
-        <div className="text-18 font-medium text-secondary">
+      <div className="flex flex-col gap-7">
+        <div className="mb-[-12px] border-b border-subtle pb-3 text-h3-medium text-primary">
           {data
             ? t("workspace_settings.settings.webhooks.modal.details")
             : t("workspace_settings.settings.webhooks.modal.title")}
         </div>
-        <div className="space-y-3">
-          <div className="space-y-1">
+        <div className="flex flex-col gap-4">
+          <Controller
+            control={control}
+            name="name"
+            rules={{ required: t("web.webhook_name_required") }}
+            render={({ field }) => (
+              <InputField
+                {...field}
+                value={field.value ?? ""}
+                size="lg"
+                orientation="vertical"
+                label={t("web.webhook_name")}
+                required
+                placeholder={t("web.webhook_name_placeholder")}
+                maxLength={255}
+              />
+            )}
+          />
+          {errors.name && <p className="text-11 text-danger-primary">{errors.name.message}</p>}
+          <div className="space-y-2">
             <Controller
               control={control}
               name="url"
@@ -88,11 +97,13 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
             {errors.url && <div className="text-11 text-danger-primary">{errors.url.message}</div>}
           </div>
           {data && <WebhookToggle control={control} />}
-          <WebhookOptions value={webhookEventType} onChange={(val) => setWebhookEventType(val)} />
         </div>
-        <div className="mt-4">
-          {webhookEventType === "individual" && <WebhookIndividualEventOptions control={control} />}
-        </div>
+        <fieldset className="space-y-5 pb-7">
+          <legend className="text-13 font-medium">{t("workspace_settings.settings.webhooks.modal.question")}</legend>
+          <div>
+            <WebhookIndividualEventOptions control={control} />
+          </div>
+        </fieldset>
       </div>
       {data ? (
         <div className="space-y-5 pt-0">
@@ -107,7 +118,7 @@ export const WebhookForm = observer(function WebhookForm(props: Props) {
           />
         </div>
       ) : (
-        <div className="flex items-center justify-end gap-2 border-t-[0.5px] border-subtle px-5 py-4">
+        <div className="flex items-center justify-end gap-2 border-t-[0.5px] border-subtle py-4">
           <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
           {!webhookSecretKey && (
             <Button

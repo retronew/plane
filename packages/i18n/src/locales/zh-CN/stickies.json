@@ -2,6 +2,11 @@
   "stickies": {
     "title": "您的便签",
     "placeholder": "点击此处输入",
+    "toolbar": {
+      "bold": "加粗",
+      "italic": "斜体",
+      "todo": "待办列表"
+    },
     "all": "所有便签",
     "no-data": "记下一个想法、一次灵光乍现或一个点子。添加便签即可开始。",
     "add": "添加便签",
@@ -28,7 +33,8 @@
     "toasts": {
       "errors": {
         "wrong_name": "便签名称不能超过 100 个字符。",
-        "already_exists": "已存在一个没有描述的便签"
+        "already_exists": "请先填写已有的空白便签，再添加新便签。",
+        "empty_title": "先填写已有便签"
       },
       "created": {
         "title": "便签已创建",

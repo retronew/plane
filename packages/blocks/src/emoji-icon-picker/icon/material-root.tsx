@@ -33,7 +33,8 @@ export function MaterialIconList(props: MaterialIconListProps) {
         <button
           key={icon.name}
           type="button"
-          className="grid h-9 w-9 place-items-center rounded-sm text-body-md-regular select-none hover:bg-layer-1"
+          aria-label={icon.name}
+          className="grid size-8 place-items-center rounded-sm text-body-md-regular select-none hover:bg-layer-1"
           onClick={() => {
             onChange({
               name: icon.name,

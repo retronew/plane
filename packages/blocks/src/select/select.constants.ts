@@ -7,10 +7,10 @@
 /** One debounce for every server-side option search (paginated lists, menu sources). */
 export const SELECT_SEARCH_DEBOUNCE_MS = 300;
 
-/** Estimated height of a legacy `renderOption` row (py-1.5 + text-13), which sets its own box. */
-export const MENU_ROW_HEIGHT = 32;
+/** Compact shared menu row (20px line box plus 4px vertical inset per side). */
+export const MENU_ROW_HEIGHT = 28;
 
-/** Estimated height of Select's standard option row — propel `ComboboxItem`'s fixed single-line `h-7`. */
+/** Estimated height of Select's standard option row, matching the shared menu density. */
 export const SELECT_OPTION_ROW_HEIGHT = 28;
 
 /** Bounded, scrollable option-list container inside a flyout panel. */

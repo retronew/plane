@@ -12,7 +12,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.permissions import SAFE_METHODS
 
 # Module imports
-from plane.db.models import APIToken
+from plane.db.models import APIToken, WorkspaceMember
 
 
 class APIKeyAuthentication(authentication.BaseAuthentication):
@@ -37,6 +37,16 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
             )
         except APIToken.DoesNotExist:
             raise AuthenticationFailed("Given API token is not valid")
+
+        if api_token.workspace_id:
+            match = getattr(request, "resolver_match", None) if request is not None else None
+            slug = match.kwargs.get("slug") if match else None
+            if slug != api_token.workspace.slug:
+                raise PermissionDenied("This API token is restricted to its workspace")
+            if not WorkspaceMember.objects.filter(
+                workspace_id=api_token.workspace_id, member_id=api_token.user_id, role=20, is_active=True
+            ).exists():
+                raise PermissionDenied("The token issuer is no longer a workspace administrator")
 
         # save api token last used
         api_token.last_used = timezone.now()

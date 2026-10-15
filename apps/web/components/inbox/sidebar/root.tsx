@@ -1,3 +1,4 @@
+import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -11,7 +12,7 @@ import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TInboxIssueCurrentTab } from "@plane/types";
 import { EInboxIssueCurrentTab } from "@plane/types";
 // plane imports
-import { Tab, Tabs, TabsList } from "@makeplane/propel/components/tabs";
+import { Tab, TabsList } from "@makeplane/propel/components/tabs";
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
 import { Loader } from "@plane/blocks/skeleton";
 // components
@@ -88,8 +89,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
       <div className="relative flex h-full w-full flex-col overflow-hidden">
         <Header variant={EHeaderVariant.SECONDARY}>
           <div className="flex min-w-0 flex-1">
-            <Tabs
-              variant="underline"
+            <AnimatedUnderlineTabs
               value={currentTab}
               onValueChange={(value) => {
                 const nextTab = value as TInboxIssueCurrentTab;
@@ -118,7 +118,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
                   ))}
                 </TabsList>
               </div>
-            </Tabs>
+            </AnimatedUnderlineTabs>
           </div>
           <div className="m-auto mr-0">
             <FiltersRoot />

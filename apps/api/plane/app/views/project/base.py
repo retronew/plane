@@ -1,3 +1,4 @@
+from django.db import transaction
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -12,6 +13,7 @@ from django.db.models import Exists, F, OuterRef, Prefetch, Q, Subquery, Count
 from django.utils import timezone
 
 # Third Party imports
+from plane.utils.workspace_features import check_project_creation
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -87,13 +89,14 @@ class ProjectViewSet(BaseViewSet):
             )
             .annotate(sort_order=Subquery(sort_order))
             .prefetch_related(
+                "labels",
                 Prefetch(
                     "project_projectmember",
                     queryset=ProjectMember.objects.filter(
                         workspace__slug=self.kwargs.get("slug"), is_active=True
                     ).select_related("member"),
                     to_attr="members_list",
-                )
+                ),
             )
             .distinct()
         )
@@ -255,8 +258,10 @@ class ProjectViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
+    @transaction.atomic
     def create(self, request, slug):
         workspace = Workspace.objects.get(slug=slug)
+        check_project_creation(workspace, request.user)
 
         serializer = ProjectSerializer(data={**request.data}, context={"workspace_id": workspace.id})
         if serializer.is_valid():
@@ -278,22 +283,49 @@ class ProjectViewSet(BaseViewSet):
                     role=ROLE.ADMIN.value,
                 )
 
+            initial_member_ids = getattr(serializer.instance, "initial_member_ids", [])
+            existing_member_ids = set(
+                ProjectMember.objects.filter(project=serializer.instance).values_list("member_id", flat=True)
+            )
+            ProjectMember.objects.bulk_create(
+                [
+                    ProjectMember(
+                        project=serializer.instance,
+                        workspace=workspace,
+                        member_id=member.member_id,
+                        role=ROLE.GUEST.value if member.role == ROLE.GUEST.value else ROLE.MEMBER.value,
+                    )
+                    for member in WorkspaceMember.objects.filter(
+                        workspace=workspace, member_id__in=initial_member_ids, is_active=True
+                    )
+                    if member.member_id not in existing_member_ids
+                ]
+            )
+
+            template_configuration = getattr(serializer.instance, "template_configuration", None) or {}
+            state_definitions = template_configuration.get("states") or DEFAULT_STATES
             State.objects.bulk_create(
                 [
                     State(
                         name=state["name"],
                         color=state["color"],
                         project=serializer.instance,
-                        sequence=state["sequence"],
+                        sequence=state.get("sequence", index * 10000),
                         workspace=serializer.instance.workspace,
                         group=state["group"],
                         default=state.get("default", False),
                         created_by=request.user,
                     )
-                    for state in DEFAULT_STATES
+                    for index, state in enumerate(state_definitions)
                 ]
             )
 
+            from plane.db.models import Label, Issue
+
+            for label in template_configuration.get("labels", []):
+                Label.objects.create(project=serializer.instance, workspace=workspace, **label)
+            for item in template_configuration.get("work_items", []):
+                Issue.objects.create(project=serializer.instance, workspace=workspace, **item)
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()
 
             # Create the model activity

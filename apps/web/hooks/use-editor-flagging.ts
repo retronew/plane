@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useInstance } from "@/hooks/store/use-instance";
 
 // editor
@@ -36,9 +37,11 @@ export type TEditorFlaggingHookProps = {
  */
 export const useEditorFlagging = (_props: TEditorFlaggingHookProps): TEditorFlaggingHookReturnType => {
   const { config } = useInstance();
+  const { getWorkspaceBySlug } = useWorkspace();
+  const aiEnabled = getWorkspaceBySlug(_props.workspaceSlug)?.ai_enabled !== false;
   return {
     document: {
-      disabled: config?.has_llm_configured ? ["collaboration-cursor"] : ["ai", "collaboration-cursor"],
+      disabled: config?.has_llm_configured && aiEnabled ? ["collaboration-cursor"] : ["ai", "collaboration-cursor"],
       flagged: [],
     },
     liteText: {

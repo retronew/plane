@@ -260,12 +260,13 @@
     }
   },
   "workspace_draft_issues": {
-    "draft_an_issue": "起草工作项",
+    "draft_an_issue": "新建草稿",
+    "temporarily_saved": "有暂存的草稿内容",
     "empty_state": {
-      "title": "未写完的工作项（以及即将支持的评论）会显示在这里。",
-      "description": "试试看：开始创建工作项后中途离开，或在下方创建您的第一个草稿。😉",
+      "title": "暂无工作项草稿",
+      "description": "将待完善的工作项保存为草稿，准备好后再发布到项目。",
       "primary_button": {
-        "text": "创建第一个草稿"
+        "text": "新建草稿"
       }
     },
     "delete_modal": {

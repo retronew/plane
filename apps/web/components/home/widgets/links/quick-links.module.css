@@ -1,0 +1,19 @@
+:global([role="dialog"]):has(> .form) {
+  border-radius: 12px;
+  border-color: var(--border-color-subtle);
+}
+
+/* Keep this compact form at the reference 16px gutter, above the app-wide modal overrides. */
+.form [data-link-main],
+.form [data-link-actions] {
+  padding: 16px !important;
+}
+
+.form [data-link-actions] {
+  gap: 12px !important;
+  border-top: 1px solid var(--border-color-subtle) !important;
+}
+
+.form button {
+  border-radius: 6px;
+}

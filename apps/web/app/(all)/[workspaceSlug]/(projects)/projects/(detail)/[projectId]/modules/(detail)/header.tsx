@@ -200,6 +200,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
             </div>
             {moduleId && <WorkItemFiltersToggle entityType={EIssuesStoreType.MODULE} entityId={moduleId} />}
             <FiltersDropdown
+              displayMenu
               title={translate("web.display")}
               placement="bottom-end"
               miniIcon={<PreferencesOutline className="size-3.5" />}

@@ -17,11 +17,13 @@ from .base import DynamicBaseSerializer
 from plane.db.models import Webhook, WebhookLog
 from plane.db.models.webhook import validate_domain, validate_schema
 from plane.utils.ip_address import validate_url
+from plane.utils.webhook_events import WEBHOOK_EVENTS
 
 logger = logging.getLogger(__name__)
 
 
 class WebhookSerializer(DynamicBaseSerializer):
+    events = serializers.ListField(child=serializers.ChoiceField(choices=WEBHOOK_EVENTS), required=False)
     url = serializers.URLField(validators=[validate_schema, validate_domain])
 
     def _validate_webhook_url(self, url):

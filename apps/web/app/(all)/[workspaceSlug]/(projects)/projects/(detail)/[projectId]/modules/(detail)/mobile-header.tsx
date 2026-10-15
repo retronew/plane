@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -14,7 +15,7 @@ import { BoardOutline, CalendarOutline, ChevronDownOutline, ListOutline } from "
 import type { IIssueDisplayFilterOptions, IIssueDisplayProperties, EIssueLayoutTypes } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 // components
 import { WorkItemsModal } from "@/components/analytics/work-items/modal";
 import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
@@ -82,7 +83,13 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
       <div className="flex justify-evenly border-b border-subtle bg-surface-1 py-2">
         <Menu>
           <MenuTrigger
-            render={<button type="button" className="flex flex-grow justify-center text-13 text-secondary" />}
+            render={
+              <button
+                aria-label={t("common.layout")}
+                type="button"
+                className="flex flex-grow justify-center text-13 text-secondary"
+              />
+            }
           >
             {t("web.layout")}
           </MenuTrigger>
@@ -101,6 +108,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
         </Menu>
         <div className="flex flex-grow items-center justify-center border-l border-subtle text-13 text-secondary">
           <FiltersDropdown
+            displayMenu
             title={t("web.display")}
             placement="bottom-end"
             menuButton={
@@ -126,6 +134,7 @@ export const ModuleIssuesMobileHeader = observer(function ModuleIssuesMobileHead
         </div>
 
         <button
+          aria-label={t("common.layout")}
           onClick={() => setAnalyticsModal(true)}
           className="flex flex-grow justify-center border-l border-subtle text-13 text-secondary"
         >

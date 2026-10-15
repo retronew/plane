@@ -15,6 +15,7 @@ import { SettingsMobileNav } from "@/components/settings/mobile/nav";
 import { WORKSPACE_SETTINGS_ACCESS } from "@plane/constants";
 import type { EUserWorkspaceRoles } from "@plane/types";
 // components
+import { SettingsSidebarProvider, SettingsDesktopSidebar } from "@/components/settings/sidebar/collapse";
 import { WorkspaceSettingsSidebarRoot } from "@/components/settings/workspace/sidebar";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
@@ -38,7 +39,7 @@ const WorkspaceSettingLayout = observer(function WorkspaceSettingLayout({ params
   }
 
   return (
-    <>
+    <SettingsSidebarProvider>
       <SettingsMobileNav
         hamburgerContent={WorkspaceSettingsSidebarRoot}
         activePath={getWorkspaceActivePath(pathname) || ""}
@@ -48,14 +49,14 @@ const WorkspaceSettingLayout = observer(function WorkspaceSettingLayout({ params
           <NotAuthorizedView section="settings" className="h-auto" />
         ) : (
           <div className="relative flex size-full">
-            <div className="hidden h-full md:block">
+            <SettingsDesktopSidebar>
               <WorkspaceSettingsSidebarRoot />
-            </div>
+            </SettingsDesktopSidebar>
             <Outlet />
           </div>
         )}
       </div>
-    </>
+    </SettingsSidebarProvider>
   );
 });
 

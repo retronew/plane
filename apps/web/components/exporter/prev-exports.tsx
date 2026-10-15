@@ -63,7 +63,7 @@ export const PrevExports = observer(function PrevExports(props: Props) {
     const interval = setInterval(() => {
       if (
         Array.isArray(exporterServices?.results) &&
-        exporterServices.results.some((service) => service.status === "processing")
+        exporterServices.results.some((service) => service.status === "processing" || service.status === "queued")
       ) {
         handleRefresh();
       } else {
@@ -85,7 +85,7 @@ export const PrevExports = observer(function PrevExports(props: Props) {
             stretch="auto"
             onClick={() => void handleRefresh()}
             icon={<Icon icon={<RefreshOutline className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />} />}
-            label={refreshing ? t("refreshing") : t("refresh_status")}
+            label={t("refresh_status")}
           />
         </div>
         {Array.isArray(exporterServices?.results) && exporterServices.results.length > 0 && (

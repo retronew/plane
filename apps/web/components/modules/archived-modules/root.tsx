@@ -13,6 +13,7 @@ import { useTranslation } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TModuleFilters } from "@plane/types";
 // components
+import { LayoutErrorFallback } from "@/components/common/layout-error-boundary";
 import { calculateTotalFilters } from "@plane/utils";
 import { ArchivedModulesView, ModuleAppliedFiltersList } from "@/components/modules";
 import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
@@ -27,19 +28,19 @@ export const ArchivedModuleLayoutRoot = observer(function ArchivedModuleLayoutRo
   // plane hooks
   const { t } = useTranslation();
   // hooks
-  const { fetchArchivedModules, projectArchivedModuleIds, loader } = useModule();
+  const { fetchArchivedModules, projectArchivedModuleIds } = useModule();
   const { clearAllFilters, currentProjectArchivedFilters, updateFilters } = useModuleFilter();
   // derived values
   const totalArchivedModules = projectArchivedModuleIds?.length ?? 0;
 
-  useSWR(
+  const { error, mutate } = useSWR(
     workspaceSlug && projectId ? `ARCHIVED_MODULES_${workspaceSlug.toString()}_${projectId.toString()}` : null,
     async () => {
       if (workspaceSlug && projectId) {
-        await fetchArchivedModules(workspaceSlug.toString(), projectId.toString());
+        return await fetchArchivedModules(workspaceSlug.toString(), projectId.toString());
       }
     },
-    { revalidateIfStale: false, revalidateOnFocus: false }
+    { revalidateIfStale: false, revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
   const handleRemoveFilter = useCallback(
@@ -57,7 +58,9 @@ export const ArchivedModuleLayoutRoot = observer(function ArchivedModuleLayoutRo
 
   if (!workspaceSlug || !projectId) return <></>;
 
-  if (loader || !projectArchivedModuleIds) {
+  if (error) return <LayoutErrorFallback onRetry={() => void mutate()} />;
+
+  if (!projectArchivedModuleIds) {
     return <CycleModuleListLayoutLoader />;
   }
 

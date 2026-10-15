@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "react-router";
 import { observer } from "mobx-react";
 // plane imports
 import { WORKSPACE_SETTINGS } from "@plane/constants";
@@ -14,7 +15,12 @@ import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 import { SettingsPageHeader } from "@/components/settings/page-header";
 import { WORKSPACE_SETTINGS_ICONS } from "@/components/settings/workspace/sidebar/item-icon";
 
-export const WebhooksWorkspaceSettingsHeader = observer(function WebhooksWorkspaceSettingsHeader() {
+export const WebhooksWorkspaceSettingsHeader = observer(function WebhooksWorkspaceSettingsHeader({
+  currentPage,
+}: {
+  currentPage?: string;
+}) {
+  const { workspaceSlug } = useParams();
   // translation
   const { t } = useTranslation();
   // derived values
@@ -30,10 +36,12 @@ export const WebhooksWorkspaceSettingsHeader = observer(function WebhooksWorkspa
               component={
                 <BreadcrumbLink
                   label={t(settingsDetails.i18n_label)}
+                  href={currentPage ? `/${workspaceSlug}/settings/webhooks/` : undefined}
                   icon={<Icon className="size-4 text-tertiary" />}
                 />
               }
             />
+            {currentPage && <Breadcrumbs.Item component={<BreadcrumbLink label={currentPage} isLast />} />}
           </Breadcrumbs>
         </div>
       }

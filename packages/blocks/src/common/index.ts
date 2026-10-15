@@ -15,3 +15,5 @@ export * from "./favorite-star";
 export * from "./sortable/sortable";
 export { toSideAndAlign } from "./popover-menu/helpers";
 export type { TPopoverMenuPlacement } from "./popover-menu/helpers";
+
+export { ActionMenuContent, ActionSubmenuContent } from "./popover-menu/action-menu-content";

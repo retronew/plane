@@ -22,7 +22,7 @@ import {
   DialogMain,
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
-import { UserOutline } from "@makeplane/propel/icons";
+import { ImageOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
 import { EFileAssetType } from "@plane/types";
 import { getAssetIdFromUrl, getFileURL, checkURLValidity } from "@plane/utils";
@@ -128,7 +128,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>{translate("web.upload_image_0ff5")}</DialogTitle>
+              <DialogTitle>{translate("workspace_settings.settings.general.upload_logo")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody tabIndex={0}>
@@ -159,7 +159,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                       </>
                     ) : (
                       <div>
-                        <UserOutline className="mx-auto h-16 w-16 text-secondary" />
+                        <ImageOutline className="mx-auto h-16 w-16 text-secondary" />
                         <span className="mt-2 block text-13 font-medium text-secondary">
                           {isDragActive
                             ? translate("web.drop_image_here_to_upload")

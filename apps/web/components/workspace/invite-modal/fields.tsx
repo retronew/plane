@@ -10,7 +10,7 @@ import { Controller } from "react-hook-form";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { ROLE } from "@plane/constants";
+import { ROLE_DETAILS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { CloseOutline } from "@makeplane/propel/icons";
 import { Select } from "@plane/blocks/select";
@@ -46,8 +46,8 @@ export const InvitationFields = observer(function InvitationFields(props: TInvit
   // derived values
   const currentWorkspaceRole = workspaceInfoBySlug(workspaceSlug.toString())?.role;
   // A member can only invite at or below their own role.
-  const roleOptions: TRoleOption[] = Object.entries(ROLE)
-    .map(([key, label]) => ({ key: parseInt(key), label }))
+  const roleOptions: TRoleOption[] = Object.entries(ROLE_DETAILS)
+    .map(([key, details]) => ({ key: parseInt(key), label: t(details.i18n_title) }))
     .filter((role) => !!currentWorkspaceRole && currentWorkspaceRole >= role.key);
 
   return (
@@ -112,7 +112,7 @@ export const InvitationFields = observer(function InvitationFields(props: TInvit
                     >
                       <Select.Trigger<TRoleOption> variant="select-2xl">
                         <span className="min-w-0 flex-1 truncate text-left text-caption-sm-regular sm:text-body-xs-regular">
-                          {ROLE[value]}
+                          {t(ROLE_DETAILS[value].i18n_title)}
                         </span>
                       </Select.Trigger>
                     </Select>

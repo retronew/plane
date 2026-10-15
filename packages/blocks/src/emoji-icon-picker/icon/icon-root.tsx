@@ -6,7 +6,8 @@
 
 import React, { useId, useState } from "react";
 
-import { SearchOutline, InfoOutline } from "@makeplane/propel/icons";
+import { Input, InputGroup } from "@makeplane/propel/components/input";
+import { SearchOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import { cn } from "@plane/utils";
 import { adjustColorForContrast, DEFAULT_COLORS } from "../helper";
@@ -46,13 +47,13 @@ export function IconRoot(props: IconRootProps) {
   const [appliedDefaultColor, setAppliedDefaultColor] = useState(defaultColor);
   if (defaultColor !== appliedDefaultColor) {
     setAppliedDefaultColor(defaultColor);
+    setActiveColor(defaultColor);
     if (isPresetColor(defaultColor)) setShowHexInput(false);
     else {
       setHexValue(defaultColor.slice(1, 7));
       setShowHexInput(true);
     }
   }
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const hexLabelId = useId();
   // use shared search query from parent
   const query = searchQuery ?? "";
@@ -62,28 +63,20 @@ export function IconRoot(props: IconRootProps) {
       {/* Sticky inside the tab panel's scrollport — needs an opaque background or icons scroll underneath. */}
       <div className="sticky top-0 flex flex-col bg-layer-2">
         {!searchDisabled && (
-          <div className="flex w-full items-center px-2 py-[15px]">
-            <div
-              className={cn("relative flex h-10 w-full items-center gap-2 rounded-lg border px-[30px]", {
-                "border-accent-strong": isInputFocused,
-                "border-transparent": !isInputFocused,
-              })}
-              onFocus={() => setIsInputFocused(true)}
-              onBlur={() => setIsInputFocused(false)}
-            >
-              <SearchOutline aria-hidden="true" className="absolute bottom-3 left-2.5 h-3.5 w-3.5 text-placeholder" />
-
-              <input
+          <div className="px-3 py-2">
+            <InputGroup size="lg">
+              <SearchOutline aria-hidden="true" className="size-3.5 shrink-0 text-placeholder" />
+              <Input
+                size="lg"
                 placeholder={searchLabel}
                 aria-label={searchLabel}
                 value={query}
                 onChange={(e) => onSearchQueryChange?.(e.target.value)}
-                className="block h-full w-full rounded-md border-[0.5px] border-none border-subtle bg-transparent p-0 px-3 py-2 text-body-md-regular placeholder-(--text-color-placeholder) focus:outline-none"
               />
-            </div>
+            </InputGroup>
           </div>
         )}
-        <div className="grid h-9 grid-cols-9 items-center justify-items-center gap-2 px-2.5 py-1">
+        <div className="grid h-8 grid-cols-9 items-center justify-items-center gap-0.5 px-2">
           {showHexInput ? (
             <div className="col-span-8 ml-2 flex items-center gap-1 justify-self-stretch">
               <span
@@ -116,7 +109,8 @@ export function IconRoot(props: IconRootProps) {
                 key={curCol}
                 type="button"
                 aria-label={curCol}
-                className="grid size-5 place-items-center"
+                aria-pressed={activeColor.toLowerCase() === curCol.toLowerCase()}
+                className="grid size-8 place-items-center rounded-md hover:bg-layer-transparent-hover"
                 onClick={() => {
                   setActiveColor(curCol);
                   setHexValue(curCol.slice(1, 7));
@@ -130,9 +124,12 @@ export function IconRoot(props: IconRootProps) {
             type="button"
             aria-label={t("aria_labels.color_picker.hex_input")}
             aria-pressed={showHexInput}
-            className={cn("grid h-4 w-4 place-items-center rounded-full border border-transparent", {
-              "border-strong-1": !showHexInput,
-            })}
+            className={cn(
+              "grid size-8 place-items-center rounded-md border border-transparent hover:bg-layer-transparent-hover",
+              {
+                "border-strong-1": !showHexInput,
+              }
+            )}
             onClick={() => {
               setShowHexInput((prevData) => !prevData);
               setHexValue(activeColor.slice(1, 7));
@@ -145,12 +142,8 @@ export function IconRoot(props: IconRootProps) {
             )}
           </button>
         </div>
-        <div className="flex h-6 w-full items-center gap-2 py-1 pr-3 pl-4">
-          <InfoOutline className="h-3 w-3" />
-          <p className="text-caption-sm-regular">{t("web.icon_colors_contrast_note")}</p>
-        </div>
       </div>
-      <div className="mt-2 grid grid-cols-8 justify-items-center gap-1 px-2.5">
+      <div className="mt-3 grid grid-cols-9 justify-items-center gap-0.5 px-2 pb-2">
         {iconType === "material" ? (
           <MaterialIconList query={query} onChange={onChange} activeColor={activeColor} />
         ) : (

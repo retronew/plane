@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 // plane imports
@@ -18,7 +18,7 @@ import { PageHead } from "@/components/core/page-title";
 import { SettingsHeading } from "@/components/settings/heading";
 import { WebhookSettingsLoader } from "@/components/ui/loader/settings/web-hook";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
-import { WebhooksList, CreateWebhookModal } from "@/components/web-hooks";
+import { WebhooksList } from "@/components/web-hooks";
 // hooks
 import { useWebhook } from "@/hooks/store/use-webhook";
 import { useWorkspace } from "@/hooks/store/use-workspace";
@@ -29,14 +29,14 @@ import { WebhooksWorkspaceSettingsHeader } from "./header";
 
 function WebhooksListPage({ params }: Route.ComponentProps) {
   // states
-  const [showCreateWebhookModal, setShowCreateWebhookModal] = useState(false);
+  const navigate = useNavigate();
   // router
   const { workspaceSlug } = params;
   // plane hooks
   const { t } = useTranslation();
   // mobx store
   const { workspaceUserInfo, allowPermissions } = useUserPermissions();
-  const { fetchWebhooks, webhooks, clearSecretKey, webhookSecretKey, createWebhook } = useWebhook();
+  const { fetchWebhooks, webhooks } = useWebhook();
   const { currentWorkspace } = useWorkspace();
   // derived values
   const canPerformWorkspaceAdminActions = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
@@ -53,11 +53,6 @@ function WebhooksListPage({ params }: Route.ComponentProps) {
       })
     : undefined;
 
-  // clear secret key when modal is closed.
-  useEffect(() => {
-    if (!showCreateWebhookModal && webhookSecretKey) clearSecretKey();
-  }, [showCreateWebhookModal, webhookSecretKey, clearSecretKey]);
-
   if (workspaceUserInfo && !canPerformWorkspaceAdminActions) {
     return <NotAuthorizedView section="settings" className="h-auto" />;
   }
@@ -65,18 +60,9 @@ function WebhooksListPage({ params }: Route.ComponentProps) {
   if (!webhooks) return <WebhookSettingsLoader />;
 
   return (
-    <SettingsContentWrapper header={<WebhooksWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper compact header={<WebhooksWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <div className="w-full">
-        <CreateWebhookModal
-          createWebhook={createWebhook}
-          clearSecretKey={clearSecretKey}
-          currentWorkspace={currentWorkspace}
-          isOpen={showCreateWebhookModal}
-          onClose={() => {
-            setShowCreateWebhookModal(false);
-          }}
-        />
         <SettingsHeading
           title={t("workspace_settings.settings.webhooks.title")}
           description={t("workspace_settings.settings.webhooks.description")}
@@ -86,34 +72,23 @@ function WebhooksListPage({ params }: Route.ComponentProps) {
               size="md"
               stretch="auto"
               label={t("workspace_settings.settings.webhooks.add_webhook")}
-              onClick={() => setShowCreateWebhookModal(true)}
+              onClick={() => navigate(`/${workspaceSlug}/settings/webhooks/create/`)}
             />
           }
         />
         {Object.keys(webhooks).length > 0 ? (
-          <div className="mt-4">
+          <div className="mt-6">
             <WebhooksList />
           </div>
         ) : (
-          <div className="flex h-full w-full flex-col">
-            <div className="flex h-full w-full items-center justify-center">
-              <EmptyStateCompact
-                assetKey="webhook"
-                title={t("settings_empty_state.webhooks.title")}
-                description={t("settings_empty_state.webhooks.description")}
-                actions={[
-                  {
-                    label: t("settings_empty_state.webhooks.cta_primary"),
-                    onClick: () => {
-                      setShowCreateWebhookModal(true);
-                    },
-                  },
-                ]}
-                align="start"
-                rootClassName="py-20"
-              />
-            </div>
-          </div>
+          <EmptyStateCompact
+            assetKey="webhook"
+            assetClassName="size-20"
+            title={t("settings_empty_state.webhooks.title")}
+            description={t("settings_empty_state.webhooks.description")}
+            className="max-w-none"
+            rootClassName="mt-6 min-h-60 rounded-lg border border-subtle px-6 py-10"
+          />
         )}
       </div>
     </SettingsContentWrapper>

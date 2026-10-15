@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { useParams } from "next/navigation";
 import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -18,15 +19,35 @@ import { Header } from "@plane/blocks/layout";
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 import { CountChip } from "@/components/common/count-chip";
 import { CreateUpdateIssueModal } from "@/components/issues/issue-modal/modal";
+import {
+  composerCacheKey,
+  composerDraftContext,
+  readComposerDraft,
+  subscribeComposerDrafts,
+} from "@/components/issues/issue-modal/composer-cache";
 
 // hooks
 import { useProject } from "@/hooks/store/use-project";
-import { useUserPermissions } from "@/hooks/store/user";
+import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 
 export const WorkspaceDraftHeader = observer(function WorkspaceDraftHeader() {
   // state
   const [isDraftIssueModalOpen, setIsDraftIssueModalOpen] = useState(false);
+  const { workspaceSlug } = useParams();
+  const { data: currentUser } = useUser();
+  const hasPendingDraft = useSyncExternalStore(
+    subscribeComposerDrafts,
+    () =>
+      !!(
+        currentUser?.id &&
+        workspaceSlug &&
+        readComposerDraft(
+          composerCacheKey(currentUser.id, workspaceSlug.toString(), composerDraftContext(undefined, undefined, true))
+        )
+      ),
+    () => false
+  );
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { paginationInfo } = useWorkspaceDraftIssues();
@@ -67,14 +88,26 @@ export const WorkspaceDraftHeader = observer(function WorkspaceDraftHeader() {
 
         <Header.RightItem>
           {joinedProjectIds && joinedProjectIds.length > 0 && (
-            <Button
-              variant="primary"
-              size="md"
-              stretch="auto"
-              label={t("workspace_draft_issues.draft_an_issue")}
-              onClick={() => setIsDraftIssueModalOpen(true)}
-              disabled={!isAuthorizedUser}
-            />
+            <span className="relative inline-flex">
+              <Button
+                data-draft-work-item-trigger=""
+                variant="primary"
+                size="md"
+                stretch="auto"
+                label={t("workspace_draft_issues.draft_an_issue")}
+                onClick={() => setIsDraftIssueModalOpen(true)}
+                disabled={!isAuthorizedUser}
+              />
+              {hasPendingDraft && !isDraftIssueModalOpen && (
+                <span
+                  data-draft-composer-indicator=""
+                  title={t("workspace_draft_issues.temporarily_saved")}
+                  className="pointer-events-none absolute top-1 right-1 size-1.5 rounded-full bg-inverse"
+                >
+                  <span className="sr-only">{t("workspace_draft_issues.temporarily_saved")}</span>
+                </span>
+              )}
+            </span>
           )}
         </Header.RightItem>
       </Header>

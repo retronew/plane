@@ -33,9 +33,13 @@ export const IssueParentActivity = observer(function IssueParentActivity(props: 
       <>
         {activity.new_value ? translate("web.set_the_parent_to") : translate("web.removed_the_parent")}
         {activity.new_value ? (
-          <span className="font-medium text-primary">{activity.new_value}</span>
+          <span data-activity-part="" className="font-medium text-primary">
+            {activity.new_value}
+          </span>
         ) : (
-          <span className="font-medium text-primary">{activity.old_value}</span>
+          <span data-activity-part="" className="font-medium text-primary">
+            {activity.old_value}
+          </span>
         )}
         {showIssue && (activity.new_value ? ` for ` : ` from `)}
         {showIssue && <IssueLink activityId={activityId} />}.

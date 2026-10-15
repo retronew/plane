@@ -5,11 +5,12 @@
  */
 
 import { observer } from "mobx-react";
+import { Fragment } from "react";
 import { useTranslation } from "@plane/i18n";
 // ui
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { MoreHorizontalOutline } from "@makeplane/propel/icons";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
@@ -23,10 +24,13 @@ export const WorkspaceDraftIssueQuickActions = observer(function WorkspaceDraftI
   const { parentRef, MENU_ITEMS } = props;
 
   const { t } = useTranslation();
+  const menuItems = getRenderableItems(MENU_ITEMS).map((item) =>
+    Object.assign({}, item, { title: t(item.title || "") })
+  );
 
   return (
     <>
-      <ContextMenu parentRef={parentRef} items={MENU_ITEMS} />
+      <ContextMenu parentRef={parentRef} items={menuItems} />
       <Menu>
         <MenuTrigger
           render={
@@ -38,20 +42,25 @@ export const WorkspaceDraftIssueQuickActions = observer(function WorkspaceDraftI
             />
           }
         />
-        <MenuContent side="bottom" align="end">
-          {getRenderableItems(MENU_ITEMS).map((item) => (
-            <MenuItem
-              key={item.key}
-              variant={resolveItemVariant(item)}
-              icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-              label={t(item.title || "")}
-              description={item.description}
-              onClick={() => {
-                item.action();
-              }}
-              disabled={item.disabled}
-            />
-          ))}
+        <MenuContent side="bottom" align="end" sizing="anchor">
+          <div className="min-w-28">
+            {menuItems.map((item, index) => (
+              <Fragment key={item.key}>
+                {resolveItemVariant(item) === "danger" && index > 0 && <MenuSeparator />}
+                <MenuItem
+                  render={<div className="h-8! py-0!" />}
+                  variant={resolveItemVariant(item)}
+                  icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+                  label={item.title}
+                  description={item.description}
+                  onClick={() => {
+                    item.action();
+                  }}
+                  disabled={item.disabled}
+                />
+              </Fragment>
+            ))}
+          </div>
         </MenuContent>
       </Menu>
     </>

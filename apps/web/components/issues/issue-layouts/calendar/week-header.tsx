@@ -4,9 +4,10 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { EStartOfTheWeek } from "@plane/types";
-import { getOrderedDays } from "@plane/utils";
+import { getOrderedDays, getDateLocale } from "@plane/utils";
 import { DAYS_LIST } from "@plane/constants";
 // helpers
 // hooks
@@ -20,6 +21,7 @@ type Props = {
 export const CalendarWeekHeader = observer(function CalendarWeekHeader(props: Props) {
   const { isLoading, showWeekends } = props;
   // hooks
+  useTranslation();
   const { data } = useUserProfile();
   const startOfWeek = data?.start_of_the_week;
 
@@ -40,8 +42,13 @@ export const CalendarWeekHeader = observer(function CalendarWeekHeader(props: Pr
           return null;
 
         return (
-          <div key={day.shortTitle} className="flex h-11 items-center justify-center bg-layer-1 px-4 md:justify-end">
-            {day.shortTitle}
+          <div
+            key={new Intl.DateTimeFormat(getDateLocale(), { weekday: "short" }).format(
+              new Date(2023, 0, 1 + day.value)
+            )}
+            className="flex h-11 items-center justify-center bg-layer-1 px-4 md:justify-end"
+          >
+            {new Intl.DateTimeFormat(getDateLocale(), { weekday: "short" }).format(new Date(2023, 0, 1 + day.value))}
           </div>
         );
       })}

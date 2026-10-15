@@ -75,6 +75,7 @@ export const ProjectIssuesMobileHeader = observer(function ProjectIssuesMobileHe
         />
         <div className="flex flex-grow items-center justify-center border-l border-subtle text-13 text-secondary">
           <FiltersDropdown
+            displayMenu
             title={t("common.display")}
             placement="bottom-end"
             menuButton={

@@ -1,22 +1,25 @@
+import { ProjectCategoryFields } from "@/components/settings/workspace/configuration/project-fields";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
+import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
+import type { TemplateConfiguration } from "@/services/workspace-configuration.service";
+import { projectIdentifierSanitizer } from "@plane/utils";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { FormProvider, useForm } from "react-hook-form";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
-import { EFileAssetType } from "@plane/types";
 // components
 import ProjectCommonAttributes from "@/components/project/create/common-attributes";
 import ProjectCreateHeader from "@/components/project/create/header";
 import ProjectCreateButtons from "@/components/project/create/project-create-buttons";
 // hooks
-import { getCoverImageType, uploadCoverImage } from "@/helpers/cover-image.helper";
+import { getCoverImagePayload } from "@/helpers/cover-image.helper";
 import { useProject } from "@/hooks/store/use-project";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web types
@@ -40,13 +43,15 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   const { t } = useTranslation();
   const { addProjectToFavorites, createProject, updateProject } = useProject();
   // states
+  const [templateConfiguration, setTemplateConfiguration] = useState<TemplateConfiguration | null>(null);
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
   // form info
   const methods = useForm<TProject>({
     defaultValues: { ...getProjectFormValues(), ...data },
     reValidateMode: "onChange",
   });
-  const { handleSubmit, reset, setValue } = methods;
+  const { handleSubmit, reset, setValue, watch } = methods;
   const { isMobile } = usePlatformOS();
   const handleAddToFavorites = (projectId: string) => {
     if (!workspaceSlug) return;
@@ -64,40 +69,17 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
     // Upper case identifier
     formData.identifier = formData.identifier?.toUpperCase();
     const coverImage = formData.cover_image_url;
-    let uploadedAssetUrl: string | null = null;
+    if (isCoverUploading) return;
+    Object.assign(formData, getCoverImagePayload(undefined, coverImage));
 
-    if (coverImage) {
-      const imageType = getCoverImageType(coverImage);
-
-      if (imageType === "local_static") {
-        try {
-          uploadedAssetUrl = await uploadCoverImage(coverImage, {
-            workspaceSlug: workspaceSlug.toString(),
-            entityIdentifier: "",
-            entityType: EFileAssetType.PROJECT_COVER,
-            isUserAsset: false,
-          });
-        } catch (error) {
-          console.error("Error uploading cover image:", error);
-          setToast({
-            type: "error",
-            title: t("toast.error"),
-            message: error instanceof Error ? error.message : t("web.failed_to_upload_cover_image"),
-          });
-          return Promise.reject(error);
-        }
-      } else {
-        formData.cover_image = coverImage;
-        formData.cover_image_asset = null;
-      }
-    }
-
-    return createProject(workspaceSlug.toString(), formData)
+    return createProject(workspaceSlug.toString(), {
+      ...formData,
+      ...(templateConfiguration
+        ? { template_configuration: templateConfiguration, intake_view: templateConfiguration.intake_view }
+        : {}),
+    })
       .then(async (res) => {
-        if (uploadedAssetUrl) {
-          await updateCoverImageStatus(res.id, uploadedAssetUrl);
-          await updateProject(workspaceSlug.toString(), res.id, { cover_image_url: uploadedAssetUrl });
-        } else if (coverImage && coverImage.startsWith("http")) {
+        if (coverImage) {
           await updateCoverImageStatus(res.id, coverImage);
           await updateProject(workspaceSlug.toString(), res.id, { cover_image_url: coverImage });
         }
@@ -174,19 +156,59 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
 
   return (
     <FormProvider {...methods}>
-      <ProjectCreateHeader handleClose={handleClose} isMobile={isMobile} />
-
-      <form onSubmit={handleSubmit(onSubmit)} className="px-3">
-        <div className="mt-9 space-y-6 pb-5">
-          <ProjectCommonAttributes
-            setValue={setValue}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col p-3">
+          <ProjectCreateHeader
+            handleClose={handleClose}
+            onCoverUploadingChange={setIsCoverUploading}
             isMobile={isMobile}
-            shouldAutoSyncIdentifier={shouldAutoSyncIdentifier}
-            setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
+            templatePicker={
+              <TemplatePicker
+                workspaceSlug={workspaceSlug}
+                kind="project"
+                variant="cover"
+                disabled={methods.formState.isSubmitting}
+                onApply={(template) => {
+                  const config = template.configuration;
+                  const name = template.title || template.name;
+                  setValue("name", name, { shouldDirty: true });
+                  if (shouldAutoSyncIdentifier)
+                    setValue("identifier", projectIdentifierSanitizer(name).substring(0, 10), { shouldDirty: true });
+                  setValue("priority", template.priority ?? "none", { shouldDirty: true });
+                  setValue("description", config.description ?? "", { shouldDirty: true });
+                  setValue("network", config.network ?? 2, { shouldDirty: true });
+                  setValue("project_lead", config.project_lead ?? null, { shouldDirty: true });
+                  for (const field of ["cycle_view", "module_view", "page_view", "issue_views_view"] as const)
+                    if (config[field] !== undefined) setValue(field, config[field], { shouldDirty: true });
+                  setTemplateConfiguration(config);
+                }}
+              />
+            }
           />
-          <ProjectAttributes isMobile={isMobile} />
+          <div className="min-h-0 overflow-y-auto px-3 pt-9 pb-5">
+            <div className="space-y-6">
+              <ProjectCommonAttributes
+                setValue={setValue}
+                isMobile={isMobile}
+                shouldAutoSyncIdentifier={shouldAutoSyncIdentifier}
+                setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <ProjectCategoryFields
+                  compact
+                  workspaceSlug={workspaceSlug}
+                  status={watch("status")}
+                  labels={watch("labels")}
+                  onStatus={(id) => setValue("status", id)}
+                  onLabels={(ids) => setValue("labels", ids)}
+                >
+                  <ProjectAttributes isMobile={isMobile} />
+                </ProjectCategoryFields>
+              </div>
+            </div>
+          </div>
         </div>
-        <ProjectCreateButtons handleClose={handleClose} />
+        <ProjectCreateButtons handleClose={handleClose} disabled={isCoverUploading} />
       </form>
     </FormProvider>
   );

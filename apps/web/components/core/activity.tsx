@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect } from "react";
+import { cloneElement, isValidElement, useEffect } from "react";
+import { ActivitySentence } from "@/components/common/activity/activity-sentence";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // store hooks
@@ -49,6 +50,22 @@ export function IssueLink({ activity }: { activity: IIssueActivity | TIssueActiv
     projectIdentifier: activity?.project_detail?.identifier,
     sequenceId: activity?.issue_detail?.sequence_id,
   });
+
+  const isDeleted =
+    activity.issue === null ||
+    ((activity.field === "issue" || activity.field === "epic") && activity.verb === "deleted");
+  if (isDeleted) {
+    return (
+      <Tooltip label={translate("web.this_work_item_has_been_deleted")} disabled={isMobile}>
+        <span className="inline text-tertiary">
+          {activity.issue_detail && (
+            <span className="mr-1 whitespace-nowrap">{`${activity.project_detail.identifier}-${activity.issue_detail.sequence_id}`}</span>
+          )}
+          <del className="break-words line-through">{activity.issue_detail?.name ?? translate("web.a_work_item")}</del>
+        </span>
+      </Tooltip>
+    );
+  }
 
   return (
     <Tooltip
@@ -102,11 +119,14 @@ const LabelPill = observer(function LabelPill({ labelId, workspaceSlug }: { labe
     if (!workspaceLabels) fetchWorkspaceLabels(workspaceSlug);
   }, [fetchWorkspaceLabels, workspaceLabels, workspaceSlug]);
 
+  const color = workspaceLabels?.find((label) => label.id === labelId)?.color?.trim();
+  if (!color) return null;
+
   return (
     <span
       className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
       style={{
-        backgroundColor: workspaceLabels?.find((l) => l.id === labelId)?.color ?? "#000000",
+        backgroundColor: color,
       }}
       aria-hidden="true"
     />
@@ -123,8 +143,14 @@ function activityMessage(
     <Translation
       translationKey={`web.activity.${key}`}
       components={{
-        issue: showIssue ? <IssueLink activity={activity} /> : <Translation translationKey="web.this_work_item" />,
-        value,
+        issue: showIssue ? (
+          <span data-activity-part="">
+            <IssueLink activity={activity} />
+          </span>
+        ) : (
+          <Translation translationKey="web.this_work_item" />
+        ),
+        value: value == null ? value : <span data-activity-part="">{value}</span>,
       }}
     />
   );
@@ -216,7 +242,7 @@ const activityDetails: Record<
         activity.old_value === "" ? "label_added" : "label_removed",
         activity,
         showIssue,
-        <span className="inline-flex items-center gap-2 rounded-full border border-strong px-2 py-0.5 text-11">
+        <span className="inline-flex items-center gap-1 rounded-full border border-subtle-1 px-1.5 text-11 leading-4">
           <LabelPill
             labelId={(activity.old_value === "" ? activity.new_identifier : activity.old_identifier) ?? ""}
             workspaceSlug={workspaceSlug}
@@ -367,8 +393,11 @@ const activityDetails: Record<
   },
 };
 
-export function ActivityIcon({ activity }: { activity: IIssueActivity | TIssueActivity }) {
-  return <>{activityDetails[activity.field as keyof typeof activityDetails]?.icon}</>;
+export function ActivityIcon({ activity, size = 12 }: { activity: IIssueActivity | TIssueActivity; size?: number }) {
+  const icon = activityDetails[activity.field as keyof typeof activityDetails]?.icon;
+  return isValidElement<{ width?: number; height?: number; size?: number }>(icon)
+    ? cloneElement(icon, { width: size, height: size, size })
+    : null;
 }
 
 type ActivityMessageProps = {
@@ -382,12 +411,12 @@ export function ActivityMessage({ activity, showIssue = false }: ActivityMessage
   const activityField = activity.field ?? "issue";
 
   return (
-    <>
+    <ActivitySentence>
       {activityDetails[activityField as keyof typeof activityDetails]?.message(
         activity,
         showIssue,
         workspaceSlug ? workspaceSlug.toString() : (activity.workspace_detail?.slug ?? "")
       )}
-    </>
+    </ActivitySentence>
   );
 }

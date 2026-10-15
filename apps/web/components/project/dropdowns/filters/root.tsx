@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "react-router";
+import { useProjectCategories } from "@/components/settings/workspace/configuration/project-fields";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { CloseOutline, SearchOutline } from "@makeplane/propel/icons";
@@ -30,6 +32,8 @@ type Props = {
 
 export const ProjectFiltersSelection = observer(function ProjectFiltersSelection(props: Props) {
   const { displayFilters, filters, handleFiltersUpdate, handleDisplayFiltersUpdate, memberIds } = props;
+  const { workspaceSlug = "" } = useParams();
+  const categories = useProjectCategories(workspaceSlug);
   // states
   const [filtersSearchQuery, setFiltersSearchQuery] = useState("");
   // store
@@ -69,6 +73,25 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
           />
         </div>
 
+        {(["status", "labels"] as const)
+          .filter((key) => key !== "status" || categories.statesEnabled)
+          .map((key) => (
+            <div className="py-2" key={key}>
+              <p className="px-2 py-1 text-12 text-tertiary">
+                {translate(key === "status" ? "web.project_statuses" : "web.project_labels")}
+              </p>
+              {(key === "status" ? categories.statuses : categories.labels)
+                .filter((entry) => entry.name.toLocaleLowerCase().includes(filtersSearchQuery.toLocaleLowerCase()))
+                .map((entry) => (
+                  <FilterOption
+                    key={entry.id}
+                    title={entry.name}
+                    isChecked={!!filters[key]?.includes(entry.id)}
+                    onClick={() => handleFiltersUpdate(key, entry.id)}
+                  />
+                ))}
+            </div>
+          ))}
         {/* access */}
         <div className="py-2">
           <FilterAccess

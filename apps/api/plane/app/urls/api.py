@@ -4,8 +4,15 @@
 
 from django.urls import path
 from plane.app.views import ApiTokenEndpoint
+from plane.app.views.api import WorkspaceApiTokenEndpoint
 
 urlpatterns = [
+    path("workspaces/<str:slug>/api-tokens/", WorkspaceApiTokenEndpoint.as_view(), name="workspace-api-tokens"),
+    path(
+        "workspaces/<str:slug>/api-tokens/<uuid:pk>/",
+        WorkspaceApiTokenEndpoint.as_view(),
+        name="workspace-api-token-detail",
+    ),
     # API Tokens
     path(
         "users/api-tokens/",

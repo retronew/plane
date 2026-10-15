@@ -11,7 +11,9 @@ import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import type { IUserProfileData } from "@plane/types";
 import { Card } from "@plane/blocks/card";
 import { Loader } from "@plane/blocks/skeleton";
-import { capitalizeFirstLetter } from "@plane/utils";
+
+import { ProfileChartTooltip } from "./chart-tooltip";
+import type { ProfileChartTooltipContentProps } from "./chart-tooltip";
 
 type Props = {
   userProfile: IUserProfileData | undefined;
@@ -25,20 +27,33 @@ const priorityColors = {
   none: "#e5e5e5",
 };
 
+function renderPriorityTooltip({ active, label, payload }: ProfileChartTooltipContentProps) {
+  if (!active || !payload?.length) return null;
+  return (
+    <ProfileChartTooltip
+      label={label}
+      value={payload[0].value}
+      color={priorityColors[(payload[0].payload.key ?? "none") as keyof typeof priorityColors]}
+    />
+  );
+}
+
 export function ProfilePriorityDistribution({ userProfile }: Props) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col space-y-2">
-      <h3 className="text-16 font-medium">{t("profile.stats.priority_distribution.title")}</h3>
+      <h3 className="text-h6-medium">{t("profile.stats.priority_distribution.title")}</h3>
       {userProfile ? (
-        <Card>
+        <Card className="rounded-xl border border-subtle-1 bg-layer-2 p-3 pl-0">
           {userProfile.priority_distribution.length > 0 ? (
             <BarChart
-              className="h-[300px] w-full"
-              margin={{ top: 20, right: 30, bottom: 5, left: 0 }}
+              className="h-[200px] w-full"
+              margin={{ top: 8, right: 16, bottom: 5, left: 0 }}
+              tickCount={{ y: 5 }}
+              customTooltipContent={renderPriorityTooltip}
               data={userProfile.priority_distribution.map((priority) => ({
                 key: priority.priority ?? "None",
-                name: capitalizeFirstLetter(priority.priority ?? "None"),
+                name: t(priority.priority ?? "none"),
                 count: priority.priority_count,
               }))}
               bars={[
@@ -61,7 +76,7 @@ export function ProfilePriorityDistribution({ userProfile }: Props) {
                 key: "count",
                 label: "",
               }}
-              barSize={20}
+              barSize={16}
             />
           ) : (
             <EmptyStateCompact

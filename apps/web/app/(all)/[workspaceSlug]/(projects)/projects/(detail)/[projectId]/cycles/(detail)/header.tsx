@@ -206,6 +206,7 @@ export const CycleIssuesHeader = observer(function CycleIssuesHeader() {
             </div>
             <WorkItemFiltersToggle entityType={EIssuesStoreType.CYCLE} entityId={cycleId} />
             <FiltersDropdown
+              displayMenu
               title={t("common.display")}
               placement="bottom-end"
               miniIcon={<PreferencesOutline className="size-3.5" />}

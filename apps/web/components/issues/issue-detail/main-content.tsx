@@ -21,6 +21,7 @@ import { DescriptionInput } from "@/components/editor/rich-text/description-inpu
 import { IssueTypeSwitcher } from "@/components/issues/issue-type-switcher";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
 import useReloadConfirmations from "@/hooks/use-reload-confirmation";
@@ -57,6 +58,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
   const [aiOpen, setAiOpen] = useState(false);
   const { config: instanceConfig } = useInstance();
   const { t } = useTranslation();
+  const { getWorkspaceBySlug } = useWorkspace();
   // hooks
   const windowSize = useSize();
   const { data: currentUser } = useUser();
@@ -134,39 +136,42 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           workspaceSlug={workspaceSlug}
         />
 
-        {isEditable && !isArchived && instanceConfig?.has_llm_configured && (
-          <div className="flex justify-end">
-            <GptAssistantPopover
-              key={issue.id}
-              isOpen={aiOpen}
-              handleClose={() => setAiOpen(false)}
-              workspaceSlug={workspaceSlug}
-              getContext={() => ({
-                kind: "issue",
-                title: issue.name,
-                document: editorRef.current?.getDocument().html ?? "",
-              })}
-              onApply={(html, mode, context) => {
-                const editor = editorRef.current;
-                if (!editor || context.title !== issue.name || context.document !== editor.getDocument().html)
-                  return false;
-                editor.setEditorValue(mode === "replace" ? html : context.document + html, true);
-                return true;
-              }}
-              onUndo={(context) => editorRef.current?.setEditorValue(context.document, true)}
-              button={
-                <button
-                  type="button"
-                  className="flex items-center gap-1 rounded-sm px-2 py-1 text-13 hover:bg-layer-1"
-                  onClick={() => setAiOpen(true)}
-                >
-                  <AiStar1Outline className="size-4" />
-                  {t("web.ai_writing_title")}
-                </button>
-              }
-            />
-          </div>
-        )}
+        {isEditable &&
+          !isArchived &&
+          instanceConfig?.has_llm_configured &&
+          getWorkspaceBySlug(workspaceSlug)?.ai_enabled !== false && (
+            <div className="flex justify-end">
+              <GptAssistantPopover
+                key={issue.id}
+                isOpen={aiOpen}
+                handleClose={() => setAiOpen(false)}
+                workspaceSlug={workspaceSlug}
+                getContext={() => ({
+                  kind: "issue",
+                  title: issue.name,
+                  document: editorRef.current?.getDocument().html ?? "",
+                })}
+                onApply={(html, mode, context) => {
+                  const editor = editorRef.current;
+                  if (!editor || context.title !== issue.name || context.document !== editor.getDocument().html)
+                    return false;
+                  editor.setEditorValue(mode === "replace" ? html : context.document + html, true);
+                  return true;
+                }}
+                onUndo={(context) => editorRef.current?.setEditorValue(context.document, true)}
+                button={
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 rounded-sm px-2 py-1 text-13 hover:bg-layer-1"
+                    onClick={() => setAiOpen(true)}
+                  >
+                    <AiStar1Outline className="size-4" />
+                    {t("web.ai_writing_title")}
+                  </button>
+                }
+              />
+            </div>
+          )}
 
         <div className="flex items-center justify-between gap-2">
           {currentUser && (

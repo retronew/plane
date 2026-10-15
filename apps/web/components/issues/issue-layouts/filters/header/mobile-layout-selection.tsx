@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -5,7 +6,7 @@
  */
 
 import { Icon as PropelIcon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Button as ButtonChrome } from "@makeplane/propel/elements/button";
 import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { ISSUE_LAYOUTS } from "@plane/constants";
@@ -32,7 +33,13 @@ export function MobileLayoutSelection({
         {/* The trigger fills the grown cell (legacy `customButtonClassName`) so the whole cell opens the menu. */}
         <MenuTrigger
           aria-label={t("common.layout")}
-          render={<button type="button" className="flex flex-grow justify-center text-13 text-secondary" />}
+          render={
+            <button
+              aria-label={t("common.layout")}
+              type="button"
+              className="flex flex-grow justify-center text-13 text-secondary"
+            />
+          }
         >
           {/* `MenuTrigger` supplies the real button, so this is chrome only. */}
           <ButtonChrome variant="secondary" size="sm" stretch="auto" render={<span />}>

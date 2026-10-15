@@ -22,6 +22,8 @@ export type TProjectDisplayFilters = {
 export type TProjectAppliedDisplayFilterKeys = "my_projects" | "archived_projects";
 
 export type TProjectFilters = {
+  status?: string[];
+  labels?: string[];
   access?: string[] | null;
   lead?: string[] | null;
   members?: string[] | null;

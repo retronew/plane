@@ -136,7 +136,7 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
         <Header.RightItem className="items-center">
           {globalViewId && <WorkItemFiltersToggle entityType={EIssuesStoreType.GLOBAL} entityId={globalViewId} />}
           {!isLocked && (
-            <FiltersDropdown title={t("common.display")} placement="bottom-end">
+            <FiltersDropdown displayMenu title={t("common.display")} placement="bottom-end">
               <DisplayFiltersSelection
                 layoutDisplayFiltersOptions={currentLayoutFilters}
                 displayFilters={issueFilters?.displayFilters ?? {}}

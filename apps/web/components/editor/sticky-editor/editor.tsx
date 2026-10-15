@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 // plane constants
 import type { EIssueCommentAccessSpecifier } from "@plane/constants";
 // plane editor
@@ -40,6 +40,7 @@ interface StickyEditorWrapperProps extends Omit<
   parentClassName?: string;
   handleColorChange: (data: Partial<TSticky>) => Promise<void>;
   handleDelete: () => void;
+  selectedColor?: string;
 }
 
 export const StickyEditor = React.forwardRef(function StickyEditor(
@@ -58,10 +59,20 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
     parentClassName = "",
     uploadFile,
     duplicateFile,
+    selectedColor,
     ...rest
   } = props;
   // states
   const [isFocused, setIsFocused] = useState(showToolbarInitially);
+  const [editorApi, setEditorApi] = useState<EditorRefApi | null>(null);
+  const setEditorRef = useCallback(
+    (instance: EditorRefApi | null) => {
+      setEditorApi(instance);
+      if (typeof ref === "function") ref(instance);
+      else if (ref) ref.current = instance;
+    },
+    [ref]
+  );
   // editor flaggings
   const { liteText: liteTextEditorExtensions } = useEditorFlagging({
     workspaceSlug,
@@ -74,11 +85,6 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
   });
   // editor config
   const { getEditorFileHandlers } = useEditorConfig();
-  function isMutableRefObject<T>(ref: React.ForwardedRef<T>): ref is React.MutableRefObject<T | null> {
-    return !!ref && typeof ref === "object" && "current" in ref;
-  }
-  // derived values
-  const editorRef = isMutableRefObject<EditorRefApi>(ref) ? ref.current : null;
 
   return (
     <div
@@ -87,7 +93,7 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
       onBlur={() => !showToolbarInitially && setIsFocused(false)}
     >
       <LiteTextEditorWithRef
-        ref={ref}
+        ref={setEditorRef}
         disabledExtensions={[...liteTextEditorExtensions.disabled, "enter-key"]}
         flaggedExtensions={liteTextEditorExtensions.flagged}
         editable
@@ -108,8 +114,8 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
       />
       {showToolbar && (
         <div
-          className={cn("h-[60px] origin-top px-4 transition-all duration-300 ease-out", {
-            "max-h-[60px] scale-y-100 opacity-100": isFocused,
+          className={cn("h-10 origin-top px-2 pb-2 transition-[opacity,transform] duration-200 ease-out", {
+            "max-h-10 scale-y-100 opacity-100": isFocused,
             "invisible max-h-0 scale-y-0 opacity-0": !isFocused,
           })}
         >
@@ -117,14 +123,15 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
             executeCommand={(item) => {
               // TODO: update this while toolbar homogenization
               // @ts-expect-error type mismatch here
-              editorRef?.executeMenuItemCommand({
+              editorApi?.executeMenuItemCommand({
                 itemKey: item.itemKey,
                 ...item.extraProps,
               });
             }}
             handleDelete={handleDelete}
             handleColorChange={handleColorChange}
-            editorRef={editorRef}
+            editorRef={editorApi}
+            selectedColor={selectedColor}
           />
         </div>
       )}

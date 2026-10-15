@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "react-router";
+import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -50,6 +52,7 @@ const PAGE_ACCESS_SPECIFIERS: {
 ];
 
 export function PageForm(props: Props) {
+  const { workspaceSlug = "" } = useParams();
   const { formData, handleFormData, handleModalClose, handleFormSubmit } = props;
   // hooks
   const { isMobile } = usePlatformOS();
@@ -145,6 +148,17 @@ export function PageForm(props: Props) {
                 autoFocus
               />
             </div>
+          </div>
+          <div className="mt-5">
+            <TemplatePicker
+              workspaceSlug={workspaceSlug}
+              kind="page"
+              disabled={isSubmitting}
+              onApply={(template) => {
+                handleFormData("name", template.title);
+                handleFormData("description_html", template.description_html);
+              }}
+            />
           </div>
         </DialogBody>
       </DialogMain>

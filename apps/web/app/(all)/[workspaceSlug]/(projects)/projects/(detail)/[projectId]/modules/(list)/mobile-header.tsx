@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +10,7 @@ import { MODULE_VIEW_LAYOUTS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { ModuleLayoutIcon } from "@/components/modules";
 import { useModuleFilter } from "@/hooks/store/use-module-filter";
 import { useProject } from "@/hooks/store/use-project";
@@ -26,6 +27,7 @@ export const ModulesListMobileHeader = observer(function ModulesListMobileHeader
           <MenuTrigger
             render={
               <button
+                aria-label={t("common.layout")}
                 type="button"
                 className="flex flex-grow items-center justify-center gap-2 px-page-x text-13 text-secondary"
               />

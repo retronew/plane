@@ -4,13 +4,15 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 // types
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { SearchOutline } from "@makeplane/propel/icons";
+import { InputField } from "@makeplane/propel/components/input-field";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { SearchOutline, CloseOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
 import type { IWorkspaceBulkInviteFormData } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -33,6 +35,7 @@ import { MembersWorkspaceSettingsHeader } from "./header";
 const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsPage({ params }: Route.ComponentProps) {
   // states
   const [inviteModal, setInviteModal] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   // router
   const { workspaceSlug } = params;
@@ -121,15 +124,30 @@ const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsP
             )}
           </h4>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-md border border-subtle bg-surface-1 px-2.5 py-1.5">
-              <SearchOutline className="h-3.5 w-3.5 text-placeholder" />
-              <input
-                className="w-full max-w-[234px] border-none bg-transparent text-body-xs-regular outline-none placeholder:text-placeholder"
-                placeholder={translate("web.runtime.loading_label", { label: t("search") })}
+            <div className="w-60 min-w-0">
+              <InputField
+                size="md"
+                orientation="vertical"
+                ref={searchRef}
                 value={searchQuery}
-                // eslint-disable-next-line jsx-a11y/no-autofocus
-                autoFocus
-                onChange={(e) => setSearchQuery(e.target.value)}
+                startIcon={<SearchOutline className="size-3.5" />}
+                endIcon={
+                  searchQuery ? (
+                    <IconButton
+                      size="xs"
+                      variant="ghost"
+                      icon={<CloseOutline className="size-3" />}
+                      aria-label={t("web.clear_member_search")}
+                      onClick={() => {
+                        setSearchQuery("");
+                        searchRef.current?.focus();
+                      }}
+                    />
+                  ) : undefined
+                }
+                placeholder={translate("web.runtime.loading_label", { label: t("search") })}
+                aria-label={t("search")}
+                onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
             <MemberListFiltersDropdown

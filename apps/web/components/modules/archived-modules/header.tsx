@@ -81,8 +81,8 @@ export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
   const isFiltersApplied = calculateTotalFilters(currentProjectArchivedFilters ?? {}) !== 0;
 
   return (
-    <div className="group relative flex border-b border-subtle">
-      <div className="horizontal-scrollbar scrollbar-sm flex w-full items-center gap-2 overflow-x-auto px-4">
+    <div className="group @container relative flex min-h-[52px] shrink-0 border-b border-subtle">
+      <div className="horizontal-scrollbar scrollbar-sm flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-page-x">
         <ArchiveTabsList />
       </div>
       {/* filter options */}

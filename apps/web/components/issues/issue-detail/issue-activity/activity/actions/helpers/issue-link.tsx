@@ -40,6 +40,7 @@ export function IssueLink(props: TIssueLink) {
       disabled={isMobile}
     >
       <a
+        data-activity-part=""
         aria-disabled={activity.issue === null}
         href={`${activity.issue_detail ? workItemLink : "#"}`}
         target={activity.issue === null ? "_self" : "_blank"}

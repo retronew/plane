@@ -20,6 +20,7 @@ import { GeneratedHookDetails } from "./generated-hook-details";
 import { getCurrentHookAsCSV } from "./utils";
 
 interface ICreateWebhookModal {
+  inline?: boolean;
   currentWorkspace: IWorkspace | null;
   isOpen: boolean;
   clearSecretKey: () => void;
@@ -34,7 +35,7 @@ interface ICreateWebhookModal {
 }
 
 export function CreateWebhookModal(props: ICreateWebhookModal) {
-  const { isOpen, onClose, currentWorkspace, createWebhook, clearSecretKey } = props;
+  const { isOpen, onClose, currentWorkspace, createWebhook, clearSecretKey, inline = false } = props;
   // states
   const [generatedWebhook, setGeneratedKey] = useState<IWebhook | null>(null);
   // router
@@ -46,6 +47,8 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
 
     let payload: Partial<IWebhook> = {
       url: formData.url,
+      name: formData.name,
+      events: formData.events ?? [],
     };
 
     if (webhookEventType === "all")
@@ -78,7 +81,7 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
         setGeneratedKey(webHook);
 
         const csvData = getCurrentHookAsCSV(currentWorkspace, webHook, secretKey ?? undefined);
-        csvDownload(csvData, `webhook-secret-key-${Date.now()}`);
+        if (!inline) csvDownload(csvData, `webhook-secret-key-${Date.now()}`);
         return undefined;
       })
       .catch((error) => {
@@ -97,6 +100,13 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
       setGeneratedKey(null);
     }, 350);
   };
+
+  if (inline)
+    return generatedWebhook ? (
+      <GeneratedHookDetails webhookDetails={generatedWebhook} handleClose={handleClose} />
+    ) : (
+      <WebhookForm onSubmit={handleCreateWebhook} handleClose={handleClose} />
+    );
 
   return (
     <Dialog

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Plane 示例项目",
+    "identifier": "PDP",
+    "description": "通过示例工作项了解项目、成员、视图和周期等功能，熟悉团队日常协作。",
+    "network": 2,
+    "logo_props": {
+      "emoji": {
+        "url": "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f447.png",
+        "value": "128071"
+      },
+      "in_use": "emoji"
+    }
+  }
+]

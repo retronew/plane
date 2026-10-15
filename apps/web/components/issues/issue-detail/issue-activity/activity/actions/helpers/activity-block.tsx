@@ -12,7 +12,8 @@ import { renderFormattedTime, renderFormattedDate, calculateTimeAgo } from "@pla
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
-import { IssueUser } from "../";
+import { IssueUser } from "./issue-user";
+import { ActivitySentence } from "@/components/common/activity/activity-sentence";
 import { IssueCreatorDisplay } from "./issue-creator";
 
 type TIssueActivityBlockComponent = {
@@ -40,24 +41,24 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
       }`}
     >
       <div className="absolute top-0 bottom-0 left-[13px] w-px bg-layer-3" aria-hidden />
-      <div className="z-[4] flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-subtle bg-layer-2 text-secondary shadow-raised-100">
+      <div className="z-[4] flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-subtle bg-layer-2 text-secondary shadow-raised-100 [&_svg]:size-4">
         {icon ? icon : <HierarchyOutline className="h-3.5 w-3.5" />}
       </div>
-      <div className="w-full truncate text-secondary">
+      <div className="min-w-0 flex-1 break-words text-secondary">
         {!activity?.field && activity?.verb === "created" ? (
           <IssueCreatorDisplay activityId={activityId} customUserName={customUserName} />
         ) : (
           <IssueUser activityId={activityId} customUserName={customUserName} />
         )}
-        <span> {children} </span>
-        <span>
-          <Tooltip
-            label={`${renderFormattedDate(activity.created_at)}, ${renderFormattedTime(activity.created_at)}`}
-            disabled={isMobile}
-          >
-            <span className="whitespace-nowrap text-tertiary"> {calculateTimeAgo(activity.created_at)}</span>
-          </Tooltip>
-        </span>
+        <ActivitySentence> {children} </ActivitySentence>
+      </div>
+      <div className="shrink-0 text-11">
+        <Tooltip
+          label={`${renderFormattedDate(activity.created_at)}, ${renderFormattedTime(activity.created_at)}`}
+          disabled={isMobile}
+        >
+          <span className="whitespace-nowrap text-tertiary"> {calculateTimeAgo(activity.created_at)}</span>
+        </Tooltip>
       </div>
     </div>
   );

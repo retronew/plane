@@ -7,6 +7,7 @@
 // plane imports
 import { ScrollArea } from "@makeplane/propel/components/scroll-area";
 import { cn } from "@plane/utils";
+import sidebarStyles from "@/components/sidebar/sidebar-layout.module.css";
 // local imports
 import { WorkspaceSettingsSidebarHeader } from "./header";
 import { WorkspaceSettingsSidebarItemCategories } from "./item-categories";
@@ -21,7 +22,8 @@ export function WorkspaceSettingsSidebarRoot(props: Props) {
   return (
     <div
       className={cn(
-        "flex h-full w-[250px] shrink-0 animate-fade-in flex-col overflow-hidden border-r border-r-subtle bg-surface-1",
+        "flex h-full w-[250px] shrink-0 flex-col overflow-hidden border-r border-r-subtle bg-surface-1",
+        sidebarStyles.enter,
         className
       )}
     >

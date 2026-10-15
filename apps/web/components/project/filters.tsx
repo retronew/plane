@@ -50,7 +50,7 @@ const HeaderFilters = observer(function HeaderFilters({
   const handleFilters = useCallback(
     (key: keyof TProjectFilters, value: string | string[]) => {
       if (!workspaceSlug) return;
-      let newValues = filters?.[key] ?? [];
+      let newValues = [...(filters?.[key] ?? [])];
       if (Array.isArray(value)) {
         if (key === "created_at" && newValues.find((v) => v.includes("custom"))) newValues = [];
         value.forEach((val) => {

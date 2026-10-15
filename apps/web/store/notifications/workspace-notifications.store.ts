@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { orderBy, isEmpty, update, set } from "lodash-es";
+import { isEmpty, update, set } from "lodash-es";
 import { action, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane imports
@@ -19,7 +19,7 @@ import type {
   TUnreadNotificationsCount,
 } from "@plane/types";
 // helpers
-import { convertToEpoch } from "@plane/utils";
+
 // services
 import workspaceNotificationService from "@/services/workspace-notification.service";
 // store
@@ -63,6 +63,7 @@ export interface IWorkspaceNotificationStore {
 export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
   // constants
   paginatedCount = 300;
+  private requestVersion = 0;
   // observables
   loader: TNotificationLoader = undefined;
   unreadNotificationsCount: TUnreadNotificationsCount = {
@@ -118,11 +119,7 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
    */
   notificationIdsByWorkspaceId = computedFn((workspaceId: string) => {
     if (!workspaceId || isEmpty(this.notifications)) return undefined;
-    const workspaceNotifications = orderBy(
-      Object.values(this.notifications || []),
-      (n) => convertToEpoch(n.created_at),
-      ["desc"]
-    );
+    const workspaceNotifications = Object.values(this.notifications);
     const workspaceNotificationIds = workspaceNotifications
       .filter((n) => n.workspace === workspaceId)
       .filter((n) =>
@@ -149,7 +146,7 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
           }
         }
       })
-      // .filter((n) => (this.filters.read ? (n.read_at ? true : false) : n.read_at ? false : true))
+      .filter((n) => !this.filters.read || !n.read_at)
       .map((n) => n.id);
     return workspaceNotificationIds;
   });
@@ -195,6 +192,13 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
 
     const queryParams: TNotificationPaginatedInfoQueryParams = {
       type: queryParamsType,
+      priority: this.filters.priority?.join(",") || undefined,
+      state_group: this.filters.state_group?.join(",") || undefined,
+      assignees: this.filters.assignees?.join(",") || undefined,
+      triggered_by: this.filters.triggered_by?.join(",") || undefined,
+      project: this.filters.project?.join(",") || undefined,
+      search: this.filters.search?.trim() || undefined,
+      order_by: this.filters.order_by || "-created_at",
       snoozed: this.filters.snoozed || false,
       archived: this.filters.archived || false,
       read: undefined,
@@ -237,7 +241,10 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
     if (!workspaceSlug) return;
 
     set(this, "notifications", {});
-    this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT);
+    this.currentSelectedNotificationId = undefined;
+    void this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT).catch(
+      () => undefined
+    );
   };
 
   /**
@@ -253,7 +260,10 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
     if (!workspaceSlug) return;
 
     set(this, "notifications", {});
-    this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT);
+    this.currentSelectedNotificationId = undefined;
+    void this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT).catch(
+      () => undefined
+    );
   };
 
   // actions
@@ -268,7 +278,10 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
     if (!workspaceSlug) return;
 
     set(this, "notifications", {});
-    this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT);
+    this.currentSelectedNotificationId = undefined;
+    void this.getNotifications(workspaceSlug, ENotificationLoader.INIT_LOADER, ENotificationQueryParamType.INIT).catch(
+      () => undefined
+    );
   };
 
   /**
@@ -339,15 +352,18 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
     loader: TNotificationLoader = ENotificationLoader.INIT_LOADER,
     queryParamType: TNotificationQueryParamType = ENotificationQueryParamType.INIT
   ): Promise<TNotificationPaginatedInfo | undefined> => {
+    const requestVersion = ++this.requestVersion;
     this.loader = loader;
     try {
       const queryParams = this.generateNotificationQueryParams(queryParamType);
       await this.getUnreadNotificationsCount(workspaceSlug);
       const notificationResponse = await workspaceNotificationService.fetchNotifications(workspaceSlug, queryParams);
+      if (requestVersion !== this.requestVersion) return undefined;
       if (notificationResponse) {
         const { results, ...paginationInfo } = notificationResponse;
         runInAction(() => {
           if (results) {
+            if (queryParamType !== ENotificationQueryParamType.NEXT) this.notifications = {};
             this.mutateNotifications(results);
           }
           set(this, "paginationInfo", paginationInfo);
@@ -358,7 +374,9 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
       console.error("WorkspaceNotificationStore -> getNotifications -> error", error);
       throw error;
     } finally {
-      runInAction(() => (this.loader = undefined));
+      runInAction(() => {
+        if (requestVersion === this.requestVersion) this.loader = undefined;
+      });
     }
   };
 
@@ -371,27 +389,16 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
     try {
       this.loader = ENotificationLoader.MARK_ALL_AS_READY;
       const queryParams = this.generateNotificationQueryParams(ENotificationQueryParamType.INIT);
-      const params = {
-        type: queryParams.type,
-        snoozed: queryParams.snoozed,
-        archived: queryParams.archived,
-        read: queryParams.read,
-      };
-      await workspaceNotificationService.markAllNotificationsAsRead(workspaceSlug, params);
+      const affectedNotifications = Object.values(this.notifications);
+      await workspaceNotificationService.markAllNotificationsAsRead(workspaceSlug, queryParams);
       runInAction(() => {
-        update(
-          this.unreadNotificationsCount,
-          this.currentNotificationTab === ENotificationTab.ALL
-            ? "total_unread_notifications_count"
-            : "mention_unread_notifications_count",
-          () => 0
-        );
-        Object.values(this.notifications).forEach((notification) =>
+        affectedNotifications.forEach((notification) =>
           notification.mutateNotification({
             read_at: new Date().toUTCString(),
           })
         );
       });
+      await this.getUnreadNotificationsCount(workspaceSlug);
     } catch (error) {
       console.error("WorkspaceNotificationStore -> markAllNotificationsAsRead -> error", error);
       throw error;

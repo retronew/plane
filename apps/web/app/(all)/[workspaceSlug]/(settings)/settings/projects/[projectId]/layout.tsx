@@ -5,7 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { Outlet } from "react-router";
 // components
 import { getProjectActivePath } from "@/components/settings/helper";
@@ -15,6 +15,12 @@ import { ProjectAuthWrapper } from "@/layouts/auth-layout/project-wrapper";
 // types
 import type { Route } from "./+types/layout";
 import { ProjectSettingsSidebarRoot } from "@/components/settings/project/sidebar";
+import { SettingsDesktopSidebar, SettingsSidebarProvider } from "@/components/settings/sidebar/collapse";
+
+function ProjectSettingsMobileSidebar() {
+  const { projectId } = useParams();
+  return <ProjectSettingsSidebarRoot projectId={projectId?.toString() ?? ""} />;
+}
 
 function ProjectDetailSettingsLayout({ params }: Route.ComponentProps) {
   const { workspaceSlug, projectId } = params;
@@ -22,22 +28,22 @@ function ProjectDetailSettingsLayout({ params }: Route.ComponentProps) {
   const pathname = usePathname();
 
   return (
-    <>
+    <SettingsSidebarProvider scope="project">
       <SettingsMobileNav
-        hamburgerContent={(props) => <ProjectSettingsSidebarRoot {...props} projectId={projectId} />}
+        hamburgerContent={ProjectSettingsMobileSidebar}
         activePath={getProjectActivePath(pathname) || ""}
       />
       <div className="inset-y-0 flex h-full w-full flex-row">
         <div className="relative flex size-full">
-          <div className="hidden h-full shrink-0 md:block">
+          <SettingsDesktopSidebar>
             <ProjectSettingsSidebarRoot projectId={projectId} />
-          </div>
+          </SettingsDesktopSidebar>
           <ProjectAuthWrapper workspaceSlug={workspaceSlug} projectId={projectId}>
             <Outlet />
           </ProjectAuthWrapper>
         </div>
       </div>
-    </>
+    </SettingsSidebarProvider>
   );
 }
 

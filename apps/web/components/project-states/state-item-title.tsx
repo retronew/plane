@@ -1,3 +1,4 @@
+import { StateSummary } from "./state-summary";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -20,6 +21,7 @@ import { StateDelete, StateMarksAsDefault } from "./options";
 
 type TBaseStateItemTitleProps = {
   stateCount: number;
+  dragHandleRef?: (element: Element | null) => void;
   state: IState;
   shouldShowDescription?: boolean;
   setUpdateStateModal: (value: SetStateAction<boolean>) => void;
@@ -37,7 +39,7 @@ type TDisabledStateItemTitleProps = TBaseStateItemTitleProps & {
 export type TStateItemTitleProps = TEnabledStateItemTitleProps | TDisabledStateItemTitleProps;
 
 export const StateItemTitle = observer(function StateItemTitle(props: TStateItemTitleProps) {
-  const { stateCount, setUpdateStateModal, disabled, state, shouldShowDescription = true } = props;
+  const { stateCount, dragHandleRef, setUpdateStateModal, disabled, state, shouldShowDescription = true } = props;
   // plane hooks
   const { t } = useTranslation();
   // store hooks
@@ -48,33 +50,52 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
 
   return (
     <div className="flex w-full items-center justify-between gap-2">
-      <div className="flex items-center gap-1 px-1">
-        {/* draggable indicator */}
-        {!disabled && stateCount != 1 && (
-          <div className="absolute -left-1.5 hidden h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center rounded-xs bg-surface-2 text-secondary transition-colors group-hover:flex hover:text-primary">
-            <DragDropOutline className="h-3 w-3" />
-          </div>
-        )}
-        {/* state icon */}
-        <div className="flex-shrink-0">
-          <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.XL} percentage={percentage} />
-        </div>
-        {/* state title and description */}
-        <div className="min-h-5 px-2 text-13">
-          <h6 className="text-13 font-medium">{state.name}</h6>
-          {shouldShowDescription && <p className="text-11 text-secondary">{state.description}</p>}
-        </div>
-      </div>
+      {dragHandleRef && (
+        <button
+          type="button"
+          ref={dragHandleRef}
+          disabled={disabled || stateCount <= 1}
+          hidden={disabled || stateCount <= 1}
+          aria-label={`${t("web.reorder_category")} ${state.name}`}
+          title={t("web.reorder_category_hint")}
+          className="absolute -left-2.5 flex size-3 cursor-grab touch-none items-center justify-center rounded-xs text-placeholder opacity-0 transition-opacity group-focus-within:opacity-80 group-hover:opacity-60 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing"
+        >
+          <DragDropOutline className="size-3" />
+        </button>
+      )}
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setUpdateStateModal(true)}
+        className="min-w-0 flex-1 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+      >
+        <StateSummary
+          icon={
+            <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.XL} percentage={percentage} />
+          }
+          color={state.color}
+          name={state.name}
+          badge={
+            state.default ? (
+              <span className="font-normal shrink-0 text-12 text-tertiary">· {t("web.project_status_default")}</span>
+            ) : undefined
+          }
+          description={shouldShowDescription ? state.description : undefined}
+        />
+      </button>
       {!disabled && (
-        <div className="hidden items-center gap-2 group-hover:flex">
+        <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
           {/* state mark as default option */}
-          <div className="flex-shrink-0 text-11 transition-all">
-            <StateMarksAsDefault
-              stateId={state.id}
-              isDefault={state.default ? true : false}
-              markStateAsDefaultCallback={props.stateOperationsCallbacks.markStateAsDefault}
-            />
-          </div>
+          {!state.default && (
+            <div className="flex-shrink-0 text-11 transition-all">
+              <StateMarksAsDefault
+                stateId={state.id}
+                isDefault={Boolean(state.default)}
+                markStateAsDefaultCallback={props.stateOperationsCallbacks.markStateAsDefault}
+              />
+            </div>
+          )}
           {/* state edit options */}
           <div className="flex items-center gap-1 transition-all">
             <IconButton

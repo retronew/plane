@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { SettingsSidebarToggle } from "./sidebar/collapse";
 import { Header } from "@plane/blocks/layout";
 
 type Props = {
@@ -16,7 +17,10 @@ export function SettingsPageHeader(props: Props) {
 
   return (
     <Header>
-      {leftItem && <Header.LeftItem>{leftItem}</Header.LeftItem>}
+      <Header.LeftItem>
+        <SettingsSidebarToggle onlyWhenCollapsed />
+        {leftItem}
+      </Header.LeftItem>
       {rightItem && <Header.RightItem>{rightItem}</Header.RightItem>}
     </Header>
   );

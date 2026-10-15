@@ -3,7 +3,9 @@
 # See the LICENSE file for details.
 
 # Django imports
-from django.db.models import Exists, OuterRef, Q, Case, When, BooleanField
+from uuid import UUID
+
+from django.db.models import Exists, OuterRef, Q, Case, When, BooleanField, IntegerField, Value, Subquery
 from django.utils import timezone
 
 # Third party imports
@@ -30,6 +32,87 @@ from plane.app.permissions import allow_permission, ROLE
 from ..base import BaseAPIView, BaseViewSet
 
 
+def filter_notifications(notifications, params, slug, user):
+    """Apply the same receiver-scoped filters to the list and bulk read action."""
+
+    def enabled(key):
+        return str(params.get(key, "false")).lower() == "true"
+
+    def values(key):
+        return [value for value in str(params.get(key) or "").split(",") if value]
+
+    def ids(key):
+        try:
+            return [UUID(value) for value in values(key)]
+        except (ValueError, TypeError):
+            return []
+
+    notifications = notifications.filter(
+        archived_at__isnull=not enabled("archived"),
+        snoozed_till__isnull=not enabled("snoozed"),
+    )
+    if str(params.get("read", "")).lower() in ("true", "false"):
+        notifications = notifications.filter(read_at__isnull=not enabled("read"))
+    if enabled("mentioned"):
+        notifications = notifications.filter(sender__icontains="mentioned")
+    else:
+        notifications = notifications.exclude(sender__icontains="mentioned")
+    type = params.get("type") or "all"
+    q_filters = Q()
+    type = type.split(",")
+    # Subscribed issues
+    if "subscribed" in type:
+        issue_ids = (
+            IssueSubscriber.objects.filter(workspace__slug=slug, subscriber_id=user.id)
+            .annotate(created=Exists(Issue.objects.filter(created_by=user, pk=OuterRef("issue_id"))))
+            .annotate(assigned=Exists(IssueAssignee.objects.filter(issue_id=OuterRef("issue_id"), assignee=user)))
+            .filter(created=False, assigned=False)
+            .values_list("issue_id", flat=True)
+        )
+        q_filters |= Q(entity_identifier__in=issue_ids)
+
+    # Assigned Issues
+    if "assigned" in type:
+        issue_ids = IssueAssignee.objects.filter(workspace__slug=slug, assignee_id=user.id).values_list(
+            "issue_id", flat=True
+        )
+        q_filters |= Q(entity_identifier__in=issue_ids)
+
+    # Created issues
+    if "created" in type:
+        if WorkspaceMember.objects.filter(workspace__slug=slug, member=user, role__lt=15, is_active=True).exists():
+            notifications = notifications.none()
+        else:
+            issue_ids = Issue.objects.filter(workspace__slug=slug, created_by=user).values_list("pk", flat=True)
+            q_filters |= Q(entity_identifier__in=issue_ids)
+
+    notifications = notifications.filter(q_filters)
+    for key, field in (("project", "project_id"), ("triggered_by", "triggered_by_id")):
+        if values(key):
+            notifications = notifications.filter(**{f"{field}__in": ids(key)})
+    issues = Issue.objects.filter(workspace__slug=slug)
+    has_issue_filter = False
+    for key, field in (("priority", "priority"), ("state_group", "state__group")):
+        if values(key):
+            issues = issues.filter(**{f"{field}__in": values(key)})
+            has_issue_filter = True
+    if values("assignees"):
+        issues = issues.filter(issue_assignee__assignee_id__in=ids("assignees"))
+        has_issue_filter = True
+    if has_issue_filter:
+        notifications = notifications.filter(entity_identifier__in=issues.values("pk"))
+    search = str(params.get("search") or "").strip()
+    if search:
+        matching_issues = Issue.objects.filter(workspace__slug=slug).filter(Q(name__icontains=search))
+        notifications = notifications.filter(
+            Q(title__icontains=search)
+            | Q(message_stripped__icontains=search)
+            | Q(entity_identifier__in=matching_issues.values("pk"))
+            | Q(data__issue__name__icontains=search)
+        )
+    return notifications
+
+
 class NotificationViewSet(BaseViewSet, BasePaginator):
     model = Notification
     serializer_class = NotificationSerializer
@@ -47,104 +130,55 @@ class NotificationViewSet(BaseViewSet, BasePaginator):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def list(self, request, slug):
-        # Get query parameters
-        snoozed = request.GET.get("snoozed", "false")
-        archived = request.GET.get("archived", "false")
-        read = request.GET.get("read", None)
-        type = request.GET.get("type", "all")
-        mentioned = request.GET.get("mentioned", False)
-        q_filters = Q()
-
         intake_issue = Issue.objects.filter(
             pk=OuterRef("entity_identifier"),
             issue_intake__status__in=[0, 2, -2],
-            workspace__slug=self.kwargs.get("slug"),
+            workspace__slug=slug,
         )
-
-        notifications = (
-            Notification.objects.filter(workspace__slug=slug, receiver_id=request.user.id)
-            .filter(entity_name="issue")
-            .annotate(is_inbox_issue=Exists(intake_issue))
-            .annotate(is_intake_issue=Exists(intake_issue))
-            .annotate(
-                is_mentioned_notification=Case(
-                    When(sender__icontains="mentioned", then=True),
-                    default=False,
-                    output_field=BooleanField(),
+        notifications = filter_notifications(
+            self.get_queryset().filter(entity_name="issue"),
+            request.GET,
+            slug,
+            request.user,
+        ).annotate(
+            is_inbox_issue=Exists(intake_issue),
+            is_intake_issue=Exists(intake_issue),
+            is_mentioned_notification=Case(
+                When(sender__icontains="mentioned", then=True),
+                default=False,
+                output_field=BooleanField(),
+            ),
+        )
+        order_by = request.GET.get("order_by", "-created_at")
+        if order_by == "priority":
+            priority = Issue.objects.filter(pk=OuterRef("entity_identifier"), workspace__slug=slug).values("priority")[
+                :1
+            ]
+            notifications = notifications.annotate(issue_priority=Subquery(priority)).annotate(
+                notification_order=Case(
+                    *[When(issue_priority=p, then=Value(i)) for i, p in enumerate(["urgent", "high", "medium", "low"])],
+                    default=Value(4),
+                    output_field=IntegerField(),
                 )
             )
-            .select_related("workspace", "project", "triggered_by", "receiver")
-            .order_by("snoozed_till", "-created_at")
-        )
-
-        # Filters based on query parameters
-        snoozed_filters = {
-            "true": Q(snoozed_till__lt=timezone.now()) | Q(snoozed_till__isnull=False),
-            "false": Q(snoozed_till__gte=timezone.now()) | Q(snoozed_till__isnull=True),
-        }
-
-        notifications = notifications.filter(snoozed_filters[snoozed])
-
-        archived_filters = {
-            "true": Q(archived_at__isnull=False),
-            "false": Q(archived_at__isnull=True),
-        }
-
-        notifications = notifications.filter(archived_filters[archived])
-
-        if read == "false":
-            notifications = notifications.filter(read_at__isnull=True)
-
-        if read == "true":
-            notifications = notifications.filter(read_at__isnull=False)
-
-        if mentioned:
-            notifications = notifications.filter(sender__icontains="mentioned")
+            order_by = "notification_order"
+        elif order_by == "unread":
+            notifications = notifications.annotate(
+                notification_order=Case(
+                    When(read_at__isnull=True, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            )
+            order_by = "notification_order"
         else:
-            notifications = notifications.exclude(sender__icontains="mentioned")
-
-        type = type.split(",")
-        # Subscribed issues
-        if "subscribed" in type:
-            issue_ids = (
-                IssueSubscriber.objects.filter(workspace__slug=slug, subscriber_id=request.user.id)
-                .annotate(created=Exists(Issue.objects.filter(created_by=request.user, pk=OuterRef("issue_id"))))
-                .annotate(assigned=Exists(IssueAssignee.objects.filter(pk=OuterRef("issue_id"), assignee=request.user)))
-                .filter(created=False, assigned=False)
-                .values_list("issue_id", flat=True)
-            )
-            q_filters |= Q(entity_identifier__in=issue_ids)
-
-        # Assigned Issues
-        if "assigned" in type:
-            issue_ids = IssueAssignee.objects.filter(workspace__slug=slug, assignee_id=request.user.id).values_list(
-                "issue_id", flat=True
-            )
-            q_filters |= Q(entity_identifier__in=issue_ids)
-
-        # Created issues
-        if "created" in type:
-            if WorkspaceMember.objects.filter(
-                workspace__slug=slug, member=request.user, role__lt=15, is_active=True
-            ).exists():
-                notifications = notifications.none()
-            else:
-                issue_ids = Issue.objects.filter(workspace__slug=slug, created_by=request.user).values_list(
-                    "pk", flat=True
-                )
-                q_filters |= Q(entity_identifier__in=issue_ids)
-
-        # Apply the combined Q object filters
-        notifications = notifications.filter(q_filters)
+            order_by = sanitize_order_by(order_by, NOTIFICATION_ORDER_BY_ALLOWLIST, "-created_at")
+        notifications = notifications.order_by(order_by, "-created_at", "-id")
 
         # Pagination
         if request.GET.get("per_page", False) and request.GET.get("cursor", False):
             return self.paginate(
-                order_by=sanitize_order_by(
-                    request.GET.get("order_by", "-created_at"),
-                    NOTIFICATION_ORDER_BY_ALLOWLIST,
-                    "-created_at",
-                ),
+                order_by=order_by,
                 request=request,
                 queryset=(notifications),
                 on_results=lambda notifications: NotificationSerializer(notifications, many=True).data,
@@ -237,59 +271,15 @@ class UnreadNotificationEndpoint(BaseAPIView):
 class MarkAllReadNotificationViewSet(BaseViewSet):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def create(self, request, slug):
-        snoozed = request.data.get("snoozed", False)
-        archived = request.data.get("archived", False)
-        type = request.data.get("type", "all")
-
-        notifications = (
-            Notification.objects.filter(workspace__slug=slug, receiver_id=request.user.id, read_at__isnull=True)
-            .select_related("workspace", "project", "triggered_by", "receiver")
-            .order_by("snoozed_till", "-created_at")
+        notifications = filter_notifications(
+            Notification.objects.filter(
+                workspace__slug=slug, receiver=request.user, entity_name="issue", read_at__isnull=True
+            ),
+            request.data,
+            slug,
+            request.user,
         )
-
-        # Filter for snoozed notifications
-        if snoozed:
-            notifications = notifications.filter(Q(snoozed_till__lt=timezone.now()) | Q(snoozed_till__isnull=False))
-        else:
-            notifications = notifications.filter(Q(snoozed_till__gte=timezone.now()) | Q(snoozed_till__isnull=True))
-
-        # Filter for archived or unarchive
-        if archived:
-            notifications = notifications.filter(archived_at__isnull=False)
-        else:
-            notifications = notifications.filter(archived_at__isnull=True)
-
-        # Subscribed issues
-        if type == "watching":
-            issue_ids = IssueSubscriber.objects.filter(workspace__slug=slug, subscriber_id=request.user.id).values_list(
-                "issue_id", flat=True
-            )
-            notifications = notifications.filter(entity_identifier__in=issue_ids)
-
-        # Assigned Issues
-        if type == "assigned":
-            issue_ids = IssueAssignee.objects.filter(workspace__slug=slug, assignee_id=request.user.id).values_list(
-                "issue_id", flat=True
-            )
-            notifications = notifications.filter(entity_identifier__in=issue_ids)
-
-        # Created issues
-        if type == "created":
-            if WorkspaceMember.objects.filter(
-                workspace__slug=slug, member=request.user, role__lt=15, is_active=True
-            ).exists():
-                notifications = Notification.objects.none()
-            else:
-                issue_ids = Issue.objects.filter(workspace__slug=slug, created_by=request.user).values_list(
-                    "pk", flat=True
-                )
-                notifications = notifications.filter(entity_identifier__in=issue_ids)
-
-        updated_notifications = []
-        for notification in notifications:
-            notification.read_at = timezone.now()
-            updated_notifications.append(notification)
-        Notification.objects.bulk_update(updated_notifications, ["read_at"], batch_size=100)
+        notifications.update(read_at=timezone.now())
         return Response({"message": "Successful"}, status=status.HTTP_200_OK)
 
 

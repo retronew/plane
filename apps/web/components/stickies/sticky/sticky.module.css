@@ -1,0 +1,49 @@
+.card {
+  border: 1px solid color-mix(in oklab, var(--sticky-color) 20%, var(--border-color-subtle-1));
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--sticky-color) 18%, var(--background-color-layer-2));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+  transition:
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--border-color-strong);
+}
+
+.card :global(.tiptap) {
+  --font-size-regular: 13px;
+  --line-height-regular: 21px;
+  --font-size-list: 13px;
+  --line-height-list: 21px;
+  --color-placeholder: var(--text-color-placeholder);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.card :global(.tiptap .editor-paragraph-block),
+.card :global(.tiptap li) {
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.card :global(.tiptap .is-editor-empty)::before {
+  color: var(--text-color-tertiary);
+  font-size: 13px;
+  line-height: inherit;
+}
+
+:global([data-sticky-color-popover]) {
+  width: max-content;
+  min-width: 0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

@@ -6,10 +6,18 @@ export function getComposerTravel(from: DOMRect, to: DOMRect) {
   return `${to.x + to.width / 2 - from.x - from.width / 2}px ${to.y + to.height / 2 - from.y - from.height / 2}px`;
 }
 
-export function prepareComposerMotion(popup: HTMLElement) {
-  const target = Array.from(document.querySelectorAll<HTMLElement>("[data-new-work-item-trigger]")).find((element) => {
+export function prepareComposerMotion(popup: HTMLElement, kind: "new" | "draft" = "new") {
+  const selector = kind === "draft" ? "[data-draft-work-item-trigger]" : "[data-new-work-item-trigger]";
+  const target = Array.from(document.querySelectorAll<HTMLElement>(selector)).find((element) => {
     const rect = element.getBoundingClientRect();
-    return rect.width > 0 && rect.right > 0 && rect.left < window.innerWidth && rect.bottom > 0;
+    return (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      rect.right > 0 &&
+      rect.left < window.innerWidth &&
+      rect.bottom > 0 &&
+      rect.top < window.innerHeight
+    );
   });
   if (!target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   // Layout dimensions avoid measuring the entry animation's temporary scale.

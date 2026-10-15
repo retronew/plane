@@ -1,3 +1,4 @@
+import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -7,7 +8,7 @@
 // plane imports
 import { useTranslation, translate } from "@plane/i18n";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 // types
 import type { TPageFiltersSortBy, TPageFiltersSortKey } from "@plane/types";
 import { SortDescendingOutline, SortAscendingOutline } from "@makeplane/propel/icons";

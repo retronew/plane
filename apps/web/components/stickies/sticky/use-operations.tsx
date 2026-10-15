@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 // plane types
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
@@ -40,21 +40,31 @@ export const getRandomStickyColor = (): string => {
 export const useStickyOperations = (props: TProps) => {
   const { workspaceSlug } = props;
   // store hooks
-  const { stickies, getWorkspaceStickyIds, createSticky, updateSticky, deleteSticky, updateStickyPosition } =
-    useSticky();
+  const {
+    stickies,
+    getWorkspaceStickyIds,
+    createSticky,
+    updateSticky,
+    deleteSticky,
+    updateStickyPosition,
+    toggleShowNewSticky,
+  } = useSticky();
   const { t } = useTranslation();
 
-  const isValid = (data: Partial<TSticky>) => {
-    if (data.name && data.name.length > 100) {
-      setToast({
-        type: "error",
-        title: t("stickies.toasts.not_updated.title"),
-        message: t("stickies.toasts.errors.wrong_name"),
-      });
-      return false;
-    }
-    return true;
-  };
+  const isValid = useCallback(
+    (data: Partial<TSticky>) => {
+      if (data.name && data.name.length > 100) {
+        setToast({
+          type: "error",
+          title: t("stickies.toasts.not_updated.title"),
+          message: t("stickies.toasts.errors.wrong_name"),
+        });
+        return false;
+      }
+      return true;
+    },
+    [t]
+  );
 
   const stickyOperations: TOperations = useMemo(
     () => ({
@@ -66,13 +76,20 @@ export const useStickyOperations = (props: TProps) => {
           };
           const workspaceStickIds = getWorkspaceStickyIds(workspaceSlug);
           // check if latest sticky is empty
-          if (workspaceStickIds && workspaceStickIds.length >= 0) {
+          if (workspaceStickIds && workspaceStickIds.length > 0) {
             const latestSticky = stickies[workspaceStickIds[0]];
             if (latestSticky && (!latestSticky.description_html || isCommentEmpty(latestSticky.description_html))) {
+              toggleShowNewSticky(false);
+              const card = [...document.querySelectorAll<HTMLElement>("[data-sticky-card]")].find(
+                (element) => element.dataset.stickyCard === latestSticky.id && element.getClientRects().length > 0
+              );
+              const editor = card?.querySelector<HTMLElement>('[contenteditable="true"]');
+              card?.scrollIntoView({ block: "nearest", inline: "nearest" });
+              editor?.focus({ preventScroll: true });
               setToast({
                 message: t("stickies.toasts.errors.already_exists"),
                 type: "warning",
-                title: t("stickies.toasts.not_created.title"),
+                title: t("stickies.toasts.errors.empty_title"),
               });
               return;
             }
@@ -127,14 +144,14 @@ export const useStickyOperations = (props: TProps) => {
         }
       },
       updatePosition: async (
-        workspaceSlug: string,
+        targetWorkspaceSlug: string,
         sourceId: string,
         droppedId: string,
         instruction: InstructionType
       ) => {
         try {
-          if (!workspaceSlug) throw new Error("Missing required fields");
-          await updateStickyPosition(workspaceSlug, sourceId, droppedId, instruction);
+          if (!targetWorkspaceSlug) throw new Error("Missing required fields");
+          await updateStickyPosition(targetWorkspaceSlug, sourceId, droppedId, instruction);
         } catch (error) {
           console.error("Error in updating sticky position:", error);
           setToast({
@@ -145,7 +162,18 @@ export const useStickyOperations = (props: TProps) => {
         }
       },
     }),
-    [createSticky, deleteSticky, getWorkspaceStickyIds, stickies, updateSticky, updateStickyPosition, workspaceSlug]
+    [
+      createSticky,
+      deleteSticky,
+      getWorkspaceStickyIds,
+      stickies,
+      updateSticky,
+      updateStickyPosition,
+      workspaceSlug,
+      toggleShowNewSticky,
+      t,
+      isValid,
+    ]
   );
 
   return {

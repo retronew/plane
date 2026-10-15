@@ -34,6 +34,7 @@ export const IssueAssigneeActivity = observer(function IssueAssigneeActivity(pro
       <>
         {activity.old_value === "" ? translate("web.added_a_new_assignee") : translate("web.removed_the_assignee")}
         <a
+          data-activity-part=""
           href={`/${activity.workspace_detail?.slug}/profile/${activity.new_identifier ?? activity.old_identifier}`}
           target="_blank"
           rel="noopener noreferrer"

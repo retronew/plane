@@ -14,6 +14,7 @@ import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TCycleFilters } from "@plane/types";
 import { calculateTotalFilters } from "@plane/utils";
 // components
+import { LayoutErrorFallback } from "@/components/common/layout-error-boundary";
 import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
@@ -28,20 +29,20 @@ export const ArchivedCycleLayoutRoot = observer(function ArchivedCycleLayoutRoot
   // plane hooks
   const { t } = useTranslation();
   // hooks
-  const { fetchArchivedCycles, currentProjectArchivedCycleIds, loader } = useCycle();
+  const { fetchArchivedCycles, currentProjectArchivedCycleIds } = useCycle();
   // cycle filters hook
   const { clearAllFilters, currentProjectArchivedFilters, updateFilters } = useCycleFilter();
   // derived values
   const totalArchivedCycles = currentProjectArchivedCycleIds?.length ?? 0;
 
-  useSWR(
+  const { error, mutate } = useSWR(
     workspaceSlug && projectId ? `ARCHIVED_CYCLES_${workspaceSlug.toString()}_${projectId.toString()}` : null,
     async () => {
       if (workspaceSlug && projectId) {
-        await fetchArchivedCycles(workspaceSlug.toString(), projectId.toString());
+        return await fetchArchivedCycles(workspaceSlug.toString(), projectId.toString());
       }
     },
-    { revalidateIfStale: false, revalidateOnFocus: false }
+    { revalidateIfStale: false, revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
   const handleRemoveFilter = (key: keyof TCycleFilters, value: string | null) => {
@@ -56,7 +57,9 @@ export const ArchivedCycleLayoutRoot = observer(function ArchivedCycleLayoutRoot
 
   if (!workspaceSlug || !projectId) return <></>;
 
-  if (loader || !currentProjectArchivedCycleIds) {
+  if (error) return <LayoutErrorFallback onRetry={() => void mutate()} />;
+
+  if (!currentProjectArchivedCycleIds) {
     return <CycleModuleListLayoutLoader />;
   }
 

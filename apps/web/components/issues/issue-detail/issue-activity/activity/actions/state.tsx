@@ -35,7 +35,11 @@ export const IssueStateActivity = observer(function IssueStateActivity(props: TI
         <Translation
           translationKey="web.activity.state"
           components={{
-            value: <span className="font-medium text-primary">{activity.new_value}</span>,
+            value: (
+              <span data-activity-part="" className="font-medium text-primary">
+                {activity.new_value}
+              </span>
+            ),
             issue: showIssue ? (
               <IssueLink activityId={activityId} />
             ) : (

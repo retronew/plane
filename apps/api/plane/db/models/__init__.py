@@ -90,3 +90,4 @@ from .device import Device, DeviceSession
 from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
+from .workspace_configuration import ProjectCategory, WorkspaceTemplate

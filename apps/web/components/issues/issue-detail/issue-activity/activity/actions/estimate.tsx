@@ -33,7 +33,9 @@ export const IssueEstimateActivity = observer(function IssueEstimateActivity(pro
     >
       <>
         {activity.new_value ? translate("web.set_the_estimate_point_to") : translate("web.removed_the_estimate_point")}
-        {activity.new_value ? activity.new_value : activity?.old_value}
+        <span data-activity-part="" className="font-medium text-primary">
+          {activity.new_value || activity.old_value}
+        </span>
         {showIssue && (activity.new_value ? ` to ` : ` from `)}
         {showIssue && <IssueLink activityId={activityId} />}.
       </>

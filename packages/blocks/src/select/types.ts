@@ -195,12 +195,8 @@ type SelectBaseProps<T> = {
    */
   lazyMount?: boolean;
   /**
-   * Reorders the selected option(s) to the top of the list, so a selection buried in a long list is
-   * visible the moment the dropdown opens. Default: true.
-   *
-   * Ruling 45: pass `false` for a SMALL FIXED option set — priority, state, a role list, a handful
-   * of layout modes. There is nothing to scroll past there, and reordering makes a list the user
-   * has memorised jump around every time they open it.
+   * Opts into moving selected options to the top. Default: false.
+   * Source ordering stays stable across selection, close/reopen, and search by default.
    */
   pinSelected?: boolean;
   /**

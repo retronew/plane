@@ -1,0 +1,12 @@
+/* Propel shares group/item across Menu, ContextMenu, Select and Combobox rows,
+ * including submenu triggers and checkbox/radio options. Keep their density in
+ * one place; role=option alone would also resize unrelated command/search rows.
+ * Natural height lets descriptions and larger avatars grow without clipping.
+ * Unlayered so these defaults override the published component's h-8/py-0.
+ */
+.group\/item {
+  height: auto;
+  min-height: 1.75rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+}

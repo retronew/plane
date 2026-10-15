@@ -7,6 +7,7 @@
  * See the LICENSE file for details.
  */
 
+import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
 import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -415,6 +416,27 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               />
             </div>
             <div className="flex shrink-0 flex-col gap-3 pt-2">
+              {!data?.id && (
+                <TemplatePicker
+                  workspaceSlug={workspaceSlug?.toString() ?? ""}
+                  kind="work_item"
+                  projectId={projectId ?? undefined}
+                  disabled={isDisabled}
+                  onApply={(template) => {
+                    setValue("name", template.title, { shouldDirty: true });
+                    setValue("description_html", template.description_html, { shouldDirty: true });
+                    setValue("priority", template.priority, { shouldDirty: true });
+                    if (template.configuration?.state_id)
+                      setValue("state_id", template.configuration.state_id, { shouldDirty: true });
+                    setValue("assignee_ids", template.configuration?.assignee_ids ?? [], { shouldDirty: true });
+                    setValue("label_ids", template.configuration?.label_ids ?? [], { shouldDirty: true });
+                    setValue("module_ids", template.configuration?.module_ids ?? [], { shouldDirty: true });
+                    setValue("template_children", template.configuration?.children ?? [], { shouldDirty: true });
+                    editorRef.current?.setEditorValue(template.description_html, true);
+                    handleFormChange();
+                  }}
+                />
+              )}
               {watch("parent_id") && selectedParentIssue && (
                 <IssueParentTag
                   control={control}

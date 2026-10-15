@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "周期 1：熟悉 Plane",
+    "project_id": 1,
+    "sort_order": 1,
+    "timezone": "UTC",
+    "type": "CURRENT"
+  },
+  {
+    "id": 2,
+    "name": "周期 2：协作与自定义",
+    "project_id": 1,
+    "sort_order": 2,
+    "timezone": "UTC",
+    "type": "UPCOMING"
+  }
+]

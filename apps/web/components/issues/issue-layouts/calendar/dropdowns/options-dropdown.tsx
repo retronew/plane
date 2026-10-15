@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import type { IBaseIssueFilterStore } from "@/store/issue/helpers/issue-filter-helper.store";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import {
@@ -25,13 +26,9 @@ import type { TCalendarLayouts, TSupportedFilterForUpdate } from "@plane/types";
 // hooks
 import { useCalendarView } from "@/hooks/store/use-calendar-view";
 import useSize from "@/hooks/use-window-size";
-import type { ICycleIssuesFilter } from "@/store/issue/cycle";
-import type { IModuleIssuesFilter } from "@/store/issue/module";
-import type { IProjectIssuesFilter } from "@/store/issue/project";
-import type { IProjectViewIssuesFilter } from "@/store/issue/project-views";
 
 interface ICalendarHeader {
-  issuesFilterStore: IProjectIssuesFilter | IModuleIssuesFilter | ICycleIssuesFilter | IProjectViewIssuesFilter;
+  issuesFilterStore: Pick<IBaseIssueFilterStore, "issueFilters">;
   updateFilters?: (
     projectId: string,
     filterType: TSupportedFilterTypeForUpdate,

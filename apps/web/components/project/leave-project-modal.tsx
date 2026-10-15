@@ -53,6 +53,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
   const { workspaceSlug } = useParams();
   // store hooks
   const { leaveProject } = useUserPermissions();
+  const confirmationPhrase = translate("web.leave_project");
 
   const {
     control,
@@ -66,16 +67,16 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
     onClose();
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     if (!workspaceSlug) return;
 
     if (data) {
       if (data.projectName === project?.name) {
-        if (data.confirmLeave === "Leave Project") {
-          router.push(`/${workspaceSlug}/projects`);
+        if (data.confirmLeave === confirmationPhrase) {
           return leaveProject(workspaceSlug.toString(), project.id)
             .then(() => {
               handleClose();
+              router.push(`/${workspaceSlug}/projects/`);
               return undefined;
             })
             .catch((_err) => {
@@ -135,13 +136,13 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                   <span className="font-medium text-primary">{` "${project?.name}" `}</span>
                   {translate("web.leave_project_confirm_suffix")}
                 </p>
-                <div className="text-secondary">
-                  <p className="text-13 break-words">
+                <div className="flex flex-col gap-2 text-secondary">
+                  <label htmlFor="projectName" className="text-13 break-words">
                     <Translation
                       translationKey="web.ui.confirm_project_name"
                       components={{ name: <span className="font-medium text-primary">{project?.name}</span> }}
                     />
-                  </p>
+                  </label>
                   <Controller
                     control={control}
                     name="projectName"
@@ -166,15 +167,19 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                     )}
                   />
                 </div>
-                <div className="text-secondary">
-                  <p className="text-13">
+                <div className="flex flex-col gap-2 text-secondary">
+                  <label htmlFor="confirmLeave" className="text-13">
                     <Translation
                       translationKey="web.ui.confirm_phrase"
                       components={{
-                        phrase: <span className="font-medium text-primary">{translate("web.leave_project")}</span>,
+                        phrase: (
+                          <code className="font-mono rounded-md bg-danger-subtle/60 px-1 py-0.5 text-12 text-danger-primary">
+                            {confirmationPhrase}
+                          </code>
+                        ),
                       }}
                     />
-                  </p>
+                  </label>
                   <Controller
                     control={control}
                     name="confirmLeave"
@@ -189,7 +194,7 @@ export const LeaveProjectModal = observer(function LeaveProjectModal(props: ILea
                             value={value}
                             onChange={onChange}
                             ref={ref}
-                            placeholder={translate("web.enter_leave_project")}
+                            placeholder={confirmationPhrase}
                           />
                         </InputGroup>
                       </Field>

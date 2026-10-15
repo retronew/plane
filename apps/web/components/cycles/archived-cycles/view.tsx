@@ -25,12 +25,12 @@ export interface IArchivedCyclesView {
 export const ArchivedCyclesView = observer(function ArchivedCyclesView(props: IArchivedCyclesView) {
   const { workspaceSlug, projectId } = props;
   // store hooks
-  const { getFilteredArchivedCycleIds, loader } = useCycle();
+  const { getFilteredArchivedCycleIds } = useCycle();
   const { archivedCyclesSearchQuery } = useCycleFilter();
   // derived values
   const filteredArchivedCycleIds = getFilteredArchivedCycleIds(projectId);
 
-  if (loader || !filteredArchivedCycleIds) return <CycleModuleListLayoutLoader />;
+  if (!filteredArchivedCycleIds) return <CycleModuleListLayoutLoader />;
 
   if (filteredArchivedCycleIds.length === 0)
     return (

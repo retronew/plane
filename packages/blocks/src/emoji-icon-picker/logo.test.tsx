@@ -5,11 +5,14 @@
  */
 
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Logo } from "./logo";
 import { LUCIDE_ICONS_LIST } from "./lucide-icons";
 
 // lucide-react v1 dropped these; project logos saved before the upgrade still name them.
+// Lucide SVG rendering does not need a font load or its browser polling timers.
+vi.mock("use-font-face-observer", () => ({ default: () => true }));
+
 const BRAND_ICON_NAMES = [
   "Codepen",
   "Codesandbox",
