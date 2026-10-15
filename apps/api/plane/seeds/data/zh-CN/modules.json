@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "核心工作流",
+    "project_id": 1,
+    "sort_order": 1,
+    "status": "planned",
+    "description": "通过不同视图管理、查看和跟踪工作项。"
+  },
+  {
+    "id": 2,
+    "name": "新手引导",
+    "project_id": 1,
+    "sort_order": 2,
+    "status": "backlog",
+    "description": "从创建项目、邀请成员开始熟悉团队协作。"
+  },
+  {
+    "id": 3,
+    "name": "工作区设置",
+    "project_id": 1,
+    "sort_order": 3,
+    "status": "in-progress",
+    "description": "配置工作区、标签和其他偏好。"
+  }
+]

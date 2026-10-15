@@ -3,7 +3,6 @@
 # See the LICENSE file for details.
 
 # Python imports
-import os
 import json
 import time
 import uuid
@@ -44,23 +43,15 @@ from plane.db.models import (
     BotTypeEnum,
 )
 
+from plane.utils.seed_data import load_seed_data
+
 logger = logging.getLogger("plane.worker")
 
 
-def read_seed_file(filename):
-    """
-    Read a JSON file from the seed directory.
-
-    Args:
-        filename (str): Name of the JSON file to read
-
-    Returns:
-        dict: Contents of the JSON file
-    """
-    file_path = os.path.join(settings.SEED_DIR, "data", filename)
+def read_seed_file(filename, language="en"):
+    """Read example content in the workspace owner's language, with English as default."""
     try:
-        with open(file_path, "r") as file:
-            return json.load(file)
+        return load_seed_data(settings.SEED_DIR, filename, language)
     except FileNotFoundError:
         logger.error(f"Seed file {filename} not found in {settings.SEED_DIR}/data")
         return None
@@ -81,7 +72,9 @@ def create_project_and_member(workspace: Workspace, bot_user: User) -> Dict[int,
     Returns:
         A mapping of seed project IDs to actual project IDs
     """
-    project_seeds = read_seed_file("projects.json")
+    project_seeds = read_seed_file(
+        "projects.json", getattr(getattr(workspace.owner, "profile", None), "language", "en")
+    )
     project_identifier = "".join(ch for ch in workspace.name if ch.isalnum())[:5]
 
     # Create members
@@ -187,7 +180,7 @@ def create_project_states(
         A mapping of seed state IDs to actual state IDs
     """
 
-    state_seeds = read_seed_file("states.json")
+    state_seeds = read_seed_file("states.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
     state_map: Dict[int, uuid.UUID] = {}
 
     if not state_seeds:
@@ -221,7 +214,7 @@ def create_project_labels(
     Returns:
         A mapping of seed label IDs to actual label IDs
     """
-    label_seeds = read_seed_file("labels.json")
+    label_seeds = read_seed_file("labels.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
     label_map: Dict[int, uuid.UUID] = {}
 
     if not label_seeds:
@@ -262,7 +255,7 @@ def create_project_issues(
         states_map: Mapping of seed state IDs to actual state IDs
         labels_map: Mapping of seed label IDs to actual label IDs
     """
-    issue_seeds = read_seed_file("issues.json")
+    issue_seeds = read_seed_file("issues.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
 
     if not issue_seeds:
         return
@@ -351,7 +344,7 @@ def create_pages(workspace: Workspace, project_map: Dict[int, uuid.UUID], bot_us
         project_map: Mapping of seed project IDs to actual project IDs
         bot_user: The bot user to use for creating the pages
     """
-    page_seeds = read_seed_file("pages.json")
+    page_seeds = read_seed_file("pages.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
 
     if not page_seeds:
         return
@@ -399,7 +392,7 @@ def create_cycles(workspace: Workspace, project_map: Dict[int, uuid.UUID], bot_u
     Returns:
         A mapping of seed cycle IDs to actual cycle IDs
     """
-    cycle_seeds = read_seed_file("cycles.json")
+    cycle_seeds = read_seed_file("cycles.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
     if not cycle_seeds:
         return {}
 
@@ -448,7 +441,7 @@ def create_modules(workspace: Workspace, project_map: Dict[int, uuid.UUID], bot_
         project_map: Mapping of seed project IDs to actual project IDs
         bot_user: The bot user to use for creating the modules
     """
-    module_seeds = read_seed_file("modules.json")
+    module_seeds = read_seed_file("modules.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
     if not module_seeds:
         return {}
 
@@ -484,7 +477,7 @@ def create_views(workspace: Workspace, project_map: Dict[int, uuid.UUID], bot_us
         bot_user: The bot user to use for creating the views
     """
 
-    view_seeds = read_seed_file("views.json")
+    view_seeds = read_seed_file("views.json", getattr(getattr(workspace.owner, "profile", None), "language", "en"))
     if not view_seeds:
         return
 
@@ -517,7 +510,7 @@ def workspace_seed(workspace_id: uuid.UUID) -> None:
     try:
         logger.info(f"Task: workspace_seed_task -> Seeding workspace {workspace_id}")
         # Get the workspace
-        workspace = Workspace.objects.get(id=workspace_id)
+        workspace = Workspace.objects.select_related("owner__profile").get(id=workspace_id)
 
         # Create a bot user for creating all the workspace data
         bot_user = User.objects.create(
