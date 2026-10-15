@@ -65,7 +65,7 @@ export function DataTable<TData extends RowData>({
   return (
     <div className="space-y-4">
       <div className="flex min-h-7 w-full items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex min-w-0 items-baseline gap-2.5">
           {title && <h2 className="text-16 font-medium text-primary">{title}</h2>}
           <span className="text-12 whitespace-nowrap text-tertiary">{searchPlaceholder}</span>
         </div>

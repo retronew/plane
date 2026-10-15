@@ -16,7 +16,7 @@ export const csvConfig = (workspaceSlug: string) =>
     useKeysAsHeaders: true,
   });
 
-export type AnalyticsExportFormat = "csv" | "json";
+export type AnalyticsExportFormat = "csv" | "xlsx" | "json";
 
 export const getExportRows = <T extends RowData>(
   rows: Row<TInsightTableFeatures, T>[],
@@ -34,23 +34,22 @@ export const getExportRows = <T extends RowData>(
     return cells;
   });
 
-export const exportAnalytics = <T extends RowData>(
+export const exportAnalytics = async <T extends RowData>(
   rows: Row<TInsightTableFeatures, T>[],
   columns: ColumnDef<TInsightTableFeatures, T>[],
   workspaceSlug: string,
   format: AnalyticsExportFormat
 ) => {
   const rowData = getExportRows(rows, columns);
+  if (format === "xlsx") {
+    const { createAnalyticsExcel } = await import("./export-excel");
+    const blob = await createAnalyticsExcel(rowData);
+    downloadAnalyticsBlob(blob, `${workspaceSlug}-analytics.xlsx`);
+    return;
+  }
   if (format === "json") {
     const blob = new Blob([JSON.stringify(rowData, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${workspaceSlug}-analytics.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadAnalyticsBlob(blob, `${workspaceSlug}-analytics.json`);
     return;
   }
   // Spreadsheet software interprets leading operators as formulas; preserve them as text.
@@ -65,3 +64,14 @@ export const exportAnalytics = <T extends RowData>(
   const csv = generateCsv(csvConfig(workspaceSlug))(safeRows);
   download(csvConfig(workspaceSlug))(csv);
 };
+
+function downloadAnalyticsBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}

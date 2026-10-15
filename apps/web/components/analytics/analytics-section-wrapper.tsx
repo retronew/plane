@@ -13,16 +13,17 @@ type Props = {
   subtitle?: string | null;
   actions?: React.ReactNode;
   headerClassName?: string;
+  titleClassName?: string;
 };
 
 function AnalyticsSectionWrapper(props: Props) {
-  const { title, children, className, actions, headerClassName } = props;
+  const { title, children, className, actions, headerClassName, titleClassName } = props;
   return (
     <div className={className}>
       <div className={cn("mb-4 flex items-center gap-2 text-nowrap", headerClassName)}>
         {title && (
           <div className="flex items-center gap-2">
-            <h2 className="text-13 font-medium">{title}</h2>
+            <h2 className={cn("text-13 font-medium", titleClassName)}>{title}</h2>
             {/* {subtitle && <p className="text-16 text-tertiary"> • {subtitle}</p>} */}
           </div>
         )}

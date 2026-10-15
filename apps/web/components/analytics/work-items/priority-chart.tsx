@@ -5,6 +5,7 @@
  */
 
 import { AsyncContent } from "@/components/common/async-content";
+import { StatisticsNote } from "../statistics-note";
 import AnalyticsRequestError from "../request-error";
 
 import { useMemo } from "react";
@@ -130,7 +131,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
       parsedBars = schemaKeys.map((key, index) => ({
         key: key,
         label: parsedData.schema[key],
-        stackId: "bar-one",
+        stackId: [x_axis, group_by].some((axis) => axis === "ASSIGNEES" || axis === "LABELS") ? key : "bar-one",
         fill: extendedColors[index],
         textClassName: "",
         showPercentage: false,
@@ -205,6 +206,9 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
   return (
     <AsyncContent loading={priorityChartLoading} skeleton={<ChartLoader />} minHeight={288}>
       <div className="flex flex-col gap-6">
+        {[x_axis, group_by].some((axis) => axis === "ASSIGNEES" || axis === "LABELS") && (
+          <StatisticsNote kind="duplicates" />
+        )}
         {parsedData?.data && parsedData.data.length > 0 ? (
           <>
             <BarChart

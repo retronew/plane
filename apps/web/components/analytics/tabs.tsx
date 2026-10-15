@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { ProjectProgressPreview } from "./preview/projects";
+import { QuickInsightsPreview } from "./preview/insights";
 import type { AnalyticsTab } from "@plane/types";
 import { Overview } from "@/components/analytics/overview";
 import { WorkItems } from "@/components/analytics/work-items";
@@ -28,4 +30,16 @@ export const getAnalyticsTabs = (t: (key: string, params?: Record<string, any>) 
     isDisabled: false,
   },
   { key: "intake", label: t("workspace_analytics.details.tabs.intake"), content: IntakeAnalytics, isDisabled: false },
+  {
+    key: "project-progress-preview",
+    label: t("workspace_analytics.preview.projects_tab"),
+    content: ProjectProgressPreview,
+    isDisabled: false,
+  },
+  {
+    key: "quick-insights-preview",
+    label: t("workspace_analytics.preview.insights_tab"),
+    content: QuickInsightsPreview,
+    isDisabled: false,
+  },
 ];

@@ -8,16 +8,6 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { Link } from "react-router";
 import useSWR from "swr";
-import {
-  CircleDot,
-  FolderKanban,
-  Users,
-  ShieldCheck,
-  UserRound,
-  UserRoundCheck,
-  RefreshCcw,
-  Inbox,
-} from "lucide-react";
 import type { IInsightField } from "@plane/constants";
 import { ANALYTICS_INSIGHTS_FIELDS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -31,16 +21,6 @@ import AnalyticsRequestError from "./request-error";
 import InsightCard from "./insight-card";
 
 const service = new AnalyticsService();
-const icons = {
-  total_work_items: CircleDot,
-  total_projects: FolderKanban,
-  total_users: Users,
-  total_admins: ShieldCheck,
-  total_members: UserRoundCheck,
-  total_guests: UserRound,
-  total_cycles: RefreshCcw,
-  total_intake: Inbox,
-};
 const targets: Record<string, string> = {
   total_work_items: "work-items",
   total_projects: "projects",
@@ -138,18 +118,19 @@ const TotalInsights = observer(function TotalInsights({
       >
         {fields.map((field) => {
           const label = getInsightLabel(analyticsType, field, isEpic, t);
-          if (!dashboard) return <InsightCard key={field.key} label={label} data={data?.[field.key]} />;
-          const Icon = icons[field.key as keyof typeof icons];
+          if (!dashboard)
+            return (
+              <div key={field.key} className="px-2 py-1.5">
+                <InsightCard label={label} data={data?.[field.key]} />
+              </div>
+            );
           return (
             <Link
               key={field.key}
               to={`/${slug}/analytics/${targets[field.key] ?? "users"}/`}
               className="group rounded-lg px-2 py-1.5 transition-colors hover:bg-layer-transparent-hover"
             >
-              <span className="flex items-center gap-2 text-12 text-tertiary">
-                <Icon className="size-3.5" />
-                {label}
-              </span>
+              <span className="block text-12 text-tertiary">{label}</span>
               <span className="mt-1 block text-24 font-medium text-primary tabular-nums">
                 {(data?.[field.key]?.count ?? 0).toLocaleString()}
               </span>

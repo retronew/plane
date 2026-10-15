@@ -20,11 +20,11 @@ function InsightCard(props: InsightCardProps) {
   const count = data?.count ?? 0;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="text-13 text-tertiary">{label}</div>
+    <div className="flex flex-col gap-1">
+      <div className="text-12 text-tertiary">{label}</div>
       {!isLoading ? (
         <div className="flex flex-col gap-1">
-          <div className="text-20 font-bold text-primary">{count}</div>
+          <div className="text-24 font-medium text-primary tabular-nums">{count}</div>
         </div>
       ) : (
         <Loader.Item height="50px" width="100%" />

@@ -102,7 +102,14 @@ it("reuses the real project table for the dashboard without repeating its summar
     </MemoryRouter>
   );
   await screen.findByText("Alpha");
-  expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+  expect(screen.getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
+    "名称",
+    "工作项",
+    "已完成",
+    "周期",
+    "模块",
+    "完成率",
+  ]);
   expect(screen.queryByLabelText("Chart")).toBeNull();
   expect(screen.getByRole("link", { name: "Alpha" }).getAttribute("href")).toBe("/test-workspace/projects/p1/issues/");
 });
@@ -117,4 +124,27 @@ it("offers JSON as well as CSV and preserves the current filtered rows", async (
   fireEvent.click(await screen.findByRole("menuitem", { name: "JSON" }));
   expect(vi.mocked(exportAnalytics).mock.calls[0][0]).toMatchObject([{ original: { name: "Beta" } }]);
   expect(vi.mocked(exportAnalytics).mock.calls[0].slice(2)).toEqual(["test-workspace", "json"]);
+});
+
+it("exports the current search as Excel through the shared format menu", async () => {
+  render(<View tab="projects" />);
+  await screen.findByText("Alpha");
+  fireEvent.click(screen.getByRole("button", { name: "搜索" }));
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Alpha" } });
+  await waitFor(() => expect(screen.queryByText("Beta")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "导出" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Excel" }));
+  expect(vi.mocked(exportAnalytics).mock.calls[0][0]).toMatchObject([{ original: { name: "Alpha" } }]);
+  expect(vi.mocked(exportAnalytics).mock.calls[0].slice(2)).toEqual(["test-workspace", "xlsx"]);
+});
+it("fits sparse horizontal charts and recomputes density on the final page", async () => {
+  mocks.get.mockResolvedValue({
+    ...response,
+    chart: Array.from({ length: 22 }, (_, index) => ({ name: `Member ${index}`, count: index + 1 })),
+  });
+  render(<View tab="users" />);
+  const chart = await screen.findByLabelText("Chart");
+  expect(chart.parentElement?.style.height).toBe("810px");
+  fireEvent.click(screen.getByRole("button", { name: "下一页" }));
+  expect(chart.parentElement?.style.height).toBe("162px");
 });

@@ -45,22 +45,36 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   await setLanguage("en");
 });
 it("uses the existing picker to select a real period and the shared project filter", async () => {
   render(<AnalyticsFilterActions />);
   fireEvent.click(screen.getByRole("button", { name: "全部时间" }));
-  fireEvent.click(await screen.findByRole("option", { name: /7/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /7/ }));
   expect(state.updateSelectedDuration).toHaveBeenCalledWith("last_7_days");
   fireEvent.click(screen.getByRole("button", { name: "Projects" }));
   expect(state.updateSelectedProjects).toHaveBeenCalledWith(["p1"]);
 });
-it("clears both period and project conditions with one action", () => {
+it("keeps project and period controls without an extra clear action", () => {
   state.selectedDuration = "last_7_days";
   state.selectedProjects = ["p1"];
   render(<AnalyticsFilterActions />);
-  fireEvent.click(screen.getByRole("button", { name: "清除" }));
-  expect(state.updateSelectedProjects).toHaveBeenCalledWith([]);
-  expect(state.updateSelectedDuration).toHaveBeenCalledWith("all_time");
+  expect(screen.queryByRole("button", { name: "清除" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Projects" })).toBeTruthy();
+});
+it("selects a closed custom interval only after both dates are picked", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 16));
+  render(<AnalyticsFilterActions />);
+  fireEvent.click(screen.getByRole("button", { name: "全部时间" }));
+  fireEvent.click(await screen.findByRole("button", { name: "自定义范围" }));
+  const days = await screen.findAllByRole("button", { name: /2026年10月/ });
+  const first = days.find((e) => /10月12日/.test(e.getAttribute("aria-label") ?? ""))!;
+  const last = days.find((e) => /10月15日/.test(e.getAttribute("aria-label") ?? ""))!;
+  fireEvent.click(first);
+  expect(state.updateSelectedDuration).not.toHaveBeenCalled();
+  fireEvent.click(last);
+  expect(state.updateSelectedDuration).toHaveBeenCalledWith("custom:2026-10-12:2026-10-15");
 });

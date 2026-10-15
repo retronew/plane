@@ -36,7 +36,7 @@ const ActiveProjects = observer(function ActiveProjects() {
     workspaceSlug
       ? () =>
           fetchProjectAnalyticsCount(workspaceSlug.toString(), {
-            fields: "total_issues,completed_issues",
+            fields: "total_issues,completed_issues,cancelled_issues",
             ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
             ...(selectedProjects.length ? { project_ids: selectedProjects.join(",") } : {}),
           })
@@ -50,6 +50,7 @@ const ActiveProjects = observer(function ActiveProjects() {
       subtitle={selectedDurationLabel}
       className="h-full"
       headerClassName="mb-2"
+      titleClassName="text-16"
     >
       <AsyncContent
         loading={isProjectAnalyticsCountLoading}

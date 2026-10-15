@@ -158,7 +158,7 @@
         "users": "Completed vs pending work items",
         "cycles": "Cycle progress",
         "modules": "Module progress",
-        "intake": "Intake trends"
+        "intake": "Current status of intake created each month"
       },
       "empty": {
         "projects": "Create projects to see their status distribution",
@@ -219,7 +219,10 @@
         "in-progress": "In progress",
         "planned": "Planned",
         "paused": "Paused",
-        "epics": "Epics"
+        "epics": "Epics",
+        "cancelled": "Cancelled",
+        "snoozed": "Snoozed",
+        "unique_work_items": "Distinct work items"
       },
       "load_error": "Unable to load analytics. Please retry.",
       "previous": "Previous",
@@ -230,6 +233,7 @@
     "dashboard": {
       "project_progress": "Project progress",
       "monthly": "Monthly",
+      "custom_range": "Custom range",
       "project_progress_hint": "{completed} of {total} work items completed · {percentage}%",
       "all_time": "All time",
       "periods": {
@@ -239,6 +243,42 @@
         "last_3_months": "Last 3 months"
       },
       "empty_project": "0 work items"
+    },
+    "preview": {
+      "projects": "Project progress",
+      "insights": "Quick insights",
+      "projects_tab": "Project progress (Preview)",
+      "insights_tab": "Quick insights (Preview)",
+      "note": "Preview · Live data for the current filters",
+      "project_comparison": "Project comparison",
+      "metric": "Metric",
+      "show_all": "Show all",
+      "group_by": "Group by",
+      "estimate_points": "Estimate points",
+      "hide_chart": "Hide insights",
+      "show_chart": "Show insights",
+      "breakdown": "Group details",
+      "distribution": "Distribution",
+      "click_chart": "Select a bar or legend to filter details. Select it again to clear.",
+      "group_total": "Group total",
+      "assignee_counts": "Work items with multiple assignees count in each assignee group.",
+      "show_real": "View real data",
+      "show_demo": "View demo data",
+      "demo_note": "Demo data · Jan–Aug 2026. Preview only; top filters do not apply."
+    },
+    "methodology": {
+      "completion": "Completion = completed ÷ (total − cancelled); 0% for empty or fully cancelled scopes.",
+      "intake": "Grouped by intake creation month and current status, not the number of processing events that month.",
+      "duplicates": "Work items may belong to multiple people or labels. Group counts cannot be summed as a distinct total.",
+      "trend": "Counts by creation date and completion date of currently completed items. Reopening can change past values; these are not transition counts.",
+      "cycle": "Reconstructed from the current scope, not historical snapshots. Cancelled items are excluded; scope changes and reopening can change the curve. In progress is shown only for today.",
+      "cohort": "Time filters select work items by creation date; status and membership reflect their current values.",
+      "range": "Reporting period: {start} to {end}; only dates within this interval are counted.",
+      "current_completed": "Currently completed",
+      "remaining": "Remaining {entity}",
+      "reconstructed": "Reconstructed from current scope and completion dates, excluding cancellations; not historical snapshots. History is left blank when completion dates are missing.",
+      "no_effective": "All cancelled",
+      "daily": "Daily"
     }
   },
   "workspace_projects": {

@@ -33,7 +33,7 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
   // plane hooks
   const { t } = useTranslation();
   // derived values
-  const closedIssues = cycle ? cycle.completed_issues + cycle.cancelled_issues : 0;
+  const closedIssues = cycle ? cycle.completed_issues : 0;
   const closableIssues = cycle ? cycle.total_issues - cycle.cancelled_issues : 0;
   const progressValue = closableIssues > 0 ? (closedIssues / closableIssues) * 100 : 0;
   const groupedIssues: any = cycle
@@ -53,8 +53,8 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
           <h3 className="text-14 font-semibold text-tertiary">{t("project_cycles.active_cycle.progress")}</h3>
           {cycle.total_issues > 0 && (
             <span className="flex gap-1 rounded-xs px-3 py-1 text-13 font-medium whitespace-nowrap text-placeholder">
-              {`${cycle.completed_issues + cycle.cancelled_issues}/${cycle.total_issues - cycle.cancelled_issues} ${
-                cycle.completed_issues + cycle.cancelled_issues > 1 ? "Work items" : "Work item"
+              {`${cycle.completed_issues}/${cycle.total_issues - cycle.cancelled_issues} ${
+                cycle.completed_issues > 1 ? "Work items" : "Work item"
               } closed`}
             </span>
           )}

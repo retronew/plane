@@ -41,12 +41,15 @@ export type TAnalyticsTabsBase = "overview" | "work-items";
 export type TAnalyticsGraphsBase = "projects" | "work-items" | "custom-work-items";
 export type TAnalyticsDetailTab = "projects" | "users" | "cycles" | "modules" | "intake";
 export interface AnalyticsTab {
-  key: TAnalyticsTabsBase | TAnalyticsDetailTab;
+  key: TAnalyticsTabsBase | TAnalyticsDetailTab | "project-progress-preview" | "quick-insights-preview";
   label: string;
   content: React.FC;
   isDisabled: boolean;
 }
 export type TAnalyticsFilterParams = {
+  x_axis?: ChartXAxisProperty;
+  y_axis?: ChartYAxisMetric;
+  group_by?: ChartXAxisProperty;
   date_filter?: string;
   project_ids?: string;
   cycle_id?: string;
@@ -67,6 +70,8 @@ export interface IAnalyticsResponseFields {
 // chart types
 
 export interface IChartResponse {
+  granularity?: "day" | "month";
+  period?: { start: string; end: string };
   schema: Record<string, string>;
   data: TChartData<string, string>[];
 }
@@ -109,5 +114,8 @@ export interface IAnalyticsDetailsResponse {
     completed?: number;
     accepted?: number;
     rejected?: number;
+    snoozed?: number;
+    duplicate?: number;
+    cancelled?: number;
   }[];
 }

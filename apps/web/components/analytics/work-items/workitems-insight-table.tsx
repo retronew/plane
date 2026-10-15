@@ -140,7 +140,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         meta: {
           export: {
             key: columnsLabels["backlog_work_items"],
-            value: (row) => row.original.backlog_work_items.toString(),
+            value: (row) => row.original.backlog_work_items,
           },
         },
       },
@@ -151,7 +151,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         meta: {
           export: {
             key: columnsLabels["started_work_items"],
-            value: (row) => row.original.started_work_items.toString(),
+            value: (row) => row.original.started_work_items,
           },
         },
       },
@@ -162,7 +162,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         meta: {
           export: {
             key: columnsLabels["un_started_work_items"],
-            value: (row) => row.original.un_started_work_items.toString(),
+            value: (row) => row.original.un_started_work_items,
           },
         },
       },
@@ -173,7 +173,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         meta: {
           export: {
             key: columnsLabels["completed_work_items"],
-            value: (row) => row.original.completed_work_items.toString(),
+            value: (row) => row.original.completed_work_items,
           },
         },
       },
@@ -184,7 +184,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         meta: {
           export: {
             key: columnsLabels["cancelled_work_items"],
-            value: (row) => row.original.cancelled_work_items.toString(),
+            value: (row) => row.original.cancelled_work_items,
           },
         },
       },

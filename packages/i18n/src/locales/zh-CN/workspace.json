@@ -158,7 +158,7 @@
         "users": "已完成与待处理工作项",
         "cycles": "周期进度",
         "modules": "模块进度",
-        "intake": "收集趋势"
+        "intake": "各月新增收件的当前状态"
       },
       "empty": {
         "projects": "创建项目后即可查看状态分布",
@@ -219,7 +219,10 @@
         "in-progress": "进行中",
         "planned": "已计划",
         "paused": "已暂停",
-        "epics": "史诗"
+        "epics": "史诗",
+        "cancelled": "已取消",
+        "snoozed": "已延后",
+        "unique_work_items": "去重工作项"
       },
       "load_error": "暂时无法加载分析数据，请重试",
       "previous": "上一页",
@@ -230,6 +233,7 @@
     "dashboard": {
       "project_progress": "项目进展",
       "monthly": "按月统计",
+      "custom_range": "自定义范围",
       "project_progress_hint": "已完成 {completed} / {total} 个工作项 · 完成率 {percentage}%",
       "all_time": "全部时间",
       "periods": {
@@ -239,6 +243,42 @@
         "last_3_months": "最近 3 个月"
       },
       "empty_project": "0 个工作项"
+    },
+    "preview": {
+      "projects": "项目进展",
+      "insights": "随手洞察",
+      "projects_tab": "项目进展（预览）",
+      "insights_tab": "随手洞察（预览）",
+      "note": "预览方案 · 使用当前筛选范围的真实数据",
+      "project_comparison": "项目对比",
+      "metric": "统计指标",
+      "show_all": "显示全部",
+      "group_by": "分组维度",
+      "estimate_points": "估算点数",
+      "hide_chart": "收起洞察",
+      "show_chart": "展开洞察",
+      "breakdown": "分组明细",
+      "distribution": "数据分布",
+      "click_chart": "点击图表或图例筛选明细，再次点击取消选择。",
+      "group_total": "分组总计",
+      "assignee_counts": "多位负责人共同负责的工作项，会计入各自的分组。",
+      "show_real": "查看真实数据",
+      "show_demo": "查看演示数据",
+      "demo_note": "演示数据 · 2026 年 1–8 月，仅用于预览，不受顶部筛选影响。"
+    },
+    "methodology": {
+      "completion": "完成率 = 已完成 ÷（全部 − 已取消）；全部取消或无工作项时为 0%。",
+      "intake": "按收件创建月份分组，展示这些收件当前的状态，不代表当月处理次数。",
+      "duplicates": "同一工作项可属于多人或多个标签，各组数量不能相加作为去重总数。",
+      "trend": "按创建日期和当前已完成工作项的完成日期分别计数；重开会改变历史值，不代表状态变更次数。",
+      "cycle": "按当前有效范围回算，非历史快照；当前范围排除取消，范围调整或重开会改变曲线。进行中仅展示今天的数量。",
+      "cohort": "时间筛选按创建日期限定工作项，状态及归属展示当前值。",
+      "range": "统计区间：{start} 至 {end}；仅统计区间内日期。",
+      "current_completed": "当前已完成",
+      "remaining": "剩余{entity}",
+      "reconstructed": "按当前范围和完成日期回算，排除取消；并非历史快照。缺少完成日期时历史曲线留空，不推测日期。",
+      "no_effective": "全部已取消",
+      "daily": "按日统计"
     }
   },
   "workspace_projects": {

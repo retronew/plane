@@ -7,7 +7,7 @@
 // plane imports
 import { AsyncContent } from "@/components/common/async-content";
 import { ChartLoader } from "@/components/analytics/loaders";
-import { STATE_GROUPS } from "@plane/constants";
+import { CHART_STATE_COLORS, STATE_GROUPS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { PieChart } from "@plane/blocks/charts/pie-chart";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
@@ -27,9 +27,10 @@ function renderStateTooltip({ active, payload }: ProfileChartTooltipContentProps
   return <ProfileChartTooltip label={payload[0].name} value={payload[0].value} color={payload[0].payload.color} />;
 }
 
-export function ProfileStateDistribution({ stateDistribution, userProfile }: Props) {
+export function ProfileStateDistribution({ userProfile }: Props) {
   const { t } = useTranslation();
   const distribution = userProfile?.state_distribution ?? [];
+  const total = distribution.reduce((sum, group) => sum + group.state_count, 0);
 
   return (
     <div className="flex flex-col space-y-2">
@@ -53,12 +54,12 @@ export function ProfileStateDistribution({ stateDistribution, userProfile }: Pro
                     key: group.state_group,
                     value: group.state_count,
                     name: STATE_GROUPS[group.state_group].label,
-                    color: STATE_GROUPS[group.state_group]?.color,
+                    color: CHART_STATE_COLORS[group.state_group],
                   })) ?? []
                 }
                 cells={distribution.map((group) => ({
                   key: group.state_group,
-                  fill: STATE_GROUPS[group.state_group]?.color,
+                  fill: CHART_STATE_COLORS[group.state_group],
                 }))}
                 showTooltip
                 tooltipLabel={t("web.count")}
@@ -70,19 +71,21 @@ export function ProfileStateDistribution({ stateDistribution, userProfile }: Pro
               />
               <div className="flex items-center">
                 <div className="w-full space-y-1.5">
-                  {stateDistribution.map((group) => (
+                  {distribution.map((group) => (
                     <div key={group.state_group} className="flex items-center justify-between gap-2 text-11">
                       <div className="flex items-center gap-1.5">
                         <div
                           className="h-2.5 w-2.5 rounded-xs"
                           style={{
                             backgroundColor:
-                              STATE_GROUPS[group.state_group]?.color ?? "var(--background-color-accent-primary)",
+                              CHART_STATE_COLORS[group.state_group] ?? "var(--background-color-accent-primary)",
                           }}
                         />
                         <div className="whitespace-nowrap">{STATE_GROUPS[group.state_group].label}</div>
                       </div>
-                      <div>{group.state_count}</div>
+                      <div className="tabular-nums">
+                        {group.state_count} · {total ? Math.round((group.state_count * 100) / total) : 0}%
+                      </div>
                     </div>
                   ))}
                 </div>

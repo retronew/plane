@@ -8,9 +8,10 @@ import React from "react";
 import { CHART_SERIES_COLORS } from "@plane/constants";
 // plane imports
 import { AreaChart } from "@plane/blocks/charts/area-chart";
-import type { TChartData, TModuleCompletionChartDistribution } from "@plane/types";
-import { renderFormattedDateWithoutYear } from "@plane/utils";
-import { translate } from "@plane/i18n";
+import type { TModuleCompletionChartDistribution } from "@plane/types";
+import { StatisticsNote } from "@/components/analytics/statistics-note";
+import { progressChartData } from "./progress-data";
+import { getCurrentLanguage, translate } from "@plane/i18n";
 
 type Props = {
   distribution: TModuleCompletionChartDistribution;
@@ -20,14 +21,11 @@ type Props = {
 };
 
 function ProgressChart({ distribution, totalIssues, className = "", plotTitle = "work items" }: Props) {
-  const chartData: TChartData<string, string>[] = Object.keys(distribution ?? []).map((key, index) => ({
-    name: renderFormattedDateWithoutYear(key),
-    current: distribution[key] ?? 0,
-    ideal: totalIssues * (1 - index / Math.max(1, Object.keys(distribution ?? []).length - 1)),
-  }));
+  const chartData = progressChartData(distribution ?? {}, totalIssues);
 
   return (
-    <div className={`flex w-full items-center justify-center ${className}`}>
+    <div className={`flex w-full flex-col justify-center ${className}`}>
+      <StatisticsNote kind="reconstructed" />
       <AreaChart
         data={chartData}
         areas={[
@@ -36,9 +34,9 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
             label: translate("web.ui.current_plot", { title: plotTitle }),
             strokeColor: CHART_SERIES_COLORS[0],
             fill: CHART_SERIES_COLORS[0],
-            fillOpacity: 0.06,
+            fillOpacity: 0,
             showDot: true,
-            smoothCurves: true,
+            smoothCurves: false,
             strokeOpacity: 1,
             stackId: "bar-one",
           },
@@ -49,7 +47,7 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
             fill: "var(--text-color-tertiary)",
             fillOpacity: 0,
             showDot: true,
-            smoothCurves: true,
+            smoothCurves: false,
             strokeOpacity: 1,
             stackId: "bar-two",
             style: {
@@ -58,17 +56,27 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
             },
           },
         ]}
-        xAxis={{ key: "name", label: translate("web.date") }}
-        yAxis={{ key: "current", label: translate("web.completion") }}
-        margin={{ bottom: 30 }}
-        className="h-72 w-full"
+        xAxis={{
+          key: "timestamp",
+          type: "number",
+          scale: "time",
+          domain: [chartData[0]?.timestamp ?? 0, chartData.at(-1)?.timestamp ?? 0],
+          tickFormatter: (value) =>
+            new Intl.DateTimeFormat(getCurrentLanguage(), {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            }).format(value),
+          label: translate("web.date"),
+        }}
+        yAxis={{ key: "current", label: translate("workspace_analytics.methodology.remaining", { entity: plotTitle }) }}
+        margin={{ bottom: 5 }}
+        className="h-64 w-full"
         legend={{
           align: "center",
           verticalAlign: "bottom",
           layout: "horizontal",
-          wrapperStyles: {
-            marginTop: 20,
-          },
         }}
       />
     </div>

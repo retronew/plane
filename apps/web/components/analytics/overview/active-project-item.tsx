@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { useParams } from "next/navigation";
 import { Link } from "react-router";
 import { FolderKanban } from "lucide-react";
@@ -13,19 +14,19 @@ import { cn } from "@plane/utils";
 import { useTranslation } from "@plane/i18n";
 import { useProject } from "@/hooks/store/use-project";
 
-type Props = { project: { id: string; completed_issues?: number; total_issues?: number } };
+type Props = { project: { id: string; completed_issues?: number; total_issues?: number; cancelled_issues?: number } };
 export default function ActiveProjectItem({ project }: Props) {
   const { workspaceSlug } = useParams();
   const { getProjectById } = useProject();
   const { t } = useTranslation();
   const details = getProjectById(project.id);
   if (!details) return null;
-  const total = project.total_issues ?? 0,
+  const total = Math.max(0, (project.total_issues ?? 0) - (project.cancelled_issues ?? 0)),
     done = project.completed_issues ?? 0;
   const percentage = total ? Math.round((done / total) * 100) : 0;
   return (
     <Tooltip
-      label={`${details.name} · ${t("workspace_analytics.dashboard.project_progress_hint", { completed: done, total, percentage })}`}
+      label={`${details.name} · ${t("workspace_analytics.dashboard.project_progress_hint", { completed: done, total, percentage })} · ${t("workspace_analytics.methodology.completion")}`}
     >
       <Link
         to={`/${workspaceSlug}/projects/${project.id}/issues/`}
@@ -45,12 +46,18 @@ export default function ActiveProjectItem({ project }: Props) {
               <span className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-[var(--border-subtle)]">
                 <span
                   className="block h-full rounded-full"
-                  style={{ width: `${percentage}%`, backgroundColor: "light-dark(#48897d, #80b8a8)" }}
+                  style={{ width: `${percentage}%`, backgroundColor: CHART_SEMANTIC_COLORS.completed }}
                 />
               </span>
             )}
             <span className="shrink-0 text-11 text-tertiary tabular-nums">
-              {total ? `${done} / ${total}` : t("workspace_analytics.dashboard.empty_project")}
+              {total
+                ? `${done} / ${total}`
+                : t(
+                    (project.total_issues ?? 0) > 0
+                      ? "workspace_analytics.methodology.no_effective"
+                      : "workspace_analytics.dashboard.empty_project"
+                  )}
             </span>
           </div>
         </div>
@@ -58,7 +65,7 @@ export default function ActiveProjectItem({ project }: Props) {
           <span
             className={cn(
               "shrink-0 rounded-sm px-1.5 py-0.5 text-11 tabular-nums",
-              percentage > 50 ? "bg-success-subtle text-success-primary" : "bg-layer-2 text-secondary"
+              percentage > 50 ? "bg-success-subtle text-success-primary" : "bg-[var(--border-subtle)] text-secondary"
             )}
           >
             {percentage}%

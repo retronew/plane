@@ -5,7 +5,7 @@
  */
 
 // plane imports
-import { STATE_GROUPS } from "@plane/constants";
+import { CHART_STATE_COLORS, STATE_GROUPS } from "@plane/constants";
 // types
 import { useTranslation } from "@plane/i18n";
 import type { IUserStateDistribution } from "@plane/types";
@@ -28,7 +28,7 @@ export function ProfileWorkload({ stateDistribution }: Props) {
             <div className="flex min-w-0 items-center gap-1.5">
               <span
                 className="size-2.5 shrink-0 rounded-xs"
-                style={{ backgroundColor: STATE_GROUPS[group.state_group].color }}
+                style={{ backgroundColor: CHART_STATE_COLORS[group.state_group] }}
               />
               <p className="truncate text-body-xs-regular text-secondary">
                 {group.state_group === "unstarted"

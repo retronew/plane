@@ -5,7 +5,7 @@
  */
 
 // plane package imports
-import { CHART_PRIORITY_COLORS } from "@plane/constants";
+import { CHART_PRIORITY_COLORS, CHART_STATE_COLORS } from "@plane/constants";
 import type { ChartYAxisMetric, IState } from "@plane/types";
 import { ChartXAxisProperty } from "@plane/types";
 
@@ -26,6 +26,10 @@ export const generateBarColor = (
   // Priority
   if (params.x_axis === ChartXAxisProperty.PRIORITY) {
     color = CHART_PRIORITY_COLORS[value as keyof typeof CHART_PRIORITY_COLORS] ?? CHART_PRIORITY_COLORS.none;
+  }
+
+  if (params.x_axis === ChartXAxisProperty.STATE_GROUPS) {
+    color = CHART_STATE_COLORS[value as keyof typeof CHART_STATE_COLORS] ?? baseColors[0];
   }
 
   // State

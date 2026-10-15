@@ -20,7 +20,7 @@ function AnalyticsWrapper(props: Props) {
   const { i18nTitle, children, className, hideTitle } = props;
   const { t } = useTranslation();
   return (
-    <div className={cn("px-6 py-4", className)}>
+    <div className={cn("px-6 py-6", className)}>
       {!hideTitle && <h1 className="mb-5 text-20 font-semibold">{t(i18nTitle)}</h1>}
       {children}
     </div>

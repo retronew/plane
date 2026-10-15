@@ -69,13 +69,15 @@ export const ModuleAnalyticsProgress = observer(function ModuleAnalyticsProgress
   const totalIssues = moduleDetails?.total_issues || 0;
   const completedEstimatePoints = moduleDetails?.completed_estimate_points || 0;
   const totalEstimatePoints = moduleDetails?.total_estimate_points || 0;
+  const effectiveIssues = Math.max(0, totalIssues - (moduleDetails?.cancelled_issues || 0));
+  const effectivePoints = Math.max(0, totalEstimatePoints - (moduleDetails?.cancelled_estimate_points || 0));
   const progressHeaderPercentage = moduleDetails
     ? plotType === "points"
-      ? completedEstimatePoints != 0 && totalEstimatePoints != 0
-        ? Math.round((completedEstimatePoints / totalEstimatePoints) * 100)
+      ? completedEstimatePoints != 0 && effectivePoints != 0
+        ? Math.round((completedEstimatePoints / effectivePoints) * 100)
         : 0
-      : completedIssues != 0 && totalIssues != 0
-        ? Math.round((completedIssues / totalIssues) * 100)
+      : completedIssues != 0 && effectiveIssues != 0
+        ? Math.round((completedIssues / effectiveIssues) * 100)
         : 0
     : 0;
   const chartDistributionData =
@@ -132,13 +134,13 @@ export const ModuleAnalyticsProgress = observer(function ModuleAnalyticsProgress
             {plotType === "points" ? (
               <ProgressChart
                 distribution={completionChartDistributionData}
-                totalIssues={totalEstimatePoints}
+                totalIssues={effectivePoints}
                 plotTitle={"points"}
               />
             ) : (
               <ProgressChart
                 distribution={completionChartDistributionData}
-                totalIssues={totalIssues}
+                totalIssues={effectiveIssues}
                 plotTitle={t("web.work_items_2")}
               />
             )}

@@ -85,13 +85,16 @@ export const ActiveCycleProductivity = observer(function ActiveCycleProductivity
                     {estimateType === "points" ? (
                       <ProgressChart
                         distribution={completionChartDistributionData}
-                        totalIssues={cycle.total_estimate_points || 0}
+                        totalIssues={Math.max(
+                          0,
+                          (cycle.total_estimate_points || 0) - (cycle.cancelled_estimate_points || 0)
+                        )}
                         plotTitle={"points"}
                       />
                     ) : (
                       <ProgressChart
                         distribution={completionChartDistributionData}
-                        totalIssues={cycle.total_issues || 0}
+                        totalIssues={Math.max(0, (cycle.total_issues || 0) - (cycle.cancelled_issues || 0))}
                         plotTitle={t("web.work_items_2")}
                       />
                     )}

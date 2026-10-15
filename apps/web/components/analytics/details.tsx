@@ -21,18 +21,44 @@ import type { TInsightTableFeatures } from "./insight-table/table-features";
 import { TableLoader } from "./insight-table/loader";
 import { AnalyticsDetailsLoader } from "./loaders";
 import { AsyncContent } from "@/components/common/async-content";
-import { CHART_SERIES_COLORS } from "@plane/constants";
+import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { exportAnalytics } from "./export";
 import { AnalyticsExportMenu } from "./export-menu";
 import AnalyticsRequestError from "./request-error";
 
+import { StatisticsNote } from "./statistics-note";
+
 const service = new AnalyticsService();
 export const DETAIL_COLUMNS: Record<TAnalyticsDetailTab, string[]> = {
-  projects: ["name", "members", "epics", "work_items", "cycles", "modules", "pages", "views", "intake", "completion"],
-  users: ["name", "started", "unstarted", "completed"],
-  cycles: ["name", "project", "lead", "start_date", "end_date", "work_items", "completion"],
-  modules: ["name", "lead", "project", "start_date", "end_date", "status", "completion"],
-  intake: ["name", "pending", "accepted", "rejected", "duplicate", "total"],
+  projects: [
+    "name",
+    "members",
+    "epics",
+    "work_items",
+    "completed",
+    "cancelled",
+    "cycles",
+    "modules",
+    "pages",
+    "views",
+    "intake",
+    "completion",
+  ],
+  users: ["name", "started", "unstarted", "completed", "cancelled"],
+  cycles: ["name", "project", "lead", "start_date", "end_date", "work_items", "completed", "cancelled", "completion"],
+  modules: [
+    "name",
+    "lead",
+    "project",
+    "start_date",
+    "end_date",
+    "status",
+    "work_items",
+    "completed",
+    "cancelled",
+    "completion",
+  ],
+  intake: ["name", "pending", "snoozed", "accepted", "rejected", "duplicate", "total"],
 };
 
 export const AnalyticsDetails = observer(function AnalyticsDetails({
@@ -111,11 +137,25 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
   );
   const bars = useMemo<TBarItem<string>[]>(() => {
     const keys =
-      tab === "projects" ? ["count"] : tab === "intake" ? ["accepted", "rejected"] : ["pending", "completed"];
-    return keys.map((key, index) => ({
+      tab === "projects"
+        ? ["count"]
+        : tab === "intake"
+          ? ["pending", "snoozed", "accepted", "rejected", "duplicate"]
+          : ["pending", "completed", "cancelled"];
+    const colors: Record<string, string> = {
+      count: CHART_SEMANTIC_COLORS.primary,
+      pending: CHART_SEMANTIC_COLORS.primary,
+      completed: CHART_SEMANTIC_COLORS.completed,
+      cancelled: CHART_SEMANTIC_COLORS.cancelled,
+      snoozed: CHART_SEMANTIC_COLORS.warning,
+      accepted: CHART_SEMANTIC_COLORS.completed,
+      rejected: CHART_SEMANTIC_COLORS.danger,
+      duplicate: CHART_SEMANTIC_COLORS.neutral,
+    };
+    return keys.map((key) => ({
       key,
       label: t(`workspace_analytics.details.fields.${key}`),
-      fill: CHART_SERIES_COLORS[index % CHART_SERIES_COLORS.length],
+      fill: colors[key],
       stackId: "progress",
       textClassName: "fill-primary",
     }));
@@ -147,8 +187,22 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
           minHeight={embedded ? 250 : 650}
         >
           <div className="flex flex-col gap-8">
+            <div className="space-y-1">
+              <StatisticsNote kind={tab === "intake" ? "intake" : "cohort"} />
+              {tab === "users" ? (
+                <StatisticsNote kind="duplicates" />
+              ) : (
+                tab !== "intake" && <StatisticsNote kind="completion" />
+              )}
+            </div>
             {!embedded && (
-              <div className="grid grid-cols-2 gap-6 lg:grid-cols-5">
+              <div
+                className={
+                  tab === "intake"
+                    ? "grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-6"
+                    : "grid grid-cols-2 gap-6 lg:grid-cols-5"
+                }
+              >
                 {Object.entries(data?.summary ?? {}).map(([key, count]) => (
                   <div key={key} className="flex flex-col gap-3">
                     <span className="text-13 text-tertiary">{label(key)}</span>
@@ -191,13 +245,27 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
                 }
               >
                 {chart.length ? (
-                  <BarChart
-                    className="h-72 w-full"
-                    data={chart.slice(page * 20, (page + 1) * 20)}
-                    bars={bars}
-                    xAxis={{ key: "name", label: "" }}
-                    yAxis={{ key: "count", label: label("count") }}
-                  />
+                  <div
+                    style={{
+                      height:
+                        tab === "users" || tab === "cycles" || tab === "modules"
+                          ? Math.max(160, Math.min(20, chart.length - page * 20) * 36 + 90)
+                          : 260,
+                    }}
+                  >
+                    <BarChart
+                      className="h-full w-full"
+                      barSize={24}
+                      layout={tab === "users" || tab === "cycles" || tab === "modules" ? "vertical" : "horizontal"}
+                      legend={
+                        bars.length > 1 ? { align: "center", verticalAlign: "bottom", layout: "horizontal" } : undefined
+                      }
+                      data={chart.slice(page * 20, (page + 1) * 20)}
+                      bars={bars}
+                      xAxis={{ key: "name", label: "" }}
+                      yAxis={{ key: "count", label: label("count") }}
+                    />
+                  </div>
                 ) : (
                   <AnalyticsEmptyState
                     className="min-h-44"

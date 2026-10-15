@@ -19,7 +19,10 @@ interface InsightTableProps<T extends Exclude<TAnalyticsTabsBase, "overview">> {
   columns: ColumnDef<TInsightTableFeatures, AnalyticsTableDataMap[T]>[];
   columnsLabels?: Record<string, string>;
   headerText: string;
-  onExport?: (rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[], format: AnalyticsExportFormat) => void;
+  onExport?: (
+    rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[],
+    format: AnalyticsExportFormat
+  ) => void | Promise<void>;
 }
 
 export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(

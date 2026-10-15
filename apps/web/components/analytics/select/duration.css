@@ -1,0 +1,8 @@
+/* Propel's rich popover is sized for forms; duration choices use compact menu spacing. */
+[data-analytics-duration] {
+  width: 240px;
+  min-width: 0;
+  padding: 4px;
+  gap: 0;
+  border-radius: 8px;
+}
