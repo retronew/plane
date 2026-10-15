@@ -52,9 +52,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
         period = get_chart_period_range(request.GET.get("date_filter"))
         if period:
             self.issues = self.issues.filter(created_at__date__gte=period[0], created_at__date__lte=period[1])
-            self.intake = self.intake.filter(
-                issue__created_at__date__gte=period[0], issue__created_at__date__lte=period[1]
-            )
+            self.intake = self.intake.filter(created_at__date__gte=period[0], created_at__date__lte=period[1])
         if tab == "projects":
             data = self.project_details()
         elif tab == "users":
@@ -73,6 +71,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
             "work_items": self.counts_by_project(self.issues),
             "epics": self.counts_by_project(self.issues.filter(type__is_epic=True)),
             "completed": self.counts_by_project(self.issues.filter(state__group="completed")),
+            "cancelled": self.counts_by_project(self.issues.filter(state__group="cancelled")),
             "members": self.counts_by_project(
                 ProjectMember.objects.filter(project_id__in=self.project_ids, is_active=True, member__is_bot=False)
             ),
@@ -98,7 +97,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 "status_group": project.status.group if project.status else "draft",
             }
             row.update({key: values.get(project.id, 0) for key, values in counts.items()})
-            row["completion"] = round(row["completed"] * 100 / row["work_items"]) if row["work_items"] else 0
+            effective = row["work_items"] - row["cancelled"]
+            row["completion"] = round(row["completed"] * 100 / effective) if effective else 0
             rows.append(row)
         groups = Counter(row["status"] or row["status_group"] for row in rows)
         return {
@@ -129,6 +129,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 started=Count("issue_id", filter=Q(issue__state__group="started"), distinct=True),
                 unstarted=Count("issue_id", filter=Q(issue__state__group__in=["backlog", "unstarted"]), distinct=True),
                 completed=Count("issue_id", filter=Q(issue__state__group="completed"), distinct=True),
+                cancelled=Count("issue_id", filter=Q(issue__state__group="cancelled"), distinct=True),
             )
         )
         counts = {row["assignee_id"]: row for row in grouped}
@@ -141,7 +142,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 {
                     "id": str(membership.member_id),
                     "name": membership.member.display_name or membership.member.first_name,
-                    **{key: counts_row.get(key, 0) for key in ["started", "unstarted", "completed"]},
+                    **{key: counts_row.get(key, 0) for key in ["started", "unstarted", "completed", "cancelled"]},
                 }
             )
         unassigned = self.issues.exclude(issue_assignee__deleted_at__isnull=True, issue_assignee__isnull=False)
@@ -153,6 +154,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                     "started": unassigned.filter(state__group="started").count(),
                     "unstarted": unassigned.filter(state__group__in=["backlog", "unstarted"]).count(),
                     "completed": unassigned.filter(state__group="completed").count(),
+                    "cancelled": unassigned.filter(state__group="cancelled").count(),
                 }
             )
         return {
@@ -161,6 +163,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 "total_admins": roles[20],
                 "total_members": roles[15],
                 "total_guests": roles[5],
+                "unique_work_items": self.issues.count(),
             },
             "rows": rows,
             "chart": [
@@ -169,7 +172,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                     "id": r["id"],
                     "pending": r["started"] + r["unstarted"],
                     "completed": r["completed"],
-                    "count": r["started"] + r["unstarted"] + r["completed"],
+                    "cancelled": r["cancelled"],
+                    "count": r["started"] + r["unstarted"] + r["completed"] + r["cancelled"],
                 }
                 for r in rows
             ],
@@ -186,6 +190,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
             .annotate(
                 work_items=Count("id", distinct=True),
                 completed=Count("id", filter=Q(state__group="completed"), distinct=True),
+                cancelled=Count("id", filter=Q(state__group="cancelled"), distinct=True),
             )
         )
         counts = {row[key]: row for row in grouped if row[key]}
@@ -216,6 +221,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
             statuses[state] += 1
             item = counts.get(entity.id, {})
             total, completed = item.get("work_items", 0), item.get("completed", 0)
+            cancelled = item.get("cancelled", 0)
+            effective = total - cancelled
             lead = entity.owned_by if is_cycle else entity.lead
             rows.append(
                 {
@@ -229,7 +236,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                     "status": state,
                     "work_items": total,
                     "completed": completed,
-                    "completion": round(completed * 100 / total) if total else 0,
+                    "cancelled": cancelled,
+                    "completion": round(completed * 100 / effective) if effective else 0,
                 }
             )
         keys = ["current", "upcoming", "completed"] if is_cycle else ["completed", "in-progress", "planned", "paused"]
@@ -241,7 +249,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                     "name": r["name"],
                     "count": r["work_items"],
                     "completed": r["completed"],
-                    "pending": r["work_items"] - r["completed"],
+                    "pending": r["work_items"] - r["completed"] - r["cancelled"],
+                    "cancelled": r["cancelled"],
                 }
                 for r in rows
             ],
@@ -253,6 +262,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
             .values("project_id", "project__name")
             .annotate(
                 pending=Count("id", filter=Q(status=-2)),
+                snoozed=Count("id", filter=Q(status=0)),
                 accepted=Count("id", filter=Q(status=1)),
                 rejected=Count("id", filter=Q(status=-1)),
                 duplicate=Count("id", filter=Q(status=2)),
@@ -264,12 +274,14 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 "id": str(r["project_id"]),
                 "name": r["project__name"],
                 "project_id": str(r["project_id"]),
-                **{k: r[k] for k in ["pending", "accepted", "rejected", "duplicate", "total"]},
+                **{k: r[k] for k in ["pending", "snoozed", "accepted", "rejected", "duplicate", "total"]},
             }
             for r in grouped
         ]
         summary = self.intake.aggregate(
             total_intake=Count("id"),
+            pending=Count("id", filter=Q(status=-2)),
+            snoozed=Count("id", filter=Q(status=0)),
             accepted=Count("id", filter=Q(status=1)),
             rejected=Count("id", filter=Q(status=-1)),
             duplicate=Count("id", filter=Q(status=2)),
@@ -279,14 +291,22 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
             .order_by("month")
             .values("month")
             .annotate(
-                accepted=Count("id", filter=Q(status=1)), rejected=Count("id", filter=Q(status=-1)), count=Count("id")
+                accepted=Count("id", filter=Q(status=1)),
+                rejected=Count("id", filter=Q(status=-1)),
+                pending=Count("id", filter=Q(status=-2)),
+                snoozed=Count("id", filter=Q(status=0)),
+                duplicate=Count("id", filter=Q(status=2)),
+                count=Count("id"),
             )
         )
         return {
             "summary": summary,
             "rows": rows,
             "chart": [
-                {"name": r["month"].strftime("%Y-%m"), **{k: r[k] for k in ["accepted", "rejected", "count"]}}
+                {
+                    "name": r["month"].strftime("%Y-%m"),
+                    **{k: r[k] for k in ["pending", "snoozed", "accepted", "rejected", "duplicate", "count"]},
+                }
                 for r in chart
             ],
         }

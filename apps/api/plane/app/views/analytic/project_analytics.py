@@ -7,9 +7,7 @@ from rest_framework import status
 from typing import Dict, Any
 from django.db.models import QuerySet, Q, Count
 from django.http import HttpRequest
-from django.db.models.functions import TruncMonth
 from django.utils import timezone
-from datetime import timedelta
 from plane.app.views.base import BaseAPIView
 from plane.app.permissions import ROLE, allow_permission
 from plane.db.models import (
@@ -24,6 +22,7 @@ from django.db import models
 from django.db.models import F, Case, When, Value
 from django.db.models.functions import Cast, Concat
 from plane.utils.build_chart import build_analytics_chart
+from plane.utils.analytics_trends import filter_trend_scope, work_item_trend
 from plane.utils.date_utils import (
     get_analytics_filters,
 )
@@ -181,138 +180,27 @@ class ProjectAdvanceAnalyticsStatsEndpoint(ProjectAdvanceAnalyticsBaseView):
 
 class ProjectAdvanceAnalyticsChartEndpoint(ProjectAdvanceAnalyticsBaseView):
     def work_item_completion_chart(self, project_id, cycle_id=None, module_id=None) -> Dict[str, Any]:
-        # Get the base queryset
-        queryset = (
-            Issue.issue_objects.filter(**self.filters["base_filters"])
-            .filter(project_id=project_id)
-            .select_related("workspace", "state", "parent")
-            .prefetch_related("assignees", "labels", "issue_module__module", "issue_cycle__cycle")
+        queryset = filter_trend_scope(
+            Issue.issue_objects.filter(**self.filters["base_filters"], project_id=project_id), self.request.GET
         )
-
-        if cycle_id is not None:
-            cycle_issues = CycleIssue.objects.filter(**self.filters["base_filters"], cycle_id=cycle_id).values_list(
-                "issue_id", flat=True
-            )
-            cycle = Cycle.objects.filter(id=cycle_id).first()
-            if cycle and cycle.start_date:
-                start_date = cycle.start_date.date()
-                end_date = cycle.end_date.date()
-            else:
-                return {"data": [], "schema": {}}
-            queryset = cycle_issues
-
-        elif module_id is not None:
-            module_issues = ModuleIssue.objects.filter(**self.filters["base_filters"], module_id=module_id).values_list(
-                "issue_id", flat=True
-            )
-            module = Module.objects.filter(id=module_id).first()
-            if module and module.start_date:
-                start_date = module.start_date
-                end_date = module.target_date
-            else:
-                return {"data": [], "schema": {}}
-            queryset = module_issues
-
+        daily = bool(cycle_id or module_id)
+        if cycle_id:
+            entity = Cycle.objects.filter(id=cycle_id, project_id=project_id).first()
+            if not entity or not entity.start_date or not entity.end_date:
+                return {"data": [], "schema": {}, "granularity": "day"}
+            start, end = timezone.localtime(entity.start_date).date(), timezone.localtime(entity.end_date).date()
+        elif module_id:
+            entity = Module.objects.filter(id=module_id, project_id=project_id).first()
+            if not entity or not entity.start_date or not entity.target_date:
+                return {"data": [], "schema": {}, "granularity": "day"}
+            start, end = entity.start_date, entity.target_date
         else:
-            project = Project.objects.filter(id=project_id).first()
-            if project.created_at:
-                start_date = project.created_at.date().replace(day=1)
-            else:
-                return {"data": [], "schema": {}}
-
-        if cycle_id or module_id:
-            # Get daily stats with optimized query
-            daily_stats = (
-                queryset.values("created_at__date")
-                .annotate(
-                    created_count=Count("id"),
-                    completed_count=Count("id", filter=Q(issue__state__group="completed")),
-                )
-                .order_by("created_at__date")
-            )
-
-            # Create a dictionary of existing stats with summed counts
-            stats_dict = {
-                stat["created_at__date"].strftime("%Y-%m-%d"): {
-                    "created_count": stat["created_count"],
-                    "completed_count": stat["completed_count"],
-                }
-                for stat in daily_stats
-            }
-
-            # Generate data for all days in the range
-            data = []
-            current_date = start_date
-            while current_date <= end_date:
-                date_str = current_date.strftime("%Y-%m-%d")
-                stats = stats_dict.get(date_str, {"created_count": 0, "completed_count": 0})
-                data.append(
-                    {
-                        "key": date_str,
-                        "name": date_str,
-                        "count": stats["created_count"] + stats["completed_count"],
-                        "completed_issues": stats["completed_count"],
-                        "created_issues": stats["created_count"],
-                    }
-                )
-                current_date += timedelta(days=1)
-        else:
-            # Apply date range filter if available
-            if self.filters["chart_period_range"]:
-                start_date, end_date = self.filters["chart_period_range"]
-                queryset = queryset.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
-
-            # Annotate by month and count
-            monthly_stats = (
-                queryset.annotate(month=TruncMonth("created_at"))
-                .values("month")
-                .annotate(
-                    created_count=Count("id"),
-                    completed_count=Count("id", filter=Q(state__group="completed")),
-                )
-                .order_by("month")
-            )
-
-            # Create dictionary of month -> counts
-            stats_dict = {
-                stat["month"].strftime("%Y-%m-%d"): {
-                    "created_count": stat["created_count"],
-                    "completed_count": stat["completed_count"],
-                }
-                for stat in monthly_stats
-            }
-
-            # Generate monthly data (ensure months with 0 count are included)
-            data = []
-            # include the current date at the end
-            end_date = timezone.now().date()
-            last_month = end_date.replace(day=1)
-            current_month = start_date
-
-            while current_month <= last_month:
-                date_str = current_month.strftime("%Y-%m-%d")
-                stats = stats_dict.get(date_str, {"created_count": 0, "completed_count": 0})
-                data.append(
-                    {
-                        "key": date_str,
-                        "name": date_str,
-                        "count": stats["created_count"],
-                        "completed_issues": stats["completed_count"],
-                        "created_issues": stats["created_count"],
-                    }
-                )
-                # Move to next month
-                if current_month.month == 12:
-                    current_month = current_month.replace(year=current_month.year + 1, month=1)
-                else:
-                    current_month = current_month.replace(month=current_month.month + 1)
-
-        schema = {
-            "completed_issues": "completed_issues",
-            "created_issues": "created_issues",
-        }
-
-        return {"data": data, "schema": schema}
+            entity = Project.objects.get(id=project_id)
+            start, end = timezone.localtime(entity.created_at).date(), timezone.localdate()
+        if self.filters["chart_period_range"]:
+            selected_start, selected_end = self.filters["chart_period_range"]
+            start, end = max(start, selected_start), min(end, selected_end)
+        return work_item_trend(queryset, start, end, daily=daily)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request: HttpRequest, slug: str, project_id: str) -> Response:

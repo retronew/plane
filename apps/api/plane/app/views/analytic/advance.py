@@ -7,7 +7,6 @@ from rest_framework import status
 from typing import Dict, List, Any
 from django.db.models import QuerySet, Q, Count
 from django.http import HttpRequest
-from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from plane.app.views.base import BaseAPIView
 from plane.app.permissions import ROLE, allow_permission
@@ -23,6 +22,7 @@ from plane.db.models import (
     ProjectMember,
 )
 from plane.utils.build_chart import build_analytics_chart
+from plane.utils.analytics_trends import filter_trend_scope, work_item_trend
 from plane.utils.date_utils import (
     get_analytics_filters,
 )
@@ -230,65 +230,13 @@ class AdvanceAnalyticsChartEndpoint(AdvanceAnalyticsBaseView):
         ]
 
     def work_item_completion_chart(self) -> Dict[str, Any]:
-        queryset = Issue.issue_objects.filter(**self.filters["base_filters"])
+        queryset = filter_trend_scope(Issue.issue_objects.filter(**self.filters["base_filters"]), self.request.GET)
         workspace = Workspace.objects.get(slug=self._workspace_slug)
-        start_date = workspace.created_at.date().replace(day=1)
-        end_date = timezone.localdate()
-        if self.filters["chart_period_range"]:
-            start_date, end_date = self.filters["chart_period_range"]
-
-        # Created and completed are independent event dates. A work item created last
-        # month and completed this month belongs to different buckets in each series.
-        created = (
-            queryset.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
-            .annotate(month=TruncMonth("created_at"))
-            .values("month")
-            .annotate(count=Count("id"))
+        start, end = self.filters["chart_period_range"] or (
+            timezone.localtime(workspace.created_at).date(),
+            timezone.localdate(),
         )
-        completed = (
-            queryset.filter(
-                completed_at__date__gte=start_date, completed_at__date__lte=end_date, state__group="completed"
-            )
-            .annotate(month=TruncMonth("completed_at"))
-            .values("month")
-            .annotate(count=Count("id"))
-        )
-        stats_dict = {}
-        for series, key in [(created, "created_count"), (completed, "completed_count")]:
-            for row in series:
-                date_str = row["month"].strftime("%Y-%m-%d")
-                stats_dict.setdefault(date_str, {"created_count": 0, "completed_count": 0})[key] = row["count"]
-
-        # Generate monthly data (ensure months with 0 count are included)
-        data = []
-        # include the current date at the end
-        last_month = end_date.replace(day=1)
-        current_month = start_date.replace(day=1)
-
-        while current_month <= last_month:
-            date_str = current_month.strftime("%Y-%m-%d")
-            stats = stats_dict.get(date_str, {"created_count": 0, "completed_count": 0})
-            data.append(
-                {
-                    "key": date_str,
-                    "name": date_str,
-                    "count": stats["created_count"],
-                    "completed_issues": stats["completed_count"],
-                    "created_issues": stats["created_count"],
-                }
-            )
-            # Move to next month
-            if current_month.month == 12:
-                current_month = current_month.replace(year=current_month.year + 1, month=1)
-            else:
-                current_month = current_month.replace(month=current_month.month + 1)
-
-        schema = {
-            "completed_issues": "completed_issues",
-            "created_issues": "created_issues",
-        }
-
-        return {"data": data, "schema": schema}
+        return work_item_trend(queryset, start, end)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request: HttpRequest, slug: str) -> Response:

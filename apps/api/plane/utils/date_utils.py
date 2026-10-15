@@ -7,6 +7,21 @@ from django.utils import timezone
 from typing import Dict, Optional, List, Union, Tuple, Any
 
 from plane.db.models import User
+from rest_framework.exceptions import ValidationError
+
+
+def get_custom_analytics_range(date_filter: Optional[str]) -> Optional[Tuple[date, date]]:
+    """A closed, inclusive custom interval shared by counters, details and charts."""
+    if not date_filter or not date_filter.startswith("custom:"):
+        return None
+    try:
+        _, raw_start, raw_end = date_filter.split(":")
+        start, end = date.fromisoformat(raw_start), date.fromisoformat(raw_end)
+        if start > end or start.isoformat() != raw_start or end.isoformat() != raw_end:
+            raise ValueError
+        return start, end
+    except (ValueError, TypeError):
+        raise ValidationError({"date_filter": "Invalid custom date range"})
 
 
 def get_analytics_date_range(
@@ -28,6 +43,15 @@ def get_analytics_date_range(
     """
     if not date_filter:
         return None
+
+    custom = get_custom_analytics_range(date_filter)
+    if custom:
+        return {
+            "current": {
+                "gte": datetime.combine(custom[0], datetime.min.time()),
+                "lte": datetime.combine(custom[1], datetime.max.time()),
+            }
+        }
 
     today = timezone.now().date()
 
@@ -100,13 +124,18 @@ def get_chart_period_range(
             - "last_7_days": Last 7 days
             - "last_30_days": Last 30 days
             - "last_3_months": Last 90 days
-            Defaults to "last_7_days" if not specified or invalid.
+            Custom ranges use "custom:YYYY-MM-DD:YYYY-MM-DD" (inclusive).
+            Returns None if no supported preset is selected.
 
     Returns:
         tuple: A tuple containing (start_date, end_date) as date objects
     """
     if not date_filter:
         return None
+
+    custom = get_custom_analytics_range(date_filter)
+    if custom:
+        return custom
 
     today = timezone.now().date()
     period_ranges = {

@@ -397,6 +397,7 @@ class ProjectStatsEndpoint(BaseAPIView):
         valid_fields = {
             "total_issues",
             "completed_issues",
+            "cancelled_issues",
             "total_members",
             "total_cycles",
             "total_modules",
@@ -433,6 +434,14 @@ class ProjectStatsEndpoint(BaseAPIView):
         if "completed_issues" in requested_fields:
             annotations["completed_issues"] = (
                 Issue.issue_objects.filter(project_id=OuterRef("pk"), state__group="completed", **issue_filters)
+                .order_by()
+                .annotate(count=Func(F("id"), function="Count"))
+                .values("count")
+            )
+
+        if "cancelled_issues" in requested_fields:
+            annotations["cancelled_issues"] = (
+                Issue.issue_objects.filter(project_id=OuterRef("pk"), state__group="cancelled", **issue_filters)
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")

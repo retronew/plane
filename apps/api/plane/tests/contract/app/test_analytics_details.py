@@ -90,7 +90,14 @@ def test_progress_uses_actual_associations_and_completed_states(session_client, 
 
 def test_intake_uses_all_five_actual_statuses(session_client, workspace, analytics_records):
     response = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {"type": "intake"})
-    assert response.data["summary"] == {"total_intake": 5, "accepted": 1, "rejected": 1, "duplicate": 1}
+    assert response.data["summary"] == {
+        "total_intake": 5,
+        "accepted": 1,
+        "rejected": 1,
+        "duplicate": 1,
+        "pending": 1,
+        "snoozed": 1,
+    }
     assert response.data["rows"][0]["pending"] == 1
     assert response.data["rows"][0]["total"] == 5
     assert response.data["chart"][0]["count"] == 5
@@ -217,6 +224,7 @@ def test_detail_period_filters_real_workload_without_removing_current_structure(
     project, _, first, completed, *_ = analytics_records
     old = timezone.now() - timedelta(days=40)
     Issue.objects.filter(project=project).update(created_at=old)
+    IntakeIssue.objects.filter(project=project).update(created_at=old)
     Issue.objects.filter(id=first.id).update(created_at=timezone.now())
     response = session_client.get(
         f"/api/workspaces/{workspace.slug}/advance-analytics-details/",
@@ -243,6 +251,7 @@ def test_overview_period_keeps_current_members_and_projects_but_filters_created_
     project, _, first, completed, *_ = analytics_records
     old = timezone.now() - timedelta(days=40)
     Issue.objects.filter(project=project).update(created_at=old)
+    IntakeIssue.objects.filter(project=project).update(created_at=old)
     Issue.objects.filter(id=first.id).update(created_at=timezone.now())
     Project.objects.filter(id=project.id).update(created_at=old)
     WorkspaceMember.objects.filter(workspace=workspace, member=create_user).update(created_at=old)
@@ -257,3 +266,213 @@ def test_overview_period_keeps_current_members_and_projects_but_filters_created_
     )
     assert stats.data[0]["total_issues"] == 1
     assert stats.data[0]["completed_issues"] == 0
+
+
+def test_custom_interval_is_inclusive_and_shared_by_all_overview_regions(session_client, workspace, analytics_records):
+    project, _, first, second, *_ = analytics_records
+    today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start = today - timedelta(days=3)
+    end = today - timedelta(days=2)
+    Issue.objects.filter(project=project).update(created_at=today - timedelta(days=10))
+    Issue.objects.filter(pk=first.pk).update(created_at=start)
+    Issue.objects.filter(pk=second.pk).update(created_at=end + timedelta(hours=23, minutes=59), completed_at=end)
+    params = {"project_ids": str(project.id), "date_filter": f"custom:{start.date()}:{end.date()}"}
+    overview = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics/", {**params, "tab": "overview"})
+    assert overview.status_code == 200
+    assert overview.data["total_work_items"]["count"] == 2
+    assert overview.data["total_projects"]["count"] == 1
+    details = session_client.get(
+        f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {**params, "type": "projects"}
+    )
+    assert details.status_code == 200
+    assert details.data["rows"][0]["work_items"] == 2
+    assert details.data["rows"][0]["completion"] == 50
+    stats = session_client.get(
+        f"/api/workspaces/{workspace.slug}/project-stats/", {**params, "fields": "total_issues,completed_issues"}
+    )
+    assert stats.data[0]["total_issues"] == 2
+    assert stats.data[0]["completed_issues"] == 1
+    chart = session_client.get(
+        f"/api/workspaces/{workspace.slug}/advance-analytics-charts/", {**params, "type": "work-items"}
+    )
+    assert chart.status_code == 200
+    assert sum(row["created_issues"] for row in chart.data["data"]) == 2
+    assert sum(row["completed_issues"] for row in chart.data["data"]) == 1
+
+
+@pytest.mark.parametrize(
+    "interval", ["custom:2026-10-20:2026-10-01", "custom:2026-02-30:2026-03-01", "custom:2026-10-01", "custom:x:y"]
+)
+@pytest.mark.parametrize(
+    "endpoint,extra",
+    [
+        ("advance-analytics", {"tab": "overview"}),
+        ("advance-analytics-details", {"type": "projects"}),
+        ("advance-analytics-charts", {"type": "work-items"}),
+        ("project-stats", {}),
+    ],
+)
+def test_invalid_custom_interval_is_rejected_instead_of_exporting_all_time(
+    session_client, workspace, analytics_records, interval, endpoint, extra
+):
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/{endpoint}/", {**extra, "date_filter": interval})
+    assert response.status_code == 400
+
+
+@pytest.mark.parametrize("tab", ["cycles", "modules", "projects"])
+def test_cancelled_is_separate_and_excluded_from_completion_denominator(
+    session_client, workspace, analytics_records, tab
+):
+    project, _, first, second, cycle, module = analytics_records
+    cancelled = State.objects.create(project=project, name="Cancelled", group="cancelled")
+    Issue.objects.filter(pk=first.pk).update(state=cancelled)
+    if tab == "projects":
+        IntakeIssue.objects.filter(project=project).delete()
+        Issue.objects.filter(project=project, name__startswith="Intake").delete()
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {"type": tab})
+    row = response.data["rows"][0]
+    assert row["work_items"] == 2
+    assert row["cancelled"] == 1
+    assert row["completion"] == 100
+    if tab != "projects":
+        assert response.data["chart"][0]["pending"] == 0
+        assert response.data["chart"][0]["cancelled"] == 1
+    Issue.objects.filter(pk=second.pk).update(state=cancelled)
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {"type": tab})
+    assert response.data["rows"][0]["completion"] == 0
+
+
+def test_intake_chart_partitions_all_statuses_and_uses_receipt_date(session_client, workspace, analytics_records):
+    project = analytics_records[0]
+    old = timezone.now() - timedelta(days=60)
+    Issue.objects.filter(project=project).update(created_at=old)
+    response = session_client.get(
+        f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {"type": "intake", "date_filter": "last_7_days"}
+    )
+    assert response.status_code == 200
+    assert response.data["summary"]["total_intake"] == 5
+    chart = response.data["chart"][0]
+    assert chart["name"] == timezone.localdate().strftime("%Y-%m")
+    assert [chart[k] for k in ["pending", "snoozed", "accepted", "rejected", "duplicate"]] == [1] * 5
+    assert sum(chart[k] for k in ["pending", "snoozed", "accepted", "rejected", "duplicate"]) == chart["count"]
+
+
+def test_reopened_items_are_not_reported_as_currently_completed(session_client, workspace, analytics_records):
+    project, _, first, second, *_ = analytics_records
+    now = timezone.now()
+    Issue.objects.filter(pk=second.pk).update(completed_at=now, state=first.state)
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics-charts/", {"type": "work-items"})
+    assert sum(row["completed_issues"] for row in response.data["data"]) == 0
+    assert response.data["period"]["end"] == timezone.localdate().isoformat()
+
+
+def test_shared_work_does_not_inflate_distinct_total(session_client, workspace, analytics_records, create_user):
+    from plane.db.models import User
+
+    project, _, first, *_ = analytics_records
+    other = User.objects.create(email="other-analytics@example.com", username="other-analytics")
+    WorkspaceMember.objects.create(workspace=workspace, member=other, role=15)
+    ProjectMember.objects.create(project=project, member=other, role=15)
+    IssueAssignee.objects.create(project=project, issue=first, assignee=other)
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/advance-analytics-details/", {"type": "users"})
+    assert response.data["summary"]["unique_work_items"] == 7
+    assert sum(row["count"] for row in response.data["chart"]) == 8
+
+
+@pytest.mark.parametrize("kind", ["cycles", "modules"])
+def test_sidebar_burndown_excludes_cancelled_reopened_and_future_values(analytics_records, workspace, kind):
+    from plane.utils.analytics_plot import burndown_plot
+
+    project, _, first, second, cycle, module = analytics_records
+    today = timezone.localdate()
+    if kind == "modules":
+        module.start_date, module.target_date = today - timedelta(days=1), today + timedelta(days=1)
+        entity, ids = module, {"module_id": module.id}
+    else:
+        entity, ids = cycle, {"cycle_id": cycle.id}
+    cancelled = State.objects.create(project=project, name="Cancelled", group="cancelled")
+    Issue.objects.filter(pk=first.pk).update(state=cancelled, completed_at=timezone.now() - timedelta(days=3))
+    Issue.objects.filter(pk=second.pk).update(completed_at=timezone.now())
+    chart = burndown_plot(entity, workspace.slug, project.id, "issues", **ids)
+    assert chart[today.isoformat()] == 0
+    assert chart[(today - timedelta(days=1)).isoformat()] == 1
+    assert chart[(today + timedelta(days=1)).isoformat()] is None
+    Issue.objects.filter(pk=second.pk).update(completed_at=None)
+    chart = burndown_plot(entity, workspace.slug, project.id, "issues", **ids)
+    assert chart[(today - timedelta(days=1)).isoformat()] is None
+    assert chart[today.isoformat()] == 0
+    Issue.objects.filter(pk=second.pk).update(
+        state=State.objects.get(project=project, group="unstarted"), completed_at=timezone.now() - timedelta(days=3)
+    )
+    chart = burndown_plot(entity, workspace.slug, project.id, "issues", **ids)
+    assert chart[today.isoformat()] == 1
+
+
+def test_project_stats_returns_cancelled_with_the_same_period_scope(session_client, workspace, analytics_records):
+    project, _, first, *_ = analytics_records
+    cancelled = State.objects.create(project=project, name="Cancelled", group="cancelled")
+    Issue.objects.filter(pk=first.pk).update(state=cancelled)
+    params = {"fields": "total_issues,completed_issues,cancelled_issues", "date_filter": "last_7_days"}
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/project-stats/", params)
+    assert response.data[0]["cancelled_issues"] == 1
+    Issue.objects.filter(pk=first.pk).update(created_at=timezone.now() - timedelta(days=20))
+    response = session_client.get(f"/api/workspaces/{workspace.slug}/project-stats/", params)
+    assert response.data[0]["cancelled_issues"] == 0
+
+
+@pytest.mark.parametrize("value,expected", [("3.5", 3.5), ("M", 0)])
+def test_burndown_estimates_preserve_numeric_points_and_ignore_categorical_values(
+    workspace, analytics_records, value, expected
+):
+    from plane.db.models import Estimate, EstimatePoint
+    from plane.utils.analytics_plot import burndown_plot
+
+    project, _, first, second, cycle, _ = analytics_records
+    estimate = Estimate.objects.create(project=project, name="Points", type="points")
+    point = EstimatePoint.objects.create(project=project, estimate=estimate, key=1, value=value)
+    Issue.objects.filter(pk=first.pk).update(estimate_point=point)
+    chart = burndown_plot(cycle, workspace.slug, project.id, "points", cycle_id=cycle.id)
+    assert chart[timezone.localdate().isoformat()] == expected
+
+
+@pytest.mark.parametrize("kind", ["project", "cycle", "module"])
+def test_peek_trend_uses_completion_date_and_correct_granularity(session_client, workspace, analytics_records, kind):
+    project, _, first, second, cycle, module = analytics_records
+    today = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
+    old = today - timedelta(days=2)
+    Project.objects.filter(pk=project.pk).update(created_at=old - timedelta(days=1))
+    Issue.objects.filter(pk=first.pk).update(created_at=old)
+    Issue.objects.filter(pk=second.pk).update(created_at=old, completed_at=today)
+    params = {"type": "work-items"}
+    if kind == "cycle":
+        Cycle.objects.filter(pk=cycle.pk).update(start_date=old, end_date=today + timedelta(days=1))
+        params["cycle_id"] = str(cycle.pk)
+    if kind == "module":
+        Module.objects.filter(pk=module.pk).update(start_date=old.date(), target_date=today.date() + timedelta(days=1))
+        params["module_id"] = str(module.pk)
+    response = session_client.get(
+        f"/api/workspaces/{workspace.slug}/projects/{project.id}/advance-analytics-charts/", params
+    )
+    assert response.status_code == 200, response.data
+    assert response.data["granularity"] == ("month" if kind == "project" else "day")
+    assert sum(row["completed_issues"] for row in response.data["data"]) == 1
+    if kind != "project":
+        data = {row["key"]: row for row in response.data["data"]}
+        assert data[old.date().isoformat()]["created_issues"] == 2
+        assert data[old.date().isoformat()]["completed_issues"] == 0
+        assert data[today.date().isoformat()]["completed_issues"] == 1
+        assert sum(row["created_issues"] for row in data.values()) == 2
+
+
+def test_trend_applies_cycle_and_epic_scope(session_client, workspace, analytics_records):
+    from plane.db.models import IssueType
+
+    project, _, first, second, cycle, _ = analytics_records
+    epic = IssueType.objects.create(workspace=workspace, name="Epic", is_epic=True)
+    Issue.objects.filter(pk=first.pk).update(type=epic)
+    response = session_client.get(
+        f"/api/workspaces/{workspace.slug}/advance-analytics-charts/",
+        {"type": "work-items", "cycle_id": str(cycle.pk), "epic": "true"},
+    )
+    assert response.status_code == 200
+    assert sum(row["created_issues"] for row in response.data["data"]) == 1
