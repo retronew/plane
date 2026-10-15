@@ -35,7 +35,7 @@ export class BaseAnalyticsStore implements IBaseAnalyticsStore {
   //observables
   currentTab: TAnalyticsTabsBase = "overview";
   selectedProjects: string[] = [];
-  selectedDuration: DurationType = "last_30_days";
+  selectedDuration: DurationType = "all_time";
   selectedCycle: string = "";
   selectedModule: string = "";
   isPeekView: boolean = false;

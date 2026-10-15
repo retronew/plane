@@ -39,13 +39,15 @@ export enum ChartYAxisMetric {
 
 export type TAnalyticsTabsBase = "overview" | "work-items";
 export type TAnalyticsGraphsBase = "projects" | "work-items" | "custom-work-items";
+export type TAnalyticsDetailTab = "projects" | "users" | "cycles" | "modules" | "intake";
 export interface AnalyticsTab {
-  key: TAnalyticsTabsBase;
+  key: TAnalyticsTabsBase | TAnalyticsDetailTab;
   label: string;
   content: React.FC;
   isDisabled: boolean;
 }
 export type TAnalyticsFilterParams = {
+  date_filter?: string;
   project_ids?: string;
   cycle_id?: string;
   module_id?: string;
@@ -93,4 +95,19 @@ export interface IAnalyticsParams {
   x_axis: ChartXAxisProperty;
   y_axis: ChartYAxisMetric;
   group_by?: ChartXAxisProperty;
+}
+
+export type TAnalyticsDetailRow = Record<string, string | number | null>;
+export interface IAnalyticsDetailsResponse {
+  summary: Record<string, number>;
+  rows: TAnalyticsDetailRow[];
+  chart: {
+    name: string;
+    count: number;
+    id?: string;
+    pending?: number;
+    completed?: number;
+    accepted?: number;
+    rejected?: number;
+  }[];
 }

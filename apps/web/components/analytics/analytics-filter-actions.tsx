@@ -10,13 +10,17 @@ import { observer } from "mobx-react";
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { useProject } from "@/hooks/store/use-project";
 // components
+import { Button } from "@makeplane/propel/components/button";
+import { useTranslation } from "@plane/i18n";
+import DurationDropdown from "./select/duration";
 import { ProjectSelect } from "./select/project";
 
 const AnalyticsFilterActions = observer(function AnalyticsFilterActions() {
-  const { selectedProjects, updateSelectedProjects } = useAnalytics();
+  const { t } = useTranslation();
+  const { selectedProjects, updateSelectedProjects, selectedDuration, updateSelectedDuration } = useAnalytics();
   const { joinedProjectIds } = useProject();
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
       <ProjectSelect
         value={selectedProjects}
         onChange={(val) => {
@@ -24,14 +28,19 @@ const AnalyticsFilterActions = observer(function AnalyticsFilterActions() {
         }}
         projectIds={joinedProjectIds}
       />
-      {/* <DurationDropdown
-        buttonVariant="border-with-text"
-        value={selectedDuration}
-        onChange={(val) => {
-          updateSelectedDuration(val);
-        }}
-        dropdownArrow
-      /> */}
+      <DurationDropdown value={selectedDuration} onChange={updateSelectedDuration} />
+      {(selectedProjects.length > 0 || selectedDuration !== "all_time") && (
+        <Button
+          variant="ghost"
+          size="md"
+          stretch="auto"
+          label={t("common.clear")}
+          onClick={() => {
+            updateSelectedProjects([]);
+            updateSelectedDuration("all_time");
+          }}
+        />
+      )}
     </div>
   );
 });

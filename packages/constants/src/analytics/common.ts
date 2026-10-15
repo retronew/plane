@@ -106,6 +106,12 @@ export const ANALYTICS_INSIGHTS_FIELDS: Record<TAnalyticsTabsBase, IInsightField
 export const ANALYTICS_DURATION_FILTER_OPTIONS = [
   {
     get name() {
+      return translate("workspace_analytics.dashboard.all_time");
+    },
+    value: "all_time",
+  },
+  {
+    get name() {
       return translate("web.runtime.yesterday");
     },
     value: "yesterday",

@@ -144,7 +144,102 @@
     "workitem_resolved_vs_pending": "Work items resolved vs pending",
     "projects_by_status": "Projects by status",
     "active_users": "Active users",
-    "intake_trends": "Intake Trends"
+    "intake_trends": "Intake Trends",
+    "details": {
+      "tabs": {
+        "projects": "Projects",
+        "users": "Users",
+        "cycles": "Cycles",
+        "modules": "Modules",
+        "intake": "Intake"
+      },
+      "charts": {
+        "projects": "Projects by status",
+        "users": "Completed vs pending work items",
+        "cycles": "Cycle progress",
+        "modules": "Module progress",
+        "intake": "Intake trends"
+      },
+      "empty": {
+        "projects": "Create projects to see their status distribution",
+        "users": "Assign work items to see member workloads",
+        "cycles": "Add work items to cycles to track progress",
+        "modules": "Add work items to modules to track progress",
+        "intake": "Collect work items to see intake trends"
+      },
+      "statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "planning": "Planning",
+        "execution": "In progress",
+        "monitoring": "In review",
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "unscheduled": "Unscheduled"
+      },
+      "fields": {
+        "name": "Name",
+        "members": "Members",
+        "work_items": "Work items",
+        "cycles": "Cycles",
+        "modules": "Modules",
+        "pages": "Pages",
+        "views": "Views",
+        "intake": "Intake",
+        "completion": "Completion",
+        "project": "Project",
+        "lead": "Lead",
+        "start_date": "Start date",
+        "end_date": "End date",
+        "status": "Status",
+        "started": "In progress",
+        "unstarted": "Not started",
+        "completed": "Completed",
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "duplicate": "Duplicate",
+        "total": "Total",
+        "count": "Count",
+        "total_projects": "Total projects",
+        "total_users": "Total users",
+        "total_admins": "Total admins",
+        "total_members": "Total members",
+        "total_guests": "Total guests",
+        "total_cycles": "Total cycles",
+        "total_modules": "Total modules",
+        "total_intake": "Total intake",
+        "current": "Current cycles",
+        "upcoming": "Upcoming",
+        "in-progress": "In progress",
+        "planned": "Planned",
+        "paused": "Paused",
+        "epics": "Epics"
+      },
+      "load_error": "Unable to load analytics. Please retry.",
+      "previous": "Previous",
+      "next": "Next",
+      "export_csv": "Export as CSV",
+      "records": "{count, plural, one {# record} other {# records}}"
+    },
+    "dashboard": {
+      "project_progress": "Project progress",
+      "monthly": "Monthly",
+      "project_progress_hint": "{completed} of {total} work items completed · {percentage}%",
+      "all_time": "All time",
+      "periods": {
+        "yesterday": "Yesterday",
+        "last_7_days": "Last 7 days",
+        "last_30_days": "Last 30 days",
+        "last_3_months": "Last 3 months"
+      },
+      "empty_project": "0 work items"
+    }
   },
   "workspace_projects": {
     "label": "{count, plural, one {Project} other {Projects}}",

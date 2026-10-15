@@ -8,11 +8,17 @@ from typing import Dict, Any, Tuple, Optional, List, Union
 # Django imports
 from django.db.models import (
     Count,
+    Sum,
+    Case,
+    When,
+    Value,
+    FloatField,
     F,
     QuerySet,
     Aggregate,
 )
 
+from django.db.models.functions import Cast, Coalesce
 from plane.db.models import Issue
 from rest_framework.exceptions import ValidationError
 
@@ -155,6 +161,7 @@ def build_analytics_chart(
     x_axis: str,
     group_by: Optional[str] = None,
     date_filter: Optional[str] = None,
+    y_axis: str = "WORK_ITEM_COUNT",
 ) -> Dict[str, Union[List[Dict[str, Any]], Dict[str, str]]]:
     # Validate x_axis
     if x_axis not in x_axis_mapper:
@@ -176,7 +183,24 @@ def build_analytics_chart(
     if group_additional_filter or {}:
         queryset = queryset.filter(**group_additional_filter)
 
-    aggregate_func = Count("id", distinct=True)
+    if y_axis == "WORK_ITEM_COUNT":
+        aggregate_func = Count("id", distinct=True)
+    elif y_axis == "EPIC_WORK_ITEM_COUNT":
+        queryset = queryset.filter(type__is_epic=True)
+        aggregate_func = Count("id", distinct=True)
+    elif y_axis == "ESTIMATE_POINT_COUNT":
+        # New estimate values are strings and can be shirt sizes; only numeric values are summable.
+        estimate_value = Case(
+            When(
+                estimate_point__value__regex=r"^[0-9]+([.][0-9]+)?$", then=Cast("estimate_point__value", FloatField())
+            ),
+            When(estimate_point__isnull=True, then=Coalesce(Cast("point", FloatField()), Value(0.0))),
+            default=Value(0.0),
+            output_field=FloatField(),
+        )
+        aggregate_func = Coalesce(Sum(estimate_value), Value(0.0))
+    else:
+        raise ValidationError(f"Invalid y_axis metric: {y_axis}")
 
     if group_field:
         response, schema = build_grouped_chart_response(

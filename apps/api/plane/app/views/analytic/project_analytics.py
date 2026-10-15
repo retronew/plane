@@ -350,7 +350,7 @@ class ProjectAdvanceAnalyticsChartEndpoint(ProjectAdvanceAnalyticsBaseView):
                 queryset = queryset.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
 
             return Response(
-                build_analytics_chart(queryset, x_axis, group_by),
+                build_analytics_chart(queryset, x_axis, group_by, y_axis=request.GET.get("y_axis", "WORK_ITEM_COUNT")),
                 status=status.HTTP_200_OK,
             )
 

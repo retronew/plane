@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { AsyncContent } from "@/components/common/async-content";
+import AnalyticsRequestError from "../request-error";
+
 import { useMemo } from "react";
 import type { ColumnDef, Table } from "@tanstack/react-table";
 import { observer } from "mobx-react";
@@ -11,12 +14,9 @@ import { useParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import useSWR from "swr";
 // plane package imports
-import { Download } from "lucide-react";
 import type { ChartXAxisDateGrouping } from "@plane/constants";
 import { ANALYTICS_X_AXIS_VALUES, ANALYTICS_Y_AXIS_VALUES, CHART_COLOR_PALETTES, EChartModels } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { Button } from "@makeplane/propel/components/button";
-import { Icon } from "@makeplane/propel/components/icon";
 import { BarChart } from "@plane/blocks/charts/bar-chart";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import type { TBarItem, TChart, TChartDatum, ChartXAxisProperty, ChartYAxisMetric } from "@plane/types";
@@ -26,10 +26,12 @@ import { generateExtendedColors, parseChartData } from "@/components/chart/utils
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { AnalyticsService } from "@/services/analytics.service";
-import { exportCSV } from "../export";
+import { exportAnalytics } from "../export";
+import { AnalyticsExportMenu } from "../export-menu";
 import { DataTable } from "../insight-table/data-table";
 import type { TInsightTableFeatures } from "../insight-table/table-features";
 import { ChartLoader } from "../loaders";
+import { localizeInsightChart } from "../localize-chart";
 import { generateBarColor } from "./utils";
 
 interface Props {
@@ -51,7 +53,12 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
   const params = useParams();
   const workspaceSlug = params.workspaceSlug.toString();
 
-  const { data: priorityChartData, isLoading: priorityChartLoading } = useSWR(
+  const {
+    error,
+    mutate,
+    data: priorityChartData,
+    isLoading: priorityChartLoading,
+  } = useSWR(
     `customized-insights-chart-${workspaceSlug}-${selectedDuration}-
     ${selectedProjects}-${selectedCycle}-${selectedModule}-${props.x_axis}-${props.y_axis}-${props.group_by}-${isPeekView}-${isEpic}`,
     () =>
@@ -59,7 +66,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
         workspaceSlug,
         "custom-work-items",
         {
-          // date_filter: selectedDuration,
+          ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
           ...(selectedProjects?.length > 0 && { project_ids: selectedProjects?.join(",") }),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
@@ -71,8 +78,14 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
   );
   const parsedData = useMemo(
     () =>
-      priorityChartData && parseChartData(priorityChartData, props.x_axis, props.group_by, props.x_axis_date_grouping),
-    [priorityChartData, props.x_axis, props.group_by, props.x_axis_date_grouping]
+      priorityChartData &&
+      localizeInsightChart(
+        parseChartData(priorityChartData, props.x_axis, props.group_by, props.x_axis_date_grouping),
+        props.x_axis,
+        props.group_by,
+        t
+      ),
+    [priorityChartData, props.x_axis, props.group_by, props.x_axis_date_grouping, t]
   );
   const chart_model = props.group_by ? EChartModels.STACKED : EChartModels.BASIC;
 
@@ -187,57 +200,61 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
     [parsedData]
   );
 
+  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
+
   return (
-    <div className="flex flex-col gap-12">
-      {priorityChartLoading ? (
-        <ChartLoader />
-      ) : parsedData?.data && parsedData.data.length > 0 ? (
-        <>
-          <BarChart
-            className="h-[370px] w-full"
-            data={parsedData.data}
-            bars={bars}
-            margin={{
-              bottom: 30,
-            }}
-            xAxis={{
-              key: "name",
-              label: xAxisLabel.replace("_", " "),
-              dy: 30,
-            }}
-            yAxis={{
-              key: "count",
-              label: t("common.no_of", { entity: yAxisLabel.replace("_", " ") }),
-              offset: -60,
-              dx: -26,
-            }}
+    <AsyncContent loading={priorityChartLoading} skeleton={<ChartLoader />} minHeight={288}>
+      <div className="flex flex-col gap-6">
+        {parsedData?.data && parsedData.data.length > 0 ? (
+          <>
+            <BarChart
+              className="h-72 w-full"
+              data={parsedData.data}
+              bars={bars}
+              margin={{
+                bottom: 30,
+              }}
+              xAxis={{
+                key: "name",
+                label: xAxisLabel.replace("_", " "),
+                dy: 30,
+              }}
+              yAxis={{
+                key: "count",
+                label: t("common.no_of", { entity: yAxisLabel.replace("_", " ") }),
+                offset: -60,
+                dx: -26,
+              }}
+            />
+            <DataTable
+              data={parsedData.data}
+              columns={[...defaultColumns, ...columns]}
+              searchPlaceholder={`${parsedData.data.length} ${xAxisLabel}`}
+              actions={(table: Table<TInsightTableFeatures, TChartDatum>) => (
+                <AnalyticsExportMenu
+                  disabled={!table.getFilteredRowModel().rows.length}
+                  onExport={(format) =>
+                    exportAnalytics(
+                      table.getFilteredRowModel().rows,
+                      [...defaultColumns, ...columns],
+                      workspaceSlug,
+                      format
+                    )
+                  }
+                />
+              )}
+            />
+          </>
+        ) : (
+          <EmptyStateCompact
+            assetKey="unknown"
+            assetClassName="size-20"
+            rootClassName="border border-subtle px-5 py-10 md:py-20 md:px-20"
+            title={t("workspace_empty_state.analytics_work_items.title")}
           />
-          <DataTable
-            data={parsedData.data}
-            columns={[...defaultColumns, ...columns]}
-            searchPlaceholder={`${parsedData.data.length} ${xAxisLabel}`}
-            actions={(table: Table<TInsightTableFeatures, TChartDatum>) => (
-              <Button
-                variant="secondary"
-                size="sm"
-                stretch="auto"
-                label={t("web.download_format", { format: "CSV" })}
-                icon={<Icon icon={Download} />}
-                iconPosition="start"
-                onClick={() => exportCSV(table.getRowModel().rows, [...defaultColumns, ...columns], workspaceSlug)}
-              />
-            )}
-          />
-        </>
-      ) : (
-        <EmptyStateCompact
-          assetKey="unknown"
-          assetClassName="size-20"
-          rootClassName="border border-subtle px-5 py-10 md:py-20 md:px-20"
-          title={t("workspace_empty_state.analytics_work_items.title")}
-        />
-      )}
-    </div>
+        )}
+      </div>
+    </AsyncContent>
   );
 });
 

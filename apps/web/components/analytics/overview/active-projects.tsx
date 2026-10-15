@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { AsyncContent } from "@/components/common/async-content";
+import AnalyticsRequestError from "../request-error";
+
 import React from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -22,28 +25,48 @@ const ActiveProjects = observer(function ActiveProjects() {
   const { t } = useTranslation();
   const { fetchProjectAnalyticsCount } = useProject();
   const { workspaceSlug } = useParams();
-  const { selectedDurationLabel } = useAnalytics();
-  const { data: projectAnalyticsCount, isLoading: isProjectAnalyticsCountLoading } = useSWR(
-    workspaceSlug ? ["projectAnalyticsCount", workspaceSlug] : null,
+  const { selectedDurationLabel, selectedDuration, selectedProjects } = useAnalytics();
+  const {
+    error,
+    mutate,
+    data: projectAnalyticsCount,
+    isLoading: isProjectAnalyticsCountLoading,
+  } = useSWR(
+    workspaceSlug ? ["projectAnalyticsCount", workspaceSlug, selectedProjects.join(","), selectedDuration] : null,
     workspaceSlug
       ? () =>
           fetchProjectAnalyticsCount(workspaceSlug.toString(), {
-            fields: "total_work_items,total_completed_work_items",
+            fields: "total_issues,completed_issues",
+            ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
+            ...(selectedProjects.length ? { project_ids: selectedProjects.join(",") } : {}),
           })
       : null
   );
+  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
+
   return (
     <AnalyticsSectionWrapper
       title={t("workspace_analytics.active_projects")}
       subtitle={selectedDurationLabel}
-      className="md:col-span-2"
+      className="h-full"
+      headerClassName="mb-2"
     >
-      <div className="flex h-[350px] flex-col gap-4 overflow-auto">
-        {isProjectAnalyticsCountLoading &&
-          Array.from({ length: 5 }).map((_, index) => <Loader.Item key={index} height="40px" width="100%" />)}
-        {!isProjectAnalyticsCountLoading &&
-          projectAnalyticsCount?.map((project) => <ActiveProjectItem key={project.id} project={project} />)}
-      </div>
+      <AsyncContent
+        loading={isProjectAnalyticsCountLoading}
+        minHeight={220}
+        skeleton={
+          <Loader className="space-y-1">
+            {[0, 1, 2, 3].map((key) => (
+              <Loader.Item key={key} height="45px" width="100%" />
+            ))}
+          </Loader>
+        }
+      >
+        <div className="vertical-scrollbar -mx-2 scrollbar-sm h-[220px] overflow-y-auto">
+          {!isProjectAnalyticsCountLoading &&
+            projectAnalyticsCount?.map((project) => <ActiveProjectItem key={project.id} project={project} />)}
+        </div>
+      </AsyncContent>
     </AnalyticsSectionWrapper>
   );
 });

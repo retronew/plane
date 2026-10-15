@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import AnalyticsRequestError from "../request-error";
+
 import { useMemo } from "react";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { observer } from "mobx-react";
@@ -23,7 +25,7 @@ import { useAnalytics } from "@/hooks/store/use-analytics";
 import { useProject } from "@/hooks/store/use-project";
 import { AnalyticsService } from "@/services/analytics.service";
 // plane web components
-import { exportCSV } from "../export";
+import { exportAnalytics } from "../export";
 import { InsightTable } from "../insight-table";
 import type { TInsightTableFeatures } from "../insight-table/table-features";
 
@@ -37,14 +39,19 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
   // store hooks
   const { getProjectById } = useProject();
   const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
-  const { data: workItemsData, isLoading } = useSWR(
+  const {
+    error,
+    mutate,
+    data: workItemsData,
+    isLoading,
+  } = useSWR(
     `insights-table-work-items-${workspaceSlug}-${selectedDuration}-${selectedProjects}-${selectedCycle}-${selectedModule}-${isPeekView}-${isEpic}`,
     () =>
       analyticsService.getAdvanceAnalyticsStats<WorkItemInsightColumns[]>(
         workspaceSlug,
         "work-items",
         {
-          // date_filter: selectedDuration,
+          ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
           ...(selectedProjects?.length > 0 ? { project_ids: selectedProjects.join(",") } : {}),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
@@ -184,6 +191,8 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
     ],
     [columnsLabels, getProjectById, isPeekView, t]
   );
+  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
+
   return (
     <InsightTable<"work-items">
       analyticsType="work-items"
@@ -192,7 +201,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
       columns={columns}
       columnsLabels={columnsLabels}
       headerText={isPeekView ? t("common.assignee") : t("common.projects")}
-      onExport={(rows) => workItemsData && exportCSV(rows, columns, workspaceSlug)}
+      onExport={(rows, format) => workItemsData && exportAnalytics(rows, columns, workspaceSlug, format)}
     />
   );
 });

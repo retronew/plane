@@ -406,14 +406,25 @@ class ProjectStatsEndpoint(BaseAPIView):
         if not requested_fields:
             requested_fields = valid_fields
 
-        projects = Project.objects.filter(workspace__slug=slug)
+        projects = Project.objects.filter(
+            workspace__slug=slug,
+            project_projectmember__member=request.user,
+            project_projectmember__is_active=True,
+            archived_at__isnull=True,
+        ).distinct()
         if project_ids:
             projects = projects.filter(id__in=project_ids.split(","))
 
+        from plane.utils.date_utils import get_chart_period_range
+
+        period = get_chart_period_range(request.GET.get("date_filter"))
+        issue_filters = {}
+        if period:
+            issue_filters = {"created_at__date__gte": period[0], "created_at__date__lte": period[1]}
         annotations = {}
         if "total_issues" in requested_fields:
             annotations["total_issues"] = (
-                Issue.issue_objects.filter(project_id=OuterRef("pk"))
+                Issue.issue_objects.filter(project_id=OuterRef("pk"), **issue_filters)
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -421,7 +432,7 @@ class ProjectStatsEndpoint(BaseAPIView):
 
         if "completed_issues" in requested_fields:
             annotations["completed_issues"] = (
-                Issue.issue_objects.filter(project_id=OuterRef("pk"), state__group__in=["completed", "cancelled"])
+                Issue.issue_objects.filter(project_id=OuterRef("pk"), state__group="completed", **issue_filters)
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")

@@ -4,24 +4,30 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
 import AnalyticsWrapper from "../analytics-wrapper";
 import TotalInsights from "../total-insights";
 import ActiveProjects from "./active-projects";
-import ProjectInsights from "./project-insights";
+import CreatedVsResolved from "../work-items/created-vs-resolved";
+import { AnalyticsDetails } from "../details";
 
 function Overview() {
   return (
     <AnalyticsWrapper i18nTitle="common.overview">
-      <div className="flex flex-col gap-14">
+      <div className="flex flex-col gap-5">
         <TotalInsights analyticsType="overview" />
-        <div className="grid grid-cols-1 gap-14 md:grid-cols-5">
-          <ProjectInsights />
-          <ActiveProjects />
+        <div className="grid grid-cols-1 items-stretch gap-8 xl:grid-cols-5">
+          <div className="min-w-0 xl:col-span-3">
+            <CreatedVsResolved dashboard />
+          </div>
+          <div className="min-w-0 xl:col-span-2">
+            <ActiveProjects />
+          </div>
+        </div>
+        <div className="min-w-0 border-t border-subtle pt-5">
+          <AnalyticsDetails tab="projects" embedded />
         </div>
       </div>
     </AnalyticsWrapper>
   );
 }
-
 export { Overview };

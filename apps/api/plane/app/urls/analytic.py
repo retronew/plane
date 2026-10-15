@@ -4,6 +4,8 @@
 
 from django.urls import path
 
+from plane.app.views.analytic.details import AnalyticsDetailsEndpoint
+
 
 from plane.app.views import (
     AnalyticsEndpoint,
@@ -22,6 +24,11 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/advance-analytics-details/",
+        AnalyticsDetailsEndpoint.as_view(),
+        name="advance-analytics-details",
+    ),
     path(
         "workspaces/<str:slug>/analytics/",
         AnalyticsEndpoint.as_view(),

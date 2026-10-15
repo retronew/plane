@@ -14,7 +14,7 @@ import WorkItemsInsightTable from "./workitems-insight-table";
 function WorkItems() {
   return (
     <AnalyticsWrapper i18nTitle="sidebar.work_items">
-      <div className="flex flex-col gap-14">
+      <div className="flex flex-col gap-8">
         <TotalInsights analyticsType="work-items" />
         <CreatedVsResolved />
         <CustomizedInsights />

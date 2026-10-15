@@ -8,6 +8,8 @@
 import { API_BASE_URL } from "@plane/constants";
 import type {
   IAnalyticsResponse,
+  TAnalyticsDetailTab,
+  IAnalyticsDetailsResponse,
   TAnalyticsTabsBase,
   TAnalyticsGraphsBase,
   TAnalyticsFilterParams,
@@ -86,6 +88,22 @@ export class AnalyticsService extends APIService {
       .catch((err) => {
         throw err?.response?.data;
       });
+  }
+
+  async getAnalyticsDetails(
+    workspaceSlug: string,
+    type: TAnalyticsDetailTab,
+    projectIds: string[],
+    dateFilter?: string
+  ): Promise<IAnalyticsDetailsResponse> {
+    const response = await this.get(`/api/workspaces/${workspaceSlug}/advance-analytics-details/`, {
+      params: {
+        type,
+        ...(projectIds.length ? { project_ids: projectIds.join(",") } : {}),
+        ...(dateFilter && dateFilter !== "all_time" ? { date_filter: dateFilter } : {}),
+      },
+    });
+    return response.data;
   }
 
   processUrl<_T extends string>(

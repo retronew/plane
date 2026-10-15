@@ -8,43 +8,42 @@ import { useMemo } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
-// plane package imports
+import { CHART_SERIES_COLORS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { AreaChart } from "@plane/blocks/charts/area-chart";
-import { EmptyStateCompact } from "@plane/blocks/empty-state";
-import type { IChartResponse, TChartData } from "@plane/types";
-import { renderFormattedDate } from "@plane/utils";
-// hooks
+import type { IChartResponse } from "@plane/types";
 import { useAnalytics } from "@/hooks/store/use-analytics";
-// services
+import { AsyncContent } from "@/components/common/async-content";
 import { AnalyticsService } from "@/services/analytics.service";
-// plane web components
 import AnalyticsSectionWrapper from "../analytics-section-wrapper";
+import AnalyticsRequestError from "../request-error";
+import AnalyticsEmptyState from "../empty-state";
 import { ChartLoader } from "../loaders";
 
-const analyticsService = new AnalyticsService();
-const CreatedVsResolved = observer(function CreatedVsResolved() {
-  const {
-    selectedDuration,
-    selectedDurationLabel,
-    selectedProjects,
-    selectedCycle,
-    selectedModule,
-    isPeekView,
-    isEpic,
-  } = useAnalytics();
-  const params = useParams();
-  const { t } = useTranslation();
-  const workspaceSlug = params.workspaceSlug.toString();
-  const { data: createdVsResolvedData, isLoading: isCreatedVsResolvedLoading } = useSWR(
-    `created-vs-resolved-${workspaceSlug}-${selectedDuration}-${selectedProjects}-${selectedCycle}-${selectedModule}-${isPeekView}-${isEpic}`,
+const service = new AnalyticsService();
+const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = false }: { dashboard?: boolean }) {
+  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
+  const { workspaceSlug } = useParams();
+  const { t, currentLocale } = useTranslation();
+  const slug = String(workspaceSlug);
+  const { data, isLoading, error, mutate } = useSWR(
+    [
+      "created-vs-resolved",
+      slug,
+      selectedDuration,
+      selectedProjects.join(","),
+      selectedCycle,
+      selectedModule,
+      isPeekView,
+      isEpic,
+    ],
     () =>
-      analyticsService.getAdvanceAnalyticsCharts<IChartResponse>(
-        workspaceSlug,
+      service.getAdvanceAnalyticsCharts<IChartResponse>(
+        slug,
         "work-items",
         {
-          // date_filter: selectedDuration,
-          ...(selectedProjects?.length > 0 && { project_ids: selectedProjects?.join(",") }),
+          ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
+          ...(selectedProjects.length ? { project_ids: selectedProjects.join(",") } : {}),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
           ...(isEpic ? { epic: true } : {}),
@@ -52,88 +51,76 @@ const CreatedVsResolved = observer(function CreatedVsResolved() {
         isPeekView
       )
   );
-  const parsedData: TChartData<string, string>[] = useMemo(() => {
-    if (!createdVsResolvedData?.data) return [];
-    return createdVsResolvedData.data.map((datum) => ({
-      ...datum,
-      [datum.key]: datum.count,
-      name: renderFormattedDate(datum.key) ?? datum.key,
-    }));
-  }, [createdVsResolvedData]);
-
+  const parsed = useMemo(
+    () =>
+      data?.data.map((item) => ({
+        ...item,
+        name: new Intl.DateTimeFormat(currentLocale, { year: "numeric", month: "short" }).format(
+          new Date(String(item.key) + "T00:00:00")
+        ),
+      })) ?? [],
+    [data, currentLocale]
+  );
   const areas = useMemo(
     () => [
       {
-        key: "completed_issues",
-        label: t("web.resolved"),
-        fill: "#19803833",
-        fillOpacity: 1,
-        stackId: "bar-one",
-        showDot: false,
+        key: "created_issues",
+        label: t("web.created"),
+        fill: CHART_SERIES_COLORS[0],
+        fillOpacity: 0.06,
+        stackId: "created",
+        showDot: parsed.length === 1,
         smoothCurves: true,
-        strokeColor: "#198038",
+        strokeColor: CHART_SERIES_COLORS[0],
         strokeOpacity: 1,
       },
       {
-        key: "created_issues",
-        label: t("web.created"),
-        fill: "#1192E833",
-        fillOpacity: 1,
-        stackId: "bar-one",
-        showDot: false,
+        key: "completed_issues",
+        label: t("web.resolved"),
+        fill: CHART_SERIES_COLORS[1],
+        fillOpacity: 0.04,
+        stackId: "completed",
+        showDot: parsed.length === 1,
         smoothCurves: true,
-        strokeColor: "#1192E8",
+        strokeColor: CHART_SERIES_COLORS[1],
         strokeOpacity: 1,
       },
     ],
-    [t]
+    [t, parsed.length]
   );
-
   return (
     <AnalyticsSectionWrapper
       title={t("workspace_analytics.created_vs_resolved")}
-      subtitle={selectedDurationLabel}
-      className="col-span-1"
+      className={dashboard ? "h-full" : undefined}
+      actions={<span className="ml-auto text-11 text-tertiary">{t("workspace_analytics.dashboard.monthly")}</span>}
     >
-      {isCreatedVsResolvedLoading ? (
-        <ChartLoader />
-      ) : parsedData && parsedData.length > 0 ? (
-        <AreaChart
-          className="h-[350px] w-full"
-          data={parsedData}
-          areas={areas}
-          xAxis={{
-            key: "name",
-            label: t("date"),
-          }}
-          yAxis={{
-            key: "count",
-            label: t("common.no_of", { entity: isEpic ? t("common.epics") : t("work_items") }),
-            offset: -60,
-            dx: -24,
-          }}
-          legend={{
-            align: "left",
-            verticalAlign: "bottom",
-            layout: "horizontal",
-            wrapperStyles: {
-              justifyContent: "start",
-              alignContent: "start",
-              paddingLeft: "40px",
-              paddingTop: "10px",
-            },
-          }}
-        />
+      {error ? (
+        <AnalyticsRequestError onRetry={() => void mutate()} />
       ) : (
-        <EmptyStateCompact
-          assetKey="unknown"
-          assetClassName="size-20"
-          rootClassName="border border-subtle px-5 py-10 md:py-20 md:px-20"
-          title={t("workspace_empty_state.analytics_work_items.title")}
-        />
+        <AsyncContent
+          loading={isLoading}
+          minHeight={dashboard ? 220 : 260}
+          skeleton={<ChartLoader height={dashboard ? 220 : 260} />}
+        >
+          {parsed.length ? (
+            <AreaChart
+              className={dashboard ? "h-[220px] w-full" : "h-[260px] w-full"}
+              data={parsed}
+              areas={areas}
+              margin={{ top: 12, bottom: 20, left: 0, right: 12 }}
+              xAxis={{ key: "name", label: "" }}
+              yAxis={{ key: "count", label: "" }}
+              legend={{ align: "left", verticalAlign: "bottom", layout: "horizontal" }}
+            />
+          ) : (
+            <AnalyticsEmptyState
+              title={t("common.no_data_available")}
+              description={t("workspace_empty_state.analytics_work_items.title")}
+            />
+          )}
+        </AsyncContent>
       )}
     </AnalyticsSectionWrapper>
   );
 });
-
 export default CreatedVsResolved;

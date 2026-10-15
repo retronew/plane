@@ -16,12 +16,13 @@ export const csvConfig = (workspaceSlug: string) =>
     useKeysAsHeaders: true,
   });
 
-export const exportCSV = <T extends RowData>(
+export type AnalyticsExportFormat = "csv" | "json";
+
+export const getExportRows = <T extends RowData>(
   rows: Row<TInsightTableFeatures, T>[],
-  columns: ColumnDef<TInsightTableFeatures, T>[],
-  workspaceSlug: string
-) => {
-  const rowData = rows.map((row) => {
+  columns: ColumnDef<TInsightTableFeatures, T>[]
+) =>
+  rows.map((row) => {
     const exportColumns = columns.map((col) => col.meta?.export);
     const cells = exportColumns.reduce((acc: Record<string, string | number>, col) => {
       if (col) {
@@ -32,6 +33,35 @@ export const exportCSV = <T extends RowData>(
     }, {});
     return cells;
   });
-  const csv = generateCsv(csvConfig(workspaceSlug))(rowData);
+
+export const exportAnalytics = <T extends RowData>(
+  rows: Row<TInsightTableFeatures, T>[],
+  columns: ColumnDef<TInsightTableFeatures, T>[],
+  workspaceSlug: string,
+  format: AnalyticsExportFormat
+) => {
+  const rowData = getExportRows(rows, columns);
+  if (format === "json") {
+    const blob = new Blob([JSON.stringify(rowData, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${workspaceSlug}-analytics.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+    return;
+  }
+  // Spreadsheet software interprets leading operators as formulas; preserve them as text.
+  const safeRows = rowData.map((row) =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [
+        key,
+        typeof value === "string" && /^[=+@\-\t\r]/.test(value) ? `'${value}` : value,
+      ])
+    )
+  );
+  const csv = generateCsv(csvConfig(workspaceSlug))(safeRows);
   download(csvConfig(workspaceSlug))(csv);
 };

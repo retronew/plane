@@ -13,14 +13,15 @@ type Props = {
   i18nTitle: string;
   children: React.ReactNode;
   className?: string;
+  hideTitle?: boolean;
 };
 
 function AnalyticsWrapper(props: Props) {
-  const { i18nTitle, children, className } = props;
+  const { i18nTitle, children, className, hideTitle } = props;
   const { t } = useTranslation();
   return (
     <div className={cn("px-6 py-4", className)}>
-      <h1 className={"mb-4 text-20 font-bold md:mb-6"}>{t(i18nTitle)}</h1>
+      {!hideTitle && <h1 className="mb-5 text-20 font-semibold">{t(i18nTitle)}</h1>}
       {children}
     </div>
   );

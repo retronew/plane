@@ -5,11 +5,10 @@
  */
 
 import type { ColumnDef, Row, Table } from "@tanstack/react-table";
-import { Download } from "lucide-react";
-import { useTranslation } from "@plane/i18n";
-import { Button } from "@makeplane/propel/components/button";
-import { Icon } from "@makeplane/propel/components/icon";
 import type { AnalyticsTableDataMap, TAnalyticsTabsBase } from "@plane/types";
+import { AsyncContent } from "@/components/common/async-content";
+import { AnalyticsExportMenu } from "../export-menu";
+import type { AnalyticsExportFormat } from "../export";
 import { DataTable } from "./data-table";
 import { TableLoader } from "./loader";
 import type { TInsightTableFeatures } from "./table-features";
@@ -20,36 +19,27 @@ interface InsightTableProps<T extends Exclude<TAnalyticsTabsBase, "overview">> {
   columns: ColumnDef<TInsightTableFeatures, AnalyticsTableDataMap[T]>[];
   columnsLabels?: Record<string, string>;
   headerText: string;
-  onExport?: (rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[]) => void;
+  onExport?: (rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[], format: AnalyticsExportFormat) => void;
 }
 
 export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(
   props: InsightTableProps<T>
 ): React.ReactElement {
   const { data, isLoading, columns, headerText, onExport } = props;
-  const { t } = useTranslation();
-  if (isLoading) {
-    return <TableLoader columns={columns} rows={5} />;
-  }
 
   return (
-    <div className="">
+    <AsyncContent loading={!!isLoading} skeleton={<TableLoader columns={columns} rows={5} />} minHeight={270}>
       <DataTable
         columns={columns}
         data={data || []}
         searchPlaceholder={`${data?.length || 0} ${headerText}`}
         actions={(table: Table<TInsightTableFeatures, AnalyticsTableDataMap[T]>) => (
-          <Button
-            variant="secondary"
-            size="sm"
-            stretch="auto"
-            label={t("web.download_format", { format: "CSV" })}
-            icon={<Icon icon={Download} />}
-            iconPosition="start"
-            onClick={() => onExport?.(table.getFilteredRowModel().rows)}
+          <AnalyticsExportMenu
+            disabled={!onExport || !table.getFilteredRowModel().rows.length}
+            onExport={(format) => onExport?.(table.getFilteredRowModel().rows, format)}
           />
         )}
       />
-    </div>
+    </AsyncContent>
   );
 }

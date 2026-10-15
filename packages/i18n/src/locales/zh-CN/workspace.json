@@ -144,7 +144,102 @@
     "workitem_resolved_vs_pending": "已解决与待处理工作项对比",
     "projects_by_status": "按状态分类的项目",
     "active_users": "活跃用户",
-    "intake_trends": "Intake 趋势"
+    "intake_trends": "Intake 趋势",
+    "details": {
+      "tabs": {
+        "projects": "项目",
+        "users": "用户",
+        "cycles": "周期",
+        "modules": "模块",
+        "intake": "收集"
+      },
+      "charts": {
+        "projects": "按状态分类的项目",
+        "users": "已完成与待处理工作项",
+        "cycles": "周期进度",
+        "modules": "模块进度",
+        "intake": "收集趋势"
+      },
+      "empty": {
+        "projects": "创建项目后即可查看状态分布",
+        "users": "分配工作项后即可查看成员工作量",
+        "cycles": "将工作项加入周期以跟踪进度",
+        "modules": "将工作项加入模块以跟踪进度",
+        "intake": "收集工作项后即可查看处理趋势"
+      },
+      "statuses": {
+        "backlog": "待办",
+        "planned": "已计划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "draft": "待处理",
+        "planning": "规划中",
+        "execution": "进行中",
+        "monitoring": "待验收",
+        "current": "当前",
+        "upcoming": "即将开始",
+        "unscheduled": "未安排"
+      },
+      "fields": {
+        "name": "名称",
+        "members": "成员",
+        "work_items": "工作项",
+        "cycles": "周期",
+        "modules": "模块",
+        "pages": "页面",
+        "views": "视图",
+        "intake": "收集",
+        "completion": "完成率",
+        "project": "项目",
+        "lead": "负责人",
+        "start_date": "开始日期",
+        "end_date": "结束日期",
+        "status": "状态",
+        "started": "进行中",
+        "unstarted": "未开始",
+        "completed": "已完成",
+        "pending": "待处理",
+        "accepted": "已接受",
+        "rejected": "已拒绝",
+        "duplicate": "重复",
+        "total": "总数",
+        "count": "数量",
+        "total_projects": "项目总数",
+        "total_users": "用户总数",
+        "total_admins": "管理员总数",
+        "total_members": "成员总数",
+        "total_guests": "访客总数",
+        "total_cycles": "周期总数",
+        "total_modules": "模块总数",
+        "total_intake": "收集总数",
+        "current": "当前周期",
+        "upcoming": "即将开始",
+        "in-progress": "进行中",
+        "planned": "已计划",
+        "paused": "已暂停",
+        "epics": "史诗"
+      },
+      "load_error": "暂时无法加载分析数据，请重试",
+      "previous": "上一页",
+      "next": "下一页",
+      "export_csv": "导出为 CSV",
+      "records": "{count} 条记录"
+    },
+    "dashboard": {
+      "project_progress": "项目进展",
+      "monthly": "按月统计",
+      "project_progress_hint": "已完成 {completed} / {total} 个工作项 · 完成率 {percentage}%",
+      "all_time": "全部时间",
+      "periods": {
+        "yesterday": "昨天",
+        "last_7_days": "最近 7 天",
+        "last_30_days": "最近 30 天",
+        "last_3_months": "最近 3 个月"
+      },
+      "empty_project": "0 个工作项"
+    }
   },
   "workspace_projects": {
     "label": "{count, plural, one {项目} other {项目}}",

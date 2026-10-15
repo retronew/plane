@@ -4,7 +4,9 @@
  * See the LICENSE file for details.
  */
 
-import { lazy, Suspense } from "react";
+import AnalyticsRequestError from "../request-error";
+
+import { lazy, Suspense, useMemo } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -35,14 +37,19 @@ const ProjectInsights = observer(function ProjectInsights() {
   const { selectedDuration, selectedDurationLabel, selectedProjects, selectedCycle, selectedModule, isPeekView } =
     useAnalytics();
 
-  const { data: projectInsightsData, isLoading: isLoadingProjectInsight } = useSWR(
+  const {
+    error,
+    mutate,
+    data: rawProjectInsightsData,
+    isLoading: isLoadingProjectInsight,
+  } = useSWR(
     `radar-chart-project-insights-${workspaceSlug}-${selectedDuration}-${selectedProjects}-${selectedCycle}-${selectedModule}-${isPeekView}`,
     () =>
       analyticsService.getAdvanceAnalyticsCharts<TChartData<string, string>[]>(
         workspaceSlug,
         "projects",
         {
-          // date_filter: selectedDuration,
+          ...(selectedDuration && selectedDuration !== "all_time" ? { date_filter: selectedDuration } : {}),
           ...(selectedProjects?.length > 0 && { project_ids: selectedProjects?.join(",") }),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
@@ -50,6 +57,19 @@ const ProjectInsights = observer(function ProjectInsights() {
         isPeekView
       )
   );
+
+  const projectInsightsData = useMemo(
+    () =>
+      rawProjectInsightsData?.map((item) => ({
+        ...item,
+        key: item.key,
+        count: item.count,
+        name: t(`workspace_analytics.details.fields.${item.key}`),
+      })),
+    [rawProjectInsightsData, t]
+  );
+
+  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
 
   return (
     <AnalyticsSectionWrapper
@@ -77,10 +97,10 @@ const ProjectInsights = observer(function ProjectInsights() {
                 radars={[
                   {
                     key: "count",
-                    name: "Count",
+                    name: t("web.count"),
                     fill: "var(--text-color-accent-primary)",
                     stroke: "var(--text-color-accent-primary)",
-                    fillOpacity: 0.6,
+                    fillOpacity: 0.12,
                     dot: {
                       r: 4,
                       fillOpacity: 1,

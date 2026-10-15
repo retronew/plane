@@ -6,7 +6,7 @@
 
 // react
 import React from "react";
-import { CalendarOutline } from "@makeplane/propel/icons";
+import { CalendarDays } from "lucide-react";
 // plane package imports
 import { ANALYTICS_DURATION_FILTER_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -25,13 +25,14 @@ const getDurationOption = (value: string | null) =>
 
 function DurationDropdown({ placeholder: placeholderProp, onChange, value }: Props) {
   const { t } = useTranslation();
-  const placeholder = placeholderProp ?? t("web.ui.duration");
+  const placeholder = placeholderProp ?? t("workspace_analytics.dashboard.all_time");
 
   // derived values
-  const selectedOption = getDurationOption(value);
+  const selectedOption = value === "all_time" ? null : getDurationOption(value);
 
   return (
     <Select<TDurationOption>
+      placeholder={placeholder}
       getValues={() => [...ANALYTICS_DURATION_FILTER_OPTIONS]}
       value={selectedOption}
       onChange={(val) => {
@@ -42,7 +43,11 @@ function DurationDropdown({ placeholder: placeholderProp, onChange, value }: Pro
       getOptionLabel={(option) => option.name}
       pinSelected={false}
     >
-      <Select.Trigger<TDurationOption> variant="select-md" prependIcon={<CalendarOutline aria-hidden="true" />}>
+      <Select.Trigger<TDurationOption>
+        className="w-auto"
+        variant="select-md"
+        prependIcon={<CalendarDays className="size-3.5" aria-hidden="true" />}
+      >
         {(selected) => <span className="truncate">{selected[0]?.name ?? placeholder}</span>}
       </Select.Trigger>
     </Select>

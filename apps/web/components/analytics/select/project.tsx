@@ -77,13 +77,13 @@ export const ProjectSelect = observer(function ProjectSelect(props: Props) {
     >
       <Select.Trigger<ProjectOption>
         variant="select-md"
-        className="w-auto"
+        className="w-auto max-w-44"
         prependIcon={<ProjectsOutline aria-hidden="true" />}
       >
         {(selectedOptions) => (
           <span className="truncate">
             {selectedOptions.length > 3
-              ? `3+ projects`
+              ? translate("property_select.projects_count", { count: selectedOptions.length })
               : selectedOptions.length > 0
                 ? selectedOptions.map((option) => option.name).join(", ")
                 : translate("web.all_projects")}
