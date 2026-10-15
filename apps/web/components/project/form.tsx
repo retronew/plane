@@ -19,15 +19,14 @@ import { Button } from "@makeplane/propel/components/button";
 import { EmojiPicker, Logo } from "@plane/blocks/emoji-icon-picker";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import { EFileAssetType } from "@plane/types";
 import type { IProject, IWorkspace } from "@plane/types";
 import { Select } from "@plane/blocks/select";
 import { renderFormattedDate } from "@plane/utils";
 import { CoverImage } from "@/components/common/cover-image";
-import { ImagePickerPopover } from "@/components/core/image-picker-popover";
+import { CoverImageUploadButton } from "@/components/core/cover-image-upload-button";
 import { TimezoneSelect } from "@/components/global";
 // helpers
-import { handleCoverImageChange } from "@/helpers/cover-image.helper";
+import { getCoverImagePayload } from "@/helpers/cover-image.helper";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -57,6 +56,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
   // states
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
   // store hooks
   const { updateProject } = useProject();
   const { isMobile } = usePlatformOS();
@@ -178,27 +178,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
     };
 
     // Handle cover image changes
-    try {
-      const coverImagePayload = await handleCoverImageChange(project.cover_image_url, formData.cover_image_url, {
-        workspaceSlug: workspaceSlug.toString(),
-        entityIdentifier: project.id,
-        entityType: EFileAssetType.PROJECT_COVER,
-        isUserAsset: false,
-      });
-
-      if (coverImagePayload) {
-        Object.assign(payload, coverImagePayload);
-      }
-    } catch (error) {
-      console.error("Error handling cover image:", error);
-      setToast({
-        type: "error",
-        title: t("toast.error"),
-        message: error instanceof Error ? error.message : t("web.failed_to_process_cover_image"),
-      });
-      setIsLoading(false);
-      return;
-    }
+    Object.assign(payload, getCoverImagePayload(project.cover_image_url, formData.cover_image_url));
 
     if (project.identifier !== formData.identifier)
       await projectService
@@ -216,9 +196,13 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="relative h-44 w-full">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <CoverImage src={coverImage} alt={t("web.project_cover_image")} className="h-44 w-full rounded-md" />
+      <div className="relative h-44 w-full overflow-hidden rounded-lg bg-[#262626]">
+        {coverImage && (
+          <>
+            <CoverImage src={coverImage} alt={t("web.project_cover_image")} className="h-full w-full" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          </>
+        )}
         <div className="absolute bottom-4 z-5 flex w-full items-end justify-between gap-3 px-4">
           <div className="flex flex-grow gap-3 truncate">
             <Controller
@@ -271,11 +255,11 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
               <Controller
                 control={control}
                 name="cover_image_url"
-                render={({ field: { value, onChange } }) => (
-                  <ImagePickerPopover
+                render={({ field: { onChange } }) => (
+                  <CoverImageUploadButton
+                    onUploadingChange={setIsCoverUploading}
                     label={t("change_cover")}
                     onChange={onChange}
-                    value={value ?? null}
                     disabled={!isAdmin}
                     projectId={project.id}
                   />
@@ -302,12 +286,12 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
               <Field name="name" invalid={Boolean(errors.name)}>
                 <InputGroup size="lg">
                   <Input
+                    value={value}
                     size="lg"
                     id="name"
                     name="name"
                     type="text"
                     ref={ref}
-                    value={value}
                     onChange={onChange}
                     placeholder={t("common.project_name")}
                     disabled={!isAdmin}
@@ -327,13 +311,13 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
               <Field name="description" invalid={Boolean(errors?.description)} disabled={!isAdmin}>
                 <TextAreaGroup resize="none">
                   <TextArea
+                    value={value}
                     size="lg"
                     surface="field"
                     autoResize
                     maxRows={8}
                     id="description"
                     name="description"
-                    value={value}
                     placeholder={t("project_description_placeholder")}
                     onChange={onChange}
                   />
@@ -365,11 +349,11 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                   <Field name="identifier" invalid={Boolean(errors.identifier)}>
                     <InputGroup size="lg">
                       <Input
+                        value={value}
                         size="lg"
                         id="identifier"
                         name="identifier"
                         type="text"
-                        value={value}
                         onChange={handleIdentifierChange}
                         ref={ref}
                         placeholder={t("project_settings.general.enter_project_id")}
@@ -473,7 +457,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
               type="submit"
               label={isLoading ? t("updating") : t("common.update_project")}
               loading={isLoading}
-              disabled={!isAdmin}
+              disabled={!isAdmin || isCoverUploading}
             />
             <span className="text-13 text-placeholder italic">
               {t("common.created_on")} {renderFormattedDate(project?.created_at)}

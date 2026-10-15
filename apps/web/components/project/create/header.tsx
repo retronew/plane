@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 // plane imports
 import { ETabIndices } from "@plane/constants";
@@ -17,7 +18,7 @@ import type { IProject } from "@plane/types";
 import { getTabIndex } from "@plane/utils";
 // components
 import { CoverImage } from "@/components/common/cover-image";
-import { ImagePickerPopover } from "@/components/core/image-picker-popover";
+import { CoverImageUploadButton } from "@/components/core/cover-image-upload-button";
 
 type Props = {
   handleClose: () => void;
@@ -26,10 +27,19 @@ type Props = {
   isClosable?: boolean;
   handleTemplateSelect?: () => void;
   showActionButtons?: boolean;
+  templatePicker?: ReactNode;
+  onCoverUploadingChange?: (uploading: boolean) => void;
 };
 
 function ProjectCreateHeader(props: Props) {
-  const { handleClose, isMobile = false, handleFormOnChange, isClosable = true } = props;
+  const {
+    handleClose,
+    isMobile = false,
+    handleFormOnChange,
+    isClosable = true,
+    templatePicker,
+    onCoverUploadingChange,
+  } = props;
   const { watch, control, setValue } = useFormContext<IProject>();
   const { t } = useTranslation();
   // derived values
@@ -39,12 +49,15 @@ function ProjectCreateHeader(props: Props) {
   const { getIndex } = getTabIndex(ETabIndices.PROJECT_CREATE, isMobile);
 
   return (
-    <div className="group relative h-44 w-full rounded-lg">
-      <CoverImage
-        src={coverImage}
-        alt={t("project_cover_image_alt")}
-        className="absolute top-0 left-0 h-full w-full rounded-lg"
-      />
+    <div className="group relative h-44 w-full shrink-0 rounded-lg bg-[#262626]">
+      {coverImage && (
+        <CoverImage
+          src={coverImage}
+          alt={t("project_cover_image_alt")}
+          className="absolute top-0 left-0 h-full w-full rounded-lg"
+        />
+      )}
+      {templatePicker && <div className="absolute top-2 left-2">{templatePicker}</div>}
       {isClosable && (
         <div className="absolute top-2 right-2 p-2">
           <button type="button" aria-label={t("close")} onClick={handleClose} tabIndex={getIndex("close")}>
@@ -56,14 +69,14 @@ function ProjectCreateHeader(props: Props) {
         <Controller
           name="cover_image_url"
           control={control}
-          render={({ field: { value, onChange } }) => (
-            <ImagePickerPopover
+          render={({ field: { onChange } }) => (
+            <CoverImageUploadButton
+              onUploadingChange={onCoverUploadingChange}
               label={t("change_cover")}
               onChange={(data) => {
                 onChange(data);
                 handleFormOnChange?.();
               }}
-              value={value ?? null}
               tabIndex={getIndex("cover_image")}
             />
           )}
@@ -80,6 +93,7 @@ function ProjectCreateHeader(props: Props) {
               handleToggle={(val: boolean) => setIsOpen(val)}
               className="flex items-center justify-center"
               buttonClassName="flex items-center justify-center"
+              searchPlaceholder={t("common.search.label")}
               label={
                 <span className="grid h-11 w-11 place-items-center rounded-md border border-subtle bg-layer-2">
                   <Logo logo={value} size={20} />

@@ -6,10 +6,9 @@
 
 import { RANDOM_EMOJI_CODES } from "@plane/constants";
 import type { IProject } from "@plane/types";
-import { getRandomCoverImage } from "@/helpers/cover-image.helper";
 
 export const getProjectFormValues = (): Partial<IProject> => ({
-  cover_image_url: getRandomCoverImage(),
+  cover_image_url: "",
   description: "",
   logo_props: {
     in_use: "emoji",
@@ -21,4 +20,8 @@ export const getProjectFormValues = (): Partial<IProject> => ({
   name: "",
   network: 2,
   project_lead: null,
+  priority: "none",
+  start_date: null,
+  target_date: null,
+  member_ids: [],
 });

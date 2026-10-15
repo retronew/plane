@@ -1,9 +1,19 @@
 import useSWR from "swr";
+import { LabelSelect } from "@plane/blocks/property-select";
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { useUserPermissions } from "@/hooks/store/user";
+import { ProjectStatusIcon } from "@/components/project/project-status-icon";
+import type { ReactNode } from "react";
+import { Select } from "@plane/blocks/select";
+import { PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME } from "@/components/project/create/attribute-styles";
 import { useTranslation } from "@plane/i18n";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { configurationKey, workspaceConfigurationService as service } from "@/services/workspace-configuration.service";
 import type { ProjectCategory } from "@/services/workspace-configuration.service";
 import { ConfigurationSelect } from "./select";
+
+const statusIcon = (entry: ProjectCategory) => <ProjectStatusIcon group={entry.group} color={entry.color} />;
+const selectedStatusIcon = (entries: ProjectCategory[]) => (entries[0] ? statusIcon(entries[0]) : undefined);
 
 export function useProjectCategories(slug: string) {
   const { data: stateSettings } = useSWR(`project-state-settings:${slug}`, () => service.stateSettings(slug));
@@ -18,6 +28,7 @@ export function useProjectCategories(slug: string) {
     statesEnabled: stateSettings?.enabled ?? false,
     labels: labels.data ?? [],
     error: statuses.error || labels.error,
+    refreshLabels: labels.mutate,
   };
 }
 export function ProjectCategoryFields({
@@ -27,6 +38,8 @@ export function ProjectCategoryFields({
   onStatus,
   onLabels,
   disabled = false,
+  compact = false,
+  children,
 }: {
   workspaceSlug: string;
   status?: string | null;
@@ -34,9 +47,77 @@ export function ProjectCategoryFields({
   onStatus: (id: string | null) => void;
   onLabels: (ids: string[]) => void;
   disabled?: boolean;
+  compact?: boolean;
+  children?: ReactNode;
 }) {
   const { t } = useTranslation();
   const categories = useProjectCategories(workspaceSlug);
+  const { allowPermissions } = useUserPermissions();
+  const canCreateLabel = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, workspaceSlug);
+  if (compact) {
+    const selectedStatus =
+      categories.statuses.find((entry) => entry.id === status) ??
+      (!status ? categories.statuses.find((entry) => entry.is_default) : undefined) ??
+      null;
+    return (
+      <>
+        {categories.statesEnabled && (
+          <Select<ProjectCategory>
+            getValues={() => categories.statuses}
+            value={selectedStatus}
+            onChange={onStatus}
+            getOptionValue={(entry) => entry.id}
+            getOptionLabel={(entry) => entry.name}
+            getOptionIcon={statusIcon}
+            disabled={disabled || Boolean(categories.error)}
+            placeholder={t("state")}
+            showSearch
+          >
+            <Select.Trigger<ProjectCategory>
+              variant="pill-md"
+              className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
+              aria-label={t("state")}
+              prependIcon={selectedStatusIcon}
+            >
+              {(entries) => entries[0]?.name ?? t("state")}
+            </Select.Trigger>
+          </Select>
+        )}
+        {children}
+        <LabelSelect
+          getValues={async ({ search }) => ({
+            results: categories.labels.filter((entry) =>
+              entry.name.toLocaleLowerCase().includes(search?.trim().toLocaleLowerCase() ?? "")
+            ),
+            next_page_results: false,
+          })}
+          value={(labels ?? []).map((id) => categories.labels.find((entry) => entry.id === id) ?? { id, name: id })}
+          onChange={onLabels}
+          disabled={disabled || Boolean(categories.error)}
+          placeholder={t("labels")}
+          variant="pill-md"
+          className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
+          createLabel={{
+            canCreate: canCreateLabel,
+            onCreate: async (name) => {
+              const created = await service.save<ProjectCategory>(workspaceSlug, "project-categories/label", {
+                name: name.trim(),
+                color: "#60646C",
+              });
+              await categories.refreshLabels(
+                (entries: ProjectCategory[] | undefined) => [
+                  ...(entries ?? []).filter((entry) => entry.id !== created.id),
+                  created,
+                ],
+                { revalidate: false }
+              );
+              return created;
+            },
+          }}
+        />
+      </>
+    );
+  }
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
       {categories.statesEnabled && (

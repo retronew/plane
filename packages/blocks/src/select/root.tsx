@@ -94,7 +94,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     filterHeaderItems = false,
     lazyMount = true,
     modal = false,
-    pinSelected: shouldPinSelected = true,
+    pinSelected: shouldPinSelected = false,
     contentSizing = "auto",
     defaultOpen = false,
     open: controlledOpen,
@@ -167,9 +167,8 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     resolvedFromIds ?? (multiple ? ((value as T[]) ?? []) : value ? [value as T] : [])
   );
 
-  // Snapshot of the selection taken each time the dropdown opens. Pinning against this snapshot
-  // (rather than live `value`) keeps options from jumping to the top mid-interaction — they reorder
-  // on the next open instead, matching the rest of the dropdowns.
+  // Stable source ordering is the default across opens. Explicit opt-in pinning snapshots the
+  // selection only on open, so even those pickers do not reorder during an interaction.
   const [pinnedSelected, setPinnedSelected] = useState<T[]>([]);
 
   // Open state is uncontrolled by default; a caller that needs to open the picker itself passes

@@ -283,6 +283,25 @@ class ProjectViewSet(BaseViewSet):
                     role=ROLE.ADMIN.value,
                 )
 
+            initial_member_ids = getattr(serializer.instance, "initial_member_ids", [])
+            existing_member_ids = set(
+                ProjectMember.objects.filter(project=serializer.instance).values_list("member_id", flat=True)
+            )
+            ProjectMember.objects.bulk_create(
+                [
+                    ProjectMember(
+                        project=serializer.instance,
+                        workspace=workspace,
+                        member_id=member.member_id,
+                        role=ROLE.GUEST.value if member.role == ROLE.GUEST.value else ROLE.MEMBER.value,
+                    )
+                    for member in WorkspaceMember.objects.filter(
+                        workspace=workspace, member_id__in=initial_member_ids, is_active=True
+                    )
+                    if member.member_id not in existing_member_ids
+                ]
+            )
+
             template_configuration = getattr(serializer.instance, "template_configuration", None) or {}
             state_definitions = template_configuration.get("states") or DEFAULT_STATES
             State.objects.bulk_create(

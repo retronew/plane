@@ -1,5 +1,7 @@
 {
   "web": {
+    "change_skin_tone": "更改肤色",
+    "no_project_templates": "暂无项目模板，可在工作区设置中创建",
     "composer_temporarily_saved": "有暂存的未完成工作项",
     "ai_is_answering": "AI 正在回答…",
     "accept": "接受",

@@ -117,7 +117,6 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
               src={userData?.cover_image_url ?? undefined}
               alt={userData?.display_name}
               className="h-[110px] w-full"
-              showDefaultWhenEmpty
             />
             <div className="absolute -bottom-[26px] left-5 h-[52px] w-[52px] rounded-sm">
               {userData?.avatar_url && userData?.avatar_url !== "" ? (

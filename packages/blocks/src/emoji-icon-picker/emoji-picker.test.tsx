@@ -28,7 +28,7 @@ describe("EmojiPicker popover", () => {
     const user = userEvent.setup();
     render(<ControlledPicker />);
     expect(document.querySelector("[data-prevent-outside-click]")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Pick emoji" }));
+    await user.click(screen.getByRole("button", { name: "Emoji / Icon" }));
     expect(await screen.findByTestId("emoji-grid")).toBeDefined();
     expect(document.querySelector("[data-prevent-outside-click]")).not.toBeNull();
   });

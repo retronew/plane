@@ -167,16 +167,16 @@ describe("Select on Propel combobox", () => {
 
   it("pins the selected option to the top on open", async () => {
     const user = userEvent.setup();
-    renderSelect({ value: options[150] });
+    renderSelect({ value: options[150], pinSelected: true });
 
     await openSelect(user, `${TRIGGER_NAME}, Option 150`);
     const rendered = popup().getAllByRole("option");
     expect(rendered[0]).toHaveProperty("textContent", "Option 150");
   });
 
-  it("does not reorder the list when pinSelected is off", async () => {
+  it("preserves source order by default even with a selected option", async () => {
     const user = userEvent.setup();
-    renderSelect({ value: options[150], pinSelected: false });
+    renderSelect({ value: options[150] });
 
     await openSelect(user, `${TRIGGER_NAME}, Option 150`);
     const rendered = popup().getAllByRole("option");

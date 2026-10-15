@@ -10,6 +10,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InfoOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ETabIndices } from "@plane/constants";
@@ -119,19 +120,19 @@ function ProjectCommonAttributes(props: Props) {
                   placeholder={t("project_id")}
                   tabIndex={getIndex("identifier")}
                 />
+                <Tooltip label={t("project_id_tooltip_content")} side="top" align="center" disabled={isMobile}>
+                  <IconButton
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    aria-label={t("project_id_tooltip_content")}
+                    icon={<InfoOutline />}
+                  />
+                </Tooltip>
               </InputGroup>
             </Field>
           )}
         />
-        <Tooltip
-          label={t("project_id_tooltip_content")}
-          layout="stacked"
-          side="right"
-          align="start"
-          disabled={isMobile}
-        >
-          <InfoOutline className="absolute top-2.5 right-2 h-3 w-3 text-placeholder" />
-        </Tooltip>
         <span className="text-11 text-danger-primary">{errors?.identifier?.message}</span>
       </div>
       <div className="md:col-span-4">
@@ -140,12 +141,11 @@ function ProjectCommonAttributes(props: Props) {
           control={control}
           render={({ field: { value, onChange } }) => (
             <Field name="description" invalid={Boolean(errors?.description)}>
-              <TextAreaGroup resize="none">
+              <TextAreaGroup resize="none" render={<div className="h-[98px] shrink-0" />}>
                 <TextArea
                   size="lg"
                   surface="field"
-                  autoResize
-                  maxRows={8}
+                  rows={4}
                   id="description"
                   name="description"
                   value={value}

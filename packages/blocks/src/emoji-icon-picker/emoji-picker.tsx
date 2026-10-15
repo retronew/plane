@@ -153,12 +153,20 @@ export function EmojiPicker(props: EmojiPickerProps) {
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         disabled={disabled}
-        render={<button type="button" className={cn("outline-none", buttonClassName)} disabled={disabled} />}
+        render={
+          <button
+            type="button"
+            aria-label={showEmojiTab ? `${t("web.emoji")} / ${t("web.icon")}` : t("web.icon")}
+            className={cn("outline-none", buttonClassName)}
+            disabled={disabled}
+          />
+        }
       >
         {label}
       </PopoverTrigger>
       <PopoverContent
         variant="rich"
+        data-emoji-icon-picker-popup=""
         side={finalSide}
         align={finalAlign}
         sideOffset={8}
@@ -177,21 +185,40 @@ export function EmojiPicker(props: EmojiPickerProps) {
           e.stopPropagation();
         }}
       >
-        <div className={cn("flex min-h-0 flex-col", dropdownClassName)}>
-          <Tabs variant="contained" stretch="full" defaultValue={showEmojiTab ? defaultOpen : "icon"}>
+        <div
+          className={cn(
+            "flex h-[438px] max-h-[calc(var(--available-height)-2px)] min-h-0 w-full flex-col",
+            dropdownClassName
+          )}
+        >
+          <Tabs
+            data-emoji-picker-tabs=""
+            variant="underline"
+            layout="fill"
+            defaultValue={showEmojiTab ? defaultOpen : "icon"}
+          >
             {tabs.length > 1 && (
-              <TabsList>
-                {tabs.map((tab) => (
-                  <Tab key={tab.key} value={tab.key} label={tab.label} />
-                ))}
-              </TabsList>
+              <div className="w-full px-3 pt-2.5">
+                <TabsList>
+                  {tabs.map((tab) => (
+                    <Tab key={tab.key} value={tab.key} label={tab.label} />
+                  ))}
+                </TabsList>
+              </div>
             )}
-            <PopoverBody tabIndex={0}>
+            <PopoverBody data-emoji-picker-body="" tabIndex={0}>
               {tabs.map((tab) => (
                 // The icon tab has no inner scrollport (unlike the emoji tab's frimousse
                 // viewport), so the panel itself scrolls.
                 <TabsPanel key={tab.key} value={tab.key}>
-                  <div className="h-80 overflow-y-auto">{tab.content}</div>
+                  <div
+                    className={cn(
+                      "h-full min-h-0",
+                      tab.key === "icon" ? "scrollbar-sm overflow-y-auto" : "overflow-hidden"
+                    )}
+                  >
+                    {tab.content}
+                  </div>
                 </TabsPanel>
               ))}
             </PopoverBody>

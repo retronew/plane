@@ -1,3 +1,5 @@
+import { Select } from "@plane/blocks/select";
+import { TemplatesOutline } from "@makeplane/propel/icons";
 import { useState } from "react";
 import useSWR from "swr";
 import { useTranslation } from "@plane/i18n";
@@ -12,21 +14,50 @@ export function TemplatePicker({
   onApply,
   disabled = false,
   projectId,
+  variant = "inline",
 }: {
   workspaceSlug: string;
   kind: WorkspaceTemplate["kind"];
   onApply: (template: WorkspaceTemplate) => void;
   disabled?: boolean;
   projectId?: string;
+  variant?: "inline" | "cover";
 }) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState("");
-  const { data } = useSWR(workspaceSlug ? configurationKey(workspaceSlug, "templates") : null, () =>
+  const { data, error } = useSWR(workspaceSlug ? configurationKey(workspaceSlug, "templates") : null, () =>
     service.list<WorkspaceTemplate>(workspaceSlug, "templates")
   );
   const templates =
     data?.filter((entry) => entry.kind === kind && (!entry.project || entry.project === projectId)) ?? [];
   const template = templates.find((entry) => entry.id === selected);
+  if (variant === "cover") {
+    return (
+      <Select<WorkspaceTemplate>
+        getValues={() => templates}
+        value={template ?? null}
+        onChange={(id) => {
+          const chosen = templates.find((entry) => entry.id === id);
+          if (chosen) {
+            setSelected(chosen.id);
+            onApply(chosen);
+          }
+        }}
+        getOptionValue={(entry) => entry.id}
+        getOptionLabel={(entry) => entry.name}
+        disabled={disabled}
+        placeholder={t("web.choose_template")}
+        emptyMessage={error ? t("web.configuration_load_error") : t("web.no_project_templates")}
+      >
+        <Select.Trigger<WorkspaceTemplate>
+          variant="icon-md"
+          prependIcon={<TemplatesOutline />}
+          aria-label={t("web.choose_template")}
+          className="text-on-color hover:bg-white/10"
+        />
+      </Select>
+    );
+  }
   if (!templates.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">

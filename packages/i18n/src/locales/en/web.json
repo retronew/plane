@@ -1,5 +1,7 @@
 {
   "web": {
+    "change_skin_tone": "Change skin tone",
+    "no_project_templates": "No project templates yet. Create one in workspace settings.",
     "composer_temporarily_saved": "Unfinished work item saved temporarily",
     "ai_is_answering": "AI is answering...",
     "accept": "Accept",

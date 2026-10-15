@@ -111,7 +111,6 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                 src={currentUser?.cover_image_url ?? undefined}
                 alt=""
                 className="absolute inset-0 size-full"
-                showDefaultWhenEmpty
               />
               <div className="absolute inset-0 bg-black/50" />
               <div className="relative flex">

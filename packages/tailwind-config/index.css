@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./emoji-picker.css";
 /*
  * Design tokens + animations come from @makeplane/propel, which supersedes the
  * variables.css / animations.css this package used to ship. It defines every
@@ -27,7 +28,7 @@
 }
 
 body {
-  @apply font-body bg-canvas text-primary;
+  @apply bg-canvas font-body text-primary;
 }
 
 /* emoji icon picker */
@@ -100,12 +101,12 @@ body {
   }
 
   &::-webkit-scrollbar-track {
-    @apply bg-layer-transparent rounded-full;
+    @apply rounded-full bg-layer-transparent;
   }
 
   &::-webkit-scrollbar-thumb {
     background-clip: padding-box;
-    @apply bg-scrollbar-thumb rounded-full;
+    @apply rounded-full bg-scrollbar-thumb;
 
     &:hover {
       @apply bg-scrollbar-thumb-hover;

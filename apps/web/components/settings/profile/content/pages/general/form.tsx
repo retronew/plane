@@ -14,19 +14,18 @@ import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
-import { EFileAssetType } from "@plane/types";
 import type { IUser, TUserProfile } from "@plane/types";
 
 import { getFileURL } from "@plane/utils";
 // components
 import { DeactivateAccountModal } from "@/components/account/deactivate-account-modal";
-import { ImagePickerPopover } from "@/components/core/image-picker-popover";
+import { CoverImageUploadButton } from "@/components/core/cover-image-upload-button";
 import { ChangeEmailModal } from "@/components/core/modals/change-email-modal";
 import { UserImageUploadModal } from "@/components/core/modals/user-image-upload-modal";
 import { CoverImage } from "@/components/common/cover-image";
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 // helpers
-import { handleCoverImageChange } from "@/helpers/cover-image.helper";
+import { getCoverImagePayload } from "@/helpers/cover-image.helper";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
 import { useUser, useUserProfile } from "@/hooks/store/user";
@@ -56,6 +55,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
   const { user, profile } = props;
   // states
   const [isLoading, setIsLoading] = useState(false);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
   const [deactivateAccountModal, setDeactivateAccountModal] = useState(false);
   const [isChangeEmailModalOpen, setIsChangeEmailModalOpen] = useState(false);
@@ -127,26 +127,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       display_name: formData?.display_name,
     };
 
-    try {
-      const coverImagePayload = await handleCoverImageChange(user.cover_image_url, formData.cover_image_url, {
-        entityIdentifier: "",
-        entityType: EFileAssetType.USER_COVER,
-        isUserAsset: true,
-      });
-
-      if (coverImagePayload) {
-        Object.assign(userPayload, coverImagePayload);
-      }
-    } catch (error) {
-      console.error("Error handling cover image:", error);
-      setToast({
-        type: "error",
-        title: t("toast.error"),
-        message: error instanceof Error ? error.message : t("web.failed_to_process_cover_image"),
-      });
-      setIsLoading(false);
-      return;
-    }
+    Object.assign(userPayload, getCoverImagePayload(user.cover_image_url, formData.cover_image_url));
 
     const profilePayload: Partial<TUserProfile> = {
       role: formData.role,
@@ -218,7 +199,6 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
               src={userCover}
               className="absolute inset-0 size-full"
               alt={currentUser?.first_name ?? translate("web.cover_image")}
-              showDefaultWhenEmpty
             />
             <div className="absolute inset-0 bg-black/30" />
             <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-2">
@@ -244,11 +224,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
               <Controller
                 control={control}
                 name="cover_image_url"
-                render={({ field: { value, onChange } }) => (
-                  <ImagePickerPopover
+                render={({ field: { onChange } }) => (
+                  <CoverImageUploadButton
+                    onUploadingChange={setIsCoverUploading}
                     label={t("change_cover")}
                     onChange={(imageUrl) => onChange(imageUrl)}
-                    value={value}
                     isProfileCover
                   />
                 )}
@@ -273,11 +253,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                     <Field name="first_name" invalid={Boolean(errors.first_name)}>
                       <InputGroup size="lg">
                         <Input
+                          value={value}
                           size="lg"
                           id="first_name"
                           name="first_name"
                           type="text"
-                          value={value}
                           onChange={onChange}
                           ref={ref}
                           placeholder={t("web.enter_your_first_name")}
@@ -304,11 +284,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                     <Field name="last_name" invalid={Boolean(errors.last_name)}>
                       <InputGroup size="lg">
                         <Input
+                          value={value}
                           size="lg"
                           id="last_name"
                           name="last_name"
                           type="text"
-                          value={value}
                           onChange={onChange}
                           ref={ref}
                           placeholder={t("web.enter_your_last_name")}
@@ -337,11 +317,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                     <Field name="display_name" invalid={Boolean(errors?.display_name)}>
                       <InputGroup size="lg">
                         <Input
+                          value={value}
                           size="lg"
                           id="display_name"
                           name="display_name"
                           type="text"
-                          value={value}
                           onChange={onChange}
                           ref={ref}
                           placeholder={t("web.enter_your_display_name")}
@@ -370,11 +350,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                     <Field name="email" invalid={Boolean(errors.email)}>
                       <InputGroup size="lg">
                         <Input
+                          value={value}
                           size="lg"
                           id="email"
                           name="email"
                           type="email"
-                          value={value}
                           ref={ref}
                           placeholder={t("web.enter_your_email")}
                           autoComplete="on"
@@ -404,6 +384,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
               type="submit"
               label={isLoading ? t("saving") : t("save_changes")}
               loading={isLoading}
+              disabled={isCoverUploading}
             />
           </div>
         </div>

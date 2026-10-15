@@ -72,6 +72,13 @@ class Project(BaseModel):
     )
     labels = models.ManyToManyField("db.ProjectCategory", blank=True, related_name="label_projects")
     name = models.CharField(max_length=255, verbose_name="Project Name")
+    priority = models.CharField(
+        max_length=30,
+        choices=(("urgent", "Urgent"), ("high", "High"), ("medium", "Medium"), ("low", "Low"), ("none", "None")),
+        default="none",
+    )
+    start_date = models.DateField(null=True, blank=True)
+    target_date = models.DateField(null=True, blank=True)
     description = models.TextField(verbose_name="Project Description", blank=True)
     description_text = models.JSONField(verbose_name="Project Description RT", blank=True, null=True)
     description_html = models.JSONField(verbose_name="Project Description HTML", blank=True, null=True)

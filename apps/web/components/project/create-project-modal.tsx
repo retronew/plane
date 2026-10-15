@@ -83,9 +83,7 @@ export const CreateProjectModal = observer(function CreateProjectModal(props: Pr
           </div>
         )}
         {canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
-          // CreateProjectForm has no DialogBody scroller of its own yet, so this wrapper keeps the
-          // whole form (including the submit footer) reachable on short viewports.
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col">
             <CreateProjectForm
               setToFavorite={setToFavorite}
               workspaceSlug={workspaceSlug}
