@@ -17,14 +17,21 @@ import {
   MenuSubmenuTrigger,
 } from "@makeplane/propel/components/menu";
 import { Toggle, ToggleLabel } from "@makeplane/propel/elements/toggle";
-import { ISSUE_DISPLAY_PROPERTIES, ISSUE_GROUP_BY_OPTIONS, ISSUE_ORDER_BY_OPTIONS } from "@plane/constants";
+import {
+  ISSUE_DISPLAY_PROPERTIES,
+  ISSUE_GROUP_BY_OPTIONS,
+  ISSUE_ORDER_BY_OPTIONS,
+  SPREADSHEET_PROPERTY_DETAILS,
+} from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
   ILayoutDisplayFiltersOptions,
   TIssueGroupByOptions,
+  TIssueOrderByOptions,
 } from "@plane/types";
+import { SortMenuItems } from "@/components/common/sort-menu";
 import styles from "./display-filters-selection.module.css";
 
 type Props = {
@@ -44,11 +51,13 @@ function DisplayChoiceMenu<T extends string | null>({
   options,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   options: { key: T; title: string }[];
   value: T;
   onChange: (value: T) => void;
+  disabled?: boolean;
 }) {
   const encode = (key: T) => key ?? "__none__";
   const selected = options.find((option) => option.key === value);
@@ -56,6 +65,7 @@ function DisplayChoiceMenu<T extends string | null>({
     <MenuSubmenu>
       <MenuSubmenuTrigger
         label={label}
+        disabled={disabled}
         trailing={<span className="max-w-32 truncate text-secondary">{selected?.title}</span>}
       />
       <MenuSubmenuContent>
@@ -130,6 +140,15 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
         )
       : [];
   const orders = ISSUE_ORDER_BY_OPTIONS.filter((option) => enabledFilters.order_by?.includes(option.key));
+  const orderBy = displayFilters?.order_by ?? "-created_at";
+  const orderField = orderBy.replace(/^-/, "");
+  const descending = orderBy.startsWith("-");
+  // Column headers can sort extra table fields (state, assignees, labels, ...).
+  const selectedColumnOrder = Object.values(SPREADSHEET_PROPERTY_DETAILS).find(
+    (property) => property?.ascendingOrderKey.replace(/^-/, "") === orderField
+  );
+  if (orders.length && !orders.some((option) => option.key.replace(/^-/, "") === orderField) && selectedColumnOrder)
+    orders.push({ key: orderBy, titleTranslationKey: selectedColumnOrder.i18n_title });
   const extras = configuration?.extra_options.access ? (configuration.extra_options.values ?? []) : [];
   return (
     <div className={styles.menu}>
@@ -181,13 +200,28 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
         />
       )}
       {orders.length > 0 && (
-        <DisplayChoiceMenu
-          label={t("common.order_by.label")}
-          value={displayFilters?.order_by ?? "-created_at"}
-          options={orders.map((option) => ({ key: option.key, title: t(option.titleTranslationKey) }))}
-          onChange={(order_by) => handleDisplayFiltersUpdate({ order_by })}
+        <SortMenuItems
+          field={orderField}
+          direction={descending ? "desc" : "asc"}
+          options={orders.map((option) => ({
+            value: option.key.replace(/^-/, ""),
+            label: t(option.titleTranslationKey),
+          }))}
+          onFieldChange={(field) => {
+            const selected = orders.find((option) => option.key.replace(/^-/, "") === field)!;
+            const next =
+              field === "sort_order" || orderField === "sort_order" ? selected.key : `${descending ? "-" : ""}${field}`;
+            handleDisplayFiltersUpdate({ order_by: next as TIssueOrderByOptions });
+          }}
+          directionDisabled={orderField === "sort_order"}
+          onDirectionChange={(direction) =>
+            handleDisplayFiltersUpdate({
+              order_by: `${direction === "desc" ? "-" : ""}${orderField}` as TIssueOrderByOptions,
+            })
+          }
         />
       )}
+
       {extras.length > 0 && (
         <>
           {(properties.length > 0 || groups.length > 0 || orders.length > 0) && <MenuSeparator />}

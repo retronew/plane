@@ -4,114 +4,66 @@
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
 import { observer } from "mobx-react";
 import type { IBaseIssueFilterStore } from "@/store/issue/helpers/issue-filter-helper.store";
-import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
-import { ChevronLeftOutline, ChevronRightOutline } from "@makeplane/propel/icons";
-//hooks
-// icons
-// constants
-import { getDate } from "@plane/utils";
-import { MONTHS_LIST } from "@plane/constants";
+import { Calendar } from "@makeplane/propel/components/calendar";
+import { Button } from "@makeplane/propel/components/button";
+import { Icon } from "@makeplane/propel/components/icon";
+import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
+import { ChevronDownOutline } from "@makeplane/propel/icons";
+import { getCalendarLocale } from "@plane/blocks/property-select";
+import { useTranslation } from "@plane/i18n";
+import { getCalendarFormatters, getDate } from "@plane/utils";
 import { useCalendarView } from "@/hooks/store/use-calendar-view";
-// helpers
 
 interface Props {
   issuesFilterStore: Pick<IBaseIssueFilterStore, "issueFilters">;
 }
-export const CalendarMonthsDropdown = observer(function CalendarMonthsDropdown(props: Props) {
-  const { issuesFilterStore } = props;
-
+export const CalendarMonthsDropdown = observer(function CalendarMonthsDropdown({ issuesFilterStore }: Props) {
+  const { currentLocale } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
   const issueCalendarView = useCalendarView();
-
   const calendarLayout = issuesFilterStore.issueFilters?.displayFilters?.calendar?.layout ?? "month";
-
-  const { activeMonthDate } = issueCalendarView.calendarFilters;
-
-  const getWeekLayoutHeader = (): string => {
-    const allDaysOfActiveWeek = issueCalendarView.allDaysOfActiveWeek;
-
-    if (!allDaysOfActiveWeek) return "Week view";
-
-    const daysList = Object.keys(allDaysOfActiveWeek);
-
-    const firstDay = getDate(daysList[0]);
-    const lastDay = getDate(daysList[daysList.length - 1]);
-
-    if (!firstDay || !lastDay) return "Week view";
-
-    if (firstDay.getMonth() === lastDay.getMonth() && firstDay.getFullYear() === lastDay.getFullYear())
-      return `${MONTHS_LIST[firstDay.getMonth() + 1].title} ${firstDay.getFullYear()}`;
-
-    if (firstDay.getFullYear() !== lastDay.getFullYear()) {
-      return `${MONTHS_LIST[firstDay.getMonth() + 1].shortTitle} ${firstDay.getFullYear()} - ${
-        MONTHS_LIST[lastDay.getMonth() + 1].shortTitle
-      } ${lastDay.getFullYear()}`;
-    } else
-      return `${MONTHS_LIST[firstDay.getMonth() + 1].shortTitle} - ${
-        MONTHS_LIST[lastDay.getMonth() + 1].shortTitle
-      } ${lastDay.getFullYear()}`;
-  };
-
-  const handleDateChange = (date: Date) => {
-    issueCalendarView.updateCalendarFilters({
-      activeMonthDate: date,
-    });
-  };
-
+  const { activeMonthDate, activeWeekDate } = issueCalendarView.calendarFilters;
+  const formatter = new Intl.DateTimeFormat(currentLocale, { month: "long", year: "numeric" });
+  let label = formatter.format(activeMonthDate);
+  if (calendarLayout === "week") {
+    const days = Object.keys(issueCalendarView.allDaysOfActiveWeek ?? {});
+    const first = getDate(days[0]) ?? activeWeekDate;
+    const last = getDate(days[days.length - 1]) ?? first;
+    label = formatter.formatRange(first, last);
+  }
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger
         disabled={calendarLayout === "week"}
         render={
-          <button type="button" className="text-18 font-semibold outline-none">
-            {calendarLayout === "month"
-              ? `${MONTHS_LIST[activeMonthDate.getMonth() + 1].title} ${activeMonthDate.getFullYear()}`
-              : getWeekLayoutHeader()}
-          </button>
+          <Button
+            variant="ghost"
+            size="md"
+            stretch="auto"
+            label={label}
+            icon={<Icon icon={ChevronDownOutline} />}
+            iconPosition="end"
+          />
         }
       />
-      <PopoverContent variant="rich" side="bottom" align="start" collisionPadding={12}>
-        <div className="w-56 divide-y divide-subtle-1">
-          <div className="flex items-center justify-between gap-2 pb-3">
-            <button
-              type="button"
-              className="grid place-items-center"
-              onClick={() => {
-                const previousYear = new Date(activeMonthDate.getFullYear() - 1, activeMonthDate.getMonth(), 1);
-                handleDateChange(previousYear);
-              }}
-            >
-              <ChevronLeftOutline height={14} width={14} />
-            </button>
-            <span className="text-11">{activeMonthDate.getFullYear()}</span>
-            <button
-              type="button"
-              className="grid place-items-center"
-              onClick={() => {
-                const nextYear = new Date(activeMonthDate.getFullYear() + 1, activeMonthDate.getMonth(), 1);
-                handleDateChange(nextYear);
-              }}
-            >
-              <ChevronRightOutline height={14} width={14} />
-            </button>
-          </div>
-          <div className="grid grid-cols-4 items-stretch justify-items-stretch gap-4 pt-3">
-            {Object.values(MONTHS_LIST).map((month, index) => (
-              <button
-                key={month.shortTitle}
-                type="button"
-                className="rounded-sm py-0.5 text-11 hover:bg-layer-1"
-                onClick={() => {
-                  const newDate = new Date(activeMonthDate.getFullYear(), index, 1);
-                  handleDateChange(newDate);
-                }}
-              >
-                {month.shortTitle}
-              </button>
-            ))}
-          </div>
-        </div>
+      <PopoverContent variant="rich" side="bottom" align="start" collisionPadding={12} data-date-picker="">
+        <PopoverBody>
+          <Calendar
+            {...getCalendarLocale(currentLocale)}
+            formatters={getCalendarFormatters()}
+            defaultView="months"
+            defaultMonth={activeMonthDate}
+            onMonthChange={(date) => {
+              issueCalendarView.updateCalendarFilters({
+                activeMonthDate: new Date(date.getFullYear(), date.getMonth(), 1),
+              });
+              setIsOpen(false);
+            }}
+          />
+        </PopoverBody>
       </PopoverContent>
     </Popover>
   );

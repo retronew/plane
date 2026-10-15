@@ -29,6 +29,7 @@ import { Row } from "@plane/blocks/layout";
 import { cn } from "@plane/utils";
 // components
 import { ListLoaderItemRow } from "@/components/ui/loader/layouts/list-layout-loader";
+import { useCollapsibleVisibilityUpdates } from "@/components/core/visibility-observer-boundary";
 import { useWorkFlowFDragNDrop } from "@/components/workflow";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -260,6 +261,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
 
   const isGroupByCreatedBy = group_by === "created_by";
   const shouldExpand = (!!groupIssueCount && isExpanded) || !group_by;
+  const finishVisibilityTransition = useCollapsibleVisibilityUpdates(shouldExpand);
 
   return validateEmptyIssueGroups(groupIssueCount) ? (
     <Collapsible.Root
@@ -294,7 +296,13 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           isEpic={isEpic}
         />
       </Row>
-      <Collapsible.Panel className="motion-reduce:transition-none" render={<CollapsiblePanel />}>
+      <Collapsible.Panel
+        keepMounted
+        inert={!shouldExpand}
+        className="motion-reduce:transition-none"
+        onTransitionEnd={finishVisibilityTransition}
+        render={<CollapsiblePanel />}
+      >
         <div className="relative">
           <GroupDragOverlay
             dragColumnOrientation={dragColumnOrientation}

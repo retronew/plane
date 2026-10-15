@@ -24,6 +24,7 @@ import type {
 } from "@plane/types";
 // components
 import { MultipleSelectGroup } from "@/components/core/multiple-select";
+import { VisibilityObserverBoundary } from "@/components/core/visibility-observer-boundary";
 // hooks
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 // plane web components
@@ -33,6 +34,7 @@ import { useBulkOperationStatus } from "@/hooks/use-bulk-operation-status";
 // utils
 import type { GroupDropLocation } from "../utils";
 import { getGroupByColumns, isWorkspaceLevel, isSubGrouped } from "../utils";
+import { IssueRowExpansionProvider } from "../row-expansion";
 import { ListGroup } from "./list-group";
 import type { TRenderQuickActions } from "./list-view-types";
 
@@ -129,54 +131,58 @@ export const List = observer(function List(props: IList) {
     entities = orderedGroups;
   }
   return (
-    <div className="relative flex size-full flex-col">
-      {groups && (
-        <MultipleSelectGroup
-          containerRef={containerRef}
-          entities={entities}
-          disabled={!isBulkOperationsEnabled || isEpic}
-        >
-          {(helpers) => (
-            <>
-              <div
-                ref={containerRef}
-                className="vertical-scrollbar relative scrollbar-lg size-full overflow-auto bg-surface-1"
-              >
-                {groups.map((group: IGroupByColumn) => (
-                  <ListGroup
-                    key={group.id}
-                    groupIssueIds={groupedIssueIds?.[group.id]}
-                    issuesMap={issuesMap}
-                    group_by={group_by}
-                    group={group}
-                    updateIssue={updateIssue}
-                    quickActions={quickActions}
-                    orderBy={orderBy}
-                    getGroupIndex={getGroupIndex}
-                    handleOnDrop={handleOnDrop}
-                    displayProperties={displayProperties}
-                    enableIssueQuickAdd={enableIssueQuickAdd}
-                    showEmptyGroup={showEmptyGroup}
-                    canEditProperties={canEditProperties}
-                    quickAddCallback={quickAddCallback}
-                    disableIssueCreation={disableIssueCreation}
-                    addIssuesToView={addIssuesToView}
-                    isCompletedCycle={isCompletedCycle}
-                    loadMoreIssues={loadMoreIssues}
-                    containerRef={containerRef}
-                    selectionHelpers={helpers}
-                    handleCollapsedGroups={handleCollapsedGroups}
-                    collapsedGroups={collapsedGroups}
-                    isEpic={isEpic}
-                  />
-                ))}
-              </div>
+    <IssueRowExpansionProvider>
+      <VisibilityObserverBoundary>
+        <div className="relative flex size-full flex-col">
+          {groups && (
+            <MultipleSelectGroup
+              containerRef={containerRef}
+              entities={entities}
+              disabled={!isBulkOperationsEnabled || isEpic}
+            >
+              {(helpers) => (
+                <>
+                  <div
+                    ref={containerRef}
+                    className="vertical-scrollbar relative scrollbar-lg size-full overflow-auto bg-surface-1"
+                  >
+                    {groups.map((group: IGroupByColumn) => (
+                      <ListGroup
+                        key={group.id}
+                        groupIssueIds={groupedIssueIds?.[group.id]}
+                        issuesMap={issuesMap}
+                        group_by={group_by}
+                        group={group}
+                        updateIssue={updateIssue}
+                        quickActions={quickActions}
+                        orderBy={orderBy}
+                        getGroupIndex={getGroupIndex}
+                        handleOnDrop={handleOnDrop}
+                        displayProperties={displayProperties}
+                        enableIssueQuickAdd={enableIssueQuickAdd}
+                        showEmptyGroup={showEmptyGroup}
+                        canEditProperties={canEditProperties}
+                        quickAddCallback={quickAddCallback}
+                        disableIssueCreation={disableIssueCreation}
+                        addIssuesToView={addIssuesToView}
+                        isCompletedCycle={isCompletedCycle}
+                        loadMoreIssues={loadMoreIssues}
+                        containerRef={containerRef}
+                        selectionHelpers={helpers}
+                        handleCollapsedGroups={handleCollapsedGroups}
+                        collapsedGroups={collapsedGroups}
+                        isEpic={isEpic}
+                      />
+                    ))}
+                  </div>
 
-              <IssueBulkOperationsRoot selectionHelpers={helpers} />
-            </>
+                  <IssueBulkOperationsRoot selectionHelpers={helpers} />
+                </>
+              )}
+            </MultipleSelectGroup>
           )}
-        </MultipleSelectGroup>
-      )}
-    </div>
+        </div>
+      </VisibilityObserverBoundary>
+    </IssueRowExpansionProvider>
   );
 });

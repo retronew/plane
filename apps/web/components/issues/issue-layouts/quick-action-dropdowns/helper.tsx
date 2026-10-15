@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import {
   ArchiveOutline,
   CloseCircleOutline,
@@ -260,6 +260,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createArchiveMenuItem = (): TContextMenuItem => ({
     key: "archive",
+    section: "lifecycle",
     title: t("common.actions.archive"),
     description: isInArchivableGroup ? undefined : t("issue.archive.description"),
     icon: ArchiveOutline,
@@ -278,6 +279,8 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createDeleteMenuItem = (): TContextMenuItem => ({
     key: "delete",
+    section: "lifecycle",
+    variant: "danger",
     title: t("common.actions.delete"),
     icon: DeleteOutline,
     action: () => {
@@ -329,7 +332,7 @@ export const useWorkItemDetailMenuItems = (props: MenuItemFactoryProps): TContex
       factory.createDeleteMenuItem(),
     ],
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [factory]
+    [factory, props.workspaceSlug]
   );
 };
 
@@ -351,14 +354,15 @@ export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuI
 
 export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
   const factory = useMenuItemFactory(props);
+  const { issue, cycleId, setIssueToEdit, setCreateUpdateIssueModal } = props;
 
-  const customEditAction = () => {
-    props.setIssueToEdit({
-      ...props.issue,
-      cycle_id: props.cycleId ?? null,
+  const customEditAction = useCallback(() => {
+    setIssueToEdit({
+      ...issue,
+      cycle_id: cycleId ?? null,
     });
-    props.setCreateUpdateIssueModal(true);
-  };
+    setCreateUpdateIssueModal(true);
+  }, [issue, cycleId, setIssueToEdit, setCreateUpdateIssueModal]);
 
   return useMemo(
     () => [
@@ -371,20 +375,21 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
       factory.createDeleteMenuItem(),
     ],
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [factory, props.cycleId]
+    [factory, customEditAction]
   );
 };
 
 export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
   const factory = useMenuItemFactory(props);
+  const { issue, moduleId, setIssueToEdit, setCreateUpdateIssueModal } = props;
 
-  const customEditAction = () => {
-    props.setIssueToEdit({
-      ...props.issue,
-      module_ids: props.moduleId ? [props.moduleId] : [],
+  const customEditAction = useCallback(() => {
+    setIssueToEdit({
+      ...issue,
+      module_ids: moduleId ? [moduleId] : [],
     });
-    props.setCreateUpdateIssueModal(true);
-  };
+    setCreateUpdateIssueModal(true);
+  }, [issue, moduleId, setIssueToEdit, setCreateUpdateIssueModal]);
 
   return useMemo(
     () => [
@@ -397,7 +402,7 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
       factory.createDeleteMenuItem(),
     ],
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [factory, props.moduleId]
+    [factory, customEditAction]
   );
 };
 

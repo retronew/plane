@@ -22,7 +22,7 @@ import { cn, generateWorkItemLink } from "@plane/utils";
 // components
 import { MultipleSelectEntityAction } from "@/components/core/multiple-select";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
-import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { ListIssueIdentifier } from "../identifier";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -32,6 +32,7 @@ import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local components
 import type { TRenderQuickActions } from "../list/list-view-types";
+import { useIssueRowExpansion } from "../row-expansion";
 import { isIssueNew } from "../utils";
 import { IssueColumn } from "./issue-column";
 import { translate } from "@plane/i18n";
@@ -51,6 +52,7 @@ interface Props {
   spacingLeft?: number;
   selectionHelpers: TSelectionHelper;
   shouldRenderByDefault?: boolean;
+  virtualized?: boolean;
   isEpic?: boolean;
 }
 
@@ -70,10 +72,11 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
     spacingLeft = 6,
     selectionHelpers,
     shouldRenderByDefault,
+    virtualized = false,
     isEpic = false,
   } = props;
   // states
-  const [isExpanded, setExpanded] = useState<boolean>(false);
+  const [isExpanded, setExpanded] = useIssueRowExpansion(issueId);
   // store hooks
   const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const { issueMap } = useIssues();
@@ -91,17 +94,21 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
       {/* first column/ issue name and key column */}
       <RenderIfVisible
         as="tr"
+        aria-label={issue.name}
+        forceRender={virtualized}
+        renderVisibleBeforePaint
         root={containerRef}
         placeholderChildren={
           <td
+            aria-label={translate("common.loading")}
             colSpan={100}
-            className="border-[0.5px] border-transparent border-b-subtle-1"
+            className="border-b-[0.5px] border-subtle"
             style={{ height: "calc(2.75rem - 1px)" }}
           />
         }
         classNames={cn("bg-surface-1 transition-[background-color]", {
           "group selected-issue-row": isIssueSelected,
-          "border-[0.5px] border-strong-1": isIssueActive,
+          "outline outline-1 -outline-offset-1 outline-strong": isIssueActive,
         })}
         verticalOffset={100}
         shouldRecordHeights={false}
@@ -145,6 +152,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
             spreadsheetColumnsList={spreadsheetColumnsList}
             selectionHelpers={selectionHelpers}
             shouldRenderByDefault={isExpanded}
+            virtualized={virtualized}
           />
         ))}
     </>
@@ -263,9 +271,10 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
       {/* Single sticky column containing both identifier and workitem */}
       <td
         id={`issue-${issueId}`}
+        aria-label={issueDetail.name}
         ref={cellRef}
         tabIndex={0}
-        className="group/list-block relative left-0 z-10 max-w-lg bg-surface-1 md:sticky"
+        className="group/list-block relative left-0 z-10 max-w-lg border-r-[0.5px] border-b-[0.5px] border-subtle bg-surface-1 md:sticky"
       >
         <ControlLink
           href={workItemLink}
@@ -275,10 +284,9 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
         >
           <Row
             className={cn(
-              "group clickable z-10 flex h-11 w-full cursor-pointer items-center border-r-[0.5px] border-subtle-1 bg-transparent text-13 group-[.selected-issue-row]:bg-accent-primary/5 after:absolute group-[.selected-issue-row]:hover:bg-accent-primary/10",
+              "group clickable z-10 flex h-11 w-full cursor-pointer items-center bg-transparent text-13 group-[.selected-issue-row]:bg-accent-primary/5 group-[.selected-issue-row]:hover:bg-accent-primary/10",
               {
-                "border-b-[0.5px]": !getIsIssuePeeked(issueDetail.id),
-                "border border-accent-strong hover:border-accent-strong":
+                "outline outline-1 -outline-offset-1 outline-accent-strong":
                   getIsIssuePeeked(issueDetail.id) && nestingLevel === peekIssue?.nestingLevel,
                 "shadow-[8px_22px_22px_10px_rgba(0,0,0,0.05)]": isScrolled.current,
               }
@@ -286,16 +294,10 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
           >
             {/* Identifier section - conditionally rendered */}
             {displayProperties?.key && (
-              <div className="flex h-full min-w-24 flex-shrink-0 items-center">
+              <div className="flex h-full flex-shrink-0 items-center">
                 <div className="relative flex cursor-pointer items-center text-11 hover:text-primary">
                   {issueDetail.project_id && (
-                    <IssueIdentifier
-                      issueId={issueDetail.id}
-                      projectId={issueDetail.project_id}
-                      size="xs"
-                      variant="tertiary"
-                      displayProperties={displayProperties}
-                    />
+                    <ListIssueIdentifier identifier={`${projectIdentifier}-${issueDetail.sequence_id}`} />
                   )}
                 </div>
               </div>

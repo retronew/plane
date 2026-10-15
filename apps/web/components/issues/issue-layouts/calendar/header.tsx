@@ -11,6 +11,7 @@ import type { IBaseIssueFilterStore } from "@/store/issue/helpers/issue-filter-h
 import type { TSupportedFilterTypeForUpdate } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { ChevronLeftOutline, ChevronRightOutline } from "@makeplane/propel/icons";
+import { Button } from "@makeplane/propel/components/button";
 import type { TSupportedFilterForUpdate } from "@plane/types";
 import { Row } from "@plane/blocks/layout";
 // icons
@@ -98,7 +99,10 @@ export const CalendarHeader = observer(function CalendarHeader(props: ICalendarH
   };
 
   return (
-    <Row className="mb-4 flex items-center justify-between gap-2">
+    <Row
+      data-calendar-toolbar=""
+      className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-subtle"
+    >
       <div className="flex items-center gap-1.5">
         <button type="button" className="grid place-items-center" onClick={handlePrevious}>
           <ChevronLeftOutline height={16} width={16} />
@@ -109,13 +113,7 @@ export const CalendarHeader = observer(function CalendarHeader(props: ICalendarH
         <CalendarMonthsDropdown issuesFilterStore={issuesFilterStore} />
       </div>
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          className="rounded-sm bg-layer-transparent px-2.5 py-1 text-11 font-medium text-secondary hover:bg-layer-transparent-hover hover:text-primary"
-          onClick={handleToday}
-        >
-          {t("common.today")}
-        </button>
+        <Button variant="ghost" size="md" stretch="auto" label={t("common.today")} onClick={handleToday} />
         <CalendarOptionsDropdown issuesFilterStore={issuesFilterStore} updateFilters={updateFilters} />
       </div>
     </Row>

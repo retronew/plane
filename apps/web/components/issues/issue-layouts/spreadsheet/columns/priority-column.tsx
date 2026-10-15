@@ -22,7 +22,7 @@ export const SpreadsheetPriorityColumn = observer(function SpreadsheetPriorityCo
   const { issue, onChange, disabled, onClose } = props;
 
   return (
-    <div className="h-11 border-b-[0.5px] border-subtle">
+    <div className="h-11">
       <PrioritySelect
         testId="spreadsheet-priority-select"
         value={issue.priority}

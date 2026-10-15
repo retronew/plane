@@ -14,6 +14,7 @@ import { useTranslation } from "@plane/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import type { TIssue } from "@plane/types";
 import { ControlLink } from "@plane/blocks/layout";
+import { StateGroupIcon } from "@plane/blocks/icons";
 import { cn, generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -56,7 +57,7 @@ export const CalendarIssueBlock = observer(
     const { issuesFilter } = useIssues(storeType);
     const { getProjectIdentifierById } = useProject();
 
-    const stateColor = getProjectStates(issue?.project_id)?.find((state) => state?.id == issue?.state_id)?.color || "";
+    const stateDetails = getProjectStates(issue?.project_id)?.find((state) => state?.id === issue?.state_id);
     const projectIdentifier = getProjectIdentifierById(issue?.project_id);
 
     // handlers
@@ -81,12 +82,7 @@ export const CalendarIssueBlock = observer(
       </button>
     );
 
-    const isMenuActionRefAboveScreenBottom =
-      typeof window !== "undefined" &&
-      menuActionRef?.current &&
-      menuActionRef?.current?.getBoundingClientRect().bottom < window.innerHeight - 220;
-
-    const placement = isMenuActionRefAboveScreenBottom ? "bottom-end" : "top-end";
+    const placement = "bottom-end";
 
     const workItemLink = generateWorkItemLink({
       workspaceSlug: workspaceSlug?.toString(),
@@ -108,7 +104,8 @@ export const CalendarIssueBlock = observer(
               id={`issue-${issue.id}`}
               href={workItemLink}
               onClick={() => handleIssuePeekOverview(issue)}
-              className="block w-full rounded-sm border-b border-subtle text-13 text-primary hover:border-subtle-1 md:border-[1px]"
+              data-calendar-work-item=""
+              className="block w-full rounded-xl border border-subtle text-13 text-primary transition-colors hover:border-strong"
               disabled={!!issue?.tempId || isMobile}
               ref={ref}
             >
@@ -120,7 +117,7 @@ export const CalendarIssueBlock = observer(
                 <div
                   ref={blockRef}
                   className={cn(
-                    "group/calendar-block flex h-10 w-full items-center justify-between gap-1.5 rounded-sm px-4 py-1.5 md:h-8 md:px-1",
+                    "group/calendar-block flex h-10 w-full items-center justify-between gap-1.5 rounded-[11px] px-2 py-1.5 transition-colors md:h-8",
                     {
                       "border-accent-strong bg-surface-2 shadow-raised-200": isDragging,
                       "bg-surface-1 hover:bg-surface-2": !isDragging,
@@ -129,11 +126,10 @@ export const CalendarIssueBlock = observer(
                   )}
                 >
                   <div className="flex h-full items-center gap-1.5 truncate">
-                    <span
-                      className="h-full w-0.5 flex-shrink-0 rounded-sm"
-                      style={{
-                        backgroundColor: stateColor,
-                      }}
+                    <StateGroupIcon
+                      stateGroup={stateDetails?.group ?? "backlog"}
+                      color={stateDetails?.color}
+                      className="size-3.5 shrink-0"
                     />
                     {issue.project_id && (
                       <IssueIdentifier
@@ -144,15 +140,15 @@ export const CalendarIssueBlock = observer(
                         displayProperties={issuesFilter?.issueFilters?.displayProperties}
                       />
                     )}
-                    <div className="truncate text-13 font-medium md:text-11 md:font-regular">{issue.name}</div>
+                    <div className="truncate text-13 font-medium md:text-12">{issue.name}</div>
                   </div>
                   {/* Wrapper exists only to stop clicks reaching the ControlLink; the
                       quick-action menu inside carries its own interactive semantics. */}
                   <div
                     role="presentation"
-                    className={cn("size-5 flex-shrink-0", {
-                      "hidden group-hover/calendar-block:block": !isMobile,
-                      block: isMenuActive,
+                    className={cn("size-5 flex-shrink-0 has-[[data-popup-open]]:opacity-100", {
+                      "opacity-0 group-focus-within/calendar-block:opacity-100 group-hover/calendar-block:opacity-100":
+                        !isMobile && !isMenuActive,
                     })}
                     onClick={(e) => {
                       e.preventDefault();

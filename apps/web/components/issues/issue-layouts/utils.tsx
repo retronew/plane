@@ -10,27 +10,11 @@ import type { CSSProperties } from "react";
 import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/extract-instruction";
 import { clone, isNil, pull, uniq, concat } from "lodash-es";
 import scrollIntoView from "smooth-scroll-into-view-if-needed";
-import type { FC } from "react";
-import {
-  AttachOutline,
-  CalendarOutline,
-  CyclesOutline,
-  DueDateOutline,
-  EstimateOutline,
-  LabelsOutline,
-  LinkOutline,
-  MembersOutline,
-  ModuleOutline,
-  PriorityOutline,
-  StartDateOutline,
-  StateOutline,
-  WorkItemsOutline,
-} from "@makeplane/propel/icons";
+import { CyclesOutline, ModuleOutline } from "@makeplane/propel/icons";
 // plane types
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { EIconSize, ISSUE_PRIORITIES, STATE_GROUPS } from "@plane/constants";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
-import type { ISvgIcons } from "@plane/blocks/icons";
 import { CycleGroupIcon, PriorityIcon, StateGroupIcon } from "@plane/blocks/icons";
 import type {
   GroupByColumnTypes,
@@ -760,17 +744,6 @@ export const getBlockViewDetails = (
 };
 
 /**
- * This method returns the icon for Spreadsheet column headers
- * @param iconKey
- */
-export function SpreadSheetPropertyIcon(props: ISvgIcons & { iconKey: string }) {
-  const { iconKey } = props;
-  const Icon = SpreadSheetPropertyIconMap[iconKey];
-  if (!Icon) return null;
-  return <Icon {...props} />;
-}
-
-/**
  * This method returns if the filters are applied
  * @param filters
  * @returns
@@ -804,21 +777,6 @@ export const isFiltersApplied = (filters: IIssueFilterOptions): boolean =>
     return value !== undefined && value !== null && value !== "";
   });
 
-/**
- * Calculates the minimum width needed for issue identifiers in list layouts
- * @param projectIdentifierLength - Length of the project identifier (e.g., "PROJ" = 4)
- * @param maxSequenceId - Maximum sequence ID in the project (e.g., 1234)
- * @returns Width in pixels needed to display the identifier
- *
- * @example
- * // For "PROJ-1234"
- * calculateIdentifierWidth(4, 1234) // Returns width for "PROJ" + "-" + "1234"
- */
-export const calculateIdentifierWidth = (projectIdentifierLength: number, maxSequenceId: number): number => {
-  const sequenceDigits = Math.max(1, Math.floor(Math.log10(maxSequenceId)) + 1);
-  return projectIdentifierLength * 7 + 7 + sequenceDigits * 7; // project identifier chars + dash + sequence digits
-};
-
 export type TGetScopeMemberIdsResult = {
   memberIds: string[];
   includeNone: boolean;
@@ -848,22 +806,6 @@ export const getScopeMemberIds = ({ isWorkspaceLevel, projectId }: TGetColumns):
 };
 
 export const getTeamProjectColumns = (): IGroupByColumn[] | undefined => undefined;
-
-export const SpreadSheetPropertyIconMap: Record<string, FC<ISvgIcons>> = {
-  MembersOutline: MembersOutline,
-  CalenderDays: CalendarOutline,
-  DueDateOutline: DueDateOutline,
-  EstimateOutline: EstimateOutline,
-  LabelsOutline: LabelsOutline,
-  ModuleOutline: ModuleOutline,
-  ContrastIcon: CyclesOutline,
-  PriorityOutline: PriorityOutline,
-  StartDateOutline: StartDateOutline,
-  StateOutline: StateOutline,
-  Link2: LinkOutline,
-  AttachOutline: AttachOutline,
-  WorkItemsOutline: WorkItemsOutline,
-};
 
 export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpreadsheetColumn } = {
   assignee: SpreadsheetAssigneeColumn,

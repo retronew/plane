@@ -48,7 +48,7 @@ export const SpreadsheetModuleColumn = observer(function SpreadsheetModuleColumn
   );
 
   return (
-    <div className="h-11 border-b-[0.5px] border-subtle">
+    <div className="h-11">
       <ModuleSelect
         multiple
         projectId={issue?.project_id ?? undefined}

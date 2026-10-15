@@ -57,8 +57,8 @@ export interface IWorkspaceIssues extends IBaseIssuesStore {
 
 export class WorkspaceIssues extends BaseIssuesStore implements IWorkspaceIssues {
   viewFlags = {
-    enableQuickAdd: true,
-    enableIssueCreation: true,
+    enableQuickAdd: false,
+    enableIssueCreation: false,
     enableInlineEditing: true,
   };
   // service

@@ -23,15 +23,14 @@ import { cn, generateWorkItemLink } from "@plane/utils";
 // components
 import { MultipleSelectEntityAction } from "@/components/core/multiple-select";
 import { IssueProperties } from "@/components/issues/issue-layouts/properties";
-import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
-import { calculateIdentifierWidth } from "../utils";
 import type { TRenderQuickActions } from "./list-view-types";
+import { ListIssueIdentifier } from "../identifier";
 import { translate } from "@plane/i18n";
 
 interface IssueBlockProps {
@@ -80,7 +79,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   const projectId = routerProjectId?.toString();
   // hooks
   const { sidebarCollapsed: isSidebarCollapsed } = useAppTheme();
-  const { getProjectIdentifierById, currentProjectNextSequenceId } = useProject();
+  const { getProjectIdentifierById } = useProject();
   const {
     getIsIssuePeeked,
     peekIssue,
@@ -154,13 +153,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     }
   };
 
-  // Calculate width for: projectIdentifier + "-" + dynamic sequence number digits
-  // Use next_work_item_sequence from backend (static value from project endpoint)
-  const maxSequenceId = currentProjectNextSequenceId ?? 1;
-  const keyMinWidth = displayProperties?.key
-    ? calculateIdentifierWidth(projectIdentifier?.length ?? 0, maxSequenceId)
-    : 0;
-
   const workItemLink = generateWorkItemLink({
     workspaceSlug,
     projectId: issue?.project_id,
@@ -230,18 +222,8 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
                   </div>
                 </Tooltip>
               )}
-              {displayProperties && (displayProperties.key || displayProperties.issue_type) && (
-                <div className="flex-shrink-0" style={{ minWidth: `${keyMinWidth}px` }}>
-                  {issue.project_id && (
-                    <IssueIdentifier
-                      issueId={issueId}
-                      projectId={issue.project_id}
-                      size="xs"
-                      variant="tertiary"
-                      displayProperties={displayProperties}
-                    />
-                  )}
-                </div>
+              {displayProperties?.key && issue.project_id && (
+                <ListIssueIdentifier identifier={`${projectIdentifier}-${issue.sequence_id}`} />
               )}
 
               {/* sub-issues chevron */}

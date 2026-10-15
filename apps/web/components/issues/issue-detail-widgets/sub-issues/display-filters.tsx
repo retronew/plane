@@ -5,19 +5,14 @@
  */
 
 import { useMemo } from "react";
-import { isEmpty } from "lodash-es";
 import { observer } from "mobx-react";
 import { PreferencesOutline } from "@makeplane/propel/icons";
 // plane imports
 import type { IIssueDisplayFilterOptions, ILayoutDisplayFiltersOptions, IIssueDisplayProperties } from "@plane/types";
 import { cn } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
 // components
-import {
-  FilterDisplayProperties,
-  FilterGroupBy,
-  FilterOrderBy,
-  FiltersDropdown,
-} from "@/components/issues/issue-layouts/filters";
+import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
 import { isDisplayFiltersApplied } from "@/components/issues/issue-layouts/utils";
 type TSubIssueDisplayFiltersProps = {
   displayProperties: IIssueDisplayProperties;
@@ -38,6 +33,7 @@ export const SubIssueDisplayFilters = observer(function SubIssueDisplayFilters(p
     displayFilters,
   } = props;
 
+  const { t } = useTranslation();
   const isFilterApplied = useMemo(
     () => isDisplayFiltersApplied({ displayProperties, displayFilters }),
     [displayProperties, displayFilters]
@@ -47,6 +43,8 @@ export const SubIssueDisplayFilters = observer(function SubIssueDisplayFilters(p
     <>
       {layoutDisplayFiltersOptions?.display_filters && layoutDisplayFiltersOptions?.display_properties.length > 0 && (
         <FiltersDropdown
+          displayMenu
+          title={t("common.display")}
           placement="bottom-end"
           menuButton={
             <div
@@ -60,46 +58,14 @@ export const SubIssueDisplayFilters = observer(function SubIssueDisplayFilters(p
             </div>
           }
         >
-          <div className="vertical-scrollbar relative scrollbar-sm h-full max-h-[25rem] w-full divide-y divide-subtle-1 overflow-hidden overflow-y-auto px-2.5 text-left">
-            {/* display properties */}
-            <div className="py-2">
-              <FilterDisplayProperties
-                displayProperties={displayProperties}
-                displayPropertiesToRender={layoutDisplayFiltersOptions.display_properties}
-                handleUpdate={handleDisplayPropertiesUpdate}
-                isEpic={isEpic}
-              />
-            </div>
-
-            {/* group by */}
-            <div className="py-2">
-              <FilterGroupBy
-                displayFilters={displayFilters}
-                groupByOptions={layoutDisplayFiltersOptions?.display_filters.group_by ?? []}
-                handleUpdate={(val) =>
-                  handleDisplayFiltersUpdate({
-                    group_by: val,
-                  })
-                }
-                ignoreGroupedFilters={[]}
-              />
-            </div>
-
-            {/* order by */}
-            {!isEmpty(layoutDisplayFiltersOptions?.display_filters?.order_by) && (
-              <div className="py-2">
-                <FilterOrderBy
-                  selectedOrderBy={displayFilters?.order_by}
-                  handleUpdate={(val) =>
-                    handleDisplayFiltersUpdate({
-                      order_by: val,
-                    })
-                  }
-                  orderByOptions={layoutDisplayFiltersOptions?.display_filters.order_by ?? []}
-                />
-              </div>
-            )}
-          </div>
+          <DisplayFiltersSelection
+            displayProperties={displayProperties}
+            displayFilters={displayFilters}
+            handleDisplayPropertiesUpdate={handleDisplayPropertiesUpdate}
+            handleDisplayFiltersUpdate={handleDisplayFiltersUpdate}
+            layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
+            isEpic={isEpic}
+          />
         </FiltersDropdown>
       )}
     </>

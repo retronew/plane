@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { ComponentProps } from "react";
 import React, { useCallback, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -29,14 +30,17 @@ import { useBulkOperationStatus } from "@/hooks/use-bulk-operation-status";
 import { IssueLayoutHOC } from "../issue-layout-HOC";
 import { GanttQuickAddIssueButton, QuickAddIssueRoot } from "../quick-add";
 import { IssueGanttBlock } from "./blocks";
+import { updateGanttIssueDates } from "./update-block-dates";
 
 interface IBaseGanttRoot {
+  canEditPropertiesBasedOnProject?: (projectId: string) => boolean;
   viewId?: string | undefined;
   isCompletedCycle?: boolean;
   isEpic?: boolean;
 }
 
 export type GanttStoreType =
+  | EIssuesStoreType.GLOBAL
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE
@@ -44,13 +48,13 @@ export type GanttStoreType =
   | EIssuesStoreType.EPIC;
 
 export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRoot) {
-  const { viewId, isCompletedCycle = false, isEpic = false } = props;
+  const { viewId, isCompletedCycle = false, isEpic = false, canEditPropertiesBasedOnProject } = props;
   const { t } = useTranslation();
   // router
   const { workspaceSlug, projectId } = useParams();
 
   const storeType = useIssueStoreType() as GanttStoreType;
-  const { issues, issuesFilter } = useIssues(storeType);
+  const { issues, issuesFilter, issueMap } = useIssues(storeType);
   const { fetchIssues, fetchNextIssues, updateIssue, quickAddIssue } = useIssuesActions(storeType);
   const { initGantt } = useTimeLineChart(GANTT_TIMELINE_TYPE.ISSUE);
   // store hooks
@@ -64,8 +68,9 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
   targetDate.setDate(targetDate.getDate() + 1);
 
   useEffect(() => {
+    if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.GANTT) return;
     fetchIssues("init-loader", { canGroup: false, perPageCount: 100 }, viewId);
-  }, [fetchIssues, storeType, viewId]);
+  }, [fetchIssues, issuesFilter, appliedDisplayFilters?.layout, storeType, viewId]);
 
   useEffect(() => {
     initGantt();
@@ -81,8 +86,22 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
     fetchNextIssues();
   }, [fetchNextIssues]);
 
+  const canEditBlock = useCallback(
+    (blockId: string) => {
+      const issue = issueMap[blockId];
+      return (
+        !isCompletedCycle &&
+        !!issue?.project_id &&
+        (canEditPropertiesBasedOnProject
+          ? canEditPropertiesBasedOnProject(issue.project_id)
+          : allowPermissions([EUserPermissions.ADMIN, EUserPermissions.MEMBER], EUserPermissionsLevel.PROJECT))
+      );
+    },
+    [issueMap, isCompletedCycle, canEditPropertiesBasedOnProject, allowPermissions]
+  );
+
   const updateIssueBlockStructure = async (issue: TIssue, data: IBlockUpdateData) => {
-    if (!workspaceSlug) return;
+    if (!workspaceSlug || !canEditBlock(issue.id)) return;
 
     const payload: any = { ...data };
     if (data.sort_order) payload.sort_order = data.sort_order.newSortOrder;
@@ -98,19 +117,22 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
         start_date?: string;
         target_date?: string;
       }[]
-    ) =>
-      issues.updateIssueDates(workspaceSlug.toString(), updates, projectId.toString()).catch(() => {
+    ) => {
+      return updateGanttIssueDates(updates, issueMap, canEditBlock, (issueProjectId, projectUpdates) =>
+        issues.updateIssueDates(workspaceSlug.toString(), projectUpdates, issueProjectId)
+      ).catch(() => {
         setToast({
           type: "error",
           title: t("toast.error"),
           message: t("web.error_while_updating_work_item_dates_please_try_again_later"),
         });
-      }),
-    [issues, projectId, workspaceSlug, t]
+      });
+    },
+    [issues, issueMap, workspaceSlug, t, canEditBlock]
   );
 
   const quickAdd =
-    enableIssueCreation && isAllowed && !isCompletedCycle ? (
+    projectId && enableIssueCreation && isAllowed && !isCompletedCycle ? (
       <QuickAddIssueRoot
         layout={EIssueLayoutTypes.GANTT}
         QuickAddButton={GanttQuickAddIssueButton}
@@ -124,6 +146,17 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
       />
     ) : undefined;
 
+  const renderIssueBlock = useCallback(
+    (data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />,
+    [isEpic]
+  );
+  const renderSidebar = useCallback(
+    (sidebarProps: ComponentProps<typeof IssueGanttSidebar>) => (
+      <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />
+    ),
+    [isEpic]
+  );
+
   return (
     <IssueLayoutHOC layout={EIssueLayoutTypes.GANTT}>
       <TimeLineTypeContext.Provider value={GANTT_TIMELINE_TYPE.ISSUE}>
@@ -134,20 +167,20 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
             loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
             blockIds={issuesIds}
             blockUpdateHandler={updateIssueBlockStructure}
-            blockToRender={(data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />}
-            sidebarToRender={(sidebarProps) => <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />}
-            enableBlockLeftResize={isAllowed}
-            enableBlockRightResize={isAllowed}
-            enableBlockMove={isAllowed}
+            blockToRender={renderIssueBlock}
+            sidebarToRender={renderSidebar}
+            enableBlockLeftResize={canEditBlock}
+            enableBlockRightResize={canEditBlock}
+            enableBlockMove={canEditBlock}
             enableReorder={appliedDisplayFilters?.order_by === "sort_order" && isAllowed}
             enableAddBlock={isAllowed}
-            enableSelection={isBulkOperationsEnabled && isAllowed}
+            enableSelection={isBulkOperationsEnabled ? canEditBlock : false}
             quickAdd={quickAdd}
             loadMoreBlocks={loadMoreIssues}
             canLoadMoreBlocks={nextPageResults}
             updateBlockDates={updateBlockDates}
             showAllBlocks
-            enableDependency
+            enableDependency={!!projectId}
             isEpic={isEpic}
           />
         </div>

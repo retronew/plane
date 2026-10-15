@@ -17,6 +17,7 @@ import { useIssuesActions } from "./use-issues-actions";
 import { translate } from "@plane/i18n";
 
 type DNDStoreType =
+  | EIssuesStoreType.GLOBAL
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE

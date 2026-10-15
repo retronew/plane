@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { isEmpty, set } from "lodash-es";
+import { isEmpty, isEqual, set } from "lodash-es";
 import { action, computed, makeObservable, observable, runInAction } from "mobx";
 // base class
 import { computedFn } from "mobx-utils";
@@ -221,7 +221,8 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
 
       switch (type) {
         case EIssueFilterType.DISPLAY_FILTERS: {
-          const updatedDisplayFilters = filters as IIssueDisplayFilterOptions;
+          const previousDisplayFilters = { ..._filters.displayFilters };
+          const updatedDisplayFilters = { ...filters } as IIssueDisplayFilterOptions;
           _filters.displayFilters = { ..._filters.displayFilters, ...updatedDisplayFilters };
 
           // set sub_group_by to null if group_by is set to null
@@ -243,6 +244,8 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
             updatedDisplayFilters.group_by = "state";
           }
 
+          if (isEqual(previousDisplayFilters, _filters.displayFilters)) break;
+
           runInAction(() => {
             Object.keys(updatedDisplayFilters).forEach((_key) => {
               set(
@@ -253,11 +256,11 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
             });
           });
 
-          if (this.getShouldClearIssues(updatedDisplayFilters)) {
+          if (previousDisplayFilters.layout !== _filters.displayFilters.layout) {
             this.rootIssueStore.moduleIssues.clear(true); // clear issues for local store when some filters like layout changes
           }
 
-          if (this.getShouldReFetchIssues(updatedDisplayFilters)) {
+          if (this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
             this.rootIssueStore.moduleIssues.fetchIssuesWithExistingPagination(
               workspaceSlug,
               projectId,

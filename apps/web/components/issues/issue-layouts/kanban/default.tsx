@@ -14,7 +14,6 @@ import type {
   IIssueDisplayProperties,
   IIssueMap,
   TSubGroupedIssues,
-  TIssueKanbanFilters,
   TIssueGroupByOptions,
   TIssueOrderByOptions,
 } from "@plane/types";
@@ -55,8 +54,6 @@ export interface IKanBan {
   sub_group_index?: number;
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
   quickActions: TRenderQuickActions;
-  collapsedGroups: TIssueKanbanFilters;
-  handleCollapsedGroups: (toggle: "group_by" | "sub_group_by", value: string) => void;
   loadMoreIssues: (groupId?: string, subGroupId?: string) => void;
   enableQuickIssueCreate?: boolean;
   quickAddCallback?: (projectId: string | null | undefined, data: TIssue) => Promise<TIssue | undefined>;
@@ -81,8 +78,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
     sub_group_id = "null",
     updateIssue,
     quickActions,
-    collapsedGroups,
-    handleCollapsedGroups,
     enableQuickIssueCreate,
     quickAddCallback,
     loadMoreIssues,
@@ -116,30 +111,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
 
   if (!list) return null;
 
-  const visibilityGroupBy = (_list: IGroupByColumn): { showGroup: boolean; showIssues: boolean } => {
-    if (sub_group_by) {
-      const groupVisibility = {
-        showGroup: true,
-        showIssues: true,
-      };
-      if (!showEmptyGroup) {
-        groupVisibility.showGroup = (getGroupIssueCount(_list.id, undefined, false) ?? 0) > 0;
-      }
-      return groupVisibility;
-    } else {
-      const groupVisibility = {
-        showGroup: true,
-        showIssues: true,
-      };
-      if (!showEmptyGroup) {
-        if ((getGroupIssueCount(_list.id, undefined, false) ?? 0) > 0) groupVisibility.showGroup = true;
-        else groupVisibility.showGroup = false;
-      }
-      if (collapsedGroups?.group_by.includes(_list.id)) groupVisibility.showIssues = false;
-      return groupVisibility;
-    }
-  };
-
   const isGroupByCreatedBy = group_by === "created_by";
   const approximateCardHeight = getApproximateCardHeight(displayProperties);
   const isSubGroup = !!sub_group_id && sub_group_id !== "null";
@@ -149,9 +120,7 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
       {list &&
         list.length > 0 &&
         list.map((subList: IGroupByColumn, groupIndex) => {
-          const groupByVisibilityToggle = visibilityGroupBy(subList);
-
-          if (groupByVisibilityToggle.showGroup === false) return <></>;
+          if (!showEmptyGroup && (getGroupIssueCount(subList.id, undefined, false) ?? 0) <= 0) return null;
 
           const issueIds = isSubGroup
             ? ((groupedIssueIds as TSubGroupedIssues)?.[subList.id]?.[sub_group_id] ?? [])
@@ -162,9 +131,8 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
           return (
             <div
               key={subList.id}
-              className={cn("group relative flex flex-shrink-0 flex-col", {
-                "w-[336px]": groupByVisibilityToggle.showIssues,
-                "h-full rounded-lg bg-layer-1 p-2": sub_group_by === null,
+              className={cn("group relative flex w-[336px] flex-shrink-0 flex-col", {
+                "h-full rounded-xl bg-layer-1 p-2": sub_group_by === null,
               })}
             >
               {sub_group_by === null && (
@@ -183,56 +151,52 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                       getIsWorkflowWorkItemCreationDisabled(subList.id, sub_group_id)
                     }
                     addIssuesToView={addIssuesToView}
-                    collapsedGroups={collapsedGroups}
-                    handleCollapsedGroups={handleCollapsedGroups}
                     isEpic={isEpic}
                   />
                 </div>
               )}
 
-              {groupByVisibilityToggle.showIssues && (
-                <RenderIfVisible
-                  verticalOffset={100}
-                  horizontalOffset={100}
-                  root={scrollableContainerRef}
-                  classNames={sub_group_by ? "h-full min-h-[120px]" : "min-h-0 flex-1"}
-                  defaultHeight={`${groupHeight}px`}
-                  placeholderChildren={
-                    <KanbanColumnLoader
-                      ignoreHeader
-                      cardHeight={approximateCardHeight}
-                      cardsInColumn={issueLength !== undefined && issueLength < 3 ? issueLength : 3}
-                      shouldAnimate={false}
-                    />
-                  }
-                  defaultValue={groupIndex < 5 && subGroupIndex < 2}
-                  useIdleTime
-                >
-                  <KanbanGroup
-                    groupId={subList.id}
-                    issuesMap={issuesMap}
-                    groupedIssueIds={groupedIssueIds}
-                    displayProperties={displayProperties}
-                    sub_group_by={sub_group_by}
-                    group_by={group_by}
-                    orderBy={orderBy}
-                    sub_group_id={sub_group_id}
-                    isDragDisabled={isDragDisabled}
-                    isDropDisabled={!!subList.isDropDisabled || !!isDropDisabled}
-                    dropErrorMessage={subList.dropErrorMessage ?? dropErrorMessage}
-                    updateIssue={updateIssue}
-                    quickActions={quickActions}
-                    enableQuickIssueCreate={enableQuickIssueCreate}
-                    quickAddCallback={quickAddCallback}
-                    disableIssueCreation={disableIssueCreation}
-                    canEditProperties={canEditProperties}
-                    scrollableContainerRef={scrollableContainerRef}
-                    loadMoreIssues={loadMoreIssues}
-                    handleOnDrop={handleOnDrop}
-                    isEpic={isEpic}
+              <RenderIfVisible
+                verticalOffset={100}
+                horizontalOffset={100}
+                root={scrollableContainerRef}
+                classNames={sub_group_by ? "h-full min-h-[120px]" : "min-h-0 flex-1"}
+                defaultHeight={`${groupHeight}px`}
+                placeholderChildren={
+                  <KanbanColumnLoader
+                    ignoreHeader
+                    cardHeight={approximateCardHeight}
+                    cardsInColumn={issueLength !== undefined && issueLength < 3 ? issueLength : 3}
+                    shouldAnimate={false}
                   />
-                </RenderIfVisible>
-              )}
+                }
+                defaultValue={groupIndex < 5 && subGroupIndex < 2}
+                useIdleTime
+              >
+                <KanbanGroup
+                  groupId={subList.id}
+                  issuesMap={issuesMap}
+                  groupedIssueIds={groupedIssueIds}
+                  displayProperties={displayProperties}
+                  sub_group_by={sub_group_by}
+                  group_by={group_by}
+                  orderBy={orderBy}
+                  sub_group_id={sub_group_id}
+                  isDragDisabled={isDragDisabled}
+                  isDropDisabled={!!subList.isDropDisabled || !!isDropDisabled}
+                  dropErrorMessage={subList.dropErrorMessage ?? dropErrorMessage}
+                  updateIssue={updateIssue}
+                  quickActions={quickActions}
+                  enableQuickIssueCreate={enableQuickIssueCreate}
+                  quickAddCallback={quickAddCallback}
+                  disableIssueCreation={disableIssueCreation}
+                  canEditProperties={canEditProperties}
+                  scrollableContainerRef={scrollableContainerRef}
+                  loadMoreIssues={loadMoreIssues}
+                  handleOnDrop={handleOnDrop}
+                  isEpic={isEpic}
+                />
+              </RenderIfVisible>
             </div>
           );
         })}

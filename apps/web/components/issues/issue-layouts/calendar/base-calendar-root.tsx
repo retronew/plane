@@ -12,7 +12,7 @@ import { useParams } from "next/navigation";
 import { EIssueGroupByToServerOptions, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { setToast } from "@plane/blocks/toast";
 import type { TGroupedIssues } from "@plane/types";
-import { EIssuesStoreType } from "@plane/types";
+import { EIssueLayoutTypes, EIssuesStoreType } from "@plane/types";
 // hooks
 import { useCalendarView } from "@/hooks/store/use-calendar-view";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -26,6 +26,7 @@ import { handleDragDrop } from "./utils";
 import { translate } from "@plane/i18n";
 
 export type CalendarStoreType =
+  | EIssuesStoreType.GLOBAL
   | EIssuesStoreType.PROFILE
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
@@ -91,6 +92,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
   const { startDate, endDate } = issueCalendarView.getStartAndEndDate(layout) ?? {};
 
   useEffect(() => {
+    if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.CALENDAR) return;
     if (startDate && endDate && layout) {
       fetchIssues(
         "init-loader",
@@ -104,7 +106,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
         viewId
       );
     }
-  }, [fetchIssues, storeType, startDate, endDate, layout, viewId]);
+  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, startDate, endDate, layout, viewId]);
 
   const handleDragAndDrop = async (
     issueId: string | undefined,
@@ -186,7 +188,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
 
   return (
     <>
-      <div className="h-full w-full overflow-hidden bg-surface-1 pt-4">
+      <div className="h-full w-full overflow-hidden bg-surface-1">
         <CalendarChart
           issuesFilterStore={issuesFilter}
           issues={issueMap}

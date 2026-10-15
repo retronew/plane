@@ -15,7 +15,6 @@ import type {
   IIssueDisplayProperties,
   IIssueMap,
   TSubGroupedIssues,
-  TIssueKanbanFilters,
   TIssueGroupByOptions,
   TIssueOrderByOptions,
 } from "@plane/types";
@@ -33,14 +32,12 @@ import { HeaderGroupByCard } from "./headers/group-by-card";
 import { HeaderSubGroupByCard } from "./headers/sub-group-by-card";
 
 interface ISubGroupSwimlaneHeader {
-  collapsedGroups: TIssueKanbanFilters;
   group_by: TIssueGroupByOptions | undefined;
   getGroupIssueCount: (
     groupId: string | undefined,
     subGroupId: string | undefined,
     isSubGroupCumulative: boolean
   ) => number | undefined;
-  handleCollapsedGroups: (toggle: "group_by" | "sub_group_by", value: string) => void;
   isEpic?: boolean;
   list: IGroupByColumn[];
   showEmptyGroup: boolean;
@@ -60,10 +57,8 @@ const visibilitySubGroupByGroupCount = (subGroupIssueCount: number, showEmptyGro
 };
 
 const SubGroupSwimlaneHeader = observer(function SubGroupSwimlaneHeader({
-  collapsedGroups,
   getGroupIssueCount,
   group_by,
-  handleCollapsedGroups,
   isEpic = false,
   list,
   showEmptyGroup,
@@ -91,8 +86,6 @@ const SubGroupSwimlaneHeader = observer(function SubGroupSwimlaneHeader({
                 icon={_list.icon}
                 title={_list.name}
                 count={groupCount}
-                collapsedGroups={collapsedGroups}
-                handleCollapsedGroups={handleCollapsedGroups}
                 issuePayload={_list.payload}
                 disableIssueCreation={getIsWorkflowWorkItemCreationDisabled(_list.id)}
                 isEpic={isEpic}
@@ -107,7 +100,6 @@ const SubGroupSwimlaneHeader = observer(function SubGroupSwimlaneHeader({
 interface ISubGroupSwimlane extends ISubGroupSwimlaneHeader {
   addIssuesToView?: (issueIds: string[]) => Promise<TIssue>;
   canEditProperties: (projectId: string | undefined) => boolean;
-  collapsedGroups: TIssueKanbanFilters;
   disableIssueCreation?: boolean;
   displayProperties: IIssueDisplayProperties | undefined;
   enableQuickIssueCreate: boolean;
@@ -117,7 +109,6 @@ interface ISubGroupSwimlane extends ISubGroupSwimlaneHeader {
     isSubGroupCumulative: boolean
   ) => number | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
-  handleCollapsedGroups: (toggle: "group_by" | "sub_group_by", value: string) => void;
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   isEpic?: boolean;
   issuesMap: IIssueMap;
@@ -134,14 +125,12 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
   const {
     addIssuesToView,
     canEditProperties,
-    collapsedGroups,
     disableIssueCreation,
     displayProperties,
     enableQuickIssueCreate,
     getGroupIssueCount,
     group_by,
     groupedIssueIds,
-    handleCollapsedGroups,
     handleOnDrop,
     isEpic = false,
     issuesMap,
@@ -156,31 +145,13 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
     updateIssue,
   } = props;
 
-  const visibilitySubGroupBy = (
-    _list: IGroupByColumn,
-    subGroupCount: number
-  ): { showGroup: boolean; showIssues: boolean } => {
-    const subGroupVisibility = {
-      showGroup: true,
-      showIssues: true,
-    };
-    if (showEmptyGroup) subGroupVisibility.showGroup = true;
-    else {
-      if (subGroupCount > 0) subGroupVisibility.showGroup = true;
-      else subGroupVisibility.showGroup = false;
-    }
-    if (collapsedGroups?.sub_group_by.includes(_list.id)) subGroupVisibility.showIssues = false;
-    return subGroupVisibility;
-  };
-
   return (
     <div className="relative h-max min-h-full w-full">
       {list &&
         list.length > 0 &&
         list.map((_list: IGroupByColumn, subGroupIndex) => {
           const issueCount = getGroupIssueCount(undefined, _list.id, true) ?? 0;
-          const subGroupByVisibilityToggle = visibilitySubGroupBy(_list, issueCount);
-          if (subGroupByVisibilityToggle.showGroup === false) return <></>;
+          if (!showEmptyGroup && issueCount === 0) return null;
           return (
             <div key={_list.id} className="flex flex-shrink-0 flex-col">
               <div className="sticky top-[50px] z-[3] flex w-full items-center border-y-[0.5px] border-subtle bg-layer-1 py-1">
@@ -190,44 +161,38 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
                     icon={_list.icon}
                     title={_list.name}
                     count={issueCount}
-                    collapsedGroups={collapsedGroups}
-                    handleCollapsedGroups={handleCollapsedGroups}
                     sub_group_by={sub_group_by}
                   />
                 </Row>
               </div>
 
-              {subGroupByVisibilityToggle.showIssues && (
-                <div className="relative">
-                  <KanBan
-                    issuesMap={issuesMap}
-                    groupedIssueIds={groupedIssueIds}
-                    getGroupIssueCount={getGroupIssueCount}
-                    displayProperties={displayProperties}
-                    sub_group_by={sub_group_by}
-                    group_by={group_by}
-                    sub_group_id={_list.id}
-                    subGroupIndex={subGroupIndex}
-                    updateIssue={updateIssue}
-                    quickActions={quickActions}
-                    collapsedGroups={collapsedGroups}
-                    handleCollapsedGroups={handleCollapsedGroups}
-                    showEmptyGroup={showEmptyGroup}
-                    enableQuickIssueCreate={enableQuickIssueCreate}
-                    disableIssueCreation={disableIssueCreation}
-                    canEditProperties={canEditProperties}
-                    addIssuesToView={addIssuesToView}
-                    quickAddCallback={quickAddCallback}
-                    scrollableContainerRef={scrollableContainerRef}
-                    loadMoreIssues={loadMoreIssues}
-                    handleOnDrop={handleOnDrop}
-                    orderBy={orderBy}
-                    isDropDisabled={_list.isDropDisabled}
-                    dropErrorMessage={_list.dropErrorMessage}
-                    isEpic={isEpic}
-                  />
-                </div>
-              )}
+              <div className="relative">
+                <KanBan
+                  issuesMap={issuesMap}
+                  groupedIssueIds={groupedIssueIds}
+                  getGroupIssueCount={getGroupIssueCount}
+                  displayProperties={displayProperties}
+                  sub_group_by={sub_group_by}
+                  group_by={group_by}
+                  sub_group_id={_list.id}
+                  subGroupIndex={subGroupIndex}
+                  updateIssue={updateIssue}
+                  quickActions={quickActions}
+                  showEmptyGroup={showEmptyGroup}
+                  enableQuickIssueCreate={enableQuickIssueCreate}
+                  disableIssueCreation={disableIssueCreation}
+                  canEditProperties={canEditProperties}
+                  addIssuesToView={addIssuesToView}
+                  quickAddCallback={quickAddCallback}
+                  scrollableContainerRef={scrollableContainerRef}
+                  loadMoreIssues={loadMoreIssues}
+                  handleOnDrop={handleOnDrop}
+                  orderBy={orderBy}
+                  isDropDisabled={_list.isDropDisabled}
+                  dropErrorMessage={_list.dropErrorMessage}
+                  isEpic={isEpic}
+                />
+              </div>
             </div>
           );
         })}
@@ -238,7 +203,6 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
 export interface IKanBanSwimLanes {
   addIssuesToView?: (issueIds: string[]) => Promise<TIssue>;
   canEditProperties: (projectId: string | undefined) => boolean;
-  collapsedGroups: TIssueKanbanFilters;
   disableIssueCreation?: boolean;
   displayProperties: IIssueDisplayProperties | undefined;
   enableQuickIssueCreate: boolean;
@@ -249,7 +213,6 @@ export interface IKanBanSwimLanes {
   ) => number | undefined;
   group_by: TIssueGroupByOptions | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
-  handleCollapsedGroups: (toggle: "group_by" | "sub_group_by", value: string) => void;
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   isEpic?: boolean;
   issuesMap: IIssueMap;
@@ -274,8 +237,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
     orderBy,
     updateIssue,
     quickActions,
-    collapsedGroups,
-    handleCollapsedGroups,
     loadMoreIssues,
     showEmptyGroup,
     handleOnDrop,
@@ -312,8 +273,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
           getGroupIssueCount={getGroupIssueCount}
           group_by={group_by}
           sub_group_by={sub_group_by}
-          collapsedGroups={collapsedGroups}
-          handleCollapsedGroups={handleCollapsedGroups}
           list={groupByList}
           showEmptyGroup={showEmptyGroup}
           isEpic={isEpic}
@@ -332,8 +291,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
           orderBy={orderBy}
           updateIssue={updateIssue}
           quickActions={quickActions}
-          collapsedGroups={collapsedGroups}
-          handleCollapsedGroups={handleCollapsedGroups}
           loadMoreIssues={loadMoreIssues}
           showEmptyGroup={showEmptyGroup}
           handleOnDrop={handleOnDrop}

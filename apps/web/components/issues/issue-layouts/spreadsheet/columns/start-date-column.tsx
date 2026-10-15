@@ -30,7 +30,7 @@ export const SpreadsheetStartDateColumn = observer(function SpreadsheetStartDate
   const { data: userProfile } = useUserProfile();
 
   return (
-    <div className="h-11 border-b-[0.5px] border-subtle">
+    <div className="h-11">
       <DateSelect
         value={getDate(issue.start_date) ?? null}
         maxDate={getDate(issue.target_date)}

@@ -17,7 +17,9 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@makeplane/propel/components/menu";
-import { ChevronUpOutline, MoreVerticalOutline } from "@makeplane/propel/icons";
+import { ChevronDownOutline } from "@makeplane/propel/icons";
+import { Button } from "@makeplane/propel/components/button";
+import { Icon } from "@makeplane/propel/components/icon";
 // plane imports
 import type { TSupportedFilterTypeForUpdate } from "@plane/constants";
 import { CALENDAR_LAYOUTS, EIssueFilterType } from "@plane/constants";
@@ -90,23 +92,14 @@ export const CalendarOptionsDropdown = observer(function CalendarOptionsDropdown
       <MenuTrigger
         aria-label={t("common.options")}
         render={
-          <button type="button">
-            <div
-              className={`hidden items-center gap-1.5 rounded-sm bg-layer-1 px-2.5 py-1 text-11 outline-none hover:bg-layer-1 md:flex ${
-                isOpen ? "text-primary" : "text-secondary"
-              }`}
-            >
-              <div className="font-medium">{t("common.options")}</div>
-              <div
-                className={`flex h-3.5 w-3.5 items-center justify-center transition-all ${isOpen ? "" : "rotate-180"}`}
-              >
-                <ChevronUpOutline width={12} />
-              </div>
-            </div>
-            <div className="md:hidden">
-              <MoreVerticalOutline className="h-4 text-secondary" />
-            </div>
-          </button>
+          <Button
+            variant="secondary"
+            size="md"
+            stretch="auto"
+            label={t("common.options")}
+            icon={<Icon icon={ChevronDownOutline} />}
+            iconPosition="end"
+          />
         }
       />
       <MenuContent side="bottom" align="end" collisionPadding={12}>

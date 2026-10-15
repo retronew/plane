@@ -9,9 +9,9 @@ import { observer } from "mobx-react";
 import { useParams, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 // plane imports
-import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
+import { EIssueFilterType, ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
-import type { EIssueLayoutTypes } from "@plane/types";
+import { EIssueLayoutTypes } from "@plane/types";
 import { EIssuesStoreType, STATIC_VIEW_TYPES } from "@plane/types";
 // assets
 // components
@@ -44,14 +44,23 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const searchParams = useSearchParams();
   // store hooks
   const {
-    issuesFilter: { filters, fetchFilters, updateFilterExpression },
-    issues: { clear, groupedIssueIds, fetchIssues, fetchNextIssues },
+    issuesFilter: { filters, fetchFilters, updateFilterExpression, updateFilters, requestedLayouts },
+    issues: { fetchNextIssues },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { fetchAllGlobalViews, getViewDetailsById } = useGlobalView();
   // Derived values
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
   const workItemFilters = globalViewId ? filters?.[globalViewId] : undefined;
-  const activeLayout: EIssueLayoutTypes | undefined = workItemFilters?.displayFilters?.layout;
+  const activeLayout =
+    (globalViewId ? requestedLayouts[globalViewId] : undefined) ?? workItemFilters?.displayFilters?.layout;
+  const handleLayoutCommit = useCallback(
+    (layout: EIssueLayoutTypes) => {
+      if (workspaceSlug && globalViewId && layout !== workItemFilters?.displayFilters?.layout) {
+        void updateFilters(workspaceSlug, undefined, EIssueFilterType.DISPLAY_FILTERS, { layout }, globalViewId);
+      }
+    },
+    [workspaceSlug, globalViewId, updateFilters, workItemFilters?.displayFilters?.layout]
+  );
   // Determine initial work item filters based on view type and availability
   const initialWorkItemFilters = useMemo(() => {
     if (!globalViewId) return undefined;
@@ -99,14 +108,12 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
     workspaceSlug && globalViewId ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}` : null,
     async () => {
       if (workspaceSlug && globalViewId) {
-        clear();
         toggleLoading(true);
-        await fetchFilters(workspaceSlug, globalViewId);
-        await fetchIssues(workspaceSlug, globalViewId, groupedIssueIds ? "mutation" : "init-loader", {
-          canGroup: false,
-          perPageCount: 100,
-        });
-        toggleLoading(false);
+        try {
+          await fetchFilters(workspaceSlug, globalViewId);
+        } finally {
+          toggleLoading(false);
+        }
       }
     },
     { revalidateIfStale: false, revalidateOnFocus: false }
@@ -141,7 +148,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
         enableUpdateView
         entityId={globalViewId}
         entityType={EIssuesStoreType.GLOBAL}
-        filtersToShowByLayout={ISSUE_DISPLAY_FILTERS_BY_PAGE.my_issues.filters}
+        filtersToShowByLayout={ISSUE_DISPLAY_FILTERS_BY_PAGE.workspace_issues.filters}
         initialWorkItemFilters={initialWorkItemFilters}
         updateFilters={updateFilterExpression.bind(updateFilterExpression, workspaceSlug, globalViewId)}
         workspaceSlug={workspaceSlug}
@@ -151,7 +158,8 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
             <div className="flex h-full w-full flex-col border-b border-strong">
               {globalWorkItemsFilter && <WorkItemFiltersRow filter={globalWorkItemsFilter} />}
               <WorkspaceActiveLayout
-                activeLayout={activeLayout}
+                activeLayout={activeLayout ?? EIssueLayoutTypes.SPREADSHEET}
+                onLayoutCommit={handleLayoutCommit}
                 isDefaultView={isDefaultView}
                 isLoading={isLoading}
                 toggleLoading={toggleLoading}

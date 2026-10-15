@@ -34,7 +34,7 @@ export const SpreadsheetLabelColumn = observer(function SpreadsheetLabelColumn(p
     }) || [];
 
   return (
-    <div className="h-11 w-full border-b-[0.5px] border-subtle">
+    <div className="h-11 w-full">
       <IssuePropertyLabels
         projectId={issue.project_id ?? null}
         value={issue.label_ids || []}

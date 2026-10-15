@@ -264,27 +264,25 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
    * @param displayFilters
    * @returns
    */
-  getShouldReFetchIssues = (displayFilters: IIssueDisplayFilterOptions) => {
-    const NON_SERVER_DISPLAY_FILTERS = ["order_by", "sub_issue", "type"];
-    const displayFilterKeys = Object.keys(displayFilters);
+  getShouldReFetchIssues = (previous: IIssueDisplayFilterOptions, next: IIssueDisplayFilterOptions) => {
+    // Layout roots own requests when grouping, pagination, or calendar bounds change.
+    // Refetching here as well would issue a request with the outgoing pagination.
+    if (previous.layout !== next.layout) return false;
+    if (next.layout === EIssueLayoutTypes.LIST && (previous.group_by || null) !== (next.group_by || null)) return false;
+    if (
+      next.layout === EIssueLayoutTypes.KANBAN &&
+      ((previous.group_by || null) !== (next.group_by || null) ||
+        (previous.sub_group_by || null) !== (next.sub_group_by || null))
+    )
+      return false;
+    if (
+      next.layout === EIssueLayoutTypes.CALENDAR &&
+      (previous.calendar?.layout ?? "month") !== (next.calendar?.layout ?? "month")
+    )
+      return false;
 
-    return NON_SERVER_DISPLAY_FILTERS.some((serverDisplayfilter: string) =>
-      displayFilterKeys.includes(serverDisplayfilter)
-    );
-  };
-
-  /**
-   * This Method returns true if the display properties changed requires a server side update
-   * @param displayFilters
-   * @returns
-   */
-  getShouldClearIssues = (displayFilters: IIssueDisplayFilterOptions) => {
-    const NON_SERVER_DISPLAY_FILTERS = ["layout"];
-    const displayFilterKeys = Object.keys(displayFilters);
-
-    return NON_SERVER_DISPLAY_FILTERS.some((serverDisplayfilter: string) =>
-      displayFilterKeys.includes(serverDisplayfilter)
-    );
+    // Empty groups, weekends, visible properties, and collapse state are client-only.
+    return previous.order_by !== next.order_by || (previous.sub_issue ?? true) !== (next.sub_issue ?? true);
   };
 
   /**

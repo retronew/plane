@@ -20,6 +20,8 @@ import type { TIssue, IIssueDisplayProperties, TIssuePriorities } from "@plane/t
 // ui
 import {
   cn,
+  formatCompactDate,
+  formatCompactDateRange,
   getDate,
   renderFormattedPayloadDate,
   generateWorkItemLink,
@@ -255,6 +257,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             icon={<StartDateOutline />}
             clearable
             mergeDates
+            formatLabel={activeLayout === "List" ? formatCompactDateRange : undefined}
             className={cn({
               "text-danger-primary": shouldHighlightIssueDueDate(issue.target_date, stateDetails?.group),
             })}
@@ -278,6 +281,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           <DateSelect
             value={getDate(issue.start_date) ?? null}
             onChange={handleStartDate}
+            formatLabel={activeLayout === "List" ? formatCompactDate : undefined}
             maxDate={maxDate}
             placeholder={t("common.order_by.start_date")}
             icon={<StartDateOutline />}
@@ -302,6 +306,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           <DateSelect
             value={getDate(issue?.target_date) ?? null}
             onChange={handleTargetDate}
+            formatLabel={activeLayout === "List" ? formatCompactDate : undefined}
             minDate={minDate}
             placeholder={t("common.order_by.due_date")}
             icon={<DueDateOutline />}

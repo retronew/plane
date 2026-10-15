@@ -43,7 +43,7 @@ it("switches to calendar without carrying priority grouping into date queries", 
     per_page: "4",
     target_date: "2026-10-01;after,2026-11-01;before",
   });
-  expect(refetch).toHaveBeenCalledWith("workspace", "profile-user", "mutation");
+  expect(refetch).not.toHaveBeenCalled();
 });
 it("fetches an ungrouped spreadsheet while preserving sorting and per-user preferences", async () => {
   const filter = makeFilter();

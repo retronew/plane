@@ -28,6 +28,7 @@ import { List } from "./default";
 import type { IQuickActionProps, TRenderQuickActions } from "./list-view-types";
 
 type ListStoreType =
+  | EIssuesStoreType.GLOBAL
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE
@@ -87,8 +88,9 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
     issuesFilter?.issueFilters?.kanbanFilters || ({ group_by: [], sub_group_by: [] } as TIssueKanbanFilters);
 
   useEffect(() => {
+    if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.LIST) return;
     fetchIssues("init-loader", { canGroup: true, perPageCount: group_by ? 50 : 100 }, viewId);
-  }, [fetchIssues, storeType, group_by, viewId]);
+  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, group_by, viewId]);
 
   const groupedIssueIds = issues?.groupedIssueIds as TGroupedIssues | undefined;
   // auth
@@ -99,9 +101,11 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
   const { enableInlineEditing, enableQuickAdd, enableIssueCreation } = issues?.viewFlags || {};
 
   const canEditProperties = useCallback(
-    (projectId: string | undefined) => {
+    (targetProjectId: string | undefined) => {
       const isEditingAllowedBasedOnProject =
-        canEditPropertiesBasedOnProject && projectId ? canEditPropertiesBasedOnProject(projectId) : isEditingAllowed;
+        canEditPropertiesBasedOnProject && targetProjectId
+          ? canEditPropertiesBasedOnProject(targetProjectId)
+          : isEditingAllowed;
 
       return !!enableInlineEditing && isEditingAllowedBasedOnProject;
     },
@@ -138,14 +142,12 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
   const handleCollapsedGroups = useCallback(
     (value: string) => {
       if (workspaceSlug) {
-        let collapsedGroups = issuesFilter?.issueFilters?.kanbanFilters?.group_by || [];
-        if (collapsedGroups.includes(value)) {
-          collapsedGroups = collapsedGroups.filter((_value) => _value != value);
-        } else {
-          collapsedGroups.push(value);
-        }
+        const currentGroups = issuesFilter?.issueFilters?.kanbanFilters?.group_by || [];
+        const nextCollapsedGroups = currentGroups.includes(value)
+          ? currentGroups.filter((_value) => _value !== value)
+          : [...currentGroups, value];
         updateFilters(projectId?.toString() ?? "", EIssueFilterType.KANBAN_FILTERS, {
-          group_by: collapsedGroups,
+          group_by: nextCollapsedGroups,
         } as TIssueKanbanFilters);
       }
     },

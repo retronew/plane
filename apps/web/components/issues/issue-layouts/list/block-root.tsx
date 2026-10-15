@@ -26,6 +26,7 @@ import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
 import { HIGHLIGHT_CLASS, getIssueBlockId, isIssueNew } from "../utils";
+import { useIssueRowExpansion } from "../row-expansion";
 import { IssueBlock } from "./block";
 import type { TRenderQuickActions } from "./list-view-types";
 
@@ -47,6 +48,7 @@ type Props = {
   isLastChild?: boolean;
   shouldRenderByDefault?: boolean;
   isEpic?: boolean;
+  virtualized?: boolean;
 };
 
 export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
@@ -68,9 +70,10 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
     selectionHelpers,
     shouldRenderByDefault,
     isEpic = false,
+    virtualized = false,
   } = props;
   // states
-  const [isExpanded, setExpanded] = useState<boolean>(false);
+  const [isExpanded, setExpanded] = useIssueRowExpansion(`${groupId}:${issueId}`);
   const [instruction, setInstruction] = useState<"DRAG_OVER" | "DRAG_BELOW" | undefined>(undefined);
   const [isCurrentBlockDragging, setIsCurrentBlockDragging] = useState(false);
   // ref
@@ -132,9 +135,17 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
 
   const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
   return (
-    <div className="relative" ref={issueBlockRef} id={getIssueBlockId(issueId, groupId)}>
+    <div
+      className="relative"
+      data-virtual-pinned={isCurrentBlockDragging || undefined}
+      ref={issueBlockRef}
+      id={getIssueBlockId(issueId, groupId)}
+    >
       <DropIndicator classNames={"absolute top-0 z-[2]"} isVisible={instruction === "DRAG_OVER"} />
       <RenderIfVisible
+        forceRender={virtualized}
+        renderVisibleBeforePaint
+        preserveWhenCollapsed
         key={`${issueId}`}
         root={containerRef}
         classNames={`relative ${isLastChild && !isExpanded ? "" : "border-b border-b-subtle"}`}
@@ -183,6 +194,7 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
             canDropOverIssue={canDropOverIssue}
             isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
             shouldRenderByDefault={isExpanded}
+            virtualized={virtualized}
           />
         ))}
       {isLastChild && <DropIndicator classNames={"absolute z-[2]"} isVisible={instruction === "DRAG_BELOW"} />}

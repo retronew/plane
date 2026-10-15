@@ -85,3 +85,21 @@ it("uses submenus for grouping and sorting, preserving the allowed option order 
   expect(screen.getAllByRole("menuitemradio").map((item) => item.textContent)).toEqual(order);
   expect(JSON.stringify(configuration)).toBe(before);
 });
+it("offers sort field and direction as separate sibling submenus", async () => {
+  render(<Fixture />);
+  fireEvent.click(screen.getByRole("button", { name: "显示" }));
+  const field = await screen.findByRole("menuitem", { name: /排序字段/ });
+  const direction = screen.getByRole("menuitem", { name: /排序方向/ });
+  expect(direction.parentElement).toBe(field.parentElement);
+  expect(direction.getAttribute("aria-disabled")).toBe("true");
+  fireEvent.click(field);
+  fireEvent.click(await screen.findByRole("menuitemradio", { name: "最近创建" }));
+  await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ order_by: "-created_at" }));
+  fireEvent.click(direction);
+  fireEvent.click(await screen.findByRole("menuitemradio", { name: "升序" }));
+  await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ order_by: "created_at" }));
+  expect(direction.textContent).toContain("升序");
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "降序" }));
+  await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ order_by: "-created_at" }));
+  expect(direction.textContent).toContain("降序");
+});

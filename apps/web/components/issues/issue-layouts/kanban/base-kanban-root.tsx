@@ -9,8 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
-import { useParams } from "next/navigation";
-import { EIssueFilterType, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { EIssuesStoreType } from "@plane/types";
 import { EIssueServiceType, EIssueLayoutTypes } from "@plane/types";
 //hooks
@@ -32,6 +31,7 @@ import { KanbanDeleteDropZone } from "./kanban-delete-drop-zone";
 import { KanBanSwimLanes } from "./swimlanes";
 
 export type KanbanStoreType =
+  | EIssuesStoreType.GLOBAL
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE
@@ -50,9 +50,6 @@ export interface IBaseKanBanLayout {
   isEpic?: boolean;
 }
 
-// Stable identity so an empty kanban-filter value doesn't churn the per-column cache's sharedDeps.
-const EMPTY_KANBAN_FILTERS = { group_by: [], sub_group_by: [] };
-
 export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBanLayout) {
   const {
     QuickActions,
@@ -63,7 +60,6 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
     isEpic = false,
   } = props;
   // router
-  const { workspaceSlug, projectId } = useParams();
   // store hooks
   const storeType = useIssueStoreType() as KanbanStoreType;
   const { allowPermissions } = useUserPermissions();
@@ -80,7 +76,6 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
     removeIssueFromView,
     archiveIssue,
     restoreIssue,
-    updateFilters,
   } = useIssuesActions(storeType);
 
   const displayFilters = issuesFilter?.issueFilters?.displayFilters;
@@ -92,8 +87,9 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
   const orderBy = displayFilters?.order_by;
 
   useEffect(() => {
+    if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.KANBAN) return;
     fetchIssues("init-loader", { canGroup: true, perPageCount: sub_group_by ? 10 : 30 }, viewId);
-  }, [fetchIssues, storeType, group_by, sub_group_by, viewId]);
+  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, group_by, sub_group_by, viewId]);
 
   const fetchMoreIssues = useCallback(
     (groupId?: string, subgroupId?: string) => {
@@ -188,25 +184,6 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
     }
   };
 
-  const handleCollapsedGroups = useCallback(
-    (toggle: "group_by" | "sub_group_by", value: string) => {
-      if (workspaceSlug) {
-        let collapsedGroups = issuesFilter?.issueFilters?.kanbanFilters?.[toggle] || [];
-        if (collapsedGroups.includes(value)) {
-          collapsedGroups = collapsedGroups.filter((_value) => _value != value);
-        } else {
-          collapsedGroups.push(value);
-        }
-        updateFilters(projectId?.toString() ?? "", EIssueFilterType.KANBAN_FILTERS, {
-          [toggle]: collapsedGroups,
-        });
-      }
-    },
-    [workspaceSlug, issuesFilter, projectId, updateFilters]
-  );
-
-  const collapsedGroups = issuesFilter?.issueFilters?.kanbanFilters || EMPTY_KANBAN_FILTERS;
-
   return (
     <>
       <DeleteIssueModal
@@ -234,8 +211,6 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
                 orderBy={orderBy}
                 updateIssue={updateIssue}
                 quickActions={renderQuickActions}
-                handleCollapsedGroups={handleCollapsedGroups}
-                collapsedGroups={collapsedGroups}
                 enableQuickIssueCreate={enableQuickAdd}
                 showEmptyGroup={userDisplayFilters?.show_empty_groups ?? true}
                 quickAddCallback={quickAddIssue}

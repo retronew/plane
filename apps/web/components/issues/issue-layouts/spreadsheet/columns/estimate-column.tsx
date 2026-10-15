@@ -22,7 +22,7 @@ export const SpreadsheetEstimateColumn = observer(function SpreadsheetEstimateCo
   const { issue, onChange, disabled, onClose } = props;
 
   return (
-    <div className="h-11 border-b-[0.5px] border-subtle">
+    <div className="h-11">
       <EstimateSelect
         value={issue.estimate_point || undefined}
         onChange={(data) =>

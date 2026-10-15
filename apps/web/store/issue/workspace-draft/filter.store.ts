@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { isEmpty, set } from "lodash-es";
+import { isEmpty, isEqual, set } from "lodash-es";
 import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
 // Plane Imports
@@ -203,7 +203,8 @@ export class WorkspaceDraftIssuesFilter extends IssueFilterHelperStore implement
 
       switch (type) {
         case EIssueFilterType.DISPLAY_FILTERS: {
-          const updatedDisplayFilters = filters as IIssueDisplayFilterOptions;
+          const previousDisplayFilters = { ..._filters.displayFilters };
+          const updatedDisplayFilters = { ...filters } as IIssueDisplayFilterOptions;
           _filters.displayFilters = { ..._filters.displayFilters, ...updatedDisplayFilters };
 
           // set sub_group_by to null if group_by is set to null
@@ -225,6 +226,8 @@ export class WorkspaceDraftIssuesFilter extends IssueFilterHelperStore implement
             updatedDisplayFilters.group_by = "priority";
           }
 
+          if (isEqual(previousDisplayFilters, _filters.displayFilters)) break;
+
           runInAction(() => {
             Object.keys(updatedDisplayFilters).forEach((_key) => {
               set(
@@ -235,7 +238,13 @@ export class WorkspaceDraftIssuesFilter extends IssueFilterHelperStore implement
             });
           });
 
-          this.rootIssueStore.profileIssues.fetchIssuesWithExistingPagination(workspaceSlug, workspaceSlug, "mutation");
+          if (this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
+            this.rootIssueStore.profileIssues.fetchIssuesWithExistingPagination(
+              workspaceSlug,
+              workspaceSlug,
+              "mutation"
+            );
+          }
 
           this.handleIssuesLocalFilters.set(EIssuesStoreType.PROFILE, type, workspaceSlug, workspaceSlug, undefined, {
             display_filters: _filters.displayFilters,

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { observer } from "mobx-react";
 // plane constants
 import { ALL_ISSUES, EIssueFilterType, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -12,14 +12,13 @@ import type { IIssueDisplayFilterOptions } from "@plane/types";
 import { EIssuesStoreType, EIssueLayoutTypes } from "@plane/types";
 // components
 import { AllIssueQuickActions } from "@/components/issues/issue-layouts/quick-action-dropdowns";
-import { SpreadsheetLayoutLoader } from "@/components/ui/loader/layouts/spreadsheet-layout-loader";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
 // store
-import { IssueLayoutHOC } from "../../issue-layout-HOC";
+import { IssueLayoutHOC, IssueLayoutLoader } from "../../issue-layout-HOC";
 import type { TRenderQuickActions } from "../../list/list-view-types";
 import { SpreadsheetView } from "../spreadsheet-view";
 
@@ -46,13 +45,17 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
   // Store hooks
   const {
     issuesFilter: { filters, updateFilters },
-    issues: { getIssueLoader, getPaginationData, groupedIssueIds },
+    issues: { fetchIssues, getIssueLoader, getPaginationData, groupedIssueIds },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { updateIssue, removeIssue, archiveIssue } = useIssuesActions(EIssuesStoreType.GLOBAL);
   const { allowPermissions } = useUserPermissions();
 
   // Derived values
   const issueFilters = globalViewId ? filters?.[globalViewId.toString()] : undefined;
+
+  useEffect(() => {
+    void fetchIssues(workspaceSlug, globalViewId, "init-loader", { canGroup: false, perPageCount: 100 });
+  }, [fetchIssues, workspaceSlug, globalViewId]);
 
   // Permission checker
   const canEditProperties = useCallback(
@@ -104,7 +107,7 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
 
   // Loading state
   if ((isLoading && issuesLoading && getIssueLoader() === "init-loader") || !globalViewId || !groupedIssueIds) {
-    return <SpreadsheetLayoutLoader />;
+    return <IssueLayoutLoader layout={EIssueLayoutTypes.SPREADSHEET} />;
   }
 
   // Computed values

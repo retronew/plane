@@ -14,6 +14,7 @@ import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane
 import type { TPopoverMenuPlacement } from "@plane/blocks/common";
 import { toSideAndAlign } from "@plane/blocks/common";
 import type { IconElement } from "@plane/blocks/types";
+import { cn } from "@plane/utils";
 
 type Props = {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ type Props = {
   disabled?: boolean;
   tabIndex?: number;
   menuButton?: React.ReactNode;
+  buttonClassName?: string;
   isFiltersApplied?: boolean;
 };
 
@@ -39,6 +41,7 @@ export function FiltersDropdown(props: Props) {
     disabled = false,
     tabIndex,
     menuButton,
+    buttonClassName,
     isFiltersApplied = false,
   } = props;
 
@@ -60,6 +63,13 @@ export function FiltersDropdown(props: Props) {
                 label={title}
                 icon={icon ?? miniIcon}
                 tabIndex={tabIndex}
+                render={
+                  buttonClassName
+                    ? (renderProps) => (
+                        <button {...renderProps} className={cn(renderProps.className, buttonClassName)} />
+                      )
+                    : undefined
+                }
               />
             )
           }
