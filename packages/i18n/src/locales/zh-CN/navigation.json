@@ -36,7 +36,6 @@
     "days_remaining": "剩余 {count} 天",
     "view_cycle": "查看周期",
     "chart_type": "图表类型",
-    "chart_hint": "使用每日实际观测的范围和状态数量，缺失历史不回推。",
     "breakdown": "本周期工作项明细",
     "pending": "待完成",
     "completed": "已完成",
@@ -56,9 +55,7 @@
     "end": "结束",
     "today": "今天",
     "ideal_completed": "今日理想已完成",
-    "snapshot_note": "使用真实每日进度，缺失日期留空；之后范围变化或任务重开，不会改写以往记录。",
-    "snapshot_first_observation": "目前只有 {date} 的快照，圆点表示当日数量；暂无更早记录。",
-    "manual_test_history": "此验收周期包含直接入库的补录历史，并非系统在过去日期自动采集的记录。",
+    "on_track": "与计划一致",
     "ideal_pending_series": "理想待完成",
     "ideal_completed_series": "理想已完成"
   }

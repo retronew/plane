@@ -74,12 +74,3 @@ def test_remaining_days_counts_full_days_until_the_actual_end_instant(remaining,
     current = cycle()
     current.end_date = NOW + remaining
     assert active_cycle_statistics(current, count_cycle_issues([]), NOW)["days_remaining"] == expected
-
-
-def test_database_verification_history_has_an_explicit_source_label():
-    current = cycle()
-    current.external_source = "database-cycle-verification"
-    stats = active_cycle_statistics(current, count_cycle_issues([]), NOW)
-    assert stats["history_source"] == "manual_test"
-    current.external_source = None
-    assert active_cycle_statistics(current, count_cycle_issues([]), NOW)["history_source"] == "observed"

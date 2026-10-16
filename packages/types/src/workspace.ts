@@ -258,7 +258,6 @@ export type TWorkspaceActiveCycle = Pick<
   progress_chart: Record<string, TCycleDailySnapshot | null>;
   chart_start_date: string;
   chart_end_date: string;
-  history_source?: "observed" | "manual_test";
   today: string;
   days_remaining: number;
 };

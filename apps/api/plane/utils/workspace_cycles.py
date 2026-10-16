@@ -42,7 +42,4 @@ def active_cycle_statistics(cycle, counts, now, snapshots=()):
         "chart_end_date": end.isoformat(),
         "today": today.isoformat(),
         "days_remaining": max(0, (cycle.end_date - now).days),
-        "history_source": (
-            "manual_test" if getattr(cycle, "external_source", None) == "database-cycle-verification" else "observed"
-        ),
     }

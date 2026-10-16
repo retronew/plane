@@ -49,7 +49,44 @@ it("links to the correct cycle and toggles the matching chart series with native
   expect(pending.getAttribute("aria-pressed")).toBe("false");
   expect(screen.getByTestId("chart").textContent).toBe("actual");
   expect(screen.getByText("workspace_cycles.cancelled_excluded:1")).toBeTruthy();
-  expect(screen.getByText("workspace_cycles.leading:0")).toBeTruthy();
+  expect(screen.getByText("workspace_cycles.on_track")).toBeTruthy();
+  expect(screen.queryByText("workspace_cycles.leading:0")).toBeNull();
+});
+
+it("updates the cycle progress icon using completed items over the scope excluding cancellations", () => {
+  const { rerender } = render(
+    <MemoryRouter>
+      <WorkspaceCycleCard cycle={cycleFixture} workspaceSlug="demo" />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("36");
+  rerender(
+    <MemoryRouter>
+      <WorkspaceCycleCard cycle={{ ...cycleFixture, completed_issues: 11 }} workspaceSlug="demo" />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("100");
+  rerender(
+    <MemoryRouter>
+      <WorkspaceCycleCard cycle={{ ...cycleFixture, cancelled_issues: 12, completed_issues: 0 }} workspaceSlug="demo" />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("0");
+});
+
+it("shows the matching trend for positive and negative differences", () => {
+  const { rerender } = render(
+    <MemoryRouter>
+      <WorkspaceCycleCard cycle={{ ...cycleFixture, completed_issues: 5 }} workspaceSlug="demo" />
+    </MemoryRouter>
+  );
+  expect(screen.getByText("workspace_cycles.leading:1")).toBeTruthy();
+  rerender(
+    <MemoryRouter>
+      <WorkspaceCycleCard cycle={{ ...cycleFixture, completed_issues: 3 }} workspaceSlug="demo" />
+    </MemoryRouter>
+  );
+  expect(screen.getByText("workspace_cycles.lagging:1")).toBeTruthy();
 });
 
 it("shows pending rather than a duplicate completed count in other states for the burn-up chart", async () => {

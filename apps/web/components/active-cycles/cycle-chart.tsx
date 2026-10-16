@@ -130,155 +130,138 @@ export function WorkspaceCycleChart({
     .sort((a, b) => a - b);
 
   return (
-    <>
-      <p className="text-12 leading-relaxed text-tertiary">
-        {cycle.history_source === "manual_test"
-          ? t("workspace_cycles.manual_test_history")
-          : singleObservation
-            ? t("workspace_cycles.snapshot_first_observation", {
-                date: new Intl.DateTimeFormat(getCurrentLanguage(), { dateStyle: "medium", timeZone: "UTC" }).format(
-                  data[0].timestamp
-                ),
-              })
-            : t("workspace_cycles.snapshot_note")}
-      </p>
-      <section
-        className="h-[320px] w-full min-w-0 text-11 md:-mb-2 md:h-[430px] [&_.recharts-cartesian-axis-tick_text]:fill-tertiary [&_:focus:not(:focus-visible)]:outline-none"
-        aria-label={t(burnup ? "web.burn_up" : "web.burn_down")}
-      >
-        <ResponsiveContainer width="99%" height="100%" onResize={(nextWidth) => setWidth(nextWidth)}>
-          <ComposedChart
-            accessibilityLayer
-            data={data}
-            margin={{ top: 30, right: 0, bottom: 70, left: width < 400 ? 0 : 20 }}
-          >
-            <defs>
-              <pattern
-                id={`${id}-future`}
-                patternUnits="userSpaceOnUse"
-                width="4"
-                height="8"
-                patternTransform="rotate(-45 2 2)"
-              >
-                <path d="M -1,2 l 6,0" stroke="var(--border-color-accent-subtle)" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <CartesianGrid vertical={false} stroke="var(--border-color-subtle)" />
-            <XAxis
-              type="number"
-              dataKey="timestamp"
-              scale="time"
-              domain={[data[0].timestamp, end]}
-              ticks={ticks}
-              tickLine={false}
-              axisLine={{ stroke: "var(--border-color-subtle)" }}
-              minTickGap={18}
-              interval={0}
-              tick={<CycleDateTick endDay={endDay} />}
-            />
-            <YAxis
-              width={width < 400 ? 40 : 60}
-              domain={[0, maximum]}
-              allowDecimals={false}
-              tickLine={false}
-              axisLine={{ stroke: "var(--border-color-subtle)" }}
-              tick={{ fontSize: 10 }}
-              label={{
-                value: t("sidebar.work_items").toLocaleUpperCase(),
-                angle: -90,
-                position: "insideLeft",
-                offset: 12,
-                style: { fontSize: 12, fill: "var(--text-color-tertiary)" },
-              }}
-            />
-            <ReferenceArea
-              x1={today}
-              x2={endDay}
-              y1={0}
-              y2={Math.max(1, scope)}
-              fill="var(--background-color-accent-subtle)"
-              fillOpacity={0.5}
-            />
-            <ReferenceArea
-              x1={today}
-              x2={endDay}
-              y1={0}
-              y2={Math.max(1, scope)}
-              fill={`url(#${id}-future)`}
-              fillOpacity={0.6}
-            />
-            <ReferenceLine x={today} stroke="var(--text-color-secondary)" strokeWidth={1} strokeDasharray="3 3" />
-            <ReferenceLine
-              x={endDay}
-              stroke="var(--border-color-danger-strong)"
-              strokeWidth={1}
-              strokeDasharray="3 3"
-            />
-            <Tooltip
-              filterNull
-              cursor={{ stroke: "var(--text-color-tertiary)", strokeDasharray: "3 3" }}
-              content={<CycleTooltip burnup={burnup} />}
-            />
-            <Line
-              dataKey="ideal"
-              name={labels.ideal}
-              stroke={CYCLE_CHART_COLORS.ideal}
-              strokeWidth={1}
-              strokeDasharray="4 4"
-              dot={false}
-              connectNulls={false}
-              hide={hidden.has("ideal")}
-              isAnimationActive={false}
-            />
-            <Area
-              dataKey="difference"
-              type="linear"
-              fill={isAhead ? "var(--background-color-success-subtle)" : "var(--background-color-danger-subtle)"}
-              fillOpacity={0.6}
-              stroke="none"
-              strokeWidth={0}
-              tooltipType="none"
-              legendType="none"
-              connectNulls={false}
-              hide={hidden.has("actual") || hidden.has("ideal")}
-              isAnimationActive={false}
-            />
-            <Line
-              dataKey="actual"
-              name={labels.actual}
-              type="linear"
-              stroke={CYCLE_CHART_COLORS.actual}
-              strokeWidth={2}
-              dot={singleObservation ? { r: 3, fill: CYCLE_CHART_COLORS.actual } : false}
-              connectNulls={false}
-              hide={hidden.has("actual")}
-              isAnimationActive={false}
-            />
-            <Line
-              dataKey="started"
-              name={labels.started}
-              type="stepAfter"
-              stroke={CYCLE_CHART_COLORS.started}
-              strokeWidth={2}
-              dot={singleObservation ? { r: 3, fill: CYCLE_CHART_COLORS.started } : false}
-              connectNulls={false}
-              hide={hidden.has("started")}
-              isAnimationActive={false}
-            />
-            <Line
-              dataKey="scope"
-              type="stepAfter"
-              name={labels.scope}
-              stroke={CYCLE_CHART_COLORS.scope}
-              strokeWidth={2}
-              dot={false}
-              connectNulls={false}
-              hide={hidden.has("scope")}
-              isAnimationActive={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </section>
-    </>
+    <section
+      className="h-[320px] w-full min-w-0 text-11 lg:h-[420px] [&_.recharts-cartesian-axis-tick_text]:fill-tertiary [&_:focus:not(:focus-visible)]:outline-none"
+      aria-label={t(burnup ? "web.burn_up" : "web.burn_down")}
+    >
+      <ResponsiveContainer width="100%" height="100%" onResize={(nextWidth) => setWidth(nextWidth)}>
+        <ComposedChart
+          accessibilityLayer
+          data={data}
+          margin={{ top: 16, right: 8, bottom: 28, left: width < 400 ? 0 : 8 }}
+        >
+          <defs>
+            <pattern
+              id={`${id}-future`}
+              patternUnits="userSpaceOnUse"
+              width="4"
+              height="8"
+              patternTransform="rotate(-45 2 2)"
+            >
+              <path d="M -1,2 l 6,0" stroke="var(--border-color-accent-subtle)" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <CartesianGrid vertical={false} stroke="var(--border-color-subtle)" />
+          <XAxis
+            type="number"
+            dataKey="timestamp"
+            scale="time"
+            domain={[data[0].timestamp, end]}
+            ticks={ticks}
+            tickLine={false}
+            axisLine={{ stroke: "var(--border-color-subtle)" }}
+            minTickGap={18}
+            interval={0}
+            height={36}
+            tick={<CycleDateTick endDay={endDay} />}
+          />
+          <YAxis
+            width={width < 400 ? 40 : 60}
+            domain={[0, maximum]}
+            allowDecimals={false}
+            tickLine={false}
+            axisLine={{ stroke: "var(--border-color-subtle)" }}
+            tick={{ fontSize: 10 }}
+            label={{
+              value: t("sidebar.work_items").toLocaleUpperCase(),
+              angle: -90,
+              position: "insideLeft",
+              offset: 12,
+              style: { fontSize: 12, fill: "var(--text-color-tertiary)" },
+            }}
+          />
+          <ReferenceArea
+            x1={today}
+            x2={endDay}
+            y1={0}
+            y2={Math.max(1, scope)}
+            fill="var(--background-color-accent-subtle)"
+            fillOpacity={0.5}
+          />
+          <ReferenceArea
+            x1={today}
+            x2={endDay}
+            y1={0}
+            y2={Math.max(1, scope)}
+            fill={`url(#${id}-future)`}
+            fillOpacity={0.6}
+          />
+          <ReferenceLine x={today} stroke="var(--text-color-secondary)" strokeWidth={1} strokeDasharray="3 3" />
+          <ReferenceLine x={endDay} stroke="var(--border-color-danger-strong)" strokeWidth={1} strokeDasharray="3 3" />
+          <Tooltip
+            filterNull
+            cursor={{ stroke: "var(--text-color-tertiary)", strokeDasharray: "3 3" }}
+            content={<CycleTooltip burnup={burnup} />}
+          />
+          <Line
+            dataKey="ideal"
+            name={labels.ideal}
+            stroke={CYCLE_CHART_COLORS.ideal}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            dot={false}
+            connectNulls={false}
+            hide={hidden.has("ideal")}
+            isAnimationActive={false}
+          />
+          <Area
+            dataKey="difference"
+            type="linear"
+            fill={isAhead ? "var(--background-color-success-subtle)" : "var(--background-color-danger-subtle)"}
+            fillOpacity={0.6}
+            stroke="none"
+            strokeWidth={0}
+            tooltipType="none"
+            legendType="none"
+            connectNulls={false}
+            hide={hidden.has("actual") || hidden.has("ideal")}
+            isAnimationActive={false}
+          />
+          <Line
+            dataKey="actual"
+            name={labels.actual}
+            type="linear"
+            stroke={CYCLE_CHART_COLORS.actual}
+            strokeWidth={2}
+            dot={singleObservation ? { r: 3, fill: CYCLE_CHART_COLORS.actual } : false}
+            connectNulls={false}
+            hide={hidden.has("actual")}
+            isAnimationActive={false}
+          />
+          <Line
+            dataKey="started"
+            name={labels.started}
+            type="stepAfter"
+            stroke={CYCLE_CHART_COLORS.started}
+            strokeWidth={2}
+            dot={singleObservation ? { r: 3, fill: CYCLE_CHART_COLORS.started } : false}
+            connectNulls={false}
+            hide={hidden.has("started")}
+            isAnimationActive={false}
+          />
+          <Line
+            dataKey="scope"
+            type="stepAfter"
+            name={labels.scope}
+            stroke={CYCLE_CHART_COLORS.scope}
+            strokeWidth={2}
+            dot={false}
+            connectNulls={false}
+            hide={hidden.has("scope")}
+            isAnimationActive={false}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </section>
   );
 }
