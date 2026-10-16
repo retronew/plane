@@ -1,13 +1,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { TrendingDown, TrendingUp, CircleMinus, Minus } from "lucide-react";
-import { Avatar } from "@makeplane/propel/components/avatar";
 import { Button } from "@makeplane/propel/components/button";
 import { Select } from "@plane/blocks/select";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
 import { useTranslation } from "@plane/i18n";
 import type { TCyclePlotType, TWorkspaceActiveCycle } from "@plane/types";
-import { getFileURL, getProgress } from "@plane/utils";
+import { getProgress } from "@plane/utils";
 import { CYCLE_CHART_COLORS, workspaceCycleChartData } from "./chart-data";
 import { WorkspaceCycleChart } from "./cycle-chart";
 import type { CycleChartSeries } from "./cycle-chart";
@@ -72,13 +71,7 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
             </span>
           </div>
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-3">
-          <Avatar
-            size="sm"
-            src={getFileURL(cycle.owned_by_detail.avatar_url ?? "")}
-            alt={cycle.owned_by_detail.display_name}
-            fallback={cycle.owned_by_detail.display_name[0]?.toUpperCase()}
-          />
+        <div className="ml-auto shrink-0">
           <Button
             stretch="auto"
             nativeButton={false}
