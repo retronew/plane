@@ -18,7 +18,7 @@ import AnalyticsRequestError from "../request-error";
 import AnalyticsEmptyState from "../empty-state";
 import { ChartLoader } from "../loaders";
 
-import { StatisticsNote } from "../statistics-note";
+import { StatisticsNote, StatisticsNotePanel } from "../statistics-note";
 
 const service = new AnalyticsService();
 const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = false }: { dashboard?: boolean }) {
@@ -66,12 +66,6 @@ const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = fals
         </span>
       }
     >
-      <div className="mb-3 space-y-1">
-        <StatisticsNote kind="trend" />
-        {data?.period && (
-          <p className="text-12 text-tertiary">{t("workspace_analytics.methodology.range", data.period)}</p>
-        )}
-      </div>
       {error ? (
         <AnalyticsRequestError onRetry={() => void mutate()} />
       ) : (
@@ -90,6 +84,14 @@ const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = fals
           )}
         </AsyncContent>
       )}
+      <StatisticsNotePanel>
+        {data?.period && (
+          <p className="text-12 font-medium text-secondary">
+            {t("workspace_analytics.methodology.range", data.period)}
+          </p>
+        )}
+        <StatisticsNote kind="trend" />
+      </StatisticsNotePanel>
     </AnalyticsSectionWrapper>
   );
 });

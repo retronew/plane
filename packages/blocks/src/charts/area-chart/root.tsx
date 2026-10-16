@@ -1,3 +1,4 @@
+import { useChartLegend } from "../components/legend-state";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -38,7 +39,8 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
   const motion = useChartMotion();
   // states
   const [activeArea, setActiveArea] = useState<string | null>(null);
-  const [activeLegend, setActiveLegend] = useState<string | null>(null);
+  const legendState = useChartLegend(areas.map((item) => item.key));
+  const activeLegend = legendState.activeKey;
 
   // derived values
   const { itemKeys, itemLabels, itemDotColors } = useMemo(() => {
@@ -63,6 +65,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
           key={area.key}
           type={area.smoothCurves ? "monotone" : "linear"}
           dataKey={area.key}
+          hide={legendState.hidden.has(area.key)}
           stackId={area.stackId}
           fill={area.fill}
           opacity={!!activeLegend && activeLegend !== area.key ? 0.1 : 1}
@@ -90,7 +93,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
           className="[&_path]:transition-opacity [&_path]:duration-200"
         />
       )),
-    [activeLegend, areas, motion]
+    [activeLegend, legendState.hidden, areas, motion]
   );
 
   // create comparison line data for straight line from origin to last point
@@ -183,9 +186,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
           {legend && (
             <Legend
               formatter={(value) => itemLabels[value]}
-              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
-              onMouseLeave={() => setActiveLegend(null)}
-              {...getLegendProps(legend, itemKeys)}
+              {...getLegendProps(legend, itemKeys, undefined, legendState)}
             />
           )}
           {showTooltip && (
@@ -208,7 +209,7 @@ export const AreaChart = React.memo(function AreaChart<K extends string, T exten
                         : label
                     }
                     payload={payload}
-                    itemKeys={itemKeys}
+                    itemKeys={legendState.visibleKeys}
                     itemLabels={itemLabels}
                     itemDotColors={itemDotColors}
                   />

@@ -138,6 +138,18 @@ export const ANALYTICS_DURATION_FILTER_OPTIONS = [
 
 export const ANALYTICS_X_AXIS_VALUES: { value: ChartXAxisProperty; label: string }[] = [
   {
+    value: ChartXAxisProperty.PROJECTS,
+    get label() {
+      return translate("workspace_analytics.details.tabs.projects");
+    },
+  },
+  {
+    value: ChartXAxisProperty.CREATED_BY,
+    get label() {
+      return translate("workspace_analytics.insights.created_by");
+    },
+  },
+  {
     value: ChartXAxisProperty.STATES,
     get label() {
       return translate("web.state_name");

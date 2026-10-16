@@ -1,3 +1,4 @@
+import { AnalyticsMetricCard } from "./metric-card";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -6,7 +7,6 @@
 
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { Link } from "react-router";
 import useSWR from "swr";
 import type { IInsightField } from "@plane/constants";
 import { ANALYTICS_INSIGHTS_FIELDS } from "@plane/constants";
@@ -99,7 +99,7 @@ const TotalInsights = observer(function TotalInsights({
       minHeight={dashboard ? 155 : 90}
       skeleton={
         <Loader
-          className={cn("-mx-2 grid grid-cols-2 gap-x-6 gap-y-3", dashboard ? "lg:grid-cols-4" : "lg:grid-cols-5")}
+          className={cn("-mx-2 grid grid-cols-2 gap-x-6 gap-y-5", dashboard ? "lg:grid-cols-4" : "lg:grid-cols-5")}
         >
           {fields.map((f) => (
             <div key={f.key} className="space-y-2 px-2 py-1.5">
@@ -112,29 +112,35 @@ const TotalInsights = observer(function TotalInsights({
     >
       <div
         className={cn(
-          "-mx-2 grid grid-cols-2 gap-x-6 gap-y-3",
+          "-mx-2 grid grid-cols-2 gap-x-6 gap-y-5",
           dashboard ? "lg:grid-cols-4" : peekView ? "grid-cols-2" : "lg:grid-cols-5"
         )}
       >
         {fields.map((field) => {
           const label = getInsightLabel(analyticsType, field, isEpic, t);
-          if (!dashboard)
+          if (!dashboard && isPeekView)
             return (
               <div key={field.key} className="px-2 py-1.5">
                 <InsightCard label={label} data={data?.[field.key]} />
               </div>
             );
           return (
-            <Link
+            <AnalyticsMetricCard
               key={field.key}
-              to={`/${slug}/analytics/${targets[field.key] ?? "users"}/`}
-              className="group rounded-lg px-2 py-1.5 transition-colors hover:bg-layer-transparent-hover"
-            >
-              <span className="block text-12 text-tertiary">{label}</span>
-              <span className="mt-1 block text-24 font-medium text-primary tabular-nums">
-                {(data?.[field.key]?.count ?? 0).toLocaleString()}
-              </span>
-            </Link>
+              label={label}
+              count={data?.[field.key]?.count ?? 0}
+              to={dashboard ? `/${slug}/analytics/${targets[field.key] ?? "users"}/` : "#work-item-breakdown"}
+              hint={
+                dashboard
+                  ? t("workspace_analytics.dashboard.open_details", {
+                      entity:
+                        field.key === "total_work_items"
+                          ? t("common.work_items")
+                          : t(`workspace_analytics.details.tabs.${targets[field.key] ?? "users"}`),
+                    })
+                  : t(`workspace_analytics.work_item_summary_hints.${field.key}`)
+              }
+            />
           );
         })}
       </div>

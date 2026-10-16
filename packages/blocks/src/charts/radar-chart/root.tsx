@@ -1,10 +1,11 @@
+import { useChartLegend } from "../components/legend-state";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { PolarGrid, Radar, RadarChart as CoreRadarChart, PolarAngleAxis, Tooltip, Legend } from "recharts";
 import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
@@ -18,8 +19,8 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
 
   const motion = useChartMotion();
   // states
-  const [, setActiveIndex] = useState<number | null>(null);
-  const [activeLegend, setActiveLegend] = useState<string | null>(null);
+  const legendState = useChartLegend(radars.map((item) => item.key));
+  const activeLegend = legendState.activeKey;
 
   const { itemKeys, itemLabels, itemDotColors } = useMemo(() => {
     const keys: string[] = [];
@@ -55,31 +56,22 @@ function RadarChart<T extends string, K extends string>(props: TRadarChartProps<
                   activeKey={activeLegend}
                   label={label}
                   payload={payload}
-                  itemKeys={itemKeys}
+                  itemKeys={legendState.visibleKeys}
                   itemLabels={itemLabels}
                   itemDotColors={itemDotColors}
                 />
               )}
             />
           )}
-          {legend && (
-            <Legend
-              onMouseEnter={(payload) => {
-                const key = (payload.payload as { key?: string } | undefined)?.key;
-                if (!key) return;
-                setActiveLegend(key);
-                setActiveIndex(null);
-              }}
-              onMouseLeave={() => setActiveLegend(null)}
-              {...getLegendProps(legend, itemKeys)}
-            />
-          )}
+          {legend && <Legend {...getLegendProps(legend, itemKeys, undefined, legendState)} />}
           {radars.map((radar) => (
             <Radar
               {...motion}
               key={radar.key}
               name={radar.name}
               dataKey={radar.key}
+              opacity={activeLegend && activeLegend !== radar.key ? 0.15 : 1}
+              hide={legendState.hidden.has(radar.key)}
               stroke={radar.stroke}
               fill={radar.fill}
               fillOpacity={radar.fillOpacity}

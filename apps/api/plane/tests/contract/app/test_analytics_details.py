@@ -85,6 +85,9 @@ def test_progress_uses_actual_associations_and_completed_states(session_client, 
     assert row["work_items"] == 2
     assert row["completed"] == 1
     assert row["completion"] == 50
+    entity = analytics_records[4 if tab == "cycles" else 5]
+    assert row["lead_id"] == str(entity.owned_by_id if tab == "cycles" else entity.lead_id)
+    assert "lead_avatar_url" in row
     assert response.data["summary"]["current" if tab == "cycles" else "in-progress"] == 1
 
 
@@ -476,3 +479,20 @@ def test_trend_applies_cycle_and_epic_scope(session_client, workspace, analytics
     )
     assert response.status_code == 200
     assert sum(row["created_issues"] for row in response.data["data"]) == 1
+
+
+@pytest.mark.parametrize("axis,index", [("PROJECTS", 0), ("CYCLES", 4), ("MODULES", 5)])
+def test_insight_entity_ids_and_parent_projects_are_permission_scoped(
+    session_client, workspace, analytics_records, axis, index
+):
+    response = session_client.get(
+        f"/api/workspaces/{workspace.slug}/advance-analytics-charts/",
+        {"type": "custom-work-items", "x_axis": axis},
+    )
+    assert response.status_code == 200, response.data
+    entity = analytics_records[index]
+    row = next(row for row in response.data["data"] if str(row["key"]) == str(entity.id))
+    assert row["count"] == (7 if axis == "PROJECTS" else 2)
+    assert "Private" not in str(response.data)
+    if axis != "PROJECTS":
+        assert row["project_id"] == str(analytics_records[0].id)

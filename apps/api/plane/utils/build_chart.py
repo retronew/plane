@@ -24,6 +24,7 @@ from rest_framework.exceptions import ValidationError
 
 
 x_axis_mapper = {
+    "PROJECTS": "PROJECTS",
     "STATES": "STATES",
     "STATE_GROUPS": "STATE_GROUPS",
     "LABELS": "LABELS",
@@ -49,6 +50,7 @@ def get_y_axis_filter(y_axis: str) -> Dict[str, Any]:
 
 def get_x_axis_field() -> Dict[str, Tuple[str, str, Optional[Dict[str, Any]]]]:
     return {
+        "PROJECTS": ("project_id", "project__name", None),
         "STATES": ("state__id", "state__name", None),
         "STATE_GROUPS": ("state__group", "state__group", None),
         "LABELS": (
@@ -214,5 +216,16 @@ def build_analytics_chart(
     else:
         response = build_simple_chart_response(queryset, id_field, name_field, aggregate_func)
         schema = {}
+
+    # Parent project IDs are taken from the already permission-scoped issue queryset.
+    if x_axis in {"CYCLES", "MODULES"}:
+        parent_projects = {
+            str(entity_id): str(project_id)
+            for entity_id, project_id in queryset.values_list(id_field, "project_id").distinct()
+            if entity_id
+        }
+        for row in response:
+            if str(row["key"]) in parent_projects:
+                row["project_id"] = parent_projects[str(row["key"])]
 
     return {"data": response, "schema": schema}

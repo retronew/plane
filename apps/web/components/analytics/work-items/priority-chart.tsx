@@ -1,3 +1,4 @@
+import { InsightEntity } from "../insight-entity";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -5,7 +6,7 @@
  */
 
 import { AsyncContent } from "@/components/common/async-content";
-import { StatisticsNote } from "../statistics-note";
+import { StatisticsNote, StatisticsNotePanel } from "../statistics-note";
 import AnalyticsRequestError from "../request-error";
 
 import { useMemo } from "react";
@@ -44,12 +45,8 @@ interface Props {
 
 const analyticsService = new AnalyticsService();
 const PriorityChart = observer(function PriorityChart(props: Props) {
-  const { x_axis, y_axis, group_by } = props;
-  const { t } = useTranslation();
   // store hooks
   const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
-  const { workspaceStates } = useProjectState();
-  const { resolvedTheme } = useTheme();
   // router
   const params = useParams();
   const workspaceSlug = params.workspaceSlug.toString();
@@ -77,6 +74,19 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
         isPeekView
       )
   );
+  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
+  return <InsightChart {...props} data={priorityChartData} loading={priorityChartLoading} />;
+});
+
+export const InsightChart = observer(function InsightChart(
+  props: Props & { data?: TChart; loading?: boolean; metricLabel?: string; dimensionLabel?: string }
+) {
+  const { x_axis, y_axis, group_by, data: priorityChartData, loading: priorityChartLoading = false } = props;
+  const { t } = useTranslation();
+  const { workspaceSlug: slug } = useParams();
+  const workspaceSlug = String(slug);
+  const { workspaceStates } = useProjectState();
+  const { resolvedTheme } = useTheme();
   const parsedData = useMemo(
     () =>
       priorityChartData &&
@@ -106,26 +116,23 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
           textClassName: "",
           showPercentage: false,
           showTopBorderRadius: () => true,
-          showBottomBorderRadius: () => true,
+          showBottomBorderRadius: () => false,
         },
       ];
     } else if (chart_model === EChartModels.STACKED && parsedData.schema) {
       const parsedExtremes: {
         [key: string]: {
           top: string | null;
-          bottom: string | null;
         };
       } = {};
       parsedData.data.forEach((datum) => {
         let top = null;
-        let bottom = null;
         for (let i = 0; i < schemaKeys.length; i++) {
           const key = schemaKeys[i];
           if (datum[key] === 0) continue;
-          if (!bottom) bottom = key;
           top = key;
         }
-        parsedExtremes[datum.key] = { top, bottom };
+        parsedExtremes[datum.key] = { top };
       });
 
       parsedBars = schemaKeys.map((key, index) => ({
@@ -135,8 +142,10 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
         fill: extendedColors[index],
         textClassName: "",
         showPercentage: false,
-        showTopBorderRadius: (value, payload: TChartDatum) => parsedExtremes[payload.key].top === value,
-        showBottomBorderRadius: (value, payload: TChartDatum) => parsedExtremes[payload.key].bottom === value,
+        showTopBorderRadius: (value, payload: TChartDatum) =>
+          [x_axis, group_by].some((axis) => axis === "ASSIGNEES" || axis === "LABELS") ||
+          parsedExtremes[payload.key].top === value,
+        showBottomBorderRadius: () => false,
       }));
     } else {
       parsedBars = [];
@@ -145,12 +154,16 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
   }, [chart_model, group_by, parsedData, resolvedTheme, workspaceStates, x_axis, y_axis, t]);
 
   const yAxisLabel = useMemo(
-    () => ANALYTICS_Y_AXIS_VALUES.find((item) => item.value === props.y_axis)?.label ?? props.y_axis,
-    [props.y_axis]
+    () =>
+      props.metricLabel ?? ANALYTICS_Y_AXIS_VALUES.find((item) => item.value === props.y_axis)?.label ?? props.y_axis,
+    [props.y_axis, props.metricLabel]
   );
   const xAxisLabel = useMemo(
-    () => ANALYTICS_X_AXIS_VALUES.find((item) => item.value === props.x_axis)?.label ?? props.x_axis,
-    [props.x_axis]
+    () =>
+      props.dimensionLabel ??
+      ANALYTICS_X_AXIS_VALUES.find((item) => item.value === props.x_axis)?.label ??
+      props.x_axis,
+    [props.x_axis, props.dimensionLabel]
   );
 
   const defaultColumns: ColumnDef<TInsightTableFeatures, TChartDatum>[] = useMemo(
@@ -158,6 +171,15 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
       {
         accessorKey: "name",
         header: () => xAxisLabel,
+        cell: ({ row }) => (
+          <InsightEntity
+            axis={x_axis}
+            id={String(row.original.key)}
+            name={String(row.original.name)}
+            slug={workspaceSlug}
+            projectId={row.original.project_id ? String(row.original.project_id) : undefined}
+          />
+        ),
         meta: {
           export: {
             key: xAxisLabel,
@@ -179,7 +201,7 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
         },
       },
     ],
-    [xAxisLabel, t]
+    [xAxisLabel, t, x_axis, workspaceSlug]
   );
 
   const columns: ColumnDef<TInsightTableFeatures, TChartDatum>[] = useMemo(
@@ -187,7 +209,16 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
       parsedData
         ? Object.keys(parsedData?.schema ?? {}).map((key) => ({
             accessorKey: key,
-            header: () => <div className="text-right">{parsedData.schema[key]}</div>,
+            header: () => (
+              <div className="flex justify-end">
+                <InsightEntity
+                  axis={group_by}
+                  id={key.replace(/^entity:/, "")}
+                  name={parsedData.schema[key]}
+                  slug={workspaceSlug}
+                />
+              </div>
+            ),
             cell: ({ row }) => <div className="text-right">{row.original[key]}</div>,
             meta: {
               export: {
@@ -198,39 +229,35 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
             },
           }))
         : [],
-    [parsedData]
+    [parsedData, group_by, workspaceSlug]
   );
-
-  if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
 
   return (
     <AsyncContent loading={priorityChartLoading} skeleton={<ChartLoader />} minHeight={288}>
       <div className="flex flex-col gap-6">
-        {[x_axis, group_by].some((axis) => axis === "ASSIGNEES" || axis === "LABELS") && (
-          <StatisticsNote kind="duplicates" />
-        )}
         {parsedData?.data && parsedData.data.length > 0 ? (
           <>
             <BarChart
               className="h-72 w-full"
               data={parsedData.data}
               bars={bars}
-              margin={{
-                bottom: 30,
-              }}
+              legend={group_by ? { align: "center", verticalAlign: "bottom", layout: "horizontal" } : undefined}
               xAxis={{
                 key: "name",
                 label: xAxisLabel.replace("_", " "),
-                dy: 30,
               }}
               yAxis={{
                 key: "count",
-                label: t("common.no_of", { entity: yAxisLabel.replace("_", " ") }),
-                offset: -60,
-                dx: -26,
+                label: props.metricLabel ?? t("common.no_of", { entity: yAxisLabel.replace("_", " ") }),
               }}
             />
+            {!props.metricLabel && [x_axis, group_by].some((axis) => axis === "ASSIGNEES" || axis === "LABELS") && (
+              <StatisticsNotePanel>
+                <StatisticsNote kind="duplicates" />
+              </StatisticsNotePanel>
+            )}
             <DataTable
+              title={t("workspace_analytics.group_breakdown")}
               data={parsedData.data}
               columns={[...defaultColumns, ...columns]}
               searchPlaceholder={`${parsedData.data.length} ${xAxisLabel}`}
@@ -254,7 +281,9 @@ const PriorityChart = observer(function PriorityChart(props: Props) {
             assetKey="unknown"
             assetClassName="size-20"
             rootClassName="border border-subtle px-5 py-10 md:py-20 md:px-20"
-            title={t("workspace_empty_state.analytics_work_items.title")}
+            title={t(
+              props.metricLabel ? "common.no_data_available" : "workspace_empty_state.analytics_work_items.title"
+            )}
           />
         )}
       </div>

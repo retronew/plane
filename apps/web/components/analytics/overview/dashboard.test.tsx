@@ -15,7 +15,9 @@ vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "test" })
 vi.mock("@/hooks/store/use-analytics", () => ({
   useAnalytics: () => ({ selectedProjects: mocks.projects, selectedDuration: mocks.period, isPeekView: false }),
 }));
-vi.mock("@/hooks/store/use-project", () => ({ useProject: () => ({ getProjectById: () => ({ name: "Core" }) }) }));
+vi.mock("@/hooks/store/use-project", () => ({
+  useProject: () => ({ getProjectById: () => ({ name: "Core", logo_props: {} }) }),
+}));
 beforeEach(async () => {
   vi.clearAllMocks();
   mocks.projects = [];
@@ -94,4 +96,14 @@ it("sends the selected period to the backend instead of changing only the filter
   );
   await screen.findByText("工作项总数");
   expect(mocks.get).toHaveBeenCalledWith("test", "overview", { date_filter: "last_7_days" }, false);
+});
+
+it("renders a fallback icon when the project has an empty logo object", () => {
+  render(
+    <MemoryRouter>
+      <ActiveProjectItem project={{ id: "p1", completed_issues: 0, total_issues: 5 }} />
+    </MemoryRouter>
+  );
+  expect(screen.getByRole("link").querySelector("svg.lucide-folder-kanban")).toBeTruthy();
+  expect(screen.getByText("0%")).toBeTruthy();
 });

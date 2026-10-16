@@ -1,16 +1,22 @@
+import { ProjectComparison, projectCompletion } from "./project-comparison";
+import CreatedVsResolved from "./work-items/created-vs-resolved";
+import { AnalyticsMetricCard } from "./metric-card";
 import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { Link } from "react-router";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FolderKanban, Layers, CircleDashed, UserRound } from "lucide-react";
+import { Avatar } from "@makeplane/propel/components/avatar";
+import { ModuleStatusIcon } from "@plane/blocks/icons";
+import type { TModuleStatus } from "@plane/blocks/icons";
+import { AnalyticsEntityCell } from "./entity-cell";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { BarChart } from "@plane/blocks/charts/bar-chart";
 import { useTranslation } from "@plane/i18n";
 import type { TAnalyticsDetailRow, TAnalyticsDetailTab, TBarItem } from "@plane/types";
-import { renderFormattedDate } from "@plane/utils";
+import { formatCompactDate, getFileURL, renderFormattedDate } from "@plane/utils";
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { AnalyticsService } from "@/services/analytics.service";
 import AnalyticsWrapper from "./analytics-wrapper";
@@ -26,7 +32,7 @@ import { exportAnalytics } from "./export";
 import { AnalyticsExportMenu } from "./export-menu";
 import AnalyticsRequestError from "./request-error";
 
-import { StatisticsNote } from "./statistics-note";
+import { StatisticsNote, StatisticsNotePanel } from "./statistics-note";
 
 const service = new AnalyticsService();
 export const DETAIL_COLUMNS: Record<TAnalyticsDetailTab, string[]> = {
@@ -78,6 +84,22 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
     () => service.getAnalyticsDetails(slug, tab, selectedProjects, selectedDuration),
     { errorRetryCount: 2 }
   );
+  const scope = `${slug}:${tab}:${selectedProjects.join(",")}:${selectedDuration}`;
+  const [selection, setSelection] = useState<{ scope: string; key?: string }>({ scope });
+  if (selection.scope !== scope) setSelection({ scope });
+  const selectedProject =
+    selection.scope === scope && data?.rows.some((row) => String(row.id) === selection.key) ? selection.key : undefined;
+  const visibleRows =
+    tab === "projects" && !embedded && selectedProject
+      ? (data?.rows.filter((row) => String(row.id) === selectedProject) ?? [])
+      : (data?.rows ?? []);
+  const summary =
+    tab === "projects" ? { ...data?.summary, completion: projectCompletion(data?.rows ?? []) } : (data?.summary ?? {});
+  const detailsId = tab === "projects" ? "project-progress" : `analytics-${tab}-details`;
+  const summaryTarget = (key: string) =>
+    (tab === "projects" && key !== "total_projects" && key !== "completion") || key === "unique_work_items"
+      ? `/${slug}/analytics/work-items/`
+      : `#${detailsId}`;
   const label = (key: string) => t(`workspace_analytics.details.fields.${key}`);
   const columns = useMemo<ColumnDef<TInsightTableFeatures, TAnalyticsDetailRow>[]>(
     () =>
@@ -94,32 +116,93 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
               const name = value || t("unassigned");
               const id = row.original.id;
               const href =
-                tab === "projects"
-                  ? `/${slug}/projects/${id}/issues/`
+                tab === "projects" || tab === "intake"
+                  ? `/${slug}/projects/${id}/${tab === "intake" ? "intake" : "issues"}/`
                   : tab === "users" && id !== "unassigned"
                     ? `/${slug}/profile/${id}/`
                     : tab === "cycles" || tab === "modules"
                       ? `/${slug}/projects/${row.original.project_id}/${tab}/${id}/`
                       : undefined;
-              return href ? (
-                <Link className="block max-w-72 truncate hover:text-accent-primary" title={String(name)} to={href}>
-                  {name}
-                </Link>
-              ) : (
-                <span>{name}</span>
-              );
+              const icon =
+                tab === "users" ? (
+                  id === "unassigned" ? (
+                    <UserRound className="size-4 text-tertiary" />
+                  ) : (
+                    <Avatar
+                      size="xs"
+                      alt={String(name)}
+                      fallback={String(name).slice(0, 1).toUpperCase()}
+                      src={getFileURL(String(row.original.avatar_url || ""))}
+                    />
+                  )
+                ) : tab === "projects" || tab === "intake" ? (
+                  <FolderKanban className="size-4 text-tertiary" />
+                ) : tab === "cycles" ? (
+                  <CircleDashed className="size-4 text-tertiary" />
+                ) : (
+                  <Layers className="size-4 text-tertiary" />
+                );
+              return <AnalyticsEntityCell name={String(name)} href={href} icon={icon} />;
             }
+            if (field === "project")
+              return (
+                <AnalyticsEntityCell
+                  name={String(value || "—")}
+                  href={row.original.project_id ? `/${slug}/projects/${row.original.project_id}/issues/` : undefined}
+                  icon={<FolderKanban className="size-4 text-tertiary" />}
+                />
+              );
+            if (field === "lead")
+              return value ? (
+                <AnalyticsEntityCell
+                  name={String(value)}
+                  href={row.original.lead_id ? `/${slug}/profile/${row.original.lead_id}/` : undefined}
+                  icon={
+                    <Avatar
+                      size="xs"
+                      alt={String(value)}
+                      fallback={String(value).slice(0, 1).toUpperCase()}
+                      src={getFileURL(String(row.original.lead_avatar_url || ""))}
+                    />
+                  }
+                />
+              ) : (
+                <span className="text-tertiary">—</span>
+              );
+
             if (field === "completion")
               return (
-                <div className="flex items-center justify-end gap-2">
-                  <span className="h-1.5 w-16 overflow-hidden rounded-full bg-layer-2">
-                    <span className="block h-full rounded-full bg-accent-primary" style={{ width: `${value}%` }} />
-                  </span>
-                  <span className="w-10 text-right tabular-nums">{value}%</span>
-                </div>
+                <Tooltip label={t("workspace_analytics.methodology.completion")}>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="h-1 w-16 overflow-hidden rounded-full bg-[var(--border-color-subtle-1)]">
+                      <span className="block h-full rounded-full bg-accent-primary" style={{ width: `${value}%` }} />
+                    </span>
+                    <span className="w-10 text-right tabular-nums">{value}%</span>
+                  </div>
+                </Tooltip>
               );
-            if (field === "start_date" || field === "end_date") return value ? renderFormattedDate(String(value)) : "—";
-            if (field === "status") return t(`workspace_analytics.details.statuses.${value}`);
+            if (field === "start_date" || field === "end_date")
+              return value ? (
+                <Tooltip label={renderFormattedDate(String(value))}>
+                  <span className="whitespace-nowrap tabular-nums">{formatCompactDate(new Date(String(value)))}</span>
+                </Tooltip>
+              ) : (
+                "—"
+              );
+            if (field === "status")
+              return (
+                <AnalyticsEntityCell
+                  name={t(`workspace_analytics.details.statuses.${value}`)}
+                  icon={
+                    <ModuleStatusIcon
+                      status={String(value) as TModuleStatus}
+                      width="16px"
+                      height="16px"
+                      className="shrink-0"
+                    />
+                  }
+                />
+              );
             return (
               <span className={typeof value === "number" ? "block text-right tabular-nums" : ""}>
                 {value || (value === 0 ? 0 : "—")}
@@ -187,33 +270,46 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
           minHeight={embedded ? 250 : 650}
         >
           <div className="flex flex-col gap-8">
-            <div className="space-y-1">
-              <StatisticsNote kind={tab === "intake" ? "intake" : "cohort"} />
-              {tab === "users" ? (
-                <StatisticsNote kind="duplicates" />
-              ) : (
-                tab !== "intake" && <StatisticsNote kind="completion" />
-              )}
-            </div>
             {!embedded && (
               <div
                 className={
                   tab === "intake"
-                    ? "grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-6"
-                    : "grid grid-cols-2 gap-6 lg:grid-cols-5"
+                    ? "-mx-2 grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-6"
+                    : tab === "projects"
+                      ? "-mx-2 grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4"
+                      : tab === "cycles"
+                        ? "-mx-2 grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4"
+                        : "-mx-2 grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-5"
                 }
               >
-                {Object.entries(data?.summary ?? {}).map(([key, count]) => (
-                  <div key={key} className="flex flex-col gap-3">
-                    <span className="text-13 text-tertiary">{label(key)}</span>
-                    <span className="text-20 font-semibold tabular-nums">{count}</span>
-                  </div>
+                {Object.entries(summary).map(([key, count]) => (
+                  <AnalyticsMetricCard
+                    key={key}
+                    count={count}
+                    unit={tab === "projects" && key === "completion" ? "%" : undefined}
+                    to={summaryTarget(key)}
+                    label={tab === "cycles" && key === "completed" ? t("workspace_analytics.cycles_ended") : label(key)}
+                    hint={t(`workspace_analytics.${tab === "projects" ? "project" : tab}_summary_hints.${key}`)}
+                  />
                 ))}
               </div>
             )}
-            {!embedded && (
+            {!embedded && tab === "projects" && (
+              <>
+                <CreatedVsResolved dashboard />
+                <ProjectComparison
+                  key={scope}
+                  rows={data?.rows ?? []}
+                  statuses={chart}
+                  selected={selectedProject}
+                  onSelect={(key) => setSelection({ scope, key })}
+                />
+              </>
+            )}
+            {!embedded && tab !== "projects" && (
               <AnalyticsSectionWrapper
                 title={t(`workspace_analytics.details.charts.${tab}`)}
+                titleClassName="text-16"
                 actions={
                   pages > 1 ? (
                     <div className="ml-auto flex items-center gap-2">
@@ -273,20 +369,35 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
                     description={t(`workspace_analytics.details.empty.${tab}`)}
                   />
                 )}
+                <StatisticsNotePanel>
+                  <p className="text-12 leading-relaxed text-tertiary">
+                    {t(`workspace_analytics.${tab}_summary_hints.distribution`)}
+                  </p>
+                </StatisticsNotePanel>
               </AnalyticsSectionWrapper>
             )}
-            <DataTable
-              title={embedded ? t("workspace_analytics.dashboard.project_progress") : undefined}
-              columns={columns}
-              data={data?.rows ?? []}
-              searchPlaceholder={t("workspace_analytics.details.records", { count: data?.rows.length ?? 0 })}
-              actions={(table) => (
-                <AnalyticsExportMenu
-                  disabled={!table.getFilteredRowModel().rows.length}
-                  onExport={(format) => exportAnalytics(table.getFilteredRowModel().rows, columns, slug, format)}
-                />
-              )}
-            />
+            <div id={!embedded ? detailsId : undefined} className="scroll-mt-4">
+              <DataTable
+                title={
+                  embedded || tab === "projects"
+                    ? t("workspace_analytics.dashboard.project_progress")
+                    : t(`workspace_analytics.detail_titles.${tab}`)
+                }
+                columns={columns}
+                data={visibleRows}
+                searchPlaceholder={t("workspace_analytics.details.records", { count: visibleRows.length })}
+                actions={(table) => (
+                  <AnalyticsExportMenu
+                    disabled={!table.getFilteredRowModel().rows.length}
+                    onExport={(format) => exportAnalytics(table.getFilteredRowModel().rows, columns, slug, format)}
+                  />
+                )}
+              />
+              <StatisticsNotePanel>
+                <StatisticsNote kind={tab === "intake" ? "intake" : "cohort"} />
+                {tab !== "users" && tab !== "intake" && <StatisticsNote kind="completion" />}
+              </StatisticsNotePanel>
+            </div>
           </div>
         </AsyncContent>
       )}

@@ -41,7 +41,7 @@ export type TAnalyticsTabsBase = "overview" | "work-items";
 export type TAnalyticsGraphsBase = "projects" | "work-items" | "custom-work-items";
 export type TAnalyticsDetailTab = "projects" | "users" | "cycles" | "modules" | "intake";
 export interface AnalyticsTab {
-  key: TAnalyticsTabsBase | TAnalyticsDetailTab | "project-progress-preview" | "quick-insights-preview";
+  key: TAnalyticsTabsBase | TAnalyticsDetailTab | "insights";
   label: string;
   content: React.FC;
   isDisabled: boolean;

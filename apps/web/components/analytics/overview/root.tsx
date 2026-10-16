@@ -13,9 +13,9 @@ import { AnalyticsDetails } from "../details";
 function Overview() {
   return (
     <AnalyticsWrapper i18nTitle="common.overview" className="pt-6">
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-8">
         <TotalInsights analyticsType="overview" />
-        <div className="mt-2 grid grid-cols-1 items-stretch gap-8 xl:grid-cols-5">
+        <div className="mt-3 grid grid-cols-1 items-stretch gap-8 xl:grid-cols-5">
           <div className="min-w-0 xl:col-span-3">
             <CreatedVsResolved dashboard />
           </div>
@@ -23,7 +23,7 @@ function Overview() {
             <ActiveProjects />
           </div>
         </div>
-        <div className="min-w-0 pt-5">
+        <div className="min-w-0 pt-2">
           <AnalyticsDetails tab="projects" embedded />
         </div>
       </div>

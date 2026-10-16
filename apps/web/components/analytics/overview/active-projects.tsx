@@ -48,13 +48,14 @@ const ActiveProjects = observer(function ActiveProjects() {
     <AnalyticsSectionWrapper
       title={t("workspace_analytics.active_projects")}
       subtitle={selectedDurationLabel}
-      className="h-full"
-      headerClassName="mb-2"
+      className="flex h-full flex-col"
+      headerClassName="mb-4"
       titleClassName="text-16"
     >
       <AsyncContent
         loading={isProjectAnalyticsCountLoading}
-        minHeight={220}
+        minHeight={320}
+        className="flex-1 [&>div]:h-full"
         skeleton={
           <Loader className="space-y-1">
             {[0, 1, 2, 3].map((key) => (
@@ -63,7 +64,7 @@ const ActiveProjects = observer(function ActiveProjects() {
           </Loader>
         }
       >
-        <div className="vertical-scrollbar -mx-2 scrollbar-sm h-[220px] overflow-y-auto">
+        <div className="vertical-scrollbar -mx-2 scrollbar-sm h-[320px] space-y-1 overflow-y-auto xl:h-0 xl:min-h-full">
           {!isProjectAnalyticsCountLoading &&
             projectAnalyticsCount?.map((project) => <ActiveProjectItem key={project.id} project={project} />)}
         </div>

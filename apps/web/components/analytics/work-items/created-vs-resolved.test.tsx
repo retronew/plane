@@ -63,6 +63,9 @@ it("requests the real trend with both filters and allows toggling each legend", 
   expect(screen.queryByRole("button", { name: "查看演示数据" })).toBeNull();
   expect(screen.getByText("按日统计")).toBeTruthy();
   expect(screen.getByText(/统计区间：2026-10-01 至 2026-10-15/)).toBeTruthy();
+  const note = screen.getByText(/统计区间：2026-10-01 至 2026-10-15/).closest("aside");
+  expect(note).toBeTruthy();
+  expect(created.compareDocumentPosition(note!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(created.getAttribute("aria-pressed")).toBe("true");
   fireEvent.click(created);
   expect(created.getAttribute("aria-pressed")).toBe("false");

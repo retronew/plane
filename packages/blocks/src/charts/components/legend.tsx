@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import type { ChartLegendState } from "./legend-state";
 import type { DefaultLegendContentProps, LegendPayload, LegendProps } from "recharts";
 // plane imports
 import type { TChartLegend } from "@plane/types";
@@ -18,7 +19,8 @@ import { cn } from "@plane/utils";
 export const getLegendProps = (
   args: TChartLegend,
   order: readonly string[],
-  getItemKey: (item: LegendPayload) => string | undefined = (item) => `${item.dataKey}`
+  getItemKey: (item: LegendPayload) => string | undefined = (item) => `${item.dataKey}`,
+  interaction?: ChartLegendState
 ): LegendProps => {
   const { align, layout, verticalAlign } = args;
   return {
@@ -43,52 +45,69 @@ export const getLegendProps = (
           }),
       ...args.wrapperStyles,
     },
-    content: <CustomLegend {...args} />,
+    content: <CustomLegend {...args} interaction={interaction} getItemKey={getItemKey} />,
   };
 };
 
-const CustomLegend = React.forwardRef(function CustomLegend(
-  props: React.ComponentProps<"div"> &
-    Pick<DefaultLegendContentProps, "payload" | "formatter" | "onClick" | "onMouseEnter" | "onMouseLeave"> &
-    TChartLegend,
-  ref: React.ForwardedRef<HTMLDivElement>
-) {
-  const { formatter, layout, onClick, onMouseEnter, onMouseLeave, payload } = props;
-
-  if (!payload?.length) return null;
-
+export function ChartLegend({
+  items,
+  interaction,
+  vertical = false,
+}: {
+  items: { key: string; label: React.ReactNode; color?: string }[];
+  interaction: ChartLegendState;
+  vertical?: boolean;
+}) {
   return (
     <div
-      ref={ref}
-      className={cn("flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 py-2", {
-        "max-h-full flex-col items-start py-4": layout === "vertical",
-      })}
+      className={cn(
+        "flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 py-2",
+        vertical && "max-h-full flex-col items-start py-4"
+      )}
     >
-      {payload.map((item, index) => (
-        // Pointer-only highlighting that mirrors the chart; recharts' accessibilityLayer gives keyboard
-        // users the data itself.
-        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-        <div
-          key={item.value}
-          className={cn("flex items-center gap-1.5 text-12 whitespace-nowrap text-tertiary", {
-            "py-1": layout === "vertical",
-
-            "cursor-pointer": !!props.onClick,
-          })}
-          onClick={(e) => onClick?.(item, index, e)}
-          onMouseEnter={(e) => onMouseEnter?.(item, index, e)}
-          onMouseLeave={(e) => onMouseLeave?.(item, index, e)}
+      {items.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          aria-pressed={!interaction.hidden.has(item.key)}
+          className="flex items-center gap-1.5 rounded-sm text-12 whitespace-nowrap text-secondary transition-opacity hover:text-primary focus-visible:outline-2 focus-visible:outline-accent-strong aria-[pressed=false]:opacity-40"
+          onClick={() => interaction.onToggle(item.key)}
+          onMouseEnter={() => interaction.onHover(item.key)}
+          onMouseLeave={() => interaction.onHover(null)}
+          onFocus={() => interaction.onHover(item.key)}
+          onBlur={() => interaction.onHover(null)}
         >
-          <div
-            className="size-2 flex-shrink-0 rounded-xs"
-            style={{
-              backgroundColor: item.color,
-            }}
-          />
-          {formatter?.(item.value, item, index) ?? (item.payload as { name?: string } | undefined)?.name ?? item.value}
-        </div>
+          <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: item.color }} />
+          <span className={interaction.hidden.has(item.key) ? "line-through" : undefined}>{item.label}</span>
+        </button>
       ))}
     </div>
   );
-});
-CustomLegend.displayName = "CustomLegend";
+}
+
+function CustomLegend(
+  props: Pick<DefaultLegendContentProps, "payload" | "formatter"> &
+    TChartLegend & {
+      interaction?: ChartLegendState;
+      getItemKey: (item: LegendPayload) => string | undefined;
+    }
+) {
+  const { payload, formatter, interaction, getItemKey, layout } = props;
+  if (!payload?.length) return null;
+  const items = payload.map((item, index) => ({
+    key: getItemKey(item) ?? String(item.value),
+    color: item.color,
+    label: formatter?.(item.value, item, index) ?? (item.payload as { name?: string } | undefined)?.name ?? item.value,
+  }));
+  if (interaction) return <ChartLegend items={items} interaction={interaction} vertical={layout === "vertical"} />;
+  return (
+    <div className="flex flex-wrap justify-center gap-4 py-2">
+      {items.map((item) => (
+        <span key={item.key} className="flex items-center gap-1.5 text-12 text-secondary">
+          <span className="size-2 rounded-xs" style={{ backgroundColor: item.color }} />
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}

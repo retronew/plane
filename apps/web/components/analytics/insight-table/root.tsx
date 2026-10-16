@@ -19,6 +19,7 @@ interface InsightTableProps<T extends Exclude<TAnalyticsTabsBase, "overview">> {
   columns: ColumnDef<TInsightTableFeatures, AnalyticsTableDataMap[T]>[];
   columnsLabels?: Record<string, string>;
   headerText: string;
+  title?: string;
   onExport?: (
     rows: Row<TInsightTableFeatures, AnalyticsTableDataMap[T]>[],
     format: AnalyticsExportFormat
@@ -28,11 +29,12 @@ interface InsightTableProps<T extends Exclude<TAnalyticsTabsBase, "overview">> {
 export function InsightTable<T extends Exclude<TAnalyticsTabsBase, "overview">>(
   props: InsightTableProps<T>
 ): React.ReactElement {
-  const { data, isLoading, columns, headerText, onExport } = props;
+  const { data, isLoading, columns, headerText, onExport, title } = props;
 
   return (
     <AsyncContent loading={!!isLoading} skeleton={<TableLoader columns={columns} rows={5} />} minHeight={270}>
       <DataTable
+        title={title}
         columns={columns}
         data={data || []}
         searchPlaceholder={`${data?.length || 0} ${headerText}`}

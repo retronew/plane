@@ -1,10 +1,11 @@
+import { useChartLegend } from "../components/legend-state";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Cell, PieChart as CorePieChart, Label, Legend, Pie, Tooltip } from "recharts";
 import { useChartMotion } from "../components/motion";
 import { ChartContainer } from "../components/responsive-container";
@@ -36,7 +37,11 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
   } = props;
   const motion = useChartMotion();
   // states
-  const [activeLegend, setActiveLegend] = useState<string | null>(null);
+  const legendState = useChartLegend(cells.map((cell) => cell.key));
+  const activeLegend = legendState.activeKey;
+  const visibleData = data.map((item, index) =>
+    legendState.hidden.has(cells[index]?.key) ? Object.assign({}, item, { [dataKey]: 0 }) : item
+  );
 
   const renderCells = useMemo(
     () =>
@@ -68,7 +73,7 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
         >
           <Pie
             {...motion}
-            data={data}
+            data={visibleData}
             dataKey={dataKey}
             cx="50%"
             cy="50%"
@@ -81,21 +86,22 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
             labelLine={false}
             label={
               showLabel
-                ? ({ payload, ...labelProps }) => (
-                    <text
-                      className="text-sm font-medium transition-opacity duration-200"
-                      cx={labelProps.cx}
-                      cy={labelProps.cy}
-                      x={labelProps.x}
-                      y={labelProps.y}
-                      textAnchor={labelProps.textAnchor}
-                      dominantBaseline={labelProps.dominantBaseline}
-                      fill="var(--text-color-secondary)"
-                      opacity={!!activeLegend && activeLegend !== payload.key ? 0.1 : 1}
-                    >
-                      {customLabel?.(payload.count) ?? payload.count}
-                    </text>
-                  )
+                ? ({ payload, ...labelProps }) =>
+                    !legendState.hidden.has(String(payload.key)) && (
+                      <text
+                        className="text-sm font-medium transition-opacity duration-200"
+                        cx={labelProps.cx}
+                        cy={labelProps.cy}
+                        x={labelProps.x}
+                        y={labelProps.y}
+                        textAnchor={labelProps.textAnchor}
+                        dominantBaseline={labelProps.dominantBaseline}
+                        fill="var(--text-color-secondary)"
+                        opacity={!!activeLegend && activeLegend !== payload.key ? 0.1 : 1}
+                      >
+                        {customLabel?.(payload.count) ?? payload.count}
+                      </text>
+                    )
                 : undefined
             }
           >
@@ -113,16 +119,11 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
           </Pie>
           {legend && (
             <Legend
-              onMouseEnter={(payload) => {
-                const key = (payload.payload as { key?: string } | undefined)?.key;
-                if (!key) return;
-                setActiveLegend(key);
-              }}
-              onMouseLeave={() => setActiveLegend(null)}
               {...getLegendProps(
                 legend,
                 cells.map((cell) => cell.key),
-                (item) => (item.payload as { key?: string } | undefined)?.key
+                (item) => (item.payload as { key?: string } | undefined)?.key,
+                legendState
               )}
             />
           )}
@@ -138,7 +139,8 @@ export const PieChart = React.memo(function PieChart<K extends string, T extends
                 pointerEvents: "none",
               }}
               content={({ active, label: chartLabel, payload }) => {
-                if (!active || !payload || !payload.length) return null;
+                if (!active || !payload || !payload.length || legendState.hidden.has(String(payload[0].payload.key)))
+                  return null;
                 if (customTooltipContent) return customTooltipContent({ active, label: chartLabel, payload });
                 const cellData = cells.find((c) => c.key === payload[0].payload.key);
                 if (!cellData) return null;

@@ -1,7 +1,7 @@
+import { Tooltip as PropelTooltip } from "@makeplane/propel/components/tooltip";
 import { CHART_SEMANTIC_COLORS } from "@plane/constants";
-import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartTooltipContent } from "@plane/blocks/charts";
+import { ChartTooltipContent, useChartLegend } from "@plane/blocks/charts";
 import { useTranslation } from "@plane/i18n";
 import type { IChartResponse } from "@plane/types";
 
@@ -15,11 +15,11 @@ export function CreatedResolvedChart({
   granularity?: "day" | "month";
 }) {
   const { t, currentLocale } = useTranslation();
-  const [hidden, setHidden] = useState<string>();
   const series = [
     { key: "created_issues", label: t("web.created"), color: CHART_SEMANTIC_COLORS.primary },
     { key: "completed_issues", label: t("web.resolved"), color: CHART_SEMANTIC_COLORS.completed },
   ];
+  const legendState = useChartLegend(series.map((item) => item.key));
   const month = (key: string) =>
     new Intl.DateTimeFormat(currentLocale, {
       year: "numeric",
@@ -68,7 +68,7 @@ export function CreatedResolvedChart({
                   <ChartTooltipContent
                     label={month(String(row.key))}
                     rows={series
-                      .filter((item) => item.key !== hidden)
+                      .filter((item) => !legendState.hidden.has(item.key))
                       .map((item) => ({
                         key: item.key,
                         label: item.label,
@@ -87,7 +87,8 @@ export function CreatedResolvedChart({
                 fill={item.color}
                 maxBarSize={28}
                 radius={[4, 4, 0, 0]}
-                hide={hidden === item.key}
+                hide={legendState.hidden.has(item.key)}
+                opacity={legendState.activeKey && legendState.activeKey !== item.key ? 0.15 : 1}
                 isAnimationActive={false}
               />
             ))}
@@ -96,16 +97,29 @@ export function CreatedResolvedChart({
       </div>
       <div className="mt-3 flex flex-wrap justify-center gap-4">
         {series.map((item) => (
-          <button
+          <PropelTooltip
             key={item.key}
-            type="button"
-            aria-pressed={hidden !== item.key}
-            className="flex items-center gap-2 rounded-sm px-2 py-1 text-12 text-secondary hover:bg-layer-transparent-hover aria-[pressed=false]:opacity-40"
-            onClick={() => setHidden(hidden === item.key ? undefined : item.key)}
+            label={t(
+              legendState.hidden.has(item.key)
+                ? "workspace_analytics.dashboard.show_series"
+                : "workspace_analytics.dashboard.hide_series",
+              { series: item.label }
+            )}
           >
-            <span className="size-2.5 rounded-xs" style={{ backgroundColor: item.color }} />
-            {item.label}
-          </button>
+            <button
+              type="button"
+              aria-pressed={!legendState.hidden.has(item.key)}
+              className="flex items-center gap-2 rounded-sm px-2 py-1 text-12 text-secondary hover:bg-layer-transparent-hover aria-[pressed=false]:opacity-40"
+              onClick={() => legendState.onToggle(item.key)}
+              onMouseEnter={() => legendState.onHover(item.key)}
+              onMouseLeave={() => legendState.onHover(null)}
+              onFocus={() => legendState.onHover(item.key)}
+              onBlur={() => legendState.onHover(null)}
+            >
+              <span className="size-2.5 rounded-xs" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </button>
+          </PropelTooltip>
         ))}
       </div>
     </>

@@ -114,7 +114,7 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
     def user_details(self, slug, project_filtered):
         members = WorkspaceMember.objects.filter(
             workspace__slug=slug, is_active=True, member__is_bot=False
-        ).select_related("member")
+        ).select_related("member", "member__avatar_asset")
         if project_filtered:
             members = members.filter(
                 member_id__in=ProjectMember.objects.filter(project_id__in=self.project_ids, is_active=True).values(
@@ -142,6 +142,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                 {
                     "id": str(membership.member_id),
                     "name": membership.member.display_name or membership.member.first_name,
+                    "avatar_url": membership.member.avatar_url,
+                    "role": membership.role,
                     **{key: counts_row.get(key, 0) for key in ["started", "unstarted", "completed", "cancelled"]},
                 }
             )
@@ -197,7 +199,9 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
         entities = (Cycle if is_cycle else Module).objects.filter(
             project_id__in=self.project_ids, archived_at__isnull=True
         )
-        entities = entities.select_related("project", "owned_by" if is_cycle else "lead").order_by("name", "id")
+        entities = entities.select_related(
+            "project", "owned_by__avatar_asset" if is_cycle else "lead__avatar_asset"
+        ).order_by("name", "id")
         rows, statuses = [], Counter()
         today = timezone.localdate()
         for entity in entities:
@@ -231,6 +235,8 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
                     "project_id": str(entity.project_id),
                     "project": entity.project.name,
                     "lead": (lead.display_name or lead.first_name) if lead else "",
+                    "lead_id": str(lead.id) if lead else None,
+                    "lead_avatar_url": lead.avatar_url if lead else None,
                     "start_date": start,
                     "end_date": end,
                     "status": state,

@@ -1,3 +1,4 @@
+import { useChartLegend } from "../components/legend-state";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -38,7 +39,8 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
   const motion = useChartMotion();
   // states
   const [activeLine, setActiveLine] = useState<string | null>(null);
-  const [activeLegend, setActiveLegend] = useState<string | null>(null);
+  const legendState = useChartLegend(lines.map((item) => item.key));
+  const activeLegend = legendState.activeKey;
 
   // derived values
   const { itemKeys, itemLabels, itemDotColors } = useMemo(() => {
@@ -62,6 +64,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           {...motion}
           key={line.key}
           dataKey={line.key}
+          hide={legendState.hidden.has(line.key)}
           type={line.smoothCurves ? "monotone" : "linear"}
           className="[&_path]:transition-opacity [&_path]:duration-200"
           opacity={!!activeLegend && activeLegend !== line.key ? 0.1 : 1}
@@ -84,7 +87,7 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           onMouseLeave={() => setActiveLine(null)}
         />
       )),
-    [activeLegend, lines, motion]
+    [activeLegend, legendState.hidden, lines, motion]
   );
 
   return (
@@ -145,10 +148,8 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
           />
           {legend && (
             <Legend
-              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
-              onMouseLeave={() => setActiveLegend(null)}
               formatter={(value) => itemLabels[value]}
-              {...getLegendProps(legend, itemKeys)}
+              {...getLegendProps(legend, itemKeys, undefined, legendState)}
             />
           )}
           {showTooltip && (
@@ -161,14 +162,19 @@ export const LineChart = React.memo(function LineChart<K extends string, T exten
                 pointerEvents: "none",
               }}
               content={({ active, label, payload }) => {
-                if (customTooltipContent) return customTooltipContent({ active, label, payload });
+                if (customTooltipContent)
+                  return customTooltipContent({
+                    active,
+                    label,
+                    payload: payload?.filter((item) => !legendState.hidden.has(String(item.dataKey))),
+                  });
                 return (
                   <CustomTooltip
                     active={active}
                     activeKey={activeLine}
                     label={label}
                     payload={payload}
-                    itemKeys={itemKeys}
+                    itemKeys={legendState.visibleKeys}
                     itemLabels={itemLabels}
                     itemDotColors={itemDotColors}
                   />

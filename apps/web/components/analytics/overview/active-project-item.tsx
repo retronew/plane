@@ -30,10 +30,11 @@ export default function ActiveProjectItem({ project }: Props) {
     >
       <Link
         to={`/${workspaceSlug}/projects/${project.id}/issues/`}
-        className="group flex items-center gap-2.5 rounded-lg px-2 py-1 transition-colors hover:bg-layer-transparent-hover"
+        className="group flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-layer-transparent-hover"
       >
         <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-layer-1">
-          {details.logo_props ? (
+          {(details.logo_props?.in_use === "emoji" && details.logo_props.emoji?.value) ||
+          (details.logo_props?.in_use === "icon" && details.logo_props.icon?.name) ? (
             <Logo logo={details.logo_props} size={16} />
           ) : (
             <FolderKanban className="size-4 text-tertiary" />
@@ -43,7 +44,7 @@ export default function ActiveProjectItem({ project }: Props) {
           <p className="truncate text-13 font-medium text-primary">{details.name}</p>
           <div className="mt-0.5 flex items-center gap-2">
             {total > 0 && (
-              <span className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-[var(--border-subtle)]">
+              <span className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-[var(--border-color-subtle-1)]">
                 <span
                   className="block h-full rounded-full"
                   style={{ width: `${percentage}%`, backgroundColor: CHART_SEMANTIC_COLORS.completed }}
@@ -64,8 +65,10 @@ export default function ActiveProjectItem({ project }: Props) {
         {total > 0 && (
           <span
             className={cn(
-              "shrink-0 rounded-sm px-1.5 py-0.5 text-11 tabular-nums",
-              percentage > 50 ? "bg-success-subtle text-success-primary" : "bg-[var(--border-subtle)] text-secondary"
+              "shrink-0 rounded px-1 py-0 text-11 leading-4 tabular-nums",
+              percentage > 50
+                ? "bg-success-subtle text-success-primary"
+                : "bg-[var(--border-color-subtle-1)] text-secondary"
             )}
           >
             {percentage}%

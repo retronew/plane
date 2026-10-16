@@ -1,3 +1,5 @@
+import { AnalyticsEntityCell } from "../entity-cell";
+import { StatisticsNote, StatisticsNotePanel } from "../statistics-note";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -82,15 +84,19 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
             header: () => <div className="text-left">{columnsLabels["project__name"]}</div>,
             cell: ({ row }) => {
               const project = getProjectById(row.original.project_id);
+              const logo = project?.logo_props;
+              const hasLogo =
+                (logo?.in_use === "emoji" && logo.emoji?.value) || (logo?.in_use === "icon" && logo.icon?.name);
               return (
-                <div className="flex items-center gap-2">
-                  {project?.logo_props ? (
-                    <Logo logo={project.logo_props} size={18} />
-                  ) : (
-                    <ProjectsOutline className="h-4 w-4" />
-                  )}
-                  {project?.name}
-                </div>
+                <AnalyticsEntityCell
+                  name={project?.name || row.original.project__name || t("unassigned")}
+                  href={
+                    row.original.project_id
+                      ? `/${workspaceSlug}/projects/${row.original.project_id}/issues/`
+                      : undefined
+                  }
+                  icon={hasLogo ? <Logo logo={logo} size={16} /> : <ProjectsOutline className="size-4 text-tertiary" />}
+                />
               );
             },
             meta: {
@@ -104,27 +110,22 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
             accessorKey: "display_name",
             header: () => <div className="text-left">{columnsLabels["display_name"]}</div>,
             cell: ({ row }: { row: Row<TInsightTableFeatures, WorkItemInsightColumns> }) => (
-              <div className="text-left">
-                <div className="flex items-center gap-2">
-                  {row.original.avatar_url && row.original.avatar_url !== "" ? (
+              <AnalyticsEntityCell
+                name={row.original.display_name || t("unassigned")}
+                href={row.original.assignee_id ? `/${workspaceSlug}/profile/${row.original.assignee_id}/` : undefined}
+                icon={
+                  row.original.display_name ? (
                     <Avatar
+                      size="xs"
                       alt={row.original.display_name}
-                      fallback={row.original.display_name?.[0]?.toUpperCase()}
-                      src={getFileURL(row.original.avatar_url)}
-                      size="sm"
+                      fallback={row.original.display_name[0]?.toUpperCase()}
+                      src={getFileURL(row.original.avatar_url || "")}
                     />
                   ) : (
-                    <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-layer-1 capitalize">
-                      {row.original.display_name ? (
-                        row.original.display_name?.[0]
-                      ) : (
-                        <UserOutline className="text-secondary" width={12} height={12} />
-                      )}
-                    </div>
-                  )}
-                  <span className="break-words text-secondary">{row.original.display_name ?? t(`Unassigned`)}</span>
-                </div>
-              </div>
+                    <UserOutline className="size-4 text-tertiary" />
+                  )
+                }
+              />
             ),
             meta: {
               export: {
@@ -189,20 +190,27 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
         },
       },
     ],
-    [columnsLabels, getProjectById, isPeekView, t]
+    [columnsLabels, getProjectById, isPeekView, t, workspaceSlug]
   );
   if (error) return <AnalyticsRequestError onRetry={() => void mutate()} />;
 
   return (
-    <InsightTable<"work-items">
-      analyticsType="work-items"
-      data={workItemsData}
-      isLoading={isLoading}
-      columns={columns}
-      columnsLabels={columnsLabels}
-      headerText={isPeekView ? t("common.assignee") : t("common.projects")}
-      onExport={(rows, format) => workItemsData && exportAnalytics(rows, columns, workspaceSlug, format)}
-    />
+    <div id={isPeekView ? undefined : "work-item-breakdown"} className="scroll-mt-4">
+      <InsightTable<"work-items">
+        title={t("workspace_analytics.work_item_breakdown")}
+        analyticsType="work-items"
+        data={workItemsData}
+        isLoading={isLoading}
+        columns={columns}
+        columnsLabels={columnsLabels}
+        headerText={isPeekView ? t("common.assignee") : t("common.projects")}
+        onExport={(rows, format) => workItemsData && exportAnalytics(rows, columns, workspaceSlug, format)}
+      />
+      <StatisticsNotePanel>
+        <StatisticsNote kind="cohort" />
+        {isPeekView && <StatisticsNote kind="duplicates" />}
+      </StatisticsNotePanel>
+    </div>
   );
 });
 

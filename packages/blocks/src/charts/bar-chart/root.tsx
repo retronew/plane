@@ -1,3 +1,4 @@
+import { useChartLegend } from "../components/legend-state";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -41,7 +42,8 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
   const motion = useChartMotion();
   // states
   const [activeBar, setActiveBar] = useState<string | null>(null);
-  const [activeLegend, setActiveLegend] = useState<string | null>(null);
+  const legendState = useChartLegend(bars.map((item) => item.key));
+  const activeLegend = legendState.activeKey;
 
   // derived values
   const { stackKeys, stackLabels } = useMemo(() => {
@@ -100,6 +102,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           {...motion}
           key={bar.key}
           dataKey={bar.key}
+          hide={legendState.hidden.has(bar.key)}
           stackId={bar.stackId}
           opacity={!!activeLegend && activeLegend !== bar.key ? 0.1 : 1}
           shape={
@@ -117,7 +120,7 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           fill={getBarColor(data, bar.key)}
         />
       )),
-    [activeLegend, stackKeys, bars, getBarColor, data, motion, layout]
+    [activeLegend, legendState.hidden, stackKeys, bars, getBarColor, data, motion, layout]
   );
 
   return (
@@ -199,10 +202,8 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
           />
           {legend && (
             <Legend
-              onMouseEnter={(payload) => setActiveLegend(payload.value ?? null)}
-              onMouseLeave={() => setActiveLegend(null)}
               formatter={(value) => stackLabels[value]}
-              {...getLegendProps(legend, stackKeys)}
+              {...getLegendProps(legend, stackKeys, undefined, legendState)}
             />
           )}
           {showTooltip && (
@@ -215,14 +216,19 @@ export const BarChart = React.memo(function BarChart<K extends string, T extends
                 pointerEvents: "none",
               }}
               content={({ active, label, payload }) => {
-                if (customTooltipContent) return customTooltipContent({ active, label, payload });
+                if (customTooltipContent)
+                  return customTooltipContent({
+                    active,
+                    label,
+                    payload: payload?.filter((item) => !legendState.hidden.has(String(item.dataKey))),
+                  });
                 return (
                   <CustomTooltip
                     active={active}
                     label={label}
                     payload={payload}
                     activeKey={activeBar}
-                    itemKeys={stackKeys}
+                    itemKeys={legendState.visibleKeys}
                     itemLabels={stackLabels}
                     itemDotColors={getAllBarColors(payload || [])}
                   />

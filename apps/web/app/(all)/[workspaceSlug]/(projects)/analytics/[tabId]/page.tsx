@@ -93,7 +93,10 @@ function AnalyticsPage({ params }: Route.ComponentProps) {
                   </div>
                   {/* Grid wrapper: Propel's TabsPanel omits className, so the single mounted panel
                       gets its fill height from a one-row grid instead. */}
-                  <div className="grid min-h-0 w-full flex-1 grid-rows-1 overflow-x-hidden overflow-y-auto">
+                  <div
+                    key={`${workspaceSlug}:${selectedTab}`}
+                    className="grid min-h-0 w-full flex-1 grid-rows-1 overflow-x-hidden overflow-y-auto"
+                  >
                     {ANALYTICS_TABS.map((tab) => (
                       <TabsPanel key={tab.key} value={tab.key}>
                         <tab.content />
