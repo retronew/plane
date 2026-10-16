@@ -494,6 +494,7 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
         serializer = IssueSerializer(
             data=request.data,
             context={
+                "request": request,
                 "project_id": project_id,
                 "workspace_id": project.workspace_id,
                 "default_assignee_id": project.default_assignee_id,
@@ -685,6 +686,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                     issue,
                     data=request.data,
                     context={
+                        "request": request,
                         "project_id": project_id,
                         "workspace_id": project.workspace_id,
                     },
@@ -730,6 +732,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                 serializer = IssueSerializer(
                     data=request.data,
                     context={
+                        "request": request,
                         "project_id": project_id,
                         "workspace_id": project.workspace_id,
                         "default_assignee_id": project.default_assignee_id,
@@ -818,7 +821,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
         serializer = IssueSerializer(
             issue,
             data=request.data,
-            context={"project_id": project_id, "workspace_id": project.workspace_id},
+            context={"request": request, "project_id": project_id, "workspace_id": project.workspace_id},
             partial=True,
         )
         if serializer.is_valid():

@@ -91,3 +91,4 @@ from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
 from .workspace_configuration import ProjectCategory, WorkspaceTemplate
+from .workflow import ProjectWorkflow, WorkflowTransition, WorkflowActivity

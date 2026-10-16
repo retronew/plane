@@ -8,6 +8,7 @@ from collections import defaultdict
 
 # Django imports
 from django.db.utils import IntegrityError
+from django.db import transaction
 
 # Third party imports
 from rest_framework.response import Response
@@ -17,8 +18,9 @@ from rest_framework import status
 from .. import BaseViewSet, BaseAPIView
 from plane.app.serializers import StateSerializer
 from plane.app.permissions import ROLE, allow_permission
-from plane.db.models import State, Issue
+from plane.db.models import State, Issue, Project
 from plane.utils.cache import invalidate_cache
+from plane.utils.workflow import validate_workflow_state_deletion
 
 
 class StateViewSet(BaseViewSet):
@@ -111,8 +113,11 @@ class StateViewSet(BaseViewSet):
 
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
     @allow_permission([ROLE.ADMIN])
+    @transaction.atomic
     def destroy(self, request, slug, project_id, pk):
+        Project.objects.select_for_update().get(pk=project_id)
         state = State.objects.get(is_triage=False, pk=pk, project_id=project_id, workspace__slug=slug)
+        validate_workflow_state_deletion(state)
 
         if state.default:
             return Response(

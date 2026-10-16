@@ -1,3 +1,4 @@
+from plane.utils.workflow import WorkflowIntakeWriteMixin, intake_creation_state
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -11,7 +12,7 @@ from .issue import IssueIntakeSerializer, LabelLiteSerializer, IssueDetailSerial
 from .project import ProjectLiteSerializer
 from .state import StateLiteSerializer
 from .user import UserLiteSerializer
-from plane.db.models import Intake, IntakeIssue, Issue, StateGroup, State, ProjectMember, WorkspaceMember, Project
+from plane.db.models import Intake, IntakeIssue, Issue, StateGroup, ProjectMember, WorkspaceMember, Project
 
 
 class IntakeSerializer(BaseSerializer):
@@ -51,7 +52,7 @@ class IntakeSerializer(BaseSerializer):
         read_only_fields = ["project", "workspace"]
 
 
-class IntakeIssueSerializer(BaseSerializer):
+class IntakeIssueSerializer(WorkflowIntakeWriteMixin, BaseSerializer):
     issue = IssueIntakeSerializer(read_only=True)
 
     class Meta:
@@ -81,9 +82,7 @@ class IntakeIssueSerializer(BaseSerializer):
             # Check if issue is in TRIAGE state
             if issue.state and issue.state.group == StateGroup.TRIAGE.value:
                 # Verify default state exists before allowing the update
-                default_state = State.objects.filter(
-                    workspace=intake_issue.workspace, project=intake_issue.project, default=True
-                ).first()
+                default_state = intake_creation_state(intake_issue.project_id)
 
                 if not default_state:
                     raise serializers.ValidationError(
@@ -101,9 +100,7 @@ class IntakeIssueSerializer(BaseSerializer):
             issue = instance.issue
             if issue.state and issue.state.group == StateGroup.TRIAGE.value:
                 # Get the default project state
-                default_state = State.objects.filter(
-                    workspace=instance.workspace, project=instance.project, default=True
-                ).first()
+                default_state = intake_creation_state(instance.project_id)
                 if default_state:
                     issue.state = default_state
                     issue.save()

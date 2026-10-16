@@ -37,13 +37,14 @@ from .cycle import CycleLiteSerializer, CycleSerializer
 from .module import ModuleLiteSerializer, ModuleSerializer
 from .state import StateLiteSerializer
 from .user import UserLiteSerializer
+from plane.utils.workflow import WorkflowIssueWriteMixin
 
 # Django imports
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 
 
-class IssueSerializer(BaseSerializer):
+class IssueSerializer(WorkflowIssueWriteMixin, BaseSerializer):
     """
     Comprehensive work item serializer with full relationship management.
 

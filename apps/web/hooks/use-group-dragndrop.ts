@@ -15,6 +15,9 @@ import { useIssueDetail } from "./store/use-issue-detail";
 import { useIssues } from "./store/use-issues";
 import { useIssuesActions } from "./use-issues-actions";
 import { translate } from "@plane/i18n";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useUser } from "@/hooks/store/user";
+import { workflowAllowsTransition, getWorkflowErrorCode } from "@/helpers/workflow";
 
 type DNDStoreType =
   | EIssuesStoreType.GLOBAL
@@ -37,6 +40,8 @@ export const useGroupIssuesDragNDrop = (
   subGroupBy?: TIssueGroupByOptions
 ) => {
   const { workspaceSlug } = useParams();
+  const workflowStore = useProjectWorkflow();
+  const { data: currentUser } = useUser();
 
   const {
     issue: { getIssueById },
@@ -64,6 +69,18 @@ export const useGroupIssuesDragNDrop = (
       };
     }
   ) => {
+    const previous = getIssueById(issueId);
+    if (workspaceSlug && data.state_id && previous?.state_id) {
+      const workflow = await workflowStore.fetch(workspaceSlug.toString(), projectId);
+      if (!workflowAllowsTransition(workflow, previous.state_id, data.state_id, currentUser?.id)) {
+        setToast({
+          type: "warning",
+          title: translate("common.warning"),
+          message: translate("web.workflow_ui.transition_blocked"),
+        });
+        return;
+      }
+    }
     const errorToastProps: SetToastProps = {
       type: "error",
       title: translate("toast.error"),
@@ -75,6 +92,24 @@ export const useGroupIssuesDragNDrop = (
     const isModuleChanged = Object.keys(data).includes(moduleKey);
     const isCycleChanged = Object.keys(data).includes(cycleKey);
 
+    // Let the API confirm the state change before mutating other grouping dimensions.
+    // The server may have newer rules than the cached policy used for the drag preview.
+    const issueData = { ...data };
+    if (isCycleChanged) delete issueData[cycleKey];
+    if (isModuleChanged) delete issueData[moduleKey];
+    if (updateIssue && Object.keys(issueData).length > 0) {
+      try {
+        await updateIssue(projectId, issueId, issueData);
+      } catch (error: unknown) {
+        const code = getWorkflowErrorCode(error);
+        setToast({
+          ...errorToastProps,
+          message: code ? translate(`web.workflow_errors.${code}`) : errorToastProps.message,
+        });
+        return;
+      }
+    }
+
     if (isCycleChanged && workspaceSlug) {
       if (data[cycleKey]) {
         addCycleToIssue(workspaceSlug.toString(), projectId, data[cycleKey]?.toString() ?? "", issueId).catch(() =>
@@ -83,7 +118,6 @@ export const useGroupIssuesDragNDrop = (
       } else {
         removeCycleFromIssue(workspaceSlug.toString(), projectId, issueId).catch(() => setToast(errorToastProps));
       }
-      delete data[cycleKey];
     }
 
     if (isModuleChanged && workspaceSlug && issueUpdates[moduleKey]) {
@@ -94,10 +128,7 @@ export const useGroupIssuesDragNDrop = (
         issueUpdates[moduleKey].ADD,
         issueUpdates[moduleKey].REMOVE
       ).catch(() => setToast(errorToastProps));
-      delete data[moduleKey];
     }
-
-    if (updateIssue) updateIssue(projectId, issueId, data).catch(() => setToast(errorToastProps));
   };
 
   const handleOnDrop = async (source: GroupDropLocation, destination: GroupDropLocation) => {

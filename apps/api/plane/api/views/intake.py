@@ -387,7 +387,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
             issue_serializer = IssueSerializer(
                 issue,
                 data=issue_data,
-                context={"project_id": project_id, "workspace_id": issue.workspace_id},
+                context={"request": request, "project_id": project_id, "workspace_id": issue.workspace_id},
                 partial=True,
             )
 

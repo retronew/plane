@@ -16,6 +16,11 @@ import { useTranslation } from "@plane/i18n";
 import type { IState, TPaginatedResponse } from "@plane/types";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useUser } from "@/hooks/store/user";
+import { workflowAllowsCreation, workflowAllowsTransition } from "@/helpers/workflow";
+import { getWorkflowErrorCode } from "@/helpers/workflow";
+import { setToast } from "@plane/blocks/toast";
 
 type StateSelectWebProps = {
   /** Project whose states are offered. */
@@ -23,7 +28,7 @@ type StateSelectWebProps = {
   /** Current state id (`null` / `undefined` when none). */
   value: string | null | undefined;
   /** Emits the next state id. */
-  onChange: (stateId: string) => void;
+  onChange: (stateId: string) => unknown;
   variant: SelectVariant;
   disabled?: boolean;
   placeholder?: string;
@@ -35,6 +40,9 @@ type StateSelectWebProps = {
   testId?: string;
   /** Tab order of the trigger, for forms that sequence focus explicitly (`ETabIndices`). */
   tabIndex?: number;
+  isForWorkItemCreation?: boolean;
+  bypassWorkflow?: boolean;
+  excludeStateIds?: string[];
 };
 
 const toOption = (state: IState): StateOption => ({
@@ -50,9 +58,8 @@ const toOption = (state: IState): StateOption => ({
  * project-state store (fetched on first open when the project has not been loaded yet), filters them
  * by the search query and maps the selected id to a `StateOption`.
  *
- * CE change: EE reads a paginated state "lite" resource with workflow gating (`typeId`,
- * `isForWorkItemCreation`, `scopedProjectIds`); CE has neither, so the whole project list is served
- * as one page and `allowedStateIds` stays unset.
+ * Creation and state changes share the project workflow policy. Configuration pickers explicitly
+ * bypass gating so administrators can define new paths. The API enforces the same rules on save.
  */
 export const StateSelect = observer(function StateSelect(props: StateSelectWebProps) {
   const {
@@ -68,11 +75,29 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
     appendElement,
     testId,
     tabIndex,
+    isForWorkItemCreation = false,
+    bypassWorkflow = false,
+    excludeStateIds,
   } = props;
   // router params
   const { workspaceSlug } = useParams();
   // store hooks
   const { getProjectStateIds, getStateById, fetchProjectStates } = useProjectState();
+  const workflowStore = useProjectWorkflow(bypassWorkflow ? undefined : projectId);
+  const { data: user } = useUser();
+  const currentWorkflow = workflowStore.workflows[projectId ?? ""];
+  const allowedStateIds =
+    bypassWorkflow || !currentWorkflow
+      ? null
+      : new Set(
+          currentWorkflow.states
+            .filter((state) =>
+              isForWorkItemCreation || !value || getStateById(value) === undefined
+                ? workflowAllowsCreation(currentWorkflow, state.id)
+                : workflowAllowsTransition(currentWorkflow, value, state.id, user?.id)
+            )
+            .map((state) => state.id)
+        );
   // translation
   const { t } = useTranslation();
   const resolvedTooltip = useMemo<SelectTooltipOverride | undefined>(() => {
@@ -87,6 +112,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const getValues = useCallback(
     async ({ search }: SelectPaginationParams): Promise<TPaginatedResponse<StateOption[]>> => {
       if (!workspaceSlug || !projectId) return { results: [] };
+      const workflow = bypassWorkflow ? undefined : await workflowStore.fetch(workspaceSlug.toString(), projectId);
       let stateIds = getProjectStateIds(projectId);
       if (!stateIds) {
         await fetchProjectStates(workspaceSlug.toString(), projectId);
@@ -96,11 +122,31 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       const results = (stateIds ?? [])
         .map((stateId) => getStateById(stateId))
         .filter((state): state is IState => !!state)
+        .filter((state) => !excludeStateIds?.includes(state.id))
+        .filter(
+          (state) =>
+            bypassWorkflow ||
+            (isForWorkItemCreation || !value || getStateById(value) === undefined
+              ? workflowAllowsCreation(workflow, state.id)
+              : workflowAllowsTransition(workflow, value, state.id, user?.id))
+        )
         .filter((state) => !query || state.name.toLowerCase().includes(query))
         .map(toOption);
       return { results, next_page_results: false };
     },
-    [workspaceSlug, projectId, getProjectStateIds, fetchProjectStates, getStateById]
+    [
+      workspaceSlug,
+      projectId,
+      getProjectStateIds,
+      fetchProjectStates,
+      getStateById,
+      bypassWorkflow,
+      workflowStore,
+      excludeStateIds,
+      isForWorkItemCreation,
+      value,
+      user?.id,
+    ]
   );
 
   // Resolved in the observer render (not in a memo) so MobX re-renders when the state loads.
@@ -110,8 +156,20 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   return (
     <StateSelectBlock
       getValues={getValues}
+      allowedStateIds={allowedStateIds}
       value={selected}
-      onChange={onChange}
+      onChange={(stateId) => {
+        void Promise.resolve()
+          .then(() => onChange(stateId))
+          .catch((error: unknown) => {
+            const code = getWorkflowErrorCode(error);
+            setToast({
+              type: "error",
+              title: t("error"),
+              message: code ? t(`web.workflow_errors.${code}`) : t("web.failed_to_perform_this_action"),
+            });
+          });
+      }}
       variant={variant}
       disabled={disabled}
       placeholder={placeholder ?? t("state")}

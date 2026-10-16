@@ -16,6 +16,7 @@ import type { IBasePowerKStore as IPowerKStore } from "@/store/base-power-k.stor
 import { BasePowerKStore as PowerKStore } from "@/store/base-power-k.store";
 import type { IStateStore } from "@/store/state.store";
 import { StateStore } from "@/store/state.store";
+import { ProjectWorkflowStore } from "@/store/project-workflow.store";
 import type { ICommandPaletteStore } from "@/store/base-command-palette.store";
 import { CommandPaletteStore } from "@/store/base-command-palette.store";
 import { WorkspaceRootStore } from "@/store/workspace";
@@ -73,6 +74,7 @@ import type { IWorkspaceRootStore } from "./workspace";
 enableStaticRendering(typeof window === "undefined");
 
 export class CoreRootStore {
+  workflow: ProjectWorkflowStore;
   workspaceRoot: IWorkspaceRootStore;
   projectRoot: IProjectRootStore;
   memberRoot: IMemberRootStore;
@@ -105,6 +107,7 @@ export class CoreRootStore {
   timelineStore: ITimelineStore;
 
   constructor() {
+    this.workflow = new ProjectWorkflowStore();
     this.router = new RouterStore();
     this.commandPalette = new CommandPaletteStore();
     this.instance = new InstanceStore();
@@ -138,6 +141,7 @@ export class CoreRootStore {
   }
 
   resetOnSignOut() {
+    this.workflow = new ProjectWorkflowStore();
     // handling the system theme when user logged out from the app
     localStorage.setItem("theme", "system");
     void resetLanguage();

@@ -35,6 +35,8 @@ import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifi
 import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { workflowIsActive } from "@/helpers/workflow";
 import { useUserProfile } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 
@@ -73,6 +75,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const { getProjectById } = useProject();
   const { getProjectDefaultStateId } = useProjectState();
+  const workflow = useProjectWorkflow(projectId ?? undefined).workflows[projectId ?? ""];
   const { isMobile } = usePlatformOS();
   const { data: userProfile } = useUserProfile();
   // derived values
@@ -93,9 +96,14 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
         name="state_id"
         render={({ field: { value, onChange } }) => (
           <StateSelect
+            isForWorkItemCreation
             testId="create-work-item-state-select"
             // an empty state shows the project's default state, as the legacy dropdown did
-            value={value || getProjectDefaultStateId(projectId)}
+            value={
+              value ||
+              (workflowIsActive(workflow) ? workflow.effective_initial_state_id : undefined) ||
+              getProjectDefaultStateId(projectId)
+            }
             onChange={(stateId) => {
               onChange(stateId);
               handleFormChange();

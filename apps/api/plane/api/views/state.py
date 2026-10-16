@@ -3,7 +3,7 @@
 # See the LICENSE file for details.
 
 # Django imports
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 # Third party imports
 from rest_framework import status
@@ -13,7 +13,7 @@ from drf_spectacular.utils import OpenApiResponse, OpenApiRequest
 # Module imports
 from plane.api.serializers import StateSerializer
 from plane.app.permissions import ProjectEntityPermission
-from plane.db.models import Issue, State
+from plane.db.models import Issue, State, Project
 from .base import BaseAPIView
 from plane.utils.openapi import (
     state_docs,
@@ -222,13 +222,18 @@ class StateDetailAPIEndpoint(BaseAPIView):
             400: STATE_CANNOT_DELETE_RESPONSE,
         },
     )
+    @transaction.atomic
     def delete(self, request, slug, project_id, state_id):
         """Delete state
 
         Permanently remove a workflow state from a project.
         Default states and states with existing work items cannot be deleted.
         """
+        from plane.utils.workflow import validate_workflow_state_deletion
+
+        Project.objects.select_for_update().get(pk=project_id)
         state = State.objects.get(is_triage=False, pk=state_id, project_id=project_id, workspace__slug=slug)
+        validate_workflow_state_deletion(state)
 
         if state.default:
             return Response(

@@ -41,6 +41,11 @@ export interface IIssueProperties {
   className: string;
 }
 
+const handleEventPropagation = (e: React.MouseEvent) => {
+  e.stopPropagation();
+  e.preventDefault();
+};
+
 export const DraftIssueProperties = observer(function DraftIssueProperties(props: IIssueProperties) {
   const { issue, updateIssue, className } = props;
   const { t } = useTranslation();
@@ -138,17 +143,13 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
   const maxDate = getDate(issue.target_date);
   maxDate?.setDate(maxDate.getDate());
 
-  const handleEventPropagation = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
   return (
     <div className={className}>
       {/* basic properties */}
       {/* state */}
       <div role="presentation" onClick={handleEventPropagation}>
         <StateSelect
+          isForWorkItemCreation
           value={issue.state_id}
           onChange={handleState}
           projectId={issue.project_id}

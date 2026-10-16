@@ -57,7 +57,9 @@ export function GroupDragOverlay(props: Props) {
         { hidden: !shouldOverlayBeVisible }
       )}
     >
-      {workflowDisabledSource ? null : (
+      {workflowDisabledSource ? (
+        <span className="p-3 text-danger-secondary">{workflowDisabledSource}</span>
+      ) : (
         <div
           className={cn("my-8 flex flex-col items-center rounded-sm p-3", {
             "text-secondary": shouldOverlayBeVisible,

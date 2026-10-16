@@ -34,6 +34,7 @@ import { convertToISODateString } from "@plane/utils";
 import { CycleService } from "@/services/cycle.service";
 import { IssueArchiveService, IssueService } from "@/services/issue";
 import { ModuleService } from "@/services/module.service";
+import { workflowAllowsCreation, workflowAllowsTransition } from "@/helpers/workflow";
 //
 import type { IIssueRootStore } from "../root.store";
 import {
@@ -533,6 +534,9 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     shouldUpdateList = true
   ) {
     // perform an API call
+    const workflow = await this.rootIssueStore.rootStore.workflow.fetch(workspaceSlug, projectId);
+    if (data.state_id && !workflowAllowsCreation(workflow, data.state_id))
+      throw { workflow: ["WORKFLOW_CREATION_NOT_ALLOWED"] };
     const response = await this.issueService.createIssue(workspaceSlug, projectId, data);
 
     // add Issue to Store
@@ -563,6 +567,12 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
   ) {
     // Store Before state of the issue
     const issueBeforeUpdate = clone(this.rootIssueStore.issues.getIssueById(issueId));
+    if (shouldSync && data.state_id && issueBeforeUpdate?.state_id) {
+      const root = this.rootIssueStore.rootStore;
+      const workflow = await root.workflow.fetch(workspaceSlug, projectId);
+      if (!workflowAllowsTransition(workflow, issueBeforeUpdate.state_id, data.state_id, root.user.data?.id))
+        throw { workflow: ["WORKFLOW_TRANSITION_NOT_ALLOWED"] };
+    }
     try {
       // Update the Respective Stores
       this.rootIssueStore.issues.updateIssue(issueId, data);

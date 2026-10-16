@@ -15,6 +15,7 @@ import { sortStates } from "@plane/utils";
 // plane web
 import { ProjectStateService } from "@/services/project/project-state.service";
 import type { RootStore } from "@/store/root.store";
+import { workflowIsActive } from "@/helpers/workflow";
 
 export interface IStateStore {
   //Loaders
@@ -206,6 +207,8 @@ export class StateStore implements IStateStore {
    * @returns string | undefined
    */
   getProjectDefaultStateId = computedFn((projectId: string | null | undefined) => {
+    const workflow = projectId ? this.rootStore.workflow.workflows[projectId] : undefined;
+    if (workflowIsActive(workflow)) return workflow?.effective_initial_state_id ?? undefined;
     const projectStates = this.getProjectStates(projectId);
     return projectStates?.find((state) => state.default)?.id;
   });
@@ -266,10 +269,11 @@ export class StateStore implements IStateStore {
    * @returns
    */
   createState = async (workspaceSlug: string, projectId: string, data: Partial<IState>) =>
-    await this.stateService.createState(workspaceSlug, projectId, data).then((response) => {
+    await this.stateService.createState(workspaceSlug, projectId, data).then(async (response) => {
       runInAction(() => {
         set(this.stateMap, [response?.id], response);
       });
+      await this.rootStore.workflow.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
       return response;
     });
 
@@ -288,6 +292,7 @@ export class StateStore implements IStateStore {
         set(this.stateMap, [stateId], { ...this.stateMap?.[stateId], ...data });
       });
       const response = await this.stateService.patchState(workspaceSlug, projectId, stateId, data);
+      await this.rootStore.workflow.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
       return response;
     } catch (error) {
       runInAction(() => {
@@ -309,10 +314,11 @@ export class StateStore implements IStateStore {
   deleteState = async (workspaceSlug: string, projectId: string, stateId: string) => {
     if (!this.stateMap?.[stateId]) return;
     // oxlint-disable-next-line promise/always-return
-    await this.stateService.deleteState(workspaceSlug, projectId, stateId).then(() => {
+    await this.stateService.deleteState(workspaceSlug, projectId, stateId).then(async () => {
       runInAction(() => {
         delete this.stateMap[stateId];
       });
+      await this.rootStore.workflow.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
     });
   };
 
@@ -333,6 +339,7 @@ export class StateStore implements IStateStore {
         set(this.stateMap, [stateId, "default"], true);
       });
       await this.stateService.markDefault(workspaceSlug, projectId, stateId);
+      await this.rootStore.workflow.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
     } catch (error) {
       // reverting back to old state group if api fails
       runInAction(() => {
@@ -357,6 +364,7 @@ export class StateStore implements IStateStore {
         this.stateMap[stateId] = { ...this.stateMap[stateId], ...payload };
       });
       await this.stateService.patchState(workspaceSlug, projectId, stateId, payload);
+      await this.rootStore.workflow.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
     } catch (error) {
       runInAction(() => {
         if (originalState) this.stateMap[stateId] = originalState;

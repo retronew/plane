@@ -48,6 +48,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
+from plane.utils.workflow import WorkflowIssueWriteMixin, validate_workflow_write
 
 
 class IssueFlatSerializer(BaseSerializer):
@@ -80,7 +81,7 @@ class IssueProjectLiteSerializer(BaseSerializer):
 
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
-class IssueCreateSerializer(BaseSerializer):
+class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
     from plane.app.serializers.template_configuration import TemplateChildSerializer
 
     template_children = TemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
@@ -281,6 +282,7 @@ class IssueCreateSerializer(BaseSerializer):
                 pass
 
         for child in children:
+            validate_workflow_write(project_id, child)
             Issue.objects.create(parent=issue, project_id=project_id, workspace_id=workspace_id, **child)
         return issue
 
