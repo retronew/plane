@@ -75,6 +75,10 @@ class IntakeViewSet(BaseViewSet):
         intake = self.get_queryset().first()
         return Response(IntakeSerializer(intake).data, status=status.HTTP_200_OK)
 
+    @allow_permission([ROLE.ADMIN])
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def perform_create(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_id"))

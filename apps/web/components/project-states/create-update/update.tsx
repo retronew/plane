@@ -15,12 +15,13 @@ import { translate } from "@plane/i18n";
 
 type TStateUpdate = {
   state: IState;
+  colorPickerInitiallyOpen?: boolean;
   updateStateCallback: TStateOperationsCallbacks["updateState"];
   handleClose: () => void;
 };
 
 export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
-  const { state, updateStateCallback, handleClose } = props;
+  const { state, updateStateCallback, handleClose, colorPickerInitiallyOpen } = props;
   const { getStatePercentageInGroup } = useProjectState();
   const percentage = getStatePercentageInGroup(state.id);
   // states
@@ -65,6 +66,7 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
 
   return (
     <StateForm
+      colorPickerInitiallyOpen={colorPickerInitiallyOpen}
       data={state}
       percentage={percentage ? percentage / 100 : undefined}
       onSubmit={onSubmit}

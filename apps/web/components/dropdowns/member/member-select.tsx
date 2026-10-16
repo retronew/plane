@@ -33,6 +33,7 @@ type MemberSelectWebCommonProps = {
   variant: MemberSelectVariant;
   /** Override the variant's default text-label visibility (avatars stay regardless). */
   showLabel?: boolean;
+  hideChevron?: boolean;
   /** Pins a "clear" row to the top of the list. Single-select only. */
   clearable?: boolean;
   /** Label shown for the "clear" row. Defaults to the placeholder or "No assignee". Single-select only. */
@@ -166,6 +167,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
         value={props.value.map(toOption)}
         onChange={props.onChange}
         variant={variant}
+        hideChevron={props.hideChevron}
         showLabel={showLabel}
         disabled={disabled}
         placeholder={placeholder}
@@ -185,6 +187,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
       value={props.value ? toOption(props.value) : null}
       onChange={props.onChange}
       variant={variant}
+      hideChevron={props.hideChevron}
       showLabel={showLabel}
       clearable={clearable}
       clearLabel={clearLabel}

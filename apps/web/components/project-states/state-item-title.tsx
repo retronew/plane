@@ -21,6 +21,7 @@ import { StateDelete, StateMarksAsDefault } from "./options";
 
 type TBaseStateItemTitleProps = {
   stateCount: number;
+  onEditColor?: () => void;
   dragHandleRef?: (element: Element | null) => void;
   state: IState;
   shouldShowDescription?: boolean;
@@ -39,7 +40,15 @@ type TDisabledStateItemTitleProps = TBaseStateItemTitleProps & {
 export type TStateItemTitleProps = TEnabledStateItemTitleProps | TDisabledStateItemTitleProps;
 
 export const StateItemTitle = observer(function StateItemTitle(props: TStateItemTitleProps) {
-  const { stateCount, dragHandleRef, setUpdateStateModal, disabled, state, shouldShowDescription = true } = props;
+  const {
+    onEditColor,
+    stateCount,
+    dragHandleRef,
+    setUpdateStateModal,
+    disabled,
+    state,
+    shouldShowDescription = true,
+  } = props;
   // plane hooks
   const { t } = useTranslation();
   // store hooks
@@ -67,7 +76,11 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setUpdateStateModal(true)}
+        onClick={(event) => {
+          if (onEditColor && event.target instanceof Element && event.target.closest("[data-state-color-target]"))
+            onEditColor();
+          else setUpdateStateModal(true);
+        }}
         className="min-w-0 flex-1 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
       >
         <StateSummary
@@ -103,7 +116,11 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
               variant="ghost"
               size="xs"
               aria-label={t("common.actions.edit")}
-              onClick={() => setUpdateStateModal(true)}
+              onClick={(event) => {
+                if (onEditColor && event.target instanceof Element && event.target.closest("[data-state-color-target]"))
+                  onEditColor();
+                else setUpdateStateModal(true);
+              }}
               icon={<Icon icon={EditOutline} />}
             />
             <StateDelete

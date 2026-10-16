@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import {
   Menu,
   MenuContent,
@@ -39,6 +40,7 @@ export function ProjectDisplayMenu({
             <MenuSubmenu>
               <MenuSubmenuTrigger
                 label={t("web.project_page.group_by")}
+                icon={<FilterFieldIcon field="group_by" />}
                 trailing={<span className="text-12 text-tertiary">{t(`web.project_page.groupings.${groupBy}`)}</span>}
               />
               <MenuSubmenuContent>
@@ -50,6 +52,7 @@ export function ProjectDisplayMenu({
                     <MenuRadioItem
                       key={key}
                       value={key}
+                      icon={<FilterFieldIcon field={key} />}
                       label={t(`web.project_page.groupings.${key}`)}
                       closeOnClick={false}
                     />

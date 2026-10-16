@@ -68,3 +68,39 @@ it("uses form submission, blocks duplicate saves and retains edits on failure", 
   fireEvent.keyDown(name, { key: "Escape" });
   expect(cancel).toHaveBeenCalledTimes(1);
 });
+
+it("does not steal focus during edit and cancels color changes without saving", async () => {
+  const submit = vi.fn();
+  const cancel = vi.fn();
+  const initial = { id: "state-1", name: "Ready", color: "#60646c" };
+  const { unmount } = render(
+    <StateForm data={initial} onSubmit={submit} onCancel={cancel} buttonDisabled={false} buttonTitle="Save" />
+  );
+  expect(document.activeElement).not.toBe(screen.getByRole("textbox", { name: "web.name" }));
+  fireEvent.click(screen.getByRole("button", { name: "aria_labels.color_picker.open" }));
+  fireEvent.click(await screen.findByRole("button", { name: "#0693e3" }));
+  expect(submit).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "web.cancel" }));
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(submit).not.toHaveBeenCalled();
+  unmount();
+  render(<StateForm data={initial} onSubmit={submit} onCancel={cancel} buttonDisabled={false} buttonTitle="Save" />);
+  fireEvent.click(screen.getByRole("button", { name: "aria_labels.color_picker.open" }));
+  const hex = await screen.findByRole("textbox", { name: "aria_labels.color_picker.hex_input" });
+  expect((hex as HTMLInputElement).value).toBe("60646c");
+});
+
+it("can open directly in color-edit mode without focusing the name", async () => {
+  render(
+    <StateForm
+      colorPickerInitiallyOpen
+      data={{ name: "Ready", color: "#60646c" }}
+      onSubmit={vi.fn()}
+      onCancel={vi.fn()}
+      buttonDisabled={false}
+      buttonTitle="Save"
+    />
+  );
+  expect(await screen.findByRole("button", { name: "#0693e3" })).toBeTruthy();
+  expect(document.activeElement).not.toBe(screen.getByRole("textbox", { name: "web.name" }));
+});

@@ -14,6 +14,11 @@
   box-shadow: none;
 }
 
+/* Keep shared cover controls identical inside and outside dialogs. */
+button[data-cover-upload-button][data-size] {
+  border-radius: 6px;
+}
+
 /* Match the standard DialogActions anatomy without touching form section dividers. */
 [role="dialog"].shadow-raised-300:not([data-issue-composer]) :where(.flex.items-center.justify-end[class*="border-t"]) {
   flex-wrap: wrap;

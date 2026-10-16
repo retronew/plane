@@ -13,6 +13,7 @@ import { NotAuthorizedView } from "@/components/auth-screens/not-authorized-view
 import { PageHead } from "@/components/core/page-title";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
 import { SettingsHeading } from "@/components/settings/heading";
+import { IntakeNotificationOwner } from "@/components/settings/project/content/intake-notification-owner";
 import { ProjectSettingsFeatureControlItem } from "@/components/settings/project/content/feature-control-item";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
@@ -59,6 +60,13 @@ function FeaturesIntakeSettingsPage({ params }: Route.ComponentProps) {
             workspaceSlug={workspaceSlug}
           />
         </div>
+        {currentProjectDetails?.inbox_view && (
+          <IntakeNotificationOwner
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            disabled={!canPerformProjectAdminActions}
+          />
+        )}
       </section>
     </SettingsContentWrapper>
   );

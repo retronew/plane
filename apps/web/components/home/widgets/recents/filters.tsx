@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
@@ -42,6 +43,7 @@ export const FiltersDropdown = observer(function FiltersDropdown(props: TFilters
           {filters?.map((filter) => (
             <MenuItem
               key={filter.name}
+              icon={<FilterFieldIcon field={filter.name} />}
               label={t(filter.i18n_key)}
               onClick={() => {
                 setActiveFilter(filter.name);

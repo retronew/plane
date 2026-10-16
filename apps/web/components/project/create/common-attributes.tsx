@@ -103,8 +103,8 @@ function ProjectCommonAttributes(props: Props) {
               message: t("project_id_min_char"),
             },
             maxLength: {
-              value: 10,
-              message: t("project_id_max_char"),
+              value: 12,
+              message: t("project_id_max_char", { max: 12 }),
             },
           }}
           render={({ field: { value, onChange } }) => (

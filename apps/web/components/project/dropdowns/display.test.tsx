@@ -18,6 +18,7 @@ for (const layout of ["gallery", "timeline"] as const)
     render(<ProjectDisplayMenu layout={layout} onChange={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "common.display" }));
     await screen.findByRole("menuitem", { name: /common.sort.field/ });
+    for (const item of screen.getAllByRole("menuitem")) expect(item.querySelector("svg.lucide")).not.toBeNull();
     expect(screen.queryByRole("menuitem", { name: /web.project_page.group_by/ })).toBeNull();
   });
 for (const layout of ["board", "list"] as const)
@@ -25,7 +26,9 @@ for (const layout of ["board", "list"] as const)
     const change = vi.fn();
     render(<ProjectDisplayMenu layout={layout} onChange={vi.fn()} onGroupChange={change} />);
     fireEvent.click(screen.getByRole("button", { name: "common.display" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: /web.project_page.group_by/ }));
+    const grouping = await screen.findByRole("menuitem", { name: /web.project_page.group_by/ });
+    expect(grouping.querySelector("svg.lucide")).not.toBeNull();
+    fireEvent.click(grouping);
     const radio = await screen.findByRole("menuitemradio", { name: "web.project_page.groupings.priority" });
     expect(screen.getAllByRole("menuitemradio")).toHaveLength(5);
     fireEvent.click(radio);

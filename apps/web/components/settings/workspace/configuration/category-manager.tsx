@@ -53,6 +53,7 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     service.list<ProjectCategory>(workspaceSlug, resource)
   );
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [colorPickerInitiallyOpen, setColorPickerInitiallyOpen] = useState(false);
   const [deleting, setDeleting] = useState<ProjectCategory | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -63,7 +64,8 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
   }, [editingId]);
   const label = kind === "label";
   const Glyph = label ? Tag : Circle;
-  const begin = (entry?: ProjectCategory) => {
+  const begin = (entry?: ProjectCategory, openColor = false) => {
+    setColorPickerInitiallyOpen(openColor);
     setMessage("");
     setDraft(entry ?? { name: "", color: "#60646C", group, description: "" });
   };
@@ -115,6 +117,8 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     draft &&
     (kind === "status" ? (
       <StateForm
+        focusNameOnOpen={!draft.id}
+        colorPickerInitiallyOpen={colorPickerInitiallyOpen}
         key={draft.id ?? "new"}
         data={{ name: draft.name, color: draft.color, description: draft.description }}
         stateGroup={phaseIcons[group ?? draft.group ?? "draft"]}
@@ -281,7 +285,14 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
                         data-category-name={entry.name}
                         className="min-w-0 flex-1 truncate text-left text-13 font-medium"
                         disabled={busy || !!draft}
-                        onClick={() => begin(entry)}
+                        onClick={(event) =>
+                          begin(
+                            entry,
+                            !label &&
+                              event.target instanceof Element &&
+                              !!event.target.closest("[data-state-color-target]")
+                          )
+                        }
                       >
                         {label ? (
                           entry.name
@@ -346,7 +357,14 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
                               <MenuItem
                                 label={t("edit")}
                                 icon={<Pencil className="size-4" />}
-                                onClick={() => begin(entry)}
+                                onClick={(event) =>
+                                  begin(
+                                    entry,
+                                    !label &&
+                                      event.target instanceof Element &&
+                                      !!event.target.closest("[data-state-color-target]")
+                                  )
+                                }
                               />
                               <MenuItem
                                 label={t("delete")}

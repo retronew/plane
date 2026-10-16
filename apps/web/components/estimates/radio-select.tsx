@@ -9,6 +9,7 @@ import React from "react";
 import { cn } from "@plane/utils";
 
 type RadioInputProps = {
+  disabled?: boolean;
   name?: string;
   label?: string | React.ReactNode;
   wrapperClassName?: string;
@@ -24,6 +25,7 @@ type RadioInputProps = {
 };
 
 export function RadioInput({
+  disabled: groupDisabled = false,
   name = "radio-input",
   label: inputLabel,
   labelClassName: inputLabelClassName = "",
@@ -54,35 +56,38 @@ export function RadioInput({
     <div className={className}>
       {inputLabel && <div className={cn(`mb-2`, inputLabelClassName)}>{inputLabel}</div>}
       <div className={cn(`${wrapperClass}`, inputWrapperClassName)}>
-        {options.map(({ value, label, disabled }, index) => (
-          <div
-            key={index}
-            onClick={() => !disabled && setSelected(value)}
-            className={cn(
-              "flex items-center gap-2 text-14",
-              disabled ? `cursor-not-allowed border-subtle bg-layer-1` : ``,
-              inputFieldClassName
-            )}
-          >
-            <input
-              id={`${name}_${index}`}
-              name={name}
+        {options.map(({ value, label, disabled: optionDisabled }, index) => {
+          const disabled = groupDisabled || optionDisabled;
+          return (
+            <div
+              key={value}
               className={cn(
-                `group flex size-5 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border border-strong-1 bg-layer-2`,
-                selected === value ? `border-accent-strong bg-accent-primary/80` : ``,
+                "flex items-center gap-2 text-14",
                 disabled ? `cursor-not-allowed border-subtle bg-layer-1` : ``,
-                inputButtonClassName
+                inputFieldClassName
               )}
-              type="radio"
-              value={value}
-              disabled={disabled}
-              checked={selected === value}
-            />
-            <label htmlFor={`${name}_${index}`} className="w-full cursor-pointer">
-              {label}
-            </label>
-          </div>
-        ))}
+            >
+              <input
+                id={`${name}_${index}`}
+                name={name}
+                className={cn(
+                  `group flex size-5 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border border-strong-1 bg-layer-2`,
+                  selected === value ? `border-accent-strong bg-accent-primary/80` : ``,
+                  disabled ? `cursor-not-allowed border-subtle bg-layer-1` : ``,
+                  inputButtonClassName
+                )}
+                type="radio"
+                value={value}
+                disabled={disabled}
+                checked={selected === value}
+                onChange={() => !disabled && setSelected(value)}
+              />
+              <label htmlFor={`${name}_${index}`} className="w-full cursor-pointer">
+                {label}
+              </label>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

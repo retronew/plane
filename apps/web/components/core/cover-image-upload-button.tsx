@@ -89,7 +89,7 @@ export function CoverImageUploadButton({
     }
   };
   return (
-    <span className="inline-flex shrink-0">
+    <span className="inline-flex shrink-0 [--control-radius-xs:6px]">
       <input
         ref={inputRef}
         type="file"
@@ -99,6 +99,7 @@ export function CoverImageUploadButton({
         onChange={(event) => void upload(event)}
       />
       <Button
+        data-cover-upload-button=""
         type="button"
         size="xs"
         variant="secondary"

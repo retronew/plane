@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { SearchOutline } from "@makeplane/propel/icons";
+import { ExpandableSearch } from "@makeplane/propel/components/expandable-search";
 // components
 import { MembersSettingsLoader } from "@/components/ui/loader/settings/members";
 // hooks
@@ -81,20 +81,17 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
         projectId={projectId}
         workspaceSlug={workspaceSlug}
       />
-      <div className="flex items-center justify-between gap-4 overflow-x-hidden border-b border-subtle py-2">
+      <div className="flex items-center justify-between gap-4 py-2">
         <div className="text-14 font-semibold">{t("common.members")}</div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-start gap-1.5 rounded-md border border-subtle bg-surface-1 px-2 py-1">
-            <SearchOutline className="h-3.5 w-3.5" />
-            <input
-              className="w-full max-w-[234px] border-none bg-transparent text-13 placeholder:text-placeholder focus:outline-none"
-              placeholder={t("web.search")}
-              value={searchQuery}
-              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-              autoFocus
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <ExpandableSearch
+            size="md"
+            aria-label={t("web.search")}
+            placeholder={t("web.search")}
+            clearLabel={t("common.clear")}
+            value={searchQuery}
+            onValueChange={(value) => setSearchQuery(value ?? "")}
+          />
           <MemberListFiltersDropdown
             appliedFilters={appliedRoleFilters}
             handleUpdate={handleRoleFilterUpdate}
@@ -116,7 +113,7 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
       {!projectMemberIds ? (
         <MembersSettingsLoader />
       ) : (
-        <div className="divide-y divide-subtle overflow-scroll">
+        <div className="divide-y divide-subtle overflow-auto [&_thead_th]:h-9 [&_thead_th]:py-1">
           {searchedProjectMembers.length !== 0 && (
             <ProjectMemberListItem
               memberDetails={memberDetails ?? []}

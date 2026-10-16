@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { Tag } from "lucide-react";
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
 import { StateIconFrame } from "../state-icon-frame";
@@ -17,22 +18,28 @@ import type { IState, TStateGroups } from "@plane/types";
 
 type TStateForm = {
   data: Partial<IState>;
+  kind?: "state" | "label";
   stateGroup?: TStateGroups;
   percentage?: number;
   onSubmit: (formData: Partial<IState>) => Promise<{ status: string }>;
   onCancel: () => void;
   buttonDisabled: boolean;
   buttonTitle: string;
+  focusNameOnOpen?: boolean;
+  colorPickerInitiallyOpen?: boolean;
 };
 
 export function StateForm({
   data,
+  kind = "state",
   stateGroup = data.group ?? "backlog",
   percentage,
   onSubmit,
   onCancel,
   buttonDisabled,
   buttonTitle,
+  focusNameOnOpen = false,
+  colorPickerInitiallyOpen = false,
 }: TStateForm) {
   const { t } = useTranslation();
   const nameId = useId();
@@ -55,7 +62,14 @@ export function StateForm({
     setError("");
     try {
       const result = await onSubmit({ ...formData, name });
-      if (result.status !== "success") setError(t("web.configuration_save_error"));
+      if (result.status !== "success")
+        setError(
+          t(
+            kind === "label" && result.status === "already_exists"
+              ? "label.create.already_exists"
+              : "web.configuration_save_error"
+          )
+        );
     } catch {
       setError(t("web.configuration_save_error"));
     } finally {
@@ -73,7 +87,7 @@ export function StateForm({
   return (
     <form className="flex min-h-14 flex-col justify-center rounded-md bg-layer-2 px-2 py-2.5" onSubmit={submit}>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-        <Popover>
+        <Popover defaultOpen={colorPickerInitiallyOpen}>
           <PopoverTrigger
             render={
               <button
@@ -83,20 +97,25 @@ export function StateForm({
                 className="flex size-7 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
               >
                 <StateIconFrame color={color}>
-                  <StateGroupIcon stateGroup={stateGroup} color={color} size={EIconSize.XL} percentage={percentage} />
+                  {kind === "label" ? (
+                    <Tag className="size-4" style={{ color }} />
+                  ) : (
+                    <StateGroupIcon stateGroup={stateGroup} color={color} size={EIconSize.XL} percentage={percentage} />
+                  )}
                 </StateIconFrame>
               </button>
             }
           />
-          <PopoverContent variant="rich" side="bottom" align="start">
+          <PopoverContent variant="rich" side="bottom" align="start" data-category-color-picker="" initialFocus={false}>
             <ColorSwatchPicker
-              className="w-88"
+              continuous
+              className="w-72 gap-1 [&_fieldset]:gap-1.5"
               value={color}
               onChange={(hex) => setFormData((previous) => ({ ...previous, color: hex }))}
             />
           </PopoverContent>
         </Popover>
-        <div className="min-w-0 flex-1 sm:w-36 sm:flex-none">
+        <div className={kind === "label" ? "min-w-0 flex-1" : "min-w-0 flex-1 sm:w-36 sm:flex-none"}>
           <Field name="name" invalid={Boolean(error)}>
             <InputGroup size="lg">
               <Input
@@ -106,37 +125,39 @@ export function StateForm({
                 aria-label={t("web.name")}
                 onKeyDown={cancelOnEscape}
                 aria-describedby={error ? `${nameId}-error` : undefined}
-                placeholder={t("web.name")}
+                placeholder={t(kind === "label" ? "project_settings.labels.label_title" : "web.name")}
                 value={formData.name ?? ""}
-                maxLength={100}
+                maxLength={kind === "label" ? 255 : 100}
                 disabled={disabled}
                 onChange={(event) => {
                   setFormData({ ...formData, name: event.target.value });
                   setError("");
                 }}
-                // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the inline editor when opened
-                autoFocus
+                // oxlint-disable-next-line jsx-a11y/no-autofocus -- only new state creation opts into focus
+                autoFocus={focusNameOnOpen}
               />
             </InputGroup>
           </Field>
         </div>
-        <div className="order-3 w-full min-w-0 sm:order-none sm:flex-1">
-          <Field name="description">
-            <InputGroup size="lg">
-              <Input
-                size="lg"
-                name="description"
-                aria-label={t("description")}
-                onKeyDown={cancelOnEscape}
-                placeholder={t("web.describe_this_state_for_your_members")}
-                value={formData.description ?? ""}
-                maxLength={1000}
-                disabled={disabled}
-                onChange={(event) => setFormData({ ...formData, description: event.target.value })}
-              />
-            </InputGroup>
-          </Field>
-        </div>
+        {kind === "state" && (
+          <div className="order-3 w-full min-w-0 sm:order-none sm:flex-1">
+            <Field name="description">
+              <InputGroup size="lg">
+                <Input
+                  size="lg"
+                  name="description"
+                  aria-label={t("description")}
+                  onKeyDown={cancelOnEscape}
+                  placeholder={t("web.describe_this_state_for_your_members")}
+                  value={formData.description ?? ""}
+                  maxLength={1000}
+                  disabled={disabled}
+                  onChange={(event) => setFormData({ ...formData, description: event.target.value })}
+                />
+              </InputGroup>
+            </Field>
+          </div>
+        )}
         <div className="ml-auto flex shrink-0 items-center gap-1 self-center">
           <Button
             type="button"

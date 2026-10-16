@@ -10,7 +10,6 @@ import { useTranslation } from "@plane/i18n";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { configurationKey, workspaceConfigurationService as service } from "@/services/workspace-configuration.service";
 import type { ProjectCategory } from "@/services/workspace-configuration.service";
-import { ConfigurationSelect } from "./select";
 
 const statusIcon = (entry: ProjectCategory) => <ProjectStatusIcon group={entry.group} color={entry.color} />;
 const selectedStatusIcon = (entries: ProjectCategory[]) => (entries[0] ? statusIcon(entries[0]) : undefined);
@@ -123,13 +122,30 @@ export function ProjectCategoryFields({
       {categories.statesEnabled && (
         <div className="flex flex-col gap-2">
           <span className="text-13">{t("web.project_statuses")}</span>
-          <ConfigurationSelect
-            placeholder={t("web.no_project_status")}
-            value={status ?? categories.statuses.find((entry) => entry.is_default)?.id ?? ""}
+          <Select<ProjectCategory>
+            getValues={() => categories.statuses}
+            value={
+              categories.statuses.find(
+                (entry) => entry.id === (status ?? categories.statuses.find((item) => item.is_default)?.id)
+              ) ?? null
+            }
             disabled={disabled || !!categories.error}
-            options={categories.statuses.map((entry) => ({ value: entry.id, label: entry.name }))}
+            getOptionValue={(entry) => entry.id}
+            getOptionLabel={(entry) => entry.name}
+            getOptionIcon={statusIcon}
+            placeholder={t("web.no_project_status")}
             onChange={onStatus}
-          />
+            showSearch
+            pinSelected={false}
+          >
+            <Select.Trigger<ProjectCategory>
+              variant="select-lg"
+              prependIcon={selectedStatusIcon}
+              aria-label={t("web.project_statuses")}
+            >
+              {(entries) => entries[0]?.name ?? t("web.no_project_status")}
+            </Select.Trigger>
+          </Select>
         </div>
       )}
       <div className="flex flex-col gap-2">

@@ -30,8 +30,8 @@ export function CategoryColorPicker({
           </button>
         }
       />
-      <PopoverContent variant="rich" side="bottom" align="start">
-        <ColorSwatchPicker className="w-88" value={value} onChange={onChange} />
+      <PopoverContent variant="rich" side="bottom" align="start" data-category-color-picker="">
+        <ColorSwatchPicker continuous className="w-72 gap-1 [&_fieldset]:gap-1.5" value={value} onChange={onChange} />
       </PopoverContent>
     </Popover>
   );

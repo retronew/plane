@@ -14,6 +14,8 @@ import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { IProject, IUserLite, IWorkspace } from "@plane/types";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { CloseOutline } from "@makeplane/propel/icons";
 import { Switch } from "@makeplane/propel/components/switch";
 import { Loader } from "@plane/blocks/skeleton";
 // constants
@@ -23,6 +25,7 @@ import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 // components
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
+import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 
 const defaultValues: Partial<IProject> = {
   project_lead: null,
@@ -37,12 +40,13 @@ type TDefaultSettingItemProps = {
 
 function DefaultSettingItem({ title, description, children }: TDefaultSettingItemProps) {
   return (
-    <div className="flex items-center justify-between gap-x-2">
-      <div className="flex flex-col gap-0.5">
-        <h4 className="text-13 font-medium">{title}</h4>
-        <p className="text-11 text-tertiary">{description}</p>
-      </div>
-      <div className="w-full max-w-48 sm:max-w-64">{children}</div>
+    <div>
+      <SettingsBoxedControlItem
+        className="rounded-none border-0 bg-transparent"
+        title={title}
+        description={description}
+        control={<div className="w-44 sm:w-52">{children}</div>}
+      />
     </div>
   );
 }
@@ -141,26 +145,41 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
   };
 
   return (
-    <div className="my-6 flex flex-col gap-y-6">
+    <div className="mt-6 mb-10 flex flex-col divide-y divide-subtle overflow-hidden rounded-lg border border-subtle bg-layer-2">
       <DefaultSettingItem title={t("web.project_lead")} description={t("web.select_the_project_lead_for_the_project")}>
         {currentProjectDetails ? (
           <Controller
             control={control}
             name="project_lead"
             render={({ field: { value } }) => (
-              <MemberSelect
-                value={value as string | null}
-                // The clear row emits "", which `submitChanges` stores as null through its "none" branch.
-                onChange={(val: string) => {
-                  void submitChanges({ project_lead: val || "none" });
-                }}
-                variant="select-md"
-                projectId={projectId}
-                disabled={!isAdmin}
-                placeholder={t("common.none")}
-                clearable
-                clearLabel={t("common.none")}
-              />
+              <div className="relative">
+                <div className="min-w-0 flex-1">
+                  <MemberSelect
+                    value={value as string | null}
+                    onChange={(val: string) => {
+                      void submitChanges({ project_lead: val || "none" });
+                    }}
+                    variant="select-md"
+                    className={value && isAdmin ? "pr-8" : undefined}
+                    hideChevron={!!value && isAdmin}
+                    projectId={projectId}
+                    disabled={!isAdmin}
+                    placeholder={t("web.select_project_lead")}
+                  />
+                </div>
+                {value && isAdmin && (
+                  <span className="absolute inset-y-0 right-1 flex items-center">
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={`${t("common.clear")} ${t("web.project_lead")}`}
+                      icon={<CloseOutline className="size-3" />}
+                      onClick={() => void submitChanges({ project_lead: "none" })}
+                    />
+                  </span>
+                )}
+              </div>
             )}
           />
         ) : (
@@ -178,19 +197,34 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
             control={control}
             name="default_assignee"
             render={({ field: { value } }) => (
-              <MemberSelect
-                value={value as string | null}
-                // The clear row emits "", which `submitChanges` stores as null through its "none" branch.
-                onChange={(val: string) => {
-                  void submitChanges({ default_assignee: val || "none" });
-                }}
-                variant="select-md"
-                projectId={projectId}
-                disabled={!isAdmin}
-                placeholder={t("common.none")}
-                clearable
-                clearLabel={t("common.none")}
-              />
+              <div className="relative">
+                <div className="min-w-0 flex-1">
+                  <MemberSelect
+                    value={value as string | null}
+                    onChange={(val: string) => {
+                      void submitChanges({ default_assignee: val || "none" });
+                    }}
+                    variant="select-md"
+                    className={value && isAdmin ? "pr-8" : undefined}
+                    hideChevron={!!value && isAdmin}
+                    projectId={projectId}
+                    disabled={!isAdmin}
+                    placeholder={t("web.select_default_assignee")}
+                  />
+                </div>
+                {value && isAdmin && (
+                  <span className="absolute inset-y-0 right-1 flex items-center">
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={`${t("common.clear")} ${t("web.default_assignee")}`}
+                      icon={<CloseOutline className="size-3" />}
+                      onClick={() => void submitChanges({ default_assignee: "none" })}
+                    />
+                  </span>
+                )}
+              </div>
             )}
           />
         ) : (

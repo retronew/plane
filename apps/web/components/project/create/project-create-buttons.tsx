@@ -30,7 +30,7 @@ function ProjectCreateButtons(props: Props) {
   const { getIndex } = getTabIndex(ETabIndices.PROJECT_CREATE, isMobile);
 
   return (
-    <div className="flex shrink-0 justify-end gap-3 border-t border-subtle px-4 py-4">
+    <div className="flex shrink-0 justify-end gap-2 border-t border-subtle px-5 py-3">
       <Button
         variant="secondary"
         size="md"

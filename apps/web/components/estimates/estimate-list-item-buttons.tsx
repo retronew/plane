@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-
 import { observer } from "mobx-react";
-import { DeleteOutline } from "@makeplane/propel/icons";
+import { Trash2 } from "lucide-react";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { useTranslation } from "@plane/i18n";
 
-type TEstimateListItem = {
+type Props = {
   estimateId: string;
   isAdmin: boolean;
   isEstimateEnabled: boolean;
@@ -15,19 +17,24 @@ type TEstimateListItem = {
   onEditClick?: (estimateId: string) => void;
   onDeleteClick?: (estimateId: string) => void;
 };
-
-export const EstimateListItemButtons = observer(function EstimateListItemButtons(props: TEstimateListItem) {
-  const { estimateId, isAdmin, isEditable, onDeleteClick } = props;
-
-  if (!isAdmin || !isEditable) return <></>;
+export const EstimateListItemButtons = observer(function EstimateListItemButtons({
+  estimateId,
+  isAdmin,
+  isEditable,
+  onDeleteClick,
+}: Props) {
+  const { t } = useTranslation();
+  if (!isAdmin || !isEditable) return null;
   return (
-    <div className="relative flex items-center gap-1">
-      <button
-        className="relative flex h-6 w-6 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-sm transition-colors hover:bg-layer-1"
-        onClick={() => onDeleteClick && onDeleteClick(estimateId)}
-      >
-        <DeleteOutline width={12} height={12} />
-      </button>
-    </div>
+    <Tooltip label={t("delete")}>
+      <IconButton
+        type="button"
+        variant="ghost"
+        size="sm"
+        aria-label={t("delete")}
+        icon={<Trash2 className="size-3.5" />}
+        onClick={() => onDeleteClick?.(estimateId)}
+      />
+    </Tooltip>
   );
 });

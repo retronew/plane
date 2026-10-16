@@ -45,11 +45,11 @@ export const ProjectSettingsFeatureControlItem = observer(function ProjectSettin
       loading: translate("web.updating_project_feature"),
       success: {
         title: translate("toast.success"),
-        message: () => "Project feature updated successfully.",
+        message: () => translate("web.project_feature_updated"),
       },
       error: {
         title: translate("toast.error"),
-        message: () => "Something went wrong while updating project feature. Please try again.",
+        message: () => translate("web.project_feature_update_failed"),
       },
     });
     void updateProjectPromise.then(() => {

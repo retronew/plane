@@ -57,7 +57,7 @@ describe("activity sentence localization", () => {
 
   it("does not duplicate the intake duplicate-status explanation", () => {
     const { container } = render(<ActivityMessage activity={activity({ field: "inbox", verb: "2" })} />);
-    expect(container.textContent).toBe("将此工作项标记为重复项并从收件箱拒绝");
+    expect(container.textContent).toBe("将此工作项标记为重复项并从需求收集拒绝");
   });
 
   it("translates priority values and updates full sentences when the language changes", async () => {

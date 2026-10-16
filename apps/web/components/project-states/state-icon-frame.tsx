@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export function StateIconFrame({ color, children }: { color?: string; children: ReactNode }) {
   return (
     <span
+      data-state-color-target=""
       className="flex size-7 shrink-0 items-center justify-center rounded-md bg-layer-1"
       style={color ? { backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` } : undefined}
     >

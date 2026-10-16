@@ -7,6 +7,7 @@
 import { ProjectCategoryFields } from "@/components/settings/workspace/configuration/project-fields";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InfoOutline, LockOutline } from "@makeplane/propel/icons";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -16,7 +17,7 @@ import { NETWORK_CHOICES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 // plane imports
 import { Button } from "@makeplane/propel/components/button";
-import { EmojiPicker, Logo } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker, Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IProject, IWorkspace } from "@plane/types";
@@ -216,7 +217,14 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                   handleToggle={(val: boolean) => setIsOpen(val)}
                   className="flex items-center justify-center"
                   buttonClassName="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-lg bg-white/10"
-                  label={<Logo logo={value} size={28} />}
+                  label={
+                    <span
+                      className="grid size-full place-items-center rounded-lg"
+                      style={getIconBackgroundStyle(value)}
+                    >
+                      <Logo background={false} logo={value} size={28} />
+                    </span>
+                  }
                   // TODO: fix types
                   onChange={(val: any) => {
                     let logoValue = {};
@@ -232,6 +240,11 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                       [val?.type]: logoValue,
                     });
                     setIsOpen(false);
+                  }}
+                  defaultIconBackground={value?.icon?.background_color}
+                  onIconBackgroundChange={(background) => {
+                    if (value?.in_use === "icon")
+                      onChange({ ...value, icon: { ...value.icon, background_color: background } });
                   }}
                   defaultIconColor={value?.in_use && value.in_use === "icon" ? value?.icon?.color : undefined}
                   defaultOpen={value.in_use && value.in_use === "emoji" ? "emoji" : "icon"}
@@ -302,7 +315,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
           />
           <span className="text-11 text-danger-primary">{errors?.name?.message}</span>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 [&_textarea]:text-14">
           <h4 className="text-13">{t("description")}</h4>
           <Controller
             name="description"
@@ -341,8 +354,8 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                     message: t("project_id_min_char"),
                   },
                   maxLength: {
-                    value: 10,
-                    message: t("project_id_max_char"),
+                    value: 12,
+                    message: t("project_id_max_char", { max: 12 }),
                   },
                 }}
                 render={({ field: { value, ref } }) => (
@@ -359,19 +372,19 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                         placeholder={t("project_settings.general.enter_project_id")}
                         disabled={!isAdmin}
                       />
+                      <Tooltip label={t("project_id_tooltip_content")} side="top" align="center" disabled={isMobile}>
+                        <IconButton
+                          type="button"
+                          size="xs"
+                          variant="ghost"
+                          aria-label={t("project_id_tooltip_content")}
+                          icon={<InfoOutline />}
+                        />
+                      </Tooltip>
                     </InputGroup>
                   </Field>
                 )}
               />
-              <Tooltip
-                label={t("project_id_tooltip_content")}
-                layout="stacked"
-                side="right"
-                align="start"
-                disabled={isMobile}
-              >
-                <InfoOutline className="absolute top-2.5 right-2 h-4 w-4 text-placeholder" />
-              </Tooltip>
             </div>
             <span className="text-11 text-danger-primary">
               <>{errors?.identifier?.message}</>

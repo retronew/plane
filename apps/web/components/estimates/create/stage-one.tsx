@@ -3,127 +3,81 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-
-import { Translation } from "@plane/i18n";
-import { InfoOutline } from "@makeplane/propel/icons";
-// plane imports
-import { EEstimateSystem, ESTIMATE_SYSTEMS } from "@plane/constants";
+import { ESTIMATE_SYSTEMS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
 import type { TEstimateSystemKeys } from "@plane/types";
-// helpers
 import { isEstimateSystemEnabled } from "./helper";
-import { convertMinutesToHoursMinutesString } from "@plane/utils";
-// components
-import { UpgradeBadge } from "@/components/workspace/upgrade-badge";
 import { RadioInput } from "../radio-select";
 
-type TEstimateCreateStageOne = {
+type Props = {
   estimateSystem: TEstimateSystemKeys;
   handleEstimateSystem: (value: TEstimateSystemKeys) => void;
-  handleEstimatePoints: (value: string) => void;
+  templateKey: string;
+  handleTemplateChange: (value: string) => void;
+  disabled?: boolean;
 };
 
-export function EstimateCreateStageOne(props: TEstimateCreateStageOne) {
-  const { estimateSystem, handleEstimateSystem, handleEstimatePoints } = props;
-
-  // i18n
+export function EstimateCreateStageOne({
+  estimateSystem,
+  handleEstimateSystem,
+  templateKey,
+  handleTemplateChange,
+  disabled,
+}: Props) {
   const { t } = useTranslation();
-
-  const currentEstimateSystem = ESTIMATE_SYSTEMS[estimateSystem] || undefined;
-
-  if (!currentEstimateSystem) return <></>;
+  const options = Object.entries(ESTIMATE_SYSTEMS[estimateSystem].templates)
+    .filter(([, template]) => !template.hide)
+    .map(([value, template]) => ({
+      value,
+      label: `${t(template.i18n_title)} (${template.values.map((point) => point.value).join(", ")})`,
+      description: t(`project_settings.estimates.create.template_help.${value}`),
+    }));
   return (
-    <div className="space-y-6">
-      <div className="mb-2 gap-2 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
-        <RadioInput
-          options={Object.keys(ESTIMATE_SYSTEMS)
-            .map((system) => {
-              const currentSystem = system as TEstimateSystemKeys;
-              const isEnabled = isEstimateSystemEnabled(currentSystem);
-              if (!isEnabled) return null;
-              return {
-                label: !ESTIMATE_SYSTEMS[currentSystem]?.is_available ? (
-                  <div className="relative flex cursor-no-drop items-center gap-2 text-tertiary">
-                    {t(ESTIMATE_SYSTEMS[currentSystem]?.i18n_name)}
-                    <Tooltip label={t("common.coming_soon")}>
-                      <InfoOutline width={12} height={12} />
-                    </Tooltip>
-                  </div>
-                ) : !isEnabled ? (
-                  <div className="relative flex cursor-no-drop items-center gap-2 text-tertiary">
-                    {t(ESTIMATE_SYSTEMS[currentSystem]?.i18n_name)}
-                    <UpgradeBadge />
-                  </div>
-                ) : (
-                  <div>{t(ESTIMATE_SYSTEMS[currentSystem]?.i18n_name)}</div>
-                ),
-                value: system,
-                disabled: !isEnabled,
-              };
-            })
-            .filter((option) => option !== null)}
-          name="estimate-radio-input"
-          label={t("project_settings.estimates.create.choose_estimate_system")}
-          labelClassName="text-13 font-medium text-secondary mb-1.5"
-          wrapperClassName="relative flex flex-wrap gap-14"
-          fieldClassName="relative flex items-center gap-1.5"
-          buttonClassName="size-4"
-          selected={estimateSystem}
-          onChange={(value) => handleEstimateSystem(value as TEstimateSystemKeys)}
-        />
+    <div className="space-y-4">
+      <RadioInput
+        options={Object.keys(ESTIMATE_SYSTEMS)
+          .filter((key) => isEstimateSystemEnabled(key as TEstimateSystemKeys))
+          .map((key) => ({ label: t(ESTIMATE_SYSTEMS[key as TEstimateSystemKeys].i18n_name), value: key }))}
+        disabled={disabled}
+        name="estimate-radio-input"
+        label={t("project_settings.estimates.create.choose_estimate_system")}
+        labelClassName="text-13 font-medium text-secondary mb-2"
+        wrapperClassName="relative flex flex-wrap gap-x-6 gap-y-2"
+        fieldClassName="relative flex items-center gap-1.5"
+        buttonClassName="size-4"
+        selected={estimateSystem}
+        onChange={(value) => handleEstimateSystem(value as TEstimateSystemKeys)}
+      />
+      <div className="space-y-2">
+        <p id="estimate-template-label" className="text-13 font-medium text-secondary">
+          {t("project_settings.estimates.create.choose_template")}
+        </p>
+        <div className="[&_button]:w-full [&_button]:min-w-0">
+          <Select<string>
+            value={templateKey}
+            disabled={disabled}
+            items={options}
+            onValueChange={(value) => {
+              if (value) handleTemplateChange(value);
+            }}
+          >
+            <SelectTrigger
+              aria-labelledby="estimate-template-label"
+              size="lg"
+              width="fit"
+              placeholder={t("project_settings.estimates.create.choose_template")}
+            />
+            <SelectContent sizing="anchor-fixed">
+              <SelectList>
+                {options.map((option) => (
+                  <SelectItem key={option.value} {...option} />
+                ))}
+              </SelectList>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      {ESTIMATE_SYSTEMS[estimateSystem]?.is_available && !ESTIMATE_SYSTEMS[estimateSystem]?.is_ee && (
-        <>
-          <div className="space-y-1.5">
-            <div className="text-13 font-medium text-secondary">
-              {t("project_settings.estimates.create.start_from_scratch")}
-            </div>
-            <button
-              className="block w-full space-y-1 rounded-md border border-subtle p-3 py-2.5 text-left hover:bg-layer-transparent-hover"
-              onClick={() => handleEstimatePoints("custom")}
-            >
-              <p className="text-14 font-medium">{t("project_settings.estimates.create.custom")}</p>
-              <p className="text-11 text-tertiary">
-                <Translation
-                  translationKey="web.ui.custom_estimate"
-                  components={{ system: <span className="lowercase">{currentEstimateSystem.name}</span> }}
-                />
-              </p>
-            </button>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="text-13 font-medium text-secondary">
-              {t("project_settings.estimates.create.choose_template")}
-            </div>
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {Object.keys(currentEstimateSystem.templates).map((name) =>
-                currentEstimateSystem.templates[name]?.hide ? null : (
-                  <button
-                    key={name}
-                    className="space-y-1 rounded-md border border-subtle p-3 py-2.5 text-left hover:bg-surface-2"
-                    onClick={() => handleEstimatePoints(name)}
-                  >
-                    <p className="text-14 font-medium">{currentEstimateSystem.templates[name]?.title}</p>
-                    <p className="text-11 text-tertiary">
-                      {currentEstimateSystem.templates[name]?.values
-                        ?.map((template) =>
-                          estimateSystem === (EEstimateSystem.TIME as TEstimateSystemKeys)
-                            ? convertMinutesToHoursMinutesString(Number(template.value)).trim()
-                            : template.value
-                        )
-                        ?.join(", ")}
-                    </p>
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
-
-//

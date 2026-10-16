@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -116,7 +117,11 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
                   const field = config.firstOperator ? config.getOperatorConfig(config.firstOperator) : undefined;
                   const content = (
                     <>
-                      {config.icon && <config.icon className="size-4 shrink-0 text-icon-tertiary" />}
+                      {config.icon ? (
+                        <config.icon className="size-4 shrink-0 text-icon-tertiary" />
+                      ) : (
+                        <FilterFieldIcon field={config.id} className="size-4 shrink-0 text-icon-tertiary" />
+                      )}
                       <span className="truncate">{config.label}</span>
                     </>
                   );

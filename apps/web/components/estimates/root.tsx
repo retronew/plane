@@ -14,6 +14,7 @@ import { useTranslation, translate } from "@plane/i18n";
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 import { SettingsHeading } from "@/components/settings/heading";
 // hooks
+import { Button } from "@makeplane/propel/components/button";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useProject } from "@/hooks/store/use-project";
@@ -74,7 +75,7 @@ export const EstimateRoot = observer(function EstimateRoot(props: TEstimateRoot)
               />
               {/* active estimates section */}
               <div className="mt-12 flex flex-col gap-y-4">
-                <SettingsHeading title={t("web.estimates_list")} variant="h6" />
+                <SettingsHeading title={t("project_settings.estimates.current_system")} variant="h6" />
                 <EstimateList
                   estimateIds={[currentActiveEstimateId]}
                   isAdmin={isAdmin}
@@ -91,14 +92,21 @@ export const EstimateRoot = observer(function EstimateRoot(props: TEstimateRoot)
               assetClassName="size-20"
               title={t("settings_empty_state.estimates.title")}
               description={t("settings_empty_state.estimates.description")}
-              actions={[
-                {
-                  label: t("settings_empty_state.estimates.cta_primary"),
-                  onClick: () => setIsEstimateCreateModalOpen(true),
-                },
-              ]}
-              align="start"
-              rootClassName="py-20"
+              customButton={
+                isAdmin ? (
+                  <div className="flex justify-center">
+                    <Button
+                      variant="primary"
+                      size="md"
+                      stretch="auto"
+                      label={t("settings_empty_state.estimates.cta_primary")}
+                      onClick={() => setIsEstimateCreateModalOpen(true)}
+                    />
+                  </div>
+                ) : undefined
+              }
+              align="center"
+              rootClassName="min-h-72 rounded-lg border border-subtle px-6 py-12"
             />
           )}
           {/* archived estimates section */}

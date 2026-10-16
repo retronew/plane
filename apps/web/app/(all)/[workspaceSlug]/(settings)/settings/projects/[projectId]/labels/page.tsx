@@ -5,9 +5,6 @@
  */
 
 import { translate } from "@plane/i18n";
-import { useEffect, useRef } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 // components
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -30,26 +27,11 @@ function LabelsSettingsPage() {
     ? translate("web.runtime.page_title", { name: currentProjectDetails?.name, section: translate("web.title_labels") })
     : undefined;
 
-  const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
-
   // derived values
   const canPerformProjectMemberActions = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.PROJECT
   );
-
-  // Enable Auto Scroll for Labels list
-  useEffect(() => {
-    const element = scrollableContainerRef.current;
-
-    if (!element) return;
-
-    return combine(
-      autoScrollForElements({
-        element,
-      })
-    );
-  }, []);
 
   if (workspaceUserInfo && !canPerformProjectMemberActions) {
     return <NotAuthorizedView section="settings" isProjectView className="h-auto" />;
@@ -58,7 +40,7 @@ function LabelsSettingsPage() {
   return (
     <SettingsContentWrapper header={<LabelsProjectSettingsHeader />}>
       <PageHead title={pageTitle} />
-      <div ref={scrollableContainerRef} className="size-full">
+      <div className="size-full">
         <ProjectSettingsLabelList />
       </div>
     </SettingsContentWrapper>

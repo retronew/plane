@@ -23,12 +23,44 @@ from plane.db.models import (
     IssueActivity,
     UserNotificationPreference,
     ProjectMember,
+    IntakeIssue,
+    WorkspaceMember,
 )
 from django.db.models import Subquery
 
 # Third Party imports
 from celery import shared_task
 from bs4 import BeautifulSoup
+
+
+def intake_notification_recipient(issue_id, project_id, actor_id):
+    """A triage owner receives new intake requests, independently of issue assignment."""
+    intake_issue = (
+        IntakeIssue.objects.select_related("intake", "project").filter(issue_id=issue_id, project_id=project_id).first()
+    )
+    if not intake_issue or not intake_issue.project.intake_view:
+        return None
+    receiver = intake_issue.intake.notification_assignee_id
+    if not receiver or str(receiver) == str(actor_id):
+        return None
+    if not ProjectMember.objects.filter(
+        project_id=project_id, member_id=receiver, is_active=True, role__gte=15, member__is_active=True
+    ).exists():
+        return None
+    if not WorkspaceMember.objects.filter(
+        workspace_id=intake_issue.workspace_id, member_id=receiver, is_active=True, role__gte=15
+    ).exists():
+        return None
+    # Re-delivery of the creation activity must not notify the triage owner twice.
+    if Notification.objects.filter(
+        project_id=project_id,
+        entity_identifier=issue_id,
+        receiver_id=receiver,
+        data__issue_activity__verb="created",
+        data__issue_activity__field="None",
+    ).exists():
+        return None
+    return receiver
 
 
 # =========== Issue Description Html Parsing and notification Functions ======================
@@ -202,6 +234,31 @@ def notifications(
         issue_activities_created = (
             json.loads(issue_activities_created) if issue_activities_created is not None else None
         )
+        intake_receiver = (
+            intake_notification_recipient(issue_id, project_id, actor_id) if type == "issue.activity.created" else None
+        )
+        if intake_receiver:
+            created_activity = (
+                IssueActivity.objects.filter(
+                    issue_id=issue_id, project_id=project_id, verb="created", field__isnull=True
+                )
+                .order_by("created_at")
+                .first()
+            )
+            if created_activity and not any(
+                str(item.get("id")) == str(created_activity.id) for item in (issue_activities_created or [])
+            ):
+                issue_activities_created = [
+                    *(issue_activities_created or []),
+                    {
+                        "id": str(created_activity.id),
+                        "issue_detail": {"id": str(issue_id)},
+                        "verb": "created",
+                        "field": None,
+                        "actor_id": str(created_activity.actor_id),
+                        "comment": created_activity.comment,
+                    },
+                ]
         if type not in [
             "cycle.activity.created",
             "cycle.activity.deleted",
@@ -306,19 +363,31 @@ def notifications(
                 assignee__in=Subquery(project_members),
             ).values_list("assignee", flat=True)
 
+            if intake_receiver and str(intake_receiver) not in new_mentions + comment_mentions:
+                issue_subscribers.append(intake_receiver)
             issue_subscribers = list(set(issue_subscribers) - {uuid.UUID(actor_id)})
 
             for subscriber in issue_subscribers:
                 if issue.created_by_id and issue.created_by_id == subscriber:
                     sender = "in_app:issue_activities:created"
+                elif subscriber == intake_receiver:
+                    sender = "in_app:intake:created"
                 elif subscriber in issue_assignees and issue.created_by_id not in issue_assignees:
                     sender = "in_app:issue_activities:assigned"
                 else:
                     sender = "in_app:issue_activities:subscribed"
 
-                preference = UserNotificationPreference.objects.get(user_id=subscriber)
+                preference = (
+                    UserNotificationPreference.objects.get_or_create(user_id=subscriber)[0]
+                    if subscriber == intake_receiver
+                    else UserNotificationPreference.objects.get(user_id=subscriber)
+                )
 
                 for issue_activity in issue_activities_created:
+                    if subscriber == intake_receiver and not (
+                        issue_activity.get("verb") == "created" and issue_activity.get("field") is None
+                    ):
+                        continue
                     # If activity done in blocking then blocked by email should not go
                     if issue_activity.get("issue_detail").get("id") != issue_id:
                         continue

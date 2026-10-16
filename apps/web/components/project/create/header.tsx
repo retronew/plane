@@ -10,7 +10,7 @@ import { Controller, useFormContext } from "react-hook-form";
 // plane imports
 import { ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { EmojiPicker, Logo } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker, Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { CloseOutline } from "@makeplane/propel/icons";
 // plane types
 import type { IProject } from "@plane/types";
@@ -95,8 +95,11 @@ function ProjectCreateHeader(props: Props) {
               buttonClassName="flex items-center justify-center"
               searchPlaceholder={t("common.search.label")}
               label={
-                <span className="grid h-11 w-11 place-items-center rounded-md border border-subtle bg-layer-2">
-                  <Logo logo={value} size={20} />
+                <span
+                  style={getIconBackgroundStyle(value)}
+                  className="grid h-11 w-11 place-items-center rounded-md border border-subtle bg-layer-2"
+                >
+                  <Logo background={false} logo={value} size={20} />
                 </span>
               }
               onChange={(val: any) => {
@@ -118,6 +121,11 @@ function ProjectCreateHeader(props: Props) {
                 onChange(newLogoProps);
                 handleFormOnChange?.();
                 setIsOpen(false);
+              }}
+              defaultIconBackground={value?.icon?.background_color}
+              onIconBackgroundChange={(background) => {
+                if (value?.in_use === "icon")
+                  onChange({ ...value, icon: { ...value.icon, background_color: background } });
               }}
               defaultIconColor={value?.in_use && value.in_use === "icon" ? value.icon?.color : undefined}
               defaultOpen={value?.in_use && value.in_use === "emoji" ? "emoji" : "icon"}

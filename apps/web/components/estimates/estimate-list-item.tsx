@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
+import { getEstimateDisplayName } from "./create/helper";
 import { observer } from "mobx-react";
 // plane imports
 import { EEstimateSystem } from "@plane/constants";
@@ -26,6 +28,7 @@ type TEstimateListItem = {
 
 export const EstimateListItem = observer(function EstimateListItem(props: TEstimateListItem) {
   const { estimateId } = props;
+  const { t } = useTranslation();
   // store hooks
   const { estimateById } = useProjectEstimates();
   const { estimatePointIds, estimatePointById } = useEstimate(estimateId);
@@ -40,7 +43,7 @@ export const EstimateListItem = observer(function EstimateListItem(props: TEstim
 
   return (
     <SettingsBoxedControlItem
-      title={currentEstimate.name}
+      title={getEstimateDisplayName(currentEstimate, t)}
       description={estimatePointValues
         ?.map((estimatePointValue) => {
           if (currentEstimate.type === EEstimateSystem.TIME) {

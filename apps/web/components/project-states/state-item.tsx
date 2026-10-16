@@ -30,6 +30,19 @@ export const StateItem = observer(function StateItem({
   stateItemClassName,
 }: TStateItem) {
   const [editing, setEditing] = useState(false);
+  const [colorPickerInitiallyOpen, setColorPickerInitiallyOpen] = useState(false);
+  if (editing) {
+    return (
+      <div className={cn(STATE_ROW_DIVIDER_CLASS_NAME, stateItemClassName)}>
+        <StateUpdate
+          colorPickerInitiallyOpen={colorPickerInitiallyOpen}
+          state={state}
+          updateStateCallback={stateOperationsCallbacks.updateState}
+          handleClose={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
   return (
     <SortableItem
       id={state.id}
@@ -39,17 +52,18 @@ export const StateItem = observer(function StateItem({
       className={cn(STATE_ROW_DIVIDER_CLASS_NAME, !editing && STATE_ROW_CLASS_NAME, stateItemClassName)}
     >
       {({ handleRef }) =>
-        editing ? (
-          <StateUpdate
-            state={state}
-            updateStateCallback={stateOperationsCallbacks.updateState}
-            handleClose={() => setEditing(false)}
-          />
-        ) : disabled ? (
+        disabled ? (
           <StateItemTitle
             stateCount={totalStates}
             state={state}
-            setUpdateStateModal={setEditing}
+            setUpdateStateModal={(value) => {
+              setColorPickerInitiallyOpen(false);
+              setEditing(value);
+            }}
+            onEditColor={() => {
+              setColorPickerInitiallyOpen(true);
+              setEditing(true);
+            }}
             dragHandleRef={handleRef}
             disabled
           />
@@ -57,7 +71,14 @@ export const StateItem = observer(function StateItem({
           <StateItemTitle
             stateCount={totalStates}
             state={state}
-            setUpdateStateModal={setEditing}
+            setUpdateStateModal={(value) => {
+              setColorPickerInitiallyOpen(false);
+              setEditing(value);
+            }}
+            onEditColor={() => {
+              setColorPickerInitiallyOpen(true);
+              setEditing(true);
+            }}
             disabled={false}
             dragHandleRef={handleRef}
             stateOperationsCallbacks={{

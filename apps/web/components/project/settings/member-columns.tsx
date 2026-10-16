@@ -16,7 +16,7 @@ import { MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Select } from "@plane/blocks/select";
 import { setToast } from "@plane/blocks/toast";
-import { ROLE, EUserPermissions } from "@plane/constants";
+import { ROLE, ROLE_DETAILS, EUserPermissions } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { EUserProjectRoles, IUser, IWorkspaceMember, TProjectMembership } from "@plane/types";
 import { getFileURL } from "@plane/utils";
@@ -76,7 +76,9 @@ export function NameColumn(props: NameProps) {
               </span>
             </Link>
           )}
-          {first_name} {last_name}
+          <Link href={`/${workspaceSlug}/profile/${id}`} className="truncate hover:underline">
+            {[first_name, last_name].filter(Boolean).join(" ") || display_name || email}
+          </Link>
         </div>
         {(isAdmin || id === currentUser?.id) && (
           <Menu>
@@ -125,7 +127,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
     formState: { errors },
   } = useForm();
   // derived values
-  const roleLabel = ROLE[rowData.original_role ?? EUserPermissions.GUEST];
+  const roleLabel = t(ROLE_DETAILS[rowData.original_role ?? EUserPermissions.GUEST].i18n_title);
   const isCurrentUser = currentUser?.id === rowData.member.id;
   const isRowDataWorkspaceAdmin = [EUserPermissions.ADMIN].includes(
     Number(getWorkspaceMemberDetails(rowData.member.id)?.role ?? EUserPermissions.GUEST)
@@ -167,7 +169,7 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
           rules={{ required: t("web.role_is_required") }}
           render={() => {
             const roleOptions: TRoleOption[] = Object.entries(checkCurrentOptionWorkspaceRole(rowData.member.id)).map(
-              ([key, label]) => ({ key, label })
+              ([key]) => ({ key, label: t(ROLE_DETAILS[Number(key) as keyof typeof ROLE_DETAILS].i18n_title) })
             );
             return (
               <div className="w-32">

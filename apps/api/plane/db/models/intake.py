@@ -13,6 +13,9 @@ class Intake(ProjectBaseModel):
     name = models.CharField(max_length=255)
     description = models.TextField(verbose_name="Intake Description", blank=True)
     is_default = models.BooleanField(default=False)
+    notification_assignee = models.ForeignKey(
+        "db.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="intake_notification_assignments"
+    )
     view_props = models.JSONField(default=dict)
     logo_props = models.JSONField(default=dict)
 

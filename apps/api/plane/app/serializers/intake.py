@@ -11,12 +11,39 @@ from .issue import IssueIntakeSerializer, LabelLiteSerializer, IssueDetailSerial
 from .project import ProjectLiteSerializer
 from .state import StateLiteSerializer
 from .user import UserLiteSerializer
-from plane.db.models import Intake, IntakeIssue, Issue, StateGroup, State
+from plane.db.models import Intake, IntakeIssue, Issue, StateGroup, State, ProjectMember, WorkspaceMember, Project
 
 
 class IntakeSerializer(BaseSerializer):
     project_detail = ProjectLiteSerializer(source="project", read_only=True)
     pending_issue_count = serializers.IntegerField(read_only=True)
+
+    def validate_notification_assignee(self, user):
+        request = self.context.get("request")
+        project_id = self.instance.project_id if self.instance else self.context["view"].kwargs["project_id"]
+        workspace_id = Project.objects.values_list("workspace_id", flat=True).get(pk=project_id)
+        if request and not (
+            ProjectMember.objects.filter(project_id=project_id, member=request.user, is_active=True, role=20).exists()
+            or WorkspaceMember.objects.filter(
+                workspace_id=workspace_id, member=request.user, is_active=True, role=20
+            ).exists()
+        ):
+            raise serializers.ValidationError("Only administrators can change the notification owner.")
+        if user is None:
+            return user
+        if (
+            not ProjectMember.objects.filter(
+                project_id=project_id, member=user, member__is_active=True, is_active=True, role__gte=15
+            ).exists()
+            or not WorkspaceMember.objects.filter(
+                workspace_id=workspace_id,
+                member=user,
+                is_active=True,
+                role__gte=15,
+            ).exists()
+        ):
+            raise serializers.ValidationError("Choose an active project member or administrator.")
+        return user
 
     class Meta:
         model = Intake

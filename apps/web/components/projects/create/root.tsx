@@ -157,7 +157,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col p-3">
+        <div className="flex min-h-0 flex-1 flex-col p-2">
           <ProjectCreateHeader
             handleClose={handleClose}
             onCoverUploadingChange={setIsCoverUploading}
@@ -185,8 +185,8 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
               />
             }
           />
-          <div className="min-h-0 overflow-y-auto px-3 pt-9 pb-5">
-            <div className="space-y-6">
+          <div className="min-h-0 overflow-y-auto px-3 pt-8 pb-4">
+            <div className="space-y-5">
               <ProjectCommonAttributes
                 setValue={setValue}
                 isMobile={isMobile}

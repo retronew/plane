@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { getEstimateDisplayName } from "../create/helper";
 import { Translation } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
@@ -94,7 +95,13 @@ export const DeleteEstimateModal = observer(function DeleteEstimateModal(props: 
             <div className="text-14 text-secondary">
               <Translation
                 translationKey="web.ui.delete_estimate_confirm"
-                components={{ name: <span className="font-bold text-primary">{estimate?.name}</span> }}
+                components={{
+                  name: (
+                    <span className="font-bold text-primary">
+                      {estimate ? getEstimateDisplayName(estimate, translate) : ""}
+                    </span>
+                  ),
+                }}
               />
             </div>
           </DialogBody>
