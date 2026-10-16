@@ -58,14 +58,6 @@ export const GROUP_CHOICES = {
   },
 };
 
-export const PROJECT_AUTOMATION_MONTHS = [
-  { i18n_label: "workspace_projects.common.months_count", value: 1 },
-  { i18n_label: "workspace_projects.common.months_count", value: 3 },
-  { i18n_label: "workspace_projects.common.months_count", value: 6 },
-  { i18n_label: "workspace_projects.common.months_count", value: 9 },
-  { i18n_label: "workspace_projects.common.months_count", value: 12 },
-];
-
 export const PROJECT_ORDER_BY_OPTIONS: {
   key: TProjectOrderByOptions;
   i18n_label: string;

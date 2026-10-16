@@ -36,6 +36,10 @@ app.conf.beat_schedule = {
         "task": "plane.bgtasks.email_notification_task.stack_email_notification",
         "schedule": crontab(minute="*/5"),  # Every 5 minutes
     },
+    "send-work-item-due-reminders-hourly": {
+        "task": "plane.bgtasks.issue_reminder_task.send_due_reminders",
+        "schedule": crontab(minute=0),
+    },
     # Occurs once every day
     "check-every-day-to-delete-hard-delete": {
         "task": "plane.bgtasks.deletion_task.hard_delete",

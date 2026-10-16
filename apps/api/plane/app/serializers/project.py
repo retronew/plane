@@ -82,6 +82,13 @@ class ProjectSerializer(BaseSerializer):
 
         return identifier
 
+    def validate_default_state(self, value):
+        if value is not None and (
+            self.instance is None or value.project_id != self.instance.id or value.group != "cancelled"
+        ):
+            raise serializers.ValidationError("Choose a cancelled state from this project.")
+        return value
+
     def validate(self, data):
         if self.instance and "template_configuration" in data:
             raise serializers.ValidationError({"template_configuration": "Only supported when creating a project."})

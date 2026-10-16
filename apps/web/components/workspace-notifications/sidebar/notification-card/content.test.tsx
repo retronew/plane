@@ -42,6 +42,24 @@ describe("notification sentence localization", () => {
     );
     expect(container.textContent?.replace(/\s/g, "")).toBe(expected);
   });
+  it("describes new intake requests without claiming work item assignment", () => {
+    const item = notification("None", "created", "");
+    item.sender = "in_app:intake:created";
+    const { container } = render(
+      <NotificationContent notification={item} workspaceId="w" workspaceSlug="workspace" projectId="p" />
+    );
+    expect(container.textContent?.replace(/\s/g, "")).toBe("Alice提交了新的需求，等待您处理。");
+  });
+  it("shows system due reminders without inventing an actor", () => {
+    const item = notification("due_reminder", "reminded", "2026-10-19");
+    item.sender = "in_app:issue_reminder:due";
+    const { container } = render(
+      <NotificationContent notification={item} workspaceId="w" workspaceSlug="workspace" projectId="p" />
+    );
+    expect(container.textContent).toContain("工作项将于");
+    expect(container.textContent).toContain("到期");
+    expect(container.textContent).not.toContain("Alice");
+  });
   it("preserves rich comments and updates language", async () => {
     const { container } = render(
       <NotificationContent

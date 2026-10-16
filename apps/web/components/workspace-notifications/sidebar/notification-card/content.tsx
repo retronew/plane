@@ -72,6 +72,11 @@ export const BASE_NOTIFICATION_CONTENT_MAP: TNotificationContentMap = {
   }),
   archived_at: ({ newValue }) => ({ translationKey: newValue === "restore" ? "restored" : "archived" }),
   None: () => ({ translationKey: "assigned_to_you" }),
+  due_reminder: ({ newValue }) => ({
+    translationKey: "due_reminder",
+    value: newValue ? renderFormattedDate(newValue) : undefined,
+  }),
+  intake_created: () => ({ translationKey: "intake_request_created" }),
   attachment: ({ verb }) => ({ translationKey: verb === "deleted" ? "attachment_removed" : "attachment_added" }),
   description: ({ newValue }) => ({ translationKey: "description", value: stripAndTruncateHTML(newValue || "", 55) }),
   estimate_time: ({ newValue, oldValue }) => ({
@@ -124,7 +129,8 @@ export function NotificationContent({
   renderCommentBox?: boolean;
 }) {
   const { data, triggered_by_details: triggeredBy } = notification;
-  const notificationField = data?.issue_activity.field;
+  const notificationField =
+    notification.sender === "in_app:intake:created" ? "intake_created" : data?.issue_activity.field;
   const newValue = data?.issue_activity.new_value;
   const oldValue = data?.issue_activity.old_value;
   const verb = data?.issue_activity.verb;

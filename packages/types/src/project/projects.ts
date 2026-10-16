@@ -52,6 +52,8 @@ export interface IProject extends IPartialProject {
   labels?: string[];
   archive_in?: number;
   close_in?: number;
+  remind_in?: number;
+  remind_email_enabled?: boolean;
   // only for uploading the cover image
   cover_image_asset?: null;
   cover_image?: string;

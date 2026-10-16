@@ -118,8 +118,18 @@ class Project(BaseModel):
         related_name="project_cover_image",
     )
     estimate = models.ForeignKey("db.Estimate", on_delete=models.SET_NULL, related_name="projects", null=True)
-    archive_in = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(12)])
-    close_in = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(12)])
+    archive_in = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(365)],
+        help_text="Inactivity in days; 0 disables automatic archiving.",
+    )
+    close_in = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(365)],
+        help_text="Inactivity in days; 0 disables automatic closing.",
+    )
+    remind_in = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(7)])
+    remind_email_enabled = models.BooleanField(default=True)
     logo_props = models.JSONField(default=dict)
     default_state = models.ForeignKey("db.State", on_delete=models.SET_NULL, null=True, related_name="default_state")
     archived_at = models.DateTimeField(null=True)

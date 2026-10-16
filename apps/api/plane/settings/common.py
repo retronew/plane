@@ -341,6 +341,7 @@ CELERY_IMPORTS = (
     "plane.bgtasks.cycle_snapshot_task",
     # scheduled tasks
     "plane.bgtasks.issue_automation_task",
+    "plane.bgtasks.issue_reminder_task",
     "plane.bgtasks.exporter_expired_task",
     "plane.bgtasks.file_asset_task",
     "plane.bgtasks.email_notification_task",

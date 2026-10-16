@@ -1,3 +1,4 @@
+import { BellRing } from "lucide-react";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -87,6 +88,7 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
 
       <div className="relative flex w-full gap-2">
         <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-layer-1">
+          {notification.sender === "in_app:issue_reminder:due" && <BellRing className="size-5 text-secondary" />}
           {notificationTriggeredBy && (
             <Avatar
               alt={notificationTriggeredBy.display_name || notificationTriggeredBy?.first_name}

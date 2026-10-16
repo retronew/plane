@@ -147,3 +147,19 @@ class EmailNotificationLog(BaseModel):
         verbose_name_plural = "Email Notification Logs"
         db_table = "email_notification_logs"
         ordering = ("-created_at",)
+
+
+class IssueDueReminder(BaseModel):
+    """Durable delivery key and email outbox for an assignee's due-date reminder."""
+
+    issue = models.ForeignKey("db.Issue", on_delete=models.CASCADE, related_name="due_reminders")
+    receiver = models.ForeignKey("db.User", on_delete=models.CASCADE, related_name="due_reminders")
+    target_date = models.DateField()
+    email_queued_at = models.DateTimeField(null=True)
+    email_sent_at = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = "issue_due_reminders"
+        constraints = [
+            models.UniqueConstraint(fields=["issue", "receiver", "target_date"], name="unique_issue_due_reminder")
+        ]

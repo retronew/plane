@@ -34,12 +34,12 @@ def archive_old_issues():
             project_id = project.id
             archive_in = project.archive_in
 
-            # Get all the issues whose updated_at in less that the archive_in month
+            # Get all the issues whose updated_at in less that the archive_in days
             issues = Issue.issue_objects.filter(
                 Q(
                     project=project_id,
                     archived_at__isnull=True,
-                    updated_at__lte=(timezone.now() - timedelta(days=archive_in * 30)),
+                    updated_at__lte=(timezone.now() - timedelta(days=archive_in)),
                     state__group__in=["completed", "cancelled"],
                 ),
                 Q(issue_cycle__isnull=True)
@@ -95,12 +95,12 @@ def close_old_issues():
             project_id = project.id
             close_in = project.close_in
 
-            # Get all the issues whose updated_at in less that the close_in month
+            # Get all the issues whose updated_at in less that the close_in days
             issues = Issue.issue_objects.filter(
                 Q(
                     project=project_id,
                     archived_at__isnull=True,
-                    updated_at__lte=(timezone.now() - timedelta(days=close_in * 30)),
+                    updated_at__lte=(timezone.now() - timedelta(days=close_in)),
                     state__group__in=["backlog", "unstarted", "started"],
                 ),
                 Q(issue_cycle__isnull=True)
@@ -116,11 +116,11 @@ def close_old_issues():
 
             # Check if Issues
             if issues:
-                if project.default_state is None:
-                    close_state = State.objects.filter(group="cancelled").first()
-                else:
-                    close_state = project.default_state
-
+                close_state = project.default_state
+                if close_state is None or close_state.project_id != project.id or close_state.group != "cancelled":
+                    close_state = State.objects.filter(project_id=project_id, group="cancelled").first()
+                if close_state is None:
+                    continue
                 issues_to_update = []
                 for issue in issues:
                     issue.state = close_state
