@@ -36,6 +36,8 @@
     "days_remaining": "{count, plural, one {# day left} other {# days left}}",
     "view_cycle": "View cycle",
     "chart_type": "Chart type",
+    "burndown_description": "Tracks remaining work over time. A lower line means less work remains; compare it with the ideal line to assess progress.",
+    "burnup_description": "Tracks completed work over time. A higher line means more work is complete; use the scope line to see scope changes.",
     "breakdown": "Breakdown of this cycle’s work items",
     "pending": "Pending",
     "completed": "Done",

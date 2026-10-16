@@ -69,6 +69,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     getOptionIcon,
     getOptionTrailing,
     getOptionDescription,
+    getOptionTooltip,
     renderOption,
     renderChip,
     filterOption,
@@ -570,6 +571,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
             getOptionIcon={getOptionIcon}
             getOptionTrailing={getOptionTrailing}
             getOptionDescription={getOptionDescription}
+            getOptionTooltip={getOptionTooltip}
             renderOption={renderOption}
           />
         )}

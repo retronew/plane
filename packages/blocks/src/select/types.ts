@@ -67,6 +67,8 @@ type SelectBaseProps<T> = {
   getOptionTrailing?: (option: T) => ReactElement | undefined;
   /** A second, muted line under the label. Rows carrying one grow past the standard single-line height. */
   getOptionDescription?: (option: T) => ReactNode;
+  /** Hover explanation for a standard option row; also exposed to assistive technology. */
+  getOptionTooltip?: (option: T) => string | undefined;
   /**
    * @deprecated Draws the whole row by hand, bypassing the standard row and its selection mark —
    * so the caller has to draw its own. Use {@link getOptionIcon}, {@link getOptionTrailing} and

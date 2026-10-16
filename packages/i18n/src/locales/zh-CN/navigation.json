@@ -36,6 +36,8 @@
     "days_remaining": "剩余 {count} 天",
     "view_cycle": "查看周期",
     "chart_type": "图表类型",
+    "burndown_description": "展示待完成工作项随时间的变化。线条越低，剩余工作越少；可与理想线比较进度。",
+    "burnup_description": "展示已完成工作项随时间的变化。线条越高，完成工作越多；结合有效范围线查看范围变化。",
     "breakdown": "本周期工作项明细",
     "pending": "待完成",
     "completed": "已完成",

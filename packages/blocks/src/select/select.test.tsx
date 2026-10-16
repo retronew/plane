@@ -1310,6 +1310,26 @@ describe("Select on Propel combobox", () => {
     expect(onChange).toHaveBeenCalledWith("id-1");
   });
 
+  it("explains an option on hover without replacing its label or selection behavior", async () => {
+    const user = userEvent.setup();
+    const explanation = "Tracks remaining work over time.";
+    const { onChange } = renderSelect({
+      getValues: () => options.slice(0, 2),
+      getOptionTooltip: () => explanation,
+    });
+    await openSelect(user);
+    const option = popup().getByRole("option", { name: "Option 1" });
+    expect(option.getAttribute("aria-description")).toBe(explanation);
+    await user.hover(option);
+    expect((await screen.findByRole("tooltip")).textContent).toContain(explanation);
+    await user.click(option);
+    expect(onChange).toHaveBeenCalledWith("id-1");
+    await openSelect(user);
+    await user.type(search(), "Option 0");
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenLastCalledWith("id-0");
+  });
+
   it("fits virtualized long labels beyond the default cap without shrinking when searching", async () => {
     const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       measureText: (text: string) => ({ width: text.length * 10 }),

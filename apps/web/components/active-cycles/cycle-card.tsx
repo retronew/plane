@@ -24,8 +24,8 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
   const status = difference > 0 ? "leading" : difference < 0 ? "lagging" : "on_track";
   const progress = getProgress(cycle.completed_issues, scope);
   const chartOptions = [
-    { value: "burndown", label: t("web.burn_down") },
-    { value: "burnup", label: t("web.burn_up") },
+    { value: "burndown", label: t("web.burn_down"), description: t("workspace_cycles.burndown_description") },
+    { value: "burnup", label: t("web.burn_up"), description: t("workspace_cycles.burnup_description") },
   ];
   const stats: { key: CycleChartSeries; label: string; count: number; badge?: boolean }[] = [
     {
@@ -93,6 +93,7 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
               }}
               getOptionValue={(option) => option.value}
               getOptionLabel={(option) => option.label}
+              getOptionTooltip={(option) => option.description}
               showSearch={false}
               contentMinWidth={160}
               pinSelected={false}

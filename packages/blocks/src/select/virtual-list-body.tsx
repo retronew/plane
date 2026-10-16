@@ -9,6 +9,7 @@ import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState 
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { Check } from "lucide-react";
 import { ComboboxItem, ComboboxItemIndicator, ComboboxList } from "@makeplane/propel/components/combobox";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import {
   ComboboxCheckboxItemIndicator,
   ComboboxItem as ComboboxItemRow,
@@ -61,6 +62,7 @@ type SelectOptionRowProps = {
   icon?: ReactNode;
   trailing?: ReactElement;
   description?: ReactNode;
+  tooltip?: string;
   href?: string;
 };
 
@@ -73,12 +75,27 @@ type SelectOptionRowProps = {
  * `elements` parts, in the same order, for the same mark.
  */
 function SelectOptionRow(props: SelectOptionRowProps) {
-  const { value, index, setSize, disabled, multiple, label, icon, trailing, description, href } = props;
-  const itemProps = { value, index, disabled, "aria-setsize": setSize, "aria-posinset": index + 1 };
+  const { value, index, setSize, disabled, multiple, label, icon, trailing, description, tooltip, href } = props;
+  const itemProps = {
+    value,
+    index,
+    disabled,
+    "aria-setsize": setSize,
+    "aria-posinset": index + 1,
+    "aria-description": tooltip,
+  };
   const rowStyle = description === undefined ? undefined : TWO_LINE_ROW_STYLE;
+  const withTooltip = (row: ReactElement) =>
+    tooltip ? (
+      <Tooltip label={tooltip} side="right" layout="stacked">
+        {row}
+      </Tooltip>
+    ) : (
+      row
+    );
 
   if (description === undefined && href === undefined) {
-    return (
+    return withTooltip(
       <ComboboxItem
         {...itemProps}
         variant="neutral"
@@ -90,7 +107,7 @@ function SelectOptionRow(props: SelectOptionRowProps) {
     );
   }
 
-  return (
+  return withTooltip(
     <BaseCombobox.Item
       {...itemProps}
       // An `href` swaps only the tag under the styled row, so a navigable row is one
@@ -153,6 +170,7 @@ type VirtualListBodyProps<T> = {
   getOptionIcon?: (option: T) => ReactNode;
   getOptionTrailing?: (option: T) => ReactElement | undefined;
   getOptionDescription?: (option: T) => ReactNode;
+  getOptionTooltip?: (option: T) => string | undefined;
   /** Deprecated hand-drawn row; when set it replaces the standard row wholesale. */
   renderOption?: (option: T) => ReactNode;
   /**
@@ -189,6 +207,7 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
     getOptionIcon,
     getOptionTrailing,
     getOptionDescription,
+    getOptionTooltip,
     renderOption,
     virtualizerRef,
   } = props;
@@ -344,6 +363,7 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
                   icon={getOptionIcon?.(item)}
                   trailing={getOptionTrailing?.(item)}
                   description={getOptionDescription?.(item)}
+                  tooltip={getOptionTooltip?.(item)}
                   href={href}
                 />
               </div>
