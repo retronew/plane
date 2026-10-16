@@ -40,6 +40,14 @@ it("keeps all priority glyphs and selection actions in the shared project and ar
       </MenuContent>
     </Menu>
   );
+  const topLevelItems = await Promise.all(
+    ["可见性", "优先级", "项目标签", "负责人", "成员", "创建日期"].map((name) =>
+      screen.findByRole("menuitem", { name })
+    )
+  );
+  for (const item of topLevelItems) {
+    expect(item.querySelector("svg.lucide")).not.toBeNull();
+  }
   fireEvent.click(await screen.findByRole("menuitem", { name: "优先级" }));
   const items = await Promise.all(
     ["紧急", "高", "中", "低", "无"].map((name) => screen.findByRole("menuitemcheckbox", { name }))

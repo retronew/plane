@@ -60,6 +60,7 @@ export const FilterAssignees = observer(function FilterAssignees(props: Props) {
   return (
     <>
       <FilterHeader
+        field="assignee"
         title={translate("web.runtime.filter_assignee", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

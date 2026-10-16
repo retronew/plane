@@ -94,11 +94,11 @@
     },
     "intake": {
       "step_zero": {
-        "title": "用 Intake 简化请求处理",
+        "title": "用需求收集简化请求处理",
         "description": "Plane 独有的功能，允许访客为缺陷、需求或工单创建工作项。"
       },
       "step_one": {
-        "title": "未处理和已处理的 Intake 请求",
+        "title": "未处理和已处理的需求收集请求",
         "description": "待处理的请求会留在“未处理”标签页中，管理员或成员处理后会移至“已处理”。"
       },
       "step_two": {

@@ -1,3 +1,5 @@
+import { useTranslation } from "@plane/i18n";
+import { matchesIconSearch } from "../search";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -15,8 +17,9 @@ type MaterialIconListProps = {
 
 export function MaterialIconList(props: MaterialIconListProps) {
   const { query, onChange, activeColor } = props;
+  const { t } = useTranslation();
 
-  const filteredArray = MATERIAL_ICONS_LIST.filter((icon) => icon.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredArray = MATERIAL_ICONS_LIST.filter((icon) => matchesIconSearch(icon.name, query));
 
   const isMaterialSymbolsFontLoaded = useFontFaceObserver([
     {
@@ -29,12 +32,18 @@ export function MaterialIconList(props: MaterialIconListProps) {
 
   return (
     <>
+      {filteredArray.length === 0 && (
+        <output className="col-span-full py-8 text-center text-13 text-tertiary">{t("web.no_results_found")}</output>
+      )}
       {filteredArray.map((icon) => (
         <button
           key={icon.name}
           type="button"
+          data-icon-picker-choice=""
+          style={{ color: activeColor }}
           aria-label={icon.name}
-          className="grid size-8 place-items-center rounded-sm text-body-md-regular select-none hover:bg-layer-1"
+          title={icon.name.replace(/_/g, " ")}
+          className="grid size-7 place-items-center rounded-md text-body-md-regular outline-none select-none hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong"
           onClick={() => {
             onChange({
               name: icon.name,
@@ -43,7 +52,7 @@ export function MaterialIconList(props: MaterialIconListProps) {
           }}
         >
           {isMaterialSymbolsFontLoaded ? (
-            <span style={{ color: activeColor }} className="material-symbols-rounded text-h4-regular! leading-5!">
+            <span style={{ color: activeColor }} className="material-symbols-rounded text-18! leading-none!">
               {icon.name}
             </span>
           ) : (

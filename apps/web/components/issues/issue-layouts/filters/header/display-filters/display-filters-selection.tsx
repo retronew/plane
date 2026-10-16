@@ -32,6 +32,7 @@ import type {
   TIssueOrderByOptions,
 } from "@plane/types";
 import { SortMenuItems } from "@/components/common/sort-menu";
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import styles from "./display-filters-selection.module.css";
 
 type Props = {
@@ -48,12 +49,14 @@ type Props = {
 
 function DisplayChoiceMenu<T extends string | null>({
   label,
+  field,
   options,
   value,
   onChange,
   disabled = false,
 }: {
   label: string;
+  field: string;
   options: { key: T; title: string }[];
   value: T;
   onChange: (value: T) => void;
@@ -65,6 +68,7 @@ function DisplayChoiceMenu<T extends string | null>({
     <MenuSubmenu>
       <MenuSubmenuTrigger
         label={label}
+        icon={<FilterFieldIcon field={field} />}
         disabled={disabled}
         trailing={<span className="max-w-32 truncate text-secondary">{selected?.title}</span>}
       />
@@ -82,6 +86,7 @@ function DisplayChoiceMenu<T extends string | null>({
                 key={encode(option.key)}
                 value={encode(option.key)}
                 label={option.title}
+                icon={<FilterFieldIcon field={option.key ?? "group_by"} />}
                 closeOnClick={false}
               />
             ))}
@@ -185,6 +190,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
       )}
       {groups.length > 0 && (
         <DisplayChoiceMenu
+          field="group_by"
           label={t("common.group_by")}
           value={displayFilters?.group_by ?? null}
           options={groups.map((option) => ({ key: option.key, title: t(option.titleTranslationKey) }))}
@@ -193,6 +199,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
       )}
       {subgroups.length > 0 && (
         <DisplayChoiceMenu
+          field="sub_group_by"
           label={t("web.sub_group_by")}
           value={displayFilters?.sub_group_by ?? null}
           options={subgroups.map((option) => ({ key: option.key, title: t(option.titleTranslationKey) }))}
@@ -228,6 +235,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
           {extras.includes("sub_issue") && (
             <MenuCheckboxItem
               label={t("issue.display.extra.show_sub_issues")}
+              icon={<FilterFieldIcon field="sub_issue" />}
               checked={displayFilters?.sub_issue ?? true}
               closeOnClick={false}
               onCheckedChange={(sub_issue) => handleDisplayFiltersUpdate({ sub_issue })}
@@ -236,6 +244,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
           {extras.includes("show_empty_groups") && (
             <MenuCheckboxItem
               label={t("issue.display.extra.show_empty_groups")}
+              icon={<FilterFieldIcon field="show_empty_groups" />}
               checked={displayFilters?.show_empty_groups ?? true}
               closeOnClick={false}
               onCheckedChange={(show_empty_groups) => handleDisplayFiltersUpdate({ show_empty_groups })}

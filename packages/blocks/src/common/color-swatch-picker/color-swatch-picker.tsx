@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { HexColorPicker } from "react-colorful";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -21,6 +22,7 @@ export type ColorSwatchPickerLabels = {
 };
 
 export type ColorSwatchPickerProps = {
+  continuous?: boolean;
   /** The current colour as a hex string (with or without the leading `#`). */
   value?: string;
   /** Optional layout width for wider settings palettes. */
@@ -41,13 +43,24 @@ export type ColorSwatchPickerProps = {
  * Propel `Popover` (or inline in a form) and let that own the surface.
  */
 export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
-  const { value = "", colors = DEFAULT_SWATCH_COLORS, onChange, labels, className } = props;
+  const { value = "", colors = DEFAULT_SWATCH_COLORS, onChange, labels, className, continuous = false } = props;
   // plane hooks
   const { t } = useTranslation();
   const swatchesLabel = labels?.swatches ?? t("aria_labels.color_picker.swatches");
   const hexLabel = labels?.hexInput ?? t("aria_labels.color_picker.hex_input");
   // ids
   const hexInputId = useId();
+  const [customOpen, setCustomOpen] = useState(false);
+  const gradientRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!continuous) return;
+    gradientRef.current
+      ?.querySelector(".react-colorful__saturation [role=slider]")
+      ?.setAttribute("aria-label", t("web.icon_color.saturation"));
+    gradientRef.current
+      ?.querySelector(".react-colorful__hue [role=slider]")
+      ?.setAttribute("aria-label", t("web.icon_color.hue"));
+  }, [continuous, t]);
   // ref
   const isFieldFocused = useRef(false);
   // derived values
@@ -86,7 +99,7 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
 
   return (
     <div className={cn("flex w-56 max-w-full flex-col gap-3", className)}>
-      <fieldset aria-label={swatchesLabel} className="flex flex-wrap gap-2">
+      <fieldset aria-label={swatchesLabel} className={cn("flex gap-2", continuous ? "flex-nowrap" : "flex-wrap")}>
         {colors.map((color) => {
           const hex = normalizeHex(color).toLowerCase();
           const isSelected = hex === selected;
@@ -98,7 +111,8 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
               aria-pressed={isSelected}
               onClick={() => onChange(hex)}
               className={cn(
-                "size-7 shrink-0 cursor-pointer rounded-md transition-transform outline-none",
+                "shrink-0 cursor-pointer rounded-md transition-transform outline-none",
+                continuous ? "size-5" : "size-7",
                 "hover:scale-110 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:ring-offset-1",
                 isSelected && "ring-2 ring-accent-strong ring-offset-1"
               )}
@@ -106,15 +120,41 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
             />
           );
         })}
+        {continuous && (
+          <button
+            type="button"
+            aria-label={t(customOpen ? "web.icon_color.presets" : "web.icon_color.custom")}
+            aria-pressed={customOpen}
+            onClick={() => setCustomOpen(!customOpen)}
+            className={cn(
+              "ml-auto size-5 shrink-0 rounded-md outline-none conical-gradient focus-visible:ring-2 focus-visible:ring-accent-strong",
+              customOpen && "ring-2 ring-accent-strong ring-offset-1"
+            )}
+          />
+        )}
       </fieldset>
+      {continuous && (
+        <div
+          data-color-mode-drawer=""
+          data-open={customOpen ? "" : undefined}
+          aria-hidden={!customOpen}
+          inert={!customOpen}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div data-continuous-color-picker="" ref={gradientRef}>
+              <HexColorPicker color={selected || "#60646c"} onChange={onChange} />
+            </div>
+          </div>
+        </div>
+      )}
       {/* propel: the bare Input is transparent; InputGroup draws the box around the "#" prefix and the field. */}
-      <InputGroup size="lg">
+      <InputGroup size={continuous ? "md" : "lg"}>
         <span aria-hidden="true" className="ps-2 text-body-sm-regular text-tertiary select-none">
           #
         </span>
         <Input
           id={hexInputId}
-          size="lg"
+          size={continuous ? "md" : "lg"}
           type="text"
           inputMode="text"
           autoComplete="off"

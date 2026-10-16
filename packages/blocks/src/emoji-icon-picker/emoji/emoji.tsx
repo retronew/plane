@@ -4,10 +4,9 @@
  * See the LICENSE file for details.
  */
 
-import { InputGroup } from "@makeplane/propel/components/input";
 import { SearchOutline } from "@makeplane/propel/icons";
-import { getEmojiLocale } from "./locale";
-import { useEffect, useRef } from "react";
+import { getEmojiCategoryLabel, getEmojiLocale } from "./locale";
+import { useEffect, useRef, useState } from "react";
 import { EmojiPicker } from "frimousse";
 import type { EmojiPickerListCategoryHeaderProps, EmojiPickerListRowProps, EmojiPickerListEmojiProps } from "frimousse";
 import { useTranslation } from "@plane/i18n";
@@ -22,19 +21,30 @@ type EmojiRootProps = {
 };
 
 const emojiListComponents = {
-  CategoryHeader: ({ category, ...props }: EmojiPickerListCategoryHeaderProps) => (
-    // frimousse renders headers sticky inside the scrolling viewport, so they need an
-    // opaque background or rows scroll visibly underneath the label text.
+  CategoryHeader: function CategoryHeader({ category, ...props }: EmojiPickerListCategoryHeaderProps) {
+    const { currentLocale } = useTranslation();
+    return (
+      <div
+        {...props}
+        data-slot="emoji-picker-list-category-header"
+        className="bg-layer-2 px-3 py-1.5 text-caption-sm-medium text-tertiary"
+      >
+        {getEmojiCategoryLabel(category.label, currentLocale)}
+      </div>
+    );
+  },
+  Row: ({ children, style, ...props }: EmojiPickerListRowProps) => (
     <div
-      data-slot="emoji-picker-list-category-header"
-      className="bg-layer-2 px-3 pb-1.5 text-caption-sm-medium text-tertiary"
+      data-slot="emoji-picker-list-row"
+      className="scroll-my-1.5 px-1.5"
       {...props}
+      style={{
+        ...style,
+        display: "grid",
+        gridTemplateColumns: "repeat(var(--frimousse-list-columns), minmax(0, 1fr))",
+        justifyItems: "center",
+      }}
     >
-      {category.label}
-    </div>
-  ),
-  Row: ({ children, ...props }: EmojiPickerListRowProps) => (
-    <div data-slot="emoji-picker-list-row" className="scroll-my-1.5 px-1.5" {...props}>
       {children}
     </div>
   ),
@@ -43,7 +53,7 @@ const emojiListComponents = {
       type="button"
       aria-label={emoji?.label ?? emoji?.emoji}
       data-slot="emoji-picker-list-emoji"
-      className="data-active:bg-accent flex size-8 items-center justify-center rounded-md text-20"
+      className="data-active:bg-accent flex size-7 items-center justify-center rounded-md text-20"
       {...props}
     >
       {emoji.emoji}
@@ -55,6 +65,15 @@ export function EmojiRoot(props: EmojiRootProps) {
   const { onChange, searchPlaceholder, searchDisabled = false, searchQuery, onSearchQueryChange } = props;
   const { t, currentLocale } = useTranslation();
   const searchLabel = searchPlaceholder ?? t("common.search.label");
+  const [columns, setColumns] = useState(14);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const observer = new ResizeObserver(() => setColumns(Math.max(1, Math.floor((root.clientWidth - 16) / 28))));
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (searchDisabled) return;
@@ -73,34 +92,37 @@ export function EmojiRoot(props: EmojiRootProps) {
   return (
     <EmojiPicker.Root
       locale={getEmojiLocale(currentLocale)}
-      columns={9}
+      columns={columns}
+      ref={rootRef}
       data-slot="emoji-picker"
       className="isolate flex h-full w-full flex-col rounded-md border-none"
       onEmojiSelect={(val) => onChange(val.emoji)}
     >
-      <div className="z-10 flex shrink-0 items-center gap-2 px-3 py-2">
-        <div ref={searchWrapperRef} data-slot="emoji-picker-search-wrapper" className="min-w-0 flex-1">
-          <InputGroup size="lg">
-            <SearchOutline className="size-3.5 shrink-0 text-placeholder" />
-            <EmojiPicker.Search
-              placeholder={searchLabel}
-              aria-label={searchLabel}
-              disabled={searchDisabled}
-              value={searchQuery ?? ""}
-              onChange={(e) => onSearchQueryChange?.(e.target.value)}
-              className="h-5 min-w-0 flex-1 bg-transparent text-13 leading-5 text-primary outline-none placeholder:text-placeholder"
-            />
-          </InputGroup>
+      <div className="z-10 flex h-9 shrink-0 items-center gap-2 border-y border-subtle px-3 transition-colors duration-150 ease-out focus-within:bg-layer-transparent-hover motion-reduce:transition-none">
+        <div
+          ref={searchWrapperRef}
+          data-slot="emoji-picker-search-wrapper"
+          className="flex h-full min-w-0 flex-1 items-center gap-2"
+        >
+          <SearchOutline className="size-3.5 shrink-0 text-placeholder" />
+          <EmojiPicker.Search
+            placeholder={searchLabel}
+            aria-label={searchLabel}
+            disabled={searchDisabled}
+            value={searchQuery ?? ""}
+            onChange={(e) => onSearchQueryChange?.(e.target.value)}
+            className="h-5 min-w-0 flex-1 bg-transparent text-13 leading-5 text-primary outline-none placeholder:text-placeholder"
+          />
         </div>
         <EmojiPicker.SkinToneSelector
           data-slot="emoji-picker-skin-tone-selector"
           aria-label={t("web.change_skin_tone")}
-          className="size-8 shrink-0 rounded-md text-18 hover:bg-layer-transparent-hover"
+          className="grid size-6 shrink-0 place-items-center rounded-md p-0 text-16 leading-none hover:bg-layer-transparent-hover"
         />
       </div>
       <EmojiPicker.Viewport
         data-slot="emoji-picker-content"
-        className={cn("relative min-h-0 flex-1 overflow-y-auto outline-none")}
+        className={cn("vertical-scrollbar relative min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none")}
       >
         <EmojiPicker.List
           data-slot="emoji-picker-list"

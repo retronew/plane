@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import type { AvatarGroupSize } from "@makeplane/propel/components/avatar-group";
@@ -93,6 +93,29 @@ function memberAvatarAlt(member: MemberOption): string {
   return getAvatarName(member.name || member.display_name);
 }
 
+function renderMemberOptionIcon(member: MemberOption) {
+  return (
+    <span className={OPTION_ICON_SLOT_CLASSNAME}>
+      {member.id === CLEAR_OPTION_ID ? (
+        <UserAltOutline className="h-4 w-4 text-primary" />
+      ) : member.suspended ? (
+        <DeactivatedUserOutline className="h-3.5 w-3.5 text-placeholder" />
+      ) : (
+        <Avatar alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} size="xs" />
+      )}
+    </span>
+  );
+}
+
+function renderMemberChip(member: MemberOption) {
+  return (
+    <>
+      <Avatar alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} size="2xs" />
+      <span className="min-w-0 truncate">{member.display_name}</span>
+    </>
+  );
+}
+
 type MemberSelectCommonProps = {
   /** Paginated fetcher, bound by the client to the members-lite service (cursor + optional server search). */
   getValues: (params: SelectPaginationParams) => Promise<TPaginatedResponse<MemberOption[]>>;
@@ -103,6 +126,8 @@ type MemberSelectCommonProps = {
    * subscribers/authors) or `value <= 1` for "name when single, avatars-only when many" (assignees).
    */
   showLabel?: boolean;
+  /** Hide the arrow when a sibling clear control occupies its slot. */
+  hideChevron?: boolean;
   disabled?: boolean;
   placeholder?: string;
   searchPlaceholder?: string;
@@ -225,6 +250,16 @@ export function MemberSelect(props: MemberSelectProps) {
   // Chips are the only way to deselect for `search-input` (no click-to-toggle row), so an already-picked member shouldn't also appear in the list.
   const excludeSelected = (member: MemberOption) => !selectedIds.has(member.id);
   const combinedFilterOption = (member: MemberOption) => excludeSelected(member) && (filterOption?.(member) ?? true);
+  const prependMemberIcon = useCallback(
+    (members: MemberOption[]) =>
+      members.length === 0 ? props.multiple ? <AssigneeOutline /> : <UserAltOutline /> : undefined,
+    [props.multiple]
+  );
+  const renderMemberTrailing = useCallback(
+    (member: MemberOption) =>
+      member.suspended ? <Badge variant="neutral" size="xs" label={suspendedLabel} /> : undefined,
+    [suspendedLabel]
+  );
 
   const sharedProps = {
     infinite: true as const,
@@ -239,30 +274,11 @@ export function MemberSelect(props: MemberSelectProps) {
     filterOption: isSearchInput ? combinedFilterOption : filterOption,
     getOptionValue: (member: MemberOption) => member.id,
     getOptionLabel: (member: MemberOption) => member.display_name,
-    getOptionIcon: (member: MemberOption) =>
-      member.id === CLEAR_OPTION_ID ? (
-        <span className={OPTION_ICON_SLOT_CLASSNAME}>
-          <UserAltOutline className="h-4 w-4 text-primary" />
-        </span>
-      ) : member.suspended ? (
-        <span className={OPTION_ICON_SLOT_CLASSNAME}>
-          <DeactivatedUserOutline className="h-3.5 w-3.5 text-placeholder" />
-        </span>
-      ) : (
-        <span className={OPTION_ICON_SLOT_CLASSNAME}>
-          <Avatar alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} size="xs" />
-        </span>
-      ),
+    getOptionIcon: renderMemberOptionIcon,
     // Suspended members cannot be newly picked; an already-selected one stays toggleable so it can be removed.
     getOptionDisabled: (member: MemberOption) => !!member.suspended && !selectedIds.has(member.id),
-    getOptionTrailing: (member: MemberOption) =>
-      member.suspended ? <Badge variant="neutral" size="xs" label={suspendedLabel} /> : undefined,
-    renderChip: (member: MemberOption) => (
-      <>
-        <Avatar alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} size="2xs" />
-        <span className="min-w-0 truncate">{member.display_name}</span>
-      </>
-    ),
+    getOptionTrailing: renderMemberTrailing,
+    renderChip: renderMemberChip,
     headerItems: clearable ? [clearOption] : undefined,
   };
 
@@ -273,9 +289,8 @@ export function MemberSelect(props: MemberSelectProps) {
       tabIndex={tabIndex}
       data-testid={testId}
       className={cn(isAvatarGroup && AVATAR_GROUP_TRIGGER_CLASSNAME, className)}
-      prependIcon={(members) =>
-        members.length === 0 ? props.multiple ? <AssigneeOutline /> : <UserAltOutline /> : undefined
-      }
+      appendIcon={props.hideChevron ? null : undefined}
+      prependIcon={prependMemberIcon}
       label={(members) =>
         triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))
       }

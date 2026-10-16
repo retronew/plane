@@ -60,6 +60,7 @@ export const FilterMentions = observer(function FilterMentions(props: Props) {
   return (
     <>
       <FilterHeader
+        field="mentions"
         title={translate("web.runtime.filter_mention", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

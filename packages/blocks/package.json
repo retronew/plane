@@ -72,6 +72,7 @@
     "lodash-es": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
+    "react-colorful": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
     "use-font-face-observer": "catalog:"

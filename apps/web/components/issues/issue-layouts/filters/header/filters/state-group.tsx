@@ -39,6 +39,7 @@ export const FilterStateGroup = observer(function FilterStateGroup(props: Props)
   return (
     <>
       <FilterHeader
+        field="state_group"
         title={translate("web.runtime.filter_state_group", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

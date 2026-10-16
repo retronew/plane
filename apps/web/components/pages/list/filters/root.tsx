@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -80,6 +81,7 @@ export const PageFiltersSelection = observer(function PageFiltersSelection(props
       <div className="vertical-scrollbar scrollbar-sm h-full w-full divide-y divide-subtle-1 overflow-y-auto px-2.5">
         <div className="py-2">
           <FilterOption
+            icon={<FilterFieldIcon field="favorites" />}
             isChecked={!!filters.filters?.favorites}
             onClick={() =>
               handleFiltersUpdate("filters", {

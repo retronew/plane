@@ -60,6 +60,7 @@ export const FilterLead = observer(function FilterLead(props: Props) {
   return (
     <>
       <FilterHeader
+        field="lead"
         title={translate("web.runtime.filter_lead", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

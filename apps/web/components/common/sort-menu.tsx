@@ -13,6 +13,8 @@ import {
 } from "@makeplane/propel/components/menu";
 import { useTranslation } from "@plane/i18n";
 
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
+
 export type SortDirection = "asc" | "desc";
 /** The same two sibling controls for display menus and standalone sorting menus. */
 export function SortMenuItems<T extends string>({
@@ -36,6 +38,7 @@ export function SortMenuItems<T extends string>({
       <MenuSubmenu>
         <MenuSubmenuTrigger
           label={t("common.sort.field")}
+          icon={<FilterFieldIcon field="order_by" />}
           trailing={
             <span className="max-w-32 truncate text-secondary">
               {options.find((option) => option.value === field)?.label}
@@ -52,7 +55,13 @@ export function SortMenuItems<T extends string>({
               }}
             >
               {options.map((option) => (
-                <MenuRadioItem key={option.value} value={option.value} label={option.label} closeOnClick={false} />
+                <MenuRadioItem
+                  key={option.value}
+                  value={option.value}
+                  label={option.label}
+                  icon={<FilterFieldIcon field={option.value} />}
+                  closeOnClick={false}
+                />
               ))}
             </MenuRadioGroup>
           </div>
@@ -61,6 +70,7 @@ export function SortMenuItems<T extends string>({
       <MenuSubmenu>
         <MenuSubmenuTrigger
           label={t("common.sort.direction")}
+          icon={<FilterFieldIcon field="sort_direction" />}
           disabled={directionDisabled}
           trailing={
             <span className="text-secondary">
@@ -76,8 +86,18 @@ export function SortMenuItems<T extends string>({
                 if (!directionDisabled && (value === "asc" || value === "desc")) onDirectionChange(value);
               }}
             >
-              <MenuRadioItem value="asc" label={t("common.sort.asc")} closeOnClick={false} />
-              <MenuRadioItem value="desc" label={t("common.sort.desc")} closeOnClick={false} />
+              <MenuRadioItem
+                value="asc"
+                icon={<FilterFieldIcon field="asc" />}
+                label={t("common.sort.asc")}
+                closeOnClick={false}
+              />
+              <MenuRadioItem
+                value="desc"
+                icon={<FilterFieldIcon field="desc" />}
+                label={t("common.sort.desc")}
+                closeOnClick={false}
+              />
             </MenuRadioGroup>
           </div>
         </MenuSubmenuContent>

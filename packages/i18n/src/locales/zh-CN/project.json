@@ -300,8 +300,8 @@
   "disabled_project": {
     "empty_state": {
       "inbox": {
-        "title": "此项目未启用 Intake。",
-        "description": "Intake 帮助您管理项目收到的外部请求，并将其作为工作项纳入工作流。在项目设置中启用 Intake 即可开始管理请求。",
+        "title": "此项目未启用需求收集。",
+        "description": "需求收集帮助您管理项目收到的外部请求，并将其作为工作项纳入工作流。在项目设置中启用需求收集即可开始管理请求。",
         "primary_button": {
           "text": "管理功能"
         }

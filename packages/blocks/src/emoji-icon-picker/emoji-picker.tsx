@@ -23,6 +23,8 @@ export type EmojiPickerProps = {
   className?: string;
   closeOnSelect?: boolean;
   defaultIconColor?: string;
+  defaultIconBackground?: string;
+  onIconBackgroundChange?: (background: string | undefined) => void;
   defaultOpen?: EmojiIconPickerType;
   disabled?: boolean;
   dropdownClassName?: string;
@@ -126,6 +128,8 @@ export function EmojiPicker(props: EmojiPickerProps) {
           content: (
             <IconRoot
               defaultColor={defaultIconColor}
+              defaultBackground={props.defaultIconBackground}
+              onBackgroundChange={props.onIconBackgroundChange}
               onChange={handleIconChange}
               searchPlaceholder={resolvedSearchPlaceholder}
               searchDisabled={searchDisabled}
@@ -139,6 +143,8 @@ export function EmojiPicker(props: EmojiPickerProps) {
     [
       t,
       defaultIconColor,
+      props.defaultIconBackground,
+      props.onIconBackgroundChange,
       searchDisabled,
       resolvedSearchPlaceholder,
       iconType,
@@ -187,7 +193,7 @@ export function EmojiPicker(props: EmojiPickerProps) {
       >
         <div
           className={cn(
-            "flex h-[438px] max-h-[calc(var(--available-height)-2px)] min-h-0 w-full flex-col",
+            "flex h-[410px] max-h-[calc(var(--available-height)-2px)] min-h-0 w-full flex-col",
             dropdownClassName
           )}
         >
@@ -208,17 +214,8 @@ export function EmojiPicker(props: EmojiPickerProps) {
             )}
             <PopoverBody data-emoji-picker-body="" tabIndex={0}>
               {tabs.map((tab) => (
-                // The icon tab has no inner scrollport (unlike the emoji tab's frimousse
-                // viewport), so the panel itself scrolls.
                 <TabsPanel key={tab.key} value={tab.key}>
-                  <div
-                    className={cn(
-                      "h-full min-h-0",
-                      tab.key === "icon" ? "scrollbar-sm overflow-y-auto" : "overflow-hidden"
-                    )}
-                  >
-                    {tab.content}
-                  </div>
+                  <div className="h-full min-h-0 overflow-hidden">{tab.content}</div>
                 </TabsPanel>
               ))}
             </PopoverBody>

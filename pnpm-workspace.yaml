@@ -150,6 +150,7 @@ catalog:
   "react-dom": "19.3.0"
   "react-dropzone": "^14.2.3"
   "react-fast-compare": "^3.2.2"
+  "react-colorful": "5.8.1"
   "react-hook-form": "^7.90.0"
   "react-i18next": "17.0.16"
   "react-is": "^19.3.0"

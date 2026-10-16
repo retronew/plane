@@ -60,6 +60,7 @@ export const FilterCreatedBy = observer(function FilterCreatedBy(props: Props) {
   return (
     <>
       <FilterHeader
+        field="created_by"
         title={translate("web.runtime.filter_created_by", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

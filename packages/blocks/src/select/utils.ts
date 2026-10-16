@@ -143,7 +143,7 @@ export const selectTriggerVariants = cva(
         select: cn(
           "border-sm border-subtle-1 bg-layer-2 data-invalid:border-danger-strong",
           "hover:border-strong hover:bg-layer-2-hover",
-          "focus-visible:border-accent-strong focus-visible:ring-2 focus-visible:ring-accent-strong/20",
+          "focus-visible:border-accent-strong focus-visible:ring-2 focus-visible:ring-accent-strong/20 focus-visible:hover:border-accent-strong",
           "data-invalid:focus-visible:border-danger-strong data-invalid:focus-visible:ring-danger-strong/20",
           "disabled:cursor-not-allowed disabled:border-subtle-1 disabled:bg-layer-2 disabled:text-disabled",
           "disabled:ring-0 disabled:hover:border-subtle-1 disabled:hover:bg-layer-2"
@@ -179,9 +179,14 @@ export const selectTriggerVariants = cva(
       {
         variant: "select",
         isActive: true,
-        className: "border-accent-strong ring-2 ring-accent-strong/20 data-invalid:ring-danger-strong/20",
+        className:
+          "border-accent-strong bg-layer-2 ring-2 ring-accent-strong/20 hover:border-accent-strong hover:bg-layer-2 data-invalid:border-danger-strong data-invalid:ring-danger-strong/20 data-invalid:hover:border-danger-strong",
       },
-      { variant: "select-ghost", isActive: true, className: "bg-layer-transparent-active" },
+      {
+        variant: "select-ghost",
+        isActive: true,
+        className: "bg-layer-transparent-active hover:bg-layer-transparent-active",
+      },
     ],
     defaultVariants: { variant: "select-ghost", size: "lg", isActive: false },
   }

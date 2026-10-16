@@ -69,6 +69,7 @@ export const FilterDate = observer(function FilterDate(props: Props) {
         />
       )}
       <FilterHeader
+        field="date"
         title={`${label || "Created date"}${appliedFiltersCount > 0 ? ` (${appliedFiltersCount})` : ""}`}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

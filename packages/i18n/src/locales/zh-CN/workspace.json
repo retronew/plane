@@ -137,27 +137,27 @@
       },
       "intake_trends": {
         "title": "暂无数据",
-        "description": "Intake 趋势分析会显示在这里。向 Intake 添加工作项即可开始跟踪趋势。"
+        "description": "需求收集趋势分析会显示在这里。向需求收集添加工作项即可开始跟踪趋势。"
       }
     },
     "upgrade_to_plan": "升级到 {plan} 以解锁 {tab}",
     "workitem_resolved_vs_pending": "已解决与待处理工作项对比",
     "projects_by_status": "按状态分类的项目",
     "active_users": "活跃用户",
-    "intake_trends": "Intake 趋势",
+    "intake_trends": "需求收集趋势",
     "details": {
       "tabs": {
         "projects": "项目",
         "users": "用户",
         "cycles": "周期",
         "modules": "模块",
-        "intake": "收集"
+        "intake": "需求收集"
       },
       "charts": {
         "projects": "按状态分类的项目",
-        "users": "已完成与待处理工作项",
-        "cycles": "周期进度",
-        "modules": "模块进度",
+        "users": "按负责人分类的工作项",
+        "cycles": "周期工作项分布",
+        "modules": "模块工作项分布",
         "intake": "各月新增收件的当前状态"
       },
       "empty": {
@@ -190,7 +190,7 @@
         "modules": "模块",
         "pages": "页面",
         "views": "视图",
-        "intake": "收集",
+        "intake": "需求收集",
         "completion": "完成率",
         "project": "项目",
         "lead": "负责人",
@@ -242,29 +242,10 @@
         "last_30_days": "最近 30 天",
         "last_3_months": "最近 3 个月"
       },
-      "empty_project": "0 个工作项"
-    },
-    "preview": {
-      "projects": "项目进展",
-      "insights": "随手洞察",
-      "projects_tab": "项目进展（预览）",
-      "insights_tab": "随手洞察（预览）",
-      "note": "预览方案 · 使用当前筛选范围的真实数据",
-      "project_comparison": "项目对比",
-      "metric": "统计指标",
-      "show_all": "显示全部",
-      "group_by": "分组维度",
-      "estimate_points": "估算点数",
-      "hide_chart": "收起洞察",
-      "show_chart": "展开洞察",
-      "breakdown": "分组明细",
-      "distribution": "数据分布",
-      "click_chart": "点击图表或图例筛选明细，再次点击取消选择。",
-      "group_total": "分组总计",
-      "assignee_counts": "多位负责人共同负责的工作项，会计入各自的分组。",
-      "show_real": "查看真实数据",
-      "show_demo": "查看演示数据",
-      "demo_note": "演示数据 · 2026 年 1–8 月，仅用于预览，不受顶部筛选影响。"
+      "empty_project": "0 个工作项",
+      "open_details": "查看{entity}明细",
+      "show_series": "显示{series}",
+      "hide_series": "隐藏{series}"
     },
     "methodology": {
       "completion": "完成率 = 已完成 ÷（全部 − 已取消）；全部取消或无工作项时为 0%。",
@@ -273,12 +254,148 @@
       "trend": "按创建日期和当前已完成工作项的完成日期分别计数；重开会改变历史值，不代表状态变更次数。",
       "cycle": "按当前有效范围回算，非历史快照；当前范围排除取消，范围调整或重开会改变曲线。进行中仅展示今天的数量。",
       "cohort": "时间筛选按创建日期限定工作项，状态及归属展示当前值。",
-      "range": "统计区间：{start} 至 {end}；仅统计区间内日期。",
+      "range": "统计区间：{start} 至 {end}",
       "current_completed": "当前已完成",
       "remaining": "剩余{entity}",
       "reconstructed": "按当前范围和完成日期回算，排除取消；并非历史快照。缺少完成日期时历史曲线留空，不推测日期。",
       "no_effective": "全部已取消",
       "daily": "按日统计"
+    },
+    "project_summary_hints": {
+      "total_projects": "当前项目筛选范围内的项目数量。时间筛选仅限定工作项，不筛除项目。 点击查看下方项目明细。",
+      "work_items": "当前项目中、在所选时间范围内创建的工作项总数，包含已取消工作项。 点击查看工作项分析。",
+      "completed": "上述工作项中当前状态为已完成的数量。 点击查看工作项分析。",
+      "distribution": "按项目当前状态统计项目数量，与工作项状态及完成率无关。",
+      "completion": "已完成工作项 ÷（全部工作项 − 已取消），按工作项数量加权，不是各项目完成率的平均值。点击查看项目明细。"
+    },
+    "users_summary_hints": {
+      "total_users": "当前项目范围内的活跃用户，不含机器人；时间筛选不改变用户数量。点击查看用户明细。",
+      "total_admins": "当前范围内工作区角色为管理员的用户数。点击查看用户明细。",
+      "total_members": "当前范围内工作区角色为成员的用户数。点击查看用户明细。",
+      "total_guests": "当前范围内工作区角色为访客的用户数。点击查看用户明细。",
+      "unique_work_items": "所选项目和时间范围内的去重工作项数，包含未分配工作项。点击查看工作项分析。",
+      "distribution": "按当前负责人统计工作项，待处理包含未开始与进行中。多人共同负责的工作项会计入各人，不能将各行相加作为去重总数。"
+    },
+    "cycles_summary_hints": {
+      "total_cycles": "当前项目范围内未归档的周期总数，包含未安排日期的周期。点击查看周期明细。",
+      "current": "今天处于开始日期和结束日期之间的周期，包含起止当天。点击查看周期明细。",
+      "upcoming": "开始日期晚于今天的周期。点击查看周期明细。",
+      "completed": "结束日期早于今天的周期，不代表其中的工作项全部完成。点击查看周期明细。",
+      "distribution": "按周期展示工作项当前状态，待处理包含未开始与进行中。周期是否已结束按日期判断，与工作项是否全部完成无关。"
+    },
+    "cycles_ended": "已结束周期",
+    "detail_titles": {
+      "users": "用户工作量",
+      "cycles": "周期进展",
+      "modules": "模块进展",
+      "intake": "收集明细"
+    },
+    "modules_summary_hints": {
+      "total_modules": "当前项目范围内未归档的模块总数，包含所有模块状态。点击查看模块明细。",
+      "completed": "当前状态为已完成的模块，不代表模块内工作项全部完成。点击查看模块明细。",
+      "in-progress": "当前状态为进行中的模块。点击查看模块明细。",
+      "planned": "当前状态为已计划的模块。点击查看模块明细。",
+      "paused": "当前状态为已暂停的模块。点击查看模块明细。",
+      "distribution": "按模块展示工作项当前状态，待处理包含未开始与进行中。模块状态独立设置，与工作项完成率不同。"
+    },
+    "work_item_breakdown": "工作项明细",
+    "intake_summary_hints": {
+      "total_intake": "所选时间范围内创建的收件总数，包含所有处理状态。点击查看项目收集明细。",
+      "pending": "所选时间范围内创建、当前状态为待处理的收件数量。点击查看项目收集明细。",
+      "snoozed": "所选时间范围内创建、当前状态为已延后的收件数量。点击查看项目收集明细。",
+      "accepted": "所选时间范围内创建、当前状态为已接受的收件数量。点击查看项目收集明细。",
+      "rejected": "所选时间范围内创建、当前状态为已拒绝的收件数量。点击查看项目收集明细。",
+      "duplicate": "所选时间范围内创建、当前状态为重复的收件数量。点击查看项目收集明细。",
+      "distribution": "按收件创建月份分组，展示当前处理状态。"
+    },
+    "work_item_summary_hints": {
+      "total_work_items": "所选范围内创建的工作项总数，包含已取消工作项。点击查看下方明细。",
+      "started_work_items": "所选范围内创建、当前为“进行中”的工作项数量。点击查看下方明细。",
+      "backlog_work_items": "所选范围内创建、当前为“待办”的工作项数量。点击查看下方明细。",
+      "un_started_work_items": "所选范围内创建、当前为“未开始”的工作项数量。点击查看下方明细。",
+      "completed_work_items": "所选范围内创建、当前为“已完成”的工作项数量。点击查看下方明细。"
+    },
+    "group_breakdown": "分组明细",
+    "project_analysis": {
+      "title": "项目分析",
+      "mode": "分析方式",
+      "comparison": "项目对比",
+      "hint": "按数值从高到低排列。点击柱条筛选下方明细，再次点击取消；点击图例显示或隐藏项目。顶部统计和趋势始终展示全局筛选范围。",
+      "selected": "当前明细：{name}",
+      "metric": "统计指标",
+      "show_all": "显示全部"
+    },
+    "insights": {
+      "title": "洞察",
+      "scope": {
+        "work-items": "按创建日期筛选工作项；多人负责或多标签可能重复计入不同分组。",
+        "projects": "统计当前可访问的未归档项目，每个项目只计一次；时间筛选不影响项目数。",
+        "users": "统计当前有效成员，排除机器人和“未分配”；项目筛选按项目成员关系，时间筛选不影响人数。",
+        "cycles": "统计当前可访问项目中的未归档周期，每个周期只计一次；状态按周期日期确定，时间筛选不影响周期数。",
+        "modules": "统计当前可访问项目中的未归档模块，每个模块只计一次；状态为当前状态，时间筛选不影响模块数。",
+        "intake": "按条目创建日期筛选收集条目，展示当前处理状态。"
+      },
+      "created_by": "创建人",
+      "dimension": "分组维度",
+      "group": "细分维度",
+      "metrics": {
+        "work-items": "工作项数",
+        "projects": "项目数",
+        "users": "成员数",
+        "cycles": "周期数",
+        "modules": "模块数",
+        "intake": "收集条目数"
+      },
+      "axes": {
+        "PROJECTS": "项目",
+        "STATE_GROUPS": "状态",
+        "ASSIGNEES": "负责人",
+        "CYCLES": "周期",
+        "MODULES": "模块",
+        "ROLE": "角色"
+      },
+      "roles": {
+        "5": "访客",
+        "15": "成员",
+        "20": "管理员"
+      },
+      "project_statuses": {
+        "backlog": "待办",
+        "planned": "已计划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "draft": "待处理",
+        "planning": "规划中",
+        "execution": "进行中",
+        "monitoring": "待验收",
+        "current": "当前",
+        "upcoming": "即将开始",
+        "unscheduled": "未安排"
+      },
+      "cycle_statuses": {
+        "current": "进行中",
+        "upcoming": "未开始",
+        "completed": "已结束",
+        "unscheduled": "未排期"
+      },
+      "module_statuses": {
+        "backlog": "待规划",
+        "planned": "已规划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消"
+      },
+      "intake_statuses": {
+        "pending": "待处理",
+        "snoozed": "已延后",
+        "accepted": "已接受",
+        "rejected": "已拒绝",
+        "duplicate": "重复"
+      },
+      "add_group": "添加细分"
     }
   },
   "workspace_projects": {
@@ -287,7 +404,7 @@
       "label": "添加项目"
     },
     "network": {
-      "label": "网络",
+      "label": "可见性",
       "private": {
         "title": "私有",
         "description": "仅限邀请访问"

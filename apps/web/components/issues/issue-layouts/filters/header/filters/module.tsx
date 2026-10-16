@@ -57,6 +57,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
   return (
     <>
       <FilterHeader
+        field="module"
         title={translate("web.runtime.filter_module", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

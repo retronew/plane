@@ -63,6 +63,9 @@ it("toggles properties and extra options in place without closing the menu", asy
   fireEvent.click(screen.getByRole("button", { name: "显示" }));
   const property = await screen.findByRole("menuitemcheckbox", { name: "ID" });
   expect(property.getAttribute("aria-checked")).toBe("true");
+  for (const item of screen.getAllByRole("menuitem")) expect(item.querySelector("svg.lucide")).not.toBeNull();
+  for (const name of ["显示子工作项", "显示空组"])
+    expect(screen.getByRole("menuitemcheckbox", { name }).querySelector("svg.lucide")).not.toBeNull();
   fireEvent.click(property);
   await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ key: false }));
   expect(screen.getByRole("menu")).toBeTruthy();

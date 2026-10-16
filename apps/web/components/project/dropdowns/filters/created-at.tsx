@@ -55,6 +55,7 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
         />
       )}
       <FilterHeader
+        field="created_at"
         title={translate("web.runtime.filter_created_date", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

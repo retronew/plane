@@ -68,6 +68,7 @@ export const FilterMember = observer(function FilterMember(props: Props) {
   return (
     <>
       <FilterHeader
+        field="members"
         title={`${label} ${appliedFiltersCount > 0 ? ` (${appliedFiltersCount})` : ""}`}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

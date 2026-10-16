@@ -257,7 +257,11 @@ export function VirtualListBody<T>(props: VirtualListBodyProps<T>) {
     // height, which strands the scroller with nothing to scroll and no way back.
     // Layout height excludes ancestor popup scale animations. Measuring the transformed
     // rectangle caches undersized rows and creates scrollbars even for two options.
-    measureElement: (element) => (element instanceof HTMLElement ? element.offsetHeight : 0) || estimateItemSize,
+    measureElement: (element, entry) =>
+      // Preserve fractional layout heights before rounding up: rounding down can leave a tiny
+      // overflow and a permanent native scrollbar even when both options visibly fit.
+      Math.ceil(entry?.borderBoxSize?.[0]?.blockSize ?? (element instanceof HTMLElement ? element.offsetHeight : 0)) ||
+      estimateItemSize,
   });
 
   // In virtualized mode base-ui skips its `CompositeList`, so only the rows we actually render

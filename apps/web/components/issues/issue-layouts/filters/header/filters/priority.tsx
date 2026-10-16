@@ -32,6 +32,7 @@ export const FilterPriority = observer(function FilterPriority(props: Props) {
   return (
     <>
       <FilterHeader
+        field="priority"
         title={translate("web.runtime.filter_priority", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
@@ -42,7 +43,7 @@ export const FilterPriority = observer(function FilterPriority(props: Props) {
             filteredOptions.map((priority) => (
               <FilterOption
                 key={priority.key}
-                isChecked={appliedFilters?.includes(priority.key) ? true : false}
+                isChecked={Boolean(appliedFilters?.includes(priority.key))}
                 onClick={() => handleUpdate(priority.key)}
                 icon={<PriorityIcon priority={priority.key} className="h-3.5 w-3.5" />}
                 title={priority.title}

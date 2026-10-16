@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -33,11 +34,13 @@ type Props = {
 };
 
 function MemberFilter({
+  field,
   label,
   ids,
   selected,
   onChange,
 }: {
+  field: string;
   label: string;
   ids: string[];
   selected: string[];
@@ -51,7 +54,11 @@ function MemberFilter({
     .filter((member) => member && member.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   return (
     <MenuSubmenu>
-      <MenuSubmenuTrigger label={label} trailing={selected.length ? String(selected.length) : undefined} />
+      <MenuSubmenuTrigger
+        icon={<FilterFieldIcon field={field} />}
+        label={label}
+        trailing={selected.length ? String(selected.length) : undefined}
+      />
       <MenuSubmenuContent>
         <div className="w-56 max-w-[calc(100vw-32px)]">
           <div className="px-1 pb-1">
@@ -107,7 +114,7 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
   return (
     <div className="w-48 max-w-[calc(100vw-32px)]">
       <MenuSubmenu>
-        <MenuSubmenuTrigger label={t("web.project_page.access")} />
+        <MenuSubmenuTrigger icon={<FilterFieldIcon field="access" />} label={t("web.project_page.access")} />
         <MenuSubmenuContent>
           {NETWORK_CHOICES.map((choice) => (
             <MenuCheckboxItem
@@ -122,7 +129,7 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
         </MenuSubmenuContent>
       </MenuSubmenu>
       <MenuSubmenu>
-        <MenuSubmenuTrigger label={t("priority")} />
+        <MenuSubmenuTrigger icon={<FilterFieldIcon field="priority" />} label={t("priority")} />
         <MenuSubmenuContent>
           {ISSUE_PRIORITIES.map((choice) => (
             <MenuCheckboxItem
@@ -140,7 +147,10 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
         .filter((key) => key !== "status" || categories.statesEnabled)
         .map((key) => (
           <MenuSubmenu key={key}>
-            <MenuSubmenuTrigger label={t(key === "status" ? "web.project_statuses" : "web.project_labels")} />
+            <MenuSubmenuTrigger
+              icon={<FilterFieldIcon field={key} />}
+              label={t(key === "status" ? "web.project_statuses" : "web.project_labels")}
+            />
             <MenuSubmenuContent>
               <div className="max-h-64 min-w-36 overflow-y-auto">
                 {(key === "status" ? categories.statuses : categories.labels).map((entry) => (
@@ -167,19 +177,21 @@ export const ProjectFiltersSelection = observer(function ProjectFiltersSelection
           </MenuSubmenu>
         ))}
       <MemberFilter
+        field="lead"
         label={t("lead")}
         ids={memberIds}
         selected={filters.lead ?? []}
         onChange={(id) => handleFiltersUpdate("lead", id)}
       />
       <MemberFilter
+        field="members"
         label={t("common.members")}
         ids={memberIds}
         selected={filters.members ?? []}
         onChange={(id) => handleFiltersUpdate("members", id)}
       />
       <MenuSubmenu>
-        <MenuSubmenuTrigger label={t("web.created_date")} />
+        <MenuSubmenuTrigger icon={<FilterFieldIcon field="created_at" />} label={t("web.created_date")} />
         <MenuSubmenuContent>
           {PROJECT_CREATED_AT_FILTER_OPTIONS.map((option) => (
             <MenuCheckboxItem

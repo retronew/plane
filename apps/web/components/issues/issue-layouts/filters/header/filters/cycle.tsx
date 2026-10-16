@@ -24,6 +24,9 @@ type Props = {
   searchQuery: string;
 };
 
+const cycleStatus = (status: TCycleGroups | undefined) =>
+  (status ? status.toLocaleLowerCase() : "draft") as TCycleGroups;
+
 export const FilterCycle = observer(function FilterCycle(props: Props) {
   const { appliedFilters, handleUpdate, searchQuery } = props;
 
@@ -58,12 +61,10 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
     else setItemsToRender(sortedOptions.length);
   };
 
-  const cycleStatus = (status: TCycleGroups | undefined) =>
-    (status ? status.toLocaleLowerCase() : "draft") as TCycleGroups;
-
   return (
     <>
       <FilterHeader
+        field="cycle"
         title={translate("web.runtime.filter_cycle", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

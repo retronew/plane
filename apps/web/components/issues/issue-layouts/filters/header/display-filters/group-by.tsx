@@ -34,6 +34,7 @@ export const FilterGroupBy = observer(function FilterGroupBy(props: Props) {
   return (
     <>
       <FilterHeader
+        field="group_by"
         title={t("common.group_by")}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

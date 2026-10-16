@@ -155,9 +155,9 @@
       },
       "charts": {
         "projects": "Projects by status",
-        "users": "Completed vs pending work items",
-        "cycles": "Cycle progress",
-        "modules": "Module progress",
+        "users": "Work items by assignee",
+        "cycles": "Work items by cycle",
+        "modules": "Work items by module",
         "intake": "Current status of intake created each month"
       },
       "empty": {
@@ -242,29 +242,10 @@
         "last_30_days": "Last 30 days",
         "last_3_months": "Last 3 months"
       },
-      "empty_project": "0 work items"
-    },
-    "preview": {
-      "projects": "Project progress",
-      "insights": "Quick insights",
-      "projects_tab": "Project progress (Preview)",
-      "insights_tab": "Quick insights (Preview)",
-      "note": "Preview · Live data for the current filters",
-      "project_comparison": "Project comparison",
-      "metric": "Metric",
-      "show_all": "Show all",
-      "group_by": "Group by",
-      "estimate_points": "Estimate points",
-      "hide_chart": "Hide insights",
-      "show_chart": "Show insights",
-      "breakdown": "Group details",
-      "distribution": "Distribution",
-      "click_chart": "Select a bar or legend to filter details. Select it again to clear.",
-      "group_total": "Group total",
-      "assignee_counts": "Work items with multiple assignees count in each assignee group.",
-      "show_real": "View real data",
-      "show_demo": "View demo data",
-      "demo_note": "Demo data · Jan–Aug 2026. Preview only; top filters do not apply."
+      "empty_project": "0 work items",
+      "open_details": "View {entity} details",
+      "show_series": "Show {series}",
+      "hide_series": "Hide {series}"
     },
     "methodology": {
       "completion": "Completion = completed ÷ (total − cancelled); 0% for empty or fully cancelled scopes.",
@@ -273,12 +254,148 @@
       "trend": "Counts by creation date and completion date of currently completed items. Reopening can change past values; these are not transition counts.",
       "cycle": "Reconstructed from the current scope, not historical snapshots. Cancelled items are excluded; scope changes and reopening can change the curve. In progress is shown only for today.",
       "cohort": "Time filters select work items by creation date; status and membership reflect their current values.",
-      "range": "Reporting period: {start} to {end}; only dates within this interval are counted.",
+      "range": "Reporting period: {start} – {end}",
       "current_completed": "Currently completed",
       "remaining": "Remaining {entity}",
       "reconstructed": "Reconstructed from current scope and completion dates, excluding cancellations; not historical snapshots. History is left blank when completion dates are missing.",
       "no_effective": "All cancelled",
       "daily": "Daily"
+    },
+    "project_summary_hints": {
+      "total_projects": "Projects matching the project filter. The date filter limits work items, not projects. Click to view the project details below.",
+      "work_items": "Work items created during the selected period in these projects, including cancelled items. Click to view work item analytics.",
+      "completed": "Work items in this scope that are currently completed. Click to view work item analytics.",
+      "distribution": "Project counts grouped by current project status, independently of work item status or completion rate.",
+      "completion": "Completed work items divided by all non-cancelled work items, weighted by work item count rather than averaging project percentages. View project details."
+    },
+    "users_summary_hints": {
+      "total_users": "Active users in the selected project scope, excluding bots. The date filter does not change this count. View user details.",
+      "total_admins": "Users with the workspace admin role in this scope. View user details.",
+      "total_members": "Users with the workspace member role in this scope. View user details.",
+      "total_guests": "Users with the workspace guest role in this scope. View user details.",
+      "unique_work_items": "Distinct work items in the selected projects and period, including unassigned items. View work item analytics.",
+      "distribution": "Work items grouped by current assignee. Pending includes unstarted and started items. Shared assignments count for each assignee; row totals are not a distinct total."
+    },
+    "cycles_summary_hints": {
+      "total_cycles": "Non-archived cycles in the selected projects, including unscheduled cycles. View cycle details.",
+      "current": "Cycles whose start and end dates include today. View cycle details.",
+      "upcoming": "Cycles starting after today. View cycle details.",
+      "completed": "Cycles ending before today, regardless of whether all work items are completed. View cycle details.",
+      "distribution": "Current work item states by cycle. Pending includes unstarted and started items. A cycle ends based on its dates, independently of work item completion."
+    },
+    "cycles_ended": "Ended cycles",
+    "detail_titles": {
+      "users": "User workload",
+      "cycles": "Cycle progress",
+      "modules": "Module progress",
+      "intake": "Intake details"
+    },
+    "modules_summary_hints": {
+      "total_modules": "Non-archived modules in the selected projects, across all module statuses. View module details.",
+      "completed": "Modules currently marked completed, regardless of work item completion. View module details.",
+      "in-progress": "Modules currently in progress. View module details.",
+      "planned": "Modules currently planned. View module details.",
+      "paused": "Modules currently paused. View module details.",
+      "distribution": "Current work item states by module. Pending includes unstarted and started items. Module status is set independently of work item completion."
+    },
+    "work_item_breakdown": "Work item details",
+    "intake_summary_hints": {
+      "total_intake": "Intake items created in the selected period (total intake). Status is current. View intake details by project.",
+      "pending": "Intake items created in the selected period (pending). Status is current. View intake details by project.",
+      "snoozed": "Intake items created in the selected period (snoozed). Status is current. View intake details by project.",
+      "accepted": "Intake items created in the selected period (accepted). Status is current. View intake details by project.",
+      "rejected": "Intake items created in the selected period (rejected). Status is current. View intake details by project.",
+      "duplicate": "Intake items created in the selected period (duplicate). Status is current. View intake details by project.",
+      "distribution": "Grouped by creation month, showing current intake status."
+    },
+    "work_item_summary_hints": {
+      "total_work_items": "All work items created in the selected scope, including cancelled items. View details below.",
+      "started_work_items": "Work items created in the selected scope (started work items), using current status. View details below.",
+      "backlog_work_items": "Work items created in the selected scope (backlog work items), using current status. View details below.",
+      "un_started_work_items": "Work items created in the selected scope (un started work items), using current status. View details below.",
+      "completed_work_items": "Work items created in the selected scope (completed work items), using current status. View details below."
+    },
+    "group_breakdown": "Group details",
+    "project_analysis": {
+      "title": "Project analysis",
+      "mode": "Analysis mode",
+      "comparison": "Compare projects",
+      "hint": "Sorted from highest to lowest. Select a bar to filter the table; select again to clear. Toggle legend items to show or hide projects. Summary and trends retain the global filter scope.",
+      "selected": "Showing: {name}",
+      "metric": "Metric",
+      "show_all": "Show all"
+    },
+    "insights": {
+      "title": "Insights",
+      "scope": {
+        "work-items": "Work items are filtered by creation date. Multiple assignees or labels may count in multiple groups.",
+        "projects": "Counts accessible, unarchived projects once each. Dates do not filter project counts.",
+        "users": "Counts active members, excluding bots and unassigned. Projects filter membership; dates do not filter member counts.",
+        "cycles": "Counts unarchived cycles once each. Status follows cycle dates; dates do not filter cycle counts.",
+        "modules": "Counts unarchived modules once each with current statuses. Dates do not filter module counts.",
+        "intake": "Filters intake entries by creation date and shows current processing status."
+      },
+      "created_by": "Created by",
+      "dimension": "Dimension",
+      "group": "Break down by",
+      "metrics": {
+        "work-items": "Work item count",
+        "projects": "Project count",
+        "users": "Member count",
+        "cycles": "Cycle count",
+        "modules": "Module count",
+        "intake": "Intake entry count"
+      },
+      "axes": {
+        "PROJECTS": "Project",
+        "STATE_GROUPS": "Status",
+        "ASSIGNEES": "Owner",
+        "CYCLES": "Cycle",
+        "MODULES": "Module",
+        "ROLE": "Role"
+      },
+      "roles": {
+        "5": "Guest",
+        "15": "Member",
+        "20": "Admin"
+      },
+      "project_statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "planning": "Planning",
+        "execution": "In progress",
+        "monitoring": "In review",
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "unscheduled": "Unscheduled"
+      },
+      "cycle_statuses": {
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "completed": "Ended",
+        "unscheduled": "Unscheduled"
+      },
+      "module_statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "intake_statuses": {
+        "pending": "Pending",
+        "snoozed": "Snoozed",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "duplicate": "Duplicate"
+      },
+      "add_group": "Add breakdown"
     }
   },
   "workspace_projects": {
@@ -287,7 +404,7 @@
       "label": "Add Project"
     },
     "network": {
-      "label": "Network",
+      "label": "Visibility",
       "private": {
         "title": "Private",
         "description": "Accessible only by invite"

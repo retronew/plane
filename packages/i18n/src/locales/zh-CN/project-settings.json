@@ -62,9 +62,17 @@
       "title": "为项目启用估算",
       "enable_description": "估算可以帮助团队沟通工作的复杂度和工作量。",
       "no_estimate": "无估算",
+      "current_system": "当前估算体系",
       "new": "新建估算体系",
       "create": {
         "custom": "自定义",
+        "template_help": {
+          "fibonacci": "间隔逐渐增大，适合复杂度和不确定性较高的工作。",
+          "linear": "等距递增，适合工作量差异较小的任务。",
+          "squares": "间隔增大更快，突出不同工作量之间的差距。",
+          "t_shirt_sizes": "用尺码表达相对大小，无需确定具体点数。",
+          "easy_to_hard": "按难易程度分级，适合直观比较任务。"
+        },
         "start_from_scratch": "从零开始",
         "choose_template": "选择模板",
         "choose_estimate_system": "选择估算体系",
@@ -177,24 +185,34 @@
       "select": "选择估算体系"
     },
     "automations": {
+      "days": "{count} 天",
+      "custom_days": "自定义天数",
+      "days_label": "天数",
+      "day_unit": "天",
+      "days_validation": "请输入 1 到 {max} 之间的整数",
       "label": "自动化",
       "heading": "自动化",
-      "description": "配置自动化操作，简化项目管理流程，减少手动操作。",
+      "description": "自动归档、关闭工作项，并在到期前提醒负责人。",
       "auto-archive": {
         "title": "自动归档已关闭的工作项",
-        "description": "Plane 将自动归档已完成或已取消的工作项。",
-        "duration": "自动归档已关闭超过以下时长的工作项"
+        "description": "已完成或已取消的工作项连续无活动达到指定天数后归档。",
+        "duration": "无活动多少天后归档"
       },
       "auto-close": {
         "title": "自动关闭工作项",
-        "description": "Plane 会自动关闭长期未完成也未取消的工作项。",
-        "duration": "自动关闭不活跃超过以下时长的工作项",
-        "auto_close_status": "自动关闭状态"
+        "description": "工作项连续无活动达到指定天数后，自动移至指定的关闭状态。",
+        "duration": "无活动多少天后关闭",
+        "state_settings": "项目状态设置",
+        "state_hint": "仅可选择已取消组中的状态，可在{settings}中添加。",
+        "auto_close_status": "关闭后状态"
       },
       "auto-remind": {
         "title": "自动提醒",
-        "description": "Plane 会通过邮件和应用内通知自动发送提醒，帮助团队按时完成工作。",
-        "duration": "提前提醒时间"
+        "description": "在工作项到期前提醒负责人，可选择同时发送邮件。",
+        "duration": "提前提醒",
+        "days": "{count} 天",
+        "email_label": "邮件通知",
+        "in_app_always_on": "站内通知始终开启"
       }
     },
     "empty_state": {
@@ -352,18 +370,18 @@
         "toggle_description": "项目成员可以创建和编辑页面。"
       },
       "intake": {
-        "intake_responsibility": "Intake 负责人",
-        "intake_sources": "Intake 来源",
-        "title": "Intake",
-        "short_title": "Intake",
+        "intake_responsibility": "需求收集负责人",
+        "intake_sources": "需求收集来源",
+        "title": "需求收集",
+        "short_title": "需求收集",
         "description": "让非成员提交缺陷、反馈和建议，而不打扰您的工作流程。",
-        "toggle_title": "启用 Intake",
-        "toggle_description": "允许项目成员在应用内创建 Intake 请求。",
+        "toggle_title": "启用需求收集",
+        "toggle_description": "允许项目成员在应用内创建需求收集请求。",
         "toggle_tooltip_on": "请联系项目管理员开启此功能。",
         "toggle_tooltip_off": "请联系项目管理员关闭此功能。",
         "notify_assignee": {
           "title": "通知负责人",
-          "description": "收到新的 Intake 请求时，会通知默认负责人"
+          "description": "有新需求到达时通知所选负责人；清空后不发送该通知"
         },
         "in_app": {
           "title": "应用内",
@@ -390,10 +408,10 @@
           "select_properties": "选择属性",
           "search_placeholder": "搜索属性",
           "toasts": {
-            "success_create": "Intake 表单已创建",
-            "success_update": "Intake 表单已更新",
-            "error_create": "创建 Intake 表单失败",
-            "error_update": "更新 Intake 表单失败"
+            "success_create": "需求收集表单已创建",
+            "success_update": "需求收集表单已更新",
+            "error_create": "创建需求收集表单失败",
+            "error_update": "更新需求收集表单失败"
           }
         },
         "toasts": {

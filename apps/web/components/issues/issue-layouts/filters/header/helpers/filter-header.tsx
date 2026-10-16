@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,13 +10,15 @@ import { ChevronDownOutline, ChevronUpOutline } from "@makeplane/propel/icons";
 
 type Props = {
   title: string;
+  field: string;
   isPreviewEnabled: boolean;
   handleIsPreviewEnabled: () => void;
 };
 
-export function FilterHeader({ title, isPreviewEnabled, handleIsPreviewEnabled }: Props) {
+export function FilterHeader({ field, title, isPreviewEnabled, handleIsPreviewEnabled }: Props) {
   return (
     <div className="sticky top-0 flex items-center justify-between gap-2 bg-surface-1">
+      <FilterFieldIcon field={field} />
       <div className="flex-grow truncate text-caption-sm-medium text-placeholder">{title}</div>
       <button
         type="button"

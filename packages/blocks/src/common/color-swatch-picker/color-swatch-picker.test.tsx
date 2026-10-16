@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ColorSwatchPicker } from "./color-swatch-picker";
@@ -99,4 +99,16 @@ describe("ColorSwatchPicker", () => {
     render(<ColorSwatchPicker onChange={() => {}} />);
     expect(screen.getByRole("group", { name: "Preset colors" }).children).toHaveLength(10);
   });
+});
+
+it("supports continuous color changes with keyboard controls when enabled", async () => {
+  const onChange = vi.fn();
+  render(<ColorSwatchPicker continuous value="#60646c" onChange={onChange} />);
+  expect(screen.queryByRole("slider")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Set custom color" }));
+  const saturation = screen.getByRole("slider", { name: "Saturation and brightness" });
+  saturation.focus();
+  fireEvent.keyDown(saturation, { key: "ArrowRight", keyCode: 39 });
+  expect(onChange).toHaveBeenCalledWith(expect.stringMatching(/^#[0-9a-f]{6}$/i));
+  expect(screen.getByRole("slider", { name: "Hue" })).toBeTruthy();
 });

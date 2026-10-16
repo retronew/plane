@@ -52,6 +52,7 @@ export const FilterStartDate = observer(function FilterStartDate(props: Props) {
         />
       )}
       <FilterHeader
+        field="start_date"
         title={translate("web.runtime.filter_start_date", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

@@ -62,9 +62,17 @@
       "title": "Enable estimates for my project",
       "enable_description": "They help you in communicating complexity and workload of the team.",
       "no_estimate": "No estimate",
+      "current_system": "Current estimate system",
       "new": "New estimate system",
       "create": {
         "custom": "Custom",
+        "template_help": {
+          "fibonacci": "Growing intervals for complex work with greater uncertainty.",
+          "linear": "Even intervals for tasks with similar levels of effort.",
+          "squares": "Wider intervals emphasize differences in effort.",
+          "t_shirt_sizes": "Compare relative sizes without assigning numeric points.",
+          "easy_to_hard": "Use difficulty levels to compare tasks intuitively."
+        },
         "start_from_scratch": "Start from scratch",
         "choose_template": "Choose a template",
         "choose_estimate_system": "Choose an estimate system",
@@ -177,24 +185,34 @@
       "select": "Select an estimate system"
     },
     "automations": {
+      "days": "{count} days",
+      "custom_days": "Custom days",
+      "days_label": "Number of days",
+      "day_unit": "days",
+      "days_validation": "Enter a whole number between 1 and {max}",
       "label": "Automations",
       "heading": "Automations",
-      "description": "Configure automated actions to streamline your project management workflow and reduce manual tasks.",
+      "description": "Automatically archive and close work items, and remind assignees before due dates.",
       "auto-archive": {
         "title": "Auto-archive closed work items",
-        "description": "Plane will auto archive work items that have been completed or canceled.",
-        "duration": "Auto-archive work items that are closed for"
+        "description": "Archive completed or cancelled work items after the selected number of inactive days.",
+        "duration": "Days of inactivity before archiving"
       },
       "auto-close": {
         "title": "Auto-close work items",
-        "description": "Plane will automatically close work items that haven't been completed or canceled.",
-        "duration": "Auto-close work items that are inactive for",
-        "auto_close_status": "Auto-close status"
+        "description": "Move inactive work items to the selected closed state after the chosen number of days.",
+        "duration": "Days of inactivity before closing",
+        "state_settings": "project state settings",
+        "state_hint": "Choose a state from the cancelled group. Add more options in {settings}.",
+        "auto_close_status": "Closed state"
       },
       "auto-remind": {
         "title": "Auto-reminders",
-        "description": "Plane will automatically send reminders via email and in-app notifications to keep your team on track with deadlines.",
-        "duration": "Send reminder before"
+        "description": "Remind assignees before work items are due, with optional email notifications.",
+        "duration": "Send reminder before",
+        "days": "{count} days",
+        "email_label": "Email notifications",
+        "in_app_always_on": "In-app reminders are always enabled."
       }
     },
     "empty_state": {
@@ -363,7 +381,7 @@
         "toggle_tooltip_off": "Ask your Project Admin to turn this off.",
         "notify_assignee": {
           "title": "Notify assignees",
-          "description": "For a new request to intake, default assignees will be alerted via notifications"
+          "description": "Notify the selected owner when a new request arrives. Clear the selection to stop these notifications."
         },
         "in_app": {
           "title": "In-app",

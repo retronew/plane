@@ -1,6 +1,7 @@
 /* Scope popup geometry to the shared emoji/icon picker. Propel's ready-made popup owns its render. */
 [data-emoji-icon-picker-popup] {
-  width: 322px;
+  width: 376px;
+  max-width: calc(100vw - 24px);
   min-width: 0;
   gap: 0;
   padding: 0;
@@ -8,9 +9,13 @@
   border-radius: 8px;
 }
 [data-emoji-picker-tabs] {
-  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
 }
 [data-emoji-picker-body] {
+  flex: 1;
+  min-height: 0;
   width: 100%;
   align-self: stretch;
   margin: 0;
@@ -25,4 +30,128 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+/* These are the only scrollports; keep colour/search controls stationary. */
+[data-icon-picker-scrollport],
+[data-emoji-icon-picker-popup] [data-slot="emoji-picker-content"] {
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-hover) transparent;
+}
+[data-icon-picker-scrollport]::-webkit-scrollbar,
+[data-emoji-icon-picker-popup] [data-slot="emoji-picker-content"]::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+[data-icon-picker-choice] {
+  background-color: color-mix(in srgb, currentColor 12.5%, transparent);
+  transition: background-color 150ms ease-out;
+}
+[data-icon-picker-choice]:hover,
+[data-icon-picker-choice]:focus-visible {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+[data-icon-color-panel] .react-colorful {
+  width: 100%;
+  height: 100px;
+  padding-right: 24px;
+}
+[data-icon-color-panel] .react-colorful__saturation {
+  border-radius: 4px;
+  border-bottom: 0;
+}
+[data-icon-color-panel] .react-colorful__hue {
+  display: none;
+}
+[data-icon-hue] {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  width: 8px;
+  height: 100px;
+  appearance: none;
+  writing-mode: vertical-lr;
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  cursor: pointer;
+}
+[data-icon-hue]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 1px 4px #0005;
+}
+[data-icon-hue]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 1px 4px #0005;
+}
+[data-icon-color-panel] .react-colorful__pointer {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+[data-color-mode-drawer] {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 350ms ease,
+    opacity 350ms ease;
+}
+[data-color-mode-drawer][data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+[data-color-mode-content] {
+  animation: icon-color-mode-in 350ms ease;
+}
+@keyframes icon-color-mode-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-color-mode-drawer] {
+    transition: none;
+  }
+  [data-color-mode-content] {
+    animation: none;
+  }
+}
+
+[data-background-disabled] [data-icon-picker-choice] {
+  background-color: transparent;
+}
+
+[data-category-color-picker] {
+  width: 306px;
+  min-width: 0;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+}
+
+[data-continuous-color-picker] .react-colorful {
+  width: 100%;
+  height: 128px;
+}
+[data-continuous-color-picker] .react-colorful__hue {
+  height: 12px;
+}
+[data-continuous-color-picker] .react-colorful__pointer {
+  width: 16px;
+  height: 16px;
 }

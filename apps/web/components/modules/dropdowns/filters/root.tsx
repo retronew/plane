@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -65,6 +66,7 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(p
         {!isArchived && (
           <div className="py-2">
             <FilterOption
+              icon={<FilterFieldIcon field="favorites" />}
               isChecked={!!displayFilters.favorites}
               onClick={() =>
                 handleDisplayFiltersUpdate({

@@ -55,6 +55,7 @@ export const FilterTargetDate = observer(function FilterTargetDate(props: Props)
         />
       )}
       <FilterHeader
+        field="target_date"
         title={translate("web.runtime.filter_due_date", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

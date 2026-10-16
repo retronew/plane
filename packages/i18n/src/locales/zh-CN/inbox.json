@@ -57,10 +57,10 @@
       "updated_at": "更新时间",
       "id": "ID"
     },
-    "label": "Intake",
-    "page_label": "{workspace} - Intake",
+    "label": "需求收集",
+    "page_label": "{workspace} -需求收集",
     "modal": {
-      "title": "创建 Intake 工作项"
+      "title": "创建需求收集工作项"
     },
     "tabs": {
       "open": "未处理",
@@ -77,7 +77,7 @@
       },
       "sidebar_filter": {
         "title": "没有匹配的工作项",
-        "description": "Intake 中没有符合当前筛选条件的工作项。您可以创建新工作项。"
+        "description": "需求收集中没有符合当前筛选条件的工作项。您可以创建新工作项。"
       },
       "detail": {
         "title": "选择一个工作项以查看其详细信息。"

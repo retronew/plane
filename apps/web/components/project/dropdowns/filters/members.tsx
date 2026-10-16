@@ -60,6 +60,7 @@ export const FilterMembers = observer(function FilterMembers(props: Props) {
   return (
     <>
       <FilterHeader
+        field="members"
         title={translate("web.runtime.filter_members", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}

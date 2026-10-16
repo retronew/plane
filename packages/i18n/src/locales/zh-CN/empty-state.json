@@ -87,12 +87,12 @@
       "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
     },
     "intake_sidebar": {
-      "title": "记录 Intake 请求",
+      "title": "记录需求收集请求",
       "description": "提交新请求，在项目工作流中进行审核、排定优先级和跟踪。",
-      "cta_primary": "创建 Intake 请求"
+      "cta_primary": "创建需求收集请求"
     },
     "intake_main": {
-      "title": "选择一个 Intake 工作项以查看详情"
+      "title": "选择一个需求收集工作项以查看详情"
     },
     "epics": {
       "title": "用史诗把复杂项目变得井然有序。",
@@ -166,7 +166,7 @@
       "title": "创建模块来组织工作，并跟踪各阶段的进度。"
     },
     "analytics_no_intake": {
-      "title": "设置 Intake 来管理外部请求，并跟踪请求的接受和拒绝情况"
+      "title": "设置需求收集来管理外部请求，并跟踪请求的接受和拒绝情况"
     },
     "home_widget_stickies": {
       "title": "记下一个想法、一次灵光乍现或一个点子。添加便签即可开始。"

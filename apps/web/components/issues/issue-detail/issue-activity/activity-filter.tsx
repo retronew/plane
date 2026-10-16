@@ -1,3 +1,4 @@
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
@@ -42,6 +43,7 @@ export const ActivityFilter = observer(function ActivityFilter(props: TActivityF
           {filterOptions.map((item) => (
             <MenuCheckboxItem
               key={item.key}
+              icon={<FilterFieldIcon field={item.key} />}
               label={t(item.labelTranslationKey)}
               checked={item.isSelected}
               onCheckedChange={() => item.onClick()}

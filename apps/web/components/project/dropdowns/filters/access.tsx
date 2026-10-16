@@ -32,6 +32,7 @@ export const FilterAccess = observer(function FilterAccess(props: Props) {
   return (
     <>
       <FilterHeader
+        field="access"
         title={translate("web.runtime.filter_access", { count: appliedFiltersCount })}
         isPreviewEnabled={previewEnabled}
         handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
