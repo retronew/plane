@@ -96,6 +96,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     modal = false,
     pinSelected: shouldPinSelected = false,
     contentSizing = "auto",
+    contentMinWidth,
     fitOptionLabels = false,
     defaultOpen = false,
     open: controlledOpen,
@@ -427,14 +428,19 @@ export function SelectRoot<T>(props: SelectProps<T>) {
   // the positioner is the positioned ancestor — so the value goes on that element directly, through
   // a hidden sentinel whose callback ref fires exactly when the portaled popup mounts (an effect
   // runs a commit too early: base-ui's portal node is created first and filled after). No restore
-  // is needed: the positioner unmounts with the popup. Delete this once propel grows the axis.
-  const applyPositionerZIndex = useCallback(
+  // is needed: the positioner unmounts with the popup. The same mount hook applies a per-picker
+  // minimum width without changing the shared theme. Delete the overrides when Propel exposes them.
+  const applyPopupOptions = useCallback(
     (node: HTMLSpanElement | null) => {
-      if (positionerZIndex === undefined || !node) return;
-      const positioner = node.closest("[data-select-popup]")?.parentElement;
-      if (positioner instanceof HTMLElement) positioner.style.zIndex = String(positionerZIndex);
+      if (!node) return;
+      const popup = node.closest<HTMLElement>("[data-select-popup]");
+      if (!popup) return;
+      if (contentMinWidth !== undefined) popup.style.setProperty("--popup-width-min", `${contentMinWidth}px`);
+      const positioner = popup.parentElement;
+      if (positionerZIndex !== undefined && positioner instanceof HTMLElement)
+        positioner.style.zIndex = String(positionerZIndex);
     },
-    [positionerZIndex]
+    [positionerZIndex, contentMinWidth]
   );
 
   const searchLabel = t("common.search.label");
@@ -453,10 +459,13 @@ export function SelectRoot<T>(props: SelectProps<T>) {
       // Panel/row insets, trailing selection mark, and the optional 16px icon with 8px gaps.
       const chromeWidth = 58 + (getOptionIcon ? 24 : 0) + (multiple ? 24 : 0);
       popup.style.setProperty("--control-gap-md", "8px");
-      popup.style.setProperty("--popup-width-min", `${Math.max(204, Math.ceil(labelWidth + chromeWidth))}px`);
+      popup.style.setProperty(
+        "--popup-width-min",
+        `${Math.max(contentMinWidth ?? 204, Math.ceil(labelWidth + chromeWidth))}px`
+      );
       popup.style.setProperty("--popup-width-max", "var(--available-width,calc(100vw - 2rem))");
     },
-    [fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple]
+    [fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple, contentMinWidth]
   );
   const popupLabel = searchPlaceholder ?? placeholder ?? t("common.options");
   const resolvedEmptyMessage =
@@ -511,7 +520,9 @@ export function SelectRoot<T>(props: SelectProps<T>) {
         search={searchSlot}
         footer={footer}
       >
-        {positionerZIndex === undefined ? null : <span hidden ref={applyPositionerZIndex} />}
+        {positionerZIndex === undefined && contentMinWidth === undefined ? null : (
+          <span hidden ref={applyPopupOptions} />
+        )}
         {fitOptionLabels ? <span hidden className="text-body-xs-regular" ref={fitPopupToLabels} /> : null}
         {/* Both regions stay mounted (base-ui announces their content politely); their chrome
             collapses while childless. */}

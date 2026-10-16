@@ -94,6 +94,7 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
               getOptionValue={(option) => option.value}
               getOptionLabel={(option) => option.label}
               showSearch={false}
+              contentMinWidth={160}
               pinSelected={false}
             >
               <Select.Trigger

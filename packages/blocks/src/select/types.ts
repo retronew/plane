@@ -200,10 +200,12 @@ type SelectBaseProps<T> = {
    */
   pinSelected?: boolean;
   /**
-   * Panel width — propel's `ComboboxContent` sizing axis (`auto` hugs the content between 12rem and
-   * 24rem, `anchor` matches the trigger). Defaults to `auto`.
+   * Panel width — propel's `ComboboxContent` sizing axis (`auto` hugs the content between 204px and
+   * 400px, `anchor` matches the trigger). Defaults to `auto`.
    */
   contentSizing?: ComboboxContentSizing;
+  /** Optional minimum width in px for this auto-sized panel; other pickers retain Propel's default. */
+  contentMinWidth?: number;
   /** Size a virtualized popup from its full option labels, capped by available screen space. */
   fitOptionLabels?: boolean;
   /**

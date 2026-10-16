@@ -1289,6 +1289,25 @@ describe("Select on Propel combobox", () => {
 
     await openSelect(user);
     expect(document.querySelector("[data-select-popup]")?.className).toContain("--popup-width-min");
+    expect(
+      document.querySelector<HTMLElement>("[data-select-popup]")?.style.getPropertyValue("--popup-width-min")
+    ).toBe("");
+  });
+
+  it("allows a compact panel for a short option list while retaining normal selection", async () => {
+    const user = userEvent.setup();
+    const { onChange } = renderSelect({
+      contentMinWidth: 160,
+      showSearch: false,
+      getValues: () => options.slice(0, 2),
+    });
+    await user.click(trigger());
+    const option = await popup().findByRole("option", { name: "Option 1" });
+    expect(
+      document.querySelector<HTMLElement>("[data-select-popup]")?.style.getPropertyValue("--popup-width-min")
+    ).toBe("160px");
+    await user.click(option);
+    expect(onChange).toHaveBeenCalledWith("id-1");
   });
 
   it("fits virtualized long labels beyond the default cap without shrinking when searching", async () => {
