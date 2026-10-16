@@ -57,7 +57,7 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
           {cycle.project_detail.name}
         </h2>
       </div>
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-subtle bg-layer-1 px-3 py-2">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-subtle bg-layer-1 px-3 py-2">
         <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
           <CycleProgressIcon value={progress} />
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
