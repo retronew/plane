@@ -202,16 +202,6 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
         <SettingsHeading
           title={t("web.workflow_ui.issue_types")}
           description={t("web.workflow_ui.types_description")}
-          control={
-            <a
-              href="https://docs.plane.so/work-items/project-work-item-types"
-              target="_blank"
-              rel="noreferrer"
-              className="text-body-xs-regular text-secondary hover:text-primary"
-            >
-              {t("web.workflow_ui.types_settings.docs")}
-            </a>
-          }
         />
       )}
       <div className="mt-6">
