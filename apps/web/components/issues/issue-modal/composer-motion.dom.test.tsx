@@ -39,3 +39,14 @@ it("ignores offscreen duplicates and respects reduced motion", () => {
   vi.stubGlobal("matchMedia", () => ({ matches: true }));
   expect(prepareComposerMotion(popup(), "draft")).toBeUndefined();
 });
+
+it("targets only the explicitly scoped Intake button and skips reduced motion", () => {
+  element("data-new-work-item-trigger", new DOMRect(50, 100, 200, 30));
+  const other = element("data-intake-request-trigger", new DOMRect(100, 50, 100, 30));
+  other.dataset.intakeRequestTrigger = "other";
+  const target = element("data-intake-request-trigger", new DOMRect(800, 50, 100, 30));
+  target.dataset.intakeRequestTrigger = "project";
+  expect(prepareComposerMotion(popup(), "new", '[data-intake-request-trigger="project"]')).toBe("350px -185px");
+  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  expect(prepareComposerMotion(popup(), "new", '[data-intake-request-trigger="project"]')).toBeUndefined();
+});

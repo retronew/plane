@@ -66,6 +66,7 @@ export interface IProjectInboxStore {
   // actions
   handleCurrentTab: (workspaceSlug: string, projectId: string, tab: TInboxIssueCurrentTab) => void;
   handleInboxIssueFilters: <T extends keyof TInboxIssueFilter>(key: T, value: TInboxIssueFilter[T]) => void; // if user sends me undefined, I will remove the value from the filter key
+  clearInboxIssueFilters: () => void;
   handleInboxIssueSorting: <T extends keyof TInboxIssueSorting>(key: T, value: TInboxIssueSorting[T]) => void; // if user sends me undefined, I will remove the value from the filter key
   fetchInboxIssues: (
     workspaceSlug: string,
@@ -117,6 +118,7 @@ export class ProjectInboxStore implements IProjectInboxStore {
       filteredInboxIssueIds: computed,
       // actions
       handleInboxIssueFilters: action,
+      clearInboxIssueFilters: action,
       handleInboxIssueSorting: action,
       fetchInboxIssues: action,
       fetchInboxPaginationIssues: action,
@@ -159,7 +161,9 @@ export class ProjectInboxStore implements IProjectInboxStore {
       this.currentTab === EInboxIssueCurrentTab.OPEN
         ? [EInboxIssueStatus.PENDING, EInboxIssueStatus.SNOOZED]
         : [EInboxIssueStatus.ACCEPTED, EInboxIssueStatus.DECLINED, EInboxIssueStatus.DUPLICATE];
-    appliedFilters = appliedFilters.filter((filter) => this.inboxFilters?.status?.includes(filter));
+    const selectedStatuses = new Set(this.inboxFilters?.status);
+    appliedFilters = appliedFilters.filter((filter) => selectedStatuses.has(filter));
+    const appliedStatusSet = new Set(appliedFilters);
     const currentTime = new Date().getTime();
 
     return this.currentTab === EInboxIssueCurrentTab.OPEN
@@ -172,12 +176,12 @@ export class ProjectInboxStore implements IProjectInboxStore {
             );
           if (appliedFilters[0] === EInboxIssueStatus.PENDING)
             return (
-              appliedFilters.includes(this.inboxIssues[id].status) ||
+              appliedStatusSet.has(this.inboxIssues[id].status) ||
               (this.inboxIssues[id].status === EInboxIssueStatus.SNOOZED &&
                 currentTime > new Date(this.inboxIssues[id].snoozed_till!).getTime())
             );
         })
-      : this.inboxIssueIds.filter((id) => appliedFilters.includes(this.inboxIssues[id].status));
+      : this.inboxIssueIds.filter((id) => appliedStatusSet.has(this.inboxIssues[id].status));
   }
 
   getIssueInboxByIssueId = computedFn((issueId: string) => this.inboxIssues?.[issueId]);
@@ -287,6 +291,20 @@ export class ProjectInboxStore implements IProjectInboxStore {
       });
       this.fetchInboxIssues(workspaceSlug, projectId, "filter-loading");
     }
+  };
+
+  clearInboxIssueFilters = () => {
+    const { workspaceSlug } = this.store.router;
+    const projectId = this.currentInboxProjectId;
+    if (!workspaceSlug || !projectId) return;
+    set(this.filtersMap, [projectId], {
+      status:
+        this.currentTab === EInboxIssueCurrentTab.OPEN
+          ? [EInboxIssueStatus.PENDING]
+          : [EInboxIssueStatus.ACCEPTED, EInboxIssueStatus.DECLINED, EInboxIssueStatus.DUPLICATE],
+    });
+    this.inboxIssuePaginationInfo = undefined;
+    void this.fetchInboxIssues(workspaceSlug, projectId, "filter-loading");
   };
 
   handleInboxIssueSorting = <T extends keyof TInboxIssueSorting>(key: T, value: TInboxIssueSorting[T]) => {

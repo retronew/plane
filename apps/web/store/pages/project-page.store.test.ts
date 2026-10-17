@@ -25,6 +25,38 @@ function makeStore() {
   return new ProjectPageStore({ router: { workspaceSlug: "workspace", projectId: "project" } } as CoreRootStore);
 }
 
+it("filters actual page-store results by any selected label together with search, favorites and creators", () => {
+  const store = makeStore();
+  const add = (id: string, labels: string[], favorite = true, owner = "alice") => {
+    store.data[id] = {
+      id,
+      name: "Design notes",
+      project_ids: ["project"],
+      access: 0,
+      archived_at: null,
+      label_ids: labels,
+      is_favorite: favorite,
+      owned_by: owner,
+      created_at: "2026-10-01T00:00:00Z",
+    } as never;
+  };
+  add("first", ["label-1"]);
+  add("second", ["label-2"]);
+  add("unrelated", ["label-3"]);
+  add("not-favorite", ["label-1"], false);
+  add("other-owner", ["label-1"], true, "bob");
+  store.updateFilters("searchQuery", "Design");
+  store.updateFilters("filters", { labels: ["label-1", "label-2"], favorites: true, created_by: ["alice"] });
+  expect(new Set(store.getCurrentProjectFilteredPageIdsByTab("public"))).toEqual(new Set(["first", "second"]));
+  store.updateFilters("filters", { labels: [], favorites: true, created_by: ["alice"] });
+  expect(new Set(store.getCurrentProjectFilteredPageIdsByTab("public"))).toEqual(
+    new Set(["first", "second", "unrelated"])
+  );
+  store.clearAllFilters();
+  expect(store.filters.searchQuery).toBe("Design");
+  expect(store.getCurrentProjectFilteredPageIdsByTab("public")).toHaveLength(5);
+});
+
 it("does not publish a newly created page to the list before redirecting", async () => {
   const store = makeStore();
   const page = { id: "new-page", name: "New page" };

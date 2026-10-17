@@ -5,6 +5,10 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
+import { ArrowNarrowRightOutline } from "@makeplane/propel/icons";
+import { IntakeHistoryValue } from "./history-value";
+import type { TIntakeActivityTab } from "./intake-tabs";
 // plane imports
 import type { E_SORT_ORDER, TActivityFilters, EActivityFilterType } from "@plane/constants";
 import { BASE_ACTIVITY_FILTER_TYPES, filterActivityOnSelectedFilters } from "@plane/constants";
@@ -15,12 +19,14 @@ import { CommentCard } from "@/components/comments/card/root";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // local imports
 import { IssueActivityItem } from "./activity/activity-list";
+import { IntakeActivityContext } from "./intake-activity-context";
 import { IssueActivityLoader } from "./loader";
 
 type TIssueActivityCommentRoot = {
   workspaceSlug: string;
   projectId: string;
   isIntakeIssue: boolean;
+  intakeTab?: TIntakeActivityTab;
   issueId: string;
   selectedFilters: TActivityFilters[];
   activityOperations: TCommentsOperations;
@@ -33,6 +39,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
   const {
     workspaceSlug,
     isIntakeIssue,
+    intakeTab = "all",
     issueId,
     selectedFilters,
     activityOperations,
@@ -41,9 +48,10 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
     disabled,
     sortOrder,
   } = props;
+  const { t } = useTranslation();
   // store hooks
   const {
-    activity: { getActivityAndCommentsByIssueId },
+    activity: { getActivityAndCommentsByIssueId, getActivityById },
     comment: { getCommentById },
   } = useIssueDetail();
   // derived values
@@ -51,9 +59,26 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
 
   if (!activityAndComments) return <IssueActivityLoader />;
 
-  if (activityAndComments.length <= 0) return null;
+  const filteredActivityAndComments = filterActivityOnSelectedFilters(activityAndComments, selectedFilters).filter(
+    (item) => {
+      if (!isIntakeIssue || intakeTab === "all") return true;
+      if (intakeTab === "comments") return item.activity_type === "COMMENT";
+      if (item.activity_type === "COMMENT") return false;
+      const activity = getActivityById(item.id);
+      if (intakeTab === "transitions") return activity?.field === "state";
+      if (intakeTab === "history") return activity?.old_value != null || activity?.new_value != null;
+      return true;
+    }
+  );
 
-  const filteredActivityAndComments = filterActivityOnSelectedFilters(activityAndComments, selectedFilters);
+  if (filteredActivityAndComments.length === 0) {
+    if (!isIntakeIssue || intakeTab === "comments") return null;
+    const emptyKey =
+      intakeTab === "transitions" ? "no_transitions" : intakeTab === "history" ? "no_history" : "no_activity";
+    return (
+      <p className="py-8 text-center text-body-xs-regular text-tertiary">{t(`activity_empty_state.${emptyKey}`)}</p>
+    );
+  }
 
   return (
     <div>
@@ -66,19 +91,55 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
             entityId={issueId}
             comment={comment}
             activityOperations={activityOperations}
-            ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
+            ends={
+              isIntakeIssue && filteredActivityAndComments.length === 1
+                ? "only"
+                : index === 0
+                  ? "top"
+                  : index === filteredActivityAndComments.length - 1
+                    ? "bottom"
+                    : undefined
+            }
             showAccessSpecifier={!!showAccessSpecifier}
             showCopyLinkOption={!isIntakeIssue}
             disabled={disabled}
             projectId={projectId}
             enableReplies
+            isIntakeIssue={isIntakeIssue}
           />
         ) : BASE_ACTIVITY_FILTER_TYPES.includes(activityComment.activity_type as EActivityFilterType) ? (
-          <IssueActivityItem
+          <div
             key={activityComment.id}
-            activityId={activityComment.id}
-            ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
-          />
+            className={
+              isIntakeIssue
+                ? "relative text-body-xs-regular [&>div.flex]:text-body-xs-regular [&>div.flex>div:last-child]:text-caption-sm-regular"
+                : undefined
+            }
+          >
+            {isIntakeIssue && filteredActivityAndComments.length > 1 && (
+              <div aria-hidden className="absolute top-0 bottom-0 left-[13px] w-px bg-layer-3" />
+            )}
+            <IntakeActivityContext.Provider value={isIntakeIssue}>
+              <IssueActivityItem
+                activityId={activityComment.id}
+                ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
+              />
+            </IntakeActivityContext.Provider>
+            {isIntakeIssue && intakeTab === "history" && (
+              <div className="ml-10 flex min-w-0 items-center gap-3 pb-3 text-body-xs-regular text-secondary">
+                {["old_value", "new_value"].map((key, valueIndex) => {
+                  const activity = getActivityById(activityComment.id);
+                  const value = activity?.[key as "old_value" | "new_value"];
+                  return (
+                    <span key={key} className="contents">
+                      {valueIndex === 1 && <ArrowNarrowRightOutline className="size-3.5 shrink-0" aria-hidden />}
+                      <IntakeHistoryValue field={activity?.field} value={value} />
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : null;
       })}
     </div>

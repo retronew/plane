@@ -41,12 +41,26 @@ export const InboxIssueStatus = observer(function InboxIssueStatus(props: Props)
       className={cn(
         `relative flex flex-col gap-1 rounded-sm p-1.5 py-0.5 ${statusIcon.textColor(
           isSnoozedDatePassed
-        )} ${statusIcon.bgColor(isSnoozedDatePassed)}`
+        )} ${statusIcon.bgColor(isSnoozedDatePassed)}`,
+        {
+          "rounded-md": inboxIssueStatusDetail.key === "pending",
+          "min-h-6 justify-center rounded-md px-1.5 py-0": inboxIssueStatusDetail.key === "accepted",
+        }
       )}
     >
       <div className={`flex items-center gap-1`}>
-        <InboxStatusIcon type={inboxIssue?.status} size={iconSize} className="flex-shrink-0" renderColor={false} />
-        <div className="text-11 font-medium whitespace-nowrap">
+        <InboxStatusIcon
+          type={inboxIssue?.status}
+          size={inboxIssueStatusDetail.key === "accepted" ? 14 : iconSize}
+          className={cn("flex-shrink-0", inboxIssueStatusDetail.key === "accepted" && "!size-3.5")}
+          renderColor={false}
+        />
+        <div
+          className={cn("whitespace-nowrap", {
+            "text-body-xs-medium": ["pending", "accepted"].includes(inboxIssueStatusDetail.key),
+            "text-11 font-medium": !["pending", "accepted"].includes(inboxIssueStatusDetail.key),
+          })}
+        >
           {inboxIssue?.status === 0 && inboxIssue?.snoozed_till ? description : t(inboxIssueStatusDetail.i18n_title)}
         </div>
       </div>

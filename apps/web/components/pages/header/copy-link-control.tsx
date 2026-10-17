@@ -58,7 +58,12 @@ export const PageCopyLinkControl = observer(function PageCopyLinkControl({ page 
   }, [pageOperations]);
 
   return (
-    <Tooltip label={isCopied ? translate("web.copied") : translate("web.copy_link")} side="bottom">
+    <Tooltip
+      label={isCopied ? translate("web.copied") : translate("web.copy_link")}
+      side="top"
+      positionMethod="fixed"
+      collisionAvoidance={{ side: "none", align: "shift" }}
+    >
       <IconButton
         variant="ghost"
         size="md"

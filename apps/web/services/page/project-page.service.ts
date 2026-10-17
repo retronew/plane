@@ -50,7 +50,10 @@ export class ProjectPageService extends APIService {
   }
 
   async update(workspaceSlug: string, projectId: string, pageId: string, data: Partial<TPage>): Promise<TPage> {
-    return this.patch(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/`, data)
+    // The API writes the relation through `labels`; `label_ids` is its read-side annotation.
+    const { label_ids, ...properties } = data;
+    const payload = label_ids === undefined ? properties : { ...properties, labels: label_ids };
+    return this.patch(`/api/workspaces/${workspaceSlug}/projects/${projectId}/pages/${pageId}/`, payload)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

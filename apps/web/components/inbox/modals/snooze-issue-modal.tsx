@@ -22,7 +22,8 @@ export type InboxIssueSnoozeModalProps = {
 export function InboxIssueSnoozeModal(props: InboxIssueSnoozeModalProps) {
   const { isOpen, handleClose, value, onConfirm } = props;
   // states
-  const [date, setDate] = useState(value || new Date());
+  const [today] = useState(() => new Date());
+  const [date, setDate] = useState(() => value || today);
   //hooks
   const { t } = useTranslation();
 
@@ -33,7 +34,7 @@ export function InboxIssueSnoozeModal(props: InboxIssueSnoozeModalProps) {
         if (!open) handleClose();
       }}
     >
-      <DialogContent size="xs" aria-label={t("inbox_issue.actions.snooze")}>
+      <DialogContent size="xs" data-intake-snooze-dialog="" aria-label={t("inbox_issue.actions.snooze")}>
         <DialogMain>
           <DialogBody>
             <Calendar
@@ -48,7 +49,7 @@ export function InboxIssueSnoozeModal(props: InboxIssueSnoozeModalProps) {
               showOutsideDays
               disabled={[
                 {
-                  before: new Date(),
+                  before: today,
                 },
               ]}
             />

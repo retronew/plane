@@ -31,6 +31,11 @@ button[data-cover-upload-button][data-size] {
   width: 440px;
 }
 
+/* A single-month calendar should determine the snooze dialog's width. */
+[data-intake-snooze-dialog] {
+  width: fit-content;
+}
+
 [data-save-draft-dialog] [data-confirm-main] {
   padding: 24px 24px 12px;
 }

@@ -4,7 +4,12 @@
  * See the LICENSE file for details.
  */
 
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
+import { IntakeActivityContext } from "../../../intake-activity-context";
+import { Avatar } from "@makeplane/propel/components/avatar";
+import { getFileURL } from "@plane/utils";
+import { useMember } from "@/hooks/store/use-member";
+
 import { HierarchyOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -15,6 +20,34 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { IssueUser } from "./issue-user";
 import { ActivitySentence } from "@/components/common/activity/activity-sentence";
 import { IssueCreatorDisplay } from "./issue-creator";
+
+export function IntakeActivityActor({ activityId }: { activityId: string }) {
+  const {
+    activity: { getActivityById },
+  } = useIssueDetail();
+  const { getUserDetails } = useMember();
+  const activity = getActivityById(activityId);
+  const actor = activity?.actor_detail;
+  const member = actor?.id ? getUserDetails(actor.id) : undefined;
+  const name = member?.display_name ?? actor?.display_name;
+  if (!activity || !actor?.id || !name || actor.is_bot) return null;
+  return (
+    <Tooltip label={name}>
+      <a
+        className="mr-1.5 inline-flex align-middle"
+        aria-label={name}
+        href={`/${activity.workspace_detail?.slug}/profile/${actor.id}`}
+      >
+        <Avatar
+          size="xs"
+          alt={name}
+          fallback={name[0]?.toUpperCase()}
+          src={getFileURL(member?.avatar_url ?? actor.avatar_url ?? "")}
+        />
+      </a>
+    </Tooltip>
+  );
+}
 
 type TIssueActivityBlockComponent = {
   icon?: ReactNode;
@@ -32,6 +65,7 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
   } = useIssueDetail();
 
   const activity = getActivityById(activityId);
+  const isIntakeIssue = useContext(IntakeActivityContext);
   const { isMobile } = usePlatformOS();
   if (!activity) return <></>;
   return (
@@ -45,11 +79,19 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
         {icon ? icon : <HierarchyOutline className="h-3.5 w-3.5" />}
       </div>
       <div className="min-w-0 flex-1 break-words text-secondary">
-        {!activity?.field && activity?.verb === "created" ? (
-          <IssueCreatorDisplay activityId={activityId} customUserName={customUserName} />
-        ) : (
-          <IssueUser activityId={activityId} customUserName={customUserName} />
-        )}
+        {isIntakeIssue && !customUserName && <IntakeActivityActor activityId={activityId} />}
+        <Tooltip
+          label={customUserName ?? activity.actor_detail?.display_name ?? ""}
+          disabled={!isIntakeIssue || !activity.actor_detail?.display_name}
+        >
+          <span>
+            {!activity?.field && activity?.verb === "created" ? (
+              <IssueCreatorDisplay activityId={activityId} customUserName={customUserName} />
+            ) : (
+              <IssueUser activityId={activityId} customUserName={customUserName} />
+            )}
+          </span>
+        </Tooltip>
         <ActivitySentence> {children} </ActivitySentence>
       </div>
       <div className="shrink-0 text-11">

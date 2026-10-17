@@ -233,51 +233,53 @@ export const PageActions = observer(function PageActions(props: Props) {
           }
         />
         <MenuContent side="bottom" align="end">
-          {getRenderableItems(arrangedOptions).map((item) => {
-            const nestedItems = getRenderableItems(item.nestedMenuItems);
-            if (nestedItems.length)
+          <div className="w-60 max-w-full">
+            {getRenderableItems(arrangedOptions).map((item) => {
+              const nestedItems = getRenderableItems(item.nestedMenuItems);
+              if (nestedItems.length)
+                return (
+                  <MenuSubmenu key={item.key}>
+                    <MenuSubmenuTrigger
+                      label={item.title ?? ""}
+                      icon={item.icon && <Icon icon={item.icon} />}
+                      disabled={item.disabled}
+                    />
+                    <MenuSubmenuContent onClick={(event) => event.stopPropagation()}>
+                      {nestedItems.map((nestedItem) => (
+                        <MenuItem
+                          key={nestedItem.key}
+                          label={nestedItem.title ?? ""}
+                          icon={nestedItem.icon && <Icon icon={nestedItem.icon} />}
+                          disabled={nestedItem.disabled}
+                          closeOnClick={nestedItem.closeOnClick}
+                          onClick={() => nestedItem.action()}
+                        />
+                      ))}
+                    </MenuSubmenuContent>
+                  </MenuSubmenu>
+                );
               return (
-                <MenuSubmenu key={item.key}>
-                  <MenuSubmenuTrigger
+                <Fragment key={item.key}>
+                  {item.key === "archive-restore" && <MenuSeparator />}
+                  <MenuItem
+                    key={item.key}
+                    variant={resolveItemVariant(item)}
                     label={item.title ?? ""}
+                    description={item.description}
                     icon={item.icon && <Icon icon={item.icon} />}
+                    // `customContent` (the full-width / sticky-toolbar switches) sits at the row's inline end.
+                    trailing={isValidElement(item.customContent) ? item.customContent : undefined}
                     disabled={item.disabled}
+                    closeOnClick={item.closeOnClick}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      item.action?.();
+                    }}
                   />
-                  <MenuSubmenuContent onClick={(event) => event.stopPropagation()}>
-                    {nestedItems.map((nestedItem) => (
-                      <MenuItem
-                        key={nestedItem.key}
-                        label={nestedItem.title ?? ""}
-                        icon={nestedItem.icon && <Icon icon={nestedItem.icon} />}
-                        disabled={nestedItem.disabled}
-                        closeOnClick={nestedItem.closeOnClick}
-                        onClick={() => nestedItem.action()}
-                      />
-                    ))}
-                  </MenuSubmenuContent>
-                </MenuSubmenu>
+                </Fragment>
               );
-            return (
-              <Fragment key={item.key}>
-                {item.key === "archive-restore" && <MenuSeparator />}
-                <MenuItem
-                  key={item.key}
-                  variant={resolveItemVariant(item)}
-                  label={item.title ?? ""}
-                  description={item.description}
-                  icon={item.icon && <Icon icon={item.icon} />}
-                  // `customContent` (the full-width / sticky-toolbar switches) sits at the row's inline end.
-                  trailing={isValidElement(item.customContent) ? item.customContent : undefined}
-                  disabled={item.disabled}
-                  closeOnClick={item.closeOnClick}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    item.action?.();
-                  }}
-                />
-              </Fragment>
-            );
-          })}
+            })}
+          </div>
         </MenuContent>
       </Menu>
     </>

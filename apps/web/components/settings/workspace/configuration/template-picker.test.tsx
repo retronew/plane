@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { WorkspaceTemplate } from "@/services/workspace-configuration.service";
 import { TemplatePicker } from "./template-picker";
@@ -40,6 +41,15 @@ const template = (id: string, kind: WorkspaceTemplate["kind"], project: string |
 });
 
 beforeEach(() => {
+  Element.prototype.getAnimations = () => [];
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+  );
   mocks.templates = [
     template("global", "work_item"),
     template("project-one", "work_item", "one"),
@@ -87,6 +97,27 @@ it.each(["project", "kind", "workspace"])("clears selection on a %s switch", (sc
   expect(screen.getByRole("button", { name: "web.apply_template" }).hasAttribute("disabled")).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "web.apply_template" }));
   expect(apply).not.toHaveBeenCalled();
+});
+
+it("shows a page action even without available templates and explains the empty result", async () => {
+  mocks.templates = [];
+  render(
+    <MemoryRouter>
+      <TemplatePicker workspaceSlug="test" projectId="one" kind="page" variant="page" onApply={vi.fn()} />
+    </MemoryRouter>
+  );
+  fireEvent.click(screen.getByRole("button", { name: "templates.settings.use_template.button.default" }));
+  expect(await screen.findByText("web.no_project_templates")).toBeTruthy();
+  const link = screen.getByRole("link", { name: "web.workspace_settings" });
+  expect(link.getAttribute("href")).toBe("/test/settings/templates/");
+  expect(link.closest('[role="option"]')).toBeNull();
+});
+
+it("keeps the compact page picker disabled while content is unavailable", () => {
+  render(<TemplatePicker workspaceSlug="test" projectId="one" kind="page" variant="page" disabled onApply={vi.fn()} />);
+  const trigger = screen.getByRole("button", { name: "templates.settings.use_template.button.default" });
+  expect(trigger.hasAttribute("disabled")).toBe(true);
+  expect(trigger.textContent).toBe("templates.settings.use_template.button.default");
 });
 
 it("cannot apply a template removed from the available list", () => {

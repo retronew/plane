@@ -18,14 +18,14 @@
     "check:format": "turbo run check:format",
     "check:types": "turbo run check:types",
     "prepare": "husky",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "react-doctor"
   },
   "devDependencies": {
     "husky": "catalog:",
     "lint-staged": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "react-doctor": "^0.4.2",
+    "react-doctor": "0.9.18",
     "turbo": "catalog:"
   },
   "lint-staged": {

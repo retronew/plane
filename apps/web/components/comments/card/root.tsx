@@ -19,10 +19,11 @@ type TCommentCard = {
   entityId: string;
   comment: TIssueComment | undefined;
   activityOperations: TCommentsOperations;
-  ends: "top" | "bottom" | undefined;
+  ends: "top" | "bottom" | "only" | undefined;
   showAccessSpecifier: boolean;
   showCopyLinkOption: boolean;
   enableReplies: boolean;
+  isIntakeIssue?: boolean;
   disabled?: boolean;
   projectId?: string;
 };
@@ -37,6 +38,7 @@ export const CommentCard = observer(function CommentCard(props: TCommentCard) {
     showAccessSpecifier,
     showCopyLinkOption,
     disabled = false,
+    isIntakeIssue = false,
     projectId,
   } = props;
   // states
@@ -49,12 +51,13 @@ export const CommentCard = observer(function CommentCard(props: TCommentCard) {
   if (!comment || !workspaceId) return null;
 
   return (
-    <CommentBlock comment={comment} ends={ends}>
+    <CommentBlock comment={comment} ends={ends} isIntakeIssue={isIntakeIssue}>
       <CommentCardDisplay
         activityOperations={activityOperations}
         entityId={entityId}
         comment={comment}
         disabled={disabled}
+        isIntakeIssue={isIntakeIssue}
         projectId={projectId}
         readOnlyEditorRef={readOnlyEditorRef}
         showAccessSpecifier={showAccessSpecifier}

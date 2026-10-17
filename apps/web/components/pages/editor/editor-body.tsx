@@ -225,9 +225,10 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     () => ({
       id: currentUser?.id ?? "",
       name: currentUser?.display_name ?? "",
+      avatar: currentUser?.avatar_url ?? null,
       color: hslToHex(generateRandomColor(currentUser?.id ?? "")),
     }),
-    [currentUser?.display_name, currentUser?.id]
+    [currentUser?.display_name, currentUser?.id, currentUser?.avatar_url]
   );
 
   const blockWidthClassName = cn("mx-auto block w-full max-w-[720px] bg-transparent", {
@@ -275,7 +276,12 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
         <div>
           <div className={cn("page-header-container group/page-header", { "wide-layout": isFullWidth })}>
             <div className={blockWidthClassName}>
-              <PageEditorHeaderRoot page={page} projectId={projectId} />
+              <PageEditorHeaderRoot
+                page={page}
+                projectId={projectId}
+                workspaceSlug={workspaceSlug}
+                titleEditorRef={titleEditorRef}
+              />
             </div>
           </div>
           <CollaborativeDocumentEditorWithRef

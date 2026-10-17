@@ -71,6 +71,8 @@ export type TEditorCommands =
 export type TCommandExtraProps = {
   image: {
     savedSelection: Selection | null;
+    file?: File;
+    pos?: number;
   };
   attachment: {
     savedSelection: Selection | null;
@@ -106,6 +108,8 @@ export type TDocumentInfo = {
 };
 
 export type CoreEditorRefApi = {
+  getCollaborationUsers: () => import("./collaboration").TCollaborationUser[];
+  onCollaborationUsersChange: (callback: (users: import("./collaboration").TCollaborationUser[]) => void) => () => void;
   blur: () => void;
   clearEditor: (emitUpdate?: boolean) => void;
   createSelectionAtCursorPosition: () => void;

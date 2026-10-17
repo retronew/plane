@@ -5,7 +5,7 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { observer } from "mobx-react";
 import {
   DeleteOutline,
@@ -20,7 +20,7 @@ import { EIssueCommentAccessSpecifier } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TIssueComment, TCommentsOperations } from "@plane/types";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
 import { resolveItemVariant } from "@plane/blocks/context-menu";
@@ -106,16 +106,18 @@ export const CommentQuickActions = observer(function CommentQuickActions(props: 
         }
       />
       <MenuContent side="bottom" align="end">
-        {MENU_ITEMS.map((item) => (
-          <MenuItem
-            key={item.key}
-            variant={resolveItemVariant(item)}
-            label={item.title ?? ""}
-            description={item.description}
-            icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-            disabled={item.disabled}
-            onClick={() => item.action()}
-          />
+        {MENU_ITEMS.map((item, index) => (
+          <Fragment key={item.key}>
+            {item.key === "delete" && index > 0 && <MenuSeparator />}
+            <MenuItem
+              variant={item.key === "delete" ? "danger" : resolveItemVariant(item)}
+              label={item.title ?? ""}
+              description={item.description}
+              icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+              disabled={item.disabled}
+              onClick={() => item.action()}
+            />
+          </Fragment>
         ))}
       </MenuContent>
     </Menu>

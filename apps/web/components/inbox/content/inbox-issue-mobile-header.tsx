@@ -23,7 +23,7 @@ import {
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import type { TNameDescriptionLoader } from "@plane/types";
 
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
@@ -227,12 +227,15 @@ export const InboxIssueActionsMobileHeader = observer(function InboxIssueActions
                 />
               )}
               {canDelete && !isAcceptedOrDeclined && (
-                <MenuItem
-                  variant="danger"
-                  icon={<Icon icon={DeleteOutline} />}
-                  label={t("web.delete")}
-                  onClick={() => setDeleteIssueModal(true)}
-                />
+                <>
+                  <MenuSeparator />
+                  <MenuItem
+                    variant="danger"
+                    icon={<Icon icon={DeleteOutline} />}
+                    label={t("web.delete")}
+                    onClick={() => setDeleteIssueModal(true)}
+                  />
+                </>
               )}
             </MenuContent>
           </Menu>

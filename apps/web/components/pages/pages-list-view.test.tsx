@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   allowPermissions: vi.fn(),
 }));
 vi.mock("swr", () => ({ default: vi.fn() }));
+vi.mock("@/hooks/store/use-label", () => ({ useLabel: () => ({ fetchProjectLabels: vi.fn() }) }));
 vi.mock("next/navigation", () => ({
   useParams: () => ({ workspaceSlug: "workspace", projectId: "project" }),
   useRouter: () => ({ push: vi.fn() }),

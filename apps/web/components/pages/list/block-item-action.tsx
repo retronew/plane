@@ -5,12 +5,14 @@
  */
 
 import { observer } from "mobx-react";
-import { GlobeOutline, InfoOutline, LockOutline, MinusOutline } from "@makeplane/propel/icons";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { GlobeOutline, LockOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { FavoriteStar } from "@plane/blocks/common";
-import { renderFormattedDate, getFileURL } from "@plane/utils";
+import { getFileURL } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { usePageOperations } from "@/hooks/use-page-operations";
@@ -20,6 +22,7 @@ import type { EPageStoreType } from "@/hooks/store";
 import type { TPageInstance } from "@/store/pages/base-page";
 // local imports
 import { PageActions } from "../dropdowns";
+import { PageLabels } from "./page-labels";
 import { translate } from "@plane/i18n";
 
 type Props = {
@@ -32,48 +35,53 @@ export const BlockItemAction = observer(function BlockItemAction(props: Props) {
   const { page, parentRef, storeType } = props;
   // store hooks
   const { getUserDetails } = useMember();
+  const { workspaceSlug } = useParams();
   // page operations
   const { pageOperations } = usePageOperations({
     page,
   });
   // derived values
-  const { access, created_at, is_favorite, owned_by, canCurrentUserFavoritePage } = page;
+  const { access, is_favorite, owned_by, canCurrentUserFavoritePage } = page;
   const ownerDetails = owned_by ? getUserDetails(owned_by) : undefined;
+  const ownerAvatar = (
+    <Avatar
+      alt={ownerDetails?.display_name}
+      fallback={ownerDetails?.display_name?.[0]?.toUpperCase()}
+      src={getFileURL(ownerDetails?.avatar_url ?? "")}
+      size="2xs"
+    />
+  );
 
   return (
     <>
+      <PageLabels page={page} />
       {/* page details */}
-      <div className="cursor-default">
-        <Tooltip label={translate("web.runtime.owned_by", { name: ownerDetails?.display_name ?? "" })} layout="stacked">
-          <Avatar
-            alt={ownerDetails?.display_name}
-            fallback={ownerDetails?.display_name?.[0]?.toUpperCase()}
-            src={getFileURL(ownerDetails?.avatar_url ?? "")}
-            size="xs"
-          />
-        </Tooltip>
-      </div>
-      <div className="cursor-default text-tertiary">
-        <Tooltip label={access === 0 ? translate("web.public") : translate("web.private")}>
-          {access === 0 ? <GlobeOutline className="h-4 w-4" /> : <LockOutline className="h-4 w-4" />}
-        </Tooltip>
-      </div>
-      {/* vertical divider */}
-      <MinusOutline className="-mx-3 h-5 w-5 rotate-90 text-placeholder" />
-
-      {/* page info */}
-      <Tooltip
-        label={translate("web.runtime.created_on", { date: renderFormattedDate(created_at) ?? "" })}
-        layout="stacked"
-      >
-        <span className="grid h-4 w-4 cursor-default place-items-center">
-          <InfoOutline className="h-4 w-4 text-tertiary" />
+      <Tooltip label={access === 0 ? translate("web.public") : translate("web.private")}>
+        <span className="grid size-6 cursor-default place-items-center text-secondary">
+          {access === 0 ? <GlobeOutline className="size-3.5" /> : <LockOutline className="size-3.5" />}
         </span>
       </Tooltip>
-
+      <div className="grid size-6 cursor-default place-items-center">
+        <Tooltip label={translate("web.runtime.owned_by", { name: ownerDetails?.display_name ?? "" })} layout="stacked">
+          {owned_by && workspaceSlug ? (
+            <Link
+              href={`/${workspaceSlug}/profile/${owned_by}/`}
+              aria-label={translate("web.runtime.owned_by", { name: ownerDetails?.display_name ?? "" })}
+              className="grid size-6 place-items-center rounded-sm focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {ownerAvatar}
+            </Link>
+          ) : (
+            <span className="grid size-6 place-items-center">{ownerAvatar}</span>
+          )}
+        </Tooltip>
+      </div>
       {/* favorite/unfavorite */}
       {canCurrentUserFavoritePage && (
         <FavoriteStar
+          buttonClassName="size-6 rounded-sm hover:bg-layer-transparent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
+          iconClassName={`size-3.5 ${is_favorite ? "text-[#fbbf24]" : "text-secondary"}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

@@ -4,7 +4,13 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
+import {
+  composerCacheKey,
+  readComposerDraft,
+  subscribeComposerDrafts,
+} from "@/components/issues/issue-modal/composer-cache";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { IntakeOutline, RefreshOutline } from "@makeplane/propel/icons";
@@ -20,7 +26,7 @@ import { InboxIssueCreateModalRoot } from "@/components/inbox/modals/create-moda
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
-import { useUserPermissions } from "@/hooks/store/user";
+import { useUser, useUserPermissions } from "@/hooks/store/user";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
@@ -34,6 +40,16 @@ export const ProjectInboxHeader = observer(function ProjectInboxHeader() {
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { t } = useTranslation();
+  const { data: user } = useUser();
+  const cacheKey =
+    user?.id && workspaceSlug && projectId
+      ? composerCacheKey(user.id, workspaceSlug.toString(), `intake:${projectId.toString()}`)
+      : undefined;
+  const hasSavedRequest = useSyncExternalStore(
+    subscribeComposerDrafts,
+    () => Boolean(cacheKey && readComposerDraft(cacheKey)),
+    () => false
+  );
 
   const { currentProjectDetails, loader: currentProjectDetailsLoader } = useProject();
   const { loader } = useProjectInbox();
@@ -84,13 +100,20 @@ export const ProjectInboxHeader = observer(function ProjectInboxHeader() {
               modalState={createIssueModal}
               handleModalClose={() => setCreateIssueModal(false)}
             />
-            <Button
-              variant="primary"
-              size="md"
-              stretch="auto"
-              label={t("add_work_item")}
-              onClick={() => setCreateIssueModal(true)}
-            />
+            <Tooltip label={t("web.runtime.intake_restore_request")} disabled={!hasSavedRequest}>
+              <Button
+                data-intake-request-trigger={projectId.toString()}
+                variant="primary"
+                size="md"
+                stretch="auto"
+                label={t("web.runtime.intake_submit_request")}
+                iconPosition="end"
+                icon={
+                  hasSavedRequest ? <span aria-hidden="true" className="size-1.5 rounded-full bg-current" /> : undefined
+                }
+                onClick={() => setCreateIssueModal(true)}
+              />
+            </Tooltip>
           </div>
         ) : (
           <></>

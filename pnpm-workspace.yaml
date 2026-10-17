@@ -4,6 +4,22 @@ packages:
   - "!apps/api"
   - "!apps/proxy"
 
+# pnpm 11 reads project settings from this file, not .npmrc.
+# Internal dependencies already declare workspace:*; preserve the installed resolution policy.
+preferWorkspacePackages: false
+linkWorkspacePackages: false
+sharedWorkspaceLockfile: true
+saveWorkspaceProtocol: true
+resolutionMode: highest
+autoInstallPeers: true
+strictPeerDependencies: false
+sideEffectsCache: true
+preferOffline: true
+preferFrozenLockfile: true
+nodeLinker: isolated
+# Preserve the existing isolated layout; the old .npmrc hoist patterns were ignored.
+publicHoistPattern: []
+
 catalog:
   "@atlaskit/pragmatic-drag-and-drop": "4.0.0"
   "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "3.2.1"

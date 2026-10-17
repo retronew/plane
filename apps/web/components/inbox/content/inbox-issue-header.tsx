@@ -28,7 +28,7 @@ import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { TNameDescriptionLoader } from "@plane/types";
 import { EInboxIssueStatus } from "@plane/types";
@@ -448,11 +448,15 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
                         onClick={() => handleCopyIssueLink(workItemLink)}
                       />
                       {canDelete && (
-                        <MenuItem
-                          icon={<Icon icon={DeleteOutline} />}
-                          label={t("inbox_issue.actions.delete")}
-                          onClick={() => setDeleteIssueModal(true)}
-                        />
+                        <>
+                          <MenuSeparator />
+                          <MenuItem
+                            variant="danger"
+                            icon={<Icon icon={DeleteOutline} />}
+                            label={t("inbox_issue.actions.delete")}
+                            onClick={() => setDeleteIssueModal(true)}
+                          />
+                        </>
                       )}
                     </MenuContent>
                   </Menu>

@@ -79,7 +79,12 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
   return (
     <>
       {displayState === "neutral" && (
-        <Tooltip label={translate("web.lock")} side="bottom">
+        <Tooltip
+          label={translate("web.lock")}
+          side="top"
+          positionMethod="fixed"
+          collisionAvoidance={{ side: "none", align: "shift" }}
+        >
           <button
             type="button"
             onClick={toggleLock}
@@ -92,17 +97,24 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
       )}
 
       {displayState === "locked" && (
-        <button
-          type="button"
-          onClick={toggleLock}
-          className="flex h-7 items-center gap-1 rounded-sm bg-accent-primary/20 px-2 text-accent-primary transition-colors hover:bg-accent-primary/30"
-          aria-label={translate("web.locked")}
+        <Tooltip
+          label={translate("web.unlock")}
+          side="top"
+          positionMethod="fixed"
+          collisionAvoidance={{ side: "none", align: "shift" }}
         >
-          <LockedOutline className="animate-lock-icon size-4 flex-shrink-0" />
-          <span className="animate-text-slide-in overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">
-            {translate("web.locked")}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={toggleLock}
+            className="flex h-7 items-center gap-1 rounded-sm bg-accent-primary/20 px-2 text-accent-primary transition-colors hover:bg-accent-primary/30"
+            aria-label={translate("web.locked")}
+          >
+            <LockedOutline className="animate-lock-icon size-4 flex-shrink-0" />
+            <span className="animate-text-slide-in overflow-hidden text-11 font-medium whitespace-nowrap transition-all duration-500 ease-out">
+              {translate("web.locked")}
+            </span>
+          </button>
+        </Tooltip>
       )}
 
       {displayState === "unlocked" && (

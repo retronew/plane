@@ -7,6 +7,7 @@
 export type TExtendedFileHandler = object;
 
 export type TFileHandler = {
+  showImageDeleteAction?: boolean;
   assetsUploadStatus: Record<string, number>; // blockId => progress percentage
   cancel: () => void;
   checkIfAssetExists: (assetId: string) => Promise<boolean>;
@@ -43,6 +44,7 @@ export type TUserDetails = {
   id: string;
   name: string;
   cookie?: string;
+  avatar?: string | null;
 };
 
 export type TRealtimeConfig = {

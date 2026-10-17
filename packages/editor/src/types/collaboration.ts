@@ -4,6 +4,13 @@
  * See the LICENSE file for details.
  */
 
+/** Public display data only; awareness is never an authorization source. */
+export type TCollaborationUser = {
+  id: string;
+  name: string;
+  avatar: string | null;
+};
+
 export type CollaborationError =
   | { type: "auth-failed"; message: string }
   | { type: "network-error"; message: string }

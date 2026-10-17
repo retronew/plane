@@ -48,6 +48,8 @@ export class IssueAttachmentService extends APIService {
     uploadProgressHandler?: AxiosRequestConfig["onUploadProgress"]
   ): Promise<TIssueAttachment> {
     const fileMetaData = await getFileMetaDataForUpload(file);
+    // Text files have no binary signature; retain their browser-provided MIME type.
+    fileMetaData.type ||= file.type || "application/octet-stream";
     return this.post(
       `/api/assets/v2/workspaces/${workspaceSlug}/projects/${projectId}/${this.serviceType}/${issueId}/attachments/`,
       fileMetaData
@@ -64,7 +66,7 @@ export class IssueAttachmentService extends APIService {
         return signedURLResponse.attachment;
       })
       .catch((error) => {
-        throw error?.response?.data;
+        throw error?.response?.data ?? error;
       });
   }
 

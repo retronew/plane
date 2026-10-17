@@ -6,8 +6,9 @@ export function getComposerTravel(from: DOMRect, to: DOMRect) {
   return `${to.x + to.width / 2 - from.x - from.width / 2}px ${to.y + to.height / 2 - from.y - from.height / 2}px`;
 }
 
-export function prepareComposerMotion(popup: HTMLElement, kind: "new" | "draft" = "new") {
-  const selector = kind === "draft" ? "[data-draft-work-item-trigger]" : "[data-new-work-item-trigger]";
+export function prepareComposerMotion(popup: HTMLElement, kind: "new" | "draft" = "new", targetSelector?: string) {
+  const selector =
+    targetSelector ?? (kind === "draft" ? "[data-draft-work-item-trigger]" : "[data-new-work-item-trigger]");
   const target = Array.from(document.querySelectorAll<HTMLElement>(selector)).find((element) => {
     const rect = element.getBoundingClientRect();
     return (

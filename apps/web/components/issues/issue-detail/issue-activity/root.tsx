@@ -4,7 +4,9 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { IntakeActivityTabs } from "./intake-tabs";
+import type { TIntakeActivityTab } from "./intake-tabs";
 import uniq from "lodash-es/uniq";
 import { observer } from "mobx-react";
 // plane package imports
@@ -40,31 +42,69 @@ export type TActivityOperations = {
   uploadCommentAsset: (blockId: string, file: File, commentId?: string) => Promise<TFileSignedURLResponse>;
 };
 
+function toggleActivityFilter(selected: TActivityFilters[] | null | undefined, filter: TActivityFilters) {
+  if (!selected) return undefined;
+  if (!selected.includes(filter)) return uniq([...selected, filter]);
+  if (selected.length === 1) return undefined;
+  return selected.filter((value) => value !== filter);
+}
+
+function ActivityHeader({
+  isIntakeIssue,
+  intakeTab,
+  setIntakeTab,
+  sortOrder,
+  toggleSort,
+  selectedFilters,
+  toggleFilter,
+  projectId,
+}: {
+  isIntakeIssue: boolean;
+  intakeTab: TIntakeActivityTab;
+  setIntakeTab: (value: TIntakeActivityTab) => void;
+  sortOrder: E_SORT_ORDER;
+  toggleSort: () => void;
+  selectedFilters: TActivityFilters[];
+  toggleFilter: (value: TActivityFilters) => void;
+  projectId: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-between">
+      {isIntakeIssue ? (
+        <IntakeActivityTabs value={intakeTab} onChange={setIntakeTab} />
+      ) : (
+        <div className="text-h5-medium text-primary">{t("common.activity")}</div>
+      )}
+      <div className="flex shrink-0 items-center gap-2">
+        <ActivitySortRoot sortOrder={sortOrder} toggleSort={toggleSort} />
+        {!isIntakeIssue && (
+          <ActivityFilterRoot selectedFilters={selectedFilters} toggleFilter={toggleFilter} projectId={projectId} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export const IssueActivity = observer(function IssueActivity(props: TIssueActivity) {
   const { workspaceSlug, projectId, issueId, disabled = false, isIntakeIssue = false } = props;
-  // i18n
-  const { t } = useTranslation();
+  const [intakeTab, setIntakeTab] = useState<TIntakeActivityTab>("all");
   // hooks
   const { setValue: setFilterValue, storedValue: selectedFilters } = useLocalStorage(
     "issue_activity_filters",
     defaultActivityFilters
   );
-  const { setValue: setSortOrder, storedValue: sortOrder } = useLocalStorage("activity_sort_order", E_SORT_ORDER.ASC);
+  const { setValue: setSortOrder, storedValue: sortOrder } = useLocalStorage(
+    isIntakeIssue ? "intake_activity_sort_order" : "activity_sort_order",
+    isIntakeIssue ? E_SORT_ORDER.DESC : E_SORT_ORDER.ASC
+  );
 
   const { getProjectById } = useProject();
 
   // toggle filter
   const toggleFilter = (filter: TActivityFilters) => {
-    if (!selectedFilters) return;
-    let _filters = [];
-    if (selectedFilters.includes(filter)) {
-      if (selectedFilters.length === 1) return selectedFilters; // Ensure at least one filter is applied
-      _filters = selectedFilters.filter((f) => f !== filter);
-    } else {
-      _filters = [...selectedFilters, filter];
-    }
-
-    setFilterValue(uniq(_filters));
+    const next = toggleActivityFilter(selectedFilters, filter);
+    if (next) setFilterValue(next);
   };
 
   const toggleSortOrder = () => {
@@ -82,46 +122,48 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
         entityId={issueId}
         activityOperations={activityOperations}
         showToolbarInitially
+        isIntakeIssue={isIntakeIssue}
         projectId={projectId}
       />
     ),
-    [workspaceSlug, issueId, activityOperations, projectId]
+    [workspaceSlug, issueId, activityOperations, projectId, isIntakeIssue]
   );
   if (!project) return <></>;
+  const effectiveSortOrder = sortOrder ?? (isIntakeIssue ? E_SORT_ORDER.DESC : E_SORT_ORDER.ASC);
+  const showCommentCreation = !disabled && [false, "all", "comments"].includes(isIntakeIssue && intakeTab);
 
   return (
     <div className="space-y-4">
       {/* header */}
-      <div className="flex items-center justify-between">
-        <div className="text-h5-medium text-primary">{t("common.activity")}</div>
-        <div className="flex items-center gap-2">
-          <ActivitySortRoot sortOrder={sortOrder || E_SORT_ORDER.ASC} toggleSort={toggleSortOrder} />
-          <ActivityFilterRoot
-            selectedFilters={selectedFilters || defaultActivityFilters}
-            toggleFilter={toggleFilter}
-            isIntakeIssue={isIntakeIssue}
-            projectId={projectId}
-          />
-        </div>
-      </div>
+      <ActivityHeader
+        isIntakeIssue={isIntakeIssue}
+        intakeTab={intakeTab}
+        setIntakeTab={setIntakeTab}
+        sortOrder={effectiveSortOrder}
+        toggleSort={toggleSortOrder}
+        selectedFilters={selectedFilters || defaultActivityFilters}
+        toggleFilter={toggleFilter}
+        projectId={projectId}
+      />
 
       {/* rendering activity */}
       <div className="space-y-3">
         <div className="min-h-[200px]">
           <div className="space-y-3">
-            {!disabled && sortOrder === E_SORT_ORDER.DESC && renderCommentCreationBox}
+            {showCommentCreation && effectiveSortOrder === E_SORT_ORDER.DESC && renderCommentCreationBox}
             <IssueActivityCommentRoot
               projectId={projectId}
               workspaceSlug={workspaceSlug}
               isIntakeIssue={isIntakeIssue}
+              intakeTab={intakeTab}
               issueId={issueId}
-              selectedFilters={selectedFilters || defaultActivityFilters}
+              selectedFilters={isIntakeIssue ? defaultActivityFilters : selectedFilters || defaultActivityFilters}
               activityOperations={activityOperations}
               showAccessSpecifier={!!project.anchor}
               disabled={disabled}
-              sortOrder={sortOrder || E_SORT_ORDER.ASC}
+              sortOrder={effectiveSortOrder}
             />
-            {!disabled && sortOrder === E_SORT_ORDER.ASC && renderCommentCreationBox}
+            {showCommentCreation && effectiveSortOrder === E_SORT_ORDER.ASC && renderCommentCreationBox}
           </div>
         </div>
       </div>

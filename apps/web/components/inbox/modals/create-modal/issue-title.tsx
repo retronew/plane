@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { Input, InputGroup } from "@makeplane/propel/components/input";
+import { Input } from "@makeplane/propel/components/input";
 import { ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { TIssue } from "@plane/types";
@@ -31,19 +31,20 @@ export const InboxIssueTitle = observer(function InboxIssueTitle(props: TInboxIs
   const { t } = useTranslation();
   return (
     <div className="space-y-1">
-      <InputGroup size="lg">
-        <Input
-          size="lg"
-          id="name"
-          name="name"
-          type="text"
-          value={data?.name}
-          onChange={(e) => handleData("name", e.target.value)}
-          placeholder={t("title")}
-          tabIndex={getIndex("name")}
-          required
-        />
-      </InputGroup>
+      <Input
+        size="2xl"
+        data-composer-title=""
+        aria-label={t("web.runtime.intake_request_title")}
+        aria-invalid={Boolean(isTitleLengthMoreThan255Character)}
+        id="name"
+        name="name"
+        type="text"
+        value={data?.name}
+        onChange={(e) => handleData("name", e.target.value)}
+        placeholder={t("web.runtime.intake_request_title")}
+        tabIndex={getIndex("name")}
+        required
+      />
       {isTitleLengthMoreThan255Character && (
         <span className="text-11 text-danger-primary">{t("title_should_be_less_than_255_characters")}</span>
       )}

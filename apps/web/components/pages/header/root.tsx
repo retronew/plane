@@ -6,14 +6,16 @@
 
 import { useCallback } from "react";
 import { observer } from "mobx-react";
-import { FilterOutline } from "@makeplane/propel/icons";
+import { Badge } from "@makeplane/propel/components/badge";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { Menu, MenuContent, MenuTrigger } from "@makeplane/propel/components/menu";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import type { TPageFilterProps, TPageNavigationTabs } from "@plane/types";
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
 import { calculateTotalFilters } from "@plane/utils";
 // components
-import { FiltersDropdown } from "@/components/issues/issue-layouts/filters";
+import { FilterToggleButton } from "@/components/common/filter-toggle-button";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { usePageStore } from "@/hooks/store";
@@ -36,7 +38,15 @@ export const PagesListHeaderRoot = observer(function PagesListHeaderRoot(props: 
   const { pageType, projectId, storeType, workspaceSlug } = props;
   const { t } = useTranslation();
   // store hooks
-  const { filters, updateFilters, clearAllFilters } = usePageStore(storeType);
+  const {
+    filters,
+    updateFilters,
+    clearAllFilters,
+    getCurrentProjectPageIdsByTab,
+    getCurrentProjectFilteredPageIdsByTab,
+  } = usePageStore(storeType);
+  const totalPages = getCurrentProjectPageIdsByTab(pageType)?.length ?? 0;
+  const filteredPages = getCurrentProjectFilteredPageIdsByTab(pageType)?.length ?? 0;
   const {
     workspace: { workspaceMemberIds },
   } = useMember();
@@ -51,7 +61,7 @@ export const PagesListHeaderRoot = observer(function PagesListHeaderRoot(props: 
         else newValues = newValues.filter((val) => val !== value);
       }
 
-      updateFilters("filters", { [key]: newValues });
+      updateFilters("filters", { ...filters.filters, [key]: newValues });
     },
     [filters.filters, updateFilters]
   );
@@ -77,28 +87,48 @@ export const PagesListHeaderRoot = observer(function PagesListHeaderRoot(props: 
               if (val.order) updateFilters("sortBy", val.order);
             }}
           />
-          <FiltersDropdown
-            icon={<FilterOutline className="h-3 w-3" />}
-            title={t("common.filters")}
-            placement="bottom-end"
-            isFiltersApplied={isFiltersApplied}
-          >
-            <PageFiltersSelection
-              filters={filters}
-              handleFiltersUpdate={updateFilters}
-              memberIds={workspaceMemberIds ?? undefined}
+          <Menu>
+            <MenuTrigger
+              render={
+                <FilterToggleButton
+                  active={isFiltersApplied}
+                  size="md"
+                  showTooltip
+                  aria-pressed={isFiltersApplied}
+                  aria-label={t("common.filters")}
+                />
+              }
             />
-          </FiltersDropdown>
+            <MenuContent side="bottom" align="end">
+              <PageFiltersSelection
+                projectId={projectId}
+                filters={filters}
+                handleFiltersUpdate={updateFilters}
+                memberIds={workspaceMemberIds ?? undefined}
+              />
+            </MenuContent>
+          </Menu>
         </Header.RightItem>
       </Header>
       {calculateTotalFilters(filters?.filters ?? {}) !== 0 && (
         <Header variant={EHeaderVariant.TERNARY}>
-          <PageAppliedFiltersList
-            appliedFilters={filters.filters ?? {}}
-            handleClearAllFilters={clearAllFilters}
-            handleRemoveFilter={handleRemoveFilter}
-            alwaysAllowEditing
-          />
+          <Header.LeftItem>
+            <PageAppliedFiltersList
+              projectId={projectId}
+              appliedFilters={filters.filters ?? {}}
+              handleClearAllFilters={clearAllFilters}
+              handleRemoveFilter={handleRemoveFilter}
+              alwaysAllowEditing
+            />
+          </Header.LeftItem>
+          <Header.RightItem>
+            <Tooltip
+              label={t("web.runtime.matching_pages", { matched: filteredPages, total: totalPages })}
+              layout="stacked"
+            >
+              <Badge size="sm" variant="neutral" label={`${filteredPages}/${totalPages}`} />
+            </Tooltip>
+          </Header.RightItem>
         </Header>
       )}
     </>

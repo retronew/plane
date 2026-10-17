@@ -57,6 +57,7 @@ export type InsertImageComponentProps = {
 };
 
 export type CustomImageExtensionOptions = {
+  showDeleteAction?: boolean;
   getImageDownloadSource: TFileHandler["getAssetDownloadSrc"];
   getImageSource: TFileHandler["getAssetSrc"];
   restoreImage: TFileHandler["restore"];

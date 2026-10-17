@@ -19,6 +19,8 @@ import { PageAccessIcon } from "@/components/common/page-access-icon";
 import { SwitcherIcon, SwitcherLabel } from "@/components/common/switcher-label";
 import { PageHeaderActions } from "@/components/pages/header/actions";
 import { PageSyncingBadge } from "@/components/pages/header/syncing-badge";
+import { PageCollaborationUsers } from "@/components/pages/header/collaboration-users";
+import { useUser } from "@/hooks/store/user";
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
 // hooks
@@ -41,6 +43,7 @@ export const PageDetailsHeader = observer(function PageDetailsHeader() {
   const projectCrumb = useProjectCrumbProps(workspaceSlug?.toString(), projectId?.toString());
   // store hooks
   const { loader } = useProject();
+  const { data: currentUser } = useUser();
   const { getPageById, getCurrentProjectPageIds } = usePageStore(storeType);
   const page = usePage({
     pageId: pageId?.toString() ?? "",
@@ -110,6 +113,7 @@ export const PageDetailsHeader = observer(function PageDetailsHeader() {
         </div>
       </Header.LeftItem>
       <Header.RightItem>
+        <PageCollaborationUsers editor={page.editor} currentUserId={currentUser?.id} />
         <PageSyncingBadge syncStatus={page.isSyncingWithServer} />
         <PageHeaderActions page={page} storeType={storeType} />
       </Header.RightItem>

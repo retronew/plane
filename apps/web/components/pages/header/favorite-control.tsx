@@ -5,10 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { StarOutline } from "@makeplane/propel/icons";
-// ui
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Icon } from "@makeplane/propel/components/icon";
+import { FavoriteStar } from "@plane/blocks/common";
 // hooks
 import { usePageOperations } from "@/hooks/use-page-operations";
 // store
@@ -30,23 +27,12 @@ export const PageFavoriteControl = observer(function PageFavoriteControl({ page 
   if (!canCurrentUserFavoritePage) return null;
 
   return (
-    <IconButton
-      variant="ghost"
-      size="md"
-      icon={<Icon icon={StarOutline} />}
-      onClick={() => {
-        pageOperations.toggleFavorite();
-      }}
+    <FavoriteStar
+      selected={is_favorite}
+      buttonClassName="size-7 rounded-sm hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none"
+      iconClassName={`size-4 ${is_favorite ? "text-[#fbbf24]" : "text-secondary"}`}
+      onClick={() => pageOperations.toggleFavorite()}
       aria-label={is_favorite ? translate("web.remove_favorite") : translate("web.add_to_favorites")}
-      render={
-        <button
-          type="button"
-          aria-label={is_favorite ? translate("web.remove_favorite") : translate("web.add_to_favorites")}
-          className={
-            is_favorite ? "[&_svg]:fill-(--color-label-yellow-icon) [&_svg]:stroke-(--color-label-yellow-icon)" : ""
-          }
-        />
-      }
     />
   );
 });

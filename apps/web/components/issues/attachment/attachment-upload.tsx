@@ -34,7 +34,11 @@ export const IssueAttachmentUpload = observer(function IssueAttachmentUpload(pro
       if (!currentFile || !workspaceSlug) return;
 
       setIsLoading(true);
-      attachmentOperations.create(currentFile).finally(() => setIsLoading(false));
+      // The operation already reports failures through its toast; consume the rejection here.
+      void attachmentOperations
+        .create(currentFile)
+        .catch(() => undefined)
+        .finally(() => setIsLoading(false));
     },
     [attachmentOperations, workspaceSlug]
   );
@@ -52,9 +56,13 @@ export const IssueAttachmentUpload = observer(function IssueAttachmentUpload(pro
   return (
     <div
       {...getRootProps()}
-      className={`flex h-[60px] items-center justify-center rounded-md border-2 border-dashed bg-accent-primary/5 px-4 text-11 text-accent-primary ${
-        isDragActive ? "border-accent-strong bg-accent-primary/10" : "border-subtle"
-      } ${isDragReject ? "bg-danger-subtle" : ""} ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+      className={`flex h-[60px] items-center justify-center rounded-lg border border-dashed px-4 text-body-xs-regular text-accent-primary transition-colors ${
+        isDragReject
+          ? "border-danger-strong bg-danger-subtle"
+          : isDragActive
+            ? "border-accent-strong bg-accent-subtle-hover"
+            : "border-accent-strong bg-accent-subtle hover:bg-accent-subtle-hover"
+      } ${disabled || isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
     >
       <input {...getInputProps()} />
       <span className="flex items-center gap-2">

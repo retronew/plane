@@ -5,6 +5,8 @@
  */
 
 import { NodeViewWrapper } from "@tiptap/react";
+import { CloseOutline } from "@makeplane/propel/icons";
+import { translate } from "@plane/i18n";
 import type { NodeViewProps } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 // local imports
@@ -22,143 +24,150 @@ export type CustomImageNodeViewProps = Omit<NodeViewProps, "extension" | "update
   updateAttributes: (attrs: Partial<TCustomImageAttributes>) => void;
 };
 
+// Source-specific state resets before rendering a different asset. The outer node
+// stays mounted so upload previews and the editor's node-view lifecycle are preserved.
+function CustomImageContent(
+  props: CustomImageNodeViewProps & {
+    imageFromFileSystem: string | undefined;
+    loadImageFromFileSystem: (file: string | undefined) => void;
+  }
+) {
+  const { editor, extension, node, imageFromFileSystem } = props;
+  const { src: imgNodeSrc, status } = node.attrs;
+  const [sources, setSources] = useState<{ src?: string; downloadSrc?: string; failed?: boolean }>({});
+  const [failedToLoadImage, setFailedToLoadImage] = useState(false);
+  const [editorContainer, setEditorContainer] = useState<HTMLDivElement | null>(null);
+  const { getImageSource, getImageDownloadSource } = extension.options;
+
+  useEffect(() => {
+    if (!imgNodeSrc) return;
+    let cancelled = false;
+    const resolveSources = async () => {
+      try {
+        const src = await getImageSource?.(imgNodeSrc);
+        if (cancelled) return;
+        setSources({ src });
+        const downloadSrc = await getImageDownloadSource?.(imgNodeSrc);
+        if (cancelled) return;
+        setSources({ src, downloadSrc });
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Error fetching image source:", error);
+        setSources({ failed: true });
+      }
+    };
+    void resolveSources();
+    return () => {
+      cancelled = true;
+    };
+  }, [imgNodeSrc, getImageSource, getImageDownloadSource]);
+
+  const hasDuplicationFailed = hasImageDuplicationFailed(status);
+  const failed = failedToLoadImage || !!sources.failed;
+  const preview = imgNodeSrc ? undefined : imageFromFileSystem;
+  const shouldShowBlock = (preview || sources.src) && !failed && !hasDuplicationFailed;
+
+  return shouldShowBlock ? (
+    <CustomImageBlock
+      {...props}
+      editorContainer={editorContainer}
+      imageFromFileSystem={preview}
+      setEditorContainer={setEditorContainer}
+      setFailedToLoadImage={setFailedToLoadImage}
+      src={sources.src}
+      downloadSrc={sources.downloadSrc}
+    />
+  ) : (
+    <CustomImageUploader
+      {...props}
+      failedToLoadImage={failed}
+      hasDuplicationFailed={hasDuplicationFailed}
+      maxFileSize={(editor.storage.imageComponent as { maxFileSize?: number } | undefined)?.maxFileSize ?? 0}
+    />
+  );
+}
+
 export function CustomImageNodeView(props: CustomImageNodeViewProps) {
   const { editor, extension, node, updateAttributes } = props;
   const { src: imgNodeSrc, status } = node.attrs;
-
-  const [isUploaded, setIsUploaded] = useState(!!imgNodeSrc);
-  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(undefined);
-  const [resolvedDownloadSrc, setResolvedDownloadSrc] = useState<string | undefined>(undefined);
   const [imageFromFileSystem, setImageFromFileSystem] = useState<string | undefined>(undefined);
-  const [failedToLoadImage, setFailedToLoadImage] = useState(false);
-
-  const [editorContainer, setEditorContainer] = useState<HTMLDivElement | null>(null);
-  const imageComponentRef = useRef<HTMLDivElement>(null);
   const hasRetriedOnMount = useRef(false);
-  const isDuplicatingRef = useRef(false);
+  const duplicationRef = useRef<{
+    src: string;
+    duplicate: NonNullable<CustomImageExtensionType["options"]["duplicateImage"]>;
+    promise: Promise<string | undefined>;
+  } | null>(null);
 
   useEffect(() => {
-    const closestEditorContainer = imageComponentRef.current?.closest(".editor-container");
-    if (closestEditorContainer) {
-      setEditorContainer(closestEditorContainer as HTMLDivElement);
-    }
-  }, []);
-
-  // the image is already uploaded if the image-component node has src attribute
-  // and we need to remove the blob from our file system
-  useEffect(() => {
-    if (resolvedSrc || imgNodeSrc) {
-      setIsUploaded(true);
-      setImageFromFileSystem(undefined);
-    } else {
-      setIsUploaded(false);
-    }
-  }, [resolvedSrc, imgNodeSrc]);
-
-  useEffect(() => {
-    if (!imgNodeSrc) {
-      setResolvedSrc(undefined);
-      setResolvedDownloadSrc(undefined);
+    const duplicateImage = extension.options.duplicateImage;
+    if (status !== ECustomImageStatus.DUPLICATING || !duplicateImage || !imgNodeSrc) {
+      duplicationRef.current = null;
       return;
     }
-
-    setResolvedSrc(undefined);
-    setResolvedDownloadSrc(undefined);
-    setFailedToLoadImage(false);
-
-    const getImageSource = async () => {
-      try {
-        const url = await extension.options.getImageSource?.(imgNodeSrc);
-        setResolvedSrc(url);
-        const downloadUrl = await extension.options.getImageDownloadSource?.(imgNodeSrc);
-        setResolvedDownloadSrc(downloadUrl);
-      } catch (error) {
-        console.error("Error fetching image source:", error);
-        setFailedToLoadImage(true);
-      }
-    };
-    void getImageSource();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imgNodeSrc, extension.options.getImageSource, extension.options.getImageDownloadSource]);
-
-  useEffect(() => {
+    let cancelled = false;
+    hasRetriedOnMount.current = true;
+    // Reuse the in-flight operation when React replays the effect or the
+    // attribute callback changes, but only the current subscriber may write.
+    if (duplicationRef.current?.src !== imgNodeSrc || duplicationRef.current.duplicate !== duplicateImage) {
+      duplicationRef.current = {
+        src: imgNodeSrc,
+        duplicate: duplicateImage,
+        promise: Promise.resolve().then(() => duplicateImage(imgNodeSrc)),
+      };
+    }
+    const request = duplicationRef.current;
     const handleDuplication = async () => {
-      if (status !== ECustomImageStatus.DUPLICATING || !extension.options.duplicateImage || !imgNodeSrc) {
-        return;
-      }
-
-      // Prevent duplicate calls - check if already duplicating this asset
-      if (isDuplicatingRef.current) {
-        return;
-      }
-
-      isDuplicatingRef.current = true;
       try {
-        hasRetriedOnMount.current = true;
-
-        const newAssetId = await extension.options.duplicateImage(imgNodeSrc);
-
-        if (!newAssetId) {
-          throw new Error("Duplication returned invalid asset ID");
-        }
-
-        setFailedToLoadImage(false);
+        const newAssetId = await request.promise;
+        if (cancelled) return;
+        if (!newAssetId) throw new Error("Duplication returned invalid asset ID");
         updateAttributes({ src: newAssetId, status: ECustomImageStatus.UPLOADED });
       } catch (error: unknown) {
+        if (cancelled) return;
         console.error("Failed to duplicate image:", error);
-        // Update status to failed
         updateAttributes({ status: ECustomImageStatus.DUPLICATION_FAILED });
-      } finally {
-        isDuplicatingRef.current = false;
       }
     };
-
     void handleDuplication();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
   }, [status, imgNodeSrc, extension.options.duplicateImage, updateAttributes]);
-
-  useEffect(() => {
-    if (hasImageDuplicationFailed(status) && !hasRetriedOnMount.current && imgNodeSrc) {
-      hasRetriedOnMount.current = true;
-      // Add a small delay before retrying to avoid immediate retries
-      updateAttributes({ status: ECustomImageStatus.DUPLICATING });
-    }
-  }, [status, imgNodeSrc, updateAttributes]);
 
   useEffect(() => {
     if (status === ECustomImageStatus.UPLOADED) {
       hasRetriedOnMount.current = false;
-      setFailedToLoadImage(false);
+    } else if (hasImageDuplicationFailed(status) && !hasRetriedOnMount.current && imgNodeSrc) {
+      hasRetriedOnMount.current = true;
+      updateAttributes({ status: ECustomImageStatus.DUPLICATING });
     }
-  }, [status]);
-
-  const hasDuplicationFailed = hasImageDuplicationFailed(status);
-  const hasValidImageSource = imageFromFileSystem || (isUploaded && resolvedSrc);
-  const shouldShowBlock = hasValidImageSource && !failedToLoadImage && !hasDuplicationFailed;
+  }, [status, imgNodeSrc, updateAttributes]);
 
   return (
     <NodeViewWrapper key={node.attrs[ECustomImageAttributeNames.ID]}>
-      <div className="mx-0 my-2 p-0" data-drag-handle ref={imageComponentRef}>
-        {shouldShowBlock && !hasDuplicationFailed ? (
-          <CustomImageBlock
-            editorContainer={editorContainer}
-            imageFromFileSystem={imageFromFileSystem}
-            setEditorContainer={setEditorContainer}
-            setFailedToLoadImage={setFailedToLoadImage}
-            src={resolvedSrc}
-            downloadSrc={resolvedDownloadSrc}
-            {...props}
-          />
-        ) : (
-          <CustomImageUploader
-            failedToLoadImage={failedToLoadImage}
-            hasDuplicationFailed={hasDuplicationFailed}
-            loadImageFromFileSystem={setImageFromFileSystem}
-            maxFileSize={(editor.storage.imageComponent as { maxFileSize?: number } | undefined)?.maxFileSize ?? 0}
-            setIsUploaded={setIsUploaded}
-            {...props}
-          />
+      <div className="group/comment-image relative mx-0 my-2 p-0" data-drag-handle>
+        {editor.isEditable && extension.options.showDeleteAction && (
+          <button
+            type="button"
+            contentEditable={false}
+            aria-label={translate("common.delete")}
+            className="shadow-sm absolute top-1 right-1 z-30 grid size-6 place-items-center rounded-sm bg-surface-1 text-secondary opacity-0 group-hover/comment-image:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              props.deleteNode();
+            }}
+          >
+            <CloseOutline className="size-4" />
+          </button>
         )}
+        <CustomImageContent
+          key={imgNodeSrc ?? ""}
+          {...props}
+          imageFromFileSystem={imageFromFileSystem}
+          loadImageFromFileSystem={setImageFromFileSystem}
+        />
       </div>
     </NodeViewWrapper>
   );

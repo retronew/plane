@@ -39,6 +39,7 @@ from plane.app.serializers import (
 from plane.db.models import (
     Page,
     PageLog,
+    PageLabel,
     UserFavorite,
     ProjectMember,
     ProjectPage,
@@ -46,6 +47,7 @@ from plane.db.models import (
     UserRecentVisit,
 )
 from plane.utils.error_codes import ERROR_CODES
+from plane.utils.issue_filters import filter_valid_uuids
 from plane.utils.order_queryset import PAGE_ORDER_BY_ALLOWLIST, sanitize_order_by
 
 # Local imports
@@ -305,6 +307,11 @@ class PageViewSet(BaseViewSet):
 
     def list(self, request, slug, project_id):
         queryset = self.get_queryset()
+        label_ids = filter_valid_uuids(label.strip() for label in request.query_params.get("labels", "").split(","))
+        if label_ids:
+            queryset = queryset.filter(
+                pk__in=PageLabel.objects.filter(label_id__in=label_ids).values("page_id")
+            )
         project = Project.objects.get(pk=project_id)
         if (
             ProjectMember.objects.filter(

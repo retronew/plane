@@ -34,6 +34,42 @@ type InboxIssueListItemProps = {
   setIsMobileSidebar: (value: boolean) => void;
 };
 
+const EMPTY_LABEL_IDS: string[] = [];
+
+const InboxIssueLabels = observer(function InboxIssueLabels({ labelIds }: { labelIds: string[] }) {
+  const { projectLabels } = useLabel();
+  if (labelIds.length > 3)
+    return (
+      <div className="relative flex !h-[17.5px] items-center gap-1 rounded-sm border border-strong px-1 text-11">
+        <span className="bg-orange-400 h-2 w-2 rounded-full" />
+        <span className="max-w-28 truncate normal-case">
+          {translate("web.runtime.labels_count", { count: labelIds.length })}
+        </span>
+      </div>
+    );
+  return labelIds.map((labelId) => {
+    const label = projectLabels?.find((item) => item.id === labelId);
+    if (!label) return null;
+    return (
+      <div
+        key={labelId}
+        className="relative flex !h-[17.5px] items-center gap-1 rounded-sm border border-strong px-1 text-11"
+      >
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: label.color }} />
+        <span className="max-w-28 truncate normal-case">{label.name}</span>
+      </div>
+    );
+  });
+});
+
+const InboxIssueCreator = observer(function InboxIssueCreator({ createdBy }: { createdBy?: string | null }) {
+  const { getUserDetails } = useMember();
+  const member = createdBy ? getUserDetails(createdBy) : undefined;
+  if (!member) return null;
+  if (member.email?.includes("intake@plane.so")) return <Avatar alt="Plane" fallback="P" size="xs" />;
+  return <ButtonAvatars showTooltip={false} userIds={member.id} />;
+});
+
 export const InboxIssueListItem = observer(function InboxIssueListItem(props: InboxIssueListItemProps) {
   const { workspaceSlug, projectId, inboxIssueId, projectIdentifier, setIsMobileSidebar } = props;
   // router
@@ -41,9 +77,7 @@ export const InboxIssueListItem = observer(function InboxIssueListItem(props: In
   const selectedInboxIssueId = searchParams.get("inboxIssueId");
   // store
   const { currentTab, getIssueInboxByIssueId } = useProjectInbox();
-  const { projectLabels } = useLabel();
   const { isMobile } = usePlatformOS();
-  const { getUserDetails } = useMember();
   const inboxIssue = getIssueInboxByIssueId(inboxIssueId);
   const issue = inboxIssue?.issue;
 
@@ -54,7 +88,7 @@ export const InboxIssueListItem = observer(function InboxIssueListItem(props: In
 
   if (!issue) return <></>;
 
-  const createdByDetails = issue?.created_by ? getUserDetails(issue?.created_by) : undefined;
+  const isSelected = selectedInboxIssueId === issue.id;
 
   return (
     <>
@@ -62,12 +96,14 @@ export const InboxIssueListItem = observer(function InboxIssueListItem(props: In
         id={`inbox-issue-list-item-${issue.id}`}
         key={`${projectId}_${issue.id}`}
         href={`/${workspaceSlug}/projects/${projectId}/intake?currentTab=${currentTab}&inboxIssueId=${issue.id}`}
+        aria-current={isSelected ? "true" : undefined}
+        className="block outline-none focus-visible:bg-layer-transparent-hover"
         onClick={(e) => handleIssueRedirection(e, issue.id)}
       >
         <Row
           className={cn(
-            `relative flex cursor-pointer flex-col gap-2 border border-t-transparent border-r-transparent border-b-subtle-1 border-l-transparent py-4 transition-all hover:bg-accent-primary/5`,
-            { "border border-accent-strong": selectedInboxIssueId === issue.id }
+            "relative flex cursor-pointer flex-col gap-2 border border-t-transparent border-r-transparent border-b-subtle-1 border-l-transparent py-4 transition-all hover:bg-layer-transparent-hover",
+            { "bg-layer-transparent-selected": isSelected }
           )}
         >
           <div className="space-y-1">
@@ -79,7 +115,7 @@ export const InboxIssueListItem = observer(function InboxIssueListItem(props: In
                 {inboxIssue.status !== -2 && <InboxIssueStatus inboxIssue={inboxIssue} iconSize={12} />}
               </div>
             </div>
-            <h3 className="w-full truncate text-13">{issue.name}</h3>
+            <h3 className="w-full truncate text-body-xs-medium">{issue.name}</h3>
           </div>
 
           <div className="flex items-center justify-between">
@@ -99,46 +135,17 @@ export const InboxIssueListItem = observer(function InboxIssueListItem(props: In
                     priority: issue.priority ?? "none",
                   })}
                 >
-                  <PriorityIcon priority={issue.priority} />
+                  <span className="inline-flex items-center gap-1 text-11 text-secondary">
+                    <PriorityIcon priority={issue.priority} />
+                    <span>{translate(issue.priority)}</span>
+                  </span>
                 </Tooltip>
               )}
 
-              {issue.label_ids && issue.label_ids.length > 3 ? (
-                <div className="relative flex !h-[17.5px] items-center gap-1 rounded-sm border border-strong px-1 text-11">
-                  <span className="bg-orange-400 h-2 w-2 rounded-full" />
-                  <span className="max-w-28 truncate normal-case">
-                    {translate("web.runtime.labels_count", { count: issue.label_ids.length })}
-                  </span>
-                </div>
-              ) : (
-                <>
-                  {(issue.label_ids ?? []).map((labelId) => {
-                    const labelDetails = projectLabels?.find((l) => l.id === labelId);
-                    if (!labelDetails) return null;
-                    return (
-                      <div
-                        key={labelId}
-                        className="relative flex !h-[17.5px] items-center gap-1 rounded-sm border border-strong px-1 text-11"
-                      >
-                        <span
-                          className="h-2 w-2 rounded-full"
-                          style={{
-                            backgroundColor: labelDetails.color,
-                          }}
-                        />
-                        <span className="max-w-28 truncate normal-case">{labelDetails.name}</span>
-                      </div>
-                    );
-                  })}
-                </>
-              )}
+              <InboxIssueLabels labelIds={issue.label_ids ?? EMPTY_LABEL_IDS} />
             </div>
             {/* created by */}
-            {createdByDetails && createdByDetails.email?.includes("intake@plane.so") ? (
-              <Avatar alt="Plane" fallback="P" size="xs" />
-            ) : createdByDetails ? (
-              <ButtonAvatars showTooltip={false} userIds={createdByDetails?.id} />
-            ) : null}
+            <InboxIssueCreator createdBy={issue.created_by} />
           </div>
         </Row>
       </Link>

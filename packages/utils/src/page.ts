@@ -48,15 +48,15 @@ export const orderPages = (
 
   if (sortByKey === "name") {
     orderedPages = sortBy(pages, [(m) => m.name?.toLowerCase()]);
-    if (sortByOrder === "desc") orderedPages = orderedPages.reverse();
+    if (sortByOrder === "desc") orderedPages = orderedPages.toReversed();
   }
   if (sortByKey === "created_at") {
     orderedPages = sortBy(pages, [(m) => m.created_at]);
-    if (sortByOrder === "desc") orderedPages = orderedPages.reverse();
+    if (sortByOrder === "desc") orderedPages = orderedPages.toReversed();
   }
   if (sortByKey === "updated_at") {
     orderedPages = sortBy(pages, [(m) => m.updated_at]);
-    if (sortByOrder === "desc") orderedPages = orderedPages.reverse();
+    if (sortByOrder === "desc") orderedPages = orderedPages.toReversed();
   }
 
   return orderedPages;
@@ -70,10 +70,11 @@ export const orderPages = (
  */
 export const shouldFilterPage = (page: TPage, filters: TPageFilterProps | undefined): boolean => {
   let fallsInFilters = true;
+  const createdBy = new Set(filters?.created_by ?? []);
   Object.keys(filters ?? {}).forEach((key) => {
     const filterKey = key as keyof TPageFilterProps;
     if (filterKey === "created_by" && filters?.created_by && filters.created_by.length > 0)
-      fallsInFilters = fallsInFilters && filters.created_by.includes(`${page.owned_by}`);
+      fallsInFilters = fallsInFilters && createdBy.has(`${page.owned_by}`);
     if (filterKey === "created_at" && filters?.created_at && filters.created_at.length > 0) {
       const createdDate = getDate(page.created_at);
       filters?.created_at.forEach((dateFilter) => {
@@ -82,6 +83,10 @@ export const shouldFilterPage = (page: TPage, filters: TPageFilterProps | undefi
     }
   });
   if (filters?.favorites && !page.is_favorite) fallsInFilters = false;
+  if (filters?.labels?.length) {
+    const pageLabels = new Set(page.label_ids ?? []);
+    fallsInFilters = fallsInFilters && filters.labels.some((id) => pageLabels.has(id));
+  }
 
   return fallsInFilters;
 };

@@ -25,25 +25,17 @@ import { translate } from "@plane/i18n";
 type CustomImageUploaderProps = CustomImageNodeViewProps & {
   failedToLoadImage: boolean;
   hasDuplicationFailed: boolean;
-  loadImageFromFileSystem: (file: string) => void;
+  loadImageFromFileSystem: (file: string | undefined) => void;
   maxFileSize: number;
-  setIsUploaded: (isUploaded: boolean) => void;
 };
 
+// Tiptap storage is a mutable editor-owned integration point shared by uploaders.
+function setEditorUploadProgress(editor: CustomImageNodeViewProps["editor"], isUploading: boolean) {
+  editor.storage.utility.uploadInProgress = isUploading;
+}
+
 export function CustomImageUploader(props: CustomImageUploaderProps) {
-  const {
-    editor,
-    extension,
-    failedToLoadImage,
-    getPos,
-    loadImageFromFileSystem,
-    maxFileSize,
-    node,
-    selected,
-    setIsUploaded,
-    updateAttributes,
-    hasDuplicationFailed,
-  } = props;
+  const { editor, extension, getPos, loadImageFromFileSystem, maxFileSize, node, updateAttributes } = props;
   // refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasTriggeredFilePickerRef = useRef(false);
@@ -57,7 +49,7 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
     (url: string) => {
       if (url) {
         if (!imageEntityId) return;
-        setIsUploaded(true);
+        loadImageFromFileSystem(undefined);
         // Update the node view's src attribute post upload
         updateAttributes({
           src: url,
@@ -91,8 +83,15 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [imageComponentImageFileMap, imageEntityId, updateAttributes, getPos]
+    [
+      editor,
+      node.type.name,
+      loadImageFromFileSystem,
+      imageComponentImageFileMap,
+      imageEntityId,
+      updateAttributes,
+      getPos,
+    ]
   );
 
   const uploadImageEditorCommand = useCallback(
@@ -105,7 +104,7 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
 
   const handleProgressStatus = useCallback(
     (isUploading: boolean) => {
-      editor.storage.utility.uploadInProgress = isUploading;
+      setEditorUploadProgress(editor, isUploading);
     },
     [editor]
   );
@@ -142,6 +141,8 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
     if (meta) {
       if (meta.event === "drop" && "file" in meta) {
         hasTriedUploadingOnMountRef.current = true;
+        // Consume the queued file before uploading; node views can remount during the request.
+        imageComponentImageFileMap?.delete(imageEntityId ?? "");
         uploadFile(meta.file);
       } else if (meta.event === "insert" && fileInputRef.current && !hasTriggeredFilePickerRef.current) {
         if (meta.hasOpenedFileInputOnce) return;
@@ -175,28 +176,60 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
     [uploadFile, editor, getPos]
   );
 
-  const isErrorState = failedToLoadImage || hasDuplicationFailed;
+  return (
+    <ImageUploadArea
+      {...props}
+      isImageBeingUploaded={isImageBeingUploaded}
+      dropZone={{ draggedInside, onDrop, onDragEnter, onDragLeave }}
+      fileInputRef={fileInputRef}
+      onFileChange={onFileChange}
+    />
+  );
+}
 
-  const borderColor =
-    selected && editor.isEditable && !isErrorState
-      ? "color-mix(in srgb, var(--border-color-accent-strong) 20%, transparent)"
-      : undefined;
+type ImageUploadAreaProps = CustomImageUploaderProps & {
+  isImageBeingUploaded: boolean;
+  dropZone: Pick<ReturnType<typeof useDropZone>, "draggedInside" | "onDrop" | "onDragEnter" | "onDragLeave">;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
+};
+
+function ImageUploadArea({
+  editor,
+  selected,
+  failedToLoadImage,
+  hasDuplicationFailed,
+  updateAttributes,
+  isImageBeingUploaded,
+  dropZone: { draggedInside, onDrop, onDragEnter, onDragLeave },
+  fileInputRef,
+  onFileChange,
+}: ImageUploadAreaProps) {
+  const isErrorState = failedToLoadImage || hasDuplicationFailed;
+  const canChooseFile = editor.isEditable && !isErrorState;
+  const isSelectedPicker = selected && canChooseFile;
+  const isSelectedError = isErrorState && selected;
+  const canRetry = hasDuplicationFailed && editor.isEditable;
+
+  const borderColor = isSelectedPicker
+    ? "color-mix(in srgb, var(--border-color-accent-strong) 20%, transparent)"
+    : undefined;
 
   const getDisplayMessage = useCallback(() => {
     const isUploading = isImageBeingUploaded;
     if (isErrorState) {
-      return "Error loading image";
+      return translate("web.runtime.image_load_error");
     }
 
     if (isUploading) {
-      return "Uploading...";
+      return translate("web.uploading");
     }
 
     if (draggedInside && editor.isEditable) {
-      return "Drop image here";
+      return translate("web.drop_image_here_to_upload");
     }
 
-    return "Add an image";
+    return translate("web.insert_an_image");
   }, [draggedInside, editor.isEditable, isErrorState, isImageBeingUploaded]);
 
   const handleRetryClick = useCallback(
@@ -210,20 +243,19 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
   );
 
   return (
-    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc
     <div
       className={cn(
         "image-upload-component flex cursor-default items-center justify-start gap-2 rounded-lg border border-dashed bg-layer-3 px-2 py-3 text-tertiary transition-all duration-200 ease-in-out",
         {
-          "border-subtle": !(selected && editor.isEditable && !isErrorState),
-          "cursor-pointer hover:bg-layer-3-hover hover:text-secondary": editor.isEditable && !isErrorState,
-          "bg-layer-3-hover text-secondary": draggedInside && editor.isEditable && !isErrorState,
+          "border-subtle": !isSelectedPicker,
+          "cursor-pointer hover:bg-layer-3-hover hover:text-secondary": canChooseFile,
+          "bg-layer-3-hover text-secondary": draggedInside && canChooseFile,
           "bg-accent-primary/10 text-accent-secondary hover:bg-accent-primary/10 hover:text-accent-secondary":
-            selected && editor.isEditable && !isErrorState,
+            isSelectedPicker,
           "cursor-default bg-danger-subtle text-danger-primary": isErrorState,
           "hover:bg-danger-subtle-hover hover:text-danger-primary": isErrorState && editor.isEditable,
-          "bg-danger-subtle-selected": isErrorState && selected,
-          "hover:bg-danger-subtle-active": isErrorState && selected && editor.isEditable,
+          "bg-danger-subtle-selected": isSelectedError,
+          "hover:bg-danger-subtle-active": isSelectedError && editor.isEditable,
         }
       )}
       style={borderColor ? { borderColor } : undefined}
@@ -231,15 +263,17 @@ export function CustomImageUploader(props: CustomImageUploaderProps) {
       onDragOver={onDragEnter}
       onDragLeave={onDragLeave}
       contentEditable={false}
-      onClick={() => {
-        if (!failedToLoadImage && editor.isEditable && !hasDuplicationFailed) {
-          fileInputRef.current?.click();
-        }
-      }}
     >
-      <ImageOutline className="size-4" />
-      <div className="flex-1 text-14 font-medium">{getDisplayMessage()}</div>
-      {hasDuplicationFailed && editor.isEditable && (
+      <button
+        type="button"
+        className="flex min-w-0 flex-1 items-center gap-2 self-stretch text-left text-14 font-medium disabled:cursor-default"
+        disabled={!canChooseFile}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <ImageOutline className="size-4" />
+        <span className="flex-1">{getDisplayMessage()}</span>
+      </button>
+      {canRetry && (
         <button
           type="button"
           onClick={handleRetryClick}

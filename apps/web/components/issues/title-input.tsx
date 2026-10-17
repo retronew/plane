@@ -26,6 +26,7 @@ export type IssueTitleInputProps = {
   projectId: string;
   issueId: string;
   containerClassName?: string;
+  isIntakeIssue?: boolean;
 };
 
 export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTitleInputProps) {
@@ -39,6 +40,7 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
     issueOperations,
     projectId,
     containerClassName,
+    isIntakeIssue = false,
   } = props;
   const { t } = useTranslation();
   // states
@@ -108,7 +110,7 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
         textarea.removeEventListener("blur", handleBlur);
       }
     };
-  }, [title, isSubmitting, setIsSubmitting]);
+  }, [title, isSubmitting, setIsSubmitting, value]);
 
   // Save on unmount if there are unsaved changes
   useEffect(
@@ -140,10 +142,25 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
     [setIsSubmitting]
   );
 
-  if (disabled) return <div className="text-20 font-medium whitespace-pre-line">{title}</div>;
+  if (disabled)
+    return (
+      <div
+        className={cn(
+          "whitespace-pre-line",
+          isIntakeIssue ? "text-[24px] leading-[30px] font-semibold" : "text-20 font-medium"
+        )}
+      >
+        {title}
+      </div>
+    );
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div
+      className={cn(
+        "flex flex-col gap-1.5",
+        isIntakeIssue && "[&_textarea]:!text-[24px] [&_textarea]:!leading-[30px] [&_textarea]:!font-semibold"
+      )}
+    >
       <div className={cn("relative", containerClassName)}>
         <Field name="title" invalid={title?.length === 0}>
           <div className="flex w-full">

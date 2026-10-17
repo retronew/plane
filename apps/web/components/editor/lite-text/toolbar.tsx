@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useSyncExternalStore, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
 
 import { EIssueCommentAccessSpecifier } from "@plane/constants";
@@ -21,6 +21,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 import type { ToolbarMenuItem } from "@plane/editor";
 import { TOOLBAR_ITEMS } from "@plane/editor";
+import { pickCommentImage } from "./comment-image-picker";
 // helpers
 
 type Props = {
@@ -34,6 +35,7 @@ type Props = {
   showSubmitButton: boolean;
   editorRef: EditorRefApi | null;
   submitButtonText?: string;
+  compact?: boolean;
 };
 
 type TCommentAccessType = {
@@ -60,6 +62,7 @@ const COMMENT_ACCESS_SPECIFIERS: TCommentAccessType[] = [
 ];
 
 const toolbarItems = TOOLBAR_ITEMS.lite;
+const getServerSnapshot = () => "";
 
 export function IssueCommentToolbar(props: Props) {
   const { t } = useTranslation();
@@ -74,40 +77,36 @@ export function IssueCommentToolbar(props: Props) {
     showSubmitButton,
     editorRef,
     submitButtonText = "common.comment",
+    compact = false,
   } = props;
-  // State to manage active states of toolbar items
-  const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
-
-  // Function to update active states
-  const updateActiveStates = useCallback(() => {
-    if (!editorRef) return;
-    const newActiveStates: Record<string, boolean> = {};
-    Object.values(toolbarItems)
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => editorRef?.onStateChange(onStoreChange) ?? (() => undefined),
+    [editorRef]
+  );
+  // A primitive snapshot stays stable until the editor's active menu items change.
+  const getSnapshot = useCallback(() => {
+    if (!editorRef) return "";
+    const activeKeys = Object.values(toolbarItems)
       .flat()
-      .forEach((item) => {
+      .filter((item) =>
         // TODO: update this while toolbar homogenization
         // @ts-expect-error type mismatch here
-        newActiveStates[item.renderKey] = editorRef.isMenuItemActive({
-          itemKey: item.itemKey,
-          ...item.extraProps,
-        });
-      });
-    setActiveStates(newActiveStates);
+        editorRef.isMenuItemActive({ itemKey: item.itemKey, ...item.extraProps })
+      )
+      .map((item) => item.renderKey);
+    if (editorRef.isEditorReadyToDiscard()) activeKeys.push("ready-to-discard");
+    return activeKeys.join(",");
   }, [editorRef]);
-
-  // useEffect to call updateActiveStates when isActive prop changes
-  useEffect(() => {
-    if (!editorRef) return;
-    const unsubscribe = editorRef.onStateChange(updateActiveStates);
-    updateActiveStates();
-    return () => unsubscribe();
-  }, [editorRef, updateActiveStates]);
+  const activeKeys = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const activeStates = new Set(activeKeys.split(","));
 
   const isEditorReadyToDiscard = editorRef?.isEditorReadyToDiscard();
   const isSubmitButtonDisabled = isCommentEmpty || !isEditorReadyToDiscard;
 
   return (
-    <div className="flex h-9 w-full items-stretch gap-1.5 overflow-x-scroll bg-surface-2">
+    <div
+      className={cn("flex h-9 w-full items-stretch gap-1.5 overflow-x-auto", compact ? "pr-1.5 pl-1" : "bg-surface-2")}
+    >
       {showAccessSpecifier && (
         <div className="flex flex-shrink-0 items-stretch gap-0.5 rounded-sm border-[0.5px] border-subtle p-1">
           {COMMENT_ACCESS_SPECIFIERS.map((access) => {
@@ -118,6 +117,7 @@ export function IssueCommentToolbar(props: Props) {
                 <button
                   type="button"
                   onClick={() => handleAccessChange?.(access.key)}
+                  aria-label={access.label}
                   className={cn("grid aspect-square place-items-center rounded-xs p-1 hover:bg-layer-1", {
                     "bg-layer-1": isAccessActive,
                   })}
@@ -134,35 +134,47 @@ export function IssueCommentToolbar(props: Props) {
           })}
         </div>
       )}
-      <div className="flex w-full items-stretch justify-between gap-2 rounded-sm border-[0.5px] border-subtle p-1">
+      <div
+        className={cn(
+          "flex w-full items-stretch justify-between gap-2 p-1",
+          !compact && "rounded-sm border-[0.5px] border-subtle"
+        )}
+      >
         <div className="flex items-stretch">
           {Object.keys(toolbarItems).map((key, index) => (
             <div
               key={key}
-              className={cn("flex items-stretch gap-0.5 border-r border-subtle px-2.5", {
+              className={cn("flex items-center gap-0.5 border-subtle", compact ? "px-1.5" : "px-2.5", {
                 "pl-0": index === 0,
+                "border-r": !compact || index < Object.keys(toolbarItems).length - 1,
               })}
             >
               {toolbarItems[key].map((item) => {
-                const isItemActive = activeStates[item.renderKey];
+                const isItemActive = activeStates.has(item.renderKey);
+                const label = t(`web.runtime.comment_toolbar.${item.renderKey.replace("text-align-", "align-")}`);
 
                 return (
-                  <Tooltip key={item.renderKey} label={item.name} shortcut={item.shortcut?.join(" + ")}>
+                  <Tooltip key={item.renderKey} label={label} shortcut={item.shortcut?.join(" + ")}>
                     <button
                       type="button"
-                      onClick={() => executeCommand(item)}
+                      onClick={() => (item.itemKey === "image" ? pickCommentImage(editorRef) : executeCommand(item))}
+                      aria-label={label}
+                      aria-pressed={!!isItemActive}
                       className={cn(
-                        "grid aspect-square place-items-center rounded-xs p-0.5 text-placeholder hover:bg-layer-1",
+                        compact
+                          ? "grid size-6 shrink-0 place-items-center rounded-md p-0 text-icon-secondary outline-none hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:text-icon-disabled"
+                          : "grid aspect-square place-items-center rounded-xs p-0.5 text-placeholder hover:bg-layer-1",
                         {
-                          "bg-layer-1 text-primary": isItemActive,
+                          "bg-layer-transparent-selected": compact && isItemActive,
+                          "bg-layer-1 text-primary": !compact && isItemActive,
                         }
                       )}
                     >
                       <item.icon
                         className={cn("h-3.5 w-3.5", {
-                          "text-primary": isItemActive,
+                          "text-primary": !compact && isItemActive,
                         })}
-                        strokeWidth={2.5}
+                        strokeWidth={compact ? 1.5 : 2.5}
                       />
                     </button>
                   </Tooltip>
@@ -172,10 +184,10 @@ export function IssueCommentToolbar(props: Props) {
           ))}
         </div>
         {showSubmitButton && (
-          <div className="sticky right-1">
+          <div className={cn("sticky right-1", compact && "flex items-center")}>
             <Button
               type="submit"
-              variant="primary"
+              variant={compact ? "secondary" : "primary"}
               size="sm"
               stretch="auto"
               label={t(submitButtonText)}

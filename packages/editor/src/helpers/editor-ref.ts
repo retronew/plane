@@ -19,6 +19,7 @@ import { CORE_EDITOR_META } from "@/constants/meta";
 import type { EditorRefApi, IEditorProps, TEditorCommands } from "@/types";
 // local imports
 import { getParagraphCount } from "./common";
+import { getCollaborationUsers, subscribeCollaborationUsers } from "./collaboration-presence";
 import { insertContentAtSavedSelection } from "./insert-content-at-cursor-position";
 import { scrollSummary, scrollToNodeViaDOMCoordinates } from "./scroll-to-node";
 
@@ -31,6 +32,8 @@ export const getEditorRefHelpers = (args: TArgs): EditorRefApi => {
   const { editor, getEditorMetaData, provider } = args;
 
   return {
+    getCollaborationUsers: () => getCollaborationUsers(provider),
+    onCollaborationUsersChange: (callback) => subscribeCollaborationUsers(provider, callback),
     blur: () => editor?.commands.blur(),
     clearEditor: (emitUpdate = false) => {
       editor?.chain().setMeta(CORE_EDITOR_META.SKIP_FILE_DELETION, true).clearContent(emitUpdate).run();

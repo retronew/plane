@@ -193,7 +193,13 @@ export const ImageItem = (editor: Editor): EditorMenuItem<"image"> => ({
   key: "image",
   name: "Image",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.IMAGE) || editor?.isActive(CORE_EXTENSIONS.CUSTOM_IMAGE),
-  command: () => insertImage({ editor, event: "insert", pos: editor.state.selection.from }),
+  command: (props) =>
+    insertImage({
+      editor,
+      event: props?.file ? "drop" : "insert",
+      pos: props?.pos ?? editor.state.selection.from,
+      file: props?.file,
+    }),
   icon: ImageOutline,
 });
 

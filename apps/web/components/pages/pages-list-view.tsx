@@ -10,6 +10,7 @@ import type { TPageNavigationTabs } from "@plane/types";
 // hooks
 import type { EPageStoreType } from "@/hooks/store";
 import { usePageStore } from "@/hooks/store";
+import { useLabel } from "@/hooks/store/use-label";
 // local imports
 import { PagesListHeaderRoot } from "./header";
 import { PagesListMainContent } from "./pages-list-main-content";
@@ -26,6 +27,11 @@ export const PagesListView = observer(function PagesListView(props: TPageView) {
   const { children, pageType, projectId, storeType, workspaceSlug } = props;
   // store hooks
   const { fetchPagesList } = usePageStore(storeType);
+  const { fetchProjectLabels } = useLabel();
+  // Resolve selected label names and colors before any picker has been opened.
+  useSWR(workspaceSlug && projectId ? `PROJECT_PAGE_LABELS_${projectId}` : null, () =>
+    fetchProjectLabels(workspaceSlug, projectId)
+  );
   // fetching pages list
   useSWR(
     workspaceSlug && projectId && pageType ? `PROJECT_PAGES_${projectId}` : null,

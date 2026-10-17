@@ -31,6 +31,7 @@ export type TCommentCardDisplayProps = {
   activityOperations: TCommentsOperations;
   comment: TIssueComment;
   disabled: boolean;
+  isIntakeIssue?: boolean;
   entityId: string;
   projectId?: string;
   readOnlyEditorRef: React.RefObject<EditorRefApi | null>;
@@ -48,6 +49,7 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
     activityOperations,
     comment,
     disabled,
+    isIntakeIssue = false,
     projectId,
     readOnlyEditorRef,
     showAccessSpecifier,
@@ -119,32 +121,54 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
           )}
         </div>
       )}
-      <div className="relative mb-3 flex w-full items-center gap-2">
-        <Avatar alt={displayName} fallback={displayName?.[0]?.toUpperCase()} size="2xs" src={getFileURL(avatarUrl)} />
+      <div className={cn("relative flex w-full items-center gap-2", !isIntakeIssue && "mb-3")}>
+        <Avatar
+          alt={displayName}
+          fallback={displayName?.[0]?.toUpperCase()}
+          size={isIntakeIssue ? "xs" : "2xs"}
+          src={getFileURL(avatarUrl)}
+        />
         <div className="flex flex-1 flex-wrap items-center gap-1">
-          <div className="text-caption-sm-medium">{displayName}</div>
+          <div className={isIntakeIssue ? "text-body-xs-medium" : "text-caption-sm-medium"}>{displayName}</div>
           <div className="text-caption-sm-regular text-tertiary">
-            <Translation
-              translationKey="web.ui.commented_at"
-              components={{
-                time: (
-                  <Tooltip
-                    label={translate("web.ui.date_at_time", {
-                      date: renderFormattedDate(comment.created_at),
-                      time: renderFormattedTime(comment.created_at),
-                    })}
-                    side="bottom"
-                    layout="single"
-                    delay={200}
-                  >
-                    <span className="text-tertiary">
-                      {calculateTimeAgo(comment.created_at)}
-                      {comment.edited_at && translate("web.ui.edited")}
-                    </span>
-                  </Tooltip>
-                ),
-              }}
-            />
+            {isIntakeIssue ? (
+              <Tooltip
+                label={translate("web.ui.date_at_time", {
+                  date: renderFormattedDate(comment.created_at),
+                  time: renderFormattedTime(comment.created_at),
+                })}
+                side="bottom"
+                layout="single"
+                delay={200}
+              >
+                <span className="text-12 text-tertiary">
+                  · {calculateTimeAgo(comment.created_at)}
+                  {comment.edited_at && translate("web.ui.edited")}
+                </span>
+              </Tooltip>
+            ) : (
+              <Translation
+                translationKey="web.ui.commented_at"
+                components={{
+                  time: (
+                    <Tooltip
+                      label={translate("web.ui.date_at_time", {
+                        date: renderFormattedDate(comment.created_at),
+                        time: renderFormattedTime(comment.created_at),
+                      })}
+                      side="bottom"
+                      layout="single"
+                      delay={200}
+                    >
+                      <span className="text-tertiary">
+                        {calculateTimeAgo(comment.created_at)}
+                        {comment.edited_at && translate("web.ui.edited")}
+                      </span>
+                    </Tooltip>
+                  ),
+                }}
+              />
+            )}
           </div>
         </div>
         {!disabled && (
@@ -181,12 +205,16 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
             initialValue={comment.comment_html ?? ""}
             workspaceId={workspaceId}
             workspaceSlug={workspaceSlug}
-            containerClassName={cn("!py-1 transition-[border-color] duration-500", highlightClassName)}
+            containerClassName={cn(
+              "transition-[border-color] duration-500",
+              isIntakeIssue ? "!px-0 !pt-1.5 !pb-0" : "!py-1",
+              highlightClassName
+            )}
             projectId={projectId?.toString()}
             displayConfig={{
               fontSize: "small-font",
             }}
-            parentClassName="border-none"
+            parentClassName={cn("border-none", isIntakeIssue && "ml-7")}
           />
           {shouldRenderReactions &&
             (renderFooter ? (

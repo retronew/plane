@@ -23,7 +23,8 @@ from plane.app.permissions import ProjectPagePermission, ROLE
 from plane.app.views.page.base import unarchive_archive_page_and_descendants
 from plane.bgtasks.page_transaction_task import page_transaction
 from plane.bgtasks.page_version_task import track_page_version
-from plane.db.models import Page, Project, ProjectMember, ProjectPage, UserFavorite, UserRecentVisit
+from plane.db.models import Page, PageLabel, Project, ProjectMember, ProjectPage, UserFavorite, UserRecentVisit
+from plane.utils.issue_filters import filter_valid_uuids
 from plane.utils.openapi import DELETED_RESPONSE, create_paginated_response
 from plane.utils.openapi.decorators import page_docs
 
@@ -87,6 +88,12 @@ class PageListCreateAPIEndpoint(PageAPIMixin, BaseAPIView):
             OpenApiParameter(name="archived", type=OpenApiTypes.BOOL, location=OpenApiParameter.QUERY),
             OpenApiParameter(name="search", type=OpenApiTypes.STR, location=OpenApiParameter.QUERY),
             OpenApiParameter(name="parent", type=OpenApiTypes.UUID, location=OpenApiParameter.QUERY),
+            OpenApiParameter(
+                name="labels",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Comma-separated label UUIDs (OR). Empty values and invalid UUIDs are ignored.",
+            ),
         ],
         responses={200: create_paginated_response(PageAPISerializer, "PaginatedPageResponse", "List of pages")},
     )
@@ -103,6 +110,12 @@ class PageListCreateAPIEndpoint(PageAPIMixin, BaseAPIView):
         parent = request.query_params.get("parent")
         if parent:
             queryset = queryset.filter(parent_id=parent)
+
+        label_ids = filter_valid_uuids(label.strip() for label in request.query_params.get("labels", "").split(","))
+        if label_ids:
+            queryset = queryset.filter(
+                pk__in=PageLabel.objects.filter(label_id__in=label_ids).values("page_id")
+            )
 
         return self.paginate(
             request=request,

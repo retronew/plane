@@ -195,11 +195,12 @@
 
 /* A responsive, gently settling curve; no overshoot for document layout. */
 .page-toolbar-shell {
-  height: 52px;
-  transition: height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  max-height: 52px;
+  flex-shrink: 1;
+  transition: max-height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 
   &[data-hidden="true"] {
-    height: 0;
+    max-height: 0;
   }
 }
 
@@ -226,8 +227,7 @@
 }
 
 #page-toolbar-container .page-toolbar-content {
-  padding-left: max(var(--normal-content-margin), calc((100cqw - var(--page-layout-width)) / 2 - 10px));
-  transition: padding-left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  padding-inline: var(--normal-content-margin);
 }
 
 #page-content-container {

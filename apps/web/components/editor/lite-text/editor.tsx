@@ -45,6 +45,7 @@ type LiteTextEditorWrapperProps = MakeOptional<
   parentClassName?: string;
   editorClassName?: string;
   submitButtonText?: string;
+  compactCommentToolbar?: boolean;
 } & (
     | {
         editable: false;
@@ -55,6 +56,33 @@ type LiteTextEditorWrapperProps = MakeOptional<
         duplicateFile: TFileHandler["duplicate"];
       }
   );
+
+function isMutableRefObject<T>(value: React.ForwardedRef<T>): value is React.MutableRefObject<T | null> {
+  return !!value && typeof value === "object" && "current" in value;
+}
+
+function FullCommentToolbar({
+  isFocused,
+  spacing,
+  ...props
+}: React.ComponentProps<typeof IssueCommentToolbar> & { isFocused: boolean; spacing: string }) {
+  return (
+    <div
+      className={cn(
+        "origin-top overflow-hidden transition-all duration-300 ease-out",
+        isFocused ? "max-h-[200px] scale-y-100 opacity-100" : "invisible max-h-0 scale-y-0 opacity-0",
+        isFocused && spacing
+      )}
+    >
+      <IssueCommentToolbar {...props} />
+    </div>
+  );
+}
+
+const compactCommentClasses = {
+  normal: { editor: "", toolbar: "mt-3" },
+  compact: { editor: "min-h-16 p-3 [&_p.is-empty]:before:font-medium", toolbar: "" },
+};
 
 export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   props: LiteTextEditorWrapperProps,
@@ -81,6 +109,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
     editorClassName = "",
     showPlaceholderOnEmpty = true,
     submitButtonText = "common.comment",
+    compactCommentToolbar = false,
     ...rest
   } = props;
   // states
@@ -111,11 +140,9 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   });
   // editor config
   const { getEditorFileHandlers } = useEditorConfig();
-  function isMutableRefObject<T>(ref: React.ForwardedRef<T>): ref is React.MutableRefObject<T | null> {
-    return !!ref && typeof ref === "object" && "current" in ref;
-  }
   // derived values
   const isEmpty = isCommentEmpty(props.initialValue);
+  const commentClasses = compactCommentClasses[compactCommentToolbar ? "compact" : "normal"];
 
   return (
     <div
@@ -132,19 +159,22 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
       {/* Wrapper for lite toolbar layout */}
       <div className={cn(isLiteVariant && editable ? "flex items-end gap-1" : "")}>
         {/* Main Editor - always rendered once */}
-        <div className={cn(isLiteVariant && editable ? "min-w-0 flex-1" : "")}>
+        <div className={cn(isLiteVariant && editable ? "min-w-0 flex-1" : "", commentClasses.editor)}>
           <LiteTextEditorWithRef
             ref={ref}
             disabledExtensions={[...liteTextEditorExtensions.disabled, ...additionalDisabledExtensions]}
             editable={editable}
             flaggedExtensions={liteTextEditorExtensions.flagged}
-            fileHandler={getEditorFileHandlers({
-              projectId,
-              uploadFile: editable ? props.uploadFile : async () => "",
-              duplicateFile: editable ? props.duplicateFile : async () => "",
-              workspaceId,
-              workspaceSlug,
-            })}
+            fileHandler={{
+              ...getEditorFileHandlers({
+                projectId,
+                uploadFile: editable ? props.uploadFile : async () => "",
+                duplicateFile: editable ? props.duplicateFile : async () => "",
+                workspaceId,
+                workspaceSlug,
+              }),
+              showImageDeleteAction: true,
+            }}
             getEditorMetaData={getEditorMetaData}
             handleEditorReady={(ready) => {
               if (ready) {
@@ -193,32 +223,28 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
 
       {/* Full Toolbar - conditionally rendered */}
       {isFullVariant && editable && (
-        <div
-          className={cn(
-            "origin-top overflow-hidden transition-all duration-300 ease-out",
-            isFocused ? "mt-3 max-h-[200px] scale-y-100 opacity-100" : "invisible max-h-0 scale-y-0 opacity-0"
-          )}
-        >
-          <IssueCommentToolbar
-            accessSpecifier={accessSpecifier}
-            executeCommand={(item) => {
-              // TODO: update this while toolbar homogenization
-              // @ts-expect-error type mismatch here
-              editorRef?.executeMenuItemCommand({
-                itemKey: item.itemKey,
-                ...item.extraProps,
-              });
-            }}
-            handleAccessChange={handleAccessChange}
-            handleSubmit={(e) => rest.onEnterKeyPress?.(e)}
-            isCommentEmpty={isEmpty}
-            isSubmitting={isSubmitting}
-            showAccessSpecifier={showAccessSpecifier}
-            editorRef={editorRef}
-            showSubmitButton={showSubmitButton}
-            submitButtonText={submitButtonText}
-          />
-        </div>
+        <FullCommentToolbar
+          isFocused={isFocused}
+          spacing={commentClasses.toolbar}
+          accessSpecifier={accessSpecifier}
+          executeCommand={(item) => {
+            // TODO: update this while toolbar homogenization
+            // @ts-expect-error type mismatch here
+            editorRef?.executeMenuItemCommand({
+              itemKey: item.itemKey,
+              ...item.extraProps,
+            });
+          }}
+          handleAccessChange={handleAccessChange}
+          handleSubmit={(e) => rest.onEnterKeyPress?.(e)}
+          isCommentEmpty={isEmpty}
+          isSubmitting={isSubmitting}
+          showAccessSpecifier={showAccessSpecifier}
+          editorRef={editorRef}
+          showSubmitButton={showSubmitButton}
+          submitButtonText={submitButtonText}
+          compact={compactCommentToolbar}
+        />
       )}
     </div>
   );
