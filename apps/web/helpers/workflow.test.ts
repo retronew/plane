@@ -1,6 +1,11 @@
 import { expect, it } from "vitest";
 import type { TProjectWorkflow } from "@plane/types";
-import { getWorkflowErrorCode, workflowAllowsCreation, workflowAllowsTransition } from "./workflow";
+import {
+  getWorkflowErrorCode,
+  getWorkflowErrorReason,
+  workflowAllowsCreation,
+  workflowAllowsTransition,
+} from "./workflow";
 
 const workflow: TProjectWorkflow = {
   id: "default",
@@ -37,6 +42,15 @@ it("treats an empty member list as all, and otherwise requires a listed user", (
   expect(workflowAllowsTransition(restricted, "backlog", "todo", "reviewer")).toBe(true);
   expect(workflowAllowsTransition(restricted, "backlog", "todo", "admin")).toBe(false);
   expect(workflowAllowsTransition(restricted, "backlog", "todo")).toBe(false);
+});
+it("extracts a readable precondition reason from direct and Axios errors", () => {
+  expect(getWorkflowErrorReason({ workflow: "WORKFLOW_PRECONDITION_FAILED", reason: "请先提高优先级" })).toBe(
+    "请先提高优先级"
+  );
+  expect(getWorkflowErrorReason({ response: { data: { reason: "Check required fields" } } })).toBe(
+    "Check required fields"
+  );
+  expect(getWorkflowErrorReason({ reason: "x".repeat(600) })).toHaveLength(500);
 });
 it("extracts app, API and Axios policy errors without assuming their shape", () => {
   expect(getWorkflowErrorCode({ workflow: ["WORKFLOW_MEMBER_NOT_ALLOWED"] })).toBe("WORKFLOW_MEMBER_NOT_ALLOWED");

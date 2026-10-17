@@ -36,15 +36,23 @@ class ProjectIssueType(ProjectBaseModel):
     issue_type = models.ForeignKey("db.IssueType", related_name="project_issue_types", on_delete=models.CASCADE)
     level = models.PositiveIntegerField(default=0)
     is_default = models.BooleanField(default=False)
+    workflow = models.ForeignKey(
+        "db.ProjectWorkflow", null=True, blank=True, on_delete=models.SET_NULL, related_name="issue_types"
+    )
 
     class Meta:
         unique_together = ["project", "issue_type", "deleted_at"]
         constraints = [
             models.UniqueConstraint(
+                fields=["project"],
+                condition=Q(deleted_at__isnull=True, is_default=True),
+                name="unique_default_project_issue_type",
+            ),
+            models.UniqueConstraint(
                 fields=["project", "issue_type"],
                 condition=Q(deleted_at__isnull=True),
                 name="project_issue_type_unique_project_issue_type_when_deleted_at_null",
-            )
+            ),
         ]
         verbose_name = "Project Issue Type"
         verbose_name_plural = "Project Issue Types"

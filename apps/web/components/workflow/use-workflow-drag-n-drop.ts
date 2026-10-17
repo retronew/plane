@@ -25,16 +25,17 @@ export function useWorkFlowFDragNDrop(groupBy: TIssueGroupByOptions | undefined,
   return {
     workflowDisabledSource: blocked ? t("web.workflow_ui.transition_blocked") : undefined,
     isWorkflowDropDisabled: blocked,
-    getIsWorkflowWorkItemCreationDisabled: (groupId: string, subGroupId?: string) => {
+    getIsWorkflowWorkItemCreationDisabled: (groupId: string, subGroupId?: string, issueTypeId?: string | null) => {
       const stateId = getStateId(groupId, subGroupId);
       const state = stateId ? getStateById(stateId) : undefined;
-      return !!state && !workflowAllowsCreation(store.workflows[state.project_id], state.id);
+      return !!state && !workflowAllowsCreation(store.resolve(state.project_id, issueTypeId), state.id);
     },
     handleWorkFlowState: (
       sourceGroupId: string,
       destinationGroupId: string,
       sourceSubGroupId?: string,
-      destinationSubGroupId?: string
+      destinationSubGroupId?: string,
+      issueTypeId?: string | null
     ) => {
       const source = getStateId(sourceGroupId, sourceSubGroupId),
         destination = getStateId(destinationGroupId, destinationSubGroupId);
@@ -43,7 +44,7 @@ export function useWorkFlowFDragNDrop(groupBy: TIssueGroupByOptions | undefined,
         !!source &&
           !!destination &&
           !!state &&
-          !workflowAllowsTransition(store.workflows[state.project_id], source, destination, user?.id)
+          !workflowAllowsTransition(store.resolve(state.project_id, issueTypeId), source, destination, user?.id)
       );
     },
   };

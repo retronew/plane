@@ -22,7 +22,16 @@ vi.mock("@/hooks/store/use-project-state", () => ({
   }),
 }));
 vi.mock("@/hooks/store/use-project-workflow", () => ({
-  useProjectWorkflow: () => ({ workflows: { p: state.workflow }, fetch: state.fetch }),
+  useProjectWorkflow: () => ({
+    workflows: { p: state.workflow },
+    fetch: state.fetch,
+    fetchList: state.fetch,
+    fetchTypes: state.fetch,
+    resolve: (_projectId: string, typeId?: string) =>
+      typeId === "custom"
+        ? { ...state.workflow, states: state.workflow.states.filter((item) => item.id !== "b"), transitions: [] }
+        : state.workflow,
+  }),
 }));
 vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "viewer" } }) }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -31,11 +40,14 @@ vi.mock("@plane/blocks/property-select", () => ({
   StateSelect: (props: {
     getValues: (args: object) => Promise<{ results: { id: string; name: string }[] }>;
     onChange: (id: string) => void;
+    allowedStateIds?: Set<string> | null;
   }) => (
     <button
       onClick={async () => {
         const data = await props.getValues({ search: "" });
-        state.toast(data.results.map((s) => s.id));
+        state.toast(
+          data.results.filter((item) => !props.allowedStateIds || props.allowedStateIds.has(item.id)).map((s) => s.id)
+        );
       }}
     >
       open
@@ -69,6 +81,23 @@ it("filters transitions and preserves the selected state", async () => {
 });
 it("hides paths restricted to another member", async () => {
   state.workflow.transitions[0].member_ids = ["other"];
+  render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a"]));
+});
+it("resolves the work item type before filtering workflow states", async () => {
+  render(<StateSelect projectId="p" issueTypeId="custom" value="a" onChange={() => undefined} variant="pill-md" />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a", "c"]));
+});
+it.each(["enabled", "is_active"] as const)("offers states outside a custom set when %s is false", async (flag) => {
+  state.workflow[flag] = false;
+  render(<StateSelect projectId="p" issueTypeId="custom" value="a" onChange={() => undefined} variant="pill-md" />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a", "b", "c"]));
+});
+it("prevents ordinary state selection from leaving an approval source", async () => {
+  state.workflow.transitions[0].kind = "approval";
   render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" />);
   fireEvent.click(screen.getByText("open"));
   await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a"]));

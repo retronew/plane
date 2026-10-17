@@ -43,6 +43,7 @@ from plane.db.models import (
 from plane.bgtasks.webhook_task import model_activity, webhook_activity
 from plane.utils.exception_logger import log_exception
 from .base import BaseAPIView
+from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
 from plane.utils.host import base_host
 from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_order_by
 from plane.api.serializers import (
@@ -627,6 +628,7 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
             204: DELETED_RESPONSE,
         },
     )
+    @workflow_lifecycle_endpoint("project_deleted")
     def delete(self, request, slug, pk):
         """Delete project
 
@@ -670,6 +672,7 @@ class ProjectArchiveUnarchiveAPIEndpoint(BaseAPIView):
             204: ARCHIVED_RESPONSE,
         },
     )
+    @workflow_lifecycle_endpoint("project_archived")
     def post(self, request, slug, project_id):
         """Archive project
 

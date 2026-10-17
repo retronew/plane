@@ -23,6 +23,12 @@ services:
       context: ../../
       dockerfile: apps/live/Dockerfile.live
 
+  workflow-runner:
+    image: ${DOCKERHUB_USER:-local}/plane-workflow-runner:${APP_RELEASE:-latest}
+    build:
+      context: ../../../
+      dockerfile: apps/workflow-runner/Dockerfile
+
   api:
     image: ${DOCKERHUB_USER:-local}/plane-backend:${APP_RELEASE:-latest}
     build:

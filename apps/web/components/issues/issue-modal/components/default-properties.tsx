@@ -8,7 +8,7 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 import { useState } from "react";
 import { observer } from "mobx-react";
 import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import { Icon as PropelIcon } from "@makeplane/propel/components/icon";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Pill } from "@makeplane/propel/components/pill";
@@ -29,6 +29,7 @@ import { MemberSelect } from "@/components/dropdowns/member/member-select";
 import { ModuleSelect } from "@/components/dropdowns/module/module-select";
 import { PrioritySelect } from "@/components/dropdowns/priority/priority-select";
 import { StateSelect } from "@/components/dropdowns/state/state-select";
+import { IssueTypeSelect } from "@/components/dropdowns/issue-type-select";
 import { ParentIssuesListModal } from "@/components/issues/parent-issues-list-modal";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
@@ -75,7 +76,9 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const { getProjectById } = useProject();
   const { getProjectDefaultStateId } = useProjectState();
-  const workflow = useProjectWorkflow(projectId ?? undefined).workflows[projectId ?? ""];
+  const issueTypeId = useWatch({ control, name: "type_id" });
+  const workflowStore = useProjectWorkflow(projectId ?? undefined);
+  const workflow = workflowStore.resolve(projectId ?? "", issueTypeId);
   const { isMobile } = usePlatformOS();
   const { data: userProfile } = useUserProfile();
   // derived values
@@ -93,15 +96,30 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
     <div className="flex flex-wrap items-center gap-2">
       <Controller
         control={control}
+        name="type_id"
+        render={({ field: { value, onChange } }) => (
+          <IssueTypeSelect
+            projectId={projectId}
+            value={value}
+            onChange={(typeId) => {
+              onChange(typeId);
+              handleFormChange();
+            }}
+          />
+        )}
+      />
+      <Controller
+        control={control}
         name="state_id"
         render={({ field: { value, onChange } }) => (
           <StateSelect
             isForWorkItemCreation
+            issueTypeId={issueTypeId}
             testId="create-work-item-state-select"
             // an empty state shows the project's default state, as the legacy dropdown did
             value={
               value ||
-              (workflowIsActive(workflow) ? workflow.effective_initial_state_id : undefined) ||
+              (workflowIsActive(workflow) ? workflow?.effective_initial_state_id : undefined) ||
               getProjectDefaultStateId(projectId)
             }
             onChange={(stateId) => {

@@ -42,6 +42,7 @@ from plane.utils.order_queryset import order_issue_queryset
 from plane.utils.paginator import GroupedOffsetPaginator, SubGroupedOffsetPaginator
 from plane.app.permissions import allow_permission, ROLE
 from plane.utils.error_codes import ERROR_CODES
+from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
 from plane.utils.host import base_host
 
 # Module imports
@@ -254,6 +255,7 @@ class IssueArchiveViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    @workflow_lifecycle_endpoint("issue_archived", issues=True)
     def archive(self, request, slug, project_id, pk=None):
         issue = Issue.issue_objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
         if issue.state.group not in ["completed", "cancelled"]:
@@ -306,6 +308,7 @@ class BulkArchiveIssuesEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    @workflow_lifecycle_endpoint("issue_archived", issues=True)
     def post(self, request, slug, project_id):
         issue_ids = request.data.get("issue_ids", [])
 

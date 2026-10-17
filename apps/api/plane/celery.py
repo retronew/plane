@@ -40,6 +40,10 @@ app.conf.beat_schedule = {
         "task": "plane.bgtasks.issue_reminder_task.send_due_reminders",
         "schedule": crontab(minute=0),
     },
+    "recover-workflow-runner-outbox": {
+        "task": "plane.bgtasks.workflow_runner_task.dispatch_workflow_outbox",
+        "schedule": crontab(minute="*"),
+    },
     # Occurs once every day
     "check-every-day-to-delete-hard-delete": {
         "task": "plane.bgtasks.deletion_task.hard_delete",

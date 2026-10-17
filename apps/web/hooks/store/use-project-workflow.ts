@@ -8,7 +8,11 @@ export function useProjectWorkflow(projectId?: string) {
   const { workspaceSlug } = useParams();
   const store = context.workflow;
   useEffect(() => {
-    if (workspaceSlug && projectId) void store.fetch(workspaceSlug, projectId).catch(() => undefined);
+    if (workspaceSlug && projectId) {
+      void store.fetch(workspaceSlug, projectId).catch(() => undefined);
+      void store.fetchList(workspaceSlug, projectId).catch(() => undefined);
+      void store.fetchTypes(workspaceSlug, projectId).catch(() => undefined);
+    }
   }, [workspaceSlug, projectId, store]);
   return store;
 }

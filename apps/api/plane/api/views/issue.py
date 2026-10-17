@@ -43,6 +43,7 @@ from drf_spectacular.utils import (
 )
 
 # Module imports
+from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
 from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.api.serializers import (
     IssueAttachmentSerializer,
@@ -881,6 +882,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
             404: WORK_ITEM_NOT_FOUND_RESPONSE,
         },
     )
+    @workflow_lifecycle_endpoint("issue_deleted", issues=True)
     def delete(self, request, slug, project_id, pk):
         """Delete work item
 

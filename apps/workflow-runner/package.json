@@ -1,0 +1,27 @@
+{
+  "name": "@plane/workflow-runner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "pnpm build && pnpm start",
+    "test": "pnpm build && node --test --test-concurrency=1 tests/*.test.mjs",
+    "check:types": "tsc -p tsconfig.json --noEmit",
+    "check:lint": "oxlint --deny-warnings src tests",
+    "check:format": "oxfmt --check .",
+    "check": "pnpm check:types && pnpm check:lint && pnpm check:format",
+    "fix:format": "oxfmt ."
+  },
+  "dependencies": {
+    "quickjs-emscripten": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.22.0"
+  }
+}

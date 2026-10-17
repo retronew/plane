@@ -534,7 +534,12 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     shouldUpdateList = true
   ) {
     // perform an API call
-    const workflow = await this.rootIssueStore.rootStore.workflow.fetch(workspaceSlug, projectId);
+    const workflowStore = this.rootIssueStore.rootStore.workflow;
+    await Promise.all([
+      workflowStore.fetchList(workspaceSlug, projectId),
+      workflowStore.fetchTypes(workspaceSlug, projectId),
+    ]);
+    const workflow = workflowStore.resolve(projectId, data.type_id);
     if (data.state_id && !workflowAllowsCreation(workflow, data.state_id))
       throw { workflow: ["WORKFLOW_CREATION_NOT_ALLOWED"] };
     const response = await this.issueService.createIssue(workspaceSlug, projectId, data);
@@ -569,7 +574,11 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     const issueBeforeUpdate = clone(this.rootIssueStore.issues.getIssueById(issueId));
     if (shouldSync && data.state_id && issueBeforeUpdate?.state_id) {
       const root = this.rootIssueStore.rootStore;
-      const workflow = await root.workflow.fetch(workspaceSlug, projectId);
+      await Promise.all([
+        root.workflow.fetchList(workspaceSlug, projectId),
+        root.workflow.fetchTypes(workspaceSlug, projectId),
+      ]);
+      const workflow = root.workflow.resolve(projectId, issueBeforeUpdate.type_id);
       if (!workflowAllowsTransition(workflow, issueBeforeUpdate.state_id, data.state_id, root.user.data?.id))
         throw { workflow: ["WORKFLOW_TRANSITION_NOT_ALLOWED"] };
     }
@@ -588,7 +597,9 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       } as TIssue);
 
       // call API to update the issue
-      await this.issueService.patchIssue(workspaceSlug, projectId, issueId, data);
+      const savedIssue = await this.issueService.patchIssue(workspaceSlug, projectId, issueId, data);
+      // Reconcile server defaults and workflow side effects after the optimistic update.
+      if (savedIssue) this.rootIssueStore.issues.updateIssue(issueId, savedIssue);
 
       // call fetch Parent Stats
       this.fetchParentStats(workspaceSlug, projectId);

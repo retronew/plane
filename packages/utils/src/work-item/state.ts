@@ -14,16 +14,12 @@ export const orderStateGroups = (unorderedStateGroups: IStateResponse | undefine
   return Object.assign({ backlog: [], unstarted: [], started: [], completed: [], cancelled: [] }, unorderedStateGroups);
 };
 
-export const sortStates = (states: IState[]) => {
-  if (!states || states.length === 0) return;
-
-  return states.sort((stateA, stateB) => {
-    if (stateA.group === stateB.group) {
-      return stateA.sequence - stateB.sequence;
-    }
-    return Object.keys(STATE_GROUPS).indexOf(stateA.group) - Object.keys(STATE_GROUPS).indexOf(stateB.group);
+export const sortStates = <T extends Pick<IState, "id" | "group"> & { sequence?: number }>(states: readonly T[]): T[] =>
+  states.toSorted((stateA, stateB) => {
+    const groupOrder =
+      Object.keys(STATE_GROUPS).indexOf(stateA.group) - Object.keys(STATE_GROUPS).indexOf(stateB.group);
+    return groupOrder || (stateA.sequence ?? 0) - (stateB.sequence ?? 0) || stateA.id.localeCompare(stateB.id);
   });
-};
 
 export const getCurrentStateSequence = (
   groupSates: IState[],

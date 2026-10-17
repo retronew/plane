@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { LucideIcon } from "lucide-react";
+import { Code2, type LucideIcon } from "lucide-react";
 import {
   CyclesOutline,
   EstimateOutline,
@@ -36,4 +36,5 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | R
   estimates: EstimateOutline,
   automations: TriggerOutline,
   workflows: WorkflowsOutline,
+  workflow_runner: Code2,
 };

@@ -68,6 +68,7 @@ from plane.utils.grouper import (
     issue_on_results,
     issue_queryset_grouper,
 )
+from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
 from plane.utils.host import base_host
 from plane.utils.issue_filters import issue_filters
 from plane.utils.order_queryset import order_issue_queryset
@@ -176,6 +177,7 @@ class IssueListEndpoint(BaseAPIView):
                 "id",
                 "name",
                 "state_id",
+                "type_id",
                 "sort_order",
                 "completed_at",
                 "estimate_point",
@@ -442,6 +444,7 @@ class IssueViewSet(BaseViewSet):
                     "id",
                     "name",
                     "state_id",
+                    "type_id",
                     "sort_order",
                     "completed_at",
                     "estimate_point",
@@ -717,6 +720,7 @@ class IssueViewSet(BaseViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @allow_permission([ROLE.ADMIN], creator=True, model=Issue)
+    @workflow_lifecycle_endpoint("issue_deleted", issues=True)
     def destroy(self, request, slug, project_id, pk=None):
         issue = Issue.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
 
@@ -765,6 +769,7 @@ class ProjectUserDisplayPropertyEndpoint(BaseAPIView):
 
 class BulkDeleteIssuesEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN])
+    @workflow_lifecycle_endpoint("issue_deleted", issues=True)
     def delete(self, request, slug, project_id):
         issue_ids = request.data.get("issue_ids", [])
 
@@ -865,6 +870,7 @@ class IssuePaginatedViewSet(BaseViewSet):
             "id",
             "name",
             "state_id",
+            "type_id",
             "state__group",
             "sort_order",
             "completed_at",

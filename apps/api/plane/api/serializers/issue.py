@@ -70,7 +70,16 @@ class IssueSerializer(WorkflowIssueWriteMixin, BaseSerializer):
 
     class Meta:
         model = Issue
-        read_only_fields = ["id", "workspace", "project", "updated_by", "updated_at", "completed_at"]
+        read_only_fields = [
+            "id",
+            "workspace",
+            "project",
+            "updated_by",
+            "updated_at",
+            "completed_at",
+            "archived_at",
+            "deleted_at",
+        ]
         exclude = ["description_json", "description_stripped"]
 
     def validate(self, data):
@@ -171,14 +180,7 @@ class IssueSerializer(WorkflowIssueWriteMixin, BaseSerializer):
         workspace_id = self.context["workspace_id"]
         default_assignee_id = self.context["default_assignee_id"]
 
-        issue_type = validated_data.pop("type", None)
-
-        if not issue_type:
-            # Get default issue type
-            issue_type = IssueType.objects.filter(project_issue_types__project_id=project_id, is_default=True).first()
-            issue_type = issue_type
-
-        issue = Issue.objects.create(**validated_data, project_id=project_id, type=issue_type)
+        issue = Issue.objects.create(**validated_data, project_id=project_id)
 
         # Issue Audit Users
         created_by_id = issue.created_by_id
@@ -831,6 +833,7 @@ class IssueExpandSerializer(BaseSerializer):
     labels, assignees, and states for comprehensive data representation.
     """
 
+    type_id = serializers.UUIDField(read_only=True, allow_null=True)
     cycle = CycleLiteSerializer(source="issue_cycle.cycle", read_only=True)
     module = ModuleLiteSerializer(source="issue_module.module", read_only=True)
 

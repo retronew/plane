@@ -19,6 +19,7 @@ import type { IState, TStateOperationsCallbacks } from "@plane/types";
 import { cn } from "@plane/utils";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { getWorkflowErrorCode } from "@/helpers/workflow";
 
 type TStateDelete = {
   totalStates: number;
@@ -48,7 +49,10 @@ export const StateDelete = observer(function StateDelete(props: TStateDelete) {
       setIsDelete(false);
     } catch (error) {
       const errorStatus = error as { status: number; data: { error: string } };
-      if (errorStatus.status === 400) {
+      const workflowCode = getWorkflowErrorCode(error);
+      if (workflowCode) {
+        setToast({ type: "error", title: t("toast.error"), message: t(`web.workflow_errors.${workflowCode}`) });
+      } else if (errorStatus.status === 400) {
         setToast({
           type: "error",
           title: t("toast.error"),

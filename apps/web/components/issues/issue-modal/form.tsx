@@ -46,6 +46,8 @@ import { useIssueModal } from "@/hooks/context/use-issue-modal";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useDefaultIssueType } from "@/hooks/use-default-issue-type";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
@@ -157,6 +159,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   } = methods;
 
   const projectId = watch("project_id");
+  const workflowStore = useProjectWorkflow(projectId ?? undefined);
+  const projectTypes = workflowStore.issueTypes[projectId ?? ""]?.results;
 
   const onClose = () => {
     if (isSubmitting || isMoving || isApplyingTemplate) return;
@@ -207,19 +211,14 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...dataResetProperties]);
 
-  // Update the issue type id when the project id changes
-  useEffect(() => {
-    const issueTypeId = watch("type_id");
-
-    // if issue type id is present or project not available, return
-    if (issueTypeId || !projectId) return;
-
-    // get issue type id on project change
-    const issueTypeIdOnProjectChange = getIssueTypeIdOnProjectChange(projectId);
-    if (issueTypeIdOnProjectChange) setValue("type_id", issueTypeIdOnProjectChange, { shouldValidate: true });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, projectId]);
+  useDefaultIssueType({
+    projectId,
+    types: projectTypes,
+    data,
+    getValues,
+    setValue,
+    getDefault: getIssueTypeIdOnProjectChange,
+  });
 
   useEffect(() => {
     if (workItemTemplateId && editorRef.current) {

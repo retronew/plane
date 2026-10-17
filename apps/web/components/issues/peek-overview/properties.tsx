@@ -82,6 +82,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
       <div className={`mt-3 w-full space-y-3 ${disabled ? "opacity-60" : ""}`}>
         <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
           <StateSelect
+            issueTypeId={issue.type_id}
             testId="work-item-state-select"
             value={issue?.state_id}
             onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { state_id: val })}

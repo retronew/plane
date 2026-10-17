@@ -102,6 +102,11 @@ class ProjectCreateSerializer(BaseSerializer):
             "created_by",
             "updated_by",
             "logo_props",
+            "workflow_enabled",
+            "workflow_version",
+            "is_issue_type_enabled",
+            "archived_at",
+            "deleted_at",
         ]
 
     def validate(self, data):
@@ -235,6 +240,10 @@ class ProjectSerializer(BaseSerializer):
             "created_by",
             "updated_by",
             "deleted_at",
+            "archived_at",
+            "workflow_enabled",
+            "workflow_version",
+            "is_issue_type_enabled",
             "cover_image_url",
         ]
 

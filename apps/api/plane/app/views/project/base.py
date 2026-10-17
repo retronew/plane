@@ -42,6 +42,7 @@ from plane.db.models import (
     WorkspaceMember,
 )
 from plane.db.models.intake import IntakeIssueStatus
+from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
 from plane.utils.host import base_host
 from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_order_by
 
@@ -411,6 +412,7 @@ class ProjectViewSet(BaseViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @workflow_lifecycle_endpoint("project_deleted")
     def destroy(self, request, slug, pk):
         if (
             WorkspaceMember.objects.filter(
@@ -458,6 +460,7 @@ class ProjectViewSet(BaseViewSet):
 
 class ProjectArchiveUnarchiveEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    @workflow_lifecycle_endpoint("project_archived")
     def post(self, request, slug, project_id):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
         project.archived_at = timezone.now()

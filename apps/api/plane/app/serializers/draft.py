@@ -13,6 +13,7 @@ from .base import BaseSerializer
 from plane.db.models import (
     User,
     Issue,
+    IssueType,
     Label,
     State,
     DraftIssue,
@@ -28,10 +29,14 @@ from plane.utils.content_validator import (
     validate_binary_data,
 )
 from plane.app.permissions import ROLE
+from plane.utils.workflow import WorkflowIssueTypeMixin
 
 
-class DraftIssueCreateSerializer(BaseSerializer):
+class DraftIssueCreateSerializer(WorkflowIssueTypeMixin, BaseSerializer):
     # ids
+    type_id = serializers.PrimaryKeyRelatedField(
+        source="type", queryset=IssueType.objects.all(), required=False, allow_null=True
+    )
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.objects.all(), required=False, allow_null=True
     )
@@ -58,6 +63,7 @@ class DraftIssueCreateSerializer(BaseSerializer):
             "updated_by",
             "created_at",
             "updated_at",
+            "deleted_at",
         ]
 
     def to_representation(self, instance):

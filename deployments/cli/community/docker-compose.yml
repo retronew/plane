@@ -62,6 +62,12 @@ x-app-env: &app-env
   LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY}
   WEBHOOK_ALLOWED_IPS: ${WEBHOOK_ALLOWED_IPS:-}
   WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
+  WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+  WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+  WORKFLOW_CREDENTIAL_KEY_ID: ${WORKFLOW_CREDENTIAL_KEY_ID:-default}
+  WORKFLOW_CREDENTIAL_KEY: ${WORKFLOW_CREDENTIAL_KEY:-}
+  WORKFLOW_CREDENTIAL_PREVIOUS_KEYS: ${WORKFLOW_CREDENTIAL_PREVIOUS_KEYS:-}
+  WORKFLOW_RUNNER_BROKER_URL: http://api:8000/api/internal/workflow-runner/rpc/
 
 services:
   web:
@@ -106,6 +112,31 @@ services:
     depends_on:
       - api
       - web
+
+  workflow-runner:
+    image: ${WORKFLOW_RUNNER_IMAGE:-makeplane/plane-workflow-runner}:${APP_RELEASE:-stable}
+    environment:
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_ORIGIN: http://api:8000
+      WORKFLOW_RUNNER_MAX_CONCURRENT: "2"
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 512m
+    cpus: "1.0"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 64
 
   api:
     image: makeplane/plane-backend:${APP_RELEASE:-stable}

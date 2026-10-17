@@ -432,15 +432,23 @@ class IntakeIssueViewSet(BaseViewSet):
 
         if (project_member and project_member.role > ROLE.MEMBER.value) or is_workspace_admin:
             intake_current_instance = json.dumps(IntakeIssueSerializer(intake_issue).data, cls=DjangoJSONEncoder)
-            intake_serializer = IntakeIssueSerializer(intake_issue, data=request.data, partial=True)
+            intake_serializer = IntakeIssueSerializer(
+                intake_issue,
+                data=request.data,
+                partial=True,
+                context={"request": request, "issue_serializer": issue_serializer},
+            )
 
             if not intake_serializer.is_valid():
                 return Response(intake_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Both serializers are valid, now save them
-        if issue_serializer:
+        # Acceptance and embedded issue changes share one workflow decision and transaction.
+        if intake_serializer:
+            intake_serializer.save()
+        elif issue_serializer:
             issue_serializer.save()
 
+        if issue_serializer:
             # Check if the update is a migration description update
             is_migration_description_update = skip_activity and is_description_update
             # Log all the updates
@@ -466,7 +474,6 @@ class IntakeIssueViewSet(BaseViewSet):
                     )
 
         if intake_serializer:
-            intake_serializer.save()
             # create a activity for status change
             issue_activity.delay(
                 type="intake.activity.created",

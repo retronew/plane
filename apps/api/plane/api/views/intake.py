@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiResponse, OpenApiRequest
 
 # Module imports
+from plane.app.serializers.issue import IssueCreateSerializer
 from plane.api.serializers import (
     IntakeIssueSerializer,
     IssueSerializer,
@@ -192,14 +193,26 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
         raw_description_html = issue_data.get("description_html", "<p></p>")
         _, _, sanitized_description_html = validate_html_content(raw_description_html)
         safe_description_html = sanitized_description_html if sanitized_description_html is not None else "<p></p>"
-        issue = Issue.objects.create(
-            name=issue_data.get("name"),
-            description_json=description_json,
-            description_html=safe_description_html,
-            priority=issue_data.get("priority", "none"),
-            project_id=project_id,
-            state_id=triage_state.id,
+        issue_payload = {
+            "name": issue_data.get("name"),
+            "description_json": description_json,
+            "description_html": safe_description_html,
+            "priority": issue_data.get("priority", "none"),
+            "state_id": str(triage_state.id),
+            **{key: issue_data[key] for key in ("type", "type_id") if key in issue_data},
+        }
+        issue_serializer = IssueCreateSerializer(
+            data=issue_payload,
+            context={
+                "request": request,
+                "project_id": project_id,
+                "workspace_id": project.workspace_id,
+                "default_assignee_id": None,
+                "allow_triage_state": True,
+            },
         )
+        issue_serializer.is_valid(raise_exception=True)
+        issue = issue_serializer.save()
 
         # create an intake issue
         intake_issue = IntakeIssue.objects.create(
@@ -396,12 +409,24 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
 
         # Only project admins and members can edit intake issue attributes
         if project_member.role > 15:
-            intake_serializer = IntakeIssueUpdateSerializer(intake_issue, data=request.data, partial=True)
+            intake_serializer = IntakeIssueUpdateSerializer(
+                intake_issue,
+                data=request.data,
+                partial=True,
+                context={"request": request, "issue_serializer": issue_serializer},
+            )
 
             if not intake_serializer.is_valid():
                 return Response(intake_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Both serializers are valid, now save them
+        # Acceptance and embedded issue changes share one workflow decision and transaction.
+        if intake_serializer:
+            intake_current_instance = json.dumps(IntakeIssueSerializer(intake_issue).data, cls=DjangoJSONEncoder)
+            intake_serializer.save()
+            intake_issue = intake_serializer.instance
+        elif issue_serializer:
+            issue_serializer.save()
+
         if issue_serializer:
             current_instance = issue
             # Log all the updates
@@ -419,13 +444,8 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
                 epoch=int(timezone.now().timestamp()),
                 intake=str(intake_issue.id),
             )
-            issue_serializer.save()
 
-        # Save intake issue (state transition happens in serializer's update method)
         if intake_serializer:
-            current_instance = json.dumps(IntakeIssueSerializer(intake_issue).data, cls=DjangoJSONEncoder)
-            intake_serializer.save()
-
             # create a activity for status change
             issue_activity.delay(
                 type="intake.activity.created",
@@ -433,7 +453,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
                 actor_id=str(request.user.id),
                 issue_id=str(issue_id),
                 project_id=str(project_id),
-                current_instance=current_instance,
+                current_instance=intake_current_instance,
                 epoch=int(timezone.now().timestamp()),
                 notification=False,
                 origin=base_host(request=request, is_app=True),

@@ -12,7 +12,15 @@ const workflow = {
   transitions: [{ source_id: "a", destination_id: "b", member_ids: ["reviewer"] }],
 };
 vi.mock("react-router", () => ({ useParams: () => ({ projectId: "p" }) }));
-vi.mock("@/hooks/store/use-project-workflow", () => ({ useProjectWorkflow: () => ({ workflows: { p: workflow } }) }));
+vi.mock("@/hooks/store/use-project-workflow", () => ({
+  useProjectWorkflow: () => ({
+    workflows: { p: workflow },
+    resolve: (_projectId: string, typeId?: string) =>
+      typeId === "approval"
+        ? { ...workflow, transitions: [{ ...workflow.transitions[0], kind: "approval" }] }
+        : workflow,
+  }),
+}));
 vi.mock("@/hooks/store/use-project-state", () => ({
   useProjectState: () => ({ getStateById: (id: string) => ({ id, project_id: "p" }) }),
 }));
@@ -25,6 +33,11 @@ it("provides creation gating and sortable feedback for state columns", () => {
   expect(result.current.isWorkflowDropDisabled).toBe(true);
   act(() => result.current.handleWorkFlowState("a", "b"));
   expect(result.current.isWorkflowDropDisabled).toBe(false);
+});
+it("uses the dragged work item type and blocks ordinary approval exits", () => {
+  const { result } = renderHook(() => useWorkFlowFDragNDrop("state"));
+  act(() => result.current.handleWorkFlowState("a", "b", undefined, undefined, "approval"));
+  expect(result.current.isWorkflowDropDisabled).toBe(true);
 });
 it("respects state subgroups without restricting unrelated grouping", () => {
   const { result } = renderHook(() => useWorkFlowFDragNDrop("priority", "state"));

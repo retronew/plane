@@ -8,6 +8,12 @@ const state = vi.hoisted(() => ({
   store: {
     workflows: {} as Record<string, TProjectWorkflow>,
     errors: {},
+    lists: {} as Record<
+      string,
+      { results: TProjectWorkflow[]; count: number; enabled: boolean; policy_version: number; can_manage: boolean }
+    >,
+    issueTypes: {},
+    historyRevision: {},
     fetch: vi.fn(),
     set: vi.fn(),
     service: {
@@ -16,6 +22,7 @@ const state = vi.hoisted(() => ({
       saveTransition: vi.fn(),
       deleteTransition: vi.fn(),
       history: vi.fn(),
+      scripts: vi.fn(),
     },
   },
   toast: vi.fn(),
@@ -68,6 +75,7 @@ beforeEach(() => {
       disconnect() {}
     }
   );
+  state.store.lists = {};
   state.store.workflows.p = {
     id: "default",
     enabled: true,
@@ -83,8 +91,28 @@ beforeEach(() => {
   };
   for (const mock of Object.values(state.store.service)) mock.mockReset().mockResolvedValue(state.store.workflows.p);
   state.store.service.history.mockResolvedValue({ results: [], count: 0, next_offset: null });
+  state.store.service.scripts.mockResolvedValue([]);
   state.toast.mockReset();
   state.store.set.mockReset();
+});
+it("renders project controls and the synthetic default workflow for an empty persisted list", () => {
+  state.store.lists.p = { results: [], count: 0, enabled: false, policy_version: 1, can_manage: true };
+  render(<WorkflowSettings />);
+  expect(screen.getByRole("switch", { name: "web.workflow_ui.enable" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "web.workflow_ui.new_workflow" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "web.workflow_ui.default_name" })).toBeTruthy();
+});
+it("keeps script management out of workflow settings and links persisted workflows to their executions", () => {
+  state.store.workflows.p.workflow_id = "workflow-id";
+  render(<WorkflowSettings detail />);
+  expect(screen.queryByRole("button", { name: "web.workflow_runner.scripts" })).toBeNull();
+  expect(screen.getByRole("link", { name: "web.workflow_runner.view_executions" }).getAttribute("href")).toBe(
+    "/w/settings/projects/p/runner/?tab=executions&workflow_id=workflow-id"
+  );
+});
+it("does not send a synthetic default workflow to the UUID execution filter", () => {
+  render(<WorkflowSettings detail />);
+  expect(screen.queryByRole("link", { name: "web.workflow_runner.view_executions" })).toBeNull();
 });
 it("uses the persisted project toggle instead of a cosmetic switch", async () => {
   render(<WorkflowSettings />);
@@ -108,11 +136,24 @@ it("keeps the initial state creation switch locked and supports the rule side pa
     expect(state.store.service.saveTransition).toHaveBeenCalledWith(
       "w",
       "p",
-      { source_id: "a", destination_id: "b", member_ids: [] },
+      expect.objectContaining({ source_id: "a", destination_id: "b", member_ids: [] }),
+      undefined,
+      "default",
       undefined
     )
   );
   await waitFor(() => expect(screen.queryByLabelText("destination")).toBeNull());
+});
+it("previews unsaved choices in the main area and clears only the next rule on save and continue", async () => {
+  render(<WorkflowSettings detail />);
+  fireEvent.click(screen.getByRole("button", { name: "Backlog" }));
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.add_flow" }));
+  fireEvent.change(screen.getByLabelText("destination"), { target: { value: "b" } });
+  expect(screen.getByTestId("workflow-draft-preview").textContent).toContain("Todo");
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.save_continue" }));
+  await waitFor(() => expect((screen.getByLabelText("destination") as HTMLSelectElement).value).toBe(""));
+  expect(screen.getByTestId("workflow-draft-preview")).toBeTruthy();
+  expect(state.store.service.saveTransition).toHaveBeenCalledTimes(1);
 });
 it("retains the rule draft after save failure and permits retry", async () => {
   state.store.service.saveTransition

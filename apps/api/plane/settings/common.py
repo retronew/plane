@@ -6,6 +6,7 @@
 
 # Python imports
 import ipaddress
+import json
 import logging
 import os
 from urllib.parse import urlparse
@@ -44,7 +45,7 @@ if SECRET_KEY in _INSECURE_SECRET_KEYS:
         "This makes your installation vulnerable to session forgery, CSRF bypass, and "
         "password-reset token forging. Set a unique SECRET_KEY before deploying to production. "
         "Generate one with: "
-        "python3 -c \"from django.utils.crypto import get_random_secret_key; print(get_random_secret_key())\""
+        'python3 -c "from django.utils.crypto import get_random_secret_key; print(get_random_secret_key())"'
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -74,9 +75,7 @@ for _cidr in _webhook_allowed_ips_raw.split(","):
 # Example: "silo,silo.namespace.svc.cluster.local,internal-api.lan"
 _webhook_allowed_hosts_raw = os.environ.get("WEBHOOK_ALLOWED_HOSTS", "")
 WEBHOOK_ALLOWED_HOSTS = [
-    _host.strip().rstrip(".").lower()
-    for _host in _webhook_allowed_hosts_raw.split(",")
-    if _host.strip()
+    _host.strip().rstrip(".").lower() for _host in _webhook_allowed_hosts_raw.split(",") if _host.strip()
 ]
 
 # Webhook disallowed domains — comma-separated hostnames. Webhooks targeting
@@ -85,9 +84,7 @@ WEBHOOK_ALLOWED_HOSTS = [
 # for self-hosted deployments; set to e.g. "plane.so" to block specific domains.
 _webhook_disallowed_domains_raw = os.environ.get("WEBHOOK_DISALLOWED_DOMAINS", "")
 WEBHOOK_DISALLOWED_DOMAINS = [
-    _d.strip().rstrip(".").lower()
-    for _d in _webhook_disallowed_domains_raw.split(",")
-    if _d.strip()
+    _d.strip().rstrip(".").lower() for _d in _webhook_disallowed_domains_raw.split(",") if _d.strip()
 ]
 
 # Allowed Hosts
@@ -342,6 +339,7 @@ CELERY_IMPORTS = (
     # scheduled tasks
     "plane.bgtasks.issue_automation_task",
     "plane.bgtasks.issue_reminder_task",
+    "plane.bgtasks.workflow_runner_task",
     "plane.bgtasks.exporter_expired_task",
     "plane.bgtasks.file_asset_task",
     "plane.bgtasks.email_notification_task",
@@ -555,6 +553,21 @@ SCRIPT_CAPABLE_MIME_TYPES: frozenset[str] = frozenset(
         "application/xml",
     ]
 )
+
+# Only the trusted supervisor receives the service token. Scripts never see it.
+WORKFLOW_RUNNER_URL = os.environ.get("WORKFLOW_RUNNER_URL", "")
+WORKFLOW_RUNNER_TOKEN = os.environ.get("WORKFLOW_RUNNER_SERVICE_TOKEN", os.environ.get("WORKFLOW_RUNNER_TOKEN", ""))
+WORKFLOW_RUNNER_BROKER_URL = os.environ.get(
+    "WORKFLOW_RUNNER_BROKER_URL", "http://api:8000/api/internal/workflow-runner/rpc/"
+)
+WORKFLOW_CREDENTIAL_KEY_ID = os.environ.get("WORKFLOW_CREDENTIAL_KEY_ID", "default")
+WORKFLOW_CREDENTIAL_KEYS = json.loads(os.environ.get("WORKFLOW_CREDENTIAL_PREVIOUS_KEYS", "{}"))
+if not isinstance(WORKFLOW_CREDENTIAL_KEYS, dict) or any(
+    not isinstance(key, str) or not isinstance(value, str) or not value
+    for key, value in WORKFLOW_CREDENTIAL_KEYS.items()
+):
+    raise ValueError("WORKFLOW_CREDENTIAL_PREVIOUS_KEYS must be a JSON object of key IDs and secrets")
+WORKFLOW_CREDENTIAL_KEYS[WORKFLOW_CREDENTIAL_KEY_ID] = os.environ.get("WORKFLOW_CREDENTIAL_KEY", SECRET_KEY)
 
 # Seed directory path
 SEED_DIR = os.path.join(BASE_DIR, "seeds")

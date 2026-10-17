@@ -87,6 +87,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
           <div className={`mt-4 mb-2 space-y-2.5 truncate ${!isEditable ? "opacity-60" : ""}`}>
             <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
               <StateSelect
+                issueTypeId={issue.type_id}
                 testId="work-item-state-select"
                 value={issue?.state_id}
                 onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { state_id: val })}

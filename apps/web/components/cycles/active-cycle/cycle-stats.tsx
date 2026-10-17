@@ -151,6 +151,7 @@ export const ActiveCycleStats = observer(function ActiveCycleStats(props: Active
                           <PriorityIcon priority={issue.priority} />
                           <div className="flex flex-shrink-0 items-center gap-1.5">
                             <StateSelect
+                              issueTypeId={issue.type_id}
                               value={issue.state_id}
                               onChange={() => {}}
                               projectId={projectId?.toString() ?? ""}

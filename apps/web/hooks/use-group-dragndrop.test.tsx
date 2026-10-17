@@ -11,12 +11,13 @@ const state = vi.hoisted(() => ({
   cycle: vi.fn(),
   module: vi.fn(),
   toast: vi.fn(),
+  resolve: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w" }) }));
 vi.mock("@plane/i18n", () => ({ translate: (key: string) => key }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: state.toast }));
 vi.mock("./store/use-issue-detail", () => ({
-  useIssueDetail: () => ({ issue: { getIssueById: () => ({ state_id: "a" }) } }),
+  useIssueDetail: () => ({ issue: { getIssueById: () => ({ state_id: "a", type_id: "type" }) } }),
 }));
 vi.mock("./store/use-issues", () => ({
   useIssues: () => ({
@@ -31,11 +32,16 @@ vi.mock("./store/use-issues", () => ({
 vi.mock("./use-issues-actions", () => ({ useIssuesActions: () => ({ updateIssue: state.update }) }));
 vi.mock("./store/user", () => ({ useUser: () => ({ data: { id: "u" } }) }));
 vi.mock("./store/use-project-workflow", () => ({
-  useProjectWorkflow: () => ({ fetch: vi.fn().mockResolvedValue({}) }),
+  useProjectWorkflow: () => ({
+    fetchList: vi.fn().mockResolvedValue({}),
+    fetchTypes: vi.fn().mockResolvedValue({}),
+    resolve: state.resolve,
+  }),
 }));
 vi.mock("@/helpers/workflow", () => ({
   workflowAllowsTransition: () => state.allowed,
   getWorkflowErrorCode: () => "WORKFLOW_TRANSITION_NOT_ALLOWED",
+  getWorkflowErrorReason: () => undefined,
 }));
 vi.mock("@/store/issue/helpers/base-issues.store", () => ({
   ISSUE_FILTER_DEFAULT_DATA: { module: "module_ids", cycle: "cycle_id" },
@@ -55,6 +61,7 @@ beforeEach(() => {
   state.allowed = true;
   for (const mock of [state.update, state.cycle, state.module]) mock.mockReset().mockResolvedValue(undefined);
   state.toast.mockReset();
+  state.resolve.mockReset().mockReturnValue({});
 });
 const source = { id: "a" } as GroupDropLocation;
 const destination = { id: "b" } as GroupDropLocation;

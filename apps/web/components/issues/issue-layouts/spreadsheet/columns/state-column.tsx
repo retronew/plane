@@ -24,6 +24,7 @@ export const SpreadsheetStateColumn = observer(function SpreadsheetStateColumn(p
   return (
     <div className="h-11">
       <StateSelect
+        issueTypeId={issue.type_id}
         testId="spreadsheet-state-select"
         projectId={issue.project_id ?? undefined}
         value={issue.state_id}

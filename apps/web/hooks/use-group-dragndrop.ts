@@ -17,7 +17,7 @@ import { useIssuesActions } from "./use-issues-actions";
 import { translate } from "@plane/i18n";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
-import { workflowAllowsTransition, getWorkflowErrorCode } from "@/helpers/workflow";
+import { workflowAllowsTransition, getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
 
 type DNDStoreType =
   | EIssuesStoreType.GLOBAL
@@ -71,7 +71,11 @@ export const useGroupIssuesDragNDrop = (
   ) => {
     const previous = getIssueById(issueId);
     if (workspaceSlug && data.state_id && previous?.state_id) {
-      const workflow = await workflowStore.fetch(workspaceSlug.toString(), projectId);
+      await Promise.all([
+        workflowStore.fetchList(workspaceSlug.toString(), projectId),
+        workflowStore.fetchTypes(workspaceSlug.toString(), projectId),
+      ]);
+      const workflow = workflowStore.resolve(projectId, previous.type_id);
       if (!workflowAllowsTransition(workflow, previous.state_id, data.state_id, currentUser?.id)) {
         setToast({
           type: "warning",
@@ -104,7 +108,9 @@ export const useGroupIssuesDragNDrop = (
         const code = getWorkflowErrorCode(error);
         setToast({
           ...errorToastProps,
-          message: code ? translate(`web.workflow_errors.${code}`) : errorToastProps.message,
+          message:
+            getWorkflowErrorReason(error) ??
+            (code ? translate(`web.workflow_errors.${code}`) : errorToastProps.message),
         });
         return;
       }

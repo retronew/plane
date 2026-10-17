@@ -39,6 +39,7 @@ export type TProjectSettingsTabs =
   | "labels"
   | "estimates"
   | "workflows"
+  | "workflow_runner"
   | "automations";
 export type TProjectSettingsItem = {
   key: TProjectSettingsTabs;

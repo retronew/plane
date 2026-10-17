@@ -18,8 +18,8 @@ import type { IState, TPaginatedResponse } from "@plane/types";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
-import { workflowAllowsCreation, workflowAllowsTransition } from "@/helpers/workflow";
-import { getWorkflowErrorCode } from "@/helpers/workflow";
+import { workflowAllowsCreation, workflowAllowsTransition, workflowIsActive } from "@/helpers/workflow";
+import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
 import { setToast } from "@plane/blocks/toast";
 
 type StateSelectWebProps = {
@@ -42,6 +42,8 @@ type StateSelectWebProps = {
   tabIndex?: number;
   isForWorkItemCreation?: boolean;
   bypassWorkflow?: boolean;
+  issueTypeId?: string | null;
+  allowedStates?: string[];
   excludeStateIds?: string[];
 };
 
@@ -78,6 +80,8 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
     isForWorkItemCreation = false,
     bypassWorkflow = false,
     excludeStateIds,
+    issueTypeId,
+    allowedStates,
   } = props;
   // router params
   const { workspaceSlug } = useParams();
@@ -85,12 +89,12 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const { getProjectStateIds, getStateById, fetchProjectStates } = useProjectState();
   const workflowStore = useProjectWorkflow(bypassWorkflow ? undefined : projectId);
   const { data: user } = useUser();
-  const currentWorkflow = workflowStore.workflows[projectId ?? ""];
+  const currentWorkflow = workflowStore.resolve(projectId ?? "", issueTypeId);
   const allowedStateIds =
-    bypassWorkflow || !currentWorkflow
+    bypassWorkflow || !workflowIsActive(currentWorkflow)
       ? null
       : new Set(
-          currentWorkflow.states
+          currentWorkflow!.states
             .filter((state) =>
               isForWorkItemCreation || !value || getStateById(value) === undefined
                 ? workflowAllowsCreation(currentWorkflow, state.id)
@@ -112,17 +116,24 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const getValues = useCallback(
     async ({ search }: SelectPaginationParams): Promise<TPaginatedResponse<StateOption[]>> => {
       if (!workspaceSlug || !projectId) return { results: [] };
-      const workflow = bypassWorkflow ? undefined : await workflowStore.fetch(workspaceSlug.toString(), projectId);
+      if (!bypassWorkflow)
+        await Promise.all([
+          workflowStore.fetchList(workspaceSlug.toString(), projectId),
+          workflowStore.fetchTypes(workspaceSlug.toString(), projectId),
+        ]);
+      const workflow = bypassWorkflow ? undefined : workflowStore.resolve(projectId, issueTypeId);
       let stateIds = getProjectStateIds(projectId);
       if (!stateIds) {
         await fetchProjectStates(workspaceSlug.toString(), projectId);
         stateIds = getProjectStateIds(projectId);
       }
       const query = search?.trim().toLowerCase();
+      const excluded = new Set(excludeStateIds);
+      const allowed = allowedStates ? new Set(allowedStates) : undefined;
       const results = (stateIds ?? [])
         .map((stateId) => getStateById(stateId))
         .filter((state): state is IState => !!state)
-        .filter((state) => !excludeStateIds?.includes(state.id))
+        .filter((state) => !excluded.has(state.id) && (!allowed || allowed.has(state.id)))
         .filter(
           (state) =>
             bypassWorkflow ||
@@ -143,6 +154,8 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       bypassWorkflow,
       workflowStore,
       excludeStateIds,
+      allowedStates,
+      issueTypeId,
       isForWorkItemCreation,
       value,
       user?.id,
@@ -166,7 +179,9 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
             setToast({
               type: "error",
               title: t("error"),
-              message: code ? t(`web.workflow_errors.${code}`) : t("web.failed_to_perform_this_action"),
+              message:
+                getWorkflowErrorReason(error) ??
+                (code ? t(`web.workflow_errors.${code}`) : t("web.failed_to_perform_this_action")),
             });
           });
       }}

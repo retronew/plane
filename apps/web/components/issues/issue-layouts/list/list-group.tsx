@@ -205,7 +205,14 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           const currentGroupId = group.id;
 
           // oxlint-disable-next-line no-unused-expressions
-          sourceGroupId && handleWorkFlowState(sourceGroupId, currentGroupId);
+          sourceGroupId &&
+            handleWorkFlowState(
+              sourceGroupId,
+              currentGroupId,
+              undefined,
+              undefined,
+              issuesMap[String(source.data.id)]?.type_id
+            );
 
           const sourceIndex = getGroupIndex(sourceGroupId);
           const currentIndex = getGroupIndex(currentGroupId);

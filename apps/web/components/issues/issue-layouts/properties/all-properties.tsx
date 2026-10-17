@@ -216,6 +216,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <StateSelect
+            issueTypeId={issue.type_id}
             value={issue.state_id}
             onChange={handleState}
             projectId={issue.project_id}

@@ -97,6 +97,26 @@ services:
       timeout: 5s
       retries: 10
 
+  workflow-runner:
+    build:
+      context: .
+      dockerfile: apps/workflow-runner/Dockerfile
+    networks:
+      - test_env
+    environment:
+      WORKFLOW_RUNNER_SERVICE_TOKEN: test-workflow-runner-service-token-32chars
+      WORKFLOW_RUNNER_BROKER_ORIGIN: http://api-tests:8000
+      WORKFLOW_RUNNER_MAX_CONCURRENT: "2"
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 512m
+    cpus: "1.0"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000
+
   api-tests:
     build:
       context: ./apps/api
@@ -109,6 +129,9 @@ services:
       - ./apps/api/.env
     environment:
       DJANGO_SETTINGS_MODULE: plane.settings.test
+      WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+      WORKFLOW_RUNNER_SERVICE_TOKEN: test-workflow-runner-service-token-32chars
+      WORKFLOW_RUNNER_BROKER_URL: http://api-tests:8000/api/internal/workflow-runner/rpc/
       # Override service hostnames to point at the test-only services above.
       POSTGRES_HOST: test-db
       DATABASE_URL: postgresql://${POSTGRES_USER:-plane}:${POSTGRES_PASSWORD:-plane}@test-db:5432/${POSTGRES_DB:-plane}
@@ -123,6 +146,8 @@ services:
       - ./apps/api:/code
     working_dir: /code
     depends_on:
+      workflow-runner:
+        condition: service_healthy
       test-db:
         condition: service_healthy
       test-redis:

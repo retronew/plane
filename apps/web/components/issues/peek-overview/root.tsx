@@ -20,6 +20,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useWorkItemProperties } from "@/hooks/use-issue-properties";
+import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
 // local imports
 import type { TIssueOperations } from "../issue-detail";
 import { IssueView } from "./view";
@@ -57,7 +58,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     storeType === EIssuesStoreType.EPIC ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES
   );
   // state
-  const [error, setError] = useState(false);
+  const [hasError, setError] = useState(false);
 
   const removeRoutePeekId = useCallback(() => {
     setPeekIssue(undefined);
@@ -83,11 +84,15 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
               fetchActivities(workspaceSlug, projectId, issueId);
               return;
             })
-            .catch((_error) => {
+            .catch((updateError) => {
               setToast({
                 title: t("toast.error"),
                 type: "error",
-                message: t("entity.update.failed", { entity: t("issue.label", { count: 1 }) }),
+                message:
+                  getWorkflowErrorReason(updateError) ??
+                  (getWorkflowErrorCode(updateError)
+                    ? t(`web.workflow_errors.${getWorkflowErrorCode(updateError)}`)
+                    : t("entity.update.failed", { entity: t("issue.label", { count: 1 }) })),
               });
             });
         }
@@ -241,7 +246,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
       projectId={peekIssue.projectId}
       issueId={peekIssue.issueId}
       isLoading={isLoading}
-      isError={error}
+      isError={hasError}
       is_archived={!!peekIssue.isArchived}
       disabled={!isEditable}
       embedIssue={embedIssue}

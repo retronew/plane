@@ -1,4 +1,4 @@
-from plane.utils.workflow import WorkflowIntakeWriteMixin, intake_creation_state
+from plane.utils.workflow import WorkflowIntakeWriteMixin, WorkflowIssueTypeMixin
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -6,11 +6,11 @@ from plane.utils.workflow import WorkflowIntakeWriteMixin, intake_creation_state
 # Module imports
 from .base import BaseSerializer
 from .issue import IssueExpandSerializer
-from plane.db.models import IntakeIssue, Issue, StateGroup
+from plane.db.models import IntakeIssue, Issue, IssueType
 from rest_framework import serializers
 
 
-class IssueForIntakeSerializer(BaseSerializer):
+class IssueForIntakeSerializer(WorkflowIssueTypeMixin, BaseSerializer):
     """
     Serializer for work item data within intake submissions.
 
@@ -19,6 +19,9 @@ class IssueForIntakeSerializer(BaseSerializer):
     """
 
     description = serializers.JSONField(source="description_json", required=False, allow_null=True)
+    type_id = serializers.PrimaryKeyRelatedField(
+        source="type", queryset=IssueType.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = Issue
@@ -28,6 +31,8 @@ class IssueForIntakeSerializer(BaseSerializer):
             "description_json",
             "description_html",
             "priority",
+            "type",
+            "type_id",
         ]
         read_only_fields = [
             "id",
@@ -110,48 +115,6 @@ class IntakeIssueUpdateSerializer(WorkflowIntakeWriteMixin, BaseSerializer):
             "created_at",
             "updated_at",
         ]
-
-    def validate(self, attrs):
-        """
-        Validate that if status is being changed to accepted (1),
-        the project has a default state to transition to.
-        """
-
-        # Check if status is being updated to accepted
-        if attrs.get("status") == 1:
-            intake_issue = self.instance
-            issue = intake_issue.issue
-
-            # Check if issue is in TRIAGE state
-            if issue.state and issue.state.group == StateGroup.TRIAGE.value:
-                # Verify default state exists before allowing the update
-                default_state = intake_creation_state(intake_issue.project_id)
-
-                if not default_state:
-                    raise serializers.ValidationError(
-                        {"status": "Cannot accept intake issue: No default state found for the project"}
-                    )
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        """
-        Update intake issue and transition associated issue state if accepted.
-        """
-
-        # Update the intake issue with validated data
-        instance = super().update(instance, validated_data)
-
-        # If status is accepted (1), update the associated issue state from TRIAGE to default
-        if validated_data.get("status") == 1:
-            issue = instance.issue
-            if issue.state and issue.state.group == StateGroup.TRIAGE.value:
-                # Get the default project state
-                default_state = intake_creation_state(instance.project_id)
-                if default_state:
-                    issue.state = default_state
-                    issue.save()
-        return instance
 
 
 class IssueDataSerializer(serializers.Serializer):

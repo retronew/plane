@@ -149,6 +149,7 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       {/* state */}
       <div role="presentation" onClick={handleEventPropagation}>
         <StateSelect
+          issueTypeId={issue.type_id}
           isForWorkItemCreation
           value={issue.state_id}
           onChange={handleState}

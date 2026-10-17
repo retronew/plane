@@ -107,6 +107,13 @@ export const PROJECT_SETTINGS: Record<TProjectSettingsTabs, TProjectSettingsItem
     access: [EUserProjectRoles.ADMIN],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/automations/`,
   },
+  workflow_runner: {
+    key: "workflow_runner",
+    i18n_label: "web.workflow_runner.scripts",
+    href: "/runner",
+    access: [EUserProjectRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/runner/`,
+  },
   workflows: {
     key: "workflows",
     i18n_label: "common.workflows",
@@ -132,5 +139,9 @@ export const GROUPED_PROJECT_SETTINGS: Record<PROJECT_SETTINGS_CATEGORY, TProjec
     PROJECT_SETTINGS["labels"],
     PROJECT_SETTINGS["estimates"],
   ],
-  [PROJECT_SETTINGS_CATEGORY.EXECUTION]: [PROJECT_SETTINGS["workflows"], PROJECT_SETTINGS["automations"]],
+  [PROJECT_SETTINGS_CATEGORY.EXECUTION]: [
+    PROJECT_SETTINGS["workflows"],
+    PROJECT_SETTINGS["automations"],
+    PROJECT_SETTINGS["workflow_runner"],
+  ],
 };

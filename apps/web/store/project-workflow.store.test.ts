@@ -1,13 +1,17 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { ProjectWorkflowStore } from "./project-workflow.store";
-const api = vi.hoisted(() => ({ retrieve: vi.fn() }));
+const api = vi.hoisted(() => ({ retrieve: vi.fn(), list: vi.fn(), types: vi.fn() }));
 vi.mock("@/services/project/workflow.service", () => ({
   ProjectWorkflowService: class {
     retrieve = api.retrieve;
+    list = api.list;
+    types = api.types;
   },
 }));
 beforeEach(() => {
   api.retrieve.mockReset();
+  api.list.mockReset();
+  api.types.mockReset();
 });
 const data = {
   id: "default",
@@ -57,6 +61,77 @@ it("does not let an older fetch replace a policy that was just saved", async () 
   complete(data);
   expect((await request).enabled).toBe(true);
   expect(store.workflows.p.enabled).toBe(true);
+});
+it("keeps parallel default, list and type reads regardless of response order", async () => {
+  const store = new ProjectWorkflowStore();
+  api.retrieve.mockResolvedValue(data);
+  let completeList!: (value: unknown) => void, completeTypes!: (value: unknown) => void;
+  api.list.mockReturnValue(
+    new Promise((resolve) => {
+      completeList = resolve;
+    })
+  );
+  api.types.mockReturnValue(
+    new Promise((resolve) => {
+      completeTypes = resolve;
+    })
+  );
+  const reads = [store.fetch("w", "p"), store.fetchList("w", "p"), store.fetchTypes("w", "p")];
+  await reads[0];
+  completeList({ results: [], count: 0, enabled: false, policy_version: 1, can_manage: true });
+  completeTypes({ results: [], count: 0, policy_version: 1, can_manage: true });
+  await Promise.all(reads);
+  expect(store.lists.p.results).toEqual([]);
+  expect(store.issueTypes.p.results).toEqual([]);
+});
+it("resolves default, explicit null and inactive type-bound workflows independently", async () => {
+  const store = new ProjectWorkflowStore();
+  const custom = { ...data, id: "custom", is_active: false, issue_type_ids: ["type"] };
+  api.list.mockResolvedValue({
+    results: [{ ...data, is_default: true }, custom],
+    count: 2,
+    enabled: true,
+    policy_version: 2,
+    can_manage: true,
+  });
+  api.types.mockResolvedValue({
+    results: [{ id: "type", workflow_id: "custom", is_default: true }],
+    count: 1,
+    policy_version: 2,
+    can_manage: true,
+  });
+  await Promise.all([store.fetchList("w", "p"), store.fetchTypes("w", "p")]);
+  expect(store.resolve("p", "type")?.id).toBe("custom");
+  expect(store.resolve("p")?.id).toBe("custom");
+  expect(store.resolve("p", null)?.id).toBe("default");
+});
+it("does not let an older list overwrite a newly saved workflow and force fetches after pending", async () => {
+  const store = new ProjectWorkflowStore();
+  const list = {
+    results: [{ ...data, is_default: true }],
+    count: 1,
+    enabled: false,
+    policy_version: 1,
+    can_manage: true,
+  };
+  api.list.mockResolvedValueOnce(list);
+  await store.fetchList("w", "p");
+  let complete!: (value: typeof list) => void;
+  api.list
+    .mockReturnValueOnce(
+      new Promise((resolve) => {
+        complete = resolve;
+      })
+    )
+    .mockResolvedValueOnce({ ...list, enabled: true, results: [{ ...data, is_default: true, enabled: true }] });
+  const pending = store.fetchList("w", "p", true);
+  store.set("p", { ...data, is_default: true, enabled: true });
+  const forced = store.fetchList("w", "p", true);
+  complete(list);
+  await pending;
+  expect(store.lists.p.enabled).toBe(true);
+  await forced;
+  expect(api.list).toHaveBeenCalledTimes(3);
 });
 it("refreshes creation choices and the initial state after project state edits, without loading unused policies", async () => {
   const store = new ProjectWorkflowStore();

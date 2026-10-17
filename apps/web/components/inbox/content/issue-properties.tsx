@@ -79,6 +79,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
                 <div className="w-3/5 flex-grow">
                   {isIntakeAccepted ? (
                     <StateSelect
+                      issueTypeId={issue.type_id}
                       value={issue.state_id}
                       onChange={() => {}}
                       projectId={projectId}

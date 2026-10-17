@@ -63,6 +63,27 @@ services:
     ports:
       - "5432:5432"
 
+  workflow-runner:
+    build:
+      context: .
+      dockerfile: apps/workflow-runner/Dockerfile
+    restart: unless-stopped
+    networks:
+      - dev_env
+    environment:
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_ORIGIN: http://api:8000
+      WORKFLOW_RUNNER_MAX_CONCURRENT: "2"
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 512m
+    cpus: "1.0"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,uid=1000,gid=1000
+
   api:
     # Built once here; worker, beat-worker and migrator reuse this image
     image: plane-api:local
@@ -79,6 +100,10 @@ services:
     command: ./bin/docker-entrypoint-api-local.sh
     env_file:
       - ./apps/api/.env
+    environment:
+      WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_URL: http://api:8000/api/internal/workflow-runner/rpc/
     depends_on:
       - plane-db
       - plane-redis
@@ -97,6 +122,10 @@ services:
     command: ./bin/docker-entrypoint-worker.sh
     env_file:
       - ./apps/api/.env
+    environment:
+      WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_URL: http://api:8000/api/internal/workflow-runner/rpc/
     depends_on:
       - api
       - plane-db
@@ -113,6 +142,10 @@ services:
     command: ./bin/docker-entrypoint-beat.sh
     env_file:
       - ./apps/api/.env
+    environment:
+      WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_URL: http://api:8000/api/internal/workflow-runner/rpc/
     depends_on:
       - api
       - plane-db
@@ -129,6 +162,10 @@ services:
     command: ./bin/docker-entrypoint-migrator.sh --settings=plane.settings.local
     env_file:
       - ./apps/api/.env
+    environment:
+      WORKFLOW_RUNNER_URL: http://workflow-runner:8080
+      WORKFLOW_RUNNER_SERVICE_TOKEN: ${WORKFLOW_RUNNER_SERVICE_TOKEN:-}
+      WORKFLOW_RUNNER_BROKER_URL: http://api:8000/api/internal/workflow-runner/rpc/
     depends_on:
       - plane-db
       - plane-redis

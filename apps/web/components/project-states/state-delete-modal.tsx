@@ -15,6 +15,7 @@ import type { IState } from "@plane/types";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { translate } from "@plane/i18n";
+import { getWorkflowErrorCode } from "@/helpers/workflow";
 
 type TStateDeleteModal = {
   isOpen: boolean;
@@ -44,7 +45,14 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       await deleteState(workspaceSlug.toString(), data.project_id, data.id);
       handleClose();
     } catch (err) {
-      if ((err as { status?: number })?.status === 400)
+      const workflowCode = getWorkflowErrorCode(err);
+      if (workflowCode)
+        setToast({
+          type: "error",
+          title: translate("toast.error"),
+          message: translate(`web.workflow_errors.${workflowCode}`),
+        });
+      else if ((err as { status?: number })?.status === 400)
         setToast({
           type: "error",
           title: translate("toast.error"),

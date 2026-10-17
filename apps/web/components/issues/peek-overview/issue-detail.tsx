@@ -21,6 +21,7 @@ import { useUser } from "@/hooks/store/user";
 import useReloadConfirmations from "@/hooks/use-reload-confirmation";
 // plane web components
 import { IssueTypeSwitcher } from "@/components/issues/issue-type-switcher";
+import { WorkflowApprovalCard } from "@/components/workflow/approval-card";
 // plane web hooks
 // services
 import { WorkItemVersionService } from "@/services/issue";
@@ -103,6 +104,13 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
         issueOperations={issueOperations}
         disabled={disabled || isArchived}
         value={issue.name}
+      />
+
+      <WorkflowApprovalCard
+        workspaceSlug={workspaceSlug}
+        projectId={issue.project_id}
+        issueId={issueId}
+        disabled={isArchived || disabled}
       />
 
       <DescriptionInput

@@ -79,7 +79,7 @@ from .workspace import (
 
 from .favorite import UserFavorite
 
-from .issue_type import IssueType
+from .issue_type import IssueType, ProjectIssueType
 
 from .recent_visit import UserRecentVisit
 
@@ -91,4 +91,13 @@ from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
 from .workspace_configuration import ProjectCategory, WorkspaceTemplate
-from .workflow import ProjectWorkflow, WorkflowTransition, WorkflowActivity
+from .workflow import ProjectWorkflow, WorkflowTransition, WorkflowActivity, WorkflowApproval
+from .workflow_runner import (
+    WorkflowAction,
+    WorkflowApprovalEmail,
+    WorkflowCredential,
+    WorkflowExecution,
+    WorkflowExecutionStep,
+    WorkflowScript,
+    WorkflowScriptVersion,
+)

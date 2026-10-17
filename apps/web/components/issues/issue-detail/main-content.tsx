@@ -19,6 +19,7 @@ import { EFileAssetType, EIssueServiceType } from "@plane/types";
 import { DescriptionVersionsRoot } from "@/components/core/description-versions";
 import { DescriptionInput } from "@/components/editor/rich-text/description-input";
 import { IssueTypeSwitcher } from "@/components/issues/issue-type-switcher";
+import { WorkflowApprovalCard } from "@/components/workflow/approval-card";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useWorkspace } from "@/hooks/store/use-workspace";
@@ -113,6 +114,13 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           issueOperations={issueOperations}
           disabled={isArchived || !isEditable}
           value={issue.name}
+        />
+
+        <WorkflowApprovalCard
+          workspaceSlug={workspaceSlug}
+          projectId={issue.project_id}
+          issueId={issueId}
+          disabled={isArchived || !isEditable}
         />
 
         <DescriptionInput

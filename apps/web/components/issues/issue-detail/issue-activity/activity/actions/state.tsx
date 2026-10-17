@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { Translation } from "@plane/i18n";
+import { Translation, useTranslation } from "@plane/i18n";
+import { ShieldCheck } from "lucide-react";
 import { observer } from "mobx-react";
 // hooks
 import { StateOutline } from "@makeplane/propel/icons";
@@ -14,6 +15,24 @@ import { IssueActivityBlockComponent, IssueLink } from "./";
 // icons
 
 type TIssueStateActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
+
+export const IssueApprovalActivity = observer(function IssueApprovalActivity({
+  activityId,
+  ends,
+}: TIssueStateActivity) {
+  const {
+    activity: { getActivityById },
+  } = useIssueDetail();
+  const { t } = useTranslation();
+  const activity = getActivityById(activityId);
+  if (!activity) return null;
+  const action = ["requested", "approved", "rejected", "cancelled"].includes(activity.verb) ? activity.verb : "updated";
+  return (
+    <IssueActivityBlockComponent activityId={activityId} ends={ends} icon={<ShieldCheck className="size-4" />}>
+      {t(`web.workflow_ui.approval_activity.${action}`)}
+    </IssueActivityBlockComponent>
+  );
+});
 
 export const IssueStateActivity = observer(function IssueStateActivity(props: TIssueStateActivity) {
   const { activityId, showIssue = true, ends } = props;

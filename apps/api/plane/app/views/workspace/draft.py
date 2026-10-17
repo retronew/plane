@@ -223,8 +223,12 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        issue_data = request.data.copy()
+        if "type" not in issue_data and "type_id" not in issue_data and draft_issue.type_id is not None:
+            issue_data["type_id"] = str(draft_issue.type_id)
+
         serializer = IssueCreateSerializer(
-            data=request.data,
+            data=issue_data,
             context={
                 "request": request,
                 "project_id": draft_issue.project_id,

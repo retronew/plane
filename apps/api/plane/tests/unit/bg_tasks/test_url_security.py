@@ -133,6 +133,15 @@ class TestResolveAndValidate:
 # ---------------------------------------------------------------------------
 @pytest.mark.unit
 class TestPinnedFetch:
+    @patch("plane.utils.url_security._request_to_ip")
+    @patch("plane.utils.url_security.resolve_and_validate")
+    def test_non_idempotent_request_can_disable_address_retries(self, mock_resolve, mock_request):
+        mock_resolve.return_value = ["93.184.216.34", "93.184.216.35"]
+        mock_request.side_effect = requests.ConnectionError("connection lost after sending")
+        with pytest.raises(requests.ConnectionError):
+            pinned_fetch("POST", "https://example.com/hook", max_attempts=1)
+        assert mock_request.call_count == 1
+
     @patch("plane.utils.url_security.requests.Session")
     @patch("plane.utils.url_security.resolve_and_validate")
     def test_connects_to_validated_ip_not_hostname(self, mock_resolve, mock_session_cls):
@@ -186,9 +195,7 @@ class TestPinnedFetch:
 
     @patch("plane.utils.url_security.resolve_and_validate")
     def test_blocked_target_raises_before_any_request(self, mock_resolve):
-        mock_resolve.side_effect = ValueError(
-            "Access to private/internal networks is not allowed"
-        )
+        mock_resolve.side_effect = ValueError("Access to private/internal networks is not allowed")
         with pytest.raises(ValueError, match="private/internal"):
             pinned_fetch("POST", "https://attacker.com/hook")
 
@@ -275,9 +282,7 @@ class TestPinnedFetchRedirects:
             ValueError("Access to private/internal networks is not allowed"),
         ]
         session = mock_session_cls.return_value
-        session.request.return_value = _resp(
-            302, headers={"Location": "http://169.254.169.254/latest/meta-data/"}
-        )
+        session.request.return_value = _resp(302, headers={"Location": "http://169.254.169.254/latest/meta-data/"})
         with pytest.raises(ValueError, match="private/internal"):
             pinned_fetch_following_redirects("GET", "https://evil.com/r")
 
@@ -286,13 +291,9 @@ class TestPinnedFetchRedirects:
     def test_too_many_redirects(self, mock_resolve, mock_session_cls):
         mock_resolve.return_value = ["93.184.216.34"]
         session = mock_session_cls.return_value
-        session.request.return_value = _resp(
-            302, headers={"Location": "https://example.com/loop"}
-        )
+        session.request.return_value = _resp(302, headers={"Location": "https://example.com/loop"})
         with pytest.raises(requests.TooManyRedirects):
-            pinned_fetch_following_redirects(
-                "GET", "https://example.com/start", max_redirects=3
-            )
+            pinned_fetch_following_redirects("GET", "https://example.com/start", max_redirects=3)
 
 
 # ---------------------------------------------------------------------------

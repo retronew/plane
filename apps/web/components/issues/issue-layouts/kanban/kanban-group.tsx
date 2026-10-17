@@ -141,7 +141,13 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
           setIsDraggingOverColumn(true);
           // handle if dragging a workflowState
           if (source) {
-            handleWorkFlowState(source?.groupId, groupId, source?.subGroupId, sub_group_id);
+            handleWorkFlowState(
+              source?.groupId,
+              groupId,
+              source?.subGroupId,
+              sub_group_id,
+              issuesMap[source.id ?? ""]?.type_id
+            );
           }
         },
         onDragLeave: () => {
@@ -152,7 +158,13 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
           setIsDraggingOverColumn(true);
           // handle if dragging a workflowState
           if (source) {
-            handleWorkFlowState(source?.groupId, groupId, source?.subGroupId, sub_group_id);
+            handleWorkFlowState(
+              source?.groupId,
+              groupId,
+              source?.subGroupId,
+              sub_group_id,
+              issuesMap[source.id ?? ""]?.type_id
+            );
           }
         },
         onDrop: (payload) => {

@@ -155,15 +155,27 @@ class IntakeIssuePublicViewSet(BaseViewSet):
         _, _, sanitized_description_html = validate_html_content(raw_description_html)
         safe_description_html = sanitized_description_html if sanitized_description_html is not None else "<p></p>"
 
-        # create an issue
-        issue = Issue.objects.create(
-            name=request.data.get("issue", {}).get("name"),
-            description_json=request.data.get("issue", {}).get("description_json", {}),
-            description_html=safe_description_html,
-            priority=request.data.get("issue", {}).get("priority", "low"),
-            project_id=project_deploy_board.project_id,
-            state_id=triage_state.id,
+        issue_data = request.data.get("issue", {})
+        issue_payload = {
+            "name": issue_data.get("name"),
+            "description_json": issue_data.get("description_json", {}),
+            "description_html": safe_description_html,
+            "priority": issue_data.get("priority", "low"),
+            "state_id": str(triage_state.id),
+            **{key: issue_data[key] for key in ("type", "type_id") if key in issue_data},
+        }
+        issue_serializer = IssueCreateSerializer(
+            data=issue_payload,
+            context={
+                "request": request,
+                "project_id": project_deploy_board.project_id,
+                "workspace_id": project_deploy_board.workspace_id,
+                "default_assignee_id": None,
+                "allow_triage_state": True,
+            },
         )
+        issue_serializer.is_valid(raise_exception=True)
+        issue = issue_serializer.save()
 
         # Create an Issue Activity
         issue_activity.delay(
@@ -226,7 +238,11 @@ class IntakeIssuePublicViewSet(BaseViewSet):
             issue,
             data=issue_data,
             partial=True,
-            context={"project_id": project_deploy_board.project_id, "allow_triage_state": True},
+            context={
+                "request": request,
+                "project_id": project_deploy_board.project_id,
+                "allow_triage_state": True,
+            },
         )
 
         if issue_serializer.is_valid():

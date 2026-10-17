@@ -1,4 +1,4 @@
-from plane.utils.workflow import WorkflowIntakeWriteMixin, intake_creation_state
+from plane.utils.workflow import WorkflowIntakeWriteMixin
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -12,7 +12,7 @@ from .issue import IssueIntakeSerializer, LabelLiteSerializer, IssueDetailSerial
 from .project import ProjectLiteSerializer
 from .state import StateLiteSerializer
 from .user import UserLiteSerializer
-from plane.db.models import Intake, IntakeIssue, Issue, StateGroup, ProjectMember, WorkspaceMember, Project
+from plane.db.models import Intake, IntakeIssue, Issue, ProjectMember, WorkspaceMember, Project
 
 
 class IntakeSerializer(BaseSerializer):
@@ -68,45 +68,6 @@ class IntakeIssueSerializer(WorkflowIntakeWriteMixin, BaseSerializer):
         ]
         read_only_fields = ["project", "workspace"]
 
-    def validate(self, attrs):
-        """
-        Validate that if status is being changed to accepted (1),
-        the project has a default state to transition to.
-        """
-
-        # Check if status is being updated to accepted
-        if attrs.get("status") == 1:
-            intake_issue = self.instance
-            issue = intake_issue.issue
-
-            # Check if issue is in TRIAGE state
-            if issue.state and issue.state.group == StateGroup.TRIAGE.value:
-                # Verify default state exists before allowing the update
-                default_state = intake_creation_state(intake_issue.project_id)
-
-                if not default_state:
-                    raise serializers.ValidationError(
-                        {"status": "Cannot accept intake issue: No default state found for the project"}
-                    )
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        # Update the intake issue
-        instance = super().update(instance, validated_data)
-
-        # If status is accepted (1), transition the issue state from TRIAGE to default
-        if validated_data.get("status") == 1:
-            issue = instance.issue
-            if issue.state and issue.state.group == StateGroup.TRIAGE.value:
-                # Get the default project state
-                default_state = intake_creation_state(instance.project_id)
-                if default_state:
-                    issue.state = default_state
-                    issue.save()
-
-        return instance
-
     def to_representation(self, instance):
         # Pass the annotated fields to the Issue instance if they exist
         if hasattr(instance, "label_ids"):
@@ -149,6 +110,7 @@ class IntakeIssueLiteSerializer(BaseSerializer):
 
 
 class IssueStateIntakeSerializer(BaseSerializer):
+    type_id = serializers.UUIDField(read_only=True, allow_null=True)
     state_detail = StateLiteSerializer(read_only=True, source="state")
     project_detail = ProjectLiteSerializer(read_only=True, source="project")
     label_details = LabelLiteSerializer(read_only=True, source="labels", many=True)

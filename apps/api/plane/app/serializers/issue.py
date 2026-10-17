@@ -21,6 +21,7 @@ from .workspace import WorkspaceLiteSerializer
 from plane.db.models import (
     User,
     Issue,
+    IssueType,
     IssueActivity,
     IssueComment,
     ProjectUserProperty,
@@ -48,7 +49,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
-from plane.utils.workflow import WorkflowIssueWriteMixin, validate_workflow_write
+from plane.utils.workflow import WorkflowIssueWriteMixin, finish_workflow_write
 
 
 class IssueFlatSerializer(BaseSerializer):
@@ -87,6 +88,9 @@ class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
     template_children = TemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
 
     # ids
+    type_id = serializers.PrimaryKeyRelatedField(
+        source="type", queryset=IssueType.objects.all(), required=False, allow_null=True
+    )
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.all_state_objects.all(), required=False, allow_null=True
     )
@@ -117,6 +121,8 @@ class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
             "created_at",
             "updated_at",
             "completed_at",
+            "archived_at",
+            "deleted_at",
         ]
 
     def to_representation(self, instance):
@@ -281,9 +287,9 @@ class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
             except IntegrityError:
                 pass
 
-        for child in children:
-            validate_workflow_write(project_id, child)
-            Issue.objects.create(parent=issue, project_id=project_id, workspace_id=workspace_id, **child)
+        for child, prepared in zip(children, self._workflow_children_prepared, strict=True):
+            child_issue = Issue.objects.create(parent=issue, project_id=project_id, workspace_id=workspace_id, **child)
+            finish_workflow_write(prepared, child_issue, actor=getattr(self.context.get("request"), "user", None))
         return issue
 
     def update(self, instance, validated_data):
@@ -435,6 +441,7 @@ class IssueRelationSerializer(BaseSerializer):
             "relation_type",
             "name",
             "state_id",
+            "type_id",
             "priority",
             "assignee_ids",
             "created_by",
@@ -475,6 +482,7 @@ class RelatedIssueSerializer(BaseSerializer):
             "relation_type",
             "name",
             "state_id",
+            "type_id",
             "priority",
             "assignee_ids",
             "created_by",
@@ -749,6 +757,7 @@ class IssueStateFlatSerializer(BaseSerializer):
 
 # Issue Serializer with state details
 class IssueStateSerializer(DynamicBaseSerializer):
+    type_id = serializers.UUIDField(read_only=True, allow_null=True)
     label_details = LabelLiteSerializer(read_only=True, source="labels", many=True)
     state_detail = StateLiteSerializer(read_only=True, source="state")
     project_detail = ProjectLiteSerializer(read_only=True, source="project")
@@ -771,6 +780,7 @@ class IssueIntakeSerializer(DynamicBaseSerializer):
             "id",
             "name",
             "priority",
+            "type_id",
             "sequence_id",
             "project_id",
             "created_at",
@@ -800,6 +810,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "id",
             "name",
             "state_id",
+            "type_id",
             "sort_order",
             "completed_at",
             "estimate_point",
@@ -857,6 +868,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "id": instance.id,
             "name": instance.name,
             "state_id": instance.state_id,
+            "type_id": instance.type_id,
             "sort_order": instance.sort_order,
             "completed_at": instance.completed_at,
             "estimate_point": instance.estimate_point_id,
@@ -900,6 +912,7 @@ class IssueListDetailSerializer(serializers.Serializer):
                             "name": related_issue.name,
                             "relation_type": relation.relation_type,
                             "state_id": related_issue.state_id,
+                            "type_id": related_issue.type_id,
                             "priority": related_issue.priority,
                             "created_by": related_issue.created_by_id,
                             "created_at": related_issue.created_at,
@@ -925,6 +938,7 @@ class IssueListDetailSerializer(serializers.Serializer):
                             "name": issue.name,
                             "relation_type": relation.relation_type,
                             "state_id": issue.state_id,
+                            "type_id": issue.type_id,
                             "priority": issue.priority,
                             "created_by": issue.created_by_id,
                             "created_at": issue.created_at,
