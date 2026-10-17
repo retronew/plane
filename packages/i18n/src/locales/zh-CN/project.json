@@ -23,11 +23,11 @@
     "complete": {
       "action": "完成周期",
       "title": "选择未完成工作项的处理方式。",
-      "incomplete_count": "{count, plural, one {# 个未完成工作项} other {# 个未完成工作项}}",
+      "incomplete_count": "此周期中有 {count} 个未完成的工作项，您可以将其移至即将到来的周期，或保持原样。",
       "options": "未完成工作项",
-      "keep": "保留在当前周期",
-      "transfer": "转移到即将开始的周期",
-      "target_placeholder": "选择即将开始的周期",
+      "keep": "将待处理的工作项留在此周期中。",
+      "transfer": "将待处理的工作项转移到即将到来的周期。",
+      "target_placeholder": "选择周期",
       "no_incomplete": "没有未完成工作项。确认后即可完成此周期。",
       "success": "周期已完成",
       "error": "无法完成周期，请重试。"
