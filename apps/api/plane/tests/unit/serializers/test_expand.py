@@ -36,13 +36,17 @@ def build_user():
 
 def build_project(**kwargs):
     workspace = Workspace(id=uuid4(), name="Test Workspace", slug="test-workspace")
-    return Project(
+    project = Project(
         id=uuid4(),
         name="Test Project",
         identifier="TEST",
         workspace=workspace,
         **kwargs,
     )
+    # ProjectSerializer includes labels; keep this in-memory fixture from
+    # querying the many-to-many relation while testing audit field expansion.
+    project._prefetched_objects_cache = {"labels": []}
+    return project
 
 
 @pytest.mark.unit
@@ -85,6 +89,7 @@ class TestPublicAPIExpand:
         assert data["created_by"] == user.id
         assert data["updated_by"] is None
         assert data["project_lead"] is None
+        assert data["labels"] == []
 
     def test_expand_name_that_is_not_a_relation_is_not_a_field(self):
         project = build_project(created_by=build_user())
