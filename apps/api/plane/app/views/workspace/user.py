@@ -504,6 +504,7 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
         upcoming_cycles = CycleIssue.objects.filter(
             workspace__slug=slug,
             cycle__start_date__gt=timezone.now(),
+            cycle__completed_at__isnull=True,
             issue__assignees__in=[user_id],
         ).values("cycle__name", "cycle__id", "cycle__project_id")
 
@@ -511,6 +512,7 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
             workspace__slug=slug,
             cycle__start_date__lt=timezone.now(),
             cycle__end_date__gt=timezone.now(),
+            cycle__completed_at__isnull=True,
             issue__assignees__in=[user_id],
         ).values("cycle__name", "cycle__id", "cycle__project_id")
 

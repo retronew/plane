@@ -10,6 +10,8 @@ from rest_framework import serializers
 from .base import BaseSerializer
 from plane.db.models import Cycle, CycleIssue, User, Project
 from plane.utils.timezone_converter import convert_to_utc
+from plane.utils.cycle_status import is_cycle_completed
+from django.utils import timezone
 
 
 class CycleCreateSerializer(BaseSerializer):
@@ -120,6 +122,18 @@ class CycleSerializer(BaseSerializer):
     and time-bound iteration data for project management and sprint planning.
     """
 
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, instance):
+        now = timezone.now()
+        if is_cycle_completed(instance, now):
+            return "COMPLETED"
+        if instance.start_date and instance.end_date and instance.start_date <= now <= instance.end_date:
+            return "CURRENT"
+        if instance.start_date and instance.start_date > now:
+            return "UPCOMING"
+        return "DRAFT"
+
     total_issues = serializers.IntegerField(read_only=True)
     cancelled_issues = serializers.IntegerField(read_only=True)
     completed_issues = serializers.IntegerField(read_only=True)
@@ -143,6 +157,7 @@ class CycleSerializer(BaseSerializer):
             "project",
             "owned_by",
             "deleted_at",
+            "completed_at",
         ]
 
 

@@ -12,7 +12,6 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
 from django.db.models import (
     Case,
-    CharField,
     Count,
     Exists,
     F,
@@ -26,9 +25,10 @@ from django.db.models import (
     Sum,
     FloatField,
 )
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Coalesce, Cast, Concat
 from django.utils import timezone
+from plane.utils.cycle_status import cycle_status_case, is_cycle_completed
 from django.core.serializers.json import DjangoJSONEncoder
 
 # Third party imports
@@ -149,22 +149,7 @@ class CycleViewSet(BaseViewSet):
                     ),
                 )
             )
-            .annotate(
-                status=Case(
-                    When(
-                        Q(start_date__lte=current_time_in_utc) & Q(end_date__gte=current_time_in_utc),
-                        then=Value("CURRENT"),
-                    ),
-                    When(start_date__gt=current_time_in_utc, then=Value("UPCOMING")),
-                    When(end_date__lt=current_time_in_utc, then=Value("COMPLETED")),
-                    When(
-                        Q(start_date__isnull=True) & Q(end_date__isnull=True),
-                        then=Value("DRAFT"),
-                    ),
-                    default=Value("DRAFT"),
-                    output_field=CharField(),
-                )
-            )
+            .annotate(status=cycle_status_case(current_time_in_utc))
             .annotate(
                 assignee_ids=Coalesce(
                     ArrayAgg(
@@ -202,7 +187,9 @@ class CycleViewSet(BaseViewSet):
 
         # Current Cycle
         if cycle_view == "current":
-            queryset = queryset.filter(start_date__lte=current_time_in_utc, end_date__gte=current_time_in_utc)
+            queryset = queryset.filter(
+                completed_at__isnull=True, start_date__lte=current_time_in_utc, end_date__gte=current_time_in_utc
+            )
 
             data = queryset.values(
                 # necessary fields
@@ -214,6 +201,7 @@ class CycleViewSet(BaseViewSet):
                 "description",
                 "start_date",
                 "end_date",
+                "completed_at",
                 "owned_by_id",
                 "view_props",
                 "sort_order",
@@ -246,6 +234,7 @@ class CycleViewSet(BaseViewSet):
             "description",
             "start_date",
             "end_date",
+            "completed_at",
             "owned_by_id",
             "view_props",
             "sort_order",
@@ -288,6 +277,7 @@ class CycleViewSet(BaseViewSet):
                         "description",
                         "start_date",
                         "end_date",
+                        "completed_at",
                         "owned_by_id",
                         "view_props",
                         "sort_order",
@@ -333,7 +323,9 @@ class CycleViewSet(BaseViewSet):
             )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    @transaction.atomic
     def partial_update(self, request, slug, project_id, pk):
+        Cycle.objects.select_for_update().get(workspace__slug=slug, project_id=project_id, pk=pk)
         queryset = self.get_queryset().filter(workspace__slug=slug, project_id=project_id, pk=pk)
         cycle = queryset.first()
         if cycle.archived_at:
@@ -346,7 +338,7 @@ class CycleViewSet(BaseViewSet):
 
         request_data = request.data
 
-        if cycle.end_date is not None and cycle.end_date < timezone.now():
+        if is_cycle_completed(cycle):
             if "sort_order" in request_data:
                 # Can only change sort order for a completed cycle``
                 request_data = {"sort_order": request_data.get("sort_order", cycle.sort_order)}
@@ -356,7 +348,7 @@ class CycleViewSet(BaseViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        serializer = CycleWriteSerializer(cycle, data=request.data, partial=True, context={"project_id": project_id})
+        serializer = CycleWriteSerializer(cycle, data=request_data, partial=True, context={"project_id": project_id})
         if serializer.is_valid():
             serializer.save()
             cycle = queryset.values(
@@ -369,6 +361,7 @@ class CycleViewSet(BaseViewSet):
                 "description",
                 "start_date",
                 "end_date",
+                "completed_at",
                 "owned_by_id",
                 "view_props",
                 "sort_order",
@@ -435,6 +428,7 @@ class CycleViewSet(BaseViewSet):
                 "description",
                 "start_date",
                 "end_date",
+                "completed_at",
                 "owned_by_id",
                 "view_props",
                 "sort_order",
@@ -539,6 +533,7 @@ class CycleDateCheckEndpoint(BaseAPIView):
         cycles = Cycle.objects.filter(
             Q(workspace__slug=slug)
             & Q(project_id=project_id)
+            & Q(completed_at__isnull=True)
             & (
                 Q(start_date__lte=start_date, end_date__gte=start_date)
                 | Q(start_date__lte=end_date, end_date__gte=end_date)

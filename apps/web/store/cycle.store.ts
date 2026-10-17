@@ -8,6 +8,8 @@ import { isPast, isToday } from "date-fns";
 import { sortBy, set, isEmpty } from "lodash-es";
 import { action, computed, observable, makeObservable, runInAction, observableRef } from "mobx";
 import { computedFn } from "mobx-utils";
+import { mutate } from "swr";
+import { unstable_serialize } from "swr/infinite";
 // types
 import type {
   ICycle,
@@ -16,6 +18,9 @@ import type {
   TCycleEstimateDistribution,
   TCycleDistribution,
   TCycleEstimateType,
+  TCycleCompleteRequest,
+  TCycleCompleteResponse,
+  IWorkspaceActiveCyclesResponse,
 } from "@plane/types";
 import type { DistributionUpdates } from "@plane/utils";
 import { orderCycles, shouldFilterCycle, getDate, updateDistribution } from "@plane/utils";
@@ -87,6 +92,12 @@ export interface ICycleStore {
     cycleId: string,
     data: Partial<ICycle>
   ) => Promise<ICycle>;
+  completeCycle: (
+    workspaceSlug: string,
+    projectId: string,
+    cycleId: string,
+    data: TCycleCompleteRequest
+  ) => Promise<TCycleCompleteResponse>;
   deleteCycle: (workspaceSlug: string, projectId: string, cycleId: string) => Promise<void>;
   // favorites
   addCycleToFavorites: (workspaceSlug: string, projectId: string, cycleId: string) => Promise<any>;
@@ -146,6 +157,7 @@ export class CycleStore implements ICycleStore {
       fetchCycleDetails: action,
       updateCycleDetails: action,
       deleteCycle: action,
+      completeCycle: action,
       addCycleToFavorites: action,
       removeCycleFromFavorites: action,
       archiveCycle: action,
@@ -604,6 +616,66 @@ export class CycleStore implements ICycleStore {
       this.fetchActiveCycle(workspaceSlug, projectId);
       throw error;
     }
+  };
+
+  completeCycle = async (
+    workspaceSlug: string,
+    projectId: string,
+    cycleId: string,
+    data: TCycleCompleteRequest
+  ): Promise<TCycleCompleteResponse> => {
+    const response = await this.cycleService.completeCycle(workspaceSlug, projectId, cycleId, data);
+    runInAction(() => {
+      for (const cycle of [response.cycle, response.target_cycle]) {
+        if (cycle) set(this.cycleMap, [cycle.id], { ...this.cycleMap[cycle.id], ...cycle });
+      }
+      for (const cycle of Object.values(this.cycleMap)) {
+        if (cycle.project_id !== projectId) continue;
+        if (cycle.status?.toLowerCase() === "current" && !cycle.completed_at && !cycle.archived_at)
+          this.activeCycleIdMap[cycle.id] = true;
+        else delete this.activeCycleIdMap[cycle.id];
+      }
+    });
+
+    // Both the individual SWR pages and the infinite aggregate retain cycle cards.
+    // Remove the completed cycle immediately; a failed refresh must not report a successful POST as failed.
+    const removeCompleted = (page: IWorkspaceActiveCyclesResponse) => ({
+      ...page,
+      results: page.results.filter((cycle) => cycle.id !== cycleId),
+    });
+    await Promise.allSettled([
+      mutate<IWorkspaceActiveCyclesResponse>(
+        (key) => Array.isArray(key) && key[0] === "workspace-active-cycles" && key[1] === workspaceSlug,
+        (page) => (page ? removeCompleted(page) : page),
+        { revalidate: false }
+      ),
+      mutate<IWorkspaceActiveCyclesResponse[]>(
+        unstable_serialize(() => ["workspace-active-cycles", workspaceSlug, "10:0:0"]),
+        (pages) => pages?.map(removeCompleted),
+        { revalidate: true }
+      ),
+      mutate(
+        (key) =>
+          Array.isArray(key) &&
+          key[0] === "project-active-cycle-history" &&
+          key[1] === workspaceSlug &&
+          key[2] === projectId &&
+          (key[3] === cycleId || key[3] === response.target_cycle?.id),
+        undefined,
+        { revalidate: true }
+      ),
+      ...(response.transferred_issues_count > 0 && this.rootStore.router.cycleId === cycleId
+        ? [
+            this.rootStore.issue.cycleIssues.fetchIssuesWithExistingPagination(
+              workspaceSlug,
+              projectId,
+              "mutation",
+              cycleId
+            ),
+          ]
+        : []),
+    ]);
+    return response;
   };
 
   /**

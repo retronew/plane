@@ -7,6 +7,8 @@ import json
 
 # Django imports
 from django.core import serializers
+from django.db import transaction
+from plane.utils.cycle_status import cycle_completed_q, is_cycle_completed
 from django.utils import timezone
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import (
@@ -201,7 +203,9 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
 
         # Current Cycle
         if cycle_view == "current":
-            queryset = queryset.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now())
+            queryset = queryset.filter(
+                completed_at__isnull=True, start_date__lte=timezone.now(), end_date__gte=timezone.now()
+            )
             data = CycleSerializer(
                 queryset,
                 many=True,
@@ -213,7 +217,9 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
 
         # Upcoming Cycles
         if cycle_view == "upcoming":
-            queryset = queryset.filter(start_date__gt=timezone.now())
+            queryset = queryset.filter(completed_at__isnull=True, start_date__gt=timezone.now()).exclude(
+                cycle_completed_q()
+            )
             return self.paginate(
                 request=request,
                 queryset=(queryset),
@@ -228,7 +234,7 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
 
         # Completed Cycles
         if cycle_view == "completed":
-            queryset = queryset.filter(end_date__lt=timezone.now())
+            queryset = queryset.filter(cycle_completed_q())
             return self.paginate(
                 request=request,
                 queryset=(queryset),
@@ -243,7 +249,7 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
 
         # Draft Cycles
         if cycle_view == "draft":
-            queryset = queryset.filter(end_date=None, start_date=None)
+            queryset = queryset.filter(completed_at__isnull=True, end_date=None, start_date=None)
             return self.paginate(
                 request=request,
                 queryset=(queryset),
@@ -258,7 +264,7 @@ class CycleListCreateAPIEndpoint(BaseAPIView):
 
         # Incomplete Cycles
         if cycle_view == "incomplete":
-            queryset = queryset.filter(Q(end_date__gte=timezone.now()) | Q(end_date__isnull=True))
+            queryset = queryset.exclude(cycle_completed_q())
             return self.paginate(
                 request=request,
                 queryset=(queryset),
@@ -540,13 +546,14 @@ class CycleDetailAPIEndpoint(BaseAPIView):
             ),
         },
     )
+    @transaction.atomic
     def patch(self, request, slug, project_id, pk):
         """Update cycle
 
         Modify an existing cycle's properties like name, description, or date range.
         Completed cycles can only have their sort order changed.
         """
-        cycle = Cycle.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        cycle = Cycle.objects.select_for_update().get(workspace__slug=slug, project_id=project_id, pk=pk)
 
         current_instance = json.dumps(CycleSerializer(cycle).data, cls=DjangoJSONEncoder)
 
@@ -558,7 +565,7 @@ class CycleDetailAPIEndpoint(BaseAPIView):
 
         request_data = request.data
 
-        if cycle.end_date is not None and cycle.end_date < timezone.now():
+        if is_cycle_completed(cycle):
             if "sort_order" in request_data:
                 # Can only change sort order
                 request_data = {"sort_order": request_data.get("sort_order", cycle.sort_order)}
@@ -569,7 +576,7 @@ class CycleDetailAPIEndpoint(BaseAPIView):
                 )
 
         serializer = CycleUpdateSerializer(
-            cycle, data=request.data, partial=True, context={"request": request, "project_id": project_id}
+            cycle, data=request_data, partial=True, context={"request": request, "project_id": project_id}
         )
         if serializer.is_valid():
             if (
@@ -813,7 +820,7 @@ class CycleArchiveUnarchiveAPIEndpoint(BaseAPIView):
         Only cycles that have ended can be archived.
         """
         cycle = Cycle.objects.get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
-        if cycle.end_date is None or cycle.end_date >= timezone.now():
+        if not is_cycle_completed(cycle):
             return Response(
                 {"error": "Only completed cycles can be archived"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -963,6 +970,7 @@ class CycleIssueListCreateAPIEndpoint(BaseAPIView):
             400: REQUIRED_FIELDS_RESPONSE,
         },
     )
+    @transaction.atomic
     def post(self, request, slug, project_id, cycle_id):
         """Add cycle issues
 
@@ -977,9 +985,9 @@ class CycleIssueListCreateAPIEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        cycle = Cycle.objects.get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
+        cycle = Cycle.objects.select_for_update().get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
 
-        if cycle.end_date is not None and cycle.end_date < timezone.now():
+        if is_cycle_completed(cycle):
             return Response(
                 {
                     "code": "CYCLE_COMPLETED",
@@ -989,7 +997,11 @@ class CycleIssueListCreateAPIEndpoint(BaseAPIView):
             )
 
         # Get all CycleWorkItems already created
-        cycle_issues = list(CycleIssue.objects.filter(~Q(cycle_id=cycle_id), issue_id__in=issues))
+        cycle_issues = list(
+            CycleIssue.objects.filter(
+                ~Q(cycle_id=cycle_id), issue_id__in=issues, workspace__slug=slug, project_id=project_id
+            )
+        )
         existing_issues = [
             str(cycle_issue.issue_id) for cycle_issue in cycle_issues if str(cycle_issue.issue_id) in issues
         ]
@@ -1043,21 +1055,23 @@ class CycleIssueListCreateAPIEndpoint(BaseAPIView):
         CycleIssue.objects.bulk_update(updated_records, ["cycle_id"], batch_size=100)
 
         # Capture Issue Activity
-        issue_activity.delay(
-            type="cycle.activity.created",
-            requested_data=json.dumps({"cycles_list": issues}),
-            actor_id=str(self.request.user.id),
-            issue_id=None,
-            project_id=str(self.kwargs.get("project_id", None)),
-            current_instance=json.dumps(
-                {
-                    "updated_cycle_issues": update_cycle_issue_activity,
-                    "created_cycle_issues": serializers.serialize("json", created_records),
-                }
-            ),
-            epoch=int(timezone.now().timestamp()),
-            notification=True,
-            origin=base_host(request=request, is_app=True),
+        transaction.on_commit(
+            lambda: issue_activity.delay(
+                type="cycle.activity.created",
+                requested_data=json.dumps({"cycles_list": issues}),
+                actor_id=str(self.request.user.id),
+                issue_id=None,
+                project_id=str(self.kwargs.get("project_id", None)),
+                current_instance=json.dumps(
+                    {
+                        "updated_cycle_issues": update_cycle_issue_activity,
+                        "created_cycle_issues": serializers.serialize("json", created_records),
+                    }
+                ),
+                epoch=int(timezone.now().timestamp()),
+                notification=True,
+                origin=base_host(request=request, is_app=True),
+            )
         )
         # Return all Cycle Issues
         return Response(
@@ -1240,7 +1254,7 @@ class TransferCycleIssueAPIEndpoint(BaseAPIView):
             pk=cycle_id,
         )
         # transfer work items only when cycle is completed (passed the end data)
-        if old_cycle.end_date is not None and old_cycle.end_date > timezone.now():
+        if not is_cycle_completed(old_cycle):
             return Response(
                 {"error": "The old cycle is not completed yet"},
                 status=status.HTTP_400_BAD_REQUEST,

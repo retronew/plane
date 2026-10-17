@@ -20,6 +20,18 @@
     "start_date": "Start date",
     "end_date": "End date",
     "in_your_timezone": "In your timezone",
+    "complete": {
+      "action": "Complete cycle",
+      "title": "Choose how to handle incomplete work items.",
+      "incomplete_count": "{count, plural, one {# incomplete work item} other {# incomplete work items}}",
+      "options": "Incomplete work items",
+      "keep": "Keep in this cycle",
+      "transfer": "Transfer to an upcoming cycle",
+      "target_placeholder": "Select an upcoming cycle",
+      "no_incomplete": "There are no incomplete work items. Confirm to complete this cycle.",
+      "success": "Cycle completed",
+      "error": "Could not complete the cycle. Please try again."
+    },
     "transfer_work_items": "Transfer {count} work items",
     "transfer": {
       "no_cycles_available": "No other cycles available to transfer work items to."

@@ -85,6 +85,20 @@ describe("project active cycle snapshot adaptation", () => {
     ).toBeNull();
   });
 
+  it("stops early-completed history at the real completion instant while retaining the planned end", () => {
+    const completed = { ...cycle, completed_at: "2026-10-16T19:00:00Z" };
+    const afterCompletion = { ...snapshots[1], observed_at: "2026-10-16T20:00:00Z", total_issues: 999 };
+    const data = projectCycleChartData(completed, project, [...snapshots, afterCompletion], new Date("2026-10-20"));
+    expect(projectActiveCycleData(completed, project, snapshots, new Date("2026-10-17"))).toBeNull();
+    expect(data?.today).toBe("2026-10-16");
+    expect(data?.chart_end_date).toBe("2026-10-23");
+    expect(data?.end_date).toBe(cycle.end_date);
+    expect(data?.progress_chart["2026-10-16"]).toEqual(snapshots[1]);
+    expect(data?.progress_chart["2026-10-23"]).toBeNull();
+    expect(data?.days_remaining).toBe(0);
+    expect(data?.total_issues).not.toBe(999);
+  });
+
   it("handles upcoming, undated, and invalid ranges without chart data", () => {
     expect(projectCycleChartData(cycle, project, snapshots, new Date("2026-10-01"))).toBeNull();
     expect(projectCycleChartData({ ...cycle, end_date: null }, project, snapshots)).toBeNull();

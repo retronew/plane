@@ -89,6 +89,7 @@ export interface ICycle extends TProgressSnapshot {
 
   created_at?: string;
   created_by?: string;
+  completed_at?: string | null;
   description: string;
   end_date: string | null;
   id: string;
@@ -112,6 +113,16 @@ export interface ICycle extends TProgressSnapshot {
   progress: any[];
   version: number;
 }
+
+export type TCycleCompleteRequest =
+  | { incomplete_action: "keep" }
+  | { incomplete_action: "transfer"; target_cycle_id: string };
+
+export type TCycleCompleteResponse = {
+  cycle: ICycle;
+  target_cycle: ICycle | null;
+  transferred_issues_count: number;
+};
 
 export interface CycleIssueResponse {
   id: string;

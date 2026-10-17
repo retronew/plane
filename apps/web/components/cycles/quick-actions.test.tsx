@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { ICycle } from "@plane/types";
 import { CycleQuickActions } from "./quick-actions";
@@ -50,6 +50,9 @@ vi.mock("./modal", () => ({
   CycleCreateUpdateModal: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <dialog open aria-label="edit-cycle" /> : null,
 }));
+vi.mock("./complete-modal", () => ({
+  CycleCompleteModal: ({ open }: { open: boolean }) => (open ? <dialog open aria-label="complete-cycle" /> : null),
+}));
 vi.mock("./delete-modal", () => ({
   CycleDeleteModal: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <dialog open aria-label="delete-cycle" /> : null),
 }));
@@ -60,7 +63,7 @@ vi.mock("./archived-cycles/modal", () => ({
 function Fixture() {
   const parentRef = useRef<HTMLDivElement>(null);
   return (
-    <div ref={parentRef}>
+    <div ref={parentRef} data-testid="cycle-card">
       <CycleQuickActions parentRef={parentRef} workspaceSlug="demo" projectId="project" cycleId="cycle" />
     </div>
   );
@@ -71,6 +74,7 @@ async function openMenu() {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  Element.prototype.getAnimations ??= () => [];
   localStorage.clear();
   mocks.role = EUserPermissions.ADMIN;
   mocks.workspaceAllowed = true;
@@ -97,16 +101,64 @@ it.each([EUserPermissions.ADMIN, EUserPermissions.MEMBER])(
       "open_in_new_tab",
       "copy_link",
       "add_to_favorites",
+      "project_cycles.complete.action",
       "export",
       "archiveweb.only_completed_cycles_can_be_archived",
       "delete",
     ]);
+    const sequence = Array.from(menu.querySelectorAll('[role="menuitem"], [role="separator"]'));
+    expect(sequence.map((item) => item.getAttribute("role"))).toEqual([
+      "menuitem",
+      "menuitem",
+      "menuitem",
+      "menuitem",
+      "menuitem",
+      "menuitem",
+      "separator",
+      "menuitem",
+      "menuitem",
+    ]);
+    const deletion = within(menu).getByRole("menuitem", { name: "delete" });
+    expect(deletion.className).toContain("text-danger-primary");
+    expect(within(menu).getByRole("menuitem", { name: "edit" }).className).toContain("text-primary");
     const archive = within(menu).getByRole("menuitem", { name: /archive/ });
     expect(archive.getAttribute("aria-disabled")).toBe("true");
     fireEvent.click(archive);
     expect(screen.queryByRole("dialog")).toBeNull();
   }
 );
+afterEach(() => vi.unstubAllGlobals());
+
+it("uses the same grouping, order, and danger color in the card context menu", async () => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+  );
+  render(<Fixture />);
+  fireEvent.contextMenu(screen.getByTestId("cycle-card"), { clientX: 120, clientY: 80 });
+  const menu = await screen.findByRole("menu");
+  expect(
+    Array.from(menu.querySelectorAll('[role="menuitem"], [role="separator"]')).map((item) =>
+      item.getAttribute("role") === "separator" ? "separator" : item.textContent
+    )
+  ).toEqual([
+    "edit",
+    "open_in_new_tab",
+    "copy_link",
+    "add_to_favorites",
+    "project_cycles.complete.action",
+    "export",
+    "separator",
+    "archiveweb.only_completed_cycles_can_be_archived",
+    "delete",
+  ]);
+  expect(within(menu).getByRole("menuitem", { name: "delete" }).className).toContain("text-danger-primary");
+});
+
 it.each([EUserPermissions.GUEST, 0])("keeps role %i read-only", async (role) => {
   mocks.role = role;
   render(<Fixture />);
@@ -120,6 +172,7 @@ it.each([EUserPermissions.GUEST, 0])("keeps role %i read-only", async (role) => 
 it.each([
   ["edit", "edit-cycle"],
   ["delete", "delete-cycle"],
+  ["project_cycles.complete.action", "complete-cycle"],
 ])("opens the existing %s confirmation dialog", async (action, dialog) => {
   render(<Fixture />);
   const menu = await openMenu();

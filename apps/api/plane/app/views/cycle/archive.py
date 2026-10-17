@@ -8,7 +8,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import (
     Case,
-    CharField,
     Count,
     Exists,
     F,
@@ -25,6 +24,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce, Cast, Concat
 from django.utils import timezone
+from plane.utils.cycle_status import cycle_status_case, is_cycle_completed
 
 # Third party imports
 from rest_framework import status
@@ -205,22 +205,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                     ),
                 )
             )
-            .annotate(
-                status=Case(
-                    When(
-                        Q(start_date__lte=timezone.now()) & Q(end_date__gte=timezone.now()),
-                        then=Value("CURRENT"),
-                    ),
-                    When(start_date__gt=timezone.now(), then=Value("UPCOMING")),
-                    When(end_date__lt=timezone.now(), then=Value("COMPLETED")),
-                    When(
-                        Q(start_date__isnull=True) & Q(end_date__isnull=True),
-                        then=Value("DRAFT"),
-                    ),
-                    default=Value("DRAFT"),
-                    output_field=CharField(),
-                )
-            )
+            .annotate(status=cycle_status_case())
             .annotate(
                 assignee_ids=Coalesce(
                     ArrayAgg(
@@ -282,6 +267,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                     "description",
                     "start_date",
                     "end_date",
+                    "completed_at",
                     "owned_by_id",
                     "view_props",
                     "sort_order",
@@ -328,6 +314,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                     "description",
                     "start_date",
                     "end_date",
+                    "completed_at",
                     "owned_by_id",
                     "view_props",
                     "sort_order",
@@ -587,7 +574,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
     def post(self, request, slug, project_id, cycle_id):
         cycle = Cycle.objects.get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
 
-        if cycle.end_date is None or cycle.end_date >= timezone.now():
+        if not is_cycle_completed(cycle):
             return Response(
                 {"error": "Only completed cycles can be archived"},
                 status=status.HTTP_400_BAD_REQUEST,

@@ -16,7 +16,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
@@ -32,6 +32,7 @@ from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.host import base_host
 
 
+@transaction.atomic
 def transfer_cycle_issues(
     slug,
     project_id,
@@ -54,15 +55,33 @@ def transfer_cycle_issues(
     Returns:
         dict: Response data with success or error message
     """
-    # Get the new cycle
-    new_cycle = Cycle.objects.filter(workspace__slug=slug, project_id=project_id, pk=new_cycle_id).first()
-
-    # Check if new cycle is already completed
-    if new_cycle.end_date is not None and new_cycle.end_date < timezone.now():
-        return {
-            "success": False,
-            "error": "The cycle where the issues are transferred is already completed",
-        }
+    # Use the same lock order as completion, including legacy transfer callers.
+    locked = list(
+        Cycle.objects.filter(
+            workspace__slug=slug,
+            project_id=project_id,
+            project__workspace_id=F("workspace_id"),
+            project__archived_at__isnull=True,
+            project__deleted_at__isnull=True,
+            workspace__deleted_at__isnull=True,
+            id__in=[cycle_id, new_cycle_id],
+        )
+        .select_for_update(of=("self",))
+        .order_by("id")
+    )
+    new_cycle = next((c for c in locked if str(c.id) == str(new_cycle_id)), None)
+    source = next((c for c in locked if str(c.id) == str(cycle_id)), None)
+    if source is None:
+        return {"success": False, "error": "Source cycle not found"}
+    if new_cycle is None:
+        return {"success": False, "error": "Target cycle not found"}
+    if source.id == new_cycle.id:
+        return {"success": False, "error": "Target cycle must differ from source cycle"}
+    if source.archived_at or source.completed_at:
+        return {"success": False, "error": "Source cycle is archived or completed"}
+    now = timezone.now()
+    if new_cycle.archived_at or new_cycle.completed_at or (new_cycle.end_date is not None and new_cycle.end_date < now):
+        return {"success": False, "error": "Target cycle is archived or completed"}
 
     # Get the old cycle with issue counts
     old_cycle = (
@@ -74,6 +93,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__archived_at__isnull=True,
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                     issue_cycle__issue__deleted_at__isnull=True,
                 ),
             )
@@ -87,6 +110,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__issue__deleted_at__isnull=True,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                 ),
             )
         )
@@ -99,6 +126,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__issue__deleted_at__isnull=True,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                 ),
             )
         )
@@ -111,6 +142,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__issue__deleted_at__isnull=True,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                 ),
             )
         )
@@ -123,6 +158,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__issue__deleted_at__isnull=True,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                 ),
             )
         )
@@ -135,6 +174,10 @@ def transfer_cycle_issues(
                     issue_cycle__issue__is_draft=False,
                     issue_cycle__issue__deleted_at__isnull=True,
                     issue_cycle__deleted_at__isnull=True,
+                    issue_cycle__project_id=F("project_id"),
+                    issue_cycle__workspace_id=F("workspace_id"),
+                    issue_cycle__issue__project_id=F("project_id"),
+                    issue_cycle__issue__workspace_id=F("workspace_id"),
                 ),
             )
         )
@@ -163,6 +206,10 @@ def transfer_cycle_issues(
     if estimate_type:
         assignee_estimate_data = (
             Issue.issue_objects.filter(
+                issue_cycle__project_id=F("project_id"),
+                issue_cycle__workspace_id=F("workspace_id"),
+                state__project_id=F("project_id"),
+                state__workspace_id=F("workspace_id"),
                 issue_cycle__cycle_id=cycle_id,
                 issue_cycle__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -229,6 +276,10 @@ def transfer_cycle_issues(
 
         label_distribution_data = (
             Issue.issue_objects.filter(
+                issue_cycle__project_id=F("project_id"),
+                issue_cycle__workspace_id=F("workspace_id"),
+                state__project_id=F("project_id"),
+                state__workspace_id=F("workspace_id"),
                 issue_cycle__cycle_id=cycle_id,
                 issue_cycle__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -285,6 +336,10 @@ def transfer_cycle_issues(
     # Get the assignee distribution
     assignee_distribution = (
         Issue.issue_objects.filter(
+            issue_cycle__project_id=F("project_id"),
+            issue_cycle__workspace_id=F("workspace_id"),
+            state__project_id=F("project_id"),
+            state__workspace_id=F("workspace_id"),
             issue_cycle__cycle_id=cycle_id,
             issue_cycle__deleted_at__isnull=True,
             workspace__slug=slug,
@@ -349,6 +404,10 @@ def transfer_cycle_issues(
     # Get the label distribution
     label_distribution = (
         Issue.issue_objects.filter(
+            issue_cycle__project_id=F("project_id"),
+            issue_cycle__workspace_id=F("workspace_id"),
+            state__project_id=F("project_id"),
+            state__workspace_id=F("workspace_id"),
             issue_cycle__cycle_id=cycle_id,
             issue_cycle__deleted_at__isnull=True,
             workspace__slug=slug,
@@ -438,6 +497,11 @@ def transfer_cycle_issues(
         workspace__slug=slug,
         issue__archived_at__isnull=True,
         issue__is_draft=False,
+        issue__deleted_at__isnull=True,
+        issue__project_id=project_id,
+        issue__workspace_id=source.workspace_id,
+        issue__state__project_id=project_id,
+        issue__state__workspace_id=source.workspace_id,
         issue__state__group__in=["backlog", "unstarted", "started"],
     )
 
@@ -458,21 +522,23 @@ def transfer_cycle_issues(
     cycle_issues = CycleIssue.objects.bulk_update(updated_cycles, ["cycle_id"], batch_size=100)
 
     # Capture Issue Activity
-    issue_activity.delay(
-        type="cycle.activity.created",
-        requested_data=json.dumps({"cycles_list": []}),
-        actor_id=str(user_id),
-        issue_id=None,
-        project_id=str(project_id),
-        current_instance=json.dumps(
-            {
-                "updated_cycle_issues": update_cycle_issue_activity,
-                "created_cycle_issues": [],
-            }
-        ),
-        epoch=int(timezone.now().timestamp()),
-        notification=True,
-        origin=base_host(request=request, is_app=True),
+    transaction.on_commit(
+        lambda: issue_activity.delay(
+            type="cycle.activity.created",
+            requested_data=json.dumps({"cycles_list": []}),
+            actor_id=str(user_id),
+            issue_id=None,
+            project_id=str(project_id),
+            current_instance=json.dumps(
+                {
+                    "updated_cycle_issues": update_cycle_issue_activity,
+                    "created_cycle_issues": [],
+                }
+            ),
+            epoch=int(timezone.now().timestamp()),
+            notification=True,
+            origin=base_host(request=request, is_app=True),
+        )
     )
 
-    return {"success": True}
+    return {"success": True, "transferred_issues_count": len(updated_cycles)}

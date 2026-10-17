@@ -21,7 +21,13 @@ export function projectActiveCycleData(
   snapshots: TCycleDailySnapshot[],
   now = new Date()
 ): CycleCardData | null {
-  if (!cycle.start_date || !cycle.end_date || now < new Date(cycle.start_date) || now > new Date(cycle.end_date))
+  if (
+    cycle.completed_at ||
+    !cycle.start_date ||
+    !cycle.end_date ||
+    now < new Date(cycle.start_date) ||
+    now > new Date(cycle.end_date)
+  )
     return null;
   return projectCycleChartData(cycle, project, snapshots, now);
 }
@@ -38,8 +44,14 @@ export function projectCycleChartData(
   const endInstant = new Date(cycle.end_date);
   if (!Number.isFinite(startInstant.getTime()) || !Number.isFinite(endInstant.getTime())) return null;
   if (now < startInstant || endInstant < startInstant) return null;
-  const ended = now > endInstant;
-  const today = projectDate(ended ? endInstant : now, project.timezone);
+  const completedInstant = cycle.completed_at ? new Date(cycle.completed_at) : null;
+  if (completedInstant && (!Number.isFinite(completedInstant.getTime()) || completedInstant < startInstant))
+    return null;
+  const observationEnd = new Date(
+    Math.min(now.getTime(), endInstant.getTime(), completedInstant?.getTime() ?? Infinity)
+  );
+  const ended = completedInstant !== null || now > endInstant;
+  const today = projectDate(observationEnd, project.timezone);
   const start = projectDate(startInstant, project.timezone);
   const end = projectDate(endInstant, project.timezone);
   const startTime = Date.parse(start);
@@ -52,7 +64,7 @@ export function projectCycleChartData(
   for (const snapshot of snapshots) {
     if (snapshot.progress_date < start || snapshot.progress_date > today || snapshot.progress_date > end) continue;
     const observed = Date.parse(snapshot.observed_at);
-    if (!Number.isFinite(observed) || observed > now.getTime()) continue;
+    if (!Number.isFinite(observed) || observed > observationEnd.getTime()) continue;
     const previous = history.get(snapshot.progress_date);
     if (!previous || observed > Date.parse(previous.observed_at)) history.set(snapshot.progress_date, snapshot);
     if (ended) dates.add(snapshot.progress_date);
@@ -83,6 +95,6 @@ export function projectCycleChartData(
     chart_start_date: start,
     chart_end_date: end,
     today,
-    days_remaining: Math.max(0, Math.floor((endInstant.getTime() - now.getTime()) / DAY)),
+    days_remaining: ended ? 0 : Math.max(0, Math.floor((endInstant.getTime() - now.getTime()) / DAY)),
   };
 }

@@ -73,6 +73,7 @@ class Cycle(ProjectBaseModel):
     external_id = models.CharField(max_length=255, blank=True, null=True)
     progress_snapshot = models.JSONField(default=dict)
     archived_at = models.DateTimeField(null=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     logo_props = models.JSONField(default=dict)
     # timezone
     TIMEZONE_CHOICES = tuple(zip(pytz.common_timezones, pytz.common_timezones))

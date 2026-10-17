@@ -8,6 +8,8 @@ import json
 
 # Django imports
 from django.core import serializers
+from django.db import transaction
+from plane.utils.cycle_status import is_cycle_completed
 from django.db.models import F, Func, OuterRef, Q, Subquery
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -221,15 +223,16 @@ class CycleIssueViewSet(BaseViewSet):
             )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    @transaction.atomic
     def create(self, request, slug, project_id, cycle_id):
         issues = request.data.get("issues", [])
 
         if not issues:
             return Response({"error": "Issues are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        cycle = Cycle.objects.get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
+        cycle = Cycle.objects.select_for_update().get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
 
-        if cycle.end_date is not None and cycle.end_date < timezone.now():
+        if is_cycle_completed(cycle):
             return Response(
                 {"error": "The Cycle has already been completed so no new issues can be added"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -298,21 +301,23 @@ class CycleIssueViewSet(BaseViewSet):
         # Update the cycle issues
         CycleIssue.objects.bulk_update(updated_records, ["cycle_id"], batch_size=100)
         # Capture Issue Activity
-        issue_activity.delay(
-            type="cycle.activity.created",
-            requested_data=json.dumps({"cycles_list": issues}),
-            actor_id=str(self.request.user.id),
-            issue_id=None,
-            project_id=str(self.kwargs.get("project_id", None)),
-            current_instance=json.dumps(
-                {
-                    "updated_cycle_issues": update_cycle_issue_activity,
-                    "created_cycle_issues": serializers.serialize("json", created_records),
-                }
-            ),
-            epoch=int(timezone.now().timestamp()),
-            notification=True,
-            origin=base_host(request=request, is_app=True),
+        transaction.on_commit(
+            lambda: issue_activity.delay(
+                type="cycle.activity.created",
+                requested_data=json.dumps({"cycles_list": issues}),
+                actor_id=str(self.request.user.id),
+                issue_id=None,
+                project_id=str(self.kwargs.get("project_id", None)),
+                current_instance=json.dumps(
+                    {
+                        "updated_cycle_issues": update_cycle_issue_activity,
+                        "created_cycle_issues": serializers.serialize("json", created_records),
+                    }
+                ),
+                epoch=int(timezone.now().timestamp()),
+                notification=True,
+                origin=base_host(request=request, is_app=True),
+            )
         )
         return Response({"message": "success"}, status=status.HTTP_201_CREATED)
 

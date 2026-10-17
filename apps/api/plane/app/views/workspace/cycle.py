@@ -40,7 +40,7 @@ class WorkspaceActiveCyclesEndpoint(BaseAPIView):
         now = timezone.now()
         cycles = (
             accessible_snapshot_cycles(request, slug)
-            .filter(start_date__lte=now, end_date__gte=now)
+            .filter(completed_at__isnull=True, start_date__lte=now, end_date__gte=now)
             .select_related("project", "owned_by", "owned_by__avatar_asset")
             .order_by("project__name", "project_id", "start_date", "id")
         )

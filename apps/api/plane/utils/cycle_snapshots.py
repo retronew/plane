@@ -28,7 +28,7 @@ def snapshot_cycles():
 
 
 def current_snapshot_cycles(now):
-    return snapshot_cycles().filter(start_date__lte=now, end_date__gte=now)
+    return snapshot_cycles().filter(completed_at__isnull=True, start_date__lte=now, end_date__gte=now)
 
 
 def visible_cycle_issues(cycle_ids):
@@ -71,7 +71,11 @@ def observe_cycle_progress(cycle_ids):
         .order_by("id")
     )
     now = timezone.now()
-    cycles = [c for c in cycles if c.start_date and c.end_date and c.start_date <= now <= c.end_date]
+    cycles = [
+        c
+        for c in cycles
+        if c.completed_at is None and c.start_date and c.end_date and c.start_date <= now <= c.end_date
+    ]
     if not cycles:
         return now, {}
     by_cycle = defaultdict(list)

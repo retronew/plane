@@ -5,9 +5,9 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { observer } from "mobx-react";
-import { ExportOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { ExportOutline, MoreHorizontalOutline, StopCircleOutline } from "@makeplane/propel/icons";
 // ui
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -15,10 +15,15 @@ import { FavoriteStarIcon } from "@plane/blocks/common";
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
-import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
+import {
+  ContextMenu,
+  getRenderableItems,
+  hasMenuSeparatorBefore,
+  resolveItemVariant,
+} from "@plane/blocks/context-menu";
 import { copyUrlToClipboard } from "@plane/utils";
 // hooks
 import { useCycleMenuItems } from "@/components/common/quick-actions-helper";
@@ -29,6 +34,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 import { ArchiveCycleModal } from "./archived-cycles/modal";
 import { CycleDeleteModal } from "./delete-modal";
 import { CycleExportModal } from "./export-modal";
+import { CycleCompleteModal } from "./complete-modal";
 import { CycleCreateUpdateModal } from "./modal";
 
 type Props = {
@@ -56,6 +62,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
   const [archiveCycleModal, setArchiveCycleModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [exportModal, setExportModal] = useState(false);
+  const [completeModal, setCompleteModal] = useState(false);
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { getCycleById, restoreCycle, addCycleToFavorites, removeCycleFromFavorites } = useCycle();
@@ -149,6 +156,17 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
       shouldRender: isEditingAllowed && !!cycleDetails && !cycleDetails.archived_at,
     },
     {
+      key: "complete",
+      title: t("project_cycles.complete.action"),
+      icon: StopCircleOutline,
+      action: () => setCompleteModal(true),
+      shouldRender:
+        isEditingAllowed &&
+        cycleDetails?.status?.toLowerCase() === "current" &&
+        !cycleDetails.archived_at &&
+        !cycleDetails.completed_at,
+    },
+    {
       key: "export",
       title: t("export"),
       icon: ExportOutline,
@@ -165,14 +183,12 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
   ];
   const additionalModals = Array.isArray(menuResult) ? null : menuResult.modals;
 
-  const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
-    return {
-      ...item,
-      action: () => {
-        item.action();
-      },
-    };
-  });
+  const renderedItems = getRenderableItems(MENU_ITEMS).map((item) =>
+    Object.assign({}, item, {
+      section: ["archive", "restore", "delete"].includes(item.key) ? "lifecycle" : "actions",
+      variant: item.key === "delete" ? ("danger" as const) : ("neutral" as const),
+    })
+  );
 
   return (
     <>
@@ -199,6 +215,14 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
             workspaceSlug={workspaceSlug}
             projectId={projectId}
           />
+          <CycleCompleteModal
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            cycleId={cycleId}
+            cycleName={cycleDetails.name}
+            open={completeModal}
+            onClose={() => setCompleteModal(false)}
+          />
           <CycleExportModal
             workspaceSlug={workspaceSlug}
             projectId={projectId}
@@ -210,7 +234,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
           {additionalModals}
         </div>
       )}
-      <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
+      <ContextMenu parentRef={parentRef} items={renderedItems} />
       {/* propel: the trigger takes no className — the caller's box classes ride on the wrapper */}
       <span className={customClassName}>
         <Menu>
@@ -233,19 +257,21 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
             }
           />
           <MenuContent side="bottom" align="end">
-            {getRenderableItems(MENU_ITEMS).map((item) => (
-              <MenuItem
-                key={item.key}
-                variant={resolveItemVariant(item)}
-                icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-                label={item.title ?? ""}
-                description={item.description}
-                disabled={item.disabled}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  item.action();
-                }}
-              />
+            {renderedItems.map((item, index) => (
+              <Fragment key={item.key}>
+                {hasMenuSeparatorBefore(renderedItems, index) && <MenuSeparator />}
+                <MenuItem
+                  variant={resolveItemVariant(item)}
+                  icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+                  label={item.title ?? ""}
+                  description={item.description}
+                  disabled={item.disabled}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    item.action();
+                  }}
+                />
+              </Fragment>
             ))}
           </MenuContent>
         </Menu>

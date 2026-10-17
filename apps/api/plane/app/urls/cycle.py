@@ -8,6 +8,7 @@ from plane.app.views.workspace.cycle import CycleProgressHistoryEndpoint
 
 from plane.app.views import (
     CycleViewSet,
+    CycleCompleteEndpoint,
     CycleIssueViewSet,
     CycleDateCheckEndpoint,
     CycleFavoriteViewSet,
@@ -20,6 +21,11 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/cycles/<uuid:cycle_id>/complete/",
+        CycleCompleteEndpoint.as_view({"post": "complete"}),
+        name="cycle-complete",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/cycles/<uuid:cycle_id>/cycle-progress/",
         CycleProgressHistoryEndpoint.as_view(),

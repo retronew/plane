@@ -21,6 +21,7 @@ from plane.bgtasks.issue_activities_task import issue_activity
 from plane.db.models import Issue, Project, State
 from plane.services.workflow_lifecycle import workflow_lifecycle_change
 from plane.utils.exception_logger import log_exception
+from plane.utils.cycle_status import cycle_completed_q
 from plane.utils.workflow import prepare_workflow_write, verify_workflow_write, finish_workflow_write
 
 
@@ -48,7 +49,7 @@ def archive_old_issues():
                     state__group__in=["completed", "cancelled"],
                 ),
                 Q(issue_cycle__isnull=True)
-                | (Q(issue_cycle__cycle__end_date__lt=timezone.now()) & Q(issue_cycle__isnull=False)),
+                | (cycle_completed_q(prefix="issue_cycle__cycle__") & Q(issue_cycle__isnull=False)),
                 Q(issue_module__isnull=True)
                 | (Q(issue_module__module__target_date__lt=timezone.now()) & Q(issue_module__isnull=False)),
             ).filter(
@@ -117,8 +118,7 @@ def close_project_issues(project_id):
             updated_at__lte=(timezone.now() - timedelta(days=close_in)),
             state__group__in=["backlog", "unstarted", "started"],
         ),
-        Q(issue_cycle__isnull=True)
-        | (Q(issue_cycle__cycle__end_date__lt=timezone.now()) & Q(issue_cycle__isnull=False)),
+        Q(issue_cycle__isnull=True) | (cycle_completed_q(prefix="issue_cycle__cycle__") & Q(issue_cycle__isnull=False)),
         Q(issue_module__isnull=True)
         | (Q(issue_module__module__target_date__lt=timezone.now()) & Q(issue_module__isnull=False)),
     ).filter(

@@ -15,6 +15,8 @@ import type {
   TProgressSnapshot,
   TCycleEstimateDistribution,
   TCycleDailySnapshot,
+  TCycleCompleteRequest,
+  TCycleCompleteResponse,
 } from "@plane/types";
 import { APIService } from "@/services/api.service";
 
@@ -141,6 +143,19 @@ export class CycleService extends APIService {
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
+      });
+  }
+
+  async completeCycle(
+    workspaceSlug: string,
+    projectId: string,
+    cycleId: string,
+    data: TCycleCompleteRequest
+  ): Promise<TCycleCompleteResponse> {
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/cycles/${cycleId}/complete/`, data)
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data ?? error;
       });
   }
 
