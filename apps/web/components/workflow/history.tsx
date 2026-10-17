@@ -2,7 +2,18 @@ import { useState } from "react";
 import useSWRInfinite from "swr/infinite";
 import { observer } from "mobx-react";
 import { Link } from "react-router";
-import { History, X } from "lucide-react";
+import {
+  AlignLeftOutline,
+  CloseOutline,
+  DeleteOutline,
+  EditOutline,
+  FileStackOutline,
+  HistoryOutline,
+  MigrateOutline,
+  TickCircleOutline,
+  TextOutline,
+} from "@makeplane/propel/icons";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import {
@@ -17,6 +28,9 @@ import {
 import { E_SORT_ORDER } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { TWorkflowActivity, TWorkflowHistoryPage, TWorkflowRuleSnapshot } from "@plane/types";
+import { calculateTimeAgo, renderFormattedDate, renderFormattedTime } from "@plane/utils";
+import styles from "./history.module.css";
+import { WorkflowCreationHistoryIcon, WorkflowHistoryIcon } from "./history-icons";
 import { ActivitySortRoot } from "@/components/issues/issue-detail/issue-activity/sort-root";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 
@@ -44,8 +58,7 @@ const snapshotLabels: Record<string, string> = {
 export function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
   const { t } = useTranslation();
   const { before, after, schema_version } = entry.data;
-  if (schema_version !== 2 || (!before && !after))
-    return <p className="text-caption-md-regular text-tertiary">{t("web.workflow_ui.snapshot_missing")}</p>;
+  if (schema_version !== 2 || (!before && !after)) return null;
   const isRule = entry.action.startsWith("transition_");
   const changes = isRule ? memberSnapshotChanges(before, after) : undefined;
   const renderValue = (value: unknown): string => {
@@ -58,7 +71,7 @@ export function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
     return String(value ?? "—") || "—";
   };
   return (
-    <div className="space-y-1 rounded bg-layer-1 p-2 text-caption-md-regular text-secondary">
+    <div className="mt-1 space-y-1 rounded bg-layer-1 p-2 text-caption-sm-regular break-words text-secondary">
       {([before, after] as const).map(
         (snapshot, index) =>
           snapshot && (
@@ -113,6 +126,33 @@ export function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
   );
 }
 
+function getHistoryIcon(entry: TWorkflowActivity) {
+  if (entry.action.startsWith("transition_")) return WorkflowHistoryIcon;
+  switch (entry.action) {
+    case "created":
+      return FileStackOutline;
+    case "creation":
+      return WorkflowCreationHistoryIcon;
+    case "initial":
+      return TickCircleOutline;
+    case "enabled":
+    case "is_active":
+      return WorkflowHistoryIcon;
+    case "name":
+      return TextOutline;
+    case "description":
+      return AlignLeftOutline;
+    case "updated":
+      return EditOutline;
+    case "deleted":
+      return DeleteOutline;
+    case "migration":
+      return MigrateOutline;
+    default:
+      return HistoryOutline;
+  }
+}
+
 export const WorkflowHistory = observer(function WorkflowHistory({
   open,
   onClose,
@@ -164,8 +204,15 @@ export const WorkflowHistory = observer(function WorkflowHistory({
       }),
     { revalidateFirstPage: false, persistSize: false }
   );
-  const entries = [...new Map((data ?? []).flatMap((page) => page.results).map((entry) => [entry.id, entry])).values()];
-  const last = data?.at(-1);
+  // A null SWR key stops closed-panel requests but clears its data immediately.
+  // Retain the final open frame until Base UI finishes the closing transition.
+  const [retainedData, setRetainedData] = useState(data);
+  if (open && retainedData !== data) setRetainedData(data);
+  const visibleData = open ? data : retainedData;
+  const entries = [
+    ...new Map((visibleData ?? []).flatMap((page) => page.results).map((entry) => [entry.id, entry])).values(),
+  ];
+  const last = visibleData?.at(-1);
   return (
     <Drawer
       open={open}
@@ -174,12 +221,12 @@ export const WorkflowHistory = observer(function WorkflowHistory({
       }}
       swipeDirection="right"
     >
-      <DrawerPanel side="end" size="sm" variant="overlay">
-        <DrawerHeader>
+      <DrawerPanel side="end" size="sm" variant="inline" data-workflow-history="">
+        <DrawerHeader data-workflow-history-header="">
           <DrawerHeaderContent>
-            <DrawerTitle>{t("workflows.quick_actions.view_change_history")}</DrawerTitle>
+            <DrawerTitle data-workflow-history-title="">{t("common.change_history")}</DrawerTitle>
           </DrawerHeaderContent>
-          <DrawerHeaderActions side="end">
+          <DrawerHeaderActions side="end" data-workflow-history-actions="">
             <ActivitySortRoot
               sortOrder={direction === "asc" ? E_SORT_ORDER.ASC : E_SORT_ORDER.DESC}
               toggleSort={() => setDirection((value) => (value === "asc" ? "desc" : "asc"))}
@@ -188,42 +235,67 @@ export const WorkflowHistory = observer(function WorkflowHistory({
               size="sm"
               variant="ghost"
               aria-label={t("close")}
-              icon={<X className="size-4" />}
+              icon={<CloseOutline className="size-3.5" />}
               onClick={onClose}
             />
           </DrawerHeaderActions>
         </DrawerHeader>
-        <DrawerBody>
-          <div className="space-y-5">
-            {entries.map((entry) => (
-              <div key={entry.id} className="flex items-start gap-3">
-                <History className="mt-0.5 size-4 shrink-0 text-tertiary" />
-                <div className="min-w-0 space-y-1 text-body-xs-regular text-primary">
-                  <p>
-                    {entry.actor_id ? (
-                      <Link
-                        className="mr-1 font-medium hover:underline"
-                        to={`/${workspaceSlug}/profile/${entry.actor_id}/`}
-                      >
-                        {entry.actor_name}
-                      </Link>
-                    ) : (
-                      <span className="mr-1 font-medium">{entry.actor_name}</span>
+        <DrawerBody data-workflow-history-body="">
+          <div>
+            <ol className="m-0 list-none p-0">
+              {entries.map((entry) => {
+                const Icon = getHistoryIcon(entry);
+                return (
+                  <li
+                    key={entry.id}
+                    className={`relative flex items-start gap-2 text-caption-sm-regular text-secondary ${styles.activity}`}
+                  >
+                    {entries.length > 1 && (
+                      <span aria-hidden="true" className={`absolute left-[13px] w-px bg-layer-3 ${styles.connector}`} />
                     )}
-                    {t(`web.workflow_ui.history.${entry.action}`, {
-                      state: entry.data.state_name || t("web.workflow_ui.project_default"),
-                      source: entry.data.source_name ?? "",
-                      destination: entry.data.destination_name ?? "",
-                      value: t(entry.data.value ? "web.workflow_ui.enabled_value" : "web.workflow_ui.disabled_value"),
-                    })}
-                  </p>
-                  <HistorySnapshot entry={entry} />
-                  <time className="text-caption-md-regular text-tertiary" dateTime={entry.created_at}>
-                    {new Date(entry.created_at).toLocaleString()}
-                  </time>
-                </div>
-              </div>
-            ))}
+                    <div
+                      aria-hidden="true"
+                      className="z-[4] mt-0.5 flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-subtle bg-layer-2 text-secondary shadow-raised-100"
+                    >
+                      <Icon className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1 break-words">
+                      <p className="line-clamp-2">
+                        {entry.actor_id ? (
+                          <Link
+                            className="mr-1 font-medium text-primary hover:underline"
+                            to={`/${workspaceSlug}/profile/${entry.actor_id}/`}
+                          >
+                            {entry.actor_name}
+                          </Link>
+                        ) : (
+                          <span className="mr-1 font-medium text-primary">{entry.actor_name}</span>
+                        )}
+                        {t(`web.workflow_ui.history.${entry.action}`, {
+                          state: entry.data.state_name || t("web.workflow_ui.project_default"),
+                          source: entry.data.source_name ?? "",
+                          destination: entry.data.destination_name ?? "",
+                          value: t(
+                            entry.data.value ? "web.workflow_ui.enabled_value" : "web.workflow_ui.disabled_value"
+                          ),
+                        })}
+                      </p>
+                      <HistorySnapshot entry={entry} />
+                      <Tooltip
+                        label={`${renderFormattedDate(entry.created_at)}, ${renderFormattedTime(entry.created_at)}`}
+                      >
+                        <time
+                          className="mt-1 block w-fit cursor-help text-caption-sm-regular font-medium text-tertiary"
+                          dateTime={entry.created_at}
+                        >
+                          {calculateTimeAgo(entry.created_at)}
+                        </time>
+                      </Tooltip>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
             {!isValidating && !entries.length && !error && (
               <p className="text-body-xs-regular text-tertiary">{t("web.workflow_ui.no_history")}</p>
             )}

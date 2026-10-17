@@ -168,6 +168,7 @@ catalog:
   "sanitize-html": "2.18.0"
   "serve": "14.2.6"
   "sharp": "^0.35.5"
+  "shiki": "3.13.0"
   "smooth-scroll-into-view-if-needed": "^2.0.2"
   "storybook": "10.4.6"
   "swr": "2.5.1"

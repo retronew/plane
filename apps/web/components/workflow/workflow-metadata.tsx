@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import {
@@ -20,12 +20,16 @@ import { sortStates } from "@plane/utils";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
 
 export function WorkflowMetadata({
+  open = true,
+  onOpenChangeComplete,
   workflow,
   projectId,
   workspaceSlug,
   onClose,
   onPreview,
 }: {
+  open?: boolean;
+  onOpenChangeComplete?: (open: boolean) => void;
   workflow?: TProjectWorkflow;
   projectId: string;
   workspaceSlug: string;
@@ -39,6 +43,13 @@ export function WorkflowMetadata({
     [description, setDescription] = useState(workflow?.description ?? ""),
     [states, setStates] = useState(workflow?.states.map((state) => state.id) ?? []),
     [busy, setBusy] = useState(false);
+  // A conditionally mounted, initially open Base UI root skips its enter transition.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // Synchronize Base UI's external transition lifecycle: the root must commit closed before opening.
+    // eslint-disable-next-line react/set-state-in-effect
+    setMounted(true);
+  }, []);
   const allStates = sortStates(
     (getProjectStateIds(projectId) ?? [])
       .map((id) => getStateById(id))
@@ -86,9 +97,10 @@ export function WorkflowMetadata({
   };
   return (
     <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open && !busy) onClose();
+      open={mounted && open}
+      onOpenChangeComplete={onOpenChangeComplete}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !busy) onClose();
       }}
     >
       <DialogContent size="sm">

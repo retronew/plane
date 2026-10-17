@@ -365,6 +365,15 @@ export const coreRoutes: RouteConfigEntry[] = [
               ":workspaceSlug/settings/projects/:projectId/issue-types",
               "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/page.tsx"
             ),
+            // Project Templates
+            route(
+              ":workspaceSlug/settings/projects/:projectId/templates",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/templates/list.tsx"
+            ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/templates/:templateKind/:templateId?",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/templates/editor.tsx"
+            ),
             // Project Automations
             route(
               ":workspaceSlug/settings/projects/:projectId/workflows",

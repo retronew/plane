@@ -6,6 +6,7 @@
 
 import { useParams } from "react-router";
 import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
+import { getPageTemplatePatch } from "@/components/settings/workspace/configuration/template-application";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -36,6 +37,7 @@ import { AccessField } from "@/components/common/access-field";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 
 type Props = {
+  projectId: string;
   formData: Partial<TPage>;
   handleFormData: <T extends keyof TPage>(key: T, value: TPage[T]) => void;
   handleModalClose: () => void;
@@ -53,7 +55,7 @@ const PAGE_ACCESS_SPECIFIERS: {
 
 export function PageForm(props: Props) {
   const { workspaceSlug = "" } = useParams();
-  const { formData, handleFormData, handleModalClose, handleFormSubmit } = props;
+  const { projectId, formData, handleFormData, handleModalClose, handleFormSubmit } = props;
   // hooks
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
@@ -152,11 +154,14 @@ export function PageForm(props: Props) {
           <div className="mt-5">
             <TemplatePicker
               workspaceSlug={workspaceSlug}
+              projectId={projectId}
               kind="page"
               disabled={isSubmitting}
               onApply={(template) => {
-                handleFormData("name", template.title);
-                handleFormData("description_html", template.description_html);
+                const patch = getPageTemplatePatch(template);
+                handleFormData("name", patch.name);
+                handleFormData("description_html", patch.description_html);
+                if (patch.logo_props !== undefined) handleFormData("logo_props", patch.logo_props);
               }}
             />
           </div>

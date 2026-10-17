@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { History, Plus, Trash2 } from "lucide-react";
@@ -11,6 +11,7 @@ import { useTranslation } from "@plane/i18n";
 import type { TWorkflowExecution, TWorkflowScript, TWorkflowScriptVersion } from "@plane/types";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
+import { ScriptEditor } from "./script-editor";
 
 const CAPABILITIES = [
   "getWorkItem",
@@ -79,6 +80,7 @@ export function WorkflowExecutions({
   const [selected, setSelected] = useState<TWorkflowExecution | null>(null),
     [busy, setBusy] = useState(false);
   const [resolution, setResolution] = useState<"completed" | "abandoned" | null>(null),
+    [resolutionOpen, setResolutionOpen] = useState(false),
     [note, setNote] = useState("");
   const resolve = async () => {
     if (!selected || !resolution || !note.trim()) return;
@@ -87,7 +89,7 @@ export function WorkflowExecutions({
       setSelected(
         await store.service.resolveExecution(workspaceSlug, projectId, selected.id, { resolution, note: note.trim() })
       );
-      setResolution(null);
+      setResolutionOpen(false);
       setNote("");
       await mutate();
     } catch {
@@ -224,7 +226,10 @@ export function WorkflowExecutions({
                   variant="secondary"
                   disabled={busy || !note.trim()}
                   label={t("web.workflow_runner.confirm_completed")}
-                  onClick={() => setResolution("completed")}
+                  onClick={() => {
+                    setResolution("completed");
+                    setResolutionOpen(true);
+                  }}
                 />
                 <Button
                   stretch="auto"
@@ -232,7 +237,10 @@ export function WorkflowExecutions({
                   variant="secondary"
                   disabled={busy || !note.trim()}
                   label={t("web.workflow_runner.confirm_abandoned")}
-                  onClick={() => setResolution("abandoned")}
+                  onClick={() => {
+                    setResolution("abandoned");
+                    setResolutionOpen(true);
+                  }}
                 />
               </div>
             </div>
@@ -240,8 +248,8 @@ export function WorkflowExecutions({
         </>
       )}
       <ConfirmDialog
-        isOpen={!!resolution}
-        handleClose={() => setResolution(null)}
+        isOpen={resolutionOpen}
+        handleClose={() => setResolutionOpen(false)}
         handleSubmit={resolve}
         isSubmitting={busy}
         title={t(
@@ -254,6 +262,8 @@ export function WorkflowExecutions({
 }
 
 export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: string; projectId: string }) {
+  const sourceId = useId();
+  const testContextId = useId();
   const store = useProjectWorkflow(projectId),
     { t } = useTranslation();
   const {
@@ -447,15 +457,15 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
             }}
           />
         </div>
-        <label className="block space-y-2 text-body-xs-medium">
+        <label htmlFor={sourceId} className="block space-y-2 text-body-xs-medium">
           {t("web.workflow_runner.source")}
-          <textarea
+          <ScriptEditor
+            id={sourceId}
             aria-label={t("web.workflow_runner.source")}
-            className="font-mono min-h-64 w-full rounded-md border border-subtle bg-layer-1 p-3 text-body-xs-regular"
-            spellCheck={false}
+            language="javascript"
             disabled={busy}
             value={source}
-            onChange={(event) => setSource(event.target.value)}
+            onChange={setSource}
           />
         </label>
         <fieldset disabled={busy} className="space-y-2">
@@ -536,14 +546,19 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
             disabled={busy}
             onChange={(event) => setIssueId(event.target.value)}
           />
-          <label className="block text-body-xs-regular">
+          <label htmlFor={testContextId} className="block text-body-xs-regular">
             {t("web.workflow_runner.test_context")}
-            <textarea
-              className="font-mono mt-2 min-h-20 w-full rounded border border-subtle bg-layer-2 p-2"
-              value={testContext}
-              disabled={busy}
-              onChange={(event) => setTestContext(event.target.value)}
-            />
+            <div className="mt-2">
+              <ScriptEditor
+                id={testContextId}
+                aria-label={t("web.workflow_runner.test_context")}
+                language="json"
+                compact
+                value={testContext}
+                disabled={busy}
+                onChange={setTestContext}
+              />
+            </div>
           </label>
           <p className="text-caption-md-regular text-tertiary">{t("web.workflow_runner.test_hint")}</p>
           <Button

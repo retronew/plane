@@ -67,6 +67,7 @@
     "react-router": "catalog:",
     "recharts": "catalog:",
     "serve": "catalog:",
+    "shiki": "catalog:",
     "smooth-scroll-into-view-if-needed": "catalog:",
     "swr": "catalog:",
     "use-font-face-observer": "catalog:",

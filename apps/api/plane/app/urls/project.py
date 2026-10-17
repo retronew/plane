@@ -19,9 +19,25 @@ from plane.app.views import (
     ProjectArchiveUnarchiveEndpoint,
     ProjectMemberPreferenceEndpoint,
 )
+from plane.app.views.workspace.configuration import ProjectTemplateEndpoint, ProjectTemplateOptionsEndpoint
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/templates/",
+        ProjectTemplateEndpoint.as_view(),
+        name="project-templates",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/templates/<uuid:pk>/",
+        ProjectTemplateEndpoint.as_view(),
+        name="project-template-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/template-options/",
+        ProjectTemplateOptionsEndpoint.as_view(),
+        name="project-template-options",
+    ),
     path(
         "workspaces/<str:slug>/projects/",
         ProjectViewSet.as_view({"get": "list", "post": "create"}),

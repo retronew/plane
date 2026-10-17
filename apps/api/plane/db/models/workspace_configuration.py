@@ -57,7 +57,15 @@ class WorkspaceTemplate(BaseModel):
                 Lower("name"),
                 "workspace",
                 "kind",
-                condition=Q(deleted_at__isnull=True),
+                condition=Q(deleted_at__isnull=True, project__isnull=True),
                 name="unique_workspace_template",
+            ),
+            models.UniqueConstraint(
+                Lower("name"),
+                "workspace",
+                "project",
+                "kind",
+                condition=Q(deleted_at__isnull=True, project__isnull=False),
+                name="unique_project_template",
             )
         ]

@@ -83,9 +83,9 @@ class IssueProjectLiteSerializer(BaseSerializer):
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
 class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
-    from plane.app.serializers.template_configuration import TemplateChildSerializer
+    from plane.app.serializers.template_configuration import WorkItemTemplateChildSerializer
 
-    template_children = TemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
+    template_children = WorkItemTemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
 
     # ids
     type_id = serializers.PrimaryKeyRelatedField(
@@ -136,6 +136,19 @@ class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
     def validate(self, attrs):
         if self.instance and "template_children" in attrs:
             raise serializers.ValidationError({"template_children": "Only supported when creating a work item."})
+        if "template_children" in attrs:
+            from plane.app.serializers.template_configuration import validate_work_item_template_references
+            from plane.db.models import Project
+
+            project = Project.objects.get(pk=self.context["project_id"])
+            children = attrs["template_children"]
+            validate_work_item_template_references({"children": children}, project)
+            validated_children = []
+            for child in children:
+                child_serializer = IssueCreateSerializer(data=child, context=self.context)
+                child_serializer.is_valid(raise_exception=True)
+                validated_children.append(dict(child_serializer.validated_data))
+            attrs["template_children"] = validated_children
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
 
@@ -288,7 +301,14 @@ class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
                 pass
 
         for child, prepared in zip(children, self._workflow_children_prepared, strict=True):
-            child_issue = Issue.objects.create(parent=issue, project_id=project_id, workspace_id=workspace_id, **child)
+            # The workflow mixin prepared and verified every child before any writes.
+            # Reuse the normal creation path for assignees, labels and default rules,
+            # without running workflow preparation again inside the transaction.
+            child_serializer = IssueCreateSerializer(context=self.context)
+            child_serializer._workflow_children_prepared = []
+            child_issue = child_serializer.create(
+                {**child, "parent": issue, "created_by_id": created_by_id, "updated_by_id": updated_by_id}
+            )
             finish_workflow_write(prepared, child_issue, actor=getattr(self.context.get("request"), "user", None))
         return issue
 

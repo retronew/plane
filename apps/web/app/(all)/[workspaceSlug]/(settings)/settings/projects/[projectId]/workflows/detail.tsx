@@ -1,5 +1,7 @@
+import { useParams } from "react-router";
 import { WorkflowSettings } from "@/components/workflow/settings";
 
 export default function WorkflowDetailPage() {
-  return <WorkflowSettings detail />;
+  const { workflowId } = useParams();
+  return <WorkflowSettings key={workflowId} detail />;
 }

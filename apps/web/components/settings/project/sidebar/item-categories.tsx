@@ -5,7 +5,6 @@
  */
 
 import { observer } from "mobx-react";
-import { Shapes } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useParams } from "react-router";
 // plane imports
@@ -73,16 +72,6 @@ export const ProjectSettingsSidebarItemCategories = observer(function ProjectSet
                   />
                 );
               })}
-              {accessibleItems.some((item) => item.key === "workflows") && (
-                <SettingsSidebarItem
-                  className="h-8 rounded-md py-0 text-13 [&_svg]:size-4"
-                  as="link"
-                  href={`/${workspaceSlug}/settings/projects/${projectId}/issue-types/`}
-                  isActive={pathname.includes(`/settings/projects/${projectId}/issue-types/`)}
-                  icon={Shapes}
-                  label={t("web.workflow_ui.issue_types")}
-                />
-              )}
             </div>
           </div>
         );

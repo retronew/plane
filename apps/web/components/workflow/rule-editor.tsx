@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -20,7 +21,7 @@ import { WorkflowStepsEditor } from "./steps-editor";
 
 export type DraftRule = Omit<TWorkflowTransition, "id"> & { id?: string };
 export function WorkflowRuleEditor({
-  draft,
+  draft: currentDraft,
   onChange,
   onSave,
   workflow,
@@ -37,6 +38,10 @@ export function WorkflowRuleEditor({
   busy: boolean;
 }) {
   const { t } = useTranslation();
+  // Keep the edited form in the panel until Base UI finishes its exit transition.
+  const [lastDraft, setLastDraft] = useState(currentDraft);
+  if (currentDraft && currentDraft !== lastDraft) setLastDraft(currentDraft);
+  const draft = currentDraft ?? lastDraft;
   const approval = draft?.kind === "approval";
   const sameSourceRules = workflow.transitions.filter(
     (rule) => rule.source_id === draft?.source_id && rule.id !== draft?.id
@@ -46,7 +51,10 @@ export function WorkflowRuleEditor({
     (!approval || (!!draft.reject_state_id && (draft.approver_mode !== "explicit" || !!draft.approver_ids?.length)));
   return (
     <Drawer
-      open={!!draft}
+      open={!!currentDraft}
+      onOpenChangeComplete={(open) => {
+        if (!open) setLastDraft(null);
+      }}
       onOpenChange={(open) => {
         if (!open && !busy) onChange(null);
       }}

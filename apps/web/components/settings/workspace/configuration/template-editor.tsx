@@ -19,6 +19,7 @@ import { SettingsHeading } from "@/components/settings/heading";
 import { RichTextEditor } from "@/components/editor/rich-text";
 import {
   configurationKey,
+  projectConfigurationKey,
   workspaceConfigurationService as service,
   type WorkspaceTemplate,
   type TemplateConfiguration,
@@ -80,7 +81,13 @@ export function TemplateEditor() {
     setMessage("");
     try {
       await service.save(workspaceSlug, "templates", draft);
-      await mutate(configurationKey(workspaceSlug, "templates"));
+      await Promise.all([
+        mutate(configurationKey(workspaceSlug, "templates")),
+        ...(draft.project ? [mutate(projectConfigurationKey(workspaceSlug, draft.project))] : []),
+        ...(existing?.project && existing.project !== draft.project
+          ? [mutate(projectConfigurationKey(workspaceSlug, existing.project))]
+          : []),
+      ]);
       back();
     } catch {
       setMessage(t("web.configuration_save_error"));

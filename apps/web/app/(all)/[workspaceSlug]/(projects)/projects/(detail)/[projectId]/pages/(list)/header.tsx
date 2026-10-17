@@ -5,6 +5,7 @@
  */
 
 import useSWR from "swr";
+import { isTemplateAvailable } from "@/components/settings/workspace/configuration/template-application";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import {
   configurationKey,
@@ -99,7 +100,7 @@ export const PagesListHeader = observer(function PagesListHeader() {
       </Header.LeftItem>
       {canCurrentUserCreatePage && (
         <Header.RightItem>
-          {templates?.some((template) => template.kind === "page") && (
+          {templates?.some((template) => isTemplateAvailable(template, "page", projectId?.toString())) && (
             <Button
               variant="secondary"
               size="md"

@@ -1,0 +1,92 @@
+:global([data-workflow-history]) {
+  width: 368px;
+  padding-block: 8px 16px;
+  translate: 0;
+  /* A fast start and a soft landing, following the feel of Apple's ease-out motion. */
+  transition:
+    translate 400ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base UI keeps the popup mounted until these transitions finish. Use the
+   individual translate property so the slide does not depend on Tailwind's
+   generated state utilities or interfere with the swipe transform. */
+:global([data-workflow-history])[data-starting-style],
+:global([data-workflow-history])[data-ending-style] {
+  translate: 100% 0;
+}
+
+/* DrawerPanel supplies a padded DrawerContent; this timeline owns its spacing. */
+:global([data-workflow-history]) > [data-drawer-content] {
+  gap: 0;
+  padding: 0;
+}
+
+:global([data-workflow-history]) :global([data-workflow-history-header]) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 16px;
+  padding-top: 8px;
+}
+
+:global([data-workflow-history]) :global([data-workflow-history-title]) {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.54;
+}
+
+:global([data-workflow-history]) :global([data-workflow-history-actions]) {
+  gap: 8px;
+}
+
+:global([data-workflow-history-actions]) button {
+  width: 24px;
+  height: 24px;
+}
+
+:global([data-workflow-history-actions]) svg {
+  width: 14px;
+  height: 14px;
+}
+
+:global([data-workflow-history]) :global([data-workflow-history-body]) {
+  padding-inline: 16px;
+}
+
+:global([data-workflow-history])[data-ending-style] {
+  transition-duration: 220ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.activity {
+  padding: 12px 0;
+}
+
+.activity:first-child {
+  padding-top: 0;
+}
+
+.activity:last-child {
+  padding-bottom: 0;
+}
+
+.connector {
+  top: 0;
+  bottom: 0;
+}
+
+.activity:first-child .connector {
+  top: 16px;
+}
+
+.activity:last-child .connector {
+  bottom: calc(100% - 28px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global([data-workflow-history]) {
+    transition: none;
+  }
+}

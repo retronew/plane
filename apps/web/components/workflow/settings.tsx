@@ -1,17 +1,25 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 import { Link, useParams } from "react-router";
-import { History, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { ArrowUpRight, History, MoreHorizontal, Pause, Pencil, Play, Plus, Shapes, Trash2 } from "lucide-react";
 import { WorkflowsOutline } from "@makeplane/propel/icons";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { InputField } from "@makeplane/propel/components/input-field";
+import { Banner } from "@makeplane/propel/components/banner";
+import { Badge } from "@makeplane/propel/components/badge";
+import { ExpandableSearch } from "@makeplane/propel/components/expandable-search";
 import { Switch } from "@makeplane/propel/components/switch";
+import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
+import { ActionMenuContent } from "@plane/blocks/common";
 import { Breadcrumbs } from "@plane/blocks/breadcrumb";
+import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { StateGroupIcon } from "@plane/blocks/icons";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
-import type { TProjectWorkflow, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
+import type { TLogoProps, TProjectWorkflow, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import { SettingsPageHeader } from "@/components/settings/page-header";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
 import { SettingsHeading } from "@/components/settings/heading";
@@ -25,6 +33,7 @@ import type { DraftRule } from "./rule-editor";
 import { WorkflowStateRules } from "./state-rules";
 import { WorkflowImpactDialog } from "./impact-dialog";
 import { WorkflowMetadata } from "./workflow-metadata";
+import { WorkflowSwitcher } from "./workflow-switcher";
 
 export const WorkflowSettings = observer(function WorkflowSettings({ detail = false }: { detail?: boolean }) {
   const { workspaceSlug = "", projectId = "", workflowId = "default" } = useParams();
@@ -44,6 +53,14 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
     [historyId, setHistoryId] = useState<string | null>(null),
     [metadata, setMetadata] = useState<TProjectWorkflow | "new" | null>(null),
     [impact, setImpact] = useState<{ request: TWorkflowImpactRequest; preview: TWorkflowImpact } | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [metadataOpen, setMetadataOpen] = useState(false);
+  const [impactOpen, setImpactOpen] = useState(false);
+  const editMetadata = (value: TProjectWorkflow | "new") => {
+    setMetadata(value);
+    setMetadataOpen(true);
+  };
+  const [showTypeHint, setShowTypeHint] = useState(true);
   const [search, setSearch] = useState(""),
     [stateFilter, setStateFilter] = useState(""),
     [typeFilter, setTypeFilter] = useState(""),
@@ -78,6 +95,7 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
     setBusy(true);
     try {
       setImpact({ request, preview: await store.service.preview(workspaceSlug, projectId, request) });
+      setImpactOpen(true);
     } catch (error) {
       reportError(error);
     } finally {
@@ -125,6 +143,15 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
     );
   return (
     <SettingsContentWrapper
+      aside={
+        <WorkflowHistory
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          projectId={projectId}
+          workspaceSlug={workspaceSlug}
+          workflowId={historyId ?? "default"}
+        />
+      }
       header={
         <SettingsPageHeader
           leftItem={
@@ -140,9 +167,7 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
               />
               {detail && (
                 <Breadcrumbs.Item
-                  component={
-                    <BreadcrumbLink label={name} icon={<WorkflowsOutline className="size-4 text-tertiary" />} />
-                  }
+                  component={<WorkflowSwitcher workflows={workflows} currentId={workflowId} base={base} />}
                 />
               )}
             </Breadcrumbs>
@@ -176,8 +201,8 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
         </output>
       ) : (
         <>
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            {detail && canManage && workflow?.workflow_id && (
+          {detail && canManage && workflow?.workflow_id && (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
               <Link
                 className="inline-flex items-center gap-2 rounded px-2 py-1 text-body-xs-medium text-accent-primary hover:underline"
                 to={`/${workspaceSlug}/settings/projects/${projectId}/runner/?tab=executions&workflow_id=${workflow.workflow_id}`}
@@ -185,16 +210,10 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
                 <History className="size-3.5" />
                 {t("web.workflow_runner.view_executions")}
               </Link>
-            )}
-            <Link
-              className="ml-auto rounded px-2 py-1 text-body-xs-medium text-accent-primary hover:underline"
-              to={`/${workspaceSlug}/settings/projects/${projectId}/issue-types/`}
-            >
-              {t("web.workflow_ui.issue_types")}
-            </Link>
-          </div>
+            </div>
+          )}
           {!detail ? (
-            <div className="mt-6 space-y-6">
+            <div className="mt-6 flex flex-col gap-12">
               <SettingsBoxedControlItem
                 title={t("web.workflow_ui.enable")}
                 description={t("web.workflow_ui.enable_description")}
@@ -212,166 +231,273 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
                   />
                 }
               />
-              <div className="flex flex-wrap gap-2">
-                <InputField
-                  orientation="vertical"
-                  size="md"
-                  aria-label={t("web.workflow_ui.search")}
-                  placeholder={t("web.workflow_ui.search")}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-                <select
-                  className="rounded border border-subtle bg-layer-1 px-2 text-body-xs-regular"
-                  aria-label={t("web.workflow_ui.filter_state")}
-                  value={stateFilter}
-                  onChange={(event) => setStateFilter(event.target.value)}
-                >
-                  <option value="">{t("web.workflow_ui.all_states")}</option>
+              <section className="flex flex-col gap-4">
+                <h4 className="text-body-md-medium text-primary">{label}</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ExpandableSearch
+                    size="md"
+                    aria-label={t("web.workflow_ui.search")}
+                    placeholder={t("web.workflow_ui.search")}
+                    clearLabel={t("common.clear")}
+                    value={search}
+                    onValueChange={(value) => setSearch(value ?? "")}
+                  />
                   {[
-                    ...new Map(workflows.flatMap((item) => item.states).map((state) => [state.id, state])).values(),
-                  ].map((state) => (
-                    <option key={state.id} value={state.id}>
-                      {state.name}
-                    </option>
+                    {
+                      label: t("web.workflow_ui.filter_state"),
+                      icon: <FilterFieldIcon field="state" />,
+                      value: stateFilter,
+                      onChange: setStateFilter,
+                      options: [
+                        {
+                          value: "",
+                          label: t("web.workflow_ui.all_states"),
+                          icon: <FilterFieldIcon field="state" />,
+                        },
+                        ...[
+                          ...new Map(
+                            workflows.flatMap((item) => item.states).map((state) => [state.id, state])
+                          ).values(),
+                        ].map((state) => ({
+                          value: state.id,
+                          label: state.name,
+                          icon: <StateGroupIcon stateGroup={state.group} color={state.color} className="size-3.5" />,
+                        })),
+                      ],
+                    },
+                    {
+                      label: t("web.workflow_ui.filter_type"),
+                      icon: <Shapes className="size-3.5 shrink-0 text-icon-tertiary" aria-hidden="true" />,
+                      value: typeFilter,
+                      onChange: setTypeFilter,
+                      options: [
+                        {
+                          value: "",
+                          label: t("web.workflow_ui.all_types"),
+                          icon: <Shapes className="size-3.5 shrink-0 text-icon-tertiary" aria-hidden="true" />,
+                        },
+                        ...(store.issueTypes[projectId]?.results ?? []).map((type) => ({
+                          value: type.id,
+                          label: type.name,
+                          icon: type.logo_props?.in_use ? (
+                            <span className="shrink-0" aria-hidden="true">
+                              <Logo logo={type.logo_props as TLogoProps} size={14} />
+                            </span>
+                          ) : (
+                            <Shapes className="size-3.5 shrink-0 text-icon-tertiary" aria-hidden="true" />
+                          ),
+                        })),
+                      ],
+                    },
+                    {
+                      label: t("common.sort.label"),
+                      icon: <FilterFieldIcon field="order_by" />,
+                      value: sort,
+                      onChange: setSort,
+                      options: [
+                        {
+                          value: "name",
+                          label: t("web.workflow_ui.sort_name"),
+                          icon: <FilterFieldIcon field="asc" />,
+                        },
+                        {
+                          value: "-name",
+                          label: t("web.workflow_ui.sort_name_desc"),
+                          icon: <FilterFieldIcon field="desc" />,
+                        },
+                        {
+                          value: "status",
+                          label: t("web.workflow_ui.columns.status"),
+                          icon: <FilterFieldIcon field="status" />,
+                        },
+                      ],
+                    },
+                  ].map((filter) => (
+                    <Select<string>
+                      key={filter.label}
+                      items={filter.options}
+                      value={filter.value}
+                      onValueChange={(value) => {
+                        if (value !== null) filter.onChange(value);
+                      }}
+                    >
+                      <SelectTrigger
+                        size="md"
+                        variant="secondary"
+                        width="fit"
+                        icon={filter.icon}
+                        aria-label={filter.label}
+                      />
+                      <SelectContent sizing="auto">
+                        <SelectList>
+                          {filter.options.map((option) => (
+                            <SelectItem key={option.value} {...option} />
+                          ))}
+                        </SelectList>
+                      </SelectContent>
+                    </Select>
                   ))}
-                </select>
-                <select
-                  className="rounded border border-subtle bg-layer-1 px-2 text-body-xs-regular"
-                  aria-label={t("web.workflow_ui.filter_type")}
-                  value={typeFilter}
-                  onChange={(event) => setTypeFilter(event.target.value)}
-                >
-                  <option value="">{t("web.workflow_ui.all_types")}</option>
-                  {store.issueTypes[projectId]?.results.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="rounded border border-subtle bg-layer-1 px-2 text-body-xs-regular"
-                  aria-label={t("common.sort.label")}
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                >
-                  <option value="name">{t("web.workflow_ui.sort_name")}</option>
-                  <option value="-name">{t("web.workflow_ui.sort_name_desc")}</option>
-                  <option value="status">{t("web.workflow_ui.columns.status")}</option>
-                </select>
-                {canManage && (
-                  <Button
-                    stretch="auto"
-                    variant="primary"
-                    size="sm"
-                    icon={<Plus className="size-3.5" />}
-                    label={t("web.workflow_ui.new_workflow")}
-                    onClick={() => setMetadata("new")}
+                  {canManage && (
+                    <div className="ml-auto flex shrink-0 items-center">
+                      <Button
+                        stretch="auto"
+                        variant="primary"
+                        size="sm"
+                        icon={<Plus className="size-3.5" />}
+                        label={t("web.workflow_ui.new_workflow")}
+                        onClick={() => editMetadata("new")}
+                      />
+                    </div>
+                  )}
+                </div>
+                {showTypeHint && (
+                  <Banner
+                    placement="inline"
+                    variant="warning"
+                    role="alert"
+                    description={t("web.workflow_ui.types_workflow_hint")}
+                    onDismiss={() => setShowTypeHint(false)}
+                    dismissLabel={t("close")}
+                    render={<div className="[&_[data-slot=banner-icon]]:self-center" />}
+                    actions={
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        stretch="auto"
+                        label={t("web.workflow_ui.type_settings")}
+                        icon={<ArrowUpRight className="size-3.5" />}
+                        iconPosition="end"
+                        nativeButton={false}
+                        render={<Link to={`/${workspaceSlug}/settings/projects/${projectId}/issue-types/`} />}
+                      />
+                    }
                   />
                 )}
-              </div>
-              <div className="overflow-x-auto rounded-lg border border-subtle">
-                <table className="w-full text-left text-body-xs-regular">
-                  <thead className="bg-layer-1 text-tertiary">
-                    <tr>
-                      {["name", "status", "states", "applies_to"].map((key) => (
-                        <th key={key} className="h-9 px-4 py-1 font-medium">
-                          {t(`web.workflow_ui.columns.${key}`)}
+                <div className="overflow-x-auto rounded-lg border border-subtle">
+                  <table className="w-full text-left text-body-xs-regular">
+                    <thead className="bg-layer-1 text-tertiary">
+                      <tr>
+                        {["name", "status", "states", "applies_to"].map((key) => (
+                          <th key={key} className="h-9 px-4 py-1 font-medium">
+                            {t(`web.workflow_ui.columns.${key}`)}
+                          </th>
+                        ))}
+                        <th className="h-9 py-1">
+                          <span className="sr-only">{t("web.workflow_ui.actions")}</span>
                         </th>
-                      ))}
-                      <th className="h-9 py-1">
-                        <span className="sr-only">{t("web.workflow_ui.actions")}</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((item) => (
-                      <tr key={item.id} className="border-t border-subtle hover:bg-layer-1">
-                        <td className="px-4 py-3">
-                          <Link to={`${base}${item.workflow_id ?? item.id}/`} className="font-medium hover:underline">
-                            {item.name || t("web.workflow_ui.default_name")}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3">
-                          {t(item.is_active ? "web.workflow_ui.active" : "web.workflow_ui.inactive")}
-                        </td>
-                        <td className="px-4 py-3 text-secondary">
-                          {item.is_default || item.id === "default"
-                            ? t("web.workflow_ui.all_states")
-                            : item.states.map((state) => state.name).join(", ")}
-                        </td>
-                        <td className="px-4 py-3 text-secondary">
-                          {item.is_default || item.id === "default"
-                            ? t("web.workflow_ui.unbound_types")
-                            : store.issueTypes[projectId]?.results
-                                .filter((type) => type.workflow_id === (item.workflow_id ?? item.id))
-                                .map((type) => type.name)
-                                .join(", ") || t("common.none")}
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-1">
-                            <IconButton
-                              variant="ghost"
-                              size="sm"
-                              icon={<History className="size-3.5" />}
-                              aria-label={t("workflows.quick_actions.view_change_history")}
-                              onClick={() => setHistoryId(item.workflow_id ?? item.id)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((item) => (
+                        <tr key={item.id} className="border-t border-subtle hover:bg-layer-1">
+                          <td className="px-4 py-3">
+                            <Link to={`${base}${item.workflow_id ?? item.id}/`} className="font-medium hover:underline">
+                              {item.name || t("web.workflow_ui.default_name")}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              size="xs"
+                              variant={item.is_active ? "success" : "neutral"}
+                              label={t(item.is_active ? "web.workflow_ui.active" : "web.workflow_ui.inactive")}
                             />
-                            {canManage && (
-                              <>
-                                <IconButton
-                                  variant="ghost"
-                                  size="sm"
-                                  disabled={busy}
-                                  icon={item.is_active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-                                  aria-label={t(
-                                    item.is_active ? "web.workflow_ui.disable" : "web.workflow_ui.enable_one"
-                                  )}
-                                  onClick={() =>
-                                    item.is_active
-                                      ? void perform(() =>
-                                          store.service.update(
-                                            workspaceSlug,
-                                            projectId,
-                                            { is_active: false, version: item.version },
-                                            item.workflow_id ?? item.id
-                                          )
-                                        )
-                                      : void preview({
-                                          operation: "enable",
-                                          workflow_id: item.workflow_id ?? item.id,
-                                          is_active: true,
-                                        })
-                                  }
-                                />
-                                <IconButton
-                                  variant="ghost"
-                                  size="sm"
-                                  icon={<Pencil className="size-3.5" />}
-                                  aria-label={t("edit")}
-                                  onClick={() => setMetadata(item)}
-                                />
-                                {!item.is_default && item.id !== "default" && (
+                          </td>
+                          <td className="px-4 py-3 text-secondary">
+                            {item.is_default || item.id === "default"
+                              ? t("web.workflow_ui.all_states")
+                              : item.states.map((state) => state.name).join(", ")}
+                          </td>
+                          <td className="px-4 py-3 text-secondary">
+                            {item.is_default || item.id === "default"
+                              ? t("web.workflow_ui.unbound_types")
+                              : store.issueTypes[projectId]?.results
+                                  .filter((type) => type.workflow_id === (item.workflow_id ?? item.id))
+                                  .map((type) => type.name)
+                                  .join(", ") || t("common.none")}
+                          </td>
+                          <td className="w-12 px-3 py-2 text-right">
+                            <Menu>
+                              <MenuTrigger
+                                render={
                                   <IconButton
                                     variant="ghost"
                                     size="sm"
-                                    disabled={busy}
-                                    icon={<Trash2 className="size-3.5" />}
-                                    aria-label={t("delete")}
-                                    onClick={() =>
-                                      void preview({ operation: "delete", workflow_id: item.workflow_id ?? item.id })
-                                    }
+                                    icon={<MoreHorizontal className="size-4" />}
+                                    aria-label={`${t("aria_labels.common.more_actions")} ${item.name || t("web.workflow_ui.default_name")}`}
                                   />
+                                }
+                              />
+                              <ActionMenuContent
+                                side="bottom"
+                                align="end"
+                                heightBehavior="flip"
+                                collisionAvoidance={{ side: "none", align: "shift" }}
+                              >
+                                <MenuItem
+                                  icon={<History className="size-3.5" />}
+                                  label={t("workflows.quick_actions.view_change_history")}
+                                  onClick={() => {
+                                    setHistoryId(item.workflow_id ?? item.id);
+                                    setHistoryOpen(true);
+                                  }}
+                                />
+                                {canManage && (
+                                  <>
+                                    <MenuItem
+                                      disabled={busy}
+                                      icon={
+                                        item.is_active ? <Pause className="size-3.5" /> : <Play className="size-3.5" />
+                                      }
+                                      label={t(
+                                        item.is_active ? "web.workflow_ui.disable" : "web.workflow_ui.enable_one"
+                                      )}
+                                      onClick={() =>
+                                        item.is_active
+                                          ? void perform(() =>
+                                              store.service.update(
+                                                workspaceSlug,
+                                                projectId,
+                                                { is_active: false, version: item.version },
+                                                item.workflow_id ?? item.id
+                                              )
+                                            )
+                                          : void preview({
+                                              operation: "enable",
+                                              workflow_id: item.workflow_id ?? item.id,
+                                              is_active: true,
+                                            })
+                                      }
+                                    />
+                                    <MenuItem
+                                      icon={<Pencil className="size-3.5" />}
+                                      label={t("edit")}
+                                      onClick={() => editMetadata(item)}
+                                    />
+                                    {!item.is_default && item.id !== "default" && (
+                                      <MenuItem
+                                        disabled={busy}
+                                        variant="danger"
+                                        icon={<Trash2 className="size-3.5" />}
+                                        label={t("delete")}
+                                        onClick={() =>
+                                          void preview({
+                                            operation: "delete",
+                                            workflow_id: item.workflow_id ?? item.id,
+                                          })
+                                        }
+                                      />
+                                    )}
+                                  </>
                                 )}
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                              </ActionMenuContent>
+                            </Menu>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             </div>
           ) : workflow ? (
             <div className="mt-8 space-y-4">
@@ -384,7 +510,7 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
                       size="sm"
                       variant="ghost"
                       label={t("edit")}
-                      onClick={() => setMetadata(workflow)}
+                      onClick={() => editMetadata(workflow)}
                     />
                   )}
                   <IconButton
@@ -392,7 +518,10 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
                     variant="ghost"
                     icon={<History className="size-3.5" />}
                     aria-label={t("workflows.quick_actions.view_change_history")}
-                    onClick={() => setHistoryId(workflowId)}
+                    onClick={() => {
+                      setHistoryId(workflowId);
+                      setHistoryOpen(true);
+                    }}
                   />
                 </div>
               </div>
@@ -431,23 +560,18 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
           ) : (
             <p className="mt-6 text-body-xs-regular text-secondary">{t("web.workflow_ui.load_failed")}</p>
           )}
-          {historyId && (
-            <WorkflowHistory
-              open
-              onClose={() => setHistoryId(null)}
-              projectId={projectId}
-              workspaceSlug={workspaceSlug}
-              workflowId={historyId}
-            />
-          )}
           {metadata && (
             <WorkflowMetadata
               workflow={metadata === "new" ? undefined : metadata}
               projectId={projectId}
               workspaceSlug={workspaceSlug}
-              onClose={() => setMetadata(null)}
+              open={metadataOpen}
+              onClose={() => setMetadataOpen(false)}
+              onOpenChangeComplete={(open) => {
+                if (!open) setMetadata(null);
+              }}
               onPreview={(request) => {
-                setMetadata(null);
+                setMetadataOpen(false);
                 void preview(request);
               }}
             />
@@ -459,8 +583,12 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
               impact={impact.preview}
               projectId={projectId}
               workspaceSlug={workspaceSlug}
-              onClose={() => setImpact(null)}
-              onApplied={() => setImpact(null)}
+              open={impactOpen}
+              onClose={() => setImpactOpen(false)}
+              onApplied={() => setImpactOpen(false)}
+              onOpenChangeComplete={(open) => {
+                if (!open) setImpact(null);
+              }}
             />
           )}
         </>

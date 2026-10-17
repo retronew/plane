@@ -8,6 +8,7 @@
  */
 
 import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
+import { getWorkItemTemplatePatch } from "@/components/settings/workspace/configuration/template-application";
 import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -422,15 +423,23 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   projectId={projectId ?? undefined}
                   disabled={isDisabled}
                   onApply={(template) => {
-                    setValue("name", template.title, { shouldDirty: true });
-                    setValue("description_html", template.description_html, { shouldDirty: true });
-                    setValue("priority", template.priority, { shouldDirty: true });
-                    if (template.configuration?.state_id)
-                      setValue("state_id", template.configuration.state_id, { shouldDirty: true });
-                    setValue("assignee_ids", template.configuration?.assignee_ids ?? [], { shouldDirty: true });
-                    setValue("label_ids", template.configuration?.label_ids ?? [], { shouldDirty: true });
-                    setValue("module_ids", template.configuration?.module_ids ?? [], { shouldDirty: true });
-                    setValue("template_children", template.configuration?.children ?? [], { shouldDirty: true });
+                    const current = getValues();
+                    const typeId =
+                      template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
+                    const patch = getWorkItemTemplatePatch(
+                      template,
+                      current,
+                      workflowStore.resolve(projectId ?? "", typeId)
+                    );
+                    setValue("name", patch.name, { shouldDirty: true });
+                    setValue("description_html", patch.description_html, { shouldDirty: true });
+                    setValue("priority", patch.priority, { shouldDirty: true });
+                    if (patch.type_id !== undefined) setValue("type_id", patch.type_id, { shouldDirty: true });
+                    setValue("state_id", patch.state_id, { shouldDirty: true });
+                    setValue("assignee_ids", patch.assignee_ids, { shouldDirty: true });
+                    setValue("label_ids", patch.label_ids, { shouldDirty: true });
+                    setValue("module_ids", patch.module_ids, { shouldDirty: true });
+                    setValue("template_children", patch.template_children, { shouldDirty: true });
                     editorRef.current?.setEditorValue(template.description_html, true);
                     handleFormChange();
                   }}

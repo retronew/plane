@@ -88,7 +88,15 @@ type IssueRelation = {
 };
 
 export type TIssue = TBaseIssue & {
-  template_children?: { name: string; description_html: string }[];
+  template_children?: {
+    name: string;
+    description_html: string;
+    type_id?: string | null;
+    state_id?: string | null;
+    priority?: TIssuePriorities;
+    assignee_ids?: string[];
+    label_ids?: string[];
+  }[];
   description_html?: string;
   is_subscribed?: boolean;
   parent?: Partial<TBaseIssue>;

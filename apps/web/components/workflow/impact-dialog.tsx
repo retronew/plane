@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import {
   Dialog,
@@ -18,6 +18,8 @@ import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
 
 export function WorkflowImpactDialog({
+  open = true,
+  onOpenChangeComplete,
   request,
   impact,
   projectId,
@@ -25,6 +27,8 @@ export function WorkflowImpactDialog({
   onClose,
   onApplied,
 }: {
+  open?: boolean;
+  onOpenChangeComplete?: (open: boolean) => void;
   request: TWorkflowImpactRequest;
   impact: TWorkflowImpact;
   projectId: string;
@@ -38,6 +42,13 @@ export function WorkflowImpactDialog({
     [mapping, setMapping] = useState(impact.state_mapping ?? {}),
     [busy, setBusy] = useState(false),
     [changed, setChanged] = useState(false);
+  // Initialize the root closed so newly fetched previews animate in on first mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // Synchronize Base UI's external transition lifecycle: the root must commit closed before opening.
+    // eslint-disable-next-line react/set-state-in-effect
+    setMounted(true);
+  }, []);
   const workflow = store.lists[projectId]?.results.find(
     (item) => (item.workflow_id ?? item.id) === request.workflow_id
   );
@@ -72,9 +83,10 @@ export function WorkflowImpactDialog({
   };
   return (
     <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open && !busy) onClose();
+      open={mounted && open}
+      onOpenChangeComplete={onOpenChangeComplete}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && !busy) onClose();
       }}
     >
       <DialogContent size="sm">

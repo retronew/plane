@@ -15,10 +15,11 @@ type Props = {
   header?: React.ReactNode;
   hugging?: boolean;
   compact?: boolean;
+  aside?: React.ReactNode;
 };
 
 export function SettingsContentWrapper(props: Props) {
-  const { children, header, hugging = false, compact = false } = props;
+  const { children, header, hugging = false, compact = false, aside } = props;
 
   return (
     <div className="@container flex size-full grow flex-col overflow-hidden">
@@ -27,17 +28,20 @@ export function SettingsContentWrapper(props: Props) {
           <AppHeader header={header} />
         </div>
       )}
-      <ScrollArea orientation="vertical">
-        <div
-          className={cn("py-9", {
-            "w-full px-page-x lg:px-12": hugging,
-            "mx-auto w-full max-w-225 px-page-x @min-[58.95rem]:px-0": !hugging && !compact,
-            "mx-auto w-full max-w-200 px-page-x @min-[52.7rem]:px-0": !hugging && compact,
-          })}
-        >
-          {children}
-        </div>
-      </ScrollArea>
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <ScrollArea orientation="vertical">
+          <div
+            className={cn("py-9", {
+              "w-full px-page-x lg:px-12": hugging,
+              "mx-auto w-full max-w-225 px-page-x @min-[58.95rem]:px-0": !hugging && !compact,
+              "mx-auto w-full max-w-200 px-page-x @min-[52.7rem]:px-0": !hugging && compact,
+            })}
+          >
+            {children}
+          </div>
+        </ScrollArea>
+        {aside}
+      </div>
     </div>
   );
 }

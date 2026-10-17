@@ -15,10 +15,13 @@ from plane.db.models import (
     State,
     Label,
     Module,
+    IssueType,
 )
 from plane.app.serializers.template_configuration import (
     ProjectTemplateConfigurationSerializer,
     WorkItemTemplateConfigurationSerializer,
+    PageTemplateConfigurationSerializer,
+    validate_work_item_template_references,
 )
 from django.db.models import Q, Max
 import json
@@ -45,6 +48,14 @@ class CategorySerializer(serializers.ModelSerializer):
 class TemplateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100, trim_whitespace=True)
     description_html = serializers.CharField(max_length=100000, allow_blank=True, required=False)
+
+    def to_internal_value(self, data):
+        project = self.context.get("project")
+        if project and isinstance(data, dict):
+            if "project" in data and str(data["project"]) != str(project.id):
+                raise serializers.ValidationError({"project": "Template scope cannot be changed."})
+            data = {**data, "project": str(project.id)}
+        return super().to_internal_value(data)
 
     def validate_description_html(self, value):
         # Templates are portable text: never retain project-private asset/mention identifiers.
@@ -84,6 +95,11 @@ class TemplateSerializer(serializers.ModelSerializer):
         kind = attrs.get("kind", getattr(self.instance, "kind", "page"))
         project = attrs.get("project", getattr(self.instance, "project", None))
         workspace = self.context["workspace"]
+        if self.context.get("project"):
+            if kind not in ["work_item", "page"]:
+                raise serializers.ValidationError({"kind": "Only work item and page templates are supported."})
+            if self.instance and kind != self.instance.kind:
+                raise serializers.ValidationError({"kind": "Template kind cannot be changed."})
         if project and project.workspace_id != workspace.id:
             raise serializers.ValidationError({"project": "Project must belong to this workspace."})
         config = attrs.get("configuration", getattr(self.instance, "configuration", {}))
@@ -92,8 +108,7 @@ class TemplateSerializer(serializers.ModelSerializer):
         elif kind == "work_item":
             schema = WorkItemTemplateConfigurationSerializer(data=config)
         else:
-            attrs["configuration"] = {}
-            return attrs
+            schema = PageTemplateConfigurationSerializer(data=config)
         schema.is_valid(raise_exception=True)
         config = schema.validated_data
         if (
@@ -105,18 +120,10 @@ class TemplateSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError({"configuration": "Invalid project lead."})
         if kind == "work_item":
-            for key, model in [("state_id", State), ("label_ids", Label), ("module_ids", Module)]:
-                ids = [config[key]] if key == "state_id" and config[key] else (config[key] if key != "state_id" else [])
-                if ids and (not project or model.objects.filter(project=project, id__in=ids).count() != len(set(ids))):
-                    raise serializers.ValidationError({"configuration": "Invalid project references."})
-            if config["assignee_ids"] and (
-                not project
-                or ProjectMember.objects.filter(
-                    project=project, member_id__in=config["assignee_ids"], role__gte=15, is_active=True
-                ).count()
-                != len(set(config["assignee_ids"]))
-            ):
-                raise serializers.ValidationError({"configuration": "Invalid assignees."})
+            try:
+                validate_work_item_template_references(config, project)
+            except serializers.ValidationError as exc:
+                raise serializers.ValidationError({"configuration": exc.detail}) from exc
         attrs["configuration"] = json.loads(json.dumps(config, cls=DjangoJSONEncoder))
         return attrs
 
@@ -242,6 +249,86 @@ class ProjectCategoryEndpoint(WorkspaceConfigurationEndpoint):
 class WorkspaceTemplateEndpoint(WorkspaceConfigurationEndpoint):
     model = WorkspaceTemplate
     serializer = TemplateSerializer
+
+
+class ProjectTemplateEndpoint(BaseAPIView):
+    def project_for(self, slug, project_id):
+        return get_object_or_404(Project.objects.select_related("workspace"), workspace__slug=slug, pk=project_id)
+
+    def objects_for(self, slug, project_id):
+        return WorkspaceTemplate.objects.filter(
+            workspace__slug=slug, project_id=project_id, kind__in=["work_item", "page"]
+        )
+
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    def get(self, request, slug, project_id, pk=None):
+        self.project_for(slug, project_id)
+        queryset = self.objects_for(slug, project_id)
+        if pk:
+            return Response(TemplateSerializer(get_object_or_404(queryset, pk=pk)).data)
+        kind = request.query_params.get("kind")
+        if kind:
+            queryset = queryset.filter(kind=kind)
+        return Response(TemplateSerializer(queryset, many=True).data)
+
+    def save_template(self, request, slug, project_id, instance=None):
+        project = self.project_for(slug, project_id)
+        serializer = TemplateSerializer(
+            instance,
+            data=request.data,
+            partial=instance is not None,
+            context={"workspace": project.workspace, "project": project},
+        )
+        serializer.is_valid(raise_exception=True)
+        try:
+            with transaction.atomic():
+                serializer.save(workspace=project.workspace, project=project)
+        except IntegrityError:
+            return Response({"name": ["A template with this name already exists in this project."]}, status=400)
+        return Response(serializer.data, status=200 if instance else 201)
+
+    @allow_permission([ROLE.ADMIN])
+    def post(self, request, slug, project_id):
+        return self.save_template(request, slug, project_id)
+
+    @allow_permission([ROLE.ADMIN])
+    def patch(self, request, slug, project_id, pk):
+        obj = get_object_or_404(self.objects_for(slug, project_id), pk=pk)
+        return self.save_template(request, slug, project_id, instance=obj)
+
+    @allow_permission([ROLE.ADMIN])
+    def delete(self, request, slug, project_id, pk):
+        obj = get_object_or_404(self.objects_for(slug, project_id), pk=pk)
+        obj.delete()
+        return Response(status=204)
+
+
+class ProjectTemplateOptionsEndpoint(BaseAPIView):
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
+    def get(self, request, slug, project_id):
+        project = get_object_or_404(Project, workspace__slug=slug, pk=project_id)
+        return Response(
+            {
+                "states": list(State.objects.filter(workspace=project.workspace, project=project).values("id", "name")),
+                "labels": list(Label.objects.filter(workspace=project.workspace, project=project).values("id", "name")),
+                "modules": list(
+                    Module.objects.filter(workspace=project.workspace, project=project).values("id", "name")
+                ),
+                "assignees": list(
+                    ProjectMember.objects.filter(
+                        workspace=project.workspace, project=project, role__gte=15, is_active=True
+                    ).values("member_id", "member__display_name")
+                ),
+                "types": list(
+                    IssueType.objects.filter(
+                        workspace=project.workspace,
+                        is_active=True,
+                        project_issue_types__project=project,
+                        project_issue_types__deleted_at__isnull=True,
+                    ).values("id", "name")
+                ),
+            }
+        )
 
 
 class TemplateOptionsEndpoint(BaseAPIView):

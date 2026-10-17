@@ -21,6 +21,7 @@ vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key
 vi.mock("./delete-label-modal", () => ({ DeleteLabelModal: () => null }));
 beforeEach(() => {
   state.editable = true;
+  state.projectLabels = [{ id: "a", name: "Bug", color: "#60646c", parent: null, sort_order: 0 }];
   state.createLabel.mockReset().mockResolvedValue({});
   state.updateLabel.mockReset().mockResolvedValue({});
 });
@@ -51,6 +52,13 @@ it("retains the editor on persistence failure", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Bug" }));
   fireEvent.click(screen.getByRole("button", { name: "update" }));
   expect(await screen.findByRole("alert")).toHaveProperty("textContent", "label.create.already_exists");
+});
+it("supports moving within siblings from the action menu without dragging", async () => {
+  state.projectLabels.push({ id: "b", name: "Feature", color: "#60646c", parent: null, sort_order: 10000 });
+  render(<ProjectSettingsLabelList />);
+  fireEvent.click(screen.getByRole("button", { name: "aria_labels.common.more_actions Bug" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: "web.move_label_down" }));
+  await waitFor(() => expect(state.updateLabel).toHaveBeenCalledWith("test", "project", "a", { sort_order: 20000 }));
 });
 it("keeps the roster readable without granting mutation controls", () => {
   state.editable = false;
