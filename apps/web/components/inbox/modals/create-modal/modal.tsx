@@ -56,7 +56,6 @@ export const InboxIssueCreateModalRoot = observer(function InboxIssueCreateModal
   return (
     <Dialog
       open={modalState}
-      disablePointerDismissal
       onOpenChange={(open) => {
         if (!open) closeRequestRef.current?.();
       }}

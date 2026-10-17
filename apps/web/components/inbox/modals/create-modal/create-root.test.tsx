@@ -1,6 +1,6 @@
 import { useImperativeHandle } from "react";
 import type { Ref } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { EditorRefApi } from "@plane/editor";
 import { setLanguage } from "@plane/i18n";
@@ -125,6 +125,109 @@ it("uses the same editor readiness guard for Escape and the close button", async
   expect(close).not.toHaveBeenCalled();
   mocks.ready = true;
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  expect(close).toHaveBeenCalledOnce();
+});
+
+function clickOutside() {
+  // Exercise the real Propel/Base UI backdrop and its intentional mouse click sequence.
+  const backdrop = document.querySelector<HTMLElement>(".bg-backdrop");
+  expect(backdrop).not.toBeNull();
+  fireEvent.pointerDown(backdrop!, { button: 0, pointerType: "mouse" });
+  fireEvent.mouseDown(backdrop!, { button: 0 });
+  fireEvent.pointerUp(backdrop!, { button: 0, pointerType: "mouse" });
+  fireEvent.mouseUp(backdrop!, { button: 0 });
+  fireEvent.click(backdrop!, { button: 0 });
+}
+
+it("saves the request and assets on outside click and restores them when the same dialog reopens", async () => {
+  const key = composerCacheKey("user", "workspace", "intake:project");
+  const close = vi.fn();
+  const props = { workspaceSlug: "workspace", projectId: "project", handleModalClose: close };
+  const view = render(<InboxIssueCreateModalRoot {...props} modalState />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Request title" }), { target: { value: "Outside draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Attach image" }));
+  clickOutside();
+  await waitFor(() => expect(close).toHaveBeenCalledOnce());
+  expect(readComposerDraft(key)).toEqual(
+    expect.objectContaining({ values: expect.objectContaining({ name: "Outside draft" }), assetIds: ["asset-id"] })
+  );
+  view.rerender(<InboxIssueCreateModalRoot {...props} modalState={false} />);
+  view.rerender(<InboxIssueCreateModalRoot {...props} modalState />);
+  expect((screen.getByRole("textbox", { name: "Request title" }) as HTMLInputElement).value).toBe("Outside draft");
+  mocks.create.mockResolvedValue({ issue: { id: "restored" } });
+  fireEvent.click(screen.getByRole("button", { name: "Submit request" }));
+  await waitFor(() =>
+    expect(mocks.assets).toHaveBeenCalledWith("workspace", "project", "restored", { asset_ids: ["asset-id"] })
+  );
+});
+
+it("retains the popup and draft through the outside-dismissal exit animation", async () => {
+  let finishAnimation!: () => void;
+  const finished = new Promise<void>((resolve) => {
+    finishAnimation = resolve;
+  });
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getAnimations");
+  Object.defineProperty(HTMLElement.prototype, "getAnimations", {
+    configurable: true,
+    value: () => [{ finished }],
+  });
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0));
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
+  try {
+    const close = vi.fn();
+    const props = { workspaceSlug: "workspace", projectId: "project", handleModalClose: close };
+    const view = render(<InboxIssueCreateModalRoot {...props} modalState />);
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() => expect(dialog.hasAttribute("data-starting-style")).toBe(false));
+    fireEvent.change(screen.getByRole("textbox", { name: "Request title" }), { target: { value: "Animate draft" } });
+    clickOutside();
+    await waitFor(() => expect(close).toHaveBeenCalledOnce());
+    view.rerender(<InboxIssueCreateModalRoot {...props} modalState={false} />);
+    expect(dialog.isConnected).toBe(true);
+    expect(dialog.hasAttribute("data-ending-style")).toBe(true);
+    expect((screen.getByRole("textbox", { name: "Request title" }) as HTMLInputElement).value).toBe("Animate draft");
+    expect(readComposerDraft(composerCacheKey("user", "workspace", "intake:project"))?.values.name).toBe(
+      "Animate draft"
+    );
+    await act(async () => finishAnimation());
+    await waitFor(() => expect(dialog.isConnected).toBe(false));
+  } finally {
+    if (descriptor) Object.defineProperty(HTMLElement.prototype, "getAnimations", descriptor);
+    else delete (HTMLElement.prototype as Partial<HTMLElement>).getAnimations;
+  }
+});
+
+it("blocks outside dismissal while the editor is processing, preserving the current draft", async () => {
+  const key = composerCacheKey("user", "workspace", "intake:project");
+  const { close } = fixture();
+  fireEvent.change(screen.getByRole("textbox", { name: "Request title" }), { target: { value: "Wait for editor" } });
+  mocks.ready = false;
+  clickOutside();
+  await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "error" })));
+  expect(close).not.toHaveBeenCalled();
+  expect(readComposerDraft(key)).toBeUndefined();
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  mocks.ready = true;
+  clickOutside();
+  await waitFor(() => expect(close).toHaveBeenCalledOnce());
+  expect(readComposerDraft(key)?.values.name).toBe("Wait for editor");
+});
+
+it("blocks outside dismissal until submission settles", async () => {
+  let resolveSubmission!: (value: { issue: { id: string } }) => void;
+  mocks.create.mockReturnValue(
+    new Promise((resolve) => {
+      resolveSubmission = resolve;
+    })
+  );
+  const { close } = fixture();
+  fireEvent.change(screen.getByRole("textbox", { name: "Request title" }), { target: { value: "Submitting" } });
+  fireEvent.click(screen.getByRole("button", { name: "Submit request" }));
+  clickOutside();
+  expect(close).not.toHaveBeenCalled();
+  expect(readComposerDraft(composerCacheKey("user", "workspace", "intake:project"))).toBeUndefined();
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await act(async () => resolveSubmission({ issue: { id: "submitted" } }));
   expect(close).toHaveBeenCalledOnce();
 });
 
