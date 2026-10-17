@@ -111,6 +111,10 @@ build/
 temp/
 scripts/
 !packages/i18n/scripts/
+!.agents/skills/technical-drawing/scripts/
+
+# Local browser verification screenshots
+/.artifacts/
 
 # i18n auto-generated types (regenerated on every build)
 packages/i18n/src/types/keys.generated.ts
