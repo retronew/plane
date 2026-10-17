@@ -177,6 +177,48 @@ it("uses a native picker button, passes multiple files through, and clears the p
   expect(initial.updateAttributes).toHaveBeenCalledWith({ src: "asset", status: ECustomImageStatus.UPLOADED });
 });
 
+it("preserves the local preview until upload and ignores late file reads for a remote asset", async () => {
+  const initial = imageProps("");
+  const { rerender } = render(<CustomImageNodeView {...initial} />);
+  const loadPreview = mocks.uploadArgs.loadFileFromFileSystem as (src: string) => void;
+  act(() => loadPreview("data:image/png;base64,local"));
+  expect(screen.getByAltText("preview").getAttribute("src")).toBe("data:image/png;base64,local");
+  rerender(
+    <CustomImageNodeView {...initial} node={{ ...initial.node, attrs: { ...initial.node.attrs, src: "asset" } }} />
+  );
+  await waitFor(() => expect(screen.getByAltText("preview").getAttribute("src")).toBe("view:asset"));
+  act(() => loadPreview("data:image/png;base64,late"));
+  expect(screen.getByAltText("preview").getAttribute("src")).toBe("view:asset");
+});
+
+it("opens the insert picker once and consumes a queued drop before remounting", () => {
+  const initial = imageProps("");
+  const uploader = {
+    ...initial,
+    failedToLoadImage: false,
+    hasDuplicationFailed: false,
+    maxFileSize: 100,
+    loadImageFromFileSystem: vi.fn(),
+  };
+  mocks.fileMap.set("image", { event: "insert", hasOpenedFileInputOnce: false });
+  const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
+  const first = render(<CustomImageUploader {...uploader} />);
+  expect(click).toHaveBeenCalledOnce();
+  first.unmount();
+  const second = render(<CustomImageUploader {...uploader} />);
+  expect(click).toHaveBeenCalledOnce();
+  second.unmount();
+  click.mockRestore();
+  const file = new File(["a"], "a.png");
+  mocks.fileMap.set("image", { event: "drop", file });
+  const third = render(<CustomImageUploader {...uploader} />);
+  expect(mocks.uploadFile).toHaveBeenCalledWith(file);
+  expect(mocks.fileMap.has("image")).toBe(false);
+  third.unmount();
+  render(<CustomImageUploader {...uploader} />);
+  expect(mocks.uploadFile).toHaveBeenCalledOnce();
+});
+
 it("keeps retry separate from the disabled picker and disables picking in read-only mode", () => {
   const initial = imageProps();
   const uploader = {
