@@ -76,6 +76,8 @@ docker compose -f docker-compose-local.yml up
 pnpm dev
 ```
 
+The root `dev` command starts the web apps and shared package watchers. The workflow runner is provided by the Docker stack and is excluded from this command. To develop the runner separately, see [its local development instructions](apps/workflow-runner/README.md).
+
 5. Open your browser to http://localhost:3001/god-mode/ and register yourself as instance admin
 6. Open up your browser to http://localhost:3000 then log in using the same credentials from the previous step
 
