@@ -12,6 +12,7 @@ from django.utils import timezone
 
 # Third party imports
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -22,6 +23,11 @@ from plane.utils.path_validator import sanitize_filename
 
 # Module imports
 from .base import BaseAPIView
+
+
+def _reject_project_attachment(entity_type):
+    if entity_type == FileAsset.EntityTypeContext.PROJECT_ATTACHMENT:
+        raise PermissionDenied("Use the project asset API for project attachments.")
 
 
 class EntityAssetEndpoint(BaseAPIView):
@@ -50,8 +56,10 @@ class EntityAssetEndpoint(BaseAPIView):
             entity_type__in=[
                 FileAsset.EntityTypeContext.ISSUE_DESCRIPTION,
                 FileAsset.EntityTypeContext.COMMENT_DESCRIPTION,
+                FileAsset.EntityTypeContext.PROJECT_ATTACHMENT,
             ],
         )
+        _reject_project_attachment(asset.entity_type)
 
         # Check if the asset is uploaded
         if not asset.is_uploaded:
@@ -83,6 +91,9 @@ class EntityAssetEndpoint(BaseAPIView):
         if not deploy_board:
             return Response({"error": "Project is not published"}, status=status.HTTP_404_NOT_FOUND)
 
+        entity_type = request.data.get("entity_type", "")
+        _reject_project_attachment(entity_type)
+
         # Get the asset
         name = sanitize_filename(request.data.get("name")) or "unnamed"
         type = request.data.get("type", "image/jpeg")
@@ -93,7 +104,6 @@ class EntityAssetEndpoint(BaseAPIView):
                 {"error": "Invalid size.", "status": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        entity_type = request.data.get("entity_type", "")
         entity_identifier = request.data.get("entity_identifier")
 
         # Clamp the client-provided size to [1, FILE_SIZE_LIMIT] so the signed
@@ -163,6 +173,7 @@ class EntityAssetEndpoint(BaseAPIView):
 
         # get the asset id — scope to project to prevent cross-project IDOR
         asset = FileAsset.objects.get(id=pk, workspace=deploy_board.workspace, project_id=deploy_board.project_id)
+        _reject_project_attachment(asset.entity_type)
         # get the storage metadata
         asset.is_uploaded = True
         # get the storage metadata
@@ -183,6 +194,7 @@ class EntityAssetEndpoint(BaseAPIView):
             return Response({"error": "Project is not published"}, status=status.HTTP_404_NOT_FOUND)
         # Get the asset
         asset = FileAsset.objects.get(id=pk, workspace=deploy_board.workspace, project_id=deploy_board.project_id)
+        _reject_project_attachment(asset.entity_type)
         # Check deleted assets
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
@@ -203,6 +215,7 @@ class AssetRestoreEndpoint(BaseAPIView):
 
         # Get the asset — scope to project to prevent cross-project IDOR
         asset = FileAsset.all_objects.get(id=pk, workspace=deploy_board.workspace, project_id=deploy_board.project_id)
+        _reject_project_attachment(asset.entity_type)
         asset.is_deleted = False
         asset.deleted_at = None
         asset.save(update_fields=["is_deleted", "deleted_at"])
@@ -231,6 +244,11 @@ class EntityBulkAssetEndpoint(BaseAPIView):
             workspace=deploy_board.workspace,
             project_id=deploy_board.project_id,
         )
+
+        # Reject the entire batch before updating: its first asset may be a
+        # comment description while later assets are private project attachments.
+        if assets.filter(entity_type=FileAsset.EntityTypeContext.PROJECT_ATTACHMENT).exists():
+            _reject_project_attachment(FileAsset.EntityTypeContext.PROJECT_ATTACHMENT)
 
         asset = assets.first()
 

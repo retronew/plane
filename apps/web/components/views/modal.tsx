@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { observer } from "mobx-react";
 // types
 import { setToast } from "@plane/blocks/toast";
@@ -14,6 +15,7 @@ import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
+import { useProject } from "@/hooks/store/use-project";
 import { useWorkItemFilters } from "@/hooks/store/work-item-filters/use-work-item-filters";
 import { useAppRouter } from "@/hooks/use-app-router";
 // local imports
@@ -39,6 +41,12 @@ export const CreateUpdateProjectViewModal = observer(function CreateUpdateProjec
     issuesFilter: { mutateFilters },
   } = useIssues(EIssuesStoreType.PROJECT_VIEW);
   const { resetExpression } = useWorkItemFilters();
+  const { getPartialProjectById } = useProject();
+  const isViewsEnabled = getPartialProjectById(projectId)?.issue_views_view === true;
+
+  useEffect(() => {
+    if (isOpen && !isViewsEnabled) onClose();
+  }, [isOpen, isViewsEnabled, onClose]);
 
   const handleClose = () => {
     onClose();
@@ -79,9 +87,16 @@ export const CreateUpdateProjectViewModal = observer(function CreateUpdateProjec
   };
 
   const handleFormSubmit = async (formData: IProjectView) => {
+    // Read the current project state again in case the feature changed after the form opened.
+    if (getPartialProjectById(projectId)?.issue_views_view !== true) {
+      handleClose();
+      return;
+    }
     if (!data) await handleCreateView(formData);
     else await handleUpdateView(formData);
   };
+
+  if (!isViewsEnabled) return null;
 
   return (
     <Dialog

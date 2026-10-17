@@ -46,6 +46,7 @@ const project: TPartialProject = {
   cycle_view: true,
   module_view: true,
   page_view: true,
+  project_updates_view: false,
   issue_views_view: true,
   inbox_view: true,
 };

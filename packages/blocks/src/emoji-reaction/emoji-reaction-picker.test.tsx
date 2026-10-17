@@ -14,19 +14,32 @@ vi.mock("../emoji-icon-picker/emoji/emoji", () => ({
   EmojiRoot: () => <div data-testid="emoji-grid">emoji grid</div>,
 }));
 
-function ControlledPicker() {
+function ControlledPicker({ tooltip }: { tooltip?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <EmojiReactionPicker
       isOpen={isOpen}
       handleToggle={setIsOpen}
       onChange={vi.fn()}
-      label={<span>Add reaction</span>}
+      tooltip={tooltip}
+      label={tooltip ? <svg aria-hidden="true" /> : <span>Add reaction</span>}
     />
   );
 }
 
 describe("EmojiReactionPicker popover", () => {
+  it("anchors a named tooltip and the picker to the same icon button", async () => {
+    const user = userEvent.setup();
+    render(<ControlledPicker tooltip="Add reaction" />);
+    const trigger = screen.getByRole("button", { name: "Add reaction" });
+    expect(trigger.querySelector("button")).toBeNull();
+    await user.hover(trigger);
+    expect(await screen.findByRole("tooltip")).toHaveProperty("textContent", "Add reaction");
+    await user.click(trigger);
+    expect(await screen.findByTestId("emoji-grid")).toBeDefined();
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
   it("opens on trigger click and marks the panel as preventing outside click", async () => {
     const user = userEvent.setup();
     render(<ControlledPicker />);

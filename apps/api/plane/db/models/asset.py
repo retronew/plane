@@ -42,6 +42,7 @@ class FileAsset(BaseModel):
         USER_AVATAR = "USER_AVATAR"
         WORKSPACE_LOGO = "WORKSPACE_LOGO"
         PROJECT_COVER = "PROJECT_COVER"
+        PROJECT_ATTACHMENT = "PROJECT_ATTACHMENT"
         DRAFT_ISSUE_ATTACHMENT = "DRAFT_ISSUE_ATTACHMENT"
         DRAFT_ISSUE_DESCRIPTION = "DRAFT_ISSUE_DESCRIPTION"
 
@@ -88,6 +89,9 @@ class FileAsset(BaseModel):
             or self.entity_type == self.EntityTypeContext.PROJECT_COVER
         ):
             return f"/api/assets/v2/static/{self.id}/"
+
+        if self.entity_type == self.EntityTypeContext.PROJECT_ATTACHMENT:
+            return f"/api/assets/v2/workspaces/{self.workspace.slug}/projects/{self.project_id}/{self.id}/"
 
         if self.entity_type == self.EntityTypeContext.ISSUE_ATTACHMENT:
             return f"/api/assets/v2/workspaces/{self.workspace.slug}/projects/{self.project_id}/issues/{self.issue_id}/attachments/{self.id}/"  # noqa: E501

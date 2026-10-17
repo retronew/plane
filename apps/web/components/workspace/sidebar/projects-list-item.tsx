@@ -314,14 +314,14 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                     <div className="grid size-4 flex-shrink-0 place-items-center">
                       <Logo logo={project.logo_props} size={16} />
                     </div>
-                    <p className="truncate text-13 font-medium text-secondary">{project.name}</p>
+                    <p className="truncate text-14 font-medium text-secondary">{project.name}</p>
                   </button>
                 ) : (
                   <div className="flex w-full flex-grow items-center gap-1.5 text-left select-none">
                     <div className="grid size-4 flex-shrink-0 place-items-center">
                       <Logo logo={project.logo_props} size={16} />
                     </div>
-                    <p className="truncate text-13 font-medium text-secondary">{project.name}</p>
+                    <p className="truncate text-14 font-medium text-secondary">{project.name}</p>
                   </div>
                 )}
               </ControlLink>

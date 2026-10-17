@@ -27,7 +27,8 @@ export const ProjectViewsHeader = observer(function ProjectViewsHeader() {
   const projectCrumb = useProjectCrumbProps(workspaceSlug?.toString(), projectId?.toString());
   // store hooks
   const { toggleCreateViewModal } = useCommandPalette();
-  const { loader } = useProject();
+  const { loader, getPartialProjectById } = useProject();
+  const isViewsEnabled = getPartialProjectById(projectId?.toString())?.issue_views_view === true;
 
   return (
     <>
@@ -52,18 +53,20 @@ export const ProjectViewsHeader = observer(function ProjectViewsHeader() {
             />
           </Breadcrumbs>
         </Header.LeftItem>
-        <Header.RightItem>
-          <ViewListHeader />
-          <div>
-            <Button
-              variant="primary"
-              size="md"
-              stretch="auto"
-              label={translate("web.add_view")}
-              onClick={() => toggleCreateViewModal(true)}
-            />
-          </div>
-        </Header.RightItem>
+        {isViewsEnabled && (
+          <Header.RightItem>
+            <ViewListHeader />
+            <div>
+              <Button
+                variant="primary"
+                size="md"
+                stretch="auto"
+                label={translate("web.add_view")}
+                onClick={() => toggleCreateViewModal(true)}
+              />
+            </div>
+          </Header.RightItem>
+        )}
       </Header>
     </>
   );

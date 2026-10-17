@@ -20,7 +20,9 @@ from plane.db.models import (
 
 @pytest.fixture
 def project(db, workspace, create_user):
-    project = Project.objects.create(name="Core", identifier="CORE", workspace=workspace, created_by=create_user)
+    project = Project.objects.create(
+        name="Core", identifier="CORE", workspace=workspace, created_by=create_user, issue_views_view=True
+    )
     ProjectMember.objects.create(project=project, member=create_user, role=20, is_active=True)
     return project
 
@@ -68,6 +70,50 @@ class TestProjectViews:
         response = api_key_client.get(_project_url(workspace, project, view))
         assert response.status_code == status.HTTP_200_OK
         assert response.data["name"] == "In progress"
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("role", [20, 15])
+    def test_create_respects_project_views_toggle(self, workspace, project, role):
+        client, owner = _client_for(workspace, project, role, f"toggle-{role}@plane.so")
+        project.issue_views_view = False
+        project.save(update_fields=["issue_views_view"])
+
+        response = client.post(_project_url(workspace, project), {"name": "Blocked"}, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data == {"error": "Views are not enabled for this project"}
+        assert not IssueView.objects.exists()
+
+        project.issue_views_view = True
+        project.save(update_fields=["issue_views_view"])
+        response = client.post(_project_url(workspace, project), {"name": "Allowed"}, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED, response.data
+        view = IssueView.objects.get()
+        assert str(view.pk) == str(response.data["id"])
+        assert view.project == project
+        assert view.workspace == workspace
+        assert view.owned_by == owner
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("enabled", [False, True])
+    @pytest.mark.parametrize("membership", ["guest", "nonmember", "inactive", "wrong_workspace"])
+    def test_create_keeps_project_permission_scope(self, workspace, project, enabled, membership):
+        role = 5 if membership == "guest" else 15
+        member_project = None if membership == "nonmember" else project
+        client, user = _client_for(workspace, member_project, role, f"scope-{membership}@plane.so")
+        project.issue_views_view = enabled
+        project.save(update_fields=["issue_views_view"])
+        if membership == "inactive":
+            ProjectMember.objects.filter(project=project, member=user).update(is_active=False)
+        url = _project_url(workspace, project)
+        if membership == "wrong_workspace":
+            url = url.replace(workspace.slug, "another-workspace")
+
+        response = client.post(url, {"name": "Forbidden"}, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert not IssueView.objects.exists()
 
     @pytest.mark.django_db
     def test_invalid_filter_field_rejected(self, api_key_client, workspace, project):
@@ -138,6 +184,20 @@ class TestProjectViews:
 
 @pytest.mark.contract
 class TestWorkspaceViews:
+    @pytest.mark.django_db
+    def test_create_with_project_views_disabled(self, api_key_client, workspace, project, create_user):
+        project.issue_views_view = False
+        project.save(update_fields=["issue_views_view"])
+
+        response = api_key_client.post(_workspace_url(workspace), {"name": "Workspace view"}, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED, response.data
+        view = IssueView.objects.get()
+        assert str(view.pk) == str(response.data["id"])
+        assert view.project is None
+        assert view.workspace == workspace
+        assert view.owned_by == create_user
+
     @pytest.mark.django_db
     def test_create_list_delete(self, api_key_client, workspace, project, create_user):
         response = api_key_client.post(_workspace_url(workspace), {"name": "All open"}, format="json")

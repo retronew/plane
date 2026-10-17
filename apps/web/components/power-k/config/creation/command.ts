@@ -100,12 +100,13 @@ export const usePowerKCreationCommandsRecord = (): Record<TPowerKCreationCommand
       i18n_title: "power_k.creation_actions.create_view",
       icon: WorkItemsOutline,
       keySequence: "nv",
-      action: () => toggleCreateViewModal(true),
-      isEnabled: (ctx) => Boolean(getProjectDetails(ctx)?.issue_views_view && hasProjectMemberLevelPermissions(ctx)),
-      isVisible: (ctx) =>
-        Boolean(
-          ctx.params.projectId && getProjectDetails(ctx)?.issue_views_view && hasProjectMemberLevelPermissions(ctx)
-        ),
+      action: (ctx) => {
+        if (getProjectDetails(ctx)?.issue_views_view === true && hasProjectMemberLevelPermissions(ctx)) {
+          toggleCreateViewModal(true);
+        }
+      },
+      isEnabled: (ctx) => getProjectDetails(ctx)?.issue_views_view === true && hasProjectMemberLevelPermissions(ctx),
+      isVisible: (ctx) => getProjectDetails(ctx)?.issue_views_view === true && hasProjectMemberLevelPermissions(ctx),
       closeOnSelect: true,
     },
     create_cycle: {

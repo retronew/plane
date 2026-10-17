@@ -9,6 +9,7 @@ import { EmojiRoot } from "../emoji-icon-picker/emoji/emoji";
 import { emojiToString } from "../emoji-icon-picker/helper";
 import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { useTranslation } from "@plane/i18n";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 import { convertPlacementToSideAndAlign } from "../utils/placement";
 import type { Placement, Side, Align } from "../utils/placement";
@@ -17,6 +18,7 @@ export type EmojiReactionPickerProps = {
   isOpen: boolean;
   handleToggle: (value: boolean) => void;
   buttonClassName?: string;
+  tooltip?: string;
   closeOnSelect?: boolean;
   disabled?: boolean;
   dropdownClassName?: string;
@@ -34,6 +36,7 @@ export function EmojiReactionPicker(props: EmojiReactionPickerProps) {
     isOpen,
     handleToggle,
     buttonClassName,
+    tooltip,
     closeOnSelect = true,
     disabled = false,
     dropdownClassName,
@@ -80,14 +83,31 @@ export function EmojiReactionPicker(props: EmojiReactionPickerProps) {
     [onChange, closeOnSelect, handleOpenChange]
   );
 
+  const trigger = (
+    <PopoverTrigger
+      disabled={disabled}
+      render={
+        <button
+          type="button"
+          className={cn("outline-none", buttonClassName)}
+          disabled={disabled}
+          aria-label={tooltip}
+        />
+      }
+    >
+      {label}
+    </PopoverTrigger>
+  );
+
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger
-        disabled={disabled}
-        render={<button type="button" className={cn("outline-none", buttonClassName)} disabled={disabled} />}
-      >
-        {label}
-      </PopoverTrigger>
+      {tooltip ? (
+        <Tooltip label={tooltip} disabled={isOpen}>
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <PopoverContent
         variant="rich"
         side={finalSide}

@@ -11,6 +11,7 @@ from django.conf import settings
 
 # Third party imports
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiExample, OpenApiRequest
 
@@ -47,6 +48,11 @@ from plane.utils.openapi import (
 from plane.utils.exception_logger import log_exception
 
 
+def _reject_project_attachment(entity_type):
+    if entity_type == FileAsset.EntityTypeContext.PROJECT_ATTACHMENT:
+        raise PermissionDenied("Use the project asset API for project attachments.")
+
+
 class UserAssetEndpoint(BaseAPIView):
     """This endpoint is used to upload user profile images."""
 
@@ -54,6 +60,7 @@ class UserAssetEndpoint(BaseAPIView):
         asset = FileAsset.objects.filter(id=asset_id).first()
         if asset is None:
             return
+        _reject_project_attachment(asset.entity_type)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         asset.save(update_fields=["is_deleted", "deleted_at"])
@@ -115,11 +122,13 @@ class UserAssetEndpoint(BaseAPIView):
         Create a presigned URL for uploading user profile assets (avatar or cover image).
         This endpoint generates the necessary credentials for direct S3 upload.
         """
+        entity_type = request.data.get("entity_type", False)
+        _reject_project_attachment(entity_type)
+
         # get the asset key
         name = sanitize_filename(request.data.get("name")) or "unnamed"
         type = request.data.get("type", "image/jpeg")
         size = int(request.data.get("size", settings.FILE_SIZE_LIMIT))
-        entity_type = request.data.get("entity_type", False)
 
         # Check if the file size is within the limit
         size_limit = min(size, settings.FILE_SIZE_LIMIT)
@@ -210,6 +219,7 @@ class UserAssetEndpoint(BaseAPIView):
         """
         # get the asset id
         asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        _reject_project_attachment(asset.entity_type)
         # get the storage metadata
         asset.is_uploaded = True
         # get the storage metadata
@@ -237,6 +247,7 @@ class UserAssetEndpoint(BaseAPIView):
         This performs a soft delete by marking the asset as deleted and updating the user's profile.
         """
         asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        _reject_project_attachment(asset.entity_type)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         # get the entity and save the asset id for the request field
@@ -252,6 +263,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         asset = FileAsset.objects.filter(id=asset_id).first()
         if asset is None:
             return
+        _reject_project_attachment(asset.entity_type)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         asset.save(update_fields=["is_deleted", "deleted_at"])
@@ -288,11 +300,13 @@ class UserServerAssetEndpoint(BaseAPIView):
         (avatar or cover image) using server credentials. This endpoint generates the
         necessary credentials for direct S3 upload with server-side authentication.
         """
+        entity_type = request.data.get("entity_type", False)
+        _reject_project_attachment(entity_type)
+
         # get the asset key
         name = sanitize_filename(request.data.get("name")) or "unnamed"
         type = request.data.get("type", "image/jpeg")
         size = int(request.data.get("size", settings.FILE_SIZE_LIMIT))
-        entity_type = request.data.get("entity_type", False)
 
         # Check if the file size is within the limit
         size_limit = min(size, settings.FILE_SIZE_LIMIT)
@@ -366,6 +380,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         """
         # get the asset id
         asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        _reject_project_attachment(asset.entity_type)
         # get the storage metadata
         asset.is_uploaded = True
         # get the storage metadata
@@ -394,6 +409,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         asset as deleted and updating the user's profile.
         """
         asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        _reject_project_attachment(asset.entity_type)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         # get the entity and save the asset id for the request field
@@ -436,6 +452,7 @@ class GenericAssetEndpoint(BaseAPIView):
 
             # Get the asset
             asset = FileAsset.objects.get(id=asset_id, workspace_id=workspace.id, is_deleted=False)
+            _reject_project_attachment(asset.entity_type)
 
             # Check if the asset exists and is uploaded
             if not asset.is_uploaded:
@@ -467,6 +484,8 @@ class GenericAssetEndpoint(BaseAPIView):
                 status=status.HTTP_200_OK,
             )
 
+        except PermissionDenied:
+            raise
         except Workspace.DoesNotExist:
             return Response({"error": "Workspace not found"}, status=status.HTTP_404_NOT_FOUND)
         except FileAsset.DoesNotExist:
@@ -513,6 +532,7 @@ class GenericAssetEndpoint(BaseAPIView):
         Create a presigned URL for uploading generic assets that can be bound to entities like work items.
         Supports various file types and includes external source tracking for integrations.
         """
+        _reject_project_attachment(request.data.get("entity_type"))
         name = sanitize_filename(request.data.get("name"))
         type = request.data.get("type")
         size = int(request.data.get("size", settings.FILE_SIZE_LIMIT))
@@ -553,6 +573,7 @@ class GenericAssetEndpoint(BaseAPIView):
             ).first()
 
             if existing_asset:
+                _reject_project_attachment(existing_asset.entity_type)
                 return Response(
                     {
                         "message": "Asset with same external id and source already exists",
@@ -617,6 +638,7 @@ class GenericAssetEndpoint(BaseAPIView):
         """
         try:
             asset = FileAsset.objects.get(id=asset_id, workspace__slug=slug, is_deleted=False)
+            _reject_project_attachment(asset.entity_type)
 
             # Update is_uploaded status
             asset.is_uploaded = request.data.get("is_uploaded", asset.is_uploaded)

@@ -6,7 +6,7 @@
 
 import { useCallback } from "react";
 import { observer } from "mobx-react";
-import { useTheme } from "next-themes";
+import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
@@ -14,12 +14,8 @@ import type { EViewAccess, TViewFilterProps } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
 import { calculateTotalFilters } from "@plane/utils";
-// assets
-import darkViewsAsset from "@/app/assets/empty-state/disabled-feature/views-dark.webp?url";
-import lightViewsAsset from "@/app/assets/empty-state/disabled-feature/views-light.webp?url";
 // components
 import { PageHead } from "@/components/core/page-title";
-import { DetailedEmptyState } from "@/components/empty-state/detailed-empty-state-root";
 import { ViewAppliedFiltersList } from "@/components/views/applied-filters";
 import { ProjectViewsList } from "@/components/views/views-list";
 // hooks
@@ -33,8 +29,6 @@ function ProjectViewsPage({ params }: Route.ComponentProps) {
   // router
   const router = useAppRouter();
   const { workspaceSlug, projectId } = params;
-  // theme hook
-  const { resolvedTheme } = useTheme();
   // plane hooks
   const { t } = useTranslation();
   // store
@@ -47,7 +41,6 @@ function ProjectViewsPage({ params }: Route.ComponentProps) {
     ? translate("web.runtime.page_title", { name: project?.name, section: translate("web.title_views") })
     : undefined;
   const canPerformEmptyStateActions = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
-  const resolvedPath = resolvedTheme === "light" ? lightViewsAsset : darkViewsAsset;
 
   const handleRemoveFilter = useCallback(
     (key: keyof TViewFilterProps, value: string | EViewAccess | null) => {
@@ -71,20 +64,19 @@ function ProjectViewsPage({ params }: Route.ComponentProps) {
   // No access to
   if (currentProjectDetails?.issue_views_view === false)
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <DetailedEmptyState
-          title={t("disabled_project.empty_state.view.title")}
-          description={t("disabled_project.empty_state.view.description")}
-          assetPath={resolvedPath}
-          primaryButton={{
-            text: t("disabled_project.empty_state.view.primary_button.text"),
-            onClick: () => {
-              router.push(`/${workspaceSlug}/settings/projects/${projectId}/features`);
-            },
+      <EmptyStateDetailed
+        assetKey="view"
+        rootClassName="min-h-full overflow-y-auto px-6 py-10"
+        title={t("disabled_project.empty_state.view.title")}
+        description={t("disabled_project.empty_state.view.description")}
+        actions={[
+          {
+            label: t("disabled_project.empty_state.view.primary_button.text"),
+            onClick: () => router.push(`/${workspaceSlug}/settings/projects/${projectId}/features/views`),
             disabled: !canPerformEmptyStateActions,
-          }}
-        />
-      </div>
+          },
+        ]}
+      />
     );
 
   return (

@@ -4,6 +4,7 @@
 
 # Third party imports
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -13,6 +14,11 @@ from ..base import BaseAPIView, BaseViewSet
 from plane.app.permissions import WorkspaceMemberPermission
 from plane.db.models import FileAsset, Workspace
 from plane.app.serializers import FileAssetSerializer
+
+
+def _reject_project_attachment(entity_type):
+    if entity_type == FileAsset.EntityTypeContext.PROJECT_ATTACHMENT:
+        raise PermissionDenied("Use the project asset API for project attachments.")
 
 
 class FileAssetEndpoint(BaseAPIView):
@@ -26,6 +32,8 @@ class FileAssetEndpoint(BaseAPIView):
     def get(self, request, workspace_id, asset_key):
         asset_key = str(workspace_id) + "/" + asset_key
         files = FileAsset.objects.filter(asset=asset_key)
+        if files.filter(entity_type=FileAsset.EntityTypeContext.PROJECT_ATTACHMENT).exists():
+            _reject_project_attachment(FileAsset.EntityTypeContext.PROJECT_ATTACHMENT)
         if files.exists():
             serializer = FileAssetSerializer(files, context={"request": request}, many=True)
             return Response({"data": serializer.data, "status": True}, status=status.HTTP_200_OK)
@@ -39,6 +47,7 @@ class FileAssetEndpoint(BaseAPIView):
         # WorkspaceMemberPermission already rejects unknown slugs before this runs.
         # Use .get() so any TOCTOU race still surfaces as a 404 via ObjectDoesNotExist.
         workspace = Workspace.objects.get(slug=slug)
+        _reject_project_attachment(request.data.get("entity_type"))
         serializer = FileAssetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(workspace_id=workspace.id)
@@ -48,6 +57,7 @@ class FileAssetEndpoint(BaseAPIView):
     def delete(self, request, workspace_id, asset_key):
         asset_key = str(workspace_id) + "/" + asset_key
         file_asset = FileAsset.objects.get(asset=asset_key)
+        _reject_project_attachment(file_asset.entity_type)
         file_asset.is_deleted = True
         file_asset.save(update_fields=["is_deleted"])
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -59,6 +69,7 @@ class FileAssetViewSet(BaseViewSet):
     def restore(self, request, workspace_id, asset_key):
         asset_key = str(workspace_id) + "/" + asset_key
         file_asset = FileAsset.objects.get(asset=asset_key)
+        _reject_project_attachment(file_asset.entity_type)
         file_asset.is_deleted = False
         file_asset.save(update_fields=["is_deleted"])
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -69,6 +80,8 @@ class UserAssetsEndpoint(BaseAPIView):
 
     def get(self, request, asset_key):
         files = FileAsset.objects.filter(asset=asset_key, created_by=request.user)
+        if files.filter(entity_type=FileAsset.EntityTypeContext.PROJECT_ATTACHMENT).exists():
+            _reject_project_attachment(FileAsset.EntityTypeContext.PROJECT_ATTACHMENT)
         if files.exists():
             serializer = FileAssetSerializer(files, context={"request": request})
             return Response({"data": serializer.data, "status": True}, status=status.HTTP_200_OK)
@@ -79,6 +92,7 @@ class UserAssetsEndpoint(BaseAPIView):
             )
 
     def post(self, request):
+        _reject_project_attachment(request.data.get("entity_type"))
         serializer = FileAssetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -87,6 +101,7 @@ class UserAssetsEndpoint(BaseAPIView):
 
     def delete(self, request, asset_key):
         file_asset = FileAsset.objects.get(asset=asset_key, created_by=request.user)
+        _reject_project_attachment(file_asset.entity_type)
         file_asset.is_deleted = True
         file_asset.save(update_fields=["is_deleted"])
         return Response(status=status.HTTP_204_NO_CONTENT)

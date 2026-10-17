@@ -168,11 +168,10 @@ export class BaseCommandPaletteStore implements IBaseCommandPaletteStore {
    * @returns
    */
   toggleCreateViewModal = (value?: boolean) => {
-    if (value !== undefined) {
-      this.isCreateViewModalOpen = value;
-    } else {
-      this.isCreateViewModalOpen = !this.isCreateViewModalOpen;
-    }
+    const open = value ?? !this.isCreateViewModalOpen;
+    const projectId = store.router.projectId;
+    if (open && store.projectRoot.project.getPartialProjectById(projectId)?.issue_views_view !== true) return;
+    this.isCreateViewModalOpen = open;
   };
 
   /**

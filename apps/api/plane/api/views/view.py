@@ -180,6 +180,11 @@ class ProjectViewListCreateAPIEndpoint(ProjectViewAPIMixin, BaseAPIView):
     )
     def post(self, request, slug, project_id):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
+        if not project.issue_views_view:
+            return Response(
+                {"error": "Views are not enabled for this project"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = IssueViewAPISerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

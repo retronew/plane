@@ -11,6 +11,7 @@ import { getFileMetaDataForUpload, generateFileUploadPayload } from "@plane/serv
 import type { EFileAssetType, TFileEntityInfo, TFileSignedURLResponse } from "@plane/types";
 import { getAssetIdFromUrl } from "@plane/utils";
 // helpers
+import { optimizeImageForUpload } from "@/helpers/image-upload.helper";
 // services
 import { APIService } from "@/services/api.service";
 import { FileUploadService } from "@/services/file-upload.service";
@@ -51,6 +52,7 @@ export class FileService extends APIService {
     file: File,
     uploadProgressHandler?: AxiosRequestConfig["onUploadProgress"]
   ): Promise<TFileSignedURLResponse> {
+    file = await optimizeImageForUpload(file, data.entity_type);
     const fileMetaData = await getFileMetaDataForUpload(file);
     return this.post(`/api/assets/v2/workspaces/${workspaceSlug}/`, {
       ...data,
@@ -128,7 +130,11 @@ export class FileService extends APIService {
     file: File,
     uploadProgressHandler?: AxiosRequestConfig["onUploadProgress"]
   ): Promise<TFileSignedURLResponse> {
+    file = await optimizeImageForUpload(file, data.entity_type);
     const fileMetaData = await getFileMetaDataForUpload(file);
+    if (data.entity_type === "PROJECT_ATTACHMENT" && !fileMetaData.type) {
+      fileMetaData.type = file.type || "application/octet-stream";
+    }
     return this.post(`/api/assets/v2/workspaces/${workspaceSlug}/projects/${projectId}/`, {
       ...data,
       ...fileMetaData,
@@ -158,6 +164,7 @@ export class FileService extends APIService {
   }
 
   async uploadUserAsset(data: TFileEntityInfo, file: File): Promise<TFileSignedURLResponse> {
+    file = await optimizeImageForUpload(file, data.entity_type);
     const fileMetaData = await getFileMetaDataForUpload(file);
     return this.post(`/api/assets/v2/user-assets/`, {
       ...data,

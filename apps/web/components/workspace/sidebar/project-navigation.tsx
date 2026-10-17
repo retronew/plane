@@ -14,6 +14,7 @@ import {
   CyclesOutline,
   IntakeOutline,
   ModuleOutline,
+  OverviewOutline,
   PagesOutline,
   ViewsOutline,
   WorkItemsOutline,
@@ -77,6 +78,16 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
 
   const baseNavigation = useCallback(
     (navWorkspaceSlug: string, navProjectId: string): TNavigationItem[] => [
+      {
+        i18n_key: "common.overview",
+        key: "overview",
+        name: "Overview",
+        href: `/${navWorkspaceSlug}/projects/${navProjectId}/overview`,
+        icon: OverviewOutline,
+        access: [EUserPermissions.ADMIN, EUserPermissions.MEMBER, EUserPermissions.GUEST],
+        shouldRender: true,
+        sortOrder: 0,
+      },
       {
         i18n_key: "sidebar.work_items",
         key: "work_items",
@@ -199,9 +210,9 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
                   <item.icon
                     className={`size-4 flex-shrink-0 ${item.name === "Intake" ? "stroke-1" : "stroke-[1.5]"}`}
                   />
-                  <span className="text-11 font-medium">{t(item.i18n_key)}</span>
+                  <span className="text-13 font-medium">{t(item.i18n_key)}</span>
                 </div>
-                {shouldShowCount && <span className="text-11 font-medium text-tertiary">{project.intake_count}</span>}
+                {shouldShowCount && <span className="text-13 font-medium text-tertiary">{project.intake_count}</span>}
               </div>
             </SidebarNavItem>
           </Link>

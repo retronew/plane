@@ -556,51 +556,61 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
         Tracks changes in model activity logs for audit purposes.
         """
         try:
-            workspace = Workspace.objects.get(slug=slug)
-            project = Project.objects.get(pk=pk)
-            current_instance = json.dumps(ProjectSerializer(project).data, cls=DjangoJSONEncoder)
+            # Exceptions must leave the atomic block before being translated to
+            # responses, including non-database failures after serializer.save().
+            with transaction.atomic():
+                workspace = Workspace.objects.get(slug=slug)
+                from plane.app.views.project.overview import record_project_field_changes, snapshot_project_fields
 
-            intake_view = request.data.get("intake_view", project.intake_view)
+                project = Project.objects.select_for_update().get(pk=pk, workspace=workspace)
 
-            if project.archived_at:
-                return Response(
-                    {"error": "Archived project cannot be updated"},
-                    status=status.HTTP_400_BAD_REQUEST,
+                if project.archived_at:
+                    return Response(
+                        {"error": "Archived project cannot be updated"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                before = snapshot_project_fields(project)
+                current_instance = json.dumps(ProjectSerializer(project).data, cls=DjangoJSONEncoder)
+                intake_view = request.data.get("intake_view", project.intake_view)
+
+                serializer = ProjectUpdateSerializer(
+                    project,
+                    data={**request.data, "intake_view": intake_view},
+                    context={"workspace_id": workspace.id},
+                    partial=True,
                 )
 
-            serializer = ProjectUpdateSerializer(
-                project,
-                data={**request.data, "intake_view": intake_view},
-                context={"workspace_id": workspace.id},
-                partial=True,
-            )
+                if serializer.is_valid():
+                    serializer.save()
+                    if serializer.data["intake_view"]:
+                        intake = Intake.objects.filter(project=project, is_default=True).first()
+                        if not intake:
+                            Intake.objects.create(
+                                name=f"{project.name} Intake",
+                                project=project,
+                                is_default=True,
+                            )
 
-            if serializer.is_valid():
-                serializer.save()
-                if serializer.data["intake_view"]:
-                    intake = Intake.objects.filter(project=project, is_default=True).first()
-                    if not intake:
-                        Intake.objects.create(
-                            name=f"{project.name} Intake",
-                            project=project,
-                            is_default=True,
-                        )
+                    project = self.get_queryset().filter(pk=serializer.instance.id).first()
+                    record_project_field_changes(project, request.user, before)
 
-                project = self.get_queryset().filter(pk=serializer.instance.id).first()
+                    transaction.on_commit(
+                        lambda: model_activity.delay(
+                            model_name="project",
+                            model_id=str(project.id),
+                            requested_data=request.data,
+                            current_instance=current_instance,
+                            actor_id=request.user.id,
+                            slug=slug,
+                            origin=base_host(request=request, is_app=True),
+                        ),
+                        robust=True,
+                    )
 
-                model_activity.delay(
-                    model_name="project",
-                    model_id=str(project.id),
-                    requested_data=request.data,
-                    current_instance=current_instance,
-                    actor_id=request.user.id,
-                    slug=slug,
-                    origin=base_host(request=request, is_app=True),
-                )
-
-                serializer = ProjectSerializer(project)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    serializer = ProjectSerializer(project)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except PermissionDenied:
             raise
         except IntegrityError as e:
@@ -609,6 +619,7 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
                     {"name": "The project name is already taken"},
                     status=status.HTTP_409_CONFLICT,
                 )
+            raise
         except (Project.DoesNotExist, Workspace.DoesNotExist):
             return Response({"error": "Project does not exist"}, status=status.HTTP_404_NOT_FOUND)
         except ValidationError:

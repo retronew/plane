@@ -204,6 +204,9 @@ export class ProjectViewStore implements IProjectViewStore {
    * @returns Promise<IProjectView>
    */
   async createView(workspaceSlug: string, projectId: string, data: Partial<IProjectView>): Promise<IProjectView> {
+    if (this.rootStore.projectRoot.project.getPartialProjectById(projectId)?.issue_views_view !== true) {
+      throw new Error("Project views are not enabled");
+    }
     const response = await this.viewService.createView(workspaceSlug, projectId, getValidatedViewFilters(data));
 
     runInAction(() => {

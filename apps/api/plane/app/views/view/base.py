@@ -307,6 +307,16 @@ class IssueViewViewSet(BaseViewSet):
     serializer_class = IssueViewSerializer
     model = IssueView
 
+    @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER])
+    def create(self, request, slug, project_id):
+        project = Project.objects.get(pk=project_id, workspace__slug=slug)
+        if not project.issue_views_view:
+            return Response(
+                {"error": "Views are not enabled for this project"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, slug=slug, project_id=project_id)
+
     def perform_create(self, serializer):
         serializer.save(project_id=self.kwargs.get("project_id"), owned_by=self.request.user)
 

@@ -1,4 +1,3 @@
-from django.db import transaction
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
@@ -9,6 +8,7 @@ import json
 
 # Django imports
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
 from django.db.models import Exists, F, OuterRef, Prefetch, Q, Subquery, Count
 from django.utils import timezone
 
@@ -25,6 +25,12 @@ from plane.app.serializers import (
     ProjectSerializer,
 )
 from plane.app.views.base import BaseAPIView, BaseViewSet
+from plane.app.views.project.overview import (
+    get_project_overview_access,
+    record_project_activity,
+    record_project_field_changes,
+    snapshot_project_fields,
+)
 from plane.bgtasks.recent_visited_task import recent_visited_task
 from plane.bgtasks.webhook_task import model_activity, webhook_activity
 from plane.db.models import (
@@ -190,6 +196,7 @@ class ProjectViewSet(BaseViewSet):
             "issue_views_view",
             "module_view",
             "page_view",
+            "project_updates_view",
             "inbox_view",
             "guest_view_all_features",
             "project_lead",
@@ -327,6 +334,9 @@ class ProjectViewSet(BaseViewSet):
                 Label.objects.create(project=serializer.instance, workspace=workspace, **label)
             for item in template_configuration.get("work_items", []):
                 Issue.objects.create(project=serializer.instance, workspace=workspace, **item)
+            record_project_activity(
+                serializer.instance, request.user, "created", "project", new_value={"name": serializer.instance.name}
+            )
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()
 
             # Create the model activity
@@ -344,73 +354,47 @@ class ProjectViewSet(BaseViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def update(self, request, slug, pk=None):
+        return self.partial_update(request, slug, pk)
+
+    @transaction.atomic
     def partial_update(self, request, slug, pk=None):
-        # try:
-        is_workspace_admin = WorkspaceMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            is_active=True,
-            role=ROLE.ADMIN.value,
-        ).exists()
-
-        is_project_admin = ProjectMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            project_id=pk,
-            role=ROLE.ADMIN.value,
-            is_active=True,
-        ).exists()
-
-        # Return error for if the user is neither workspace admin nor project admin
-        if not is_project_admin and not is_workspace_admin:
+        project, project_member, workspace_member = get_project_overview_access(request.user, slug, pk, for_update=True)
+        if project_member.role != ROLE.ADMIN.value and workspace_member.role != ROLE.ADMIN.value:
             return Response(
                 {"error": "You don't have the required permissions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        workspace = Workspace.objects.get(slug=slug)
-
-        project = Project.objects.get(pk=pk, workspace__slug=slug)
         intake_view = request.data.get("inbox_view", project.intake_view)
         current_instance = json.dumps(ProjectSerializer(project).data, cls=DjangoJSONEncoder)
-        if project.archived_at:
-            return Response(
-                {"error": "Archived projects cannot be updated"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        before = snapshot_project_fields(project)
         serializer = ProjectSerializer(
             project,
             data={**request.data, "intake_view": intake_view},
-            context={"workspace_id": workspace.id},
+            context={"workspace_id": project.workspace_id},
             partial=True,
         )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        record_project_field_changes(project, request.user, before)
+        if intake_view:
+            intake = Intake.objects.filter(project=project, is_default=True).first()
+            if not intake:
+                Intake.objects.create(name=f"{project.name} Intake", project=project, is_default=True)
 
-        if serializer.is_valid():
-            serializer.save()
-            if intake_view:
-                intake = Intake.objects.filter(project=project, is_default=True).first()
-                if not intake:
-                    Intake.objects.create(
-                        name=f"{project.name} Intake",
-                        project=project,
-                        is_default=True,
-                    )
-
-            project = self.get_queryset().filter(pk=serializer.data["id"]).first()
-
-            model_activity.delay(
-                model_name="project",
-                model_id=str(project.id),
-                requested_data=request.data,
-                current_instance=current_instance,
-                actor_id=request.user.id,
-                slug=slug,
-                origin=base_host(request=request, is_app=True),
-            )
-            serializer = ProjectListSerializer(project)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        project = self.get_queryset().filter(pk=project.pk).first()
+        activity_kwargs = {
+            "model_name": "project",
+            "model_id": str(project.id),
+            "requested_data": dict(request.data),
+            "current_instance": current_instance,
+            "actor_id": request.user.id,
+            "slug": slug,
+            "origin": base_host(request=request, is_app=True),
+        }
+        transaction.on_commit(lambda: model_activity.delay(**activity_kwargs), robust=True)
+        return Response(ProjectListSerializer(project).data, status=status.HTTP_200_OK)
 
     @workflow_lifecycle_endpoint("project_deleted")
     def destroy(self, request, slug, pk):

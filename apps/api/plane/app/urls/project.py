@@ -19,10 +19,46 @@ from plane.app.views import (
     ProjectArchiveUnarchiveEndpoint,
     ProjectMemberPreferenceEndpoint,
 )
+from plane.app.views.project.overview import (
+    ProjectActivityEndpoint,
+    ProjectLinkEndpoint,
+    ProjectReactionEndpoint,
+    ProjectUpdateEndpoint,
+)
 from plane.app.views.workspace.configuration import ProjectTemplateEndpoint, ProjectTemplateOptionsEndpoint
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/links/",
+        ProjectLinkEndpoint.as_view(),
+        name="project-links",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/links/<uuid:pk>/",
+        ProjectLinkEndpoint.as_view(),
+        name="project-link-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/updates/",
+        ProjectUpdateEndpoint.as_view(),
+        name="project-updates",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/updates/<uuid:pk>/",
+        ProjectUpdateEndpoint.as_view(),
+        name="project-update-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/reactions/",
+        ProjectReactionEndpoint.as_view(),
+        name="project-reactions",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/activities/",
+        ProjectActivityEndpoint.as_view(),
+        name="project-activities",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/templates/",
         ProjectTemplateEndpoint.as_view(),

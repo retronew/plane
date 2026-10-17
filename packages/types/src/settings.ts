@@ -35,6 +35,7 @@ export type TProjectSettingsTabs =
   | "features_views"
   | "features_pages"
   | "features_intake"
+  | "project_updates"
   | "issue_types"
   | "templates"
   | "states"
