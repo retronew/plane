@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { observer } from "mobx-react";
 // plane package imports
 import { Select } from "@plane/blocks/select";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { ProjectsOutline } from "@makeplane/propel/icons";
 import type { TLogoProps } from "@plane/types";
 // hooks
@@ -67,13 +67,7 @@ export const ProjectSelect = observer(function ProjectSelect(props: Props) {
       getOptionValue={(option) => option.id}
       getOptionLabel={(option) => option.name}
       getOptionSearchText={(option) => option.query}
-      getOptionIcon={(option) =>
-        option.logo_props ? (
-          <Logo logo={option.logo_props} size={16} />
-        ) : (
-          <ProjectsOutline className="size-4 shrink-0" />
-        )
-      }
+      getOptionIcon={(option) => <ProjectLogo logo={option.logo_props} size={16} />}
     >
       <Select.Trigger<ProjectOption>
         variant="select-md"

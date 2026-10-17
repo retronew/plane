@@ -19,6 +19,7 @@ interface IListItemProps {
   title: string;
   itemLink: string;
   onItemClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  leadingElement?: React.ReactNode;
   prependTitleElement?: React.ReactNode;
   appendTitleElement?: React.ReactNode;
   actionableItems?: React.ReactNode;
@@ -41,6 +42,7 @@ export function ListItem(props: IListItemProps) {
     id,
     compact = false,
     title,
+    leadingElement,
     prependTitleElement,
     appendTitleElement,
     actionableItems,
@@ -86,6 +88,7 @@ export function ListItem(props: IListItemProps) {
             itemClassName
           )}
         >
+          {leadingElement}
           <ControlLink
             id={id}
             className={cn("relative flex w-full items-center gap-3 overflow-hidden", compact && "gap-2")}

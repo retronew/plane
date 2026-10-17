@@ -25,7 +25,7 @@ vi.mock("@plane/blocks/emoji-icon-picker", () => ({
       Change logo
     </button>
   ),
-  Logo: () => null,
+  ProjectLogo: () => null,
   getIconBackgroundStyle: () => ({}),
 }));
 vi.mock("./description", () => ({ ProjectOverviewDescription: () => <p>Description</p> }));

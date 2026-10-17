@@ -60,7 +60,7 @@
     "status": {
       "days_left": "Days left",
       "completed": "Completed",
-      "yet_to_start": "Yet to start",
+      "yet_to_start": "Upcoming",
       "in_progress": "In progress",
       "draft": "Draft"
     },

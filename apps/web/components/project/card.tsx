@@ -29,7 +29,7 @@ import { useLocalStorage } from "@plane/hooks";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IProject } from "@plane/types";
@@ -252,7 +252,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
               compact && "inset-0"
             )}
           >
-            <Logo background={false} logo={project.logo_props} size={20} />
+            <ProjectLogo background={false} logo={project.logo_props} size={20} />
           </div>
         </div>
         <div className={cn("min-w-0 px-2 pt-1.5", compact && "flex-1 p-0!")}>

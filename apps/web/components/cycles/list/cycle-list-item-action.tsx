@@ -8,13 +8,7 @@ import type { MouseEvent } from "react";
 import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
-import {
-  CalendarOutline,
-  MembersOutline,
-  ShowOutline,
-  TransferWorkItemOutline,
-  WorkItemsOutline,
-} from "@makeplane/propel/icons";
+import { CalendarOutline, MembersOutline, TransferWorkItemOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -148,19 +142,6 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
 
   const cycleOwnerDetails = getUserDetails(cycleDetails.owned_by_id);
 
-  // handlers
-  const openCycleOverview = (e: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const query = generateQueryParams(searchParams, ["peekCycle"]);
-    if (searchParams.has("peekCycle") && searchParams.get("peekCycle") === cycleId) {
-      router.push(`${pathname}?${query}`);
-    } else {
-      router.push(`${pathname}?${query && `${query}&`}peekCycle=${cycleId}`);
-    }
-  };
-
   return (
     <>
       <TransferIssuesModal
@@ -168,13 +149,6 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
         isOpen={transferIssuesModal}
         cycleId={cycleId.toString()}
       />
-      <button
-        onClick={openCycleOverview}
-        className={`z-[1] flex flex-shrink-0 items-center gap-1 text-11 text-accent-secondary ${isMobile || (isActive && !searchParams.has("peekCycle")) ? "flex" : "hidden group-hover:flex"}`}
-      >
-        <ShowOutline className="my-auto h-4 w-4 text-accent-secondary" />
-        <span>{t("project_cycles.more_details")}</span>
-      </button>
       {showIssueCount && (
         <div className="flex items-center gap-1">
           <WorkItemsOutline className="h-4 w-4 text-tertiary" />
@@ -207,7 +181,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
             >
               <div className="flex items-center gap-1 text-11 font-medium text-tertiary">
                 <CalendarOutline className="my-auto h-3 w-3 flex-shrink-0" />
-                <MergedDateDisplay startDate={cycleDetails.start_date} endDate={cycleDetails.end_date} />
+                <MergedDateDisplay compact startDate={cycleDetails.start_date} endDate={cycleDetails.end_date} />
               </div>
             </Tooltip>
             {projectUTCOffset && (
@@ -286,6 +260,10 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
           cycleId={cycleId}
           projectId={projectId}
           workspaceSlug={workspaceSlug}
+          onOpenDetails={() => {
+            const query = generateQueryParams(searchParams, ["peekCycle"]);
+            router.push(`${pathname}?${query ? `${query}&` : ""}peekCycle=${cycleId}`);
+          }}
         />
       </div>
     </>

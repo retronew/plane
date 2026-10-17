@@ -104,6 +104,9 @@ it("renders a fallback icon when the project has an empty logo object", () => {
       <ActiveProjectItem project={{ id: "p1", completed_issues: 0, total_issues: 5 }} />
     </MemoryRouter>
   );
-  expect(screen.getByRole("link").querySelector("svg.lucide-folder-kanban")).toBeTruthy();
+  const icon = screen.getByRole("link").querySelector("svg");
+  expect(icon).toBeTruthy();
+  expect(icon?.style.width).toBe("16px");
+  expect(icon?.getAttribute("aria-hidden")).toBe("true");
   expect(screen.getByText("0%")).toBeTruthy();
 });

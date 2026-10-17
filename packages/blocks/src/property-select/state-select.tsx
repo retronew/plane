@@ -18,7 +18,8 @@ export type StateOption = {
   name: string;
   color: string;
   group: TStateGroups;
-  order?: number;
+  /** Position within the state group, expressed as a percentage (0–100). */
+  percentage?: number;
   /** Owning project's short code, shown as a pill when `showIdentifier` is set. */
   identifier?: string;
 };
@@ -51,6 +52,32 @@ export type StateSelectProps = {
   /** Tab order of the trigger, for forms that sequence focus explicitly (e.g. the work item create modal). */
   tabIndex?: number;
 };
+
+function renderStateIcon(state: StateOption) {
+  return (
+    <StateGroupIcon
+      stateGroup={state.group}
+      color={state.color}
+      className="size-4 shrink-0"
+      percentage={state.percentage}
+    />
+  );
+}
+
+function renderStateIdentifier(state: StateOption) {
+  return state.identifier ? <ProjectIdentifierElement show identifier={state.identifier} /> : undefined;
+}
+
+function renderSelectedStateIcon(states: StateOption[]) {
+  return (
+    <StateGroupIcon
+      stateGroup={states[0]?.group ?? "backlog"}
+      color={states[0]?.color ?? "currentColor"}
+      percentage={states[0]?.percentage}
+      size="md"
+    />
+  );
+}
 
 /**
  * Presentational, data-source-agnostic state picker built on the generic single-select `Select`.
@@ -93,19 +120,8 @@ export function StateSelect(props: StateSelectProps) {
       getOptionValue={(state) => state.id}
       getOptionLabel={(state) => state.name}
       filterOption={shouldFilterStates ? (state) => allowedStateIds.has(state.id) : undefined}
-      getOptionIcon={(state) => (
-        <StateGroupIcon
-          stateGroup={state.group}
-          color={state.color}
-          className="size-4 shrink-0"
-          percentage={state.order}
-        />
-      )}
-      getOptionTrailing={
-        showIdentifier
-          ? (state) => (state.identifier ? <ProjectIdentifierElement show identifier={state.identifier} /> : undefined)
-          : undefined
-      }
+      getOptionIcon={renderStateIcon}
+      getOptionTrailing={showIdentifier ? renderStateIdentifier : undefined}
     >
       <Select.Trigger<StateOption>
         disabled={disabled}
@@ -113,14 +129,7 @@ export function StateSelect(props: StateSelectProps) {
         tabIndex={tabIndex}
         className={className}
         data-testid={testId}
-        prependIcon={(states) => (
-          <StateGroupIcon
-            stateGroup={states[0]?.group ?? "backlog"}
-            color={states[0]?.color ?? "currentColor"}
-            percentage={states[0]?.order}
-            size="md"
-          />
-        )}
+        prependIcon={renderSelectedStateIcon}
         label={(states) => states[0]?.name ?? placeholder}
         tooltip={tooltip}
       >

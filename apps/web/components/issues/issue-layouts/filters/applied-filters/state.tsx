@@ -11,6 +11,7 @@ import { EIconSize } from "@plane/constants";
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { CloseOutline } from "@makeplane/propel/icons";
 import type { IState } from "@plane/types";
+import { useProjectState } from "@/hooks/store/use-project-state";
 
 type Props = {
   handleRemove: (val: string) => void;
@@ -21,6 +22,7 @@ type Props = {
 
 export const AppliedStateFilters = observer(function AppliedStateFilters(props: Props) {
   const { handleRemove, states, values, editable } = props;
+  const { getStatePercentageInGroup } = useProjectState();
 
   return (
     <>
@@ -35,7 +37,7 @@ export const AppliedStateFilters = observer(function AppliedStateFilters(props: 
               color={stateDetails.color}
               stateGroup={stateDetails.group}
               size={EIconSize.SM}
-              percentage={stateDetails?.order}
+              percentage={getStatePercentageInGroup(stateDetails.id)}
             />
             {stateDetails.name}
             {editable && (

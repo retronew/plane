@@ -44,11 +44,7 @@ export const IssueColumn = observer(function IssueColumn(props: Props) {
       displayPropertyKey={property}
       shouldRenderProperty={() => shouldRenderProperty}
     >
-      <td
-        tabIndex={0}
-        className="h-11 min-w-36 border-r-[0.5px] border-b-[0.5px] border-subtle text-13"
-        ref={tableCellRef}
-      >
+      <td tabIndex={0} className="h-11 min-w-36 border-r border-b border-subtle text-13" ref={tableCellRef}>
         <Column
           issue={issueDetail}
           onChange={handleUpdateIssue}

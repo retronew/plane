@@ -10,7 +10,7 @@ import { useTranslation } from "@plane/i18n";
 // ui
 import { Button } from "@makeplane/propel/components/button";
 import { DialogActions, DialogBody, DialogInfo, DialogMain } from "@makeplane/propel/components/dialog";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 // components
 // hooks
 import { useProject } from "@/hooks/store/use-project";
@@ -44,8 +44,8 @@ export const ProjectFeatureUpdate = observer(function ProjectFeatureUpdate(props
         <DialogInfo>
           <div className="flex gap-1 text-13 font-medium text-tertiary">
             {t("congrats")}
-            <Logo logo={currentProjectDetails.logo_props} /> <p className="break-all">{currentProjectDetails.name}</p>{" "}
-            {t("created").toLowerCase()}.
+            <ProjectLogo logo={currentProjectDetails.logo_props} />{" "}
+            <p className="break-all">{currentProjectDetails.name}</p> {t("created").toLowerCase()}.
           </div>
         </DialogInfo>
         <Button variant="secondary" size="md" stretch="auto" onClick={onClose} label={t("close")} />

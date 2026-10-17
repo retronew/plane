@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { usePathname, useSearchParams } from "next/navigation";
 // hooks
@@ -13,6 +13,7 @@ import { useCycle } from "@/hooks/store/use-cycle";
 import { useAppRouter } from "@/hooks/use-app-router";
 // components
 import { CycleDetailsSidebar } from "./analytics-sidebar";
+import { CycleDetailsPanel } from "./cycle-details-panel";
 
 type Props = {
   projectId?: string;
@@ -27,13 +28,24 @@ export const CyclePeekOverview = observer(function CyclePeekOverview(props: Prop
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const peekCycle = searchParams.get("peekCycle");
-  // refs
-  const ref = React.useRef(null);
   // store hooks
   const { getCycleById, fetchCycleDetails, fetchArchivedCycleDetails } = useCycle();
   // derived values
   const cycleDetails = peekCycle ? getCycleById(peekCycle.toString()) : undefined;
   const projectId = propsProjectId || cycleDetails?.project_id;
+  const open = !!(peekCycle && projectId);
+  // Keep the last open content available while Base UI waits for the exit transition.
+  const [retainedPeek, setRetainedPeek] = useState({ cycleId: peekCycle, projectId, workspaceSlug, isArchived });
+  if (
+    open &&
+    (retainedPeek.cycleId !== peekCycle ||
+      retainedPeek.projectId !== projectId ||
+      retainedPeek.workspaceSlug !== workspaceSlug ||
+      retainedPeek.isArchived !== isArchived)
+  ) {
+    setRetainedPeek({ cycleId: peekCycle, projectId, workspaceSlug, isArchived });
+  }
+  const visiblePeek = open ? { cycleId: peekCycle, projectId, workspaceSlug, isArchived } : retainedPeek;
 
   const handleClose = () => {
     const query = generateQueryParams(searchParams, ["peekCycle"]);
@@ -47,25 +59,16 @@ export const CyclePeekOverview = observer(function CyclePeekOverview(props: Prop
   }, [fetchArchivedCycleDetails, fetchCycleDetails, isArchived, peekCycle, projectId, workspaceSlug]);
 
   return (
-    <>
-      {peekCycle && projectId && (
-        <div
-          ref={ref}
-          className="fixed right-0 z-[9] flex h-full w-full max-w-[21.5rem] flex-shrink-0 flex-col gap-3.5 overflow-y-auto border-l border-subtle bg-surface-1 px-4 duration-300 md:relative"
-          style={{
-            boxShadow:
-              "0px 1px 4px 0px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(16, 24, 40, 0.06), 0px 1px 8px -1px rgba(16, 24, 40, 0.06)",
-          }}
-        >
-          <CycleDetailsSidebar
-            handleClose={handleClose}
-            isArchived={isArchived}
-            projectId={projectId}
-            workspaceSlug={workspaceSlug}
-            cycleId={peekCycle}
-          />
-        </div>
+    <CycleDetailsPanel open={open} className="z-[9]">
+      {visiblePeek.cycleId && visiblePeek.projectId && (
+        <CycleDetailsSidebar
+          handleClose={handleClose}
+          isArchived={visiblePeek.isArchived}
+          projectId={visiblePeek.projectId}
+          workspaceSlug={visiblePeek.workspaceSlug}
+          cycleId={visiblePeek.cycleId}
+        />
       )}
-    </>
+    </CycleDetailsPanel>
   );
 });

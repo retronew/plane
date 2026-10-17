@@ -65,7 +65,6 @@ it("centers the active date, timezone and actual owner together, even when the c
   expect(owner.parentElement?.classList.contains("items-center")).toBe(true);
   expect(owner.parentElement?.contains(screen.getByText("UTC+8"))).toBe(true);
   expect(owner.parentElement?.contains(screen.getByText("October 1 – October 18"))).toBe(true);
-  expect(screen.getByRole("button", { name: "project_cycles.more_details" }).classList.contains("items-center")).toBe(
-    true
-  );
+  expect(screen.queryByRole("button", { name: "project_cycles.more_details" })).toBeNull();
+  expect(screen.getByRole("button", { name: "cycle-options" })).toBeTruthy();
 });

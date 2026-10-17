@@ -10,7 +10,7 @@ import { useParams } from "next/navigation";
 // plane imports
 import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -174,7 +174,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
                       placement="sidebar"
                       icon={
                         <span className="grid size-4 shrink-0 place-items-center">
-                          <Logo logo={projectDetails.logo_props} />
+                          <ProjectLogo logo={projectDetails.logo_props} />
                         </span>
                       }
                       trigger={

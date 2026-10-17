@@ -14,6 +14,7 @@ import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
+import { useProjectState } from "@/hooks/store/use-project-state";
 import { translate } from "@plane/i18n";
 
 type Props = {
@@ -28,6 +29,7 @@ export const FilterState = observer(function FilterState(props: Props) {
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
+  const { getStatePercentageInGroup } = useProjectState();
 
   const filterValue = inboxFilters?.state || [];
 
@@ -68,7 +70,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                         color={state.color}
                         stateGroup={state.group}
                         size={EIconSize.SM}
-                        percentage={state?.order}
+                        percentage={getStatePercentageInGroup(state.id)}
                       />
                     }
                     title={state.name}

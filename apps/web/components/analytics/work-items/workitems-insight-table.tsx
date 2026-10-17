@@ -13,10 +13,10 @@ import type { ColumnDef, Row } from "@tanstack/react-table";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
-import { ProjectsOutline, UserOutline } from "@makeplane/propel/icons";
+import { UserOutline } from "@makeplane/propel/icons";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { useTranslation } from "@plane/i18n";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 // plane package imports
 import type { AnalyticsTableDataMap, WorkItemInsightColumns } from "@plane/types";
 // plane web components
@@ -85,8 +85,6 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
             cell: ({ row }) => {
               const project = getProjectById(row.original.project_id);
               const logo = project?.logo_props;
-              const hasLogo =
-                (logo?.in_use === "emoji" && logo.emoji?.value) || (logo?.in_use === "icon" && logo.icon?.name);
               return (
                 <AnalyticsEntityCell
                   name={project?.name || row.original.project__name || t("unassigned")}
@@ -95,7 +93,7 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
                       ? `/${workspaceSlug}/projects/${row.original.project_id}/issues/`
                       : undefined
                   }
-                  icon={hasLogo ? <Logo logo={logo} size={16} /> : <ProjectsOutline className="size-4 text-tertiary" />}
+                  icon={<ProjectLogo logo={logo} size={16} />}
                 />
               );
             },

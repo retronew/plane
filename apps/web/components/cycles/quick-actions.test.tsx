@@ -202,6 +202,34 @@ it("restores archived cycles through the existing store action and hides other m
   await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith("demo", "project", "cycle"));
   await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/demo/projects/project/archives/cycles"));
 });
+it("offers details in both operation menus when supplied by the list", async () => {
+  const details = vi.fn();
+  function WithDetails() {
+    const parentRef = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={parentRef}>
+        <CycleQuickActions
+          parentRef={parentRef}
+          workspaceSlug="demo"
+          projectId="project"
+          cycleId="cycle"
+          onOpenDetails={details}
+        />
+      </div>
+    );
+  }
+  render(<WithDetails />);
+  const menu = await openMenu();
+  expect(
+    within(menu)
+      .getAllByRole("menuitem")
+      .slice(0, 2)
+      .map((item) => item.textContent)
+  ).toEqual(["edit", "project_cycles.more_details"]);
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "project_cycles.more_details" }));
+  expect(details).toHaveBeenCalledOnce();
+});
+
 it("copies the exact cycle link", async () => {
   render(<Fixture />);
   const menu = await openMenu();

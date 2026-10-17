@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { useRef } from "react";
 import { observer } from "mobx-react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -12,6 +12,7 @@ import { CircularProgress } from "@makeplane/propel/components/circular-progress
 import { TickOutline } from "@makeplane/propel/icons";
 // plane imports
 import type { TCycleGroups } from "@plane/types";
+import { CycleGroupIcon } from "@plane/blocks/icons";
 // components
 import { generateQueryParams, calculateCycleProgress, cn } from "@plane/utils";
 import { ListItem } from "@/components/core/list";
@@ -33,10 +34,56 @@ type TCyclesListItem = {
   workspaceSlug: string;
   projectId: string;
   className?: string;
+  leadingElement?: ReactNode;
+  disclosure?: { expanded: boolean; onToggle: () => void; panelId: string };
 };
 
+function CycleListProgress({ progress, expanded }: { progress: number; expanded?: boolean }) {
+  return expanded === false ? (
+    <CycleGroupIcon cycleGroup="current" className="size-4 shrink-0" />
+  ) : expanded ? (
+    <div className="relative size-12 shrink-0" aria-label={`${translate("web.cycle_progress")} ${progress}%`}>
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <circle cx="24" cy="24" r="22.5" stroke="var(--border-color-strong)" strokeWidth="3" />
+        <circle
+          cx="24"
+          cy="24"
+          r="22.5"
+          className="stroke-success-secondary"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={2 * Math.PI * 22.5}
+          strokeDashoffset={2 * Math.PI * 22.5 * (1 - progress / 100)}
+          transform="rotate(-90 24 24)"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-caption-md-medium text-primary">
+        {progress}%
+      </span>
+    </div>
+  ) : (
+    <div className="relative size-[30px] shrink-0">
+      <div className="absolute inset-0 flex scale-150 items-center justify-center">
+        <CircularProgress
+          value={progress}
+          size="md"
+          variant={progress === 100 ? "success" : "brand"}
+          aria-label={translate("web.cycle_progress")}
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        {progress === 100 ? (
+          <TickOutline className="h-3 w-3" />
+        ) : (
+          <span className="text-9 text-primary">{`${progress}%`}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export const CyclesListItem = observer(function CyclesListItem(props: TCyclesListItem) {
-  const { cycleId, workspaceSlug, projectId, className = "" } = props;
+  const { cycleId, workspaceSlug, projectId, className = "", leadingElement, disclosure } = props;
   // refs
   const parentRef = useRef(null);
   // router
@@ -85,27 +132,22 @@ export const CyclesListItem = observer(function CyclesListItem(props: TCyclesLis
       title={cycleDetails?.name ?? ""}
       itemLink={`/${workspaceSlug}/projects/${projectId}/cycles/${cycleDetails.id}`}
       onItemClick={handleItemClick}
-      className={cn(isActive && "min-h-14 rounded-lg border border-subtle bg-layer-1 !py-3", className)}
+      leadingElement={leadingElement}
+      titleClassName={disclosure?.expanded ? "text-h4-bold" : disclosure ? "text-body-xs-medium" : undefined}
+      className={cn(
+        isActive && !disclosure && "min-h-14 rounded-lg border border-subtle bg-layer-1 !py-3",
+        disclosure && "bg-surface-1 hover:bg-surface-1",
+        disclosure?.expanded && "min-h-20 !py-4",
+        className
+      )}
       itemClassName="min-w-0"
       actionItemContainerClassName={isActive ? "gap-3" : undefined}
       prependTitleElement={
-        <div className="relative size-[30px]">
-          <div className="absolute inset-0 flex scale-150 items-center justify-center">
-            <CircularProgress
-              value={progress}
-              size="md"
-              variant={progress === 100 ? "success" : "brand"}
-              aria-label={translate("web.cycle_progress")}
-            />
-          </div>
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            {progress === 100 ? (
-              <TickOutline className="h-3 w-3" />
-            ) : (
-              <span className="text-9 text-primary">{`${progress}%`}</span>
-            )}
-          </div>
-        </div>
+        isActive ? (
+          <CycleListProgress progress={progress} expanded={disclosure?.expanded} />
+        ) : (
+          <CycleGroupIcon cycleGroup={cycleStatus} className="size-4 shrink-0" />
+        )
       }
       actionableItems={
         <CycleListItemAction
@@ -124,6 +166,10 @@ export const CyclesListItem = observer(function CyclesListItem(props: TCyclesLis
             cycleId={cycleId}
             projectId={projectId}
             workspaceSlug={workspaceSlug}
+            onOpenDetails={() => {
+              const query = generateQueryParams(searchParams, ["peekCycle"]);
+              router.push(`${pathname}?${query ? `${query}&` : ""}peekCycle=${cycleId}`);
+            }}
           />
         </div>
       }

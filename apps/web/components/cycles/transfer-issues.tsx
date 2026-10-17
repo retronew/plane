@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { Banner } from "@makeplane/propel/components/banner";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { TransferWorkItemOutline, WarningCircleOutline } from "@makeplane/propel/icons";
@@ -19,14 +20,13 @@ type Props = {
 export function TransferIssues(props: Props) {
   const { handleClick, canTransferIssues = false, disabled = false } = props;
   return (
-    <div className="-mt-2 mb-4 flex items-center justify-between px-4 pt-6">
-      <div className="flex items-center gap-2 text-13 text-secondary">
-        <WarningCircleOutline className="h-3.5 w-3.5 text-secondary" />
-        <span>{translate("web.completed_cycles_are_not_editable")}</span>
-      </div>
-
-      {canTransferIssues && (
-        <div>
+    <Banner
+      placement="page"
+      variant="neutral"
+      icon={<Icon icon={WarningCircleOutline} />}
+      title={translate("web.completed_cycles_are_not_editable")}
+      actions={
+        canTransferIssues ? (
           <Button
             variant="primary"
             size="md"
@@ -37,8 +37,8 @@ export function TransferIssues(props: Props) {
             disabled={disabled}
             label={translate("web.transfer_work_items")}
           />
-        </div>
-      )}
-    </div>
+        ) : undefined
+      }
+    />
   );
 }

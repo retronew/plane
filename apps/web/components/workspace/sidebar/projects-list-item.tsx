@@ -19,7 +19,7 @@ import { ChevronRightOutline, MoreHorizontalOutline } from "@makeplane/propel/ic
 // plane imports
 import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -140,7 +140,7 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
               root.render(
                 <div className="flex items-center rounded-sm bg-surface-1 p-1 pr-2 text-13">
                   <div className="grid size-4 flex-shrink-0 place-items-center">
-                    {project && <Logo logo={project?.logo_props} />}
+                    {project && <ProjectLogo logo={project?.logo_props} />}
                   </div>
                   <p className="truncate text-secondary">{project?.name}</p>
                 </div>
@@ -312,14 +312,14 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                     }
                   >
                     <div className="grid size-4 flex-shrink-0 place-items-center">
-                      <Logo logo={project.logo_props} size={16} />
+                      <ProjectLogo logo={project.logo_props} size={16} />
                     </div>
                     <p className="truncate text-14 font-medium text-secondary">{project.name}</p>
                   </button>
                 ) : (
                   <div className="flex w-full flex-grow items-center gap-1.5 text-left select-none">
                     <div className="grid size-4 flex-shrink-0 place-items-center">
-                      <Logo logo={project.logo_props} size={16} />
+                      <ProjectLogo logo={project.logo_props} size={16} />
                     </div>
                     <p className="truncate text-14 font-medium text-secondary">{project.name}</p>
                   </div>

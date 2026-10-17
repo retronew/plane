@@ -22,7 +22,7 @@ import { cn, generateWorkItemLink } from "@plane/utils";
 // components
 import { MultipleSelectEntityAction } from "@/components/core/multiple-select";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
-import { ListIssueIdentifier } from "../identifier";
+import { WorkItemTypeIcon } from "@/components/issues/work-item-type-icon";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -102,8 +102,8 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
           <td
             aria-label={translate("common.loading")}
             colSpan={100}
-            className="border-b-[0.5px] border-subtle"
-            style={{ height: "calc(2.75rem - 1px)" }}
+            className="border-b border-subtle"
+            style={{ height: "2.75rem" }}
           />
         }
         classNames={cn("bg-surface-1 transition-[background-color]", {
@@ -155,7 +155,6 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
             virtualized={virtualized}
           />
         ))}
-      <td aria-hidden="true" className="w-12 min-w-12 border-b-[0.5px] border-subtle" />
     </>
   );
 });
@@ -275,7 +274,8 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
         aria-label={issueDetail.name}
         ref={cellRef}
         tabIndex={0}
-        className="group/list-block relative left-0 z-10 max-w-lg border-r-[0.5px] border-b-[0.5px] border-subtle bg-surface-1 md:sticky"
+        style={{ boxShadow: isScrolled.current ? "var(--shadow-direction-right)" : undefined }}
+        className="group/list-block relative left-0 z-10 max-w-lg border-r border-b border-subtle bg-surface-1 md:sticky"
       >
         <ControlLink
           href={workItemLink}
@@ -289,18 +289,22 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
               {
                 "outline outline-1 -outline-offset-1 outline-accent-strong":
                   getIsIssuePeeked(issueDetail.id) && nestingLevel === peekIssue?.nestingLevel,
-                "shadow-[8px_22px_22px_10px_rgba(0,0,0,0.05)]": isScrolled.current,
               }
             )}
           >
             {/* Identifier section - conditionally rendered */}
             {displayProperties?.key && (
-              <div className="flex h-full flex-shrink-0 items-center">
-                <div className="relative flex cursor-pointer items-center text-11 hover:text-primary">
-                  {issueDetail.project_id && (
-                    <ListIssueIdentifier identifier={`${projectIdentifier}-${issueDetail.sequence_id}`} />
-                  )}
-                </div>
+              <div className="flex h-full shrink-0 items-center">
+                {issueDetail.project_id && (
+                  <Tooltip label={`${projectIdentifier}-${issueDetail.sequence_id}`} align="start">
+                    <span
+                      data-spreadsheet-identifier
+                      className="block max-w-[20ch] shrink-0 truncate text-left text-caption-md-medium! text-tertiary! tabular-nums"
+                    >
+                      {projectIdentifier}-{issueDetail.sequence_id}
+                    </span>
+                  </Tooltip>
+                )}
               </div>
             )}
 
@@ -355,6 +359,8 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
                 )}
               </div>
 
+              <WorkItemTypeIcon projectId={issueDetail.project_id} typeId={issueDetail.type_id} isEpic={isEpic} />
+
               <div className="my-auto flex h-full w-full items-center justify-between gap-2 truncate">
                 <div className="line-clamp-1 w-full text-14 text-primary">
                   <div className="w-full overflow-hidden">
@@ -397,7 +403,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
           isEstimateEnabled={isEstimateEnabled}
         />
       ))}
-      <td aria-hidden="true" className="w-12 min-w-12 border-b-[0.5px] border-subtle" />
+      <td aria-hidden="true" className="w-12 min-w-12 border-b border-subtle" />
     </>
   );
 });

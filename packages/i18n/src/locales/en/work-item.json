@@ -55,6 +55,7 @@
     "display": {
       "properties": {
         "label": "Display Properties",
+        "more_count": "{count, plural, one {# more property} other {# more properties}}",
         "id": "ID",
         "issue_type": "Work item Type",
         "sub_issue_count": "Sub-work item count",

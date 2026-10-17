@@ -382,12 +382,9 @@ export class StateStore implements IStateStore {
     if (!stateId || !this.stateMap[stateId]) return -1;
 
     const state = this.stateMap[stateId];
-    const group = state.group;
-
-    if (!group || !this.groupedProjectStates || !this.groupedProjectStates[group]) return -1;
-
-    // Get all states in the same group
-    const statesInGroup = this.groupedProjectStates[group];
+    // Resolve the owning project rather than the route's project (workspace pickers can span projects).
+    const statesInGroup = this.getProjectStates(state.project_id)?.filter((item) => item.group === state.group);
+    if (!statesInGroup?.length) return undefined;
     const stateIndex = statesInGroup.findIndex((s) => s.id === stateId);
 
     if (stateIndex === -1) return undefined;

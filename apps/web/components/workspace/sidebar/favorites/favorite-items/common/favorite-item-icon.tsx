@@ -10,7 +10,7 @@ import type { TLogoProps } from "@plane/types";
 import { FavoriteFolderIcon } from "@plane/blocks/icons";
 import { CyclesOutline, ModuleOutline, PagesOutline, ProjectsOutline, ViewsOutline } from "@makeplane/propel/icons";
 import type { ISvgIcons } from "@plane/blocks/icons";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { Logo, ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 
 const ICON_MAP: Record<string, React.FC<ISvgIcons> | LucideIcon> = {
   page: PagesOutline,
@@ -35,8 +35,10 @@ export const FavoriteItemIcon = ({ type, logo }: Props) => {
         <Icon className="m-auto size-4 flex-shrink-0 stroke-[1.5]" />
       </div>
       <div className="flex size-5 items-center justify-center group-hover:hidden">
-        {logo?.in_use ? (
-          <Logo logo={logo} size={16} type={type === "project" ? "material" : "lucide"} />
+        {type === "project" ? (
+          <ProjectLogo logo={logo} size={16} />
+        ) : logo?.in_use ? (
+          <Logo logo={logo} size={16} type="lucide" />
         ) : (
           <Icon className="m-auto size-4 flex-shrink-0 stroke-[1.5]" />
         )}

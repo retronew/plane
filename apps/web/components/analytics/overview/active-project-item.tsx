@@ -7,8 +7,7 @@
 import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { useParams } from "next/navigation";
 import { Link } from "react-router";
-import { FolderKanban } from "lucide-react";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { cn } from "@plane/utils";
 import { useTranslation } from "@plane/i18n";
@@ -33,12 +32,7 @@ export default function ActiveProjectItem({ project }: Props) {
         className="group flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-layer-transparent-hover"
       >
         <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-layer-1">
-          {(details.logo_props?.in_use === "emoji" && details.logo_props.emoji?.value) ||
-          (details.logo_props?.in_use === "icon" && details.logo_props.icon?.name) ? (
-            <Logo logo={details.logo_props} size={16} />
-          ) : (
-            <FolderKanban className="size-4 text-tertiary" />
-          )}
+          <ProjectLogo logo={details.logo_props} size={16} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-13 font-medium text-primary">{details.name}</p>

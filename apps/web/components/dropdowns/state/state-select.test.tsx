@@ -5,10 +5,11 @@ import { StateSelect } from "./state-select";
 
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
+  options: vi.fn(),
   toast: vi.fn(),
   states: [
     { id: "a", name: "Backlog", project_id: "p", group: "backlog", color: "#555" },
-    { id: "b", name: "Todo", project_id: "p", group: "unstarted", color: "#555" },
+    { id: "b", name: "Todo", project_id: "p", group: "unstarted", color: "#555", order: 20000 },
     { id: "c", name: "Done", project_id: "p", group: "completed", color: "#555" },
   ],
   workflow: {} as TProjectWorkflow,
@@ -19,6 +20,7 @@ vi.mock("@/hooks/store/use-project-state", () => ({
     getProjectStateIds: () => state.states.map((s) => s.id),
     getStateById: (id: string) => state.states.find((s) => s.id === id),
     fetchProjectStates: vi.fn(),
+    getStatePercentageInGroup: (id: string) => (id === "b" ? 50 : 100),
   }),
 }));
 vi.mock("@/hooks/store/use-project-workflow", () => ({
@@ -45,6 +47,7 @@ vi.mock("@plane/blocks/property-select", () => ({
     <button
       onClick={async () => {
         const data = await props.getValues({ search: "" });
+        state.options(data.results);
         state.toast(
           data.results.filter((item) => !props.allowedStateIds || props.allowedStateIds.has(item.id)).map((s) => s.id)
         );
@@ -68,7 +71,21 @@ beforeEach(() => {
   };
   state.fetch.mockReset().mockImplementation(async () => state.workflow);
   state.toast.mockReset();
+  state.options.mockReset();
 });
+it("passes the group percentage rather than the sort order to state icons", async () => {
+  render(<StateSelect projectId="p" value="b" onChange={() => undefined} variant="pill-md" bypassWorkflow />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() =>
+    expect(state.options).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ id: "b", color: "#555", percentage: 50 })])
+    )
+  );
+  expect(state.options.mock.calls[0][0].find((option: { id: string }) => option.id === "b")).not.toHaveProperty(
+    "order"
+  );
+});
+
 it("filters creation states using the same project policy", async () => {
   render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" isForWorkItemCreation />);
   fireEvent.click(screen.getByText("open"));

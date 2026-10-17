@@ -1,5 +1,5 @@
 import { observable, runInAction } from "mobx";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { CyclesView } from "./cycles-view";
 
@@ -50,6 +50,14 @@ vi.mock("@/components/cycles/active-cycle/project-active-cycle", () => ({
     workspaceSlug: string;
   }) => <article aria-label={`${workspaceSlug}/${projectId}/${cycleId}`} />,
 }));
+vi.mock("@/components/cycles/list/cycles-list-item", () => ({
+  CyclesListItem: ({ cycleId, leadingElement }: { cycleId: string; leadingElement?: React.ReactNode }) => (
+    <div>
+      {leadingElement}
+      <a href={`/${cycleId}`}>{cycleId}</a>
+    </div>
+  ),
+}));
 vi.mock("@/components/cycles/list/cycles-list-map", () => ({
   CyclesListMap: ({ cycleIds }: { cycleIds: string[] }) => (
     <ul>
@@ -78,12 +86,23 @@ beforeEach(() => {
   mocks.getFilteredCompletedCycleIds.mockImplementation(() => mocks.completed);
 });
 
-it("renders every current cycle as an active card, excluding other groups and missing records", () => {
+it("shows every current cycle with only the first expanded, and allows independent arrow toggles", () => {
+  Element.prototype.getAnimations ??= () => [];
   render(<CyclesView workspaceSlug="demo" projectId="project" tab="active" />);
+  const [first, second] = screen.getAllByRole("button", { name: "project_cycles.more_details" });
+  expect(screen.getByRole("link", { name: "current-one" }).getAttribute("href")).toBe("/current-one");
+  expect(first.getAttribute("aria-expanded")).toBe("true");
+  expect(second.getAttribute("aria-expanded")).toBe("false");
   expect(screen.getAllByRole("article").map((card) => card.getAttribute("aria-label"))).toEqual([
     "demo/project/current-one",
-    "demo/project/current-two",
   ]);
+  fireEvent.click(second);
+  expect(first.getAttribute("aria-expanded")).toBe("true");
+  expect(second.getAttribute("aria-expanded")).toBe("true");
+  expect(screen.getAllByRole("article")).toHaveLength(2);
+  fireEvent.click(first);
+  expect(first.getAttribute("aria-expanded")).toBe("false");
+  expect(second.getAttribute("aria-expanded")).toBe("true");
   expect(mocks.getFilteredCycleIds).toHaveBeenCalledWith("project", false);
 });
 

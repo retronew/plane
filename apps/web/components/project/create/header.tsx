@@ -10,7 +10,7 @@ import { Controller, useFormContext } from "react-hook-form";
 // plane imports
 import { ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { EmojiPicker, Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker, ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { CloseOutline } from "@makeplane/propel/icons";
 // plane types
 import type { IProject } from "@plane/types";
@@ -99,7 +99,7 @@ function ProjectCreateHeader(props: Props) {
                   style={getIconBackgroundStyle(value)}
                   className="grid h-11 w-11 place-items-center rounded-md border border-subtle bg-layer-2"
                 >
-                  <Logo background={false} logo={value} size={20} />
+                  <ProjectLogo background={false} logo={value} size={20} />
                 </span>
               }
               onChange={(val: any) => {

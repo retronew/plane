@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { observer } from "mobx-react";
 import type { IIssueDisplayProperties } from "@plane/types";
 
-interface IWithDisplayPropertiesHOC {
+export interface IWithDisplayPropertiesHOC {
   displayProperties: IIssueDisplayProperties;
   shouldRenderProperty?: (displayProperties: IIssueDisplayProperties) => boolean;
   displayPropertyKey: keyof IIssueDisplayProperties | (keyof IIssueDisplayProperties)[];

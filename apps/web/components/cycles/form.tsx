@@ -165,8 +165,8 @@ export function CycleForm(props: Props) {
                   name="end_date"
                   render={({ field: { value: endDateValue, onChange: onChangeEndDate } }) => (
                     <DateRangeSelect
-                      variant="pill-md"
-                      className="h-7"
+                      variant="pill-sm"
+                      className="h-auto min-h-6 max-w-full [&>span]:whitespace-normal"
                       minDate={new Date()}
                       value={{
                         from: getDate(startDateValue) ?? null,

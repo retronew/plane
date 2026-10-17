@@ -47,12 +47,12 @@ type StateSelectWebProps = {
   excludeStateIds?: string[];
 };
 
-const toOption = (state: IState): StateOption => ({
+const toOption = (state: IState, percentage?: number): StateOption => ({
   id: state.id,
   name: state.name,
   color: state.color,
   group: state.group,
-  order: state.order,
+  percentage,
 });
 
 /**
@@ -86,7 +86,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   // router params
   const { workspaceSlug } = useParams();
   // store hooks
-  const { getProjectStateIds, getStateById, fetchProjectStates } = useProjectState();
+  const { getProjectStateIds, getStateById, fetchProjectStates, getStatePercentageInGroup } = useProjectState();
   const workflowStore = useProjectWorkflow(bypassWorkflow ? undefined : projectId);
   const { data: user } = useUser();
   const currentWorkflow = workflowStore.resolve(projectId ?? "", issueTypeId);
@@ -142,7 +142,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
               : workflowAllowsTransition(workflow, value, state.id, user?.id))
         )
         .filter((state) => !query || state.name.toLowerCase().includes(query))
-        .map(toOption);
+        .map((state) => toOption(state, getStatePercentageInGroup(state.id)));
       return { results, next_page_results: false };
     },
     [
@@ -151,6 +151,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       getProjectStateIds,
       fetchProjectStates,
       getStateById,
+      getStatePercentageInGroup,
       bypassWorkflow,
       workflowStore,
       excludeStateIds,
@@ -164,7 +165,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
 
   // Resolved in the observer render (not in a memo) so MobX re-renders when the state loads.
   const selectedState = value ? getStateById(value) : undefined;
-  const selected = selectedState ? toOption(selectedState) : null;
+  const selected = selectedState ? toOption(selectedState, getStatePercentageInGroup(selectedState.id)) : null;
 
   return (
     <StateSelectBlock

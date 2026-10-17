@@ -5,13 +5,12 @@
  */
 
 import { observer } from "mobx-react";
-import { ProjectsOutline } from "@makeplane/propel/icons";
 // plane imports
 import type { BreadcrumbNavigationItem, TCrumbLabelProps } from "@plane/blocks/breadcrumb";
 import { Breadcrumbs, BreadcrumbNavigationSelect } from "@plane/blocks/breadcrumb";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { useTranslation } from "@plane/i18n";
-import { SwitcherLabel } from "@/components/common/switcher-label";
+import { truncateText } from "@plane/utils";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
@@ -43,12 +42,10 @@ export const ProjectBreadcrumb = observer(function ProjectBreadcrumb(props: TPro
         key: id,
         label: project.name,
         content: (
-          <SwitcherLabel
-            name={project.name}
-            logo_props={project.logo_props}
-            LabelIcon={ProjectsOutline}
-            type="material"
-          />
+          <div className="flex items-center gap-1 text-secondary">
+            <ProjectLogo logo={project.logo_props} size={12} />
+            {truncateText(project.name, 40)}
+          </div>
         ),
       };
     })
@@ -69,7 +66,7 @@ export const ProjectBreadcrumb = observer(function ProjectBreadcrumb(props: TPro
             router.push(`/${workspaceSlug}/projects/${value}/issues`);
           }}
           label={currentProjectDetails.name}
-          icon={<Logo logo={currentProjectDetails.logo_props} size={14} />}
+          icon={<ProjectLogo logo={currentProjectDetails.logo_props} size={14} />}
           handleOnClick={() => {
             if (handleOnClick) handleOnClick();
             else router.push(`/${workspaceSlug}/projects/${currentProjectDetails.id}/issues/`);

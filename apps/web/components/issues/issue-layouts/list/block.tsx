@@ -172,6 +172,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     >
       <Row
         ref={issueRef}
+        data-issue-list-row=""
         className={cn(
           "group/list-block relative flex min-h-11 flex-col gap-3 bg-layer-transparent py-3 text-13 transition-colors hover:bg-layer-transparent-hover",
           {

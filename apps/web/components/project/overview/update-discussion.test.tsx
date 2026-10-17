@@ -343,8 +343,8 @@ describe("project update discussion", () => {
     await act(async () => request.reject(new Error("offline")));
     expect(editor).toHaveProperty("value", "Edited comment");
     fireEvent.submit(editor.closest("form")!);
-    expect(await screen.findByText("Edited comment")).toBeTruthy();
-    expect(screen.queryByRole("textbox", { name: "edit" })).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("textbox", { name: "edit" })).toBeNull());
+    expect(screen.getByText("Edited comment")).toBeTruthy();
     expect(input()).toHaveProperty("value", "New comment draft");
     expect(mocks.toast).toHaveBeenCalledTimes(1);
     expect(mocks.refresh).toHaveBeenCalledTimes(1);

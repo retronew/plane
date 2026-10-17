@@ -6,7 +6,7 @@
 
 import { useRef, useState } from "react";
 import { observer } from "mobx-react";
-import { EmojiPicker, Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker, ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
 import type { IProject } from "@plane/types";
@@ -81,12 +81,12 @@ export const ProjectOverviewContent = observer(function ProjectOverviewContent({
                 className="grid size-10 place-items-center rounded-md"
                 style={getIconBackgroundStyle(project.logo_props)}
               >
-                <Logo logo={project.logo_props} size={24} background={false} />
+                <ProjectLogo logo={project.logo_props} size={24} background={false} />
               </span>
             }
-            defaultOpen={project.logo_props.in_use === "icon" ? "icon" : "emoji"}
-            defaultIconColor={project.logo_props.icon?.color}
-            defaultIconBackground={project.logo_props.icon?.background_color}
+            defaultOpen={project.logo_props?.in_use === "icon" ? "icon" : "emoji"}
+            defaultIconColor={project.logo_props?.icon?.color}
+            defaultIconBackground={project.logo_props?.icon?.background_color}
             onChange={(value) => {
               setIconOpen(false);
               void save({
@@ -97,7 +97,7 @@ export const ProjectOverviewContent = observer(function ProjectOverviewContent({
               });
             }}
             onIconBackgroundChange={(background) => {
-              if (project.logo_props.in_use === "icon")
+              if (project.logo_props?.in_use === "icon")
                 void save({
                   logo_props: {
                     ...project.logo_props,

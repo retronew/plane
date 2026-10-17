@@ -55,6 +55,7 @@
     "display": {
       "properties": {
         "label": "显示属性",
+        "more_count": "{count, plural, one {还有 # 个属性} other {还有 # 个属性}}",
         "id": "ID",
         "issue_type": "工作项类型",
         "sub_issue_count": "子工作项数量",

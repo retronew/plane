@@ -32,11 +32,13 @@ interface IActiveCycleDetails {
   projectId: string;
   cycleId?: string;
   showHeader?: boolean;
+  showCycleHeader?: boolean;
 }
 
 type ActiveCyclesComponentProps = {
   cycleId: string | null | undefined;
   activeCycle: ICycle | null;
+  showCycleHeader?: boolean;
   activeCycleResolvedPath: string;
   workspaceSlug: string;
   projectId: string;
@@ -52,6 +54,7 @@ const ActiveCyclesComponent = observer(function ActiveCyclesComponent({
   projectId,
   handleFiltersUpdate,
   cycleIssueDetails,
+  showCycleHeader = true,
 }: ActiveCyclesComponentProps) {
   const { t } = useTranslation();
 
@@ -68,13 +71,15 @@ const ActiveCyclesComponent = observer(function ActiveCyclesComponent({
 
   return (
     <div className="flex flex-col border-b border-subtle">
-      <CyclesListItem
-        key={cycleId}
-        cycleId={cycleId}
-        workspaceSlug={workspaceSlug}
-        projectId={projectId}
-        className="!border-b-transparent"
-      />
+      {showCycleHeader && (
+        <CyclesListItem
+          key={cycleId}
+          cycleId={cycleId}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          className="!border-b-transparent"
+        />
+      )}
       <Row className="bg-surface-1 pt-3 pb-6">
         <div className="grid grid-cols-1 gap-3 bg-surface-1 lg:grid-cols-2 xl:grid-cols-3">
           <ActiveCycleProgress
@@ -99,7 +104,7 @@ const ActiveCyclesComponent = observer(function ActiveCyclesComponent({
 });
 
 export const ActiveCycleRoot = observer(function ActiveCycleRoot(props: IActiveCycleDetails) {
-  const { workspaceSlug, projectId, cycleId: propsCycleId, showHeader = true } = props;
+  const { workspaceSlug, projectId, cycleId: propsCycleId, showHeader = true, showCycleHeader = true } = props;
   // theme hook
   const { resolvedTheme } = useTheme();
   // plane hooks
@@ -131,6 +136,7 @@ export const ActiveCycleRoot = observer(function ActiveCycleRoot(props: IActiveC
           </Collapsible.Trigger>
           <Collapsible.Panel>
             <ActiveCyclesComponent
+              showCycleHeader={showCycleHeader}
               cycleId={cycleId}
               activeCycle={activeCycle}
               activeCycleResolvedPath={activeCycleResolvedPath}
@@ -143,6 +149,7 @@ export const ActiveCycleRoot = observer(function ActiveCycleRoot(props: IActiveC
         </Collapsible.Root>
       ) : (
         <ActiveCyclesComponent
+          showCycleHeader={showCycleHeader}
           cycleId={cycleId}
           activeCycle={activeCycle}
           activeCycleResolvedPath={activeCycleResolvedPath}

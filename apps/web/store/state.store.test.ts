@@ -32,6 +32,19 @@ const makeStore = () => {
   });
   return s;
 };
+it("calculates icon progress within the owning project independently of the current route", () => {
+  const s = makeStore();
+  runInAction(() => {
+    s.fetchedMap.other = true;
+    s.stateMap.c = { id: "c", project_id: "other", group: "started", sequence: 10000 } as IState;
+    s.stateMap.d = { id: "d", project_id: "other", group: "started", sequence: 20000 } as IState;
+    s.stateMap.e = { id: "e", project_id: "other", group: "completed", sequence: 30000 } as IState;
+  });
+  expect(s.getStatePercentageInGroup("c")).toBe(50);
+  expect(s.getStatePercentageInGroup("d")).toBe(100);
+  expect(s.getStatePercentageInGroup("b")).toBe(100);
+});
+
 it("keeps an optimistic move after it is persisted", async () => {
   patchState.mockResolvedValue({});
   const s = makeStore();

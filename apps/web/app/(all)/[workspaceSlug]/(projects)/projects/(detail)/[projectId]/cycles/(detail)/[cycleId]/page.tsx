@@ -5,8 +5,6 @@
  */
 
 import { observer } from "mobx-react";
-// plane imports
-import { cn } from "@plane/utils";
 // assets
 import emptyCycle from "@/app/assets/empty-state/cycle.svg?url";
 // components
@@ -14,6 +12,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHead } from "@/components/core/page-title";
 import useCyclesDetails from "@/components/cycles/active-cycle/use-cycles-details";
 import { CycleDetailsSidebar } from "@/components/cycles/analytics-sidebar";
+import { CycleDetailsPanel } from "@/components/cycles/cycle-details-panel";
 import { CycleLayoutRoot } from "@/components/issues/issue-layouts/roots/cycle-layout-root";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
@@ -67,23 +66,17 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
       ) : (
         <>
           <div className="flex h-full w-full">
-            <div className="h-full w-full overflow-hidden">
+            <div className="h-full min-w-0 flex-1 overflow-hidden">
               <CycleLayoutRoot />
             </div>
-            {!isSidebarCollapsed && (
-              <div
-                className={cn(
-                  "vertical-scrollbar absolute right-0 z-13 scrollbar-sm flex h-full w-[21.5rem] flex-shrink-0 flex-col gap-3.5 overflow-y-auto border-l border-subtle bg-surface-1 px-4 shadow-raised-200 duration-300"
-                )}
-              >
-                <CycleDetailsSidebar
-                  handleClose={toggleSidebar}
-                  cycleId={cycleId}
-                  projectId={projectId}
-                  workspaceSlug={workspaceSlug}
-                />
-              </div>
-            )}
+            <CycleDetailsPanel open={!isSidebarCollapsed}>
+              <CycleDetailsSidebar
+                handleClose={toggleSidebar}
+                cycleId={cycleId}
+                projectId={projectId}
+                workspaceSlug={workspaceSlug}
+              />
+            </CycleDetailsPanel>
           </div>
         </>
       )}

@@ -17,7 +17,7 @@ import { NETWORK_CHOICES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 // plane imports
 import { Button } from "@makeplane/propel/components/button";
-import { EmojiPicker, Logo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker, ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IProject, IWorkspace } from "@plane/types";
@@ -222,7 +222,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                       className="grid size-full place-items-center rounded-lg"
                       style={getIconBackgroundStyle(value)}
                     >
-                      <Logo background={false} logo={value} size={28} />
+                      <ProjectLogo background={false} logo={value} size={28} />
                     </span>
                   }
                   // TODO: fix types

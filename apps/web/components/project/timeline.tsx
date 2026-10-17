@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useTranslation } from "@plane/i18n";
 import { GANTT_TIMELINE_TYPE } from "@plane/types";
 import type { IProject } from "@plane/types";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { BaseGanttLayout } from "@/components/base-layouts/gantt/layout";
 import { useProjectCategories } from "@/components/settings/workspace/configuration/project-fields";
@@ -29,7 +29,7 @@ export const ProjectTimeline = observer(function ProjectTimeline({ projects }: {
     <Link href={href(project)} className="flex h-full items-center gap-2" draggable={false}>
       <span className="font-normal mr-3 w-18 shrink-0 text-11 text-tertiary">{project.identifier}</span>
       <span className="flex size-4 shrink-0 items-center justify-center">
-        <Logo logo={project.logo_props} size={16} />
+        <ProjectLogo logo={project.logo_props} size={16} />
       </span>
       <span className="min-w-0 truncate text-13 font-medium">{project.name}</span>
     </Link>

@@ -12,7 +12,7 @@ import { Combobox, ComboboxItem, ComboboxList, ComboboxSearch } from "@makeplane
 // plane ui
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { CloseOutline } from "@makeplane/propel/icons";
 import { Dialog, DialogActions, DialogContent, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 // assets
@@ -133,7 +133,7 @@ export const ProjectMultiSelectModal = observer(function ProjectMultiSelectModal
                         handleSelectedProjectChange(selectedProjectIds.filter((id) => id !== projectDetails.id));
                       }}
                     >
-                      <Logo logo={projectDetails.logo_props} size={14} />
+                      <ProjectLogo logo={projectDetails.logo_props} size={14} />
                       <p className="truncate text-11 text-tertiary transition-colors group-hover:text-secondary">
                         {projectDetails.identifier}
                       </p>
@@ -166,7 +166,7 @@ export const ProjectMultiSelectModal = observer(function ProjectMultiSelectModal
                         label={projectDetails.name}
                         icon={
                           <span className="flex shrink-0 items-center gap-2.5">
-                            <Logo logo={projectDetails.logo_props} size={16} />
+                            <ProjectLogo logo={projectDetails.logo_props} size={16} />
                             <span className="shrink-0 text-10">{projectDetails.identifier}</span>
                           </span>
                         }

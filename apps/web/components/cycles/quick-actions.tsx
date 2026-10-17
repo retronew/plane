@@ -7,7 +7,7 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { Fragment, useState } from "react";
 import { observer } from "mobx-react";
-import { ExportOutline, MoreHorizontalOutline, StopCircleOutline } from "@makeplane/propel/icons";
+import { ExportOutline, MoreHorizontalOutline, StopCircleOutline, ShowOutline } from "@makeplane/propel/icons";
 // ui
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -43,6 +43,7 @@ type Props = {
   projectId: string;
   workspaceSlug: string;
   customClassName?: string;
+  onOpenDetails?: () => void;
 };
 
 function SelectedFavoriteIcon() {
@@ -54,7 +55,7 @@ function UnselectedFavoriteIcon() {
 }
 
 export const CycleQuickActions = observer(function CycleQuickActions(props: Props) {
-  const { parentRef, cycleId, projectId, workspaceSlug, customClassName } = props;
+  const { parentRef, cycleId, projectId, workspaceSlug, customClassName, onOpenDetails } = props;
   // router
   const router = useAppRouter();
   // states
@@ -147,7 +148,15 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
 
   const cycleMenuItems: TContextMenuItem[] = Array.isArray(menuResult) ? menuResult : menuResult.items;
   const MENU_ITEMS: TContextMenuItem[] = [
-    ...cycleMenuItems.filter((item) => !["delete", "archive", "restore"].includes(item.key)),
+    ...cycleMenuItems.filter((item) => item.key === "edit"),
+    {
+      key: "details",
+      title: t("project_cycles.more_details"),
+      icon: ShowOutline,
+      action: () => onOpenDetails?.(),
+      shouldRender: !!onOpenDetails,
+    },
+    ...cycleMenuItems.filter((item) => !["edit", "delete", "archive", "restore"].includes(item.key)),
     {
       key: "favorite",
       title: t(cycleDetails?.is_favorite ? "remove_from_favorites" : "add_to_favorites"),
@@ -241,8 +250,8 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
           <MenuTrigger
             render={
               <IconButton
-                variant="tertiary"
-                size="md"
+                variant="ghost"
+                size="sm"
                 icon={<Icon icon={MoreHorizontalOutline} />}
                 aria-label={t("common.options")}
                 // the legacy menu root swallowed clicks so list rows / links around it never navigated

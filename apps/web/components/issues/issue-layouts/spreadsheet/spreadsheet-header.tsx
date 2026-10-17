@@ -56,7 +56,7 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
       <tr>
         {/* Single header column containing both identifier and workitem */}
         <th
-          className="group/list-header left-0 z-[15] h-11 min-w-60 border-r-[0.5px] border-b-[0.5px] border-subtle bg-layer-1 text-13 font-medium md:sticky"
+          className="group/list-header left-0 z-[15] h-11 min-w-60 border-r border-b border-subtle bg-layer-1 text-13 font-medium md:sticky"
           tabIndex={-1}
         >
           <div className="flex h-full w-full items-center gap-2 px-page-x">
@@ -92,7 +92,7 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
             isEpic={isEpic}
           />
         ))}
-        <th className="sticky right-0 z-[16] h-11 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-layer-1">
+        <th className="sticky right-0 z-[16] h-11 w-12 min-w-12 border-b border-subtle bg-layer-1">
           <div className="flex justify-center">
             <SpreadsheetPropertiesMenu
               displayProperties={displayProperties}

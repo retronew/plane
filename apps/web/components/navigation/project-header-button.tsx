@@ -6,7 +6,7 @@
 
 import type { TPartialProject } from "@plane/types";
 // plane propel imports
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 
 type TProjectHeaderButtonProps = {
@@ -18,7 +18,7 @@ export function ProjectHeaderButton({ project }: TProjectHeaderButtonProps) {
     <Tooltip label={project.name} layout="stacked" side="bottom">
       <div className="relative flex w-full max-w-48 items-center pr-1 text-left select-none">
         <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-md bg-layer-1">
-          <Logo logo={project.logo_props} size={16} />
+          <ProjectLogo logo={project.logo_props} size={16} />
         </div>
         {/* No chevron here: the enclosing `Select.Trigger` (`select-ghost-*`) already draws one, and two on
             the same trigger read as a duplicate. */}

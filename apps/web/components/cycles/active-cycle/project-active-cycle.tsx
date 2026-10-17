@@ -19,6 +19,7 @@ export type ProjectActiveCycleProps = {
   workspaceSlug: string;
   projectId: string;
   cycleId: string;
+  showCycleHeader?: boolean;
 };
 
 /** Guests retain the original project analytics, which supports their existing read permission. */
@@ -44,6 +45,7 @@ const MemberProjectActiveCycle = observer(function MemberProjectActiveCycle({
   workspaceSlug,
   projectId,
   cycleId,
+  showCycleHeader = true,
 }: ProjectActiveCycleProps) {
   const { t } = useTranslation();
   const { getCycleById, fetchCycleDetails } = useCycle();
@@ -103,13 +105,16 @@ const MemberProjectActiveCycle = observer(function MemberProjectActiveCycle({
       cycle={data}
       workspaceSlug={workspaceSlug}
       showProject={false}
+      plain={!showCycleHeader}
       header={
-        <CyclesListItem
-          cycleId={cycleId}
-          workspaceSlug={workspaceSlug}
-          projectId={projectId}
-          className="!border-b-transparent"
-        />
+        showCycleHeader ? (
+          <CyclesListItem
+            cycleId={cycleId}
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            className="!border-b-transparent"
+          />
+        ) : undefined
       }
     />
   );

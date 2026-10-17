@@ -47,6 +47,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // local components
 import { IssuePropertyLabels } from "./labels";
 import { WithDisplayPropertiesHOC } from "./with-display-properties-HOC";
+import { ListPropertiesOverflow } from "./list-properties-overflow";
 
 export interface IIssueProperties {
   issue: TIssue;
@@ -209,7 +210,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
   };
 
   return (
-    <div className={className}>
+    <ListPropertiesOverflow className={className} enabled={activeLayout === "List"}>
       {/* basic properties */}
       {/* state */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="state">
@@ -484,6 +485,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           maxRender={3}
         />
       </WithDisplayPropertiesHOC>
-    </div>
+    </ListPropertiesOverflow>
   );
 });

@@ -6,6 +6,7 @@
 
 // types
 import type { TLogoProps } from "@plane/types";
+import { ProjectLogo as SharedProjectLogo } from "@plane/blocks/emoji-icon-picker";
 // helpers
 import { cn } from "@plane/utils";
 
@@ -16,6 +17,15 @@ type Props = {
 
 export function ProjectLogo(props: Props) {
   const { className, logo } = props;
+
+  const hasLogo = (logo?.in_use === "emoji" && logo.emoji?.value) || (logo?.in_use === "icon" && logo.icon?.name);
+  if (!hasLogo) {
+    return (
+      <span className={cn("inline-flex shrink-0", className)}>
+        <SharedProjectLogo />
+      </span>
+    );
+  }
 
   if (logo.in_use === "icon" && logo.icon)
     return (

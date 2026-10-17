@@ -14,7 +14,7 @@ vi.mock("@plane/i18n", () => ({
   translate: (key: string) => key,
   getCurrentLanguage: () => "en",
 }));
-vi.mock("@plane/blocks/emoji-icon-picker", () => ({ Logo: () => <span>Icon</span> }));
+vi.mock("@plane/blocks/emoji-icon-picker", () => ({ ProjectLogo: () => <span>Icon</span> }));
 vi.mock("@/hooks/store/use-app-theme", () => ({
   useAppTheme: () => ({ profileSidebarCollapsed: false, toggleProfileSidebar: mock.toggle }),
 }));

@@ -8,7 +8,7 @@ import { useCallback, useMemo } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
-import { ProjectsOutline } from "@makeplane/propel/icons";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import type { TLogoProps } from "@plane/types";
 import { Select } from "@plane/blocks/select";
 // hooks
@@ -16,7 +16,6 @@ import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useAppRouter } from "@/hooks/use-app-router";
 // local imports
-import { SwitcherIcon } from "../common/switcher-label";
 import { ProjectHeaderButton } from "./project-header-button";
 import { getTabUrl } from "./tab-navigation-utils";
 import { useTabPreferences } from "./use-tab-preferences";
@@ -32,6 +31,8 @@ type TProjectSwitcherOption = {
   query: string;
   logo_props: TLogoProps | undefined;
 };
+
+const renderProjectIcon = (option: TProjectSwitcherOption) => <ProjectLogo logo={option.logo_props} size={16} />;
 
 export const ProjectHeader = observer(function ProjectHeader(props: TProjectHeaderProps) {
   const { workspaceSlug, projectId } = props;
@@ -107,9 +108,7 @@ export const ProjectHeader = observer(function ProjectHeader(props: TProjectHead
       getValues={() => switcherOptions}
       getOptionValue={(option) => option.value}
       getOptionLabel={(option) => option.query}
-      getOptionIcon={(option) => (
-        <SwitcherIcon logo_props={option.logo_props} LabelIcon={ProjectsOutline} type="material" size={16} />
-      )}
+      getOptionIcon={renderProjectIcon}
       placeholder={t("common.projects")}
     >
       {/* The switcher button carries its own layout; the ghost chrome contributes the hover/active

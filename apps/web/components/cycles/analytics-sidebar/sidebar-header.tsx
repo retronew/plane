@@ -21,6 +21,7 @@ import { useUserPermissions, useUserProfile } from "@/hooks/store/user";
 import { useTimeZoneConverter } from "@/hooks/use-timezone-converter";
 // services
 import { CycleService } from "@/services/cycle.service";
+import { formatCompactCycleDateRange } from "@/components/dropdowns/merged-date";
 
 type Props = {
   workspaceSlug: string;
@@ -117,21 +118,19 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
 
   return (
     <>
-      <div className="absolute top-5 right-0 z-10 flex items-center">
-        <div className="flex size-5 items-center justify-center">
+      <div className="flex w-full flex-col gap-3">
+        <div className="flex items-start gap-2 pt-6">
+          <h4 className="min-w-0 flex-1 text-18 leading-6 font-semibold break-words text-primary">
+            {cycleDetails.name}
+          </h4>
           <button
-            className="flex size-6 shrink-0 items-center justify-center rounded-md text-tertiary transition-colors hover:bg-layer-2-hover hover:text-primary"
+            className="flex size-6 shrink-0 items-center justify-center rounded-md bg-layer-3 text-secondary transition-colors hover:bg-layer-3-hover hover:text-primary focus-visible:outline-2 focus-visible:outline-accent-strong"
             aria-label={t("close")}
             onClick={() => handleClose()}
           >
-            <ChevronRightOutline className="size-4 text-secondary" />
+            <ChevronRightOutline className="size-4" />
           </button>
         </div>
-      </div>
-      <div className="flex w-full flex-col gap-3">
-        <h4 className="w-full pt-6 pr-7 text-18 leading-6 font-semibold break-words text-primary">
-          {cycleDetails.name}
-        </h4>
 
         <Controller
           control={control}
@@ -168,6 +167,7 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
                         cycleDetails.start_date ?? ""
                       )} → ${renderFormattedDateInUserTimezone(cycleDetails.end_date ?? "")}`}
                       mergeDates
+                      formatLabel={({ from, to }) => formatCompactCycleDateRange(from, to)}
                       // show tooltip only if both start and end date are present
                       showTooltip={!!cycleDetails.start_date && !!cycleDetails.end_date}
                       disabled={!isEditingAllowed || isArchived || isCompleted}
@@ -178,7 +178,7 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
               />
               {currentCycle && (
                 <span
-                  className={`inline-flex h-6 shrink-0 items-center rounded-sm px-2 text-12 font-medium whitespace-nowrap ${cycleStatus === "current" ? "bg-warning-subtle text-warning-primary" : "bg-layer-2 text-secondary"}`}
+                  className={`inline-flex h-6 shrink-0 items-center rounded-sm px-2 text-12 font-medium whitespace-nowrap ${currentCycle.bgColor} ${currentCycle.textColor}`}
                 >
                   {t(currentCycle.i18n_title)}
                 </span>

@@ -6,7 +6,7 @@
 
 import { useRouter } from "next/navigation";
 // plane types
-import { Logo } from "@plane/blocks/emoji-icon-picker";
+import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import type { TActivityEntityData, TProjectEntityData } from "@plane/types";
 import { calculateTimeAgo } from "@plane/utils";
 // components
@@ -39,7 +39,7 @@ export function RecentProject(props: BlockProps) {
       prependTitleElement={
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <div className="grid size-4 flex-shrink-0 place-items-center">
-            <Logo logo={projectDetails?.logo_props} size={16} />
+            <ProjectLogo logo={projectDetails?.logo_props} size={16} />
           </div>
           <div className="text-caption-md-regular whitespace-nowrap text-tertiary">{projectDetails?.identifier}</div>
         </div>

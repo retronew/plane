@@ -20,12 +20,15 @@ export function WorkspaceCycleCard({
   workspaceSlug,
   header,
   showProject = true,
+  plain = false,
 }: {
   cycle: CycleCardData;
   workspaceSlug: string;
   /** Project pages can supply their existing cycle actions as the header. */
   header?: ReactNode;
   showProject?: boolean;
+  /** Project cycle lists supply their own collapsible heading and page gutters. */
+  plain?: boolean;
 }) {
   const { t } = useTranslation();
   const [plotType, setPlotType] = useState<TCyclePlotType>("burndown");
@@ -62,7 +65,11 @@ export function WorkspaceCycleCard({
   return (
     <section
       aria-label={`${cycle.project_detail.name} · ${cycle.name}`}
-      className="flex min-w-0 shrink-0 flex-col gap-4 rounded-xl border border-subtle-1 bg-surface-1 p-4 text-primary sm:p-5"
+      className={
+        plain
+          ? "flex min-w-0 shrink-0 flex-col bg-surface-1 px-4 py-5 text-primary sm:px-6"
+          : "flex min-w-0 shrink-0 flex-col gap-4 rounded-xl border border-subtle-1 bg-surface-1 p-4 text-primary sm:p-5"
+      }
     >
       {showProject && (
         <div className="flex min-h-6 items-center gap-2">
@@ -72,34 +79,35 @@ export function WorkspaceCycleCard({
           </h2>
         </div>
       )}
-      {header ?? (
-        <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-subtle bg-layer-1 px-3 py-2">
-          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
-            <CycleProgressIcon value={progress} />
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-              <Link
-                href={href}
-                className="min-w-0 text-14 leading-5 font-medium break-words text-primary hover:underline"
-              >
-                <h3>{cycle.name}</h3>
-              </Link>
-              <span className="shrink-0 text-12 leading-5 whitespace-nowrap text-tertiary">
-                {t("workspace_cycles.days_remaining", { count: cycle.days_remaining })}
-              </span>
+      {header ??
+        (!plain && (
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-subtle bg-layer-1 px-3 py-2">
+            <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
+              <CycleProgressIcon value={progress} />
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+                <Link
+                  href={href}
+                  className="min-w-0 text-14 leading-5 font-medium break-words text-primary hover:underline"
+                >
+                  <h3>{cycle.name}</h3>
+                </Link>
+                <span className="shrink-0 text-12 leading-5 whitespace-nowrap text-tertiary">
+                  {t("workspace_cycles.days_remaining", { count: cycle.days_remaining })}
+                </span>
+              </div>
+            </div>
+            <div className="ml-auto shrink-0">
+              <Button
+                stretch="auto"
+                nativeButton={false}
+                render={<Link href={href} />}
+                variant="secondary"
+                size="sm"
+                label={t("workspace_cycles.view_cycle")}
+              />
             </div>
           </div>
-          <div className="ml-auto shrink-0">
-            <Button
-              stretch="auto"
-              nativeButton={false}
-              render={<Link href={href} />}
-              variant="secondary"
-              size="sm"
-              label={t("workspace_cycles.view_cycle")}
-            />
-          </div>
-        </div>
-      )}
+        ))}
       <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-0">
         <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:pl-6">
           <div className="flex min-h-9 flex-wrap items-center gap-x-3 gap-y-2 text-13 text-secondary">

@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 // plane imports
 import { Tabs, TabsList, Tab, TabsPanel } from "@makeplane/propel/components/tabs";
+import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import { useTranslation } from "@plane/i18n";
 import type { TWorkItemFilterCondition } from "@plane/shared-state";
 import type { TCycleDistribution, TCycleEstimateDistribution, TCyclePlotType } from "@plane/types";
@@ -136,20 +137,28 @@ export const CycleProgressStats = observer(function CycleProgressStats(props: TC
             />
           </TabsPanel>
           <TabsPanel value="stat-assignees">
-            <AssigneeStatComponent
-              distribution={distributionAssigneeData}
-              handleAssigneeFiltersUpdate={handleAssigneeFiltersUpdate}
-              isEditable={isEditable}
-              selectedAssigneeIds={selectedAssigneeIds}
-            />
+            {distributionAssigneeData.length > 0 ? (
+              <AssigneeStatComponent
+                distribution={distributionAssigneeData}
+                handleAssigneeFiltersUpdate={handleAssigneeFiltersUpdate}
+                isEditable={isEditable}
+                selectedAssigneeIds={selectedAssigneeIds}
+              />
+            ) : (
+              <EmptyStateCompact assetKey="members" title={t("no_assignee")} />
+            )}
           </TabsPanel>
           <TabsPanel value="stat-labels">
-            <LabelStatComponent
-              distribution={distributionLabelData}
-              handleLabelFiltersUpdate={handleLabelFiltersUpdate}
-              isEditable={isEditable}
-              selectedLabelIds={selectedLabelIds}
-            />
+            {distributionLabelData.length > 0 ? (
+              <LabelStatComponent
+                distribution={distributionLabelData}
+                handleLabelFiltersUpdate={handleLabelFiltersUpdate}
+                isEditable={isEditable}
+                selectedLabelIds={selectedLabelIds}
+              />
+            ) : (
+              <EmptyStateCompact assetKey="label" title={t("no_labels_yet")} />
+            )}
           </TabsPanel>
         </div>
       </Tabs>

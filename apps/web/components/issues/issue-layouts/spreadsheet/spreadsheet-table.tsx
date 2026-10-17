@@ -105,8 +105,7 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
     if (!containerRef.current) return;
     const scrollLeft = containerRef.current.scrollLeft;
 
-    const columnShadow = "8px 22px 22px 10px rgba(0, 0, 0, 0.05)"; // shadow for regular columns
-    const headerShadow = "8px -22px 22px 10px rgba(0, 0, 0, 0.05)"; // shadow for headers
+    const columnShadow = "var(--shadow-direction-right)";
 
     //The shadow styles are added this way to avoid re-render of all the rows of table, which could be costly
     if (scrollLeft > 0 !== isScrolled.current) {
@@ -115,9 +114,8 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
       );
 
       for (let i = 0; i < firstColumns.length; i++) {
-        const shadow = i === 0 ? headerShadow : columnShadow;
         if (scrollLeft > 0) {
-          (firstColumns[i] as HTMLElement).style.boxShadow = shadow;
+          (firstColumns[i] as HTMLElement).style.boxShadow = columnShadow;
         } else {
           (firstColumns[i] as HTMLElement).style.boxShadow = "none";
         }

@@ -14,6 +14,7 @@ import type { IState } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 import { translate } from "@plane/i18n";
+import { useProjectState } from "@/hooks/store/use-project-state";
 // ui
 // types
 
@@ -26,6 +27,7 @@ type Props = {
 
 export const FilterState = observer(function FilterState(props: Props) {
   const { appliedFilters, handleUpdate, searchQuery, states } = props;
+  const { getStatePercentageInGroup } = useProjectState();
 
   const [itemsToRender, setItemsToRender] = useState(5);
   const [previewEnabled, setPreviewEnabled] = useState(true);
@@ -69,7 +71,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                         stateGroup={state.group}
                         color={state.color}
                         size={EIconSize.MD}
-                        percentage={state?.order}
+                        percentage={getStatePercentageInGroup(state.id)}
                       />
                     }
                     title={state.name}

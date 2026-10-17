@@ -32,7 +32,7 @@ type BlockProps = {
 export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
   const { activity, ref, workspaceSlug } = props;
   // hooks
-  const { getStateById } = useProjectState();
+  const { getStateById, getStatePercentageInGroup } = useProjectState();
   const { setPeekIssue } = useIssueDetail();
   const { setPeekIssue: setPeekEpic } = useIssueDetail(EIssueServiceType.EPICS);
   const { getProjectIdentifierById } = useProject();
@@ -111,7 +111,7 @@ export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
                 stateGroup={state?.group ?? "backlog"}
                 color={state?.color}
                 className="my-auto h-4 w-4"
-                percentage={state?.order}
+                percentage={getStatePercentageInGroup(state?.id)}
               />
             </div>
           </Tooltip>

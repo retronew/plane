@@ -6,7 +6,7 @@
 
 import { useTranslation } from "@plane/i18n";
 import type { ReactNode } from "react";
-import { Logo } from "../emoji-icon-picker/logo";
+import { ProjectLogo } from "../emoji-icon-picker/project-logo";
 import { ChevronDownOutline, ProjectsOutline } from "@makeplane/propel/icons";
 import { cn } from "@plane/utils";
 import type { TLogoProps, TPaginatedResponse } from "@plane/types";
@@ -52,7 +52,7 @@ export type ProjectSelectProps =
       variant: SelectVariant;
     });
 
-function ProjectLogo({
+function ProjectLogoSlot({
   logoProps,
   className,
   /**
@@ -68,14 +68,11 @@ function ProjectLogo({
 }) {
   const slotClassName = density === "chip" ? "size-3.5" : "size-4";
   const iconSize = density === "glyph" ? 16 : 14;
-  if (logoProps?.in_use) {
-    return (
-      <span className={cn("grid shrink-0 place-items-center", slotClassName, className)}>
-        <Logo logo={logoProps} size={iconSize} />
-      </span>
-    );
-  }
-  return <ProjectsOutline className={cn("shrink-0 text-primary", slotClassName, className)} />;
+  return (
+    <span className={cn("grid shrink-0 place-items-center", slotClassName, className)}>
+      <ProjectLogo logo={logoProps} size={iconSize} />
+    </span>
+  );
 }
 
 function triggerLabel(
@@ -99,7 +96,7 @@ function TriggerLogos({ selected }: { selected: ProjectOption[] }) {
   return (
     <span className="flex shrink-0 items-center gap-1">
       {selected.slice(0, 3).map((project) => (
-        <ProjectLogo key={project.id} logoProps={project.logo_props} density="stack" />
+        <ProjectLogoSlot key={project.id} logoProps={project.logo_props} density="stack" />
       ))}
     </span>
   );
@@ -109,7 +106,7 @@ function TriggerLogos({ selected }: { selected: ProjectOption[] }) {
  * Presentational, data-source-agnostic project picker.
  * Pass `multiple={true}` for multi-select; omit or pass `multiple={false}` for single-select.
  */
-const renderProjectLogo = (project: ProjectOption) => <ProjectLogo logoProps={project.logo_props} />;
+const renderProjectLogo = (project: ProjectOption) => <ProjectLogoSlot logoProps={project.logo_props} />;
 
 export function ProjectSelect(props: ProjectSelectProps) {
   const { t } = useTranslation();
@@ -167,11 +164,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
               <>
                 {selectedDescription ? (
                   <span className="grid size-8 shrink-0 place-items-center rounded-md bg-layer-1">
-                    {selected?.logo_props?.in_use ? (
-                      <Logo logo={selected.logo_props} size={20} />
-                    ) : (
-                      <ProjectsOutline className="size-5" />
-                    )}
+                    <ProjectLogo logo={selected?.logo_props} size={20} />
                   </span>
                 ) : (
                   <TriggerLogos selected={projects} />
@@ -248,7 +241,7 @@ export function ProjectSelect(props: ProjectSelectProps) {
                       key={project.id}
                       className="flex h-5 max-w-full items-center gap-1 rounded-sm bg-layer-3 px-1.5 text-caption-md-medium text-secondary"
                     >
-                      <ProjectLogo logoProps={project.logo_props} density="chip" />
+                      <ProjectLogoSlot logoProps={project.logo_props} density="chip" />
                       <span className="truncate">{project.name}</span>
                     </span>
                   ))}
