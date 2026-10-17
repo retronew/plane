@@ -35,8 +35,14 @@ export type TNotificationIssueLite = {
 };
 
 export type TNotificationData = {
-  issue: TNotificationIssueLite | undefined;
-  issue_activity: {
+  // Approval notifications reference the work item directly, without an activity snapshot.
+  issue_id?: string;
+  project_id?: string;
+  approval_id?: string;
+  event?: string;
+  entry_sequence?: number;
+  issue?: TNotificationIssueLite;
+  issue_activity?: {
     id: string | undefined;
     actor: string | undefined;
     field: string | undefined;

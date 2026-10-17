@@ -177,7 +177,6 @@ export function TemplateEditor() {
   if (!validKind) return <p>{t("web.configuration_load_error")}</p>;
   return (
     <SettingsContentWrapper
-      compact
       header={
         <SettingsPageHeader
           leftItem={

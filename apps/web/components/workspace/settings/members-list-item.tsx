@@ -93,7 +93,7 @@ export const WorkspaceMembersListItem = observer(function WorkspaceMembersListIt
   return (
     // propel: a bounded flex column so the Table frame shrinks to the settings page's height and
     // scrolls in its own viewport (the sticky header sticks to that viewport).
-    <div className="flex min-h-0 grow flex-col [&_thead_th]:h-9">
+    <div className="flex min-h-0 grow flex-col">
       {removeMemberModal && (
         <ConfirmWorkspaceMemberRemove
           isOpen={removeMemberModal.member.id.length > 0}

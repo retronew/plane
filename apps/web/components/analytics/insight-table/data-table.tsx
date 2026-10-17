@@ -106,9 +106,7 @@ export function DataTable<TData extends RowData>({
                     render={
                       // TableHead fills this render template with its accessible header text.
                       // oxlint-disable-next-line jsx-a11y/control-has-associated-label
-                      <th
-                        className={title ? "h-9! py-1.5! whitespace-nowrap first:pl-3 last:pr-3" : "whitespace-nowrap"}
-                      />
+                      <th className={`h-9! py-1! whitespace-nowrap${title ? " first:pl-3 last:pr-3" : ""}`} />
                     }
                   >
                     {header.isPlaceholder

@@ -17,7 +17,6 @@ export default observer(function WorkspaceTokensPage() {
     return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
     <SettingsContentWrapper
-      compact
       header={
         <SettingsPageHeader
           leftItem={

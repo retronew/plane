@@ -275,11 +275,11 @@ export const WorkflowSettings = observer(function WorkflowSettings({ detail = fa
                   <thead className="bg-layer-1 text-tertiary">
                     <tr>
                       {["name", "status", "states", "applies_to"].map((key) => (
-                        <th key={key} className="px-4 py-2 font-medium">
+                        <th key={key} className="h-9 px-4 py-1 font-medium">
                           {t(`web.workflow_ui.columns.${key}`)}
                         </th>
                       ))}
-                      <th>
+                      <th className="h-9 py-1">
                         <span className="sr-only">{t("web.workflow_ui.actions")}</span>
                       </th>
                     </tr>

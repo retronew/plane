@@ -100,7 +100,7 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
     );
 
   return (
-    <SettingsContentWrapper compact header={<WebhookDetailsWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper header={<WebhookDetailsWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <DeleteWebhookModal isOpen={deleteWebhookModal} onClose={() => setDeleteWebhookModal(false)} />
       <div className="w-full space-y-8 overflow-y-auto">

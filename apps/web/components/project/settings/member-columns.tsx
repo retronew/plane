@@ -12,6 +12,7 @@ import { CircleMinus } from "lucide-react";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Select } from "@plane/blocks/select";
@@ -58,9 +59,9 @@ export function NameColumn(props: NameProps) {
   return (
     <div className="group relative">
       <div className="flex w-72 items-center gap-2">
-        <div className="flex flex-1 items-center gap-x-2 gap-y-2">
+        <div className="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2">
           {avatar_url && avatar_url.trim() !== "" ? (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
               <span className="relative flex size-6 items-center justify-center rounded-full text-on-color capitalize">
                 <img
                   src={getFileURL(avatar_url)}
@@ -70,8 +71,8 @@ export function NameColumn(props: NameProps) {
               </span>
             </Link>
           ) : (
-            <Link href={`/${workspaceSlug}/profile/${id}`}>
-              <span className="relative flex size-6 items-center justify-center rounded-full bg-layer-3 text-11 text-on-color capitalize">
+            <Link className="shrink-0" href={`/${workspaceSlug}/profile/${id}`}>
+              <span className="relative flex size-6 items-center justify-center rounded-full bg-layer-3 text-11 text-tertiary capitalize">
                 {(email ?? display_name ?? "?")[0]}
               </span>
             </Link>
@@ -82,7 +83,7 @@ export function NameColumn(props: NameProps) {
         </div>
         {(isAdmin || id === currentUser?.id) && (
           <Menu>
-            <div className="opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[[data-popup-open]]:opacity-100">
               <MenuTrigger
                 render={
                   <IconButton
@@ -149,6 +150,13 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
   const isRoleEditable =
     (isCurrentUserWorkspaceAdmin && isCurrentUser) ||
     (isCurrentUserProjectAdmin && !isRowDataWorkspaceAdmin && !isCurrentUser);
+  const roleDisabledReason = isRoleEditable
+    ? undefined
+    : isCurrentUser
+      ? t("web.member_management.own_project_role_readonly")
+      : !isCurrentUserProjectAdmin
+        ? t("web.member_management.project_role_admin_required")
+        : t("web.member_management.workspace_admin_project_role_readonly");
   const checkCurrentOptionWorkspaceRole = (value: string) => {
     const currentMemberWorkspaceRole = getWorkspaceMemberDetails(value)?.role as EUserPermissions | undefined;
     if (!value || !currentMemberWorkspaceRole) return ROLE;
@@ -162,22 +170,28 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
 
   return (
     <>
-      {isRoleEditable ? (
-        <Controller
-          name="role"
-          control={control}
-          rules={{ required: t("web.role_is_required") }}
-          render={() => {
-            const roleOptions: TRoleOption[] = Object.entries(checkCurrentOptionWorkspaceRole(rowData.member.id)).map(
-              ([key]) => ({ key, label: t(ROLE_DETAILS[Number(key) as keyof typeof ROLE_DETAILS].i18n_title) })
-            );
-            return (
-              <div className="w-32">
+      <Controller
+        name="role"
+        control={control}
+        rules={{ required: t("web.role_is_required") }}
+        render={() => {
+          const roleOptions: TRoleOption[] = Object.entries(checkCurrentOptionWorkspaceRole(rowData.member.id)).map(
+            ([key]) => ({ key, label: t(ROLE_DETAILS[Number(key) as keyof typeof ROLE_DETAILS].i18n_title) })
+          );
+          return (
+            <Tooltip label={roleDisabledReason}>
+              <div
+                className="w-32"
+                role={!isRoleEditable ? "group" : undefined}
+                aria-label={!isRoleEditable ? `${t("role")}, ${roleLabel}` : undefined}
+                tabIndex={!isRoleEditable ? 0 : undefined}
+              >
                 <Select<TRoleOption>
+                  disabled={!isRoleEditable}
                   getValues={() => roleOptions}
                   value={roleOptions.find((option) => option.key === String(rowData.original_role)) ?? null}
                   onChange={(value) => {
-                    if (!workspaceSlug || !value) return;
+                    if (!workspaceSlug || !isRoleEditable || !value) return;
                     void updateMemberRole(
                       workspaceSlug.toString(),
                       projectId.toString(),
@@ -203,20 +217,19 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
                 >
                   <Select.Trigger<TRoleOption>
                     variant="select-ghost-md"
-                    className={errors.role ? "border border-danger-strong" : undefined}
+                    className={[
+                      errors.role ? "border border-danger-strong" : "",
+                      !isRoleEditable ? "[&_svg]:visible" : "",
+                    ].join(" ")}
                   >
                     <span className="min-w-0 grow truncate text-left">{roleLabel}</span>
                   </Select.Trigger>
                 </Select>
               </div>
-            );
-          }}
-        />
-      ) : (
-        <div className="flex w-32">
-          <span>{roleLabel}</span>
-        </div>
-      )}
+            </Tooltip>
+          );
+        }}
+      />
     </>
   );
 });

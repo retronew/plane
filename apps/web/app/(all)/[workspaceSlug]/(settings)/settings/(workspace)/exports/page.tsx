@@ -43,7 +43,7 @@ function ExportsPage() {
   }
 
   return (
-    <SettingsContentWrapper compact header={<ExportsWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper header={<ExportsWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <div
         className={cn("flex w-full flex-col gap-y-6", {

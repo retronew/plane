@@ -76,7 +76,7 @@ export const PrevExports = observer(function PrevExports(props: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between border-b border-subtle pb-3.5">
+      <div className="flex items-center justify-between pb-3.5">
         <div className="flex items-center gap-2">
           <h3 className="text-h6-medium text-primary">{t("workspace_settings.settings.exports.previous_exports")}</h3>
           <Button

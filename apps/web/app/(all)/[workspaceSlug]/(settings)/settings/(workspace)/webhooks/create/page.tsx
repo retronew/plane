@@ -25,7 +25,7 @@ export default observer(function CreateWebhookPage() {
   if (!allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, workspaceSlug))
     return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
-    <SettingsContentWrapper compact header={<WebhooksWorkspaceSettingsHeader currentPage={t("common.create")} />}>
+    <SettingsContentWrapper header={<WebhooksWorkspaceSettingsHeader currentPage={t("common.create")} />}>
       <CreateWebhookModal
         inline
         isOpen

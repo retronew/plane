@@ -129,11 +129,13 @@ export function NotificationContent({
   renderCommentBox?: boolean;
 }) {
   const { data, triggered_by_details: triggeredBy } = notification;
-  const notificationField =
-    notification.sender === "in_app:intake:created" ? "intake_created" : data?.issue_activity.field;
-  const newValue = data?.issue_activity.new_value;
-  const oldValue = data?.issue_activity.old_value;
-  const verb = data?.issue_activity.verb;
+  const { field, new_value: newValue, old_value: oldValue, verb } = data?.issue_activity ?? {};
+  const notificationField = notification.sender === "in_app:intake:created" ? "intake_created" : field;
+
+  if (data?.event === "approval_requested") {
+    return <Translation translationKey="web.workflow_ui.pending_approval" />;
+  }
+  if (!notificationField) return <>{notification.title}</>;
 
   const fieldData: TNotificationFieldData = {
     field: notificationField,

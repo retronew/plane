@@ -14,7 +14,6 @@ export default observer(function TemplatesPage() {
     return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
     <SettingsContentWrapper
-      compact
       header={
         <SettingsPageHeader
           leftItem={

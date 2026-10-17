@@ -40,11 +40,10 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
 
   // derived values
   const projectId = notification?.project || undefined;
-  const issueId = notification?.data?.issue?.id || undefined;
+  const issueId = notification?.data?.issue?.id ?? notification?.data?.issue_id;
   const workspace = getWorkspaceBySlug(workspaceSlug);
 
-  const notificationField = notification?.data?.issue_activity.field || undefined;
-  const notificationTriggeredBy = notification.triggered_by_details || undefined;
+  const notificationTriggeredBy = notification?.triggered_by_details || undefined;
 
   const handleNotificationIssuePeekOverview = async () => {
     if (workspaceSlug && projectId && issueId && !isSnoozeStateModalOpen && !customSnoozeModal) {
@@ -68,8 +67,7 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
     }
   };
 
-  if (!workspaceSlug || !notificationId || !notification?.id || !notificationField || !workspace?.id || !projectId)
-    return <></>;
+  if (!workspaceSlug || !notificationId || !notification?.id || !workspace?.id || !projectId) return <></>;
 
   return (
     <Row
@@ -122,8 +120,14 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
 
           <div className="relative flex items-center gap-3 text-caption-sm-regular text-secondary">
             <div className="line-clamp-1 w-full truncate overflow-hidden break-words whitespace-normal">
-              {notification?.data?.issue?.identifier}-{notification?.data?.issue?.sequence_id}&nbsp;
-              {notification?.data?.issue?.name}
+              {notification.data?.issue ? (
+                <>
+                  {notification.data.issue.identifier}-{notification.data.issue.sequence_id}&nbsp;
+                  {notification.data.issue.name}
+                </>
+              ) : (
+                notification.title
+              )}
             </div>
             <div className="flex-shrink-0">
               {notification?.snoozed_till ? (

@@ -141,22 +141,22 @@ export const APITokensProfileSettings = observer(function APITokensProfileSettin
               </colgroup>
               <thead className="border-b border-subtle bg-layer-1 text-secondary">
                 <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="h-9 px-3 py-1 font-medium">
                     {t("name")}
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="h-9 px-3 py-1 font-medium">
                     {t("web.status")}
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="h-9 px-3 py-1 font-medium">
                     {t("web.created_at")}
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="h-9 px-3 py-1 font-medium">
                     {t("web.token_expiration")}
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="h-9 px-3 py-1 font-medium">
                     {t("web.token_last_used")}
                   </th>
-                  <th scope="col">
+                  <th scope="col" className="h-9 py-1">
                     <span className="sr-only">{t("common.options")}</span>
                   </th>
                 </tr>

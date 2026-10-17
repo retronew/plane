@@ -12,6 +12,7 @@ import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { ExpandableSearch } from "@makeplane/propel/components/expandable-search";
 // components
+import { CountChip } from "@/components/common/count-chip";
 import { MembersSettingsLoader } from "@/components/ui/loader/settings/members";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
@@ -32,7 +33,7 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
   const [inviteModal, setInviteModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const {
-    project: { projectMemberIds, getFilteredProjectMemberDetails, filters },
+    project: { projectMemberIds, getProjectMemberIds, getFilteredProjectMemberDetails, filters },
   } = useMember();
   const { allowPermissions } = useUserPermissions();
 
@@ -72,6 +73,7 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
 
   // Get current role filters
   const appliedRoleFilters = projectId ? filters.getFilters(projectId)?.roles || [] : [];
+  const memberCount = getProjectMemberIds(projectId, true)?.length;
 
   return (
     <>
@@ -82,7 +84,10 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
         workspaceSlug={workspaceSlug}
       />
       <div className="flex items-center justify-between gap-4 py-2">
-        <div className="text-14 font-semibold">{t("common.members")}</div>
+        <div className="flex items-center gap-2.5 text-14 font-semibold">
+          {t("common.members")}
+          {memberCount !== undefined && <CountChip count={memberCount} className="h-5" />}
+        </div>
         <div className="flex items-center gap-2">
           <ExpandableSearch
             size="md"
@@ -113,7 +118,7 @@ export const ProjectMemberList = observer(function ProjectMemberList(props: TPro
       {!projectMemberIds ? (
         <MembersSettingsLoader />
       ) : (
-        <div className="divide-y divide-subtle overflow-auto [&_thead_th]:h-9 [&_thead_th]:py-1">
+        <div className="divide-y divide-subtle overflow-auto">
           {searchedProjectMembers.length !== 0 && (
             <ProjectMemberListItem
               memberDetails={memberDetails ?? []}

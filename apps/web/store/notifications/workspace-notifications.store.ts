@@ -164,7 +164,7 @@ export class WorkspaceNotificationStore implements IWorkspaceNotificationStore {
       workspace_slug: workspaceSlug,
       project_id: notification.project,
       notification_id: notification.id,
-      issue_id: notification.data?.issue?.id,
+      issue_id: notification.data?.issue?.id ?? notification.data?.issue_id,
       is_inbox_issue: notification.is_inbox_issue || false,
     };
   });

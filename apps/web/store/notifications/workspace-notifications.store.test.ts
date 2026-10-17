@@ -26,6 +26,23 @@ beforeEach(() => {
   });
 });
 describe("notification queries", () => {
+  it("resolves the selected work item from an existing approval notification", () => {
+    const s = store();
+    s.mutateNotifications([
+      {
+        ...notification("approval"),
+        project: "project-id",
+        data: { issue_id: "issue-id", approval_id: "approval-id", event: "approval_requested", entry_sequence: 1 },
+      },
+    ]);
+    expect(s.notificationLiteByNotificationId("approval")).toEqual({
+      workspace_slug: "test",
+      project_id: "project-id",
+      notification_id: "approval",
+      issue_id: "issue-id",
+      is_inbox_issue: false,
+    });
+  });
   it("sends all filters and keeps server ordering across pagination", async () => {
     const s = store();
     s.filters = {

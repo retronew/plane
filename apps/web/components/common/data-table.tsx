@@ -65,7 +65,16 @@ export function DataTable<T>(props: DataTableProps<T>) {
       <TableHeader>
         <TableRow>
           {columns.map((column) => (
-            <TableHeadElement key={column.key} variant={variant} pinned="none">
+            <TableHeadElement
+              key={column.key}
+              variant={variant}
+              pinned="none"
+              render={
+                // TableHead supplies the accessible column label from the content below.
+                // oxlint-disable-next-line jsx-a11y/control-has-associated-label
+                <th className="h-9! py-1!" />
+              }
+            >
               <div className="flex min-h-5 items-center">
                 {column.thRender ? column.thRender() : <TableHeadTitle>{column.content}</TableHeadTitle>}
               </div>

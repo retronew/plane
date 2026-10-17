@@ -60,7 +60,7 @@ function WebhooksListPage({ params }: Route.ComponentProps) {
   if (!webhooks) return <WebhookSettingsLoader />;
 
   return (
-    <SettingsContentWrapper compact header={<WebhooksWorkspaceSettingsHeader />}>
+    <SettingsContentWrapper header={<WebhooksWorkspaceSettingsHeader />}>
       <PageHead title={pageTitle} />
       <div className="w-full">
         <SettingsHeading

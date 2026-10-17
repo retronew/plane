@@ -29,6 +29,11 @@ export function TableLoader({ columns, rows }: TableSkeletonProps) {
               key={getColumnKey(column)}
               pinned="none"
               label={typeof column.header === "string" ? column.header : ""}
+              render={
+                // TableHead supplies the accessible column label.
+                // oxlint-disable-next-line jsx-a11y/control-has-associated-label
+                <th className="h-9! py-1!" />
+              }
             />
           ))}
         </TableRow>

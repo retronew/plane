@@ -11,11 +11,13 @@ import { Controller, useForm } from "react-hook-form";
 // plane imports
 import { ROLE_DETAILS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
-import { DeactivatedUserOutline, DeleteOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { CircleMinus } from "lucide-react";
+import { DeactivatedUserOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Badge } from "@makeplane/propel/components/badge";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser, IWorkspaceMember } from "@plane/types";
 // plane ui
@@ -59,6 +61,7 @@ export function NameColumn(props: NameProps) {
   // derived values
   const { avatar_url, display_name, email, first_name, id, last_name } = rowData.member;
   const isSuspended = rowData.is_active === false;
+  const memberName = [first_name, last_name].filter(Boolean).join(" ") || display_name || email;
 
   return (
     <div className="group relative">
@@ -85,12 +88,15 @@ export function NameColumn(props: NameProps) {
               </span>
             </Link>
           )}
-          <span
-            title={`${first_name ?? ""} ${last_name ?? ""}`.trim()}
-            className={`truncate ${isSuspended ? "text-placeholder" : ""}`}
-          >
-            {first_name} {last_name}
-          </span>
+          {isSuspended ? (
+            <span title={memberName} className="truncate text-placeholder">
+              {memberName}
+            </span>
+          ) : (
+            <Link href={`/${workspaceSlug}/profile/${id}`} title={memberName} className="truncate hover:underline">
+              {memberName}
+            </Link>
+          )}
         </div>
 
         {!isSuspended && (isAdmin || id === currentUser?.id) && (
@@ -109,7 +115,8 @@ export function NameColumn(props: NameProps) {
               {/* Single action: size to the content instead of the 204px default */}
               <MenuContent side="bottom" align="end" sizing="anchor">
                 <MenuItem
-                  icon={<Icon icon={DeleteOutline} />}
+                  variant="danger"
+                  icon={<Icon icon={CircleMinus} />}
                   label={id === currentUser?.id ? t("web.member_management.leave_workspace") : t("remove")}
                   onClick={() => setRemoveMemberModal(rowData)}
                 />
@@ -139,6 +146,11 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
   const isCurrentUser = currentUser?.id === rowData.member.id;
   const isAdminRole = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE);
   const isRoleNonEditable = isCurrentUser || !isAdminRole;
+  const roleDisabledReason = isCurrentUser
+    ? t("web.member_management.own_workspace_role_readonly")
+    : !isAdminRole
+      ? t("web.member_management.workspace_role_admin_required")
+      : undefined;
   const isSuspended = rowData.is_active === false;
   const roleOption = ROLE_OPTIONS.find((role) => role.key === rowData.role);
   const roleLabel = roleOption ? t(roleOption.labelKey) : "—";
@@ -149,46 +161,54 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
         <div className="flex w-32">
           <Badge variant="neutral" size="sm" label={translate("web.suspended")} />
         </div>
-      ) : isRoleNonEditable ? (
-        <div className="flex w-32">
-          <span>{roleLabel}</span>
-        </div>
       ) : (
         <Controller
           name="role"
           control={control}
           rules={{ required: translate("web.role_is_required") }}
           render={() => (
-            <div className="w-32">
-              <Select<TRoleOption>
-                value={roleOption ?? null}
-                onChange={(val) => {
-                  if (!workspaceSlug) return;
-                  updateMember(workspaceSlug.toString(), rowData.member.id, {
-                    role: Number(val) as EUserPermissions,
-                  }).catch((err: unknown) => {
-                    const error = err as { error?: string | string[] };
-                    const errorString = Array.isArray(error?.error) ? error.error[0] : error?.error;
-
-                    setToast({
-                      type: "error",
-                      title: translate("toast.error"),
-                      message:
-                        errorString ?? translate("web.an_error_occurred_while_updating_member_role_please_try_agai"),
-                    });
-                  });
-                }}
-                getValues={() => ROLE_OPTIONS}
-                getOptionValue={(role) => String(role.key)}
-                getOptionLabel={(role) => t(role.labelKey)}
-                showSearch={false}
-                pinSelected={false}
+            <Tooltip label={roleDisabledReason}>
+              <div
+                className="w-32"
+                role={isRoleNonEditable ? "group" : undefined}
+                aria-label={isRoleNonEditable ? `${t("role")}, ${roleLabel}` : undefined}
+                tabIndex={isRoleNonEditable ? 0 : undefined}
               >
-                <Select.Trigger<TRoleOption> variant="select-ghost-md">
-                  <span className="min-w-0 flex-1 truncate text-left">{roleLabel}</span>
-                </Select.Trigger>
-              </Select>
-            </div>
+                <Select<TRoleOption>
+                  disabled={isRoleNonEditable}
+                  placeholder={t("role")}
+                  value={roleOption ?? null}
+                  onChange={(val) => {
+                    if (!workspaceSlug || isRoleNonEditable || !val) return;
+                    updateMember(workspaceSlug.toString(), rowData.member.id, {
+                      role: Number(val) as EUserPermissions,
+                    }).catch((err: unknown) => {
+                      const error = err as { error?: string | string[] };
+                      const errorString = Array.isArray(error?.error) ? error.error[0] : error?.error;
+
+                      setToast({
+                        type: "error",
+                        title: translate("toast.error"),
+                        message:
+                          errorString ?? translate("web.an_error_occurred_while_updating_member_role_please_try_agai"),
+                      });
+                    });
+                  }}
+                  getValues={() => ROLE_OPTIONS}
+                  getOptionValue={(role) => String(role.key)}
+                  getOptionLabel={(role) => t(role.labelKey)}
+                  showSearch={false}
+                  pinSelected={false}
+                >
+                  <Select.Trigger<TRoleOption>
+                    variant="select-ghost-md"
+                    className={isRoleNonEditable ? "[&_svg]:visible" : undefined}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-left">{roleLabel}</span>
+                  </Select.Trigger>
+                </Select>
+              </div>
+            </Tooltip>
           )}
         />
       )}

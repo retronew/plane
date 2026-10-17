@@ -51,7 +51,6 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
   if (!canManage) return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
     <SettingsContentWrapper
-      compact
       header={
         <SettingsPageHeader
           leftItem={
@@ -63,7 +62,7 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
         />
       }
     >
-      <div className={cn("flex flex-col gap-6", feature === "projects" && "py-1")}>
+      <div className="flex flex-col gap-6">
         <SettingsHeading title={title} description={t(`web.workspace_${feature}_description`)} />
         <div
           className={cn(

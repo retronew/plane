@@ -103,7 +103,7 @@ export function CreateWebhookModal(props: ICreateWebhookModal) {
 
   if (inline)
     return generatedWebhook ? (
-      <GeneratedHookDetails webhookDetails={generatedWebhook} handleClose={handleClose} />
+      <GeneratedHookDetails inline webhookDetails={generatedWebhook} handleClose={handleClose} />
     ) : (
       <WebhookForm onSubmit={handleCreateWebhook} handleClose={handleClose} />
     );

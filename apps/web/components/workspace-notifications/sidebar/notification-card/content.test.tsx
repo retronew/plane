@@ -60,6 +60,22 @@ describe("notification sentence localization", () => {
     expect(container.textContent).toContain("到期");
     expect(container.textContent).not.toContain("Alice");
   });
+  it("renders approval notifications without an activity snapshot", () => {
+    const item = {
+      data: { event: "approval_requested", issue_id: "issue-id", approval_id: "approval-id" },
+    } as TNotification;
+    const { container } = render(
+      <NotificationContent notification={item} workspaceId="w" workspaceSlug="workspace" projectId="p" />
+    );
+    expect(container.textContent).toBe("待审批");
+  });
+  it("uses the title when an activity snapshot is missing", () => {
+    const item = { title: "A notification", data: {} } as TNotification;
+    const { container } = render(
+      <NotificationContent notification={item} workspaceId="w" workspaceSlug="workspace" projectId="p" />
+    );
+    expect(container.textContent).toBe("A notification");
+  });
   it("preserves rich comments and updates language", async () => {
     const { container } = render(
       <NotificationContent

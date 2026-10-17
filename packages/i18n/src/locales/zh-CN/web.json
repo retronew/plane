@@ -442,6 +442,11 @@
     "success": "成功",
     "suspended": "已暂停",
     "member_management": {
+      "own_workspace_role_readonly": "您不能修改自己的工作区角色。",
+      "workspace_role_admin_required": "仅工作区管理员可以修改成员角色。",
+      "own_project_role_readonly": "仅工作区管理员可以修改自己的项目角色。",
+      "workspace_admin_project_role_readonly": "您不能修改其他工作区管理员的项目角色。",
+      "project_role_admin_required": "仅项目管理员可以修改成员角色。",
       "leave_workspace": "退出工作区",
       "leave_workspace_title": "退出工作区？",
       "leave_workspace_description": "确定要退出此工作区吗？退出后你将无法再访问此工作区，此操作无法撤销。",

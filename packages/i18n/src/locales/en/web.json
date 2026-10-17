@@ -442,6 +442,11 @@
     "success": "Success",
     "suspended": "Suspended",
     "member_management": {
+      "own_workspace_role_readonly": "You cannot change your own workspace role.",
+      "workspace_role_admin_required": "Only workspace administrators can change member roles.",
+      "own_project_role_readonly": "Only workspace administrators can change their own project role.",
+      "workspace_admin_project_role_readonly": "You cannot change another workspace administrator's project role.",
+      "project_role_admin_required": "Only project administrators can change member roles.",
       "leave_workspace": "Leave workspace",
       "leave_workspace_title": "Leave workspace?",
       "leave_workspace_description": "Are you sure you want to leave this workspace? You will no longer have access to it. This action cannot be undone.",

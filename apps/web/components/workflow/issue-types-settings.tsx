@@ -2,7 +2,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { runInAction } from "mobx";
 import { useParams } from "react-router";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Shapes, Trash2 } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InputField } from "@makeplane/propel/components/input-field";
@@ -11,6 +11,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { TProjectIssueType, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
 import { SettingsHeading } from "@/components/settings/heading";
+import { SettingsPageHeader } from "@/components/settings/page-header";
 import { PageHead } from "@/components/core/page-title";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -67,7 +68,18 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     }
   };
   return (
-    <SettingsContentWrapper>
+    <SettingsContentWrapper
+      header={
+        <SettingsPageHeader
+          leftItem={
+            <div className="flex items-center gap-2">
+              <Shapes className="size-4 text-tertiary" />
+              <span>{t("web.workflow_ui.issue_types")}</span>
+            </div>
+          }
+        />
+      }
+    >
       <PageHead title={`${t("web.workflow_ui.issue_types")} - ${t("settings")}`} />
       <SettingsHeading title={t("web.workflow_ui.issue_types")} description={t("web.workflow_ui.types_description")} />
       {!types ? (

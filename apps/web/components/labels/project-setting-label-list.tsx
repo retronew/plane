@@ -104,7 +104,7 @@ export const ProjectSettingsLabelList = observer(function ProjectSettingsLabelLi
                     disabled={busy}
                     aria-label={`${t("web.reorder_category")} ${label.name}`}
                     title={t("web.reorder_category_hint")}
-                    className="absolute left-1 grid size-3 cursor-grab touch-none place-items-center rounded-xs text-placeholder opacity-0 group-hover:opacity-60 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing"
+                    className="absolute left-1 grid size-3 cursor-grab touch-none place-items-center rounded-xs text-placeholder opacity-60 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing"
                   >
                     <GripVertical className="size-3" />
                   </button>
