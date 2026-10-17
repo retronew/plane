@@ -1,10 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SWRConfig } from "swr";
+import { MemoryRouter } from "react-router";
 import useSWRInfinite from "swr/infinite";
 import type { IProject, TProjectOverviewAttachment, TProjectOverviewLink } from "@plane/types";
 import { EFileAssetType } from "@plane/types";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { calculateTimeAgo, convertBytesToSize, renderFormattedDate, renderFormattedTime } from "@plane/utils";
 import { projectOverviewKey } from "@/services/project/project-overview.service";
 import { ProjectOverviewResources } from "./resources";
 
@@ -24,7 +26,13 @@ const mocks = vi.hoisted(() => ({
   user: { id: "me" } as { id: string } | undefined,
   maxFileSize: 1024 * 1024,
 }));
-vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("@plane/i18n", () => ({
+  getCurrentLanguage: () => "en",
+  useTranslation: () => ({
+    t: (key: string, options?: { time?: string }) =>
+      key === "web.project_overview.link_added_at" ? `Added ${options?.time}` : key,
+  }),
+}));
 vi.mock("@/hooks/store/user", () => ({
   useUser: () => ({ data: mocks.user }),
   useUserPermissions: () => ({ allowPermissions: mocks.allowPermissions }),
@@ -72,6 +80,14 @@ const attachment: TProjectOverviewAttachment = {
   attributes: { name: "spec.pdf", size: 512, type: "application/pdf" },
   asset_url: "https://example.com/assets/spec.pdf",
   created_by: "me",
+  created_by_detail: {
+    id: "me",
+    first_name: "Ada",
+    last_name: "Lovelace",
+    display_name: "Ada",
+    avatar_url: "/api/assets/v2/static/avatar-1/",
+    is_bot: false,
+  },
   created_at: link.created_at,
 };
 const reaction = (actor: string) => ({
@@ -87,9 +103,11 @@ function setup(options: { project?: IProject; children?: React.ReactNode; progre
     <SWRConfig
       value={{ provider: () => cache, dedupingInterval: 0, shouldRetryOnError: false, revalidateOnFocus: false }}
     >
-      <ProjectOverviewResources project={options.project ?? project} workspaceSlug="acme">
-        {options.progress}
-      </ProjectOverviewResources>
+      <MemoryRouter>
+        <ProjectOverviewResources project={options.project ?? project} workspaceSlug="acme">
+          {options.progress}
+        </ProjectOverviewResources>
+      </MemoryRouter>
       {options.children}
     </SWRConfig>
   );
@@ -133,6 +151,52 @@ beforeEach(() => {
     fn.mockResolvedValue(undefined);
 });
 
+describe("resource link dialog motion", () => {
+  let finishAnimation: () => void;
+  beforeEach(() => {
+    const finished = new Promise<void>((resolve) => {
+      finishAnimation = resolve;
+    });
+    // Hold Base UI's actual transition lifecycle open; JSDOM does not run CSS transitions.
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0));
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
+    Object.defineProperty(HTMLElement.prototype, "getAnimations", {
+      configurable: true,
+      value: () => [{ finished }],
+    });
+  });
+  afterEach(() => {
+    delete (HTMLElement.prototype as Partial<HTMLElement>).getAnimations;
+    vi.unstubAllGlobals();
+  });
+
+  it.each(["cancel", "escape", "save"])(
+    "animates entry and keeps the draft mounted until %s finishes closing",
+    async (action) => {
+      setup();
+      fireEvent.click(button("web.project_overview.add_link"));
+      const dialog = screen.getByRole("dialog");
+      expect(dialog.hasAttribute("data-starting-style")).toBe(true);
+      await waitFor(() => expect(dialog.hasAttribute("data-starting-style")).toBe(false));
+      fillLink();
+      if (action === "cancel") fireEvent.click(button("cancel"));
+      else if (action === "escape")
+        fireEvent.keyDown(screen.getByRole("textbox", { name: "web.project_overview.link_url" }), { key: "Escape" });
+      else submitLink();
+      await waitFor(() => expect(dialog.hasAttribute("data-ending-style")).toBe(true));
+      expect(dialog.isConnected).toBe(true);
+      expect(within(dialog).getByRole("textbox", { name: "web.project_overview.link_title" })).toHaveProperty(
+        "value",
+        "Draft"
+      );
+      await act(async () => finishAnimation());
+      await waitFor(() => expect(dialog.isConnected).toBe(false));
+      await openCreate();
+      for (const input of screen.getAllByRole("textbox")) expect(input).toHaveProperty("value", "");
+    }
+  );
+});
+
 describe("project overview resources", () => {
   it("loads project scoped resources and renders safe links, titles, URLs and non-image attachments below the toolbar", async () => {
     mocks.getLinks.mockResolvedValue([link]);
@@ -140,7 +204,7 @@ describe("project overview resources", () => {
     const { container } = setup();
     const anchor = await screen.findByRole("link", { name: "Design" });
     expect(anchor.getAttribute("href")).toBe(link.url);
-    expect(screen.getByText(link.url)).toBeTruthy();
+    expect(screen.queryByText(link.url)).toBeNull();
     const file = screen.getByRole("link", { name: "spec.pdf" });
     expect(file.getAttribute("href")).toBe(attachment.asset_url);
     for (const item of [anchor, file]) {
@@ -154,6 +218,76 @@ describe("project overview resources", () => {
     for (const fn of [mocks.getLinks, mocks.getAttachments, mocks.getReactions])
       expect(fn).toHaveBeenCalledWith("acme", "project-1");
   });
+
+  it("uses compact link rows with a link icon and added time, without an uploader avatar", async () => {
+    mocks.getLinks.mockResolvedValue([link]);
+    setup();
+    const anchor = await screen.findByRole("link", { name: "Design" });
+    const row = anchor.closest("li")!;
+    expect(row.classList.contains("-mx-2")).toBe(true);
+    expect(row.classList.contains("rounded-md")).toBe(true);
+    expect(row.querySelector("svg.lucide-link")?.classList.contains("size-4")).toBe(true);
+    const time = row.querySelector("time")!;
+    expect(time.dateTime).toBe(link.created_at);
+    expect(time.textContent).toBe(`Added ${calculateTimeAgo(link.created_at)}`);
+    fireEvent.focus(time);
+    expect(await screen.findByRole("tooltip")).toHaveProperty(
+      "textContent",
+      `${renderFormattedDate(link.created_at)} ${renderFormattedTime(link.created_at)}`
+    );
+    expect(time.parentElement).toBe(anchor.parentElement);
+    expect(within(row).queryByText(link.url)).toBeNull();
+    expect(within(row).getAllByRole("link")).toEqual([anchor]);
+    expect(within(row).queryByRole("img")).toBeNull();
+    expect(within(row).getByRole("button", { name: "web.project_overview.edit_link" })).toBeTruthy();
+    expect(within(row).getByRole("button", { name: "web.project_overview.delete_link" })).toBeTruthy();
+  });
+
+  it("shows the URL as the link label when no title is provided", async () => {
+    mocks.getLinks.mockResolvedValue([{ ...link, title: "" }]);
+    setup();
+    const anchor = await screen.findByRole("link", { name: link.url });
+    expect(anchor.getAttribute("href")).toBe(link.url);
+    expect(within(anchor.closest("li")!).getByText(`Added ${calculateTimeAgo(link.created_at)}`)).toBeTruthy();
+  });
+
+  it("shows the uploader after file size and before delete, with a name tooltip", async () => {
+    mocks.getAttachments.mockResolvedValue([attachment]);
+    setup();
+    const profileLink = await screen.findByRole("link", { name: "Ada" });
+    expect(profileLink.getAttribute("href")).toBe("/acme/profile/me/");
+    expect(within(profileLink).queryByRole("img")).toBeNull();
+    const row = screen.getByRole("link", { name: "spec.pdf" }).closest("li")!;
+    const size = within(row).getByText(convertBytesToSize(attachment.attributes.size));
+    const deleteButton = within(row).getByRole("button", { name: "web.project_overview.delete_attachment" });
+    expect(size.compareDocumentPosition(profileLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(profileLink.compareDocumentPosition(deleteButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.mouseEnter(profileLink);
+    fireEvent.mouseMove(profileLink);
+    expect(await screen.findByRole("tooltip")).toHaveProperty("textContent", "Ada");
+  });
+
+  it.each([
+    {
+      created_by: "me",
+      created_by_detail: { ...attachment.created_by_detail!, display_name: "", avatar_url: "" },
+      name: "Ada Lovelace",
+    },
+    { created_by: null, created_by_detail: null, name: "unknown_user" },
+  ])(
+    "falls back to $name when the uploader has no display name or was deleted",
+    async ({ created_by, created_by_detail, name }) => {
+      mocks.getAttachments.mockResolvedValue([{ ...attachment, created_by, created_by_detail }]);
+      setup({ project: { ...project, archived_at: link.created_at } });
+      const trigger = await screen.findByRole(created_by ? "link" : "img", { name });
+      expect(trigger.textContent).toBeTruthy();
+      if (!created_by) expect(screen.queryByRole("link", { name })).toBeNull();
+      expect(screen.queryByRole("button", { name: "web.project_overview.delete_attachment" })).toBeNull();
+      fireEvent.mouseEnter(trigger);
+      fireEvent.mouseMove(trigger);
+      expect(await screen.findByRole("tooltip")).toHaveProperty("textContent", name);
+    }
+  );
 
   it("places counted resource sections after progress and collapses them independently", async () => {
     mocks.getLinks.mockResolvedValue([link]);
@@ -219,6 +353,29 @@ describe("project overview resources", () => {
       expect(mocks.createLink).toHaveBeenCalledWith("acme", project.id, { title: "", url: "http://example.com/docs" })
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("resets cancelled and saved drafts when creating or editing again", async () => {
+    mocks.getLinks.mockResolvedValue([link]);
+    setup();
+    await openCreate();
+    fillLink("Discard this", "javascript:alert(1)");
+    submitLink();
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    fireEvent.click(button("cancel"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    fireEvent.click(button("web.project_overview.edit_link"));
+    await screen.findByRole("dialog");
+    expect(screen.getByRole("textbox", { name: "web.project_overview.link_title" })).toHaveProperty(
+      "value",
+      link.title
+    );
+    expect(screen.getByRole("textbox", { name: "web.project_overview.link_url" })).toHaveProperty("value", link.url);
+    expect(screen.queryByRole("alert")).toBeNull();
+    submitLink();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await openCreate();
+    for (const input of screen.getAllByRole("textbox")) expect(input).toHaveProperty("value", "");
   });
 
   it("updates a link and allows an empty display title", async () => {

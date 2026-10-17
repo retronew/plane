@@ -6,14 +6,17 @@
 
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 import { ReactionOutline } from "@makeplane/propel/icons";
 import { observer } from "mobx-react";
 import useSWR, { unstable_serialize, useSWRConfig } from "swr";
-import { Link2, Paperclip, Pencil, Trash2 } from "lucide-react";
+import { Link as LinkIcon, Paperclip, Pencil, Trash2 } from "lucide-react";
+import { Avatar } from "@makeplane/propel/components/avatar";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { stringToEmoji } from "@plane/blocks/emoji-icon-picker";
 import { EmojiReactionGroup, EmojiReactionPicker } from "@plane/blocks/emoji-reaction";
@@ -23,11 +26,19 @@ import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EFileAssetType } from "@plane/types";
 import type { IProject, TProjectOverviewAttachment, TProjectOverviewLink } from "@plane/types";
-import { convertBytesToSize } from "@plane/utils";
+import {
+  calculateTimeAgo,
+  cn,
+  convertBytesToSize,
+  getFileURL,
+  renderFormattedDate,
+  renderFormattedTime,
+} from "@plane/utils";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { useFileSize } from "@/hooks/use-file-size";
 import { FileService } from "@/services/file.service";
 import { projectOverviewKey, projectOverviewService } from "@/services/project/project-overview.service";
+import { overviewActorName } from "./activity-values";
 import { ResourceLinkDialog } from "./resource-link-dialog";
 import { isResourceUrl } from "./resource-url";
 
@@ -36,6 +47,39 @@ type Props = { project: IProject; workspaceSlug: string; children?: ReactNode };
 type Deletion =
   | { kind: "links"; item: TProjectOverviewLink }
   | { kind: "attachments"; item: TProjectOverviewAttachment };
+
+function AttachmentUploader({
+  attachment,
+  workspaceSlug,
+}: {
+  attachment: TProjectOverviewAttachment;
+  workspaceSlug: string;
+}) {
+  const { t } = useTranslation();
+  const name = overviewActorName(attachment.created_by_detail, t("unknown_user"));
+  const avatar = (
+    <Avatar
+      size="xs"
+      src={getFileURL(attachment.created_by_detail?.avatar_url ?? "")}
+      alt={name}
+      tooltip={!attachment.created_by}
+    />
+  );
+  if (!attachment.created_by) return avatar;
+  return (
+    <Tooltip label={name}>
+      <Link
+        href={`/${workspaceSlug}/profile/${attachment.created_by}/`}
+        aria-label={name}
+        className="inline-flex shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-accent-strong"
+      >
+        <span aria-hidden="true" className="inline-flex">
+          {avatar}
+        </span>
+      </Link>
+    </Tooltip>
+  );
+}
 
 // Remount local drafts when navigating projects; SWR data is scoped by workspace and project too.
 export const ProjectOverviewResources = observer(function ProjectOverviewResources(props: Props) {
@@ -57,7 +101,7 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
   const reactions = useSWR(projectOverviewKey(workspaceSlug, project.id, "reactions"), () =>
     projectOverviewService.getReactions(workspaceSlug, project.id)
   );
-  const [linkDialog, setLinkDialog] = useState<{ link: TProjectOverviewLink | null } | null>(null);
+  const [linkDialog, setLinkDialog] = useState<{ link: TProjectOverviewLink | null; open: boolean } | null>(null);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -164,8 +208,9 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-subtle pb-6">
         <div className="flex flex-wrap items-center gap-2" aria-label={t("web.project_overview.reactions")}>
-          <fieldset disabled={!canReact || pending} className="contents">
+          <fieldset disabled={!canReact || pending} className="m-0 contents min-w-0 border-0 p-0">
             <EmojiReactionGroup
+              className="empty:hidden"
               reactions={Array.from(grouped.values())}
               showAddButton={false}
               onReactionClick={(emoji) =>
@@ -180,7 +225,10 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
               disabled={pending}
               onChange={(reaction) => void toggleReaction(reaction)}
               tooltip={t("common.actions.add_reaction")}
-              buttonClassName="inline-flex size-6 shrink-0 items-center justify-center rounded-sm text-secondary hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-60"
+              buttonClassName={cn(
+                "inline-flex size-6 shrink-0 items-center justify-center rounded-sm text-secondary hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-60",
+                grouped.size === 0 && "-ml-[5px]"
+              )}
               label={<ReactionOutline className="size-3.5" />}
             />
           )}
@@ -193,7 +241,7 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
               size="sm"
               label={t("web.project_overview.add_link")}
               disabled={pending}
-              onClick={() => setLinkDialog({ link: null })}
+              onClick={() => setLinkDialog({ link: null, open: true })}
             />
             <Button
               stretch="auto"
@@ -270,11 +318,16 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
                 <span className="text-tertiary">{links.data.length}</span>
               </span>
             }
+            hug
+            render={<div className="[&>div:last-child]:-mx-2 [&>div:last-child]:px-2 [&>div>button]:px-0" />}
           >
             <ul className="space-y-1">
               {links.data.map((link) => (
-                <li key={link.id} className="flex items-center gap-2 text-body-sm-regular">
-                  <Link2 className="size-4 shrink-0 text-tertiary" />
+                <li
+                  key={link.id}
+                  className="-mx-2 flex min-h-9 items-center gap-2 rounded-md px-2 py-1.5 text-body-xs-regular hover:bg-layer-1"
+                >
+                  <LinkIcon className="size-4 shrink-0 text-tertiary" />
                   <div className="min-w-0 flex-1">
                     {isResourceUrl(link.url) ? (
                       <a
@@ -288,9 +341,11 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
                     ) : (
                       <span className="block truncate">{link.title || link.url}</span>
                     )}
-                    {link.title && (
-                      <span className="block truncate text-caption-sm-regular text-tertiary">{link.url}</span>
-                    )}
+                    <Tooltip label={`${renderFormattedDate(link.created_at)} ${renderFormattedTime(link.created_at)}`}>
+                      <time dateTime={link.created_at} className="block truncate text-caption-sm-regular text-tertiary">
+                        {t("web.project_overview.link_added_at", { time: calculateTimeAgo(link.created_at) })}
+                      </time>
+                    </Tooltip>
                   </div>
                   {canManage(link) && (
                     <>
@@ -300,7 +355,7 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
                         aria-label={t("web.project_overview.edit_link")}
                         disabled={pending}
                         icon={<Icon icon={<Pencil />} />}
-                        onClick={() => setLinkDialog({ link })}
+                        onClick={() => setLinkDialog({ link, open: true })}
                       />
                       <IconButton
                         variant="ghost"
@@ -328,12 +383,14 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
                 <span className="text-tertiary">{attachments.data.length}</span>
               </span>
             }
+            hug
+            render={<div className="[&>div:last-child]:-mx-2 [&>div:last-child]:px-2 [&>div>button]:px-0" />}
           >
             <ul className="space-y-1">
               {attachments.data.map((attachment) => (
                 <li
                   key={attachment.id}
-                  className="flex h-11 items-center gap-3 rounded-sm pr-2 pl-6 text-body-xs-regular hover:bg-layer-1"
+                  className="-mx-2 flex min-h-9 items-center gap-2 rounded-md px-2 py-1.5 text-body-xs-regular hover:bg-layer-1"
                 >
                   <Paperclip className="size-4 shrink-0 text-tertiary" />
                   <a
@@ -347,6 +404,7 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
                   <span className="shrink-0 text-caption-sm-regular text-tertiary">
                     {convertBytesToSize(attachment.attributes.size)}
                   </span>
+                  <AttachmentUploader attachment={attachment} workspaceSlug={workspaceSlug} />
                   {canManage(attachment) && (
                     <IconButton
                       variant="ghost"
@@ -365,10 +423,16 @@ const ProjectResources = observer(function ProjectResources({ project, workspace
       )}
       {linkDialog && (
         <ResourceLinkDialog
+          open={linkDialog.open}
           link={linkDialog.link}
           pending={pending}
           disabled={linkDialog.link ? !canManage(linkDialog.link) : !canAdd}
-          onClose={() => !pendingRef.current && setLinkDialog(null)}
+          onClose={() => {
+            if (!pendingRef.current) setLinkDialog((dialog) => (dialog ? { ...dialog, open: false } : null));
+          }}
+          onOpenChangeComplete={(open) => {
+            if (!open) setLinkDialog((dialog) => (dialog?.open ? dialog : null));
+          }}
           onSave={(data) => {
             const link = linkDialog.link;
             if (link ? !canManage(link) : !canAdd) return Promise.resolve(false);

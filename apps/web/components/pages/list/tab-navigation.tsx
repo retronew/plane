@@ -4,12 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import Link from "next/link";
+import { TabsList } from "@makeplane/propel/components/tabs";
 // types
 import type { TPageNavigationTabs } from "@plane/types";
 // helpers
-import { cn } from "@plane/utils";
 import { translate } from "@plane/i18n";
+// components
+import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
+import { UnderlineTabLink } from "@/components/navigation/underline-tab-link";
 
 type TPageTabNavigation = {
   workspaceSlug: string;
@@ -47,28 +49,18 @@ export function PageTabNavigation(props: TPageTabNavigation) {
   };
 
   return (
-    <div className="relative flex h-full items-center">
-      {pageTabs.map((tab) => (
-        <Link
-          key={tab.key}
-          href={`/${workspaceSlug}/projects/${projectId}/pages?type=${tab.key}`}
-          onClick={(e) => handleTabClick(e, tab.key)}
-          className="flex h-full flex-col"
-        >
-          <div
-            className={cn(`flex flex-1 items-center justify-center px-4 text-13 font-medium transition-all`, {
-              "text-accent-primary": tab.key === pageType,
-            })}
-          >
-            {tab.label}
-          </div>
-          <div
-            className={cn(`w-full rounded-t border-t-2 border-transparent transition-all`, {
-              "border-accent-strong": tab.key === pageType,
-            })}
+    <AnimatedUnderlineTabs fillHeight value={pageType} motionKey={`/${workspaceSlug}/projects/${projectId}/pages`}>
+      <TabsList>
+        {pageTabs.map((tab) => (
+          <UnderlineTabLink
+            key={tab.key}
+            value={tab.key}
+            label={tab.label}
+            to={`/${workspaceSlug}/projects/${projectId}/pages?type=${tab.key}`}
+            linkProps={{ onClick: (e) => handleTabClick(e, tab.key) }}
           />
-        </Link>
-      ))}
-    </div>
+        ))}
+      </TabsList>
+    </AnimatedUnderlineTabs>
   );
 }

@@ -43,7 +43,7 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
   };
 
   const router = useAppRouter();
-  const { pageId: routePageId } = useParams();
+  const { workspaceSlug, projectId, pageId: routePageId } = useParams();
 
   const handleDelete = async () => {
     if (!pageId) return;
@@ -57,8 +57,8 @@ export const DeletePageModal = observer(function DeletePageModal(props: TConfirm
         message: translate("web.page_deleted_successfully"),
       });
 
-      if (routePageId) {
-        router.back();
+      if (routePageId === pageId) {
+        router.replace(`/${workspaceSlug}/projects/${projectId}/pages/`);
       }
     } catch {
       setToast({

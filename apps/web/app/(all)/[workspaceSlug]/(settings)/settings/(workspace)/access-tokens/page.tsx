@@ -19,12 +19,9 @@ export default observer(function WorkspaceTokensPage() {
     <SettingsContentWrapper
       header={
         <SettingsPageHeader
-          leftItem={
-            <div className="flex items-center gap-2">
-              <KeyRound className="size-4 text-tertiary" />
-              {t("web.workspace_tokens_title")}
-            </div>
-          }
+          breadcrumbs={[
+            { label: t("web.workspace_tokens_title"), icon: <KeyRound className="size-4 text-tertiary" /> },
+          ]}
         />
       }
     >

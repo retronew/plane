@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
-import { ChevronRightOutline, TemplatesOutline } from "@makeplane/propel/icons";
+import { TemplatesOutline } from "@makeplane/propel/icons";
 import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -61,19 +61,14 @@ export function ProjectTemplateEditor() {
       compact
       header={
         <SettingsPageHeader
-          leftItem={
-            <nav aria-label={t("web.templates")} className="flex items-center gap-2 text-13">
-              <Link
-                to={`/${workspaceSlug}/settings/projects/${projectId}/templates/`}
-                className="flex items-center gap-2"
-              >
-                <TemplatesOutline className="size-4" />
-                {t("web.templates")}
-              </Link>
-              <ChevronRightOutline className="size-3 text-tertiary" />
-              <span>{heading}</span>
-            </nav>
-          }
+          breadcrumbs={[
+            {
+              label: t("web.templates"),
+              href: `/${workspaceSlug}/settings/projects/${projectId}/templates/`,
+              icon: <TemplatesOutline className="size-4 text-tertiary" />,
+            },
+            { label: heading },
+          ]}
         />
       }
     >

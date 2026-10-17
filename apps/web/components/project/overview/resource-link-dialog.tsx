@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useId, useState } from "react";
+import { useId, useLayoutEffect, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import {
   Dialog,
@@ -24,16 +24,20 @@ import type { TProjectOverviewLink } from "@plane/types";
 import { isResourceUrl, normalizeResourceUrl } from "./resource-url";
 
 export function ResourceLinkDialog({
+  open,
   link,
   pending,
   disabled,
   onClose,
+  onOpenChangeComplete,
   onSave,
 }: {
+  open: boolean;
   link: TProjectOverviewLink | null;
   pending: boolean;
   disabled: boolean;
   onClose: () => void;
+  onOpenChangeComplete: (open: boolean) => void;
   onSave: (data: { title: string; url: string }) => Promise<boolean>;
 }) {
   const { t } = useTranslation();
@@ -42,9 +46,20 @@ export function ResourceLinkDialog({
   const [url, setUrl] = useState(link?.url ?? "");
   const [invalidUrl, setInvalidUrl] = useState(false);
   const locked = pending || disabled;
+  // Base UI needs a closed commit before opening a conditionally mounted dialog to animate entry.
+  const [mounted, setMounted] = useState(false);
+  useLayoutEffect(() => {
+    // Synchronize Base UI's enter transition before paint; this is not form-state initialization.
+    // eslint-disable-next-line react/set-state-in-effect, react-doctor/no-initialize-state
+    setMounted(true);
+  }, []);
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !pending && onClose()}>
+    <Dialog
+      open={mounted && open}
+      onOpenChangeComplete={onOpenChangeComplete}
+      onOpenChange={(nextOpen) => !nextOpen && !pending && onClose()}
+    >
       <DialogContent size="md">
         <form
           className="flex min-h-0 flex-1 flex-col"

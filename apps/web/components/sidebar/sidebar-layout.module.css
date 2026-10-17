@@ -1,11 +1,11 @@
-/* The sidebar and page header share one desktop band and control inset. */
+/* Desktop sidebar controls and page headers use independent row heights. */
 .headerRow {
   height: 53px;
 }
 
 @media (min-width: 768px) {
   .pageHeader {
-    height: 53px;
+    height: 48px;
     padding-inline: 20px;
   }
 }

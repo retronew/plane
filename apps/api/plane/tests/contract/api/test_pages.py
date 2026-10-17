@@ -5,6 +5,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,6 +17,7 @@ def _no_background_tasks():
     with (
         patch("plane.api.views.page.page_transaction.delay"),
         patch("plane.api.views.page.track_page_version.delay"),
+        patch("plane.db.mixins.soft_delete_related_objects.delay"),
     ):
         yield
 
@@ -166,16 +168,58 @@ class TestPageDetail:
 @pytest.mark.contract
 class TestPageLifecycle:
     @pytest.mark.django_db
-    def test_delete_requires_archive(self, api_key_client, workspace, project, create_user):
-        page = _make_page(project, create_user)
-        assert api_key_client.delete(_url(workspace, project, page)).status_code == status.HTTP_400_BAD_REQUEST
+    @pytest.mark.parametrize("archived", [False, True], ids=["active", "archived"])
+    def test_delete_preserves_child_pages(self, api_key_client, workspace, project, create_user, archived):
+        archived_at = timezone.now().date() if archived else None
+        page = _make_page(project, create_user, archived_at=archived_at)
+        child = _make_page(project, create_user, parent=page, archived_at=archived_at)
+        grandchild = _make_page(project, create_user, parent=child, archived_at=archived_at)
 
-        assert api_key_client.post(_url(workspace, project, page, "archive/")).status_code == status.HTTP_200_OK
-        page.refresh_from_db()
-        assert page.archived_at is not None
+        response = api_key_client.delete(_url(workspace, project, page))
 
-        assert api_key_client.delete(_url(workspace, project, page)).status_code == status.HTTP_204_NO_CONTENT
+        assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not Page.objects.filter(pk=page.pk).exists()
+        assert api_key_client.get(_url(workspace, project, page)).status_code == status.HTTP_403_FORBIDDEN
+        child.refresh_from_db()
+        grandchild.refresh_from_db()
+        assert child.parent_id is None
+        assert grandchild.parent_id == child.id
+        for survivor in (child, grandchild):
+            assert survivor.archived_at == archived_at
+            assert ProjectPage.objects.filter(project=project, page=survivor).exists()
+            assert api_key_client.get(_url(workspace, project, survivor)).status_code == status.HTTP_200_OK
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("archived", [False, True], ids=["active", "archived"])
+    @pytest.mark.parametrize(
+        "role,is_owner,expected_status",
+        [
+            (15, True, status.HTTP_204_NO_CONTENT),
+            (15, False, status.HTTP_403_FORBIDDEN),
+            (20, False, status.HTTP_204_NO_CONTENT),
+        ],
+        ids=["owner", "other-member", "admin"],
+    )
+    def test_delete_permissions(self, workspace, project, create_user, archived, role, is_owner, expected_status):
+        client, user = _member_client(workspace, project, role, "deleter@plane.so")
+        archived_at = timezone.now().date() if archived else None
+        page = _make_page(project, user if is_owner else create_user, archived_at=archived_at)
+        child = _make_page(project, create_user, parent=page, archived_at=archived_at)
+
+        response = client.delete(_url(workspace, project, page))
+
+        assert response.status_code == expected_status
+        child.refresh_from_db()
+        assert child.archived_at == archived_at
+        if expected_status == status.HTTP_204_NO_CONTENT:
+            assert not Page.objects.filter(pk=page.pk).exists()
+            assert child.parent_id is None
+        else:
+            page.refresh_from_db()
+            assert page.archived_at == archived_at
+            assert child.parent_id == page.id
+            assert ProjectPage.objects.filter(project=project, page=page).exists()
+            assert client.get(_url(workspace, project, page)).status_code == status.HTTP_200_OK
 
     @pytest.mark.django_db
     def test_archive_cascades_and_unarchive(self, api_key_client, workspace, project, create_user):

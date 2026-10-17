@@ -25,7 +25,7 @@ export function SettingsContentWrapper(props: Props) {
     <div className="@container flex size-full grow flex-col overflow-hidden">
       {header && (
         <div className="w-full shrink-0">
-          <AppHeader header={header} />
+          <AppHeader header={header} rowClassName="!h-12" />
         </div>
       )}
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">

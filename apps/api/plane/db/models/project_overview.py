@@ -27,6 +27,8 @@ class ProjectUpdate(ProjectBaseModel):
 
     body = models.TextField()
     health = models.CharField(max_length=20, choices=Health.choices, default=Health.ON_TRACK)
+    # Publication-time counts only; historical updates have no trustworthy snapshot.
+    progress = models.JSONField(null=True, blank=True)
 
     class Meta:
         db_table = "project_updates"
@@ -45,6 +47,34 @@ class ProjectReaction(ProjectBaseModel):
                 fields=["project", "actor", "reaction"],
                 condition=models.Q(deleted_at__isnull=True),
                 name="project_reaction_unique_active_actor_reaction",
+            )
+        ]
+
+
+class ProjectUpdateComment(ProjectBaseModel):
+    update = models.ForeignKey(ProjectUpdate, on_delete=models.CASCADE, related_name="comments")
+    body = models.TextField()
+
+    class Meta:
+        db_table = "project_update_comments"
+        ordering = ("created_at", "id")
+
+
+class ProjectUpdateReaction(ProjectBaseModel):
+    update = models.ForeignKey(ProjectUpdate, on_delete=models.CASCADE, related_name="reactions")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="project_update_reactions"
+    )
+    reaction = models.CharField(max_length=64)
+
+    class Meta:
+        db_table = "project_update_reactions"
+        ordering = ("-created_at", "-id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["update", "actor", "reaction"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="project_update_reaction_unique_active_actor_reaction",
             )
         ]
 

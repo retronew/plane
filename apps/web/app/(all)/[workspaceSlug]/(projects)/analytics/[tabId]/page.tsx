@@ -11,11 +11,10 @@ import { useRouter } from "next/navigation";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
-import { TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
+import { TabsPanel } from "@makeplane/propel/components/tabs";
 // components
 import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underline-tabs";
-import { UnderlineTabLink } from "@/components/navigation/underline-tab-link";
-import AnalyticsFilterActions from "@/components/analytics/analytics-filter-actions";
+import { AnalyticsToolbar } from "@/components/analytics/toolbar";
 import { PageHead } from "@/components/core/page-title";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
@@ -72,25 +71,7 @@ function AnalyticsPage({ params }: Route.ComponentProps) {
                 motionKey={`/${workspaceSlug}/analytics`}
               >
                 <div className="flex h-full min-h-0 w-full flex-col">
-                  <div className="flex min-h-12 w-full shrink-0 flex-wrap items-end justify-between gap-4 border-b border-subtle bg-surface-1 px-6">
-                    <div className="min-w-0 overflow-x-auto">
-                      <TabsList>
-                        {ANALYTICS_TABS.map((tab) => (
-                          <UnderlineTabLink
-                            key={tab.key}
-                            value={tab.key}
-                            disabled={tab.isDisabled}
-                            label={tab.label}
-                            to={`/${workspaceSlug}/analytics/${tab.key}/`}
-                          />
-                        ))}
-                      </TabsList>
-                    </div>
-
-                    <div className="mb-2 max-w-full shrink-0">
-                      <AnalyticsFilterActions />
-                    </div>
-                  </div>
+                  <AnalyticsToolbar workspaceSlug={workspaceSlug} tabs={ANALYTICS_TABS} />
                   {/* Grid wrapper: Propel's TabsPanel omits className, so the single mounted panel
                       gets its fill height from a one-row grid instead. */}
                   <div

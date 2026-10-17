@@ -6,9 +6,18 @@ import re
 from collections.abc import Mapping
 
 from django.core.validators import URLValidator
+from django.db.models import Count, Q
 from rest_framework import serializers
 
-from plane.db.models import ProjectActivity, ProjectLink, ProjectReaction, ProjectUpdate
+from plane.db.models import (
+    Issue,
+    ProjectActivity,
+    ProjectLink,
+    ProjectReaction,
+    ProjectUpdate,
+    ProjectUpdateComment,
+    ProjectUpdateReaction,
+)
 
 from .base import BaseSerializer
 from .user import UserLiteSerializer
@@ -50,17 +59,6 @@ class ProjectLinkSerializer(EditableFieldsOnlyMixin, BaseSerializer):
     class Meta:
         model = ProjectLink
         fields = [*RESOURCE_FIELDS, "title", "url", "created_by_detail"]
-        read_only_fields = RESOURCE_FIELDS
-
-
-class ProjectUpdateSerializer(EditableFieldsOnlyMixin, BaseSerializer):
-    editable_fields = frozenset({"body", "health"})
-    body = serializers.CharField(max_length=100000)
-    created_by_detail = UserLiteSerializer(source="created_by", read_only=True)
-
-    class Meta:
-        model = ProjectUpdate
-        fields = [*RESOURCE_FIELDS, "body", "health", "created_by_detail"]
         read_only_fields = RESOURCE_FIELDS
 
 
@@ -134,6 +132,64 @@ class ProjectReactionSerializer(EditableFieldsOnlyMixin, BaseSerializer):
         read_only_fields = [*RESOURCE_FIELDS, "actor"]
         # Idempotence is handled under the project's write lock, not by input validation.
         validators = []
+
+
+class ProjectUpdateReactionSerializer(ProjectReactionSerializer):
+    class Meta(ProjectReactionSerializer.Meta):
+        model = ProjectUpdateReaction
+
+
+def get_project_update_progress(project):
+    return (
+        Issue.issue_objects.filter(project=project, workspace_id=project.workspace_id)
+        .exclude(state__group="cancelled")
+        .aggregate(completed=Count("id", filter=Q(state__group="completed")), total=Count("id"))
+    )
+
+
+class ProjectUpdateSerializer(EditableFieldsOnlyMixin, BaseSerializer):
+    editable_fields = frozenset({"body", "health"})
+    body = serializers.CharField(max_length=100000)
+    created_by_detail = UserLiteSerializer(source="created_by", read_only=True)
+    comment_count = serializers.IntegerField(read_only=True, default=0)
+    reactions = ProjectUpdateReactionSerializer(many=True, read_only=True)
+    progress = serializers.SerializerMethodField()
+    progress_source = serializers.SerializerMethodField()
+
+    def get_progress(self, instance):
+        return instance.progress if instance.progress is not None else self.context.get("current_progress")
+
+    def get_progress_source(self, instance):
+        return "snapshot" if instance.progress is not None else "current"
+
+    def create(self, validated_data):
+        validated_data["progress"] = get_project_update_progress(validated_data["project"])
+        return super().create(validated_data)
+
+    class Meta:
+        model = ProjectUpdate
+        fields = [
+            *RESOURCE_FIELDS,
+            "body",
+            "health",
+            "created_by_detail",
+            "progress",
+            "progress_source",
+            "comment_count",
+            "reactions",
+        ]
+        read_only_fields = [*RESOURCE_FIELDS, "progress"]
+
+
+class ProjectUpdateCommentSerializer(EditableFieldsOnlyMixin, BaseSerializer):
+    editable_fields = frozenset({"body"})
+    body = serializers.CharField(max_length=100000)
+    created_by_detail = UserLiteSerializer(source="created_by", read_only=True)
+
+    class Meta:
+        model = ProjectUpdateComment
+        fields = ["id", "body", "created_by", "created_by_detail", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_by", "created_at", "updated_at"]
 
 
 class ProjectActivitySerializer(BaseSerializer):

@@ -61,7 +61,7 @@ export const WorkflowRunnerSettings = observer(function WorkflowRunnerSettings()
         </output>
       ) : !access.can_manage ? (
         <p className="mt-6 text-body-sm-regular text-secondary">
-          {t("common.you_do_not_have_the_permission_to_access_this_page")}
+          {t("you_do_not_have_the_permission_to_access_this_page")}
         </p>
       ) : (
         <>

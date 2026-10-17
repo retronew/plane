@@ -20,12 +20,7 @@ export default observer(function ProjectTemplatesPage() {
       compact
       header={
         <SettingsPageHeader
-          leftItem={
-            <div className="flex items-center gap-2">
-              <TemplatesOutline className="size-4 text-tertiary" />
-              <span>{t("web.templates")}</span>
-            </div>
-          }
+          breadcrumbs={[{ label: t("web.templates"), icon: <TemplatesOutline className="size-4 text-tertiary" /> }]}
         />
       }
     >

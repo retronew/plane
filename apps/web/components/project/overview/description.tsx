@@ -6,7 +6,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
-import { Button } from "@makeplane/propel/components/button";
 import { TextArea } from "@makeplane/propel/components/text-area";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
@@ -32,6 +31,7 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
   const [draft, setDraft] = useState(project.description ?? "");
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
+  const initialDescription = useRef(project.description ?? "");
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,18 +40,17 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
 
   const startEditing = () => {
     if (disabled || saving.current) return;
-    setDraft(project.description ?? "");
+    initialDescription.current = project.description ?? "";
+    setDraft(initialDescription.current);
     setEditing(true);
-  };
-
-  const cancel = () => {
-    if (saving.current) return;
-    setDraft(project.description ?? "");
-    setEditing(false);
   };
 
   const save = async () => {
     if (disabled || saving.current || !workspaceSlug) return;
+    if (draft === initialDescription.current) {
+      setEditing(false);
+      return;
+    }
     saving.current = true;
     setBusy(true);
     try {
@@ -72,7 +71,7 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
         type="button"
         disabled={disabled}
         onClick={startEditing}
-        className="focus-visible:ring-primary block min-h-10 w-full rounded-sm text-left text-14 outline-none focus-visible:ring-2 disabled:cursor-default"
+        className="focus-visible:ring-primary flex min-h-10 w-full items-start rounded-sm p-0 text-left text-14 leading-6 outline-none focus-visible:ring-2 disabled:cursor-default"
       >
         <p className={`break-words whitespace-pre-wrap ${project.description ? "text-primary" : "text-placeholder"}`}>
           {project.description || t("common.click_to_add_description")}
@@ -84,31 +83,20 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
   return (
     <div
       ref={editorRef}
-      className="flex flex-col gap-3 [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:text-14 [&_textarea]:leading-relaxed"
+      className="flex min-h-10 flex-col [&_textarea]:min-h-10 [&_textarea]:w-full [&_textarea]:resize-none [&_textarea]:rounded-none [&_textarea]:border-0 [&_textarea]:p-0 [&_textarea]:text-14 [&_textarea]:leading-6 [&_textarea]:placeholder:text-placeholder"
     >
       <TextArea
         size="xl"
         surface="inline"
         autoResize
-        rows={2}
+        rows={1}
         aria-label={t("description")}
         placeholder={t("common.click_to_add_description")}
         value={draft}
         disabled={disabled || busy}
         onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => void save()}
       />
-      <div className="flex items-center gap-2">
-        <Button
-          variant="primary"
-          size="sm"
-          stretch="auto"
-          label={t(busy ? "saving" : "save")}
-          loading={busy}
-          disabled={disabled || busy}
-          onClick={() => void save()}
-        />
-        <Button variant="ghost" size="sm" stretch="auto" label={t("cancel")} disabled={busy} onClick={cancel} />
-      </div>
     </div>
   );
 });

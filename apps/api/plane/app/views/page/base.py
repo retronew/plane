@@ -388,12 +388,6 @@ class PageViewSet(BaseViewSet):
             project_pages__deleted_at__isnull=True,
         )
 
-        if page.archived_at is None:
-            return Response(
-                {"error": "The page should be archived before deleting"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         if page.owned_by_id != request.user.id and (
             not ProjectMember.objects.filter(
                 workspace__slug=slug,

@@ -144,6 +144,15 @@ def test_signed_upload_list_download_and_soft_delete(
         "asset_url": asset.asset_url,
         "created_at": asset.created_at,
         "created_by": str(create_user.id),
+        "created_by_detail": {
+            "id": create_user.id,
+            "first_name": create_user.first_name,
+            "last_name": create_user.last_name,
+            "avatar": create_user.avatar,
+            "avatar_url": create_user.avatar_url,
+            "is_bot": create_user.is_bot,
+            "display_name": create_user.display_name,
+        },
     }
     response = session_client.get(asset.asset_url)
     assert response.status_code == 302
@@ -168,6 +177,42 @@ def test_signed_upload_list_download_and_soft_delete(
         old_value={"id": str(asset.id), "name": "project-plan.pdf"},
     )
     storage.delete_files.assert_not_called()
+
+
+def test_list_retains_uploader_details_after_membership_removed(
+    session_client, workspace, project, make_asset, member_client
+):
+    _, uploader = member_client()
+    uploader.display_name = "Former uploader"
+    uploader.save(update_fields=["display_name"])
+    avatar = make_asset(entity_type=FileAsset.EntityTypeContext.USER_AVATAR)
+    uploader.avatar_asset = avatar
+    uploader.save(update_fields=["avatar_asset"])
+    attachment = make_asset(created_by=uploader)
+    ProjectMember.objects.filter(project=project, member=uploader).delete()
+    WorkspaceMember.objects.filter(workspace=workspace, member=uploader).delete()
+
+    response = session_client.get(collection_url(workspace, project))
+
+    assert response.status_code == 200
+    assert len(response.data) == 1
+    assert response.data[0]["id"] == str(attachment.id)
+    author = response.data[0]["created_by_detail"]
+    assert str(author["id"]) == str(uploader.id)
+    assert author["display_name"] == "Former uploader"
+    assert author["avatar_url"] == avatar.asset_url
+    assert "email" not in author
+
+
+def test_list_handles_deleted_uploader(session_client, workspace, project, make_asset):
+    attachment = make_asset(created_by=None)
+
+    response = session_client.get(collection_url(workspace, project))
+
+    assert response.status_code == 200
+    assert response.data[0]["id"] == str(attachment.id)
+    assert response.data[0]["created_by"] is None
+    assert response.data[0]["created_by_detail"] is None
 
 
 @pytest.mark.parametrize("mime_type", ["application/pdf", "text/plain", "application/octet-stream", "text/html"])

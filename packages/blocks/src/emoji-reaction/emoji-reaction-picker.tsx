@@ -110,12 +110,13 @@ export function EmojiReactionPicker(props: EmojiReactionPickerProps) {
       )}
       <PopoverContent
         variant="rich"
+        data-emoji-reaction-picker-popup=""
         side={finalSide}
         align={finalAlign}
         sideOffset={8}
         data-prevent-outside-click="true"
       >
-        <PopoverBody tabIndex={0}>
+        <PopoverBody data-emoji-reaction-picker-body="" tabIndex={0}>
           <div className={cn("h-80", dropdownClassName)}>
             <EmojiRoot
               onChange={handleEmojiChange}

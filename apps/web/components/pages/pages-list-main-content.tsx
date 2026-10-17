@@ -16,7 +16,6 @@ import type { TPage, TPageNavigationTabs } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // components
 import { PageLoader } from "@/components/pages/loaders/page-loader";
-import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 // plane web hooks
 import { EPageStoreType, usePageStore } from "@/hooks/store";
@@ -32,7 +31,6 @@ export const PagesListMainContent = observer(function PagesListMainContent(props
   // plane hooks
   const { t } = useTranslation();
   // store hooks
-  const { currentProjectDetails } = useProject();
   const { isAnyPageAvailable, getCurrentProjectFilteredPageIdsByTab, getCurrentProjectPageIdsByTab, loader } =
     usePageStore(storeType);
   const { allowPermissions } = useUserPermissions();
@@ -41,7 +39,7 @@ export const PagesListMainContent = observer(function PagesListMainContent(props
   const [isCreatingPage, setIsCreatingPage] = useState(false);
   // router
   const router = useRouter();
-  const { workspaceSlug } = useParams();
+  const { workspaceSlug, projectId } = useParams();
   // derived values
   const pageIds = getCurrentProjectPageIdsByTab(pageType);
   const filteredPageIds = getCurrentProjectFilteredPageIdsByTab(pageType);
@@ -58,10 +56,9 @@ export const PagesListMainContent = observer(function PagesListMainContent(props
       access: pageType === "private" ? EPageAccess.PRIVATE : EPageAccess.PUBLIC,
     };
 
-    await createPage(payload)
+    await createPage(payload, { addToStore: false })
       .then((res) => {
-        const pageId = `/${workspaceSlug}/projects/${currentProjectDetails?.id}/pages/${res?.id}`;
-        router.push(pageId);
+        if (res?.id) router.push(`/${workspaceSlug}/projects/${projectId}/pages/${res.id}`);
         return undefined;
       })
       .catch((err) => {

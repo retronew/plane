@@ -49,6 +49,8 @@ from .project_overview import (
     ProjectActivitySerializer,
     ProjectLinkSerializer,
     ProjectReactionSerializer,
+    ProjectUpdateCommentSerializer,
+    ProjectUpdateReactionSerializer,
     ProjectUpdateSerializer,
 )
 from .state import StateSerializer, StateLiteSerializer

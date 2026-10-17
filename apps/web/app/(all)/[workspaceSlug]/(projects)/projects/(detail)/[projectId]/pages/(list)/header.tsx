@@ -60,11 +60,10 @@ export const PagesListHeader = observer(function PagesListHeader() {
       access: pageType === "private" ? EPageAccess.PRIVATE : EPageAccess.PUBLIC,
     };
 
-    await createPage(payload)
-      // oxlint-disable-next-line promise/always-return
+    await createPage(payload, { addToStore: false })
       .then((res) => {
-        const pageId = `/${workspaceSlug}/projects/${currentProjectDetails?.id}/pages/${res?.id}`;
-        router.push(pageId);
+        if (res?.id) router.push(`/${workspaceSlug}/projects/${projectId}/pages/${res.id}`);
+        return undefined;
       })
       .catch((err) => {
         setToast({

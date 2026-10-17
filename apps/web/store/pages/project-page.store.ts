@@ -62,7 +62,7 @@ export interface IProjectPageStore {
     pageId: string,
     options?: { trackVisit?: boolean }
   ) => Promise<TPage | undefined>;
-  createPage: (pageData: Partial<TPage>) => Promise<TPage | undefined>;
+  createPage: (pageData: Partial<TPage>, options?: { addToStore?: boolean }) => Promise<TPage | undefined>;
   removePage: (params: { pageId: string; shouldSync?: boolean }) => Promise<void>;
   movePage: (workspaceSlug: string, projectId: string, pageId: string, newProjectId: string) => Promise<void>;
 }
@@ -295,7 +295,7 @@ export class ProjectPageStore implements IProjectPageStore {
    * @description create a page
    * @param {Partial<TPage>} pageData
    */
-  createPage = async (pageData: Partial<TPage>) => {
+  createPage = async (pageData: Partial<TPage>, { addToStore = true }: { addToStore?: boolean } = {}) => {
     try {
       const { workspaceSlug, projectId } = this.store.router;
       if (!workspaceSlug || !projectId) return undefined;
@@ -307,7 +307,8 @@ export class ProjectPageStore implements IProjectPageStore {
 
       const page = await this.service.create(workspaceSlug, projectId, pageData);
       runInAction(() => {
-        if (page?.id) set(this.data, [page.id], new ProjectPage(this.store, page));
+        // Redirecting callers let the detail route load the page, avoiding a flash in the list.
+        if (addToStore && page?.id) set(this.data, [page.id], new ProjectPage(this.store, page));
         this.loader = undefined;
       });
 

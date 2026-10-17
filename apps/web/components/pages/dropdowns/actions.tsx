@@ -161,8 +161,9 @@ export const PageActions = observer(function PageActions(props: Props) {
             setDeletePageModal(true);
           },
           title: t("web.delete"),
+          variant: "danger",
           icon: DeleteOutline,
-          shouldRender: canCurrentUserDeletePage && !!archived_at,
+          shouldRender: canCurrentUserDeletePage,
         },
         {
           key: "move",

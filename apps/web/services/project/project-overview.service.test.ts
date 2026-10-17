@@ -67,6 +67,30 @@ it("preserves network failures for the component retry state", async () => {
   await expect(service.getUpdates("workspace", "project")).rejects.toBe(error);
 });
 
+it("scopes update comments and reactions to their parent update", async () => {
+  const service = new ProjectOverviewService();
+  const comment = { id: "comment", body: "Hello" };
+  const read = vi.spyOn(service, "get").mockResolvedValue({ data: [comment] } as never);
+  const create = vi.spyOn(service, "post").mockResolvedValue({ data: comment } as never);
+  const remove = vi.spyOn(service, "delete").mockResolvedValue({ data: undefined } as never);
+  const patch = vi.spyOn(service, "patch").mockResolvedValue({ data: comment } as never);
+  expect(await service.updateUpdateComment("workspace", "project", "update", "comment", "Edited")).toBe(comment);
+  expect(patch).toHaveBeenCalledWith("/api/workspaces/workspace/projects/project/updates/update/comments/comment/", {
+    body: "Edited",
+  });
+  expect(await service.getUpdateComments("workspace", "project", "update")).toEqual([comment]);
+  expect(await service.createUpdateComment("workspace", "project", "update", "Hello")).toBe(comment);
+  await service.deleteUpdateComment("workspace", "project", "update", "comment");
+  await service.addUpdateReaction("workspace", "project", "update", "128077");
+  await service.deleteUpdateReaction("workspace", "project", "update", "128077");
+  const base = "/api/workspaces/workspace/projects/project/updates/update";
+  expect(read).toHaveBeenCalledWith(`${base}/comments/`);
+  expect(create).toHaveBeenCalledWith(`${base}/comments/`, { body: "Hello" });
+  expect(remove).toHaveBeenCalledWith(`${base}/comments/comment/`);
+  expect(create).toHaveBeenCalledWith(`${base}/reactions/`, { reaction: "128077" });
+  expect(remove).toHaveBeenCalledWith(`${base}/reactions/`, { reaction: "128077" });
+});
+
 it("isolates overview cache entries by workspace, project and resource", () => {
   const entries = [
     projectOverviewKey("one", "project", "links"),

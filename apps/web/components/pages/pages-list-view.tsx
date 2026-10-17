@@ -25,7 +25,7 @@ type TPageView = {
 export const PagesListView = observer(function PagesListView(props: TPageView) {
   const { children, pageType, projectId, storeType, workspaceSlug } = props;
   // store hooks
-  const { isAnyPageAvailable, fetchPagesList } = usePageStore(storeType);
+  const { fetchPagesList } = usePageStore(storeType);
   // fetching pages list
   useSWR(
     workspaceSlug && projectId && pageType ? `PROJECT_PAGES_${projectId}` : null,
@@ -36,14 +36,12 @@ export const PagesListView = observer(function PagesListView(props: TPageView) {
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       {/* tab header */}
-      {isAnyPageAvailable && (
-        <PagesListHeaderRoot
-          pageType={pageType}
-          projectId={projectId}
-          storeType={storeType}
-          workspaceSlug={workspaceSlug}
-        />
-      )}
+      <PagesListHeaderRoot
+        pageType={pageType}
+        projectId={projectId}
+        storeType={storeType}
+        workspaceSlug={workspaceSlug}
+      />
       <PagesListMainContent pageType={pageType} storeType={storeType}>
         {children}
       </PagesListMainContent>

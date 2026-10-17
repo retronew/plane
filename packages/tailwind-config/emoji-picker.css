@@ -32,6 +32,36 @@
   overflow: hidden;
 }
 
+/* Reaction pickers share the emoji grid, but have no tabs or outer content inset. */
+[data-emoji-reaction-picker-popup] {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+[data-emoji-reaction-picker-body],
+[data-emoji-reaction-picker-body] > div {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+[data-emoji-reaction-picker-popup] [data-slot="emoji-picker-search-header"] {
+  border-top-width: 0;
+  padding-right: 0;
+}
+[data-emoji-reaction-picker-popup] [data-slot="emoji-picker-skin-tone-selector"] {
+  margin-right: 8px;
+}
+[data-emoji-reaction-picker-popup] [data-slot="emoji-picker-content"] {
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+[data-emoji-reaction-picker-popup] [data-slot="emoji-picker-content"]::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
 /* These are the only scrollports; keep colour/search controls stationary. */
 [data-icon-picker-scrollport],
 [data-emoji-icon-picker-popup] [data-slot="emoji-picker-content"] {

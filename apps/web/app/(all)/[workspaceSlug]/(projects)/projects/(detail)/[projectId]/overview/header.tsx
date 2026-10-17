@@ -51,9 +51,10 @@ export const ProjectOverviewHeader = observer(function ProjectOverviewHeader({
       </Header.LeftItem>
       <Header.RightItem>
         <IconButton
-          variant="ghost"
+          variant={sidebarOpen ? "tertiary" : "ghost"}
           size="sm"
           aria-label={t("web.toggle_sidebar")}
+          aria-pressed={sidebarOpen}
           aria-expanded={sidebarOpen}
           aria-controls="project-overview-sidebar"
           onClick={onToggleSidebar}

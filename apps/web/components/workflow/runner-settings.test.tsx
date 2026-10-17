@@ -63,7 +63,7 @@ it("does not mount management components for members opening the route directly"
   render(<WorkflowRunnerSettings />);
   expect(screen.queryByTestId("scripts")).toBeNull();
   expect(screen.queryByTestId("executions")).toBeNull();
-  expect(screen.getByText("common.you_do_not_have_the_permission_to_access_this_page")).toBeTruthy();
+  expect(screen.getByText("you_do_not_have_the_permission_to_access_this_page")).toBeTruthy();
 });
 it("waits for project permissions and offers a retry after a failed load", () => {
   state.store.lists = {};

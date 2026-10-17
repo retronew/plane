@@ -98,7 +98,10 @@ export function EmojiRoot(props: EmojiRootProps) {
       className="isolate flex h-full w-full flex-col rounded-md border-none"
       onEmojiSelect={(val) => onChange(val.emoji)}
     >
-      <div className="z-10 flex h-9 shrink-0 items-center gap-2 border-y border-subtle px-3 transition-colors duration-150 ease-out focus-within:bg-layer-transparent-hover motion-reduce:transition-none">
+      <div
+        data-slot="emoji-picker-search-header"
+        className="z-10 flex h-9 shrink-0 items-center gap-2 border-y border-subtle px-3 transition-colors duration-150 ease-out focus-within:bg-layer-transparent-hover motion-reduce:transition-none"
+      >
         <div
           ref={searchWrapperRef}
           data-slot="emoji-picker-search-wrapper"

@@ -25,6 +25,7 @@ from ..base import BaseAPIView
 from plane.db.models import FileAsset, Workspace, Project, User, WorkspaceMember, ProjectMember
 from plane.settings.storage import S3Storage
 from plane.app.permissions import allow_permission, ROLE
+from plane.app.serializers import UserLiteSerializer
 from plane.utils.cache import invalidate_cache_directly
 from plane.utils.path_validator import sanitize_filename
 from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
@@ -848,7 +849,7 @@ class ProjectAssetEndpoint(BaseAPIView):
                     is_uploaded=True,
                     is_deleted=False,
                 )
-                .select_related("workspace")
+                .select_related("workspace", "created_by__avatar_asset")
                 .order_by("-created_at", "-id")
             )
             return Response(
@@ -859,6 +860,7 @@ class ProjectAssetEndpoint(BaseAPIView):
                         "asset_url": asset.asset_url,
                         "created_at": asset.created_at,
                         "created_by": str(asset.created_by_id) if asset.created_by_id else None,
+                        "created_by_detail": UserLiteSerializer(asset.created_by).data if asset.created_by_id else None,
                     }
                     for asset in assets
                 ]

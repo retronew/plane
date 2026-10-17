@@ -209,7 +209,7 @@ class PageDetailAPIEndpoint(PageAPIMixin, BaseAPIView):
     @page_docs(
         operation_id="delete_page",
         summary="Delete a page",
-        description="Permanently delete an archived page. Only the owner or a project admin can delete.",
+        description="Permanently delete a page. Only the owner or a project admin can delete. Sub-pages are preserved.",
         parameters=[PAGE_ID_PARAMETER],
         responses={204: DELETED_RESPONSE},
     )
@@ -217,11 +217,6 @@ class PageDetailAPIEndpoint(PageAPIMixin, BaseAPIView):
         page = self.get_page(slug, project_id, page_id)
         if page is None:
             return Response({"error": "Page not found"}, status=status.HTTP_404_NOT_FOUND)
-        if page.archived_at is None:
-            return Response(
-                {"error": "The page should be archived before deleting"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         if not _can_manage(page, _project_role(slug, project_id, request.user), request.user):
             return Response({"error": "Only admin or owner can delete the page"}, status=status.HTTP_403_FORBIDDEN)
 

@@ -11,7 +11,15 @@ import { describe, expect, it, vi } from "vitest";
 import { EmojiReactionPicker } from "./emoji-reaction-picker";
 
 vi.mock("../emoji-icon-picker/emoji/emoji", () => ({
-  EmojiRoot: () => <div data-testid="emoji-grid">emoji grid</div>,
+  EmojiRoot: () => (
+    <div data-testid="emoji-grid">
+      <div data-slot="emoji-picker-search-header">
+        search
+        <button type="button" data-slot="emoji-picker-skin-tone-selector" aria-label="Change skin tone" />
+      </div>
+      <div data-slot="emoji-picker-content">emoji grid</div>
+    </div>
+  ),
 }));
 
 function ControlledPicker({ tooltip }: { tooltip?: string }) {
@@ -47,6 +55,44 @@ describe("EmojiReactionPicker popover", () => {
     await user.click(screen.getByRole("button", { name: "Add reaction" }));
     expect(await screen.findByTestId("emoji-grid")).toBeDefined();
     expect(document.querySelector("[data-prevent-outside-click]")).not.toBeNull();
+  });
+
+  it("removes outer insets and the search top border while keeping a thin transparent scroll track", async () => {
+    const { readFileSync } = await vi.importActual<{ readFileSync: (path: string, encoding: "utf8") => string }>(
+      "node:fs"
+    );
+    const style = document.createElement("style");
+    style.textContent = readFileSync("../tailwind-config/emoji-picker.css", "utf8");
+    document.head.append(style);
+
+    try {
+      render(
+        <EmojiReactionPicker isOpen handleToggle={vi.fn()} onChange={vi.fn()} label={<span>Add reaction</span>} />
+      );
+      const grid = screen.getByTestId("emoji-grid");
+      const popup = grid.closest("[data-emoji-reaction-picker-popup]");
+      const body = grid.closest("[data-emoji-reaction-picker-body]");
+      expect(popup).not.toBeNull();
+      expect(body).not.toBeNull();
+      expect(getComputedStyle(popup!).padding).toBe("0px");
+      expect(getComputedStyle(body!).padding).toBe("0px");
+      expect(getComputedStyle(body!).margin).toBe("0px");
+      expect(getComputedStyle(body!).overflow).toBe("hidden");
+      expect(getComputedStyle(body!.firstElementChild!).padding).toBe("0px");
+      expect(getComputedStyle(body!.firstElementChild!).margin).toBe("0px");
+      expect(getComputedStyle(grid.querySelector('[data-slot="emoji-picker-search-header"]')!).borderTopWidth).toBe(
+        "0px"
+      );
+      expect(getComputedStyle(grid.querySelector('[data-slot="emoji-picker-search-header"]')!).paddingRight).toBe(
+        "0px"
+      );
+      expect(getComputedStyle(screen.getByRole("button", { name: "Change skin tone" })).marginRight).toBe("8px");
+      const scrollportStyle = getComputedStyle(grid.querySelector('[data-slot="emoji-picker-content"]')!);
+      expect(scrollportStyle.getPropertyValue("scrollbar-width")).toBe("thin");
+      expect(scrollportStyle.getPropertyValue("scrollbar-color")).toBe("var(--scrollbar-thumb) transparent");
+    } finally {
+      style.remove();
+    }
   });
 
   it("keeps the prevent-outside panel while open and drops it when closed", () => {

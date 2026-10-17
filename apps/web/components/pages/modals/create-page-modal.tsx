@@ -67,7 +67,7 @@ export function CreatePageModal(props: Props) {
     if (!workspaceSlug || !projectId) return;
 
     try {
-      const pageData = await createPage(pageFormData);
+      const pageData = await createPage(pageFormData, { addToStore: !redirectionEnabled });
       if (pageData) {
         handleStateClear();
         if (redirectionEnabled) router.push(`/${workspaceSlug}/projects/${projectId}/pages/${pageData.id}`);

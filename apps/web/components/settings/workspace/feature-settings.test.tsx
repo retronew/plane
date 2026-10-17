@@ -10,9 +10,15 @@ vi.mock("@/hooks/store/use-workspace", () => ({
 }));
 vi.mock("@/hooks/store/user", () => ({ useUserPermissions: () => ({ allowPermissions: () => state.allowed }) }));
 vi.mock("@/components/settings/content-wrapper", () => ({
-  SettingsContentWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SettingsContentWrapper: ({ children, header }: { children: React.ReactNode; header: React.ReactNode }) => (
+    <div>
+      {header}
+      {children}
+    </div>
+  ),
 }));
-vi.mock("@/components/settings/page-header", () => ({ SettingsPageHeader: () => null }));
+vi.mock("@/hooks/use-platform-os", () => ({ usePlatformOS: () => ({ isMobile: false }) }));
+vi.mock("@/components/settings/sidebar/collapse", () => ({ SettingsSidebarToggle: () => null }));
 vi.mock("@/components/auth-screens/not-authorized-view", () => ({ NotAuthorizedView: () => <div>Forbidden</div> }));
 afterEach(() => vi.unstubAllGlobals());
 beforeEach(() => {
@@ -28,6 +34,17 @@ it("saves the workspace toggle and reports failure without changing displayed st
   await waitFor(() => expect(state.save).toHaveBeenCalledWith("test", { ai_enabled: false }));
   await waitFor(() => expect(state.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "error" })));
   expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("true");
+});
+it.each(["projects", "ai"] as const)("renders %s using the shared breadcrumb header", (feature) => {
+  render(
+    <WorkspaceFeatureSettings
+      feature={feature}
+      field={feature === "projects" ? "allow_member_project_creation" : "ai_enabled"}
+    />
+  );
+  const title = screen.getByRole("navigation").querySelector('[aria-current="page"]');
+  expect(title?.textContent).toBe(`web.workspace_${feature}_title`);
+  expect(title?.querySelector("svg")).toBeTruthy();
 });
 it("does not expose a toggle to non-admin members", () => {
   state.allowed = false;

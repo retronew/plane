@@ -71,12 +71,7 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     <SettingsContentWrapper
       header={
         <SettingsPageHeader
-          leftItem={
-            <div className="flex items-center gap-2">
-              <Shapes className="size-4 text-tertiary" />
-              <span>{t("web.workflow_ui.issue_types")}</span>
-            </div>
-          }
+          breadcrumbs={[{ label: t("web.workflow_ui.issue_types"), icon: <Shapes className="size-4 text-tertiary" /> }]}
         />
       }
     >

@@ -23,7 +23,9 @@ from plane.app.views.project.overview import (
     ProjectActivityEndpoint,
     ProjectLinkEndpoint,
     ProjectReactionEndpoint,
+    ProjectUpdateCommentEndpoint,
     ProjectUpdateEndpoint,
+    ProjectUpdateReactionEndpoint,
 )
 from plane.app.views.workspace.configuration import ProjectTemplateEndpoint, ProjectTemplateOptionsEndpoint
 
@@ -48,6 +50,21 @@ urlpatterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/updates/<uuid:pk>/",
         ProjectUpdateEndpoint.as_view(),
         name="project-update-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/updates/<uuid:pk>/comments/",
+        ProjectUpdateCommentEndpoint.as_view(),
+        name="project-update-comments",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/updates/<uuid:pk>/comments/<uuid:comment_id>/",
+        ProjectUpdateCommentEndpoint.as_view(),
+        name="project-update-comment-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/updates/<uuid:pk>/reactions/",
+        ProjectUpdateReactionEndpoint.as_view(),
+        name="project-update-reactions",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/reactions/",

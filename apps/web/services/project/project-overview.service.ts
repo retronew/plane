@@ -10,6 +10,7 @@ import type {
   TProjectOverviewLink,
   TProjectOverviewReaction,
   TProjectOverviewUpdate,
+  TProjectOverviewUpdateComment,
   TProjectOverviewActivityPage,
   TProjectOverviewAttachment,
   TProjectUpdateHealth,
@@ -76,6 +77,35 @@ export class ProjectOverviewService extends APIService {
   }
   async deleteUpdate(slug: string, projectId: string, id: string): Promise<void> {
     await this.delete(this.path(slug, projectId, `updates/${id}`));
+  }
+  async getUpdateComments(slug: string, projectId: string, updateId: string): Promise<TProjectOverviewUpdateComment[]> {
+    return (await this.get(this.path(slug, projectId, `updates/${updateId}/comments`))).data;
+  }
+  async createUpdateComment(
+    slug: string,
+    projectId: string,
+    updateId: string,
+    body: string
+  ): Promise<TProjectOverviewUpdateComment> {
+    return (await this.post(this.path(slug, projectId, `updates/${updateId}/comments`), { body })).data;
+  }
+  async updateUpdateComment(
+    slug: string,
+    projectId: string,
+    updateId: string,
+    commentId: string,
+    body: string
+  ): Promise<TProjectOverviewUpdateComment> {
+    return (await this.patch(this.path(slug, projectId, `updates/${updateId}/comments/${commentId}`), { body })).data;
+  }
+  async deleteUpdateComment(slug: string, projectId: string, updateId: string, commentId: string): Promise<void> {
+    await this.delete(this.path(slug, projectId, `updates/${updateId}/comments/${commentId}`));
+  }
+  async addUpdateReaction(slug: string, projectId: string, updateId: string, reaction: string): Promise<void> {
+    await this.post(this.path(slug, projectId, `updates/${updateId}/reactions`), { reaction });
+  }
+  async deleteUpdateReaction(slug: string, projectId: string, updateId: string, reaction: string): Promise<void> {
+    await this.delete(this.path(slug, projectId, `updates/${updateId}/reactions`), { reaction });
   }
   async getActivities(
     slug: string,

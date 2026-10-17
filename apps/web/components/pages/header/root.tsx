@@ -60,8 +60,8 @@ export const PagesListHeaderRoot = observer(function PagesListHeaderRoot(props: 
 
   return (
     <>
-      <Header variant={EHeaderVariant.SECONDARY}>
-        <Header.LeftItem>
+      <Header variant={EHeaderVariant.SECONDARY} setHeight={false} className="h-12 shrink-0">
+        <Header.LeftItem className="h-full">
           <PageTabNavigation workspaceSlug={workspaceSlug} projectId={projectId} pageType={pageType} />
         </Header.LeftItem>
         <Header.RightItem className="items-center">

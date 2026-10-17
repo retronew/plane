@@ -19,6 +19,7 @@ export type TProjectOverviewAttachment = {
   attributes: { name: string; size: number; type: string };
   asset_url: string;
   created_by: string | null;
+  created_by_detail: IUserLite | null;
   created_at: string;
 };
 export type TProjectOverviewReaction = {
@@ -32,6 +33,18 @@ export type TProjectOverviewUpdate = {
   id: string;
   body: string;
   health: TProjectUpdateHealth;
+  progress: { completed: number; total: number } | null;
+  progress_source: "current" | "snapshot";
+  comment_count: number;
+  reactions: TProjectOverviewReaction[];
+  created_by: string | null;
+  created_by_detail: IUserLite | null;
+  created_at: string;
+  updated_at: string;
+};
+export type TProjectOverviewUpdateComment = {
+  id: string;
+  body: string;
   created_by: string | null;
   created_by_detail: IUserLite | null;
   created_at: string;

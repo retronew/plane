@@ -51,16 +51,7 @@ export const WorkspaceFeatureSettings = observer(function WorkspaceFeatureSettin
   if (!canManage) return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
     <SettingsContentWrapper
-      header={
-        <SettingsPageHeader
-          leftItem={
-            <div className="flex items-center gap-2">
-              <Icon className="size-4 text-tertiary" />
-              <span>{title}</span>
-            </div>
-          }
-        />
-      }
+      header={<SettingsPageHeader breadcrumbs={[{ label: title, icon: <Icon className="size-4 text-tertiary" /> }]} />}
     >
       <div className="flex flex-col gap-6">
         <SettingsHeading title={title} description={t(`web.workspace_${feature}_description`)} />

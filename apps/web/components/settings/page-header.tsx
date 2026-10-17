@@ -4,21 +4,34 @@
  * See the LICENSE file for details.
  */
 
-import { SettingsSidebarToggle } from "./sidebar/collapse";
+import { Breadcrumbs } from "@plane/blocks/breadcrumb";
 import { Header } from "@plane/blocks/layout";
+import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
+import { SettingsSidebarToggle } from "./sidebar/collapse";
 
 type Props = {
+  breadcrumbs?: { label: string; icon?: React.ReactNode; href?: string }[];
   leftItem?: React.ReactNode;
   rightItem?: React.ReactNode;
 };
 
 export function SettingsPageHeader(props: Props) {
-  const { leftItem, rightItem } = props;
+  const { breadcrumbs, leftItem, rightItem } = props;
 
   return (
     <Header>
       <Header.LeftItem>
         <SettingsSidebarToggle onlyWhenCollapsed />
+        {breadcrumbs && (
+          <Breadcrumbs>
+            {breadcrumbs.map((breadcrumb, index) => (
+              <Breadcrumbs.Item
+                key={breadcrumb.href ?? breadcrumb.label}
+                component={<BreadcrumbLink {...breadcrumb} isLast={index === breadcrumbs.length - 1} />}
+              />
+            ))}
+          </Breadcrumbs>
+        )}
         {leftItem}
       </Header.LeftItem>
       {rightItem && <Header.RightItem>{rightItem}</Header.RightItem>}
