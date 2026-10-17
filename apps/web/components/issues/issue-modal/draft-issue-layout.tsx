@@ -15,6 +15,7 @@ import type { TIssue } from "@plane/types";
 import { isEmptyHtmlString } from "@plane/utils";
 // hooks
 import { useIssueModal } from "@/hooks/context/use-issue-modal";
+import { customPropertyPayload } from "@/helpers/custom-properties";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 // local imports
 import { ConfirmIssueDiscard } from "../confirm-issue-discard";
@@ -33,7 +34,7 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
   // router params
   const { workspaceSlug } = useParams();
   // store hooks
-  const { handleCreateUpdatePropertyValues } = useIssueModal();
+  const { customPropertyValues, customProperties } = useIssueModal();
   const { createIssue } = useWorkspaceDraftIssues();
   const { t } = useTranslation();
 
@@ -80,11 +81,12 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
 
     const payload = {
       ...changesMade,
+      custom_properties: customPropertyPayload(customProperties ?? [], customPropertyValues ?? {}),
       name: changesMade?.name && changesMade?.name?.trim() !== "" ? changesMade.name?.trim() : "Untitled",
       project_id: projectId,
     };
 
-    const response = await createIssue(workspaceSlug.toString(), payload)
+    await createIssue(workspaceSlug.toString(), payload)
       .then((res) => {
         setToast({
           type: "success",
@@ -103,16 +105,6 @@ export const DraftIssueLayout = observer(function DraftIssueLayout(props: DraftI
           message: t("workspace_draft_issues.toasts.created.error"),
         });
       });
-
-    if (response && handleCreateUpdatePropertyValues) {
-      handleCreateUpdatePropertyValues({
-        issueId: response.id,
-        issueTypeId: response.type_id,
-        projectId,
-        workspaceSlug: workspaceSlug?.toString(),
-        isDraft: true,
-      });
-    }
   };
 
   const handleDraftAndClose = () => {

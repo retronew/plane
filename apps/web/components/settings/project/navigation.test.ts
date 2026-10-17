@@ -40,7 +40,12 @@ it("places issue types only in work structure while preserving its route, permis
     "templates",
   ]);
   expect(GROUPED_PROJECT_SETTINGS[PROJECT_SETTINGS_CATEGORY.EXECUTION]).not.toContain(PROJECT_SETTINGS.issue_types);
-  expect(PROJECT_SETTINGS.issue_types.href).toBe("/issue-types");
+  expect(PROJECT_SETTINGS.issue_types.href).toBe("/work-item-types");
+  for (const suffix of ["work-item-types/", "work-item-types/types/task/properties/", "issue-types/"]) {
+    const path = `/w/settings/projects/p/${suffix}`;
+    expect(PROJECT_SETTINGS.issue_types.highlight(path, "/w/settings/projects/p")).toBe(true);
+    expect(getProjectActivePath(path)).toBe("web.workflow_ui.issue_types");
+  }
   expect(PROJECT_SETTINGS.issue_types.access).toEqual([EUserProjectRoles.ADMIN]);
   expect(PROJECT_SETTINGS.issue_types.highlight("/w/settings/projects/p/issue-types/", "/w/settings/projects/p")).toBe(
     true

@@ -44,6 +44,7 @@ class DraftIssue(WorkspaceBaseModel):
     )
     name = models.CharField(max_length=255, verbose_name="Issue Name", blank=True, null=True)
     description_json = models.JSONField(blank=True, default=dict)
+    custom_properties = models.JSONField(blank=True, default=dict)
     description_html = models.TextField(blank=True, default="<p></p>")
     description_stripped = models.TextField(blank=True, null=True)
     description_binary = models.BinaryField(null=True)

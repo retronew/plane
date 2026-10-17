@@ -63,6 +63,8 @@ def preview_migration(project, data):
         binding = ProjectIssueType.objects.filter(project=project, issue_type_id=data.get("type_id")).first()
         if not binding:
             workflow_error("WORKFLOW_INVALID_TYPE")
+        if operation == "remove_type" and binding.is_default:
+            workflow_error("WORKFLOW_DEFAULT_PROTECTED")
         issues = Issue.objects.filter(
             project=project, type_id=binding.issue_type_id, is_draft=False, archived_at__isnull=True
         )

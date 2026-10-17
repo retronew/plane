@@ -146,6 +146,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                     "created_by",
                     "updated_by",
                     "type_id",
+                    "custom_properties",
                     "description_html",
                 )
                 .first()
@@ -224,6 +225,23 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
             )
 
         issue_data = request.data.copy()
+        submitted_properties = issue_data.get("custom_properties", {})
+        if not isinstance(submitted_properties, dict):
+            return Response({"custom_properties": "CUSTOM_PROPERTY_INVALID_VALUES"}, status=400)
+        from plane.db.models import ProjectCustomProperty
+
+        readonly_ids = {
+            str(prop.pk)
+            for prop in ProjectCustomProperty.objects.filter(project_id=draft_issue.project_id)
+            if prop.config.get("read_only")
+        }
+        inherited_properties = {
+            key: value for key, value in draft_issue.custom_properties.items() if key not in readonly_ids
+        }
+        # Read-only values are generated from current defaults during formal creation.
+        # Explicit user submissions remain in the payload so normal validation rejects them.
+        issue_data["custom_properties"] = {**inherited_properties, **submitted_properties}
+        issue_data["is_draft"] = False
         if "type" not in issue_data and "type_id" not in issue_data and draft_issue.type_id is not None:
             issue_data["type_id"] = str(draft_issue.type_id)
 

@@ -377,6 +377,16 @@ export const coreRoutes: RouteConfigEntry[] = [
               ":workspaceSlug/settings/projects/:projectId/issue-types",
               "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/page.tsx"
             ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/work-item-types",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/page.tsx",
+              { id: "project-work-item-types" }
+            ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/work-item-types/types/:typeId/properties",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/page.tsx",
+              { id: "project-work-item-type-properties" }
+            ),
             // Project Templates
             route(
               ":workspaceSlug/settings/projects/:projectId/templates",

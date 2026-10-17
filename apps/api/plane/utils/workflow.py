@@ -199,6 +199,9 @@ def resolve_workflow_transition(project_id, attrs, instance=None, actor=None):
 
 def validate_workflow_write(project_id, attrs, instance=None, actor=None, raw_data=None):
     normalize_issue_type(project_id, attrs, instance, raw_data)
+    from plane.services.custom_properties import issue_property_values
+
+    issue_property_values(project_id, attrs, instance)
     was_draft = instance is not None and instance.is_draft
     if attrs.get("is_draft", instance.is_draft if instance else False) and (instance is None or was_draft):
         return attrs
@@ -314,8 +317,12 @@ class WorkflowIssueWriteMixin(WorkflowIssueTypeMixin):
             if self.instance:
                 self.instance = Issue.objects.select_for_update().get(pk=self.instance.pk)
             verify_workflow_write(prepared, self.instance, actor=actor)
+            from plane.services.custom_properties import issue_property_values
+
+            attrs["custom_properties"] = issue_property_values(project_id, attrs, self.instance)
             for child in self._workflow_children_prepared:
                 verify_workflow_write(child, actor=actor)
+                child["attrs"]["custom_properties"] = issue_property_values(project_id, child["attrs"])
             issue = super().save(**kwargs)
             finish_workflow_write(prepared, issue, actor)
             return issue
@@ -342,6 +349,9 @@ class WorkflowIntakeWriteMixin:
             self.instance.issue = issue
             if prepared:
                 verify_workflow_write(prepared, issue, attrs, actor)
+                from plane.services.custom_properties import issue_property_values
+
+                attrs["custom_properties"] = issue_property_values(project_id, attrs, issue)
                 if issue_serializer:
                     issue_serializer.instance = issue_serializer.update(issue, attrs)
                     self.instance.issue = issue_serializer.instance

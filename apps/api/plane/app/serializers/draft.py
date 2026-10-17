@@ -4,6 +4,7 @@
 
 # Django imports
 from django.utils import timezone
+from django.db import transaction
 
 # Third Party imports
 from rest_framework import serializers
@@ -22,6 +23,7 @@ from plane.db.models import (
     DraftIssueCycle,
     DraftIssueModule,
     ProjectMember,
+    Project,
     EstimatePoint,
 )
 from plane.utils.content_validator import (
@@ -33,6 +35,22 @@ from plane.utils.workflow import WorkflowIssueTypeMixin
 
 
 class DraftIssueCreateSerializer(WorkflowIssueTypeMixin, BaseSerializer):
+    custom_properties = serializers.DictField(child=serializers.JSONField(allow_null=True), required=False)
+
+    def save(self, **kwargs):
+        from plane.services.custom_properties import issue_property_values
+
+        project_id = self.context.get("project_id")
+        with transaction.atomic():
+            if project_id:
+                Project.objects.select_for_update().get(pk=project_id)
+            if self.instance:
+                self.instance = DraftIssue.objects.select_for_update().get(pk=self.instance.pk)
+            self.validated_data["custom_properties"] = issue_property_values(
+                project_id, self.validated_data, self.instance, draft=True
+            )
+            return super().save(**kwargs)
+
     # ids
     type_id = serializers.PrimaryKeyRelatedField(
         source="type", queryset=IssueType.objects.all(), required=False, allow_null=True
@@ -335,6 +353,7 @@ class DraftIssueSerializer(BaseSerializer):
             "created_by",
             "updated_by",
             "type_id",
+            "custom_properties",
             "description_html",
         ]
         read_only_fields = fields

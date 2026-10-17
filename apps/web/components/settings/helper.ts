@@ -22,6 +22,7 @@ const workspaceHrefToLabelMap = hrefToLabelMap(GROUPED_WORKSPACE_SETTINGS);
 const projectHrefToLabelMap = PROJECT_SETTINGS_FLAT_MAP.reduce(
   (acc, setting) => {
     acc[setting.href] = setting.i18n_label;
+    if (setting.key === "issue_types") acc["/issue-types"] = setting.i18n_label;
     return acc;
   },
   {} as Record<string, string>
@@ -31,7 +32,7 @@ export const pathnameToAccessKey = (pathname: string) => {
   const pathArray = pathname.replace(/^\/|\/$/g, "").split("/"); // Regex removes leading and trailing slashes
   const workspaceSlug = pathArray[0];
   const accessKey = pathArray.slice(1, 3).join("/");
-  return { workspaceSlug, accessKey: `/${accessKey}` || "" };
+  return { workspaceSlug, accessKey: `/${accessKey}` };
 };
 
 export const getWorkspaceActivePath = (pathname: string) => {

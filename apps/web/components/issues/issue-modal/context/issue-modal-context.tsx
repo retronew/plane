@@ -44,6 +44,7 @@ export type THandleTemplateChangeProps = {
 };
 
 export type THandleProjectEntitiesFetchProps = {
+  isDraft?: boolean;
   workItemProjectId: string | null | undefined;
   workItemTypeId: string | undefined;
   workspaceSlug: string;
@@ -57,6 +58,21 @@ export type THandleParentWorkItemDetailsProps = {
 };
 
 export type TIssueModalContext = {
+  customProperties: import("@/services/project/custom-properties.types").TCustomProperty[];
+  customPropertyValues: import("@/services/project/custom-properties.types").TCustomPropertyValues;
+  setCustomPropertyValues: React.Dispatch<
+    React.SetStateAction<import("@/services/project/custom-properties.types").TCustomPropertyValues>
+  >;
+  customPropertyErrors: Record<string, string>;
+  customPropertiesLoading: boolean;
+  customPropertiesError: unknown;
+  retryCustomProperties: () => void;
+  customPropertyContext: string;
+  prepareCustomProperties: (
+    projectId: string,
+    workspaceSlug: string,
+    typeId?: string | null
+  ) => import("@/services/project/custom-properties.types").TCustomPropertyValues | null;
   allowedProjectIds: string[];
   workItemTemplateId: string | null;
   setWorkItemTemplateId: React.Dispatch<React.SetStateAction<string | null>>;

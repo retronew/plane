@@ -15,8 +15,28 @@ from plane.app.views.project.workflow_approval import (
     WorkflowApprovalReapplyEndpoint,
 )
 
+from plane.app.views.project.custom_property import (
+    ProjectCustomPropertyEndpoint,
+    CustomPropertyOptionEndpoint,
+    IssueTypeCustomPropertyEndpoint,
+    IssueCustomPropertyValueEndpoint,
+)
+
 prefix = "workspaces/<str:slug>/projects/<uuid:project_id>/"
 urlpatterns = [
+    path(prefix + "custom-properties/", ProjectCustomPropertyEndpoint.as_view()),
+    path(prefix + "custom-properties/<uuid:property_id>/", ProjectCustomPropertyEndpoint.as_view()),
+    path(prefix + "custom-properties/<uuid:property_id>/options/", CustomPropertyOptionEndpoint.as_view()),
+    path(
+        prefix + "custom-properties/<uuid:property_id>/options/<uuid:option_id>/",
+        CustomPropertyOptionEndpoint.as_view(),
+    ),
+    path(prefix + "issue-types/<uuid:type_id>/custom-properties/", IssueTypeCustomPropertyEndpoint.as_view()),
+    path(
+        prefix + "issue-types/<uuid:type_id>/custom-properties/<uuid:property_id>/",
+        IssueTypeCustomPropertyEndpoint.as_view(),
+    ),
+    path(prefix + "issues/<uuid:issue_id>/custom-properties/", IssueCustomPropertyValueEndpoint.as_view()),
     path(prefix + "workflows/", ProjectWorkflowListEndpoint.as_view()),
     path(prefix + "workflows/preview/", WorkflowMigrationEndpoint.as_view()),
     path(prefix + "workflows/apply/", WorkflowMigrationEndpoint.as_view(), {"apply": True}),

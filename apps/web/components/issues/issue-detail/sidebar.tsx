@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { IssueCustomProperties } from "@/components/issues/custom-properties";
 // i18n
 import { useTranslation } from "@plane/i18n";
 // ui
@@ -239,6 +240,12 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 disabled={!isEditable}
               />
             </SidebarPropertyListItem>
+            <IssueCustomProperties
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              issueId={issueId}
+              disabled={!isEditable}
+            />
           </div>
         </div>
       </div>

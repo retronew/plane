@@ -89,9 +89,12 @@ export const PROJECT_SETTINGS: Record<TProjectSettingsTabs, TProjectSettingsItem
   issue_types: {
     key: "issue_types",
     i18n_label: "web.workflow_ui.issue_types",
-    href: "/issue-types",
+    href: "/work-item-types",
     access: [EUserProjectRoles.ADMIN],
-    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/issue-types/`),
+    highlight: (pathname: string, baseUrl: string) =>
+      ["issue-types", "work-item-types"].some(
+        (segment) => pathname === `${baseUrl}/${segment}` || pathname.startsWith(`${baseUrl}/${segment}/`)
+      ),
   },
   templates: {
     key: "templates",

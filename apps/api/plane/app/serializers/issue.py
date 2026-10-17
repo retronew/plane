@@ -83,6 +83,7 @@ class IssueProjectLiteSerializer(BaseSerializer):
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
 class IssueCreateSerializer(WorkflowIssueWriteMixin, BaseSerializer):
+    custom_properties = serializers.DictField(child=serializers.JSONField(allow_null=True), required=False)
     from plane.app.serializers.template_configuration import WorkItemTemplateChildSerializer
 
     template_children = WorkItemTemplateChildSerializer(many=True, write_only=True, required=False, max_length=50)
@@ -811,6 +812,8 @@ class IssueIntakeSerializer(DynamicBaseSerializer):
 
 
 class IssueSerializer(DynamicBaseSerializer):
+    custom_properties = serializers.JSONField(read_only=True)
+
     # ids
     cycle_id = serializers.PrimaryKeyRelatedField(read_only=True)
     module_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
@@ -831,6 +834,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "name",
             "state_id",
             "type_id",
+            "custom_properties",
             "sort_order",
             "completed_at",
             "estimate_point",

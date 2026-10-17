@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { runInAction } from "mobx";
-import { useParams } from "react-router";
-import { Pencil, Plus, Shapes, Trash2 } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import { Shapes } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { InputField } from "@makeplane/propel/components/input-field";
+import { Badge } from "@makeplane/propel/components/badge";
+import { Tabs, Tab, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
+import { TypesLogo } from "./types-logo";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { TProjectIssueType, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
@@ -17,16 +18,54 @@ import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useIssues } from "@/hooks/store/use-issues";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
 import { WorkflowImpactDialog } from "./impact-dialog";
+import { TypesEditor } from "./types-editor";
+import { TypesActions } from "./types-actions";
+import { TypesList } from "./types-list";
+import { TypesHierarchy } from "./types-hierarchy";
+import { WorkItemPropertiesSettings } from "./types-properties-settings";
 
+const key = "web.workflow_ui.types_settings";
+const logo = (type: TProjectIssueType) => <TypesLogo type={type} />;
 export const IssueTypesSettings = observer(function IssueTypesSettings() {
-  const { workspaceSlug = "", projectId = "" } = useParams(),
-    store = useProjectWorkflow(projectId),
-    { t } = useTranslation();
-  const { issueMap } = useIssues();
-  const types = store.issueTypes[projectId],
-    [draft, setDraft] = useState<Partial<TProjectIssueType> | null>(null),
-    [busy, setBusy] = useState(false),
-    [impact, setImpact] = useState<{ request: TWorkflowImpactRequest; preview: TWorkflowImpact } | null>(null);
+  const { workspaceSlug = "", projectId = "", typeId } = useParams();
+  const store = useProjectWorkflow(projectId),
+    { t } = useTranslation(),
+    { issueMap } = useIssues();
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const tab = ["properties", "hierarchy"].includes(params.get("tab") ?? "") ? params.get("tab")! : "types";
+  const types = store.issueTypes[projectId];
+  const [draft, setDraft] = useState<Partial<TProjectIssueType> | null>(null),
+    [editorOpen, setEditorOpen] = useState(false);
+  const [busy, setBusy] = useState(false),
+    [loadError, setLoadError] = useState(false),
+    [loading, setLoading] = useState(true);
+  const [impact, setImpact] = useState<{ request: TWorkflowImpactRequest; preview: TWorkflowImpact } | null>(null),
+    [impactOpen, setImpactOpen] = useState(false);
+  useEffect(() => {
+    let current = true;
+    Promise.all([store.fetchTypes(workspaceSlug, projectId), store.fetchList(workspaceSlug, projectId)])
+      .catch(() => {
+        if (current) setLoadError(true);
+      })
+      .finally(() => {
+        if (current) setLoading(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [store, workspaceSlug, projectId]);
+  const retry = async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      await store.refresh(workspaceSlug, projectId);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
   const errorToast = (error: unknown) => {
     const code = getWorkflowErrorCode(error);
     setToast({
@@ -36,16 +75,21 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     });
   };
   const preview = async (request: TWorkflowImpactRequest) => {
+    if (busy || !types?.can_manage) return;
     setBusy(true);
     try {
       setImpact({ request, preview: await store.service.preview(workspaceSlug, projectId, request) });
+      setImpactOpen(true);
     } catch (error) {
       errorToast(error);
     } finally {
       setBusy(false);
     }
   };
-  const save = async (data: Partial<TProjectIssueType>, id?: string) => {
+  const save = async (data: Partial<TProjectIssueType>, id?: string): Promise<TProjectIssueType | false> => {
+    if (busy || !types?.can_manage) return false;
+    const original = types.results.find((type) => type.id === id);
+    if (original?.is_default && data.is_active === false) return false;
     setBusy(true);
     try {
       const saved = await store.service.saveType(
@@ -60,160 +104,166 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
             if (issue.project_id === projectId && issue.type_id === id) issue.type_id = saved.id;
         });
       await store.refresh(workspaceSlug, projectId);
-      setDraft(null);
+      if (id && saved.id !== id && typeId === id)
+        void navigate(
+          `/${workspaceSlug}/settings/projects/${projectId}/work-item-types/types/${saved.id}/properties/`,
+          { replace: true }
+        );
+      setEditorOpen(false);
+      return saved;
     } catch (error) {
       errorToast(error);
+      return false;
     } finally {
       setBusy(false);
     }
+  };
+  const edit = (type: Partial<TProjectIssueType>) => {
+    if (busy || !types?.can_manage) return;
+    setDraft(type);
+    setEditorOpen(true);
+  };
+  const base = `/${workspaceSlug}/settings/projects/${projectId}/work-item-types/`;
+  const selected = types?.results.find((type) => type.id === typeId);
+  const badge = (type: TProjectIssueType) =>
+    type.is_default ? <Badge size="xs" variant="neutral" label={t("common.default")} /> : null;
+  const renderPanel = () => {
+    if (loadError)
+      return (
+        <div role="alert" className="space-y-3 py-6">
+          <p className="text-body-xs-regular text-secondary">{t("web.workflow_ui.load_failed")}</p>
+          <Button
+            stretch="auto"
+            size="sm"
+            variant="secondary"
+            label={t("web.retry")}
+            disabled={loading}
+            onClick={() => void retry()}
+          />
+        </div>
+      );
+    if (!types) return <p className="py-6 text-body-xs-regular text-secondary">{t("loading")}</p>;
+    if (typeId && !selected) return <p className="py-6 text-body-xs-regular text-secondary">{t(`${key}.not_found`)}</p>;
+    if (typeId || tab === "properties")
+      return (
+        <WorkItemPropertiesSettings
+          projectId={projectId}
+          workspaceSlug={workspaceSlug}
+          types={types.results}
+          typeId={selected?.id}
+          onChanged={() => store.fetchTypes(workspaceSlug, projectId)}
+        />
+      );
+    if (tab === "hierarchy") return <TypesHierarchy types={types.results} base={base} />;
+    return (
+      <TypesList
+        types={types.results}
+        canManage={types.can_manage}
+        busy={busy}
+        base={base}
+        onEdit={edit}
+        onSave={save}
+        onPreview={preview}
+      />
+    );
   };
   return (
     <SettingsContentWrapper
       header={
         <SettingsPageHeader
-          breadcrumbs={[{ label: t("web.workflow_ui.issue_types"), icon: <Shapes className="size-4 text-tertiary" /> }]}
+          breadcrumbs={[
+            { label: t("web.workflow_ui.issue_types"), href: base, icon: <Shapes className="size-4 text-tertiary" /> },
+            ...(selected ? [{ label: selected.name }] : []),
+          ]}
         />
       }
     >
-      <PageHead title={`${t("web.workflow_ui.issue_types")} - ${t("settings")}`} />
-      <SettingsHeading title={t("web.workflow_ui.issue_types")} description={t("web.workflow_ui.types_description")} />
-      {!types ? (
-        <p className="mt-6 text-body-xs-regular text-secondary">{t("loading")}</p>
-      ) : (
-        <div className="mt-6 space-y-4">
-          {types.can_manage && (
-            <Button
-              stretch="auto"
-              size="sm"
-              variant="primary"
-              icon={<Plus className="size-3.5" />}
-              label={t("web.workflow_ui.new_type")}
-              onClick={() => setDraft({ name: "", description: "", is_active: true })}
-            />
-          )}
-          {draft && (
-            <form
-              className="space-y-3 rounded-lg border border-subtle p-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void save({ name: draft.name, description: draft.description, is_default: draft.is_default }, draft.id);
-              }}
-            >
-              <InputField
-                orientation="vertical"
-                size="md"
-                label={t("name")}
-                value={draft.name ?? ""}
-                disabled={busy}
-                onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+      <PageHead title={`${selected?.name ?? t("web.workflow_ui.issue_types")} - ${t("settings")}`} />
+      {selected ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            {logo(selected)}
+            <h3 className="text-h3-medium text-primary">{selected.name}</h3>
+            {badge(selected)}
+            <div className="ml-auto">
+              <TypesActions
+                type={selected}
+                canManage={types?.can_manage ?? false}
+                busy={busy}
+                onEdit={edit}
+                onSave={save}
+                onPreview={preview}
               />
-              <InputField
-                orientation="vertical"
-                size="md"
-                label={t("description")}
-                value={draft.description ?? ""}
-                disabled={busy}
-                onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-              />
-              <label className="flex items-center gap-2 text-body-xs-regular">
-                <input
-                  type="checkbox"
-                  checked={!!draft.is_default}
-                  disabled={busy}
-                  onChange={(event) => setDraft({ ...draft, is_default: event.target.checked })}
-                />
-                {t("web.workflow_ui.default_type")}
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  stretch="auto"
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={busy || !draft.name?.trim()}
-                  label={t("save")}
-                />
-                <Button
-                  stretch="auto"
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={busy}
-                  label={t("cancel")}
-                  onClick={() => setDraft(null)}
-                />
-              </div>
-            </form>
-          )}
-          <div className="divide-y divide-subtle rounded-lg border border-subtle">
-            {types.results.map((type) => (
-              <div key={type.id} className="flex flex-wrap items-center gap-3 px-4 py-3 text-body-xs-regular">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-primary">
-                    {type.name}
-                    {type.is_default && (
-                      <span className="ml-2 text-caption-md-regular text-accent-primary">{t("common.default")}</span>
-                    )}
-                  </p>
-                  {type.description && <p className="text-secondary">{type.description}</p>}
-                </div>
-                <label className="text-secondary">
-                  {t("common.workflows")}
-                  <select
-                    className="ml-2 rounded border border-subtle bg-layer-1 p-2 text-primary"
-                    value={type.workflow_id ?? ""}
-                    disabled={busy || !types.can_manage}
-                    onChange={(event) =>
-                      void preview({
-                        operation: "bind_type",
-                        type_id: type.id,
-                        workflow_id: event.target.value || undefined,
-                      })
-                    }
-                  >
-                    <option value="">{t("web.workflow_ui.default_name")}</option>
-                    {store.lists[projectId]?.results
-                      .filter((item) => !item.is_default)
-                      .map((workflow) => (
-                        <option key={workflow.id} value={workflow.workflow_id ?? workflow.id}>
-                          {workflow.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                {types.can_manage && (
-                  <>
-                    <IconButton
-                      size="sm"
-                      variant="ghost"
-                      aria-label={t("edit")}
-                      icon={<Pencil className="size-3.5" />}
-                      onClick={() => setDraft(type)}
-                    />
-                    <IconButton
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy || type.is_default}
-                      aria-label={t("delete")}
-                      icon={<Trash2 className="size-3.5" />}
-                      onClick={() => void preview({ operation: "remove_type", type_id: type.id })}
-                    />
-                  </>
-                )}
-              </div>
-            ))}
+            </div>
           </div>
+          <p className="text-body-xs-regular text-secondary">{selected.description}</p>
         </div>
+      ) : (
+        <SettingsHeading
+          title={t("web.workflow_ui.issue_types")}
+          description={t("web.workflow_ui.types_description")}
+          control={
+            <a
+              href="https://docs.plane.so/work-items/project-work-item-types"
+              target="_blank"
+              rel="noreferrer"
+              className="text-body-xs-regular text-secondary hover:text-primary"
+            >
+              {t("web.workflow_ui.types_settings.docs")}
+            </a>
+          }
+        />
+      )}
+      <div className="mt-6">
+        <Tabs
+          variant="underline"
+          value={typeId ? "properties" : tab}
+          onValueChange={(value) => {
+            if (!typeId && typeof value === "string")
+              setParams((previous) => {
+                const next = new URLSearchParams(previous);
+                next.set("tab", value);
+                return next;
+              });
+          }}
+        >
+          <TabsList aria-label={t("web.workflow_ui.issue_types")}>
+            {(typeId ? ["properties"] : ["types", "properties", "hierarchy"]).map((value) => (
+              <Tab
+                key={value}
+                value={value}
+                label={t(value === "types" ? "web.workflow_ui.issue_types" : `${key}.${value}`)}
+              />
+            ))}
+          </TabsList>
+          <TabsPanel value={typeId ? "properties" : tab}>{renderPanel()}</TabsPanel>
+        </Tabs>
+      </div>
+      {draft && (
+        <TypesEditor
+          type={draft}
+          open={editorOpen}
+          busy={busy}
+          workflows={store.lists[projectId]?.results ?? []}
+          onClose={() => setEditorOpen(false)}
+          onClosed={() => setDraft(null)}
+          onSave={save}
+          onPreview={(request) => void preview(request)}
+        />
       )}
       {impact && (
         <WorkflowImpactDialog
           key={impact.preview.token}
+          open={impactOpen}
           request={impact.request}
           impact={impact.preview}
           workspaceSlug={workspaceSlug}
           projectId={projectId}
-          onClose={() => setImpact(null)}
-          onApplied={() => setImpact(null)}
+          onClose={() => setImpactOpen(false)}
+          onApplied={() => setImpactOpen(false)}
+          onOpenChangeComplete={(open) => {
+            if (!open) setImpact(null);
+          }}
         />
       )}
     </SettingsContentWrapper>

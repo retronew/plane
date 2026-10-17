@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { IssueCustomProperties } from "@/components/issues/custom-properties";
 // i18n
 import { useTranslation } from "@plane/i18n";
 // ui icons
@@ -230,6 +231,12 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={LabelsOutline} label={t("common.labels")}>
           <IssueLabel workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={disabled} />
         </SidebarPropertyListItem>
+        <IssueCustomProperties
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          disabled={disabled}
+        />
       </div>
     </div>
   );

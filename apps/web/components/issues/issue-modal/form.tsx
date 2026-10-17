@@ -52,6 +52,9 @@ import { useDefaultIssueType } from "@/hooks/use-default-issue-type";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
+import { CustomPropertyFields } from "@/components/issues/custom-properties";
+import { customPropertyDefaults, customPropertyPayload } from "@/helpers/custom-properties";
+import type { TCustomPropertyValues } from "@/services/project/custom-properties.types";
 
 export interface IssueFormProps {
   data?: Partial<TIssue>;
@@ -131,8 +134,17 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     setSelectedParentIssue,
     getIssueTypeIdOnProjectChange,
     handlePropertyValuesValidation,
-    handleCreateUpdatePropertyValues,
     handleTemplateChange,
+    handleProjectEntitiesFetch,
+    customProperties,
+    customPropertyValues,
+    setCustomPropertyValues,
+    customPropertyErrors,
+    customPropertiesLoading,
+    customPropertiesError,
+    customPropertyContext,
+    prepareCustomProperties,
+    retryCustomProperties,
   } = useIssueModal();
   const { isMobile } = usePlatformOS();
   const { moveIssue } = useWorkspaceDraftIssues();
@@ -160,6 +172,22 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   } = methods;
 
   const projectId = watch("project_id");
+  const typeId = watch("type_id");
+  const slug = workspaceSlug?.toString();
+  useEffect(() => {
+    void handleProjectEntitiesFetch({
+      workItemProjectId: projectId,
+      workItemTypeId: typeId ?? undefined,
+      workspaceSlug: slug,
+      isDraft,
+    });
+  }, [projectId, typeId, slug, isDraft, handleProjectEntitiesFetch]);
+  const savedCustomProperties = (data as (Partial<TIssue> & { custom_properties?: TCustomPropertyValues }) | undefined)
+    ?.custom_properties;
+  useEffect(() => {
+    if (savedCustomProperties) setCustomPropertyValues(savedCustomProperties);
+  }, [savedCustomProperties, setCustomPropertyValues]);
+  const withCustomProperties = (values: Partial<TIssue>) => ({ ...values, custom_properties: customPropertyValues });
   const workflowStore = useProjectWorkflow(projectId ?? undefined);
   const projectTypes = workflowStore.issueTypes[projectId ?? ""]?.results;
 
@@ -170,7 +198,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       return;
     }
     if (onKeepDraft && !data?.id) {
-      onKeepDraft(getValues(), isDirty);
+      onKeepDraft(withCustomProperties(getValues()), isDirty || Object.keys(customPropertyValues).length > 0);
       return;
     }
     closeWithDraftPrompt();
@@ -245,6 +273,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
     // check for required properties validation
     if (
+      !isDraft &&
+      !is_draft_issue &&
       !handlePropertyValuesValidation({
         projectId: projectId,
         workspaceSlug: workspaceSlug?.toString(),
@@ -266,9 +296,15 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // this condition helps to move the issues from draft to project issues
     if (formData.hasOwnProperty("is_draft")) submitData.is_draft = formData.is_draft;
 
-    await onSubmit(submitData, is_draft_issue)
+    const propertyPayload =
+      isDraft || is_draft_issue
+        ? customPropertyPayload(customProperties, customPropertyValues)
+        : prepareCustomProperties(projectId!, slug, typeId);
+    if (propertyPayload === null) return;
+    await onSubmit({ ...submitData, custom_properties: propertyPayload } as Partial<TIssue>, is_draft_issue)
       .then(() => {
         setGptAssistantModal(false);
+        setCustomPropertyValues(customPropertyDefaults(customProperties));
         if (isCreateMoreToggleEnabled && workItemTemplateId) {
           handleTemplateChange({
             workspaceSlug: workspaceSlug?.toString(),
@@ -295,17 +331,12 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     if (!data?.id || !data?.project_id || !data) return;
     setIsMoving(true);
     try {
-      await handleCreateUpdatePropertyValues({
-        issueId: data.id,
-        issueTypeId: data.type_id,
-        projectId: data.project_id,
-        workspaceSlug: workspaceSlug?.toString(),
-        isDraft: true,
-      });
-
+      const custom_properties = prepareCustomProperties(projectId!, slug, typeId);
+      if (custom_properties === null) return;
       await moveIssue(workspaceSlug.toString(), data.id, {
         ...data,
         ...getValues(),
+        custom_properties,
       } as TWorkspaceDraftIssue);
     } catch {
       setToast({
@@ -496,6 +527,34 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                 handleFormChange={handleFormChange}
                 setSelectedParentIssue={setSelectedParentIssue}
               />
+            </div>
+            <div className="max-h-64 shrink-0 overflow-y-auto py-2">
+              {customPropertiesError ? (
+                <div role="alert">
+                  <p className="text-caption-sm-regular text-danger-primary">
+                    {t("web.work_item_properties.load_failed")}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    stretch="auto"
+                    label={t("web.work_item_properties.retry")}
+                    onClick={retryCustomProperties}
+                  />
+                </div>
+              ) : customPropertiesLoading || customPropertyContext !== `${slug}:${projectId}:${typeId ?? ""}` ? (
+                <p role="status">{t("web.work_item_properties.loading")}</p>
+              ) : (
+                <CustomPropertyFields
+                  properties={customProperties}
+                  values={customPropertyValues}
+                  projectId={projectId!}
+                  disabled={isDisabled}
+                  errors={customPropertyErrors}
+                  onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
+                />
+              )}
             </div>
           </DialogMain>
           {showActionButtons && (

@@ -182,6 +182,8 @@ class WorkflowBaseView(BaseAPIView):
         }
 
     def types_representation(self, project):
+        from plane.services.custom_properties import effective_properties
+
         return [
             {
                 "id": b.issue_type_id,
@@ -191,6 +193,9 @@ class WorkflowBaseView(BaseAPIView):
                 "logo_props": b.issue_type.logo_props,
                 "is_default": b.is_default,
                 "is_active": b.issue_type.is_active,
+                "level": b.level,
+                "is_epic": b.issue_type.is_epic,
+                "properties_count": sum(active for _, active, _ in effective_properties(project.pk, b.issue_type_id)),
                 "workflow_id": b.workflow_id,
             }
             for b in ProjectIssueType.objects.filter(project=project)
@@ -671,7 +676,12 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
             default = serializers.BooleanField().run_validation(request.data["is_default"])
             if default:
                 ProjectIssueType.objects.filter(project=project, is_default=True).update(is_default=False)
+            elif binding.is_default:
+                workflow_error("WORKFLOW_DEFAULT_PROTECTED")
             binding.is_default = default
+        if binding.is_default and request.data.get("is_active") is not None:
+            if not serializers.BooleanField().run_validation(request.data["is_active"]):
+                workflow_error("WORKFLOW_DEFAULT_PROTECTED")
         if any(k in request.data for k in ("name", "description", "logo_props", "is_active")):
             # Clone shared types before editing; the original may be used by another project.
             issue_type = binding.issue_type
@@ -713,6 +723,8 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         project, _ = self.project(request, slug, project_id, write=True)
         binding = get_object_or_404(ProjectIssueType, project=project, issue_type_id=type_id)
         self.check_project_version(request, project)
+        if binding.is_default:
+            workflow_error("WORKFLOW_DEFAULT_PROTECTED")
         if Issue.objects.filter(project=project, type_id=type_id).exists():
             workflow_error("WORKFLOW_PREVIEW_REQUIRED")
         binding.delete(soft=False)

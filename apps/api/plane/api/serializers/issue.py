@@ -45,6 +45,8 @@ from django.core.validators import URLValidator
 
 
 class IssueSerializer(WorkflowIssueWriteMixin, BaseSerializer):
+    custom_properties = serializers.DictField(child=serializers.JSONField(allow_null=True), required=False)
+
     """
     Comprehensive work item serializer with full relationship management.
 
