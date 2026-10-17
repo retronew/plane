@@ -4,10 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback } from "react";
+import { createElement, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { StarOff } from "lucide-react";
-import { LinkOutline, StarOutline } from "@makeplane/propel/icons";
+import { FavoriteStarIcon } from "@plane/blocks/common";
+import { LinkOutline } from "@makeplane/propel/icons";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -75,7 +75,7 @@ export const usePowerKCycleContextBasedActions = (): TPowerKCommandConfig[] => {
       i18n_title: isFavorite
         ? "power_k.contextual_actions.cycle.remove_from_favorites"
         : "power_k.contextual_actions.cycle.add_to_favorites",
-      icon: isFavorite ? StarOff : StarOutline,
+      iconNode: createElement(FavoriteStarIcon, { selected: isFavorite, className: "size-3.5 shrink-0" }),
       group: "contextual",
       contextType: "cycle",
       type: "action",

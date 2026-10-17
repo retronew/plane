@@ -14,7 +14,7 @@ import {
 import type { TooltipContentProps } from "recharts";
 import { ChartTooltipContent } from "@plane/blocks/charts";
 import { getCurrentLanguage, useTranslation } from "@plane/i18n";
-import type { TWorkspaceActiveCycle } from "@plane/types";
+import type { CycleChartData } from "./chart-data";
 import { CYCLE_CHART_COLORS, workspaceCycleChartData } from "./chart-data";
 
 export type CycleChartSeries = keyof typeof CYCLE_CHART_COLORS;
@@ -91,7 +91,7 @@ export function WorkspaceCycleChart({
   burnup,
   hidden,
 }: {
-  cycle: TWorkspaceActiveCycle;
+  cycle: CycleChartData;
   burnup: boolean;
   hidden: Set<CycleChartSeries>;
 }) {

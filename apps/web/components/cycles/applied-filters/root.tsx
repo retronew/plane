@@ -1,21 +1,12 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
 import { observer } from "mobx-react";
-// plane imports
+import { Button } from "@makeplane/propel/components/button";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { CloseOutline } from "@makeplane/propel/icons";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { Icon } from "@makeplane/propel/components/icon";
-import { Pill } from "@makeplane/propel/components/pill";
-import { CloseOutline } from "@makeplane/propel/icons";
 import type { TCycleFilters } from "@plane/types";
-import { replaceUnderscoreIfSnakeCase } from "@plane/utils";
-// hooks
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 import { useUserPermissions } from "@/hooks/store/user";
-// local imports
 import { AppliedDateFilters } from "./date";
 import { AppliedStatusFilters } from "./status";
 
@@ -26,70 +17,71 @@ type Props = {
   alwaysAllowEditing?: boolean;
 };
 
-const DATE_FILTERS = new Set(["start_date", "end_date"]);
+const FILTER_LABELS: Record<keyof TCycleFilters, string> = {
+  status: "web.status",
+  start_date: "web.start_date",
+  end_date: "project_cycles.end_date",
+};
 
-export const CycleAppliedFiltersList = observer(function CycleAppliedFiltersList(props: Props) {
-  const { appliedFilters, handleClearAllFilters, handleRemoveFilter, alwaysAllowEditing } = props;
-  // store hooks
+export const CycleAppliedFiltersList = observer(function CycleAppliedFiltersList({
+  appliedFilters,
+  handleClearAllFilters,
+  handleRemoveFilter,
+  alwaysAllowEditing,
+}: Props) {
   const { allowPermissions } = useUserPermissions();
   const { t } = useTranslation();
-
-  if (!appliedFilters) return null;
-
-  if (Object.keys(appliedFilters).length === 0) return null;
+  if (!appliedFilters || Object.values(appliedFilters).every((values) => !values?.length)) return null;
 
   const isEditingAllowed =
     alwaysAllowEditing ||
     allowPermissions([EUserPermissions.ADMIN, EUserPermissions.MEMBER], EUserPermissionsLevel.PROJECT);
 
   return (
-    <div className="flex flex-wrap items-stretch gap-2 bg-surface-1">
-      {Object.entries(appliedFilters).map(([key, value]) => {
-        const filterKey = key as keyof TCycleFilters;
-
-        if (!value) return;
-        if (Array.isArray(value) && value.length === 0) return;
-
+    <div className="flex flex-wrap items-center gap-2 bg-surface-1">
+      {(Object.keys(FILTER_LABELS) as (keyof TCycleFilters)[]).map((key) => {
+        const values = appliedFilters[key];
+        if (!values?.length) return null;
         return (
           <div
-            key={filterKey}
-            className="my-auto flex min-h-9 cursor-pointer flex-wrap items-center gap-1.5 rounded-md border border-subtle p-1.5 text-11 text-tertiary capitalize hover:text-secondary"
+            key={key}
+            className="my-auto flex min-h-7 flex-wrap items-center gap-1.5 rounded-md border border-subtle-1 bg-layer-2 px-2 py-0.5 text-11 text-tertiary"
           >
-            <span className="text-11 text-tertiary">{replaceUnderscoreIfSnakeCase(filterKey)}</span>
+            <FilterFieldIcon field={key} />
+            <span>{t(FILTER_LABELS[key])}</span>
             <div className="flex flex-wrap items-center gap-1">
-              {filterKey === "status" && (
+              {key === "status" ? (
                 <AppliedStatusFilters
                   editable={isEditingAllowed}
-                  handleRemove={(val) => handleRemoveFilter("status", val)}
-                  values={value}
+                  handleRemove={(value) => handleRemoveFilter(key, value)}
+                  values={values}
                 />
-              )}
-              {DATE_FILTERS.has(filterKey) && (
+              ) : (
                 <AppliedDateFilters
                   editable={isEditingAllowed}
-                  handleRemove={(val) => handleRemoveFilter(filterKey, val)}
-                  values={value}
+                  handleRemove={(value) => handleRemoveFilter(key, value)}
+                  values={values}
                 />
               )}
               {isEditingAllowed && (
-                <button
-                  type="button"
-                  className="grid place-items-center text-tertiary hover:text-secondary"
-                  onClick={() => handleRemoveFilter(filterKey, null)}
-                >
-                  <CloseOutline height={12} width={12} />
-                </button>
+                <IconButton
+                  variant="ghost"
+                  size="xs"
+                  icon={<CloseOutline />}
+                  aria-label={`${t("remove")} ${t(FILTER_LABELS[key])}`}
+                  onClick={() => handleRemoveFilter(key, null)}
+                />
               )}
             </div>
           </div>
         );
       })}
       {isEditingAllowed && (
-        <Pill
+        <Button
+          variant="secondary"
           size="md"
-          variant="outline"
+          stretch="auto"
           label={t("common.clear_all")}
-          endIcon={<Icon icon={CloseOutline} />}
           onClick={handleClearAllFilters}
         />
       )}

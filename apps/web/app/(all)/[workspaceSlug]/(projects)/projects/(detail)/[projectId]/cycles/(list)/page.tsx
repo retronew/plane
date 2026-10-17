@@ -4,13 +4,17 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
 import { observer } from "mobx-react";
+import { Badge } from "@makeplane/propel/components/badge";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { getFilteredCycleIdsForTab, isCycleInTab } from "@/components/cycles/cycle-tab-data";
+import { useSearchParams } from "next/navigation";
+import { CycleTabNavigation } from "@/components/cycles/tab-navigation";
+import { CyclesViewHeader } from "@/components/cycles/cycles-view-header";
 // plane imports
 import { useTheme } from "next-themes";
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
-import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TCycleFilters } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // components
@@ -23,7 +27,6 @@ import lightEmptyState from "@/app/assets/empty-state/disabled-feature/cycles-li
 import { PageHead } from "@/components/core/page-title";
 import { CycleAppliedFiltersList } from "@/components/cycles/applied-filters";
 import { CyclesView } from "@/components/cycles/cycles-view";
-import { CycleCreateUpdateModal } from "@/components/cycles/modal";
 import { DetailedEmptyState } from "@/components/empty-state/detailed-empty-state-root";
 import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
 // hooks
@@ -35,10 +38,12 @@ import { useAppRouter } from "@/hooks/use-app-router";
 import type { Route } from "./+types/page";
 
 function ProjectCyclesPage({ params }: Route.ComponentProps) {
-  // states
-  const [createModal, setCreateModal] = useState(false);
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const tab = requestedTab === "upcoming" || requestedTab === "completed" ? requestedTab : "active";
   // store hooks
-  const { currentProjectCycleIds, loader } = useCycle();
+  const cycleStore = useCycle();
+  const { loader, cycleMap, fetchedMap } = cycleStore;
   const { getProjectById, currentProjectDetails } = useProject();
   // router
   const router = useAppRouter();
@@ -48,20 +53,22 @@ function ProjectCyclesPage({ params }: Route.ComponentProps) {
   // plane hooks
   const { t } = useTranslation();
   // cycle filters hook
-  const { clearAllFilters, currentProjectFilters, updateFilters } = useCycleFilter();
+  const { clearAllFilters, currentProjectFilters, updateFilters, searchQuery } = useCycleFilter();
   const { allowPermissions } = useUserPermissions();
   // derived values
   const resolvedEmptyState = resolvedTheme === "light" ? lightEmptyState : darkEmptyState;
-  const totalCycles = currentProjectCycleIds?.length ?? 0;
   const project = getProjectById(projectId);
   const pageTitle = project?.name
     ? translate("web.runtime.page_title", { name: project?.name, section: t("common.cycles", { count: 2 }) })
     : undefined;
   const hasAdminLevelPermission = allowPermissions([EUserProjectRoles.ADMIN], EUserPermissionsLevel.PROJECT);
-  const hasMemberLevelPermission = allowPermissions(
-    [EUserProjectRoles.ADMIN, EUserProjectRoles.MEMBER],
-    EUserPermissionsLevel.PROJECT
-  );
+  const hasFilters = calculateTotalFilters(currentProjectFilters ?? {}) !== 0;
+  const hasSearch = searchQuery.trim() !== "";
+  const filteredCycleIds = getFilteredCycleIdsForTab(cycleStore, projectId, tab);
+  const totalCycles = Object.values(cycleMap).filter(
+    (cycle) => cycle.project_id === projectId && !cycle.archived_at && isCycleInTab(cycle, tab)
+  ).length;
+  const showCycleCount = !loader && fetchedMap[projectId] && filteredCycleIds !== null;
 
   const handleRemoveFilter = (key: keyof TCycleFilters, value: string | null) => {
     let newValues = currentProjectFilters?.[key] ?? [];
@@ -96,44 +103,42 @@ function ProjectCyclesPage({ params }: Route.ComponentProps) {
   return (
     <>
       <PageHead title={pageTitle} />
-      <div className="h-full w-full">
-        <CycleCreateUpdateModal
-          workspaceSlug={workspaceSlug}
-          projectId={projectId}
-          isOpen={createModal}
-          handleClose={() => setCreateModal(false)}
-        />
-        {totalCycles === 0 ? (
-          <div className="h-full place-items-center">
-            <EmptyStateDetailed
-              assetKey="cycle"
-              title={t("project_empty_state.cycles.title")}
-              description={t("project_empty_state.cycles.description")}
-              actions={[
-                {
-                  label: t("project_empty_state.cycles.cta_primary"),
-                  onClick: () => setCreateModal(true),
-                  variant: "primary",
-                  disabled: !hasMemberLevelPermission,
-                },
-              ]}
-            />
-          </div>
-        ) : (
-          <>
-            {calculateTotalFilters(currentProjectFilters ?? {}) !== 0 && (
-              <Header variant={EHeaderVariant.TERNARY}>
+      <div className="flex h-full min-h-0 w-full flex-col">
+        <Header variant={EHeaderVariant.SECONDARY} setHeight={false} className="h-12 shrink-0">
+          <Header.LeftItem className="h-full min-w-0 overflow-x-auto">
+            <CycleTabNavigation workspaceSlug={workspaceSlug} projectId={projectId} tab={tab} />
+          </Header.LeftItem>
+          <Header.RightItem className="items-center">
+            <CyclesViewHeader projectId={projectId} />
+          </Header.RightItem>
+        </Header>
+        {(hasFilters || hasSearch) && (
+          <Header variant={EHeaderVariant.TERNARY}>
+            <Header.LeftItem>
+              {hasFilters && (
                 <CycleAppliedFiltersList
                   appliedFilters={currentProjectFilters ?? {}}
                   handleClearAllFilters={() => clearAllFilters(projectId)}
                   handleRemoveFilter={handleRemoveFilter}
+                  alwaysAllowEditing
                 />
-              </Header>
+              )}
+            </Header.LeftItem>
+            {showCycleCount && (
+              <Header.RightItem>
+                <Tooltip
+                  label={t("web.runtime.matching_cycles", { matched: filteredCycleIds.length, total: totalCycles })}
+                  layout="stacked"
+                >
+                  <Badge size="sm" variant="neutral" label={`${filteredCycleIds.length}/${totalCycles}`} />
+                </Tooltip>
+              </Header.RightItem>
             )}
-
-            <CyclesView workspaceSlug={workspaceSlug} projectId={projectId} />
-          </>
+          </Header>
         )}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <CyclesView workspaceSlug={workspaceSlug} projectId={projectId} tab={tab} />
+        </div>
       </div>
     </>
   );

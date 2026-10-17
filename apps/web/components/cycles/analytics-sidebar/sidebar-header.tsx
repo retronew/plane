@@ -44,10 +44,7 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
   const { data: userProfile } = useUserProfile();
   const { updateCycleDetails } = useCycle();
   const { t } = useTranslation();
-  const { renderFormattedDateInUserTimezone, getProjectUTCOffset } = useTimeZoneConverter(projectId);
-
-  // derived values
-  const projectUTCOffset = getProjectUTCOffset();
+  const { renderFormattedDateInUserTimezone } = useTimeZoneConverter(projectId);
 
   // form info
   const { control, reset } = useForm({
@@ -120,37 +117,27 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
 
   return (
     <>
-      <div className="sticky top-0 z-10 flex items-center justify-between bg-surface-1 pt-2">
+      <div className="absolute top-5 right-0 z-10 flex items-center">
         <div className="flex size-5 items-center justify-center">
           <button
-            className="flex size-6 flex-shrink-0 items-center justify-center rounded-full bg-layer-3 hover:bg-layer-3-hover"
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-tertiary transition-colors hover:bg-layer-2-hover hover:text-primary"
+            aria-label={t("close")}
             onClick={() => handleClose()}
           >
             <ChevronRightOutline className="size-4 text-secondary" />
           </button>
         </div>
       </div>
-      <div className="flex w-full flex-col gap-2">
-        <div className="flex items-start justify-between gap-3 pt-2">
-          <h4 className="w-full text-18 font-semibold break-words text-primary">{cycleDetails.name}</h4>
-          {currentCycle && (
-            <span
-              className="flex h-6 min-w-20 items-center justify-center truncate rounded-sm px-3 text-center text-11 font-medium whitespace-nowrap"
-              style={{
-                color: currentCycle.color,
-                backgroundColor: `${currentCycle.color}20`,
-              }}
-            >
-              {t(currentCycle.i18n_title)}
-            </span>
-          )}
-        </div>
+      <div className="flex w-full flex-col gap-3">
+        <h4 className="w-full pt-6 pr-7 text-18 leading-6 font-semibold break-words text-primary">
+          {cycleDetails.name}
+        </h4>
 
         <Controller
           control={control}
           name="start_date"
           render={({ field: { value: startDateValue, onChange: onChangeStartDate } }) => (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Controller
                 control={control}
                 name="end_date"
@@ -158,6 +145,7 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
                   <div className="h-7">
                     <DateRangeSelect
                       variant="pill-sm"
+                      className="h-6! max-w-none! rounded-md! [&>span]:overflow-visible [&>span]:text-clip"
                       minDate={new Date()}
                       value={{
                         from: getDate(startDateValue) ?? null,
@@ -188,9 +176,11 @@ export const CycleSidebarHeader = observer(function CycleSidebarHeader(props: Pr
                   </div>
                 )}
               />
-              {projectUTCOffset && (
-                <span className="cursor-default rounded-md bg-layer-1 px-2 py-1 text-11 text-tertiary">
-                  {projectUTCOffset}
+              {currentCycle && (
+                <span
+                  className={`inline-flex h-6 shrink-0 items-center rounded-sm px-2 text-12 font-medium whitespace-nowrap ${cycleStatus === "current" ? "bg-warning-subtle text-warning-primary" : "bg-layer-2 text-secondary"}`}
+                >
+                  {t(currentCycle.i18n_title)}
                 </span>
               )}
             </div>

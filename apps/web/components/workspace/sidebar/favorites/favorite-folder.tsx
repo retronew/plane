@@ -1,4 +1,4 @@
-import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
+import { ActionMenuContent as MenuContent, FavoriteStarIcon } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -17,13 +17,7 @@ import { attachInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree
 import { orderBy } from "lodash-es";
 import { useParams } from "next/navigation";
 import { createRoot } from "react-dom/client";
-import {
-  ChevronRightOutline,
-  DraftsOutline,
-  DragDropOutline,
-  MoreHorizontalOutline,
-  StarFilled,
-} from "@makeplane/propel/icons";
+import { ChevronRightOutline, DraftsOutline, DragDropOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
@@ -237,7 +231,7 @@ export function FavoriteFolder(props: Props) {
                 />
                 <MenuContent side="bottom" align="start">
                   <MenuItem
-                    icon={<Icon icon={<StarFilled className="text-yellow-500" />} />}
+                    icon={<Icon icon={<FavoriteStarIcon selected />} />}
                     label={t("remove_from_favorites")}
                     onClick={() => handleRemoveFromFavorites(favorite)}
                   />

@@ -1711,6 +1711,7 @@
       "matching_intake_items": "共 {count} 个 Intake 工作项符合筛选条件。",
       "matching_projects": "共 {total} 个项目，其中 {matched} 个符合筛选条件。",
       "matching_pages": "共 {total} 个页面，其中 {matched} 个符合筛选条件。",
+      "matching_cycles": "共 {total} 个周期，其中 {matched} 个符合搜索和筛选条件。",
       "uploaded_by": "{name} 上传于 {date}",
       "heading_level": "标题 {level}",
       "editor_commands": "输入 / 打开命令菜单…",

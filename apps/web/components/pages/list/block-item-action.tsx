@@ -81,7 +81,7 @@ export const BlockItemAction = observer(function BlockItemAction(props: Props) {
       {canCurrentUserFavoritePage && (
         <FavoriteStar
           buttonClassName="size-6 rounded-sm hover:bg-layer-transparent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
-          iconClassName={`size-3.5 ${is_favorite ? "text-[#fbbf24]" : "text-secondary"}`}
+          iconClassName="size-3.5"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

@@ -1,59 +1,35 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
 import { observer } from "mobx-react";
-// helpers
+import { CalendarOutline } from "@makeplane/propel/icons";
 import { DATE_AFTER_FILTER_OPTIONS } from "@plane/constants";
-import { CloseOutline } from "@makeplane/propel/icons";
-import { renderFormattedDate, capitalizeFirstLetter } from "@plane/utils";
-// constants
+import { useTranslation } from "@plane/i18n";
+import { isInDateFormat, renderFormattedDate } from "@plane/utils";
+import { ProjectFilterChip } from "@/components/project/applied-filters/chip";
 
 type Props = {
   editable: boolean | undefined;
-  handleRemove: (val: string) => void;
+  handleRemove: (value: string) => void;
   values: string[];
 };
 
-export const AppliedDateFilters = observer(function AppliedDateFilters(props: Props) {
-  const { editable, handleRemove, values } = props;
-
-  const getDateLabel = (value: string): string => {
-    let dateLabel = "";
-
-    const dateDetails = DATE_AFTER_FILTER_OPTIONS.find((d) => d.value === value);
-
-    if (dateDetails) dateLabel = dateDetails.name;
-    else {
-      const dateParts = value.split(";");
-
-      if (dateParts.length === 2) {
-        const [date, time] = dateParts;
-
-        dateLabel = `${capitalizeFirstLetter(time)} ${renderFormattedDate(date)}`;
-      }
-    }
-
-    return dateLabel;
+export const AppliedDateFilters = observer(function AppliedDateFilters({ editable, handleRemove, values }: Props) {
+  const { t } = useTranslation();
+  const getDateLabel = (value: string) => {
+    const preset = DATE_AFTER_FILTER_OPTIONS.find((option) => option.value === value);
+    if (preset) return preset.name;
+    const [date, direction] = value.split(";");
+    if (isInDateFormat(date) && (direction === "before" || direction === "after"))
+      return `${t(direction === "before" ? "web.before" : "web.after")} ${renderFormattedDate(date)}`;
+    return value;
   };
-
   return (
     <>
       {values.map((date) => (
-        <div key={date} className="flex items-center gap-1 rounded-sm bg-layer-3 px-1.5 py-1 text-11">
-          <span className="normal-case">{getDateLabel(date)}</span>
-          {editable && (
-            <button
-              type="button"
-              className="grid place-items-center text-tertiary hover:text-secondary"
-              onClick={() => handleRemove(date)}
-            >
-              <CloseOutline height={10} width={10} />
-            </button>
-          )}
-        </div>
+        <ProjectFilterChip
+          key={date}
+          label={getDateLabel(date)}
+          icon={<CalendarOutline className="size-3" />}
+          onRemove={editable ? () => handleRemove(date) : undefined}
+        />
       ))}
     </>
   );

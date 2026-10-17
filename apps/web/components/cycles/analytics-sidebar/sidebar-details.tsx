@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 import { MembersOutline, UserAltOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 // plane types
 import { EEstimateSystem } from "@plane/constants";
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import { TextArea } from "@makeplane/propel/components/text-area";
@@ -38,40 +38,26 @@ export const CycleSidebarDetails = observer(function CycleSidebarDetails(props: 
   const cycleStatus = cycleDetails?.status?.toLocaleLowerCase();
   const isCompleted = cycleStatus === "completed";
 
-  const issueCount =
-    isCompleted && !isEmpty(cycleDetails?.progress_snapshot)
-      ? cycleDetails?.progress_snapshot?.total_issues === 0
-        ? translate("web.runtime.items_count", { count: 0 })
-        : `${cycleDetails?.progress_snapshot?.completed_issues}/${cycleDetails?.progress_snapshot?.total_issues}`
-      : cycleDetails?.total_issues === 0
-        ? translate("web.runtime.items_count", { count: 0 })
-        : `${cycleDetails?.completed_issues}/${cycleDetails?.total_issues}`;
+  const counts =
+    isCompleted && !isEmpty(cycleDetails.progress_snapshot) ? cycleDetails.progress_snapshot : cycleDetails;
+  const cancelledIssues = counts?.cancelled_issues ?? 0;
+  const issueCount = `${counts?.completed_issues ?? 0}/${Math.max(0, (counts?.total_issues ?? 0) - cancelledIssues)}`;
   const estimateType = areEstimateEnabled && currentActiveEstimateId && estimateById(currentActiveEstimateId);
-  const cycleOwnerDetails = cycleDetails ? getUserDetails(cycleDetails.owned_by_id) : undefined;
+  const cycleOwnerDetails = getUserDetails(cycleDetails.owned_by_id);
+  const creatorDetails = cycleDetails.created_by ? getUserDetails(cycleDetails.created_by) : undefined;
 
-  const isEstimatePointValid = isEmpty(cycleDetails?.progress_snapshot || {})
-    ? estimateType && estimateType?.type == EEstimateSystem.POINTS
-      ? true
-      : false
-    : isEmpty(cycleDetails?.progress_snapshot?.estimate_distribution || {})
-      ? false
-      : true;
-
-  const issueEstimatePointCount =
-    isCompleted && !isEmpty(cycleDetails?.progress_snapshot)
-      ? cycleDetails?.progress_snapshot.total_issues === 0
-        ? translate("web.runtime.items_count", { count: 0 })
-        : `${cycleDetails?.progress_snapshot.completed_estimate_points}/${cycleDetails?.progress_snapshot.total_estimate_points}`
-      : cycleDetails?.total_issues === 0
-        ? translate("web.runtime.items_count", { count: 0 })
-        : `${cycleDetails?.completed_estimate_points}/${cycleDetails?.total_estimate_points}`;
+  const isEstimatePointValid = isEmpty(cycleDetails.progress_snapshot)
+    ? Boolean(estimateType && estimateType.type === EEstimateSystem.POINTS)
+    : !isEmpty(cycleDetails.progress_snapshot?.estimate_distribution);
+  const issueEstimatePointCount = `${counts?.completed_estimate_points ?? 0}/${counts?.total_estimate_points ?? 0}`;
   return (
     <div className="flex w-full flex-col gap-5">
       {cycleDetails?.description && (
         <TextArea size="lg" surface="inline" autoResize value={cycleDetails.description} disabled />
       )}
 
-      <div className="flex flex-col gap-5 pt-2.5 pb-6">
+      <div className="flex flex-col gap-5 border-t border-subtle pt-6 pb-6">
+        <h5 className="text-13 font-medium text-primary">{t("common.properties")}</h5>
         <div className="flex items-center justify-start gap-1">
           <div className="flex w-2/5 items-center justify-start gap-2 text-tertiary">
             <UserAltOutline className="h-4 w-4" />
@@ -113,7 +99,7 @@ export const CycleSidebarDetails = observer(function CycleSidebarDetails(props: 
                   </AvatarGroup>
                 </>
               ) : (
-                <span className="px-1.5 text-13 text-tertiary">{t("no_assignee")}</span>
+                <span className="px-1.5 text-13 text-tertiary">{t("none")}</span>
               )}
             </div>
           </div>
@@ -125,7 +111,34 @@ export const CycleSidebarDetails = observer(function CycleSidebarDetails(props: 
             <span className="text-14">{t("work_items")}</span>
           </div>
           <div className="flex w-3/5 items-center">
-            <span className="px-1.5 text-13 text-tertiary">{issueCount}</span>
+            <span className="text-13 text-secondary">
+              {issueCount}
+              {cancelledIssues > 0 && (
+                <span className="ml-1">{t("project_cycles.cancelled_count", { count: cancelledIssues })}</span>
+              )}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-start gap-1">
+          <div className="flex w-2/5 items-center gap-2 text-tertiary">
+            <UserAltOutline className="h-4 w-4" />
+            <span className="text-14">{t("common.created_by")}</span>
+          </div>
+          <div className="flex w-3/5 items-center gap-2.5 text-13 text-secondary">
+            {creatorDetails ? (
+              <>
+                <Avatar
+                  alt={creatorDetails.display_name}
+                  fallback={creatorDetails.display_name?.[0]?.toUpperCase()}
+                  src={getFileURL(creatorDetails.avatar_url ?? "")}
+                  size="xs"
+                />
+                <span>{creatorDetails.display_name}</span>
+              </>
+            ) : (
+              <span>{t("none")}</span>
+            )}
           </div>
         </div>
 

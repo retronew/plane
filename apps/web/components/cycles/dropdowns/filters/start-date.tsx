@@ -1,90 +1,173 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { observer } from "mobx-react";
-// constants
+import { Button } from "@makeplane/propel/components/button";
+import { Calendar } from "@makeplane/propel/components/calendar";
+import {
+  MenuCheckboxItem,
+  MenuSubmenu,
+  MenuSubmenuContent,
+  MenuSubmenuTrigger,
+} from "@makeplane/propel/components/menu";
+import { getCalendarLocale } from "@plane/blocks/property-select";
 import { DATE_AFTER_FILTER_OPTIONS } from "@plane/constants";
-// components
-import { isInDateFormat } from "@plane/utils";
-import { DateFilterModal } from "@/components/core/filters/date-filter-modal";
-import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
-import { translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
+import { getCalendarFormatters, getDate, isInDateFormat, renderFormattedPayloadDate } from "@plane/utils";
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 
-// helpers
-
-type Props = {
+type CycleDateFilterProps = {
   appliedFilters: string[] | null;
-  handleUpdate: (val: string | string[]) => void;
-  searchQuery: string;
+  handleUpdate: (value: string | string[]) => void;
+  searchQuery?: string;
 };
 
-export const FilterStartDate = observer(function FilterStartDate(props: Props) {
-  const { appliedFilters, handleUpdate, searchQuery } = props;
-  const [previewEnabled, setPreviewEnabled] = useState(true);
-  const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
+type DateCondition = "before" | "after" | "range";
 
-  const appliedFiltersCount = appliedFilters?.length ?? 0;
-
-  const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((d) =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase())
+function CustomDateMenu({
+  values,
+  handleUpdate,
+}: {
+  values: string[];
+  handleUpdate: CycleDateFilterProps["handleUpdate"];
+}) {
+  const { t, currentLocale } = useTranslation();
+  const before = values.find((value) => value.endsWith(";before"))?.split(";")[0];
+  const after = values.find((value) => value.endsWith(";after"))?.split(";")[0];
+  const [condition, setCondition] = useState<DateCondition>(
+    before && after ? "range" : before ? "before" : after ? "after" : "range"
   );
+  const [from, setFrom] = useState<Date | undefined>(() => getDate(after ?? before ?? "") ?? undefined);
+  const [to, setTo] = useState<Date | undefined>(() => getDate(before ?? "") ?? undefined);
+  const [open, setOpen] = useState(false);
+  const complete = !!from && (condition !== "range" || (!!to && from <= to));
+  const apply = () => {
+    if (!from || !complete) return;
+    const next =
+      condition === "range" && to
+        ? [`${renderFormattedPayloadDate(from)};after`, `${renderFormattedPayloadDate(to)};before`]
+        : [`${renderFormattedPayloadDate(from)};${condition}`];
+    // The caller toggles each value, so only emit the symmetric difference when editing a range.
+    const previousSet = new Set(values);
+    const nextSet = new Set(next);
+    const changes = [
+      ...values.filter((value) => !nextSet.has(value)),
+      ...next.filter((value) => !previousSet.has(value)),
+    ];
+    if (changes.length) handleUpdate(changes);
+    setOpen(false);
+  };
+  return (
+    <MenuSubmenu open={open} onOpenChange={setOpen}>
+      <MenuSubmenuTrigger label={t("web.custom")} trailing={values.length ? String(values.length) : undefined} />
+      <MenuSubmenuContent>
+        <div className="max-w-[calc(100vw-32px)] space-y-2 p-2">
+          <fieldset className="flex gap-1" aria-label={t("date_range")}>
+            {(["before", "after", "range"] as const).map((value) => (
+              <Button
+                key={value}
+                variant={condition === value ? "primary" : "secondary"}
+                size="sm"
+                stretch="auto"
+                aria-pressed={condition === value}
+                label={t(value === "range" ? "date_range" : value === "before" ? "web.before" : "web.after")}
+                onClick={() => {
+                  setCondition(value);
+                  setFrom(undefined);
+                  setTo(undefined);
+                }}
+              />
+            ))}
+          </fieldset>
+          {condition === "range" ? (
+            <Calendar
+              {...getCalendarLocale(currentLocale)}
+              formatters={getCalendarFormatters()}
+              mode="range"
+              selected={from ? { from, to } : undefined}
+              defaultMonth={from}
+              onSelect={(range) => {
+                setFrom(range?.from);
+                setTo(range?.to);
+              }}
+            />
+          ) : (
+            <Calendar
+              {...getCalendarLocale(currentLocale)}
+              formatters={getCalendarFormatters()}
+              mode="single"
+              selected={from}
+              defaultMonth={from}
+              onSelect={setFrom}
+            />
+          )}
+          <div className="flex justify-end gap-2">
+            {values.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                stretch="auto"
+                label={t("remove")}
+                onClick={() => {
+                  handleUpdate(values);
+                  setFrom(undefined);
+                  setTo(undefined);
+                  setOpen(false);
+                }}
+              />
+            )}
+            <Button
+              variant="primary"
+              size="sm"
+              stretch="auto"
+              label={t("web.apply")}
+              disabled={!complete}
+              onClick={apply}
+            />
+          </div>
+        </div>
+      </MenuSubmenuContent>
+    </MenuSubmenu>
+  );
+}
 
-  const isCustomDateSelected = () => {
-    const isValidDateSelected = appliedFilters?.filter((f) => isInDateFormat(f.split(";")[0])) || [];
-    return isValidDateSelected.length > 0;
-  };
-  const handleCustomDate = () => {
-    if (isCustomDateSelected()) {
-      const updateAppliedFilters = appliedFilters?.filter((f) => f.includes("-")) || [];
-      handleUpdate(updateAppliedFilters);
-    } else setIsDateFilterModalOpen(true);
-  };
+const CycleDateFilterContent = observer(function CycleDateFilterContent({
+  field,
+  appliedFilters,
+  handleUpdate,
+  searchQuery = "",
+}: CycleDateFilterProps & { field: "start_date" | "end_date" }) {
+  const { t } = useTranslation();
+  const customSelected = (appliedFilters ?? []).filter((value) => isInDateFormat(value.split(";")[0]));
+  const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((option) =>
+    option.name.toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase())
+  );
 
   return (
-    <>
-      {isDateFilterModalOpen && (
-        <DateFilterModal
-          handleClose={() => setIsDateFilterModalOpen(false)}
-          isOpen={isDateFilterModalOpen}
-          onSelect={(val) => handleUpdate(val)}
-          title={translate("web.start_date")}
-        />
-      )}
-      <FilterHeader
-        field="start_date"
-        title={translate("web.runtime.filter_start_date", { count: appliedFiltersCount })}
-        isPreviewEnabled={previewEnabled}
-        handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
+    <MenuSubmenu>
+      <MenuSubmenuTrigger
+        icon={<FilterFieldIcon field={field} />}
+        label={t(field === "start_date" ? "web.start_date" : "project_cycles.end_date")}
+        trailing={appliedFilters?.length ? String(appliedFilters.length) : undefined}
       />
-      {previewEnabled && (
-        <div>
-          {filteredOptions.length > 0 ? (
-            <>
-              {filteredOptions.map((option) => (
-                <FilterOption
-                  key={option.value}
-                  isChecked={Boolean(appliedFilters?.includes(option.value))}
-                  onClick={() => handleUpdate(option.value)}
-                  title={option.name}
-                  multiple
-                />
-              ))}
-              <FilterOption
-                isChecked={isCustomDateSelected()}
-                onClick={handleCustomDate}
-                title={translate("web.custom")}
-                multiple
-              />
-            </>
-          ) : (
-            <p className="text-11 text-placeholder italic">{translate("web.no_matches_found")}</p>
-          )}
-        </div>
-      )}
-    </>
+      <MenuSubmenuContent>
+        {filteredOptions.map((option) => (
+          <MenuCheckboxItem
+            key={option.value}
+            label={option.name}
+            checked={appliedFilters?.includes(option.value) ?? false}
+            onCheckedChange={() => handleUpdate(option.value)}
+            closeOnClick={false}
+          />
+        ))}
+        <CustomDateMenu key={customSelected.join(",")} values={customSelected} handleUpdate={handleUpdate} />
+      </MenuSubmenuContent>
+    </MenuSubmenu>
   );
 });
+
+export function CycleDateFilter(props: CycleDateFilterProps & { field: "start_date" | "end_date" }) {
+  return <CycleDateFilterContent {...props} />;
+}
+
+export function FilterStartDate(props: CycleDateFilterProps) {
+  return <CycleDateFilter {...props} field="start_date" />;
+}

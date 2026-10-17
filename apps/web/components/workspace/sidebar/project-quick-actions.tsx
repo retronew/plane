@@ -3,19 +3,11 @@ import { observer } from "mobx-react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@makeplane/propel/components/icon";
 import { MenuItem, MenuSeparator } from "@makeplane/propel/components/menu";
-import {
-  ArchiveOutline,
-  LinkOutline,
-  RemoveOutline,
-  SettingsOutline,
-  ShareOutline,
-  StarFilled,
-  StarOutline,
-} from "@makeplane/propel/icons";
+import { ArchiveOutline, LinkOutline, RemoveOutline, SettingsOutline, ShareOutline } from "@makeplane/propel/icons";
 import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { TPartialProject } from "@plane/types";
-import { ActionMenuContent } from "@plane/blocks/common";
+import { ActionMenuContent, FavoriteStarIcon } from "@plane/blocks/common";
 import { setToast } from "@plane/blocks/toast";
 import { ArchiveRestoreProjectModal } from "@/components/project/archive-restore-modal";
 import { LeaveProjectModal } from "@/components/project/leave-project-modal";
@@ -99,7 +91,7 @@ export const SidebarProjectQuickActions = observer(function SidebarProjectQuickA
         />
         <MenuItem icon={<Icon icon={LinkOutline} />} label={t("copy_link")} onClick={onCopyLink} />
         <MenuItem
-          icon={<Icon icon={isFavorite ? StarFilled : StarOutline} />}
+          icon={<Icon icon={<FavoriteStarIcon selected={isFavorite} />} />}
           label={t(isFavorite ? "remove_from_favorites" : "add_to_favorites")}
           disabled={updatingFavorite}
           onClick={() => void toggleFavorite()}

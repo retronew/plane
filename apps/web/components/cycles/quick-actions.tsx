@@ -7,9 +7,11 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { ExportOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 // ui
-import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
+import { useLocalStorage } from "@plane/hooks";
+import { FavoriteStarIcon } from "@plane/blocks/common";
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -26,6 +28,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 // local imports
 import { ArchiveCycleModal } from "./archived-cycles/modal";
 import { CycleDeleteModal } from "./delete-modal";
+import { CycleExportModal } from "./export-modal";
 import { CycleCreateUpdateModal } from "./modal";
 
 type Props = {
@@ -36,6 +39,14 @@ type Props = {
   customClassName?: string;
 };
 
+function SelectedFavoriteIcon() {
+  return <FavoriteStarIcon selected />;
+}
+
+function UnselectedFavoriteIcon() {
+  return <FavoriteStarIcon selected={false} />;
+}
+
 export const CycleQuickActions = observer(function CycleQuickActions(props: Props) {
   const { parentRef, cycleId, projectId, workspaceSlug, customClassName } = props;
   // router
@@ -44,10 +55,12 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
   const [updateModal, setUpdateModal] = useState(false);
   const [archiveCycleModal, setArchiveCycleModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
   // store hooks
   const { allowPermissions } = useUserPermissions();
-  const { getCycleById, restoreCycle } = useCycle();
+  const { getCycleById, restoreCycle, addCycleToFavorites, removeCycleFromFavorites } = useCycle();
   const { t } = useTranslation();
+  const { setValue: toggleFavoriteMenu } = useLocalStorage<boolean>(IS_FAVORITE_MENU_OPEN, false);
   // derived values
   const cycleDetails = getCycleById(cycleId);
   // auth
@@ -68,7 +81,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
       });
       return undefined;
     });
-  const handleOpenInNewTab = () => window.open(`/${cycleLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${cycleLink}`, "_blank", "noopener,noreferrer");
 
   const handleRestoreCycle = async () =>
     await restoreCycle(workspaceSlug, projectId, cycleId)
@@ -88,6 +101,29 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
         });
       });
 
+  const handleToggleFavorite = async () => {
+    if (!isEditingAllowed || !cycleDetails || cycleDetails.archived_at) return;
+    const action = cycleDetails.is_favorite ? "unfavorite" : "favorite";
+    try {
+      if (cycleDetails.is_favorite) await removeCycleFromFavorites(workspaceSlug, projectId, cycleId);
+      else {
+        await addCycleToFavorites(workspaceSlug, projectId, cycleId);
+        toggleFavoriteMenu(true);
+      }
+      setToast({
+        type: "success",
+        title: t(`project_cycles.action.${action}.success.title`),
+        message: t(`project_cycles.action.${action}.success.description`),
+      });
+    } catch {
+      setToast({
+        type: "error",
+        title: t(`project_cycles.action.${action}.failed.title`),
+        message: t(`project_cycles.action.${action}.failed.description`),
+      });
+    }
+  };
+
   const menuResult = useCycleMenuItems({
     cycleDetails: cycleDetails ?? undefined,
     workspaceSlug,
@@ -102,7 +138,31 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
     handleOpenInNewTab,
   });
 
-  const MENU_ITEMS: TContextMenuItem[] = Array.isArray(menuResult) ? menuResult : menuResult.items;
+  const cycleMenuItems: TContextMenuItem[] = Array.isArray(menuResult) ? menuResult : menuResult.items;
+  const MENU_ITEMS: TContextMenuItem[] = [
+    ...cycleMenuItems.filter((item) => !["delete", "archive", "restore"].includes(item.key)),
+    {
+      key: "favorite",
+      title: t(cycleDetails?.is_favorite ? "remove_from_favorites" : "add_to_favorites"),
+      icon: cycleDetails?.is_favorite ? SelectedFavoriteIcon : UnselectedFavoriteIcon,
+      action: () => void handleToggleFavorite(),
+      shouldRender: isEditingAllowed && !!cycleDetails && !cycleDetails.archived_at,
+    },
+    {
+      key: "export",
+      title: t("export"),
+      icon: ExportOutline,
+      action: () => setExportModal(true),
+      shouldRender:
+        isEditingAllowed &&
+        allowPermissions(
+          [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+          EUserPermissionsLevel.WORKSPACE,
+          workspaceSlug
+        ),
+    },
+    ...cycleMenuItems.filter((item) => ["archive", "restore", "delete"].includes(item.key)),
+  ];
   const additionalModals = Array.isArray(menuResult) ? null : menuResult.modals;
 
   const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
@@ -138,6 +198,14 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
             handleClose={() => setDeleteModal(false)}
             workspaceSlug={workspaceSlug}
             projectId={projectId}
+          />
+          <CycleExportModal
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            cycleId={cycleId}
+            cycleName={cycleDetails.name}
+            open={exportModal}
+            onClose={() => setExportModal(false)}
           />
           {additionalModals}
         </div>

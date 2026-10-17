@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { TrendingDown, TrendingUp, CircleMinus, Minus } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
@@ -12,7 +13,20 @@ import { WorkspaceCycleChart } from "./cycle-chart";
 import type { CycleChartSeries } from "./cycle-chart";
 import { CycleProgressIcon } from "./cycle-progress-icon";
 
-export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspaceActiveCycle; workspaceSlug: string }) {
+export type CycleCardData = Omit<TWorkspaceActiveCycle, "owned_by_detail" | "completion_chart">;
+
+export function WorkspaceCycleCard({
+  cycle,
+  workspaceSlug,
+  header,
+  showProject = true,
+}: {
+  cycle: CycleCardData;
+  workspaceSlug: string;
+  /** Project pages can supply their existing cycle actions as the header. */
+  header?: ReactNode;
+  showProject?: boolean;
+}) {
   const { t } = useTranslation();
   const [plotType, setPlotType] = useState<TCyclePlotType>("burndown");
   const [hidden, setHidden] = useState<Set<CycleChartSeries>>(new Set());
@@ -50,38 +64,42 @@ export function WorkspaceCycleCard({ cycle, workspaceSlug }: { cycle: TWorkspace
       aria-label={`${cycle.project_detail.name} · ${cycle.name}`}
       className="flex min-w-0 shrink-0 flex-col gap-4 rounded-xl border border-subtle-1 bg-surface-1 p-4 text-primary sm:p-5"
     >
-      <div className="flex min-h-6 items-center gap-2">
-        <Logo logo={cycle.project_detail.logo_props} size={16} />
-        <h2 className="min-w-0 text-16 leading-6 font-semibold break-words text-primary">
-          {cycle.project_detail.name}
-        </h2>
-      </div>
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-subtle bg-layer-1 px-3 py-2">
-        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
-          <CycleProgressIcon value={progress} />
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <Link
-              href={href}
-              className="min-w-0 text-14 leading-5 font-medium break-words text-primary hover:underline"
-            >
-              <h3>{cycle.name}</h3>
-            </Link>
-            <span className="shrink-0 text-12 leading-5 whitespace-nowrap text-tertiary">
-              {t("workspace_cycles.days_remaining", { count: cycle.days_remaining })}
-            </span>
+      {showProject && (
+        <div className="flex min-h-6 items-center gap-2">
+          <Logo logo={cycle.project_detail.logo_props} size={16} />
+          <h2 className="min-w-0 text-16 leading-6 font-semibold break-words text-primary">
+            {cycle.project_detail.name}
+          </h2>
+        </div>
+      )}
+      {header ?? (
+        <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-subtle bg-layer-1 px-3 py-2">
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
+            <CycleProgressIcon value={progress} />
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <Link
+                href={href}
+                className="min-w-0 text-14 leading-5 font-medium break-words text-primary hover:underline"
+              >
+                <h3>{cycle.name}</h3>
+              </Link>
+              <span className="shrink-0 text-12 leading-5 whitespace-nowrap text-tertiary">
+                {t("workspace_cycles.days_remaining", { count: cycle.days_remaining })}
+              </span>
+            </div>
+          </div>
+          <div className="ml-auto shrink-0">
+            <Button
+              stretch="auto"
+              nativeButton={false}
+              render={<Link href={href} />}
+              variant="secondary"
+              size="sm"
+              label={t("workspace_cycles.view_cycle")}
+            />
           </div>
         </div>
-        <div className="ml-auto shrink-0">
-          <Button
-            stretch="auto"
-            nativeButton={false}
-            render={<Link href={href} />}
-            variant="secondary"
-            size="sm"
-            label={t("workspace_cycles.view_cycle")}
-          />
-        </div>
-      </div>
+      )}
       <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-0">
         <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:pl-6">
           <div className="flex min-h-9 flex-wrap items-center gap-x-3 gap-y-2 text-13 text-secondary">

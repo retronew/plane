@@ -5,10 +5,9 @@
  */
 
 import type { MouseEvent } from "react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
 import {
   CalendarOutline,
   MembersOutline,
@@ -51,11 +50,6 @@ type Props = {
   isActive?: boolean;
 };
 
-const defaultValues: Partial<ICycle> = {
-  start_date: null,
-  end_date: null,
-};
-
 export const CycleListItemAction = observer(function CycleListItemAction(props: Props) {
   const { workspaceSlug, projectId, cycleId, cycleDetails, parentRef, isActive = false } = props;
   // router
@@ -83,11 +77,6 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
   );
 
   const { getUserDetails } = useMember();
-
-  // form
-  const { reset } = useForm({
-    defaultValues,
-  });
 
   // derived values
   const cycleStatus = cycleDetails.status ? (cycleDetails.status.toLocaleLowerCase() as TCycleGroups) : "draft";
@@ -157,14 +146,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
     });
   };
 
-  const createdByDetails = cycleDetails.created_by ? getUserDetails(cycleDetails.created_by) : undefined;
-
-  useEffect(() => {
-    if (cycleDetails)
-      reset({
-        ...cycleDetails,
-      });
-  }, [cycleDetails, reset]);
+  const cycleOwnerDetails = getUserDetails(cycleDetails.owned_by_id);
 
   // handlers
   const openCycleOverview = (e: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
@@ -188,7 +170,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
       />
       <button
         onClick={openCycleOverview}
-        className={`z-[1] flex flex-shrink-0 gap-1 text-11 text-accent-secondary ${isMobile || (isActive && !searchParams.has("peekCycle")) ? "flex" : "hidden group-hover:flex"}`}
+        className={`z-[1] flex flex-shrink-0 items-center gap-1 text-11 text-accent-secondary ${isMobile || (isActive && !searchParams.has("peekCycle")) ? "flex" : "hidden group-hover:flex"}`}
       >
         <ShowOutline className="my-auto h-4 w-4 text-accent-secondary" />
         <span>{t("project_cycles.more_details")}</span>
@@ -213,7 +195,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
       )}
       {isActive ? (
         <>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Duration */}
             <Tooltip
               label={translate("web.runtime.timezone_range", {
@@ -234,7 +216,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
               </span>
             )}
             {/* created by */}
-            {createdByDetails && <ButtonAvatars showTooltip={false} userIds={createdByDetails?.id} />}
+            {cycleOwnerDetails && <ButtonAvatars showTooltip={false} userIds={cycleOwnerDetails?.id} />}
           </div>
         </>
       ) : (
@@ -264,7 +246,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
         )
       )}
       {/* created by */}
-      {createdByDetails && !isActive && <ButtonAvatars showTooltip={false} userIds={createdByDetails?.id} />}
+      {cycleOwnerDetails && !isActive && <ButtonAvatars showTooltip={false} userIds={cycleOwnerDetails?.id} />}
       {!isActive && (
         <Tooltip
           label={translate("web.runtime.members_count", { count: cycleDetails.assignee_ids?.length ?? 0 })}

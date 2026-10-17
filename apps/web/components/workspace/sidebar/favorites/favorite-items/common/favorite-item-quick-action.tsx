@@ -1,4 +1,4 @@
-import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
+import { ActionMenuContent as MenuContent, FavoriteStarIcon } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -9,7 +9,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { MoreHorizontalOutline, StarFilled } from "@makeplane/propel/icons";
+import { MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import type { IFavorite } from "@plane/types";
@@ -53,7 +53,7 @@ export const FavoriteItemQuickAction = observer(function FavoriteItemQuickAction
         />
         <MenuContent side="bottom" align="start">
           <MenuItem
-            icon={<Icon icon={<StarFilled className="text-yellow-500" />} />}
+            icon={<Icon icon={<FavoriteStarIcon selected />} />}
             label={t("remove_from_favorites")}
             onClick={() => handleRemoveFromFavorites(favorite)}
           />

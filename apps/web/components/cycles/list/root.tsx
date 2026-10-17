@@ -4,87 +4,44 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
-import { Collapsible } from "@base-ui/react/collapsible";
 import { observer } from "mobx-react";
-// components
-import { useTranslation } from "@plane/i18n";
 import { ContentWrapper, ERowVariant } from "@plane/blocks/layout";
 import { ListLayout } from "@/components/core/list";
-// local imports
+import { ProjectActiveCycle } from "../active-cycle/project-active-cycle";
 import { CyclePeekOverview } from "../cycle-peek-overview";
-import { CycleListGroupHeader } from "./cycle-list-group-header";
+import type { CycleTab } from "../tab-navigation";
 import { CyclesListMap } from "./cycles-list-map";
-import { ActiveCycleRoot } from "../active-cycle/root";
 
 export interface ICyclesList {
-  completedCycleIds: string[];
-  upcomingCycleIds?: string[] | undefined;
+  completedCycleIds?: string[];
+  upcomingCycleIds?: string[];
   cycleIds: string[];
   workspaceSlug: string;
   projectId: string;
   isArchived?: boolean;
+  tab?: CycleTab;
 }
 
-export const CyclesList = observer(function CyclesList(props: ICyclesList) {
-  const { completedCycleIds, upcomingCycleIds, cycleIds, workspaceSlug, projectId, isArchived = false } = props;
-  const { t } = useTranslation();
-  // states
-  const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(true);
-  const [isCompletedExpanded, setIsCompletedExpanded] = useState(false);
-
+export const CyclesList = observer(function CyclesList({
+  cycleIds,
+  workspaceSlug,
+  projectId,
+  isArchived = false,
+  tab = "active",
+}: ICyclesList) {
   return (
-    <ContentWrapper variant={ERowVariant.HUGGING} className="flex-row">
-      <ListLayout>
-        {isArchived ? (
-          <>
-            <CyclesListMap cycleIds={cycleIds} projectId={projectId} workspaceSlug={workspaceSlug} />
-          </>
-        ) : (
-          <>
-            <ActiveCycleRoot workspaceSlug={workspaceSlug} projectId={projectId} />
-
-            {upcomingCycleIds && (
-              <Collapsible.Root
-                open={isUpcomingExpanded}
-                onOpenChange={setIsUpcomingExpanded}
-                className="flex flex-shrink-0 flex-col"
-              >
-                <Collapsible.Trigger className="sticky top-0 z-[2] w-full flex-shrink-0 cursor-pointer border-b border-subtle bg-layer-1">
-                  <CycleListGroupHeader
-                    title={t("project_cycles.upcoming_cycle.label")}
-                    type="upcoming"
-                    count={upcomingCycleIds.length}
-                    showCount
-                    isExpanded={isUpcomingExpanded}
-                  />
-                </Collapsible.Trigger>
-                <Collapsible.Panel>
-                  <CyclesListMap cycleIds={upcomingCycleIds} projectId={projectId} workspaceSlug={workspaceSlug} />
-                </Collapsible.Panel>
-              </Collapsible.Root>
-            )}
-            <Collapsible.Root
-              open={isCompletedExpanded}
-              onOpenChange={setIsCompletedExpanded}
-              className="flex flex-shrink-0 flex-col pb-7"
-            >
-              <Collapsible.Trigger className="sticky top-0 z-2 w-full flex-shrink-0 cursor-pointer border-b border-subtle bg-layer-1">
-                <CycleListGroupHeader
-                  title={t("project_cycles.completed_cycle.label")}
-                  type="completed"
-                  count={completedCycleIds.length}
-                  showCount
-                  isExpanded={isCompletedExpanded}
-                />
-              </Collapsible.Trigger>
-              <Collapsible.Panel>
-                <CyclesListMap cycleIds={completedCycleIds} projectId={projectId} workspaceSlug={workspaceSlug} />
-              </Collapsible.Panel>
-            </Collapsible.Root>
-          </>
-        )}
-      </ListLayout>
+    <ContentWrapper variant={ERowVariant.HUGGING} className="min-h-0 flex-row">
+      {tab === "active" && !isArchived ? (
+        <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6">
+          {cycleIds.map((cycleId) => (
+            <ProjectActiveCycle key={cycleId} cycleId={cycleId} projectId={projectId} workspaceSlug={workspaceSlug} />
+          ))}
+        </div>
+      ) : (
+        <ListLayout>
+          <CyclesListMap cycleIds={cycleIds} projectId={projectId} workspaceSlug={workspaceSlug} />
+        </ListLayout>
+      )}
       <CyclePeekOverview projectId={projectId} workspaceSlug={workspaceSlug} isArchived={isArchived} />
     </ContentWrapper>
   );

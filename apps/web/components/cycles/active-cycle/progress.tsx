@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Fragment } from "react";
 import { observer } from "mobx-react";
 import { useTheme } from "next-themes";
 // plane imports
@@ -73,7 +74,7 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
       {cycle.total_issues > 0 ? (
         <div className="flex flex-col gap-5">
           {Object.keys(groupedIssues).map((group, index) => (
-            <>
+            <Fragment key={group}>
               {groupedIssues[group] > 0 && (
                 <div key={group}>
                   {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
@@ -98,7 +99,7 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
                   </div>
                 </div>
               )}
-            </>
+            </Fragment>
           ))}
           {cycle.cancelled_issues > 0 && (
             <span className="flex items-center gap-2 text-13 text-tertiary">

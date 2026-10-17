@@ -1711,6 +1711,7 @@
       "matching_intake_items": "{count, plural, one {# Intake work item matches} other {# Intake work items match}} the applied filters.",
       "matching_projects": "{matched} of {total} projects match the applied filters.",
       "matching_pages": "{matched} of {total, plural, one {# page} other {# pages}} match the applied filters.",
+      "matching_cycles": "Cycles matching the search and filters: {matched} of {total}.",
       "uploaded_by": "{name} uploaded on {date}",
       "heading_level": "Heading {level}",
       "editor_commands": "Press '/' for commands...",

@@ -16,7 +16,7 @@ export function CollaborationUsers({ users, currentUserId }: { users: TCollabora
     ...users.filter((user) => user.id !== currentUserId),
   ];
   const name = (user: TCollaborationUser) => {
-    const displayName = user.name.trim() || t("common.unknown_user");
+    const displayName = user.name.trim() || t("unknown_user");
     return user.id === currentUserId ? t("web.page_collaboration_self", { name: displayName }) : displayName;
   };
   const hiddenUsers = orderedUsers.length > MAX_VISIBLE + 1 ? orderedUsers.slice(MAX_VISIBLE) : [];

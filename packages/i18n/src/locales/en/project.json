@@ -9,6 +9,7 @@
   "project_cycles": {
     "add_cycle": "Add cycle",
     "more_details": "More details",
+    "cancelled_count": "({count, plural, one {# cancelled} other {# cancelled}})",
     "cycle": "Cycle",
     "update_cycle": "Update cycle",
     "create_cycle": "Create cycle",
@@ -127,8 +128,16 @@
         "description": "No work items in the cycle. Work items are either transferred or hidden. To see hidden work items if any, update your display properties accordingly."
       },
       "active": {
-        "title": "No active cycle",
-        "description": "An active cycle includes any period that encompasses today's date within its range. Find the progress and details of the active cycle here."
+        "title": "No cycles in progress",
+        "description": "Create and schedule a cycle to start tracking your team's progress."
+      },
+      "upcoming": {
+        "title": "No upcoming cycles",
+        "description": "No upcoming cycles are scheduled. Create a new cycle to plan your team's next phase of work."
+      },
+      "completed": {
+        "title": "No completed cycles",
+        "description": "Completed and archived cycles will appear here with their performance metrics."
       },
       "archived": {
         "title": "No archived cycles yet",

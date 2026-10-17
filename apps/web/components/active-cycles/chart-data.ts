@@ -9,7 +9,18 @@ export const CYCLE_CHART_COLORS = {
   scope: CHART_SEMANTIC_COLORS.primary,
 };
 
-export function workspaceCycleChartData(cycle: TWorkspaceActiveCycle, burnup = false) {
+export type CycleChartData = Pick<
+  TWorkspaceActiveCycle,
+  | "total_issues"
+  | "cancelled_issues"
+  | "completed_issues"
+  | "progress_chart"
+  | "chart_start_date"
+  | "chart_end_date"
+  | "today"
+>;
+
+export function workspaceCycleChartData(cycle: CycleChartData, burnup = false) {
   const scope = Math.max(0, cycle.total_issues - cycle.cancelled_issues);
   // oxlint-disable-next-line unicorn/no-array-sort -- sorts a fresh array; target is ES2022
   const dates = Object.keys(cycle.progress_chart).sort();

@@ -9,6 +9,7 @@
   "project_cycles": {
     "add_cycle": "添加周期",
     "more_details": "更多详情",
+    "cancelled_count": "（已取消 {count} 个）",
     "cycle": "周期",
     "update_cycle": "更新周期",
     "create_cycle": "创建周期",
@@ -127,8 +128,16 @@
         "description": "周期中没有工作项，工作项可能已被转移或隐藏。如需查看隐藏的工作项，请调整显示属性。"
       },
       "active": {
-        "title": "没有进行中的周期",
-        "description": "日期范围包含今天的周期即为进行中的周期，您可以在这里查看它的进度和详情。"
+        "title": "暂无进行中的周期",
+        "description": "创建并安排周期，开始跟踪团队的工作进度。"
+      },
+      "upcoming": {
+        "title": "暂无即将到来的周期",
+        "description": "暂无已安排的即将到来的周期。创建新周期以规划团队的下一个工作阶段。"
+      },
+      "completed": {
+        "title": "暂无已完成的周期",
+        "description": "已完成和已归档的周期将在此处显示，并附有其绩效指标。"
       },
       "archived": {
         "title": "暂无已归档的周期",

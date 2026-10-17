@@ -13,7 +13,7 @@ import { TickOutline } from "@makeplane/propel/icons";
 // plane imports
 import type { TCycleGroups } from "@plane/types";
 // components
-import { generateQueryParams, calculateCycleProgress } from "@plane/utils";
+import { generateQueryParams, calculateCycleProgress, cn } from "@plane/utils";
 import { ListItem } from "@/components/core/list";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
@@ -85,7 +85,9 @@ export const CyclesListItem = observer(function CyclesListItem(props: TCyclesLis
       title={cycleDetails?.name ?? ""}
       itemLink={`/${workspaceSlug}/projects/${projectId}/cycles/${cycleDetails.id}`}
       onItemClick={handleItemClick}
-      className={className}
+      className={cn(isActive && "min-h-14 rounded-lg border border-subtle bg-layer-1 !py-3", className)}
+      itemClassName="min-w-0"
+      actionItemContainerClassName={isActive ? "gap-3" : undefined}
       prependTitleElement={
         <div className="relative size-[30px]">
           <div className="absolute inset-0 flex scale-150 items-center justify-center">

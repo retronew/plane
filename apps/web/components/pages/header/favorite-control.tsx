@@ -30,7 +30,7 @@ export const PageFavoriteControl = observer(function PageFavoriteControl({ page 
     <FavoriteStar
       selected={is_favorite}
       buttonClassName="size-7 rounded-sm hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none"
-      iconClassName={`size-4 ${is_favorite ? "text-[#fbbf24]" : "text-secondary"}`}
+      iconClassName="size-4"
       onClick={() => pageOperations.toggleFavorite()}
       aria-label={is_favorite ? translate("web.remove_favorite") : translate("web.add_to_favorites")}
     />

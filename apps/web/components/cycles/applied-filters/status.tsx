@@ -1,50 +1,29 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
 import { observer } from "mobx-react";
-// plane imports
 import { CYCLE_STATUS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { CloseOutline } from "@makeplane/propel/icons";
-import { cn } from "@plane/utils";
+import { ProjectFilterChip } from "@/components/project/applied-filters/chip";
 
 type Props = {
-  handleRemove: (val: string) => void;
+  handleRemove: (value: string) => void;
   values: string[];
   editable: boolean | undefined;
 };
 
-export const AppliedStatusFilters = observer(function AppliedStatusFilters(props: Props) {
-  const { handleRemove, values, editable } = props;
+export const AppliedStatusFilters = observer(function AppliedStatusFilters({ handleRemove, values, editable }: Props) {
   const { t } = useTranslation();
-
   return (
     <>
       {values.map((status) => {
-        const statusDetails = CYCLE_STATUS.find((s) => s.value === status);
+        const details = CYCLE_STATUS.find((option) => option.value === status);
         return (
-          <div
+          <ProjectFilterChip
             key={status}
-            className={cn(
-              "flex items-center gap-1 rounded-sm px-1.5 py-1 text-11",
-              statusDetails?.bgColor,
-              statusDetails?.textColor
-            )}
-          >
-            {statusDetails && t(statusDetails?.i18n_title)}
-            {editable && (
-              <button
-                type="button"
-                className="grid place-items-center text-tertiary hover:text-secondary"
-                onClick={() => handleRemove(status)}
-              >
-                <CloseOutline height={10} width={10} />
-              </button>
-            )}
-          </div>
+            label={details ? t(details.i18n_title) : status}
+            icon={
+              details && <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: details.color }} />
+            }
+            onRemove={editable ? () => handleRemove(status) : undefined}
+          />
         );
       })}
     </>

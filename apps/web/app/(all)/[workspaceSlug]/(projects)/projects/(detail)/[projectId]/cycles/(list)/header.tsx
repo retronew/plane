@@ -15,7 +15,6 @@ import { Breadcrumbs } from "@plane/blocks/breadcrumb";
 import { Header } from "@plane/blocks/layout";
 // components
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
-import { CyclesViewHeader } from "@/components/cycles/cycles-view-header";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useProject } from "@/hooks/store/use-project";
@@ -64,7 +63,6 @@ export const CyclesListHeader = observer(function CyclesListHeader() {
       </Header.LeftItem>
       {canUserCreateCycle && currentProjectDetails ? (
         <Header.RightItem>
-          <CyclesViewHeader projectId={currentProjectDetails.id} />
           <div className="flex">
             <div className="block sm:hidden">
               <Button

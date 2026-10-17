@@ -19,6 +19,14 @@ type Props = {
   selected: boolean;
 };
 
+/** Shared glyph for favorite toggles and menu actions. */
+export function FavoriteStarIcon({ selected, className }: { selected: boolean; className?: string }) {
+  const Icon = selected ? StarFilled : StarOutline;
+  return (
+    <Icon aria-hidden="true" className={cn("h-4 w-4", selected ? "text-[#fbbf24]" : "text-secondary", className)} />
+  );
+}
+
 export function FavoriteStar(props: Props) {
   const { "aria-label": ariaLabel, buttonClassName, iconClassName, onClick, selected } = props;
   const { t } = useTranslation();
@@ -31,18 +39,18 @@ export function FavoriteStar(props: Props) {
       aria-label={ariaLabel ?? t("add_to_favorites")}
       aria-pressed={selected}
     >
-      <StarOutline
-        aria-hidden="true"
+      <FavoriteStarIcon
+        selected={false}
         className={cn(
-          "col-start-1 row-start-1 h-4 w-4 text-tertiary transition-opacity motion-reduce:transition-none",
+          "col-start-1 row-start-1 transition-opacity motion-reduce:transition-none",
           iconClassName,
           selected ? "opacity-0" : "opacity-100"
         )}
       />
-      <StarFilled
-        aria-hidden="true"
+      <FavoriteStarIcon
+        selected
         className={cn(
-          "col-start-1 row-start-1 h-4 w-4 text-(--color-label-yellow-icon) transition-opacity motion-reduce:transition-none",
+          "col-start-1 row-start-1 transition-opacity motion-reduce:transition-none",
           iconClassName,
           selected ? "opacity-100" : "opacity-0"
         )}

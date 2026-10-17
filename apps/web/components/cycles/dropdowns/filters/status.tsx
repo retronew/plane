@@ -1,58 +1,46 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
-import React, { useState } from "react";
 import { observer } from "mobx-react";
+import {
+  MenuCheckboxItem,
+  MenuSubmenu,
+  MenuSubmenuContent,
+  MenuSubmenuTrigger,
+} from "@makeplane/propel/components/menu";
 import { CYCLE_STATUS } from "@plane/constants";
-import { useTranslation, translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
 import type { TCycleGroups } from "@plane/types";
-// components
-import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
-// types
-// constants
+import { FilterFieldIcon } from "@/components/common/filters/field-icon";
 
 type Props = {
   appliedFilters: TCycleGroups[] | null;
-  handleUpdate: (val: string) => void;
-  searchQuery: string;
+  handleUpdate: (value: string) => void;
+  searchQuery?: string;
 };
 
-export const FilterStatus = observer(function FilterStatus(props: Props) {
-  const { appliedFilters, handleUpdate, searchQuery } = props;
-  // states
-  const [previewEnabled, setPreviewEnabled] = useState(true);
-  //hooks
+export const FilterStatus = observer(function FilterStatus({ appliedFilters, handleUpdate, searchQuery = "" }: Props) {
   const { t } = useTranslation();
-  const appliedFiltersCount = appliedFilters?.length ?? 0;
-  const filteredOptions = CYCLE_STATUS.filter((p) => p.value.includes(searchQuery.toLowerCase()));
-
+  const options = CYCLE_STATUS.filter((status) =>
+    t(status.i18n_title).toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase())
+  );
   return (
-    <>
-      <FilterHeader
-        field="status"
-        title={translate("web.runtime.filter_status_of_the_cycle", { count: appliedFiltersCount })}
-        isPreviewEnabled={previewEnabled}
-        handleIsPreviewEnabled={() => setPreviewEnabled(!previewEnabled)}
+    <MenuSubmenu>
+      <MenuSubmenuTrigger
+        icon={<FilterFieldIcon field="status" />}
+        label={t("web.status")}
+        trailing={appliedFilters?.length ? String(appliedFilters.length) : undefined}
       />
-      {previewEnabled && (
-        <div>
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((status) => (
-              <FilterOption
-                key={status.value}
-                isChecked={Boolean(appliedFilters?.includes(status.value))}
-                onClick={() => handleUpdate(status.value)}
-                title={t(status.i18n_title)}
-              />
-            ))
-          ) : (
-            <p className="text-11 text-placeholder italic">{t("web.no_matches_found")}</p>
-          )}
-        </div>
-      )}
-    </>
+      <MenuSubmenuContent>
+        {options.map((status) => (
+          <MenuCheckboxItem
+            key={status.value}
+            label={t(status.i18n_title)}
+            icon={<span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: status.color }} />}
+            checked={appliedFilters?.includes(status.value) ?? false}
+            onCheckedChange={() => handleUpdate(status.value)}
+            closeOnClick={false}
+          />
+        ))}
+        {!options.length && <p className="px-2 py-2 text-12 text-tertiary">{t("web.no_matches_found")}</p>}
+      </MenuSubmenuContent>
+    </MenuSubmenu>
   );
 });
