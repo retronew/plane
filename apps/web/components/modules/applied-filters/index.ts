@@ -5,6 +5,6 @@
  */
 
 export * from "./date";
-export * from "./members";
+export { AppliedMembersFilters } from "@/components/common/applied-filters/members";
 export * from "./root";
 export * from "./status";

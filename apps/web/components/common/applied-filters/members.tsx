@@ -9,7 +9,7 @@ import { CloseOutline } from "@makeplane/propel/icons";
 // plane ui
 import { Avatar } from "@makeplane/propel/components/avatar";
 // helpers
-import { getFileURL } from "@plane/utils";
+import { cn, getFileURL } from "@plane/utils";
 // types
 import { useMember } from "@/hooks/store/use-member";
 
@@ -17,10 +17,15 @@ type Props = {
   handleRemove: (val: string) => void;
   values: string[];
   editable: boolean | undefined;
+  /**
+   * Chip padding differs by surface: the issue and module filter rows use `p-1`, the views and
+   * settings-style rows use a wider horizontal padding.
+   */
+  chipClassName?: string;
 };
 
 export const AppliedMembersFilters = observer(function AppliedMembersFilters(props: Props) {
-  const { handleRemove, values, editable } = props;
+  const { handleRemove, values, editable, chipClassName = "p-1" } = props;
   // store hooks
   const {
     workspace: { getWorkspaceMemberDetails },
@@ -34,7 +39,7 @@ export const AppliedMembersFilters = observer(function AppliedMembersFilters(pro
         if (!memberDetails) return null;
 
         return (
-          <div key={memberId} className="flex items-center gap-1 rounded-sm bg-layer-1 px-1.5 py-1 text-11">
+          <div key={memberId} className={cn("flex items-center gap-1 rounded-sm bg-layer-1 text-11", chipClassName)}>
             <Avatar
               alt={memberDetails.display_name}
               fallback={memberDetails.display_name?.[0]?.toUpperCase()}

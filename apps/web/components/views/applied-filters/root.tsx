@@ -70,6 +70,7 @@ export function ViewAppliedFiltersList(props: Props) {
                 editable={isEditingAllowed}
                 handleRemove={(val) => handleRemoveFilter(filterKey, val)}
                 values={Array.isArray(value) ? (value as string[]) : []}
+                chipClassName="px-1.5 py-1"
               />
             )}
             {isEditingAllowed && (

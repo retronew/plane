@@ -6,7 +6,7 @@
 
 export * from "./date";
 export * from "./label";
-export * from "./members";
+export { AppliedMembersFilters } from "@/components/common/applied-filters/members";
 export * from "./priority";
 export * from "./project";
 export * from "./module";
