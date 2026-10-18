@@ -332,6 +332,33 @@ def test_delete_workflow_preview_falls_back_and_keeps_issue_type(session_client,
     assert resolve_issue_workflow(core.project.pk, core.bug.pk).pk == core.default.pk
 
 
+@pytest.mark.parametrize("level", [0, 1, 2])
+def test_type_creation_persists_hierarchy_level(session_client, core, level):
+    response = session_client.post(
+        core.base + "issue-types/", {"name": "Hierarchy type", "level": level}, format="json"
+    )
+    assert response.status_code == 201, response.data
+    assert response.data["level"] == level
+    assert response.data["is_epic"] is (level > 0)
+    binding = ProjectIssueType.objects.get(project=core.project, issue_type_id=response.data["id"])
+    assert binding.level == level
+    assert binding.issue_type.level == level
+    listing = session_client.get(core.base + "issue-types/")
+    assert (
+        next(item for item in listing.data["results"] if str(item["id"]) == str(response.data["id"]))["level"] == level
+    )
+
+
+@pytest.mark.parametrize("level", [-1, 1.5, "invalid", None, 2147483648])
+def test_type_creation_rejects_invalid_hierarchy_without_writing(session_client, core, level):
+    count = IssueType.objects.count()
+    response = session_client.post(
+        core.base + "issue-types/", {"name": "Invalid hierarchy", "level": level}, format="json"
+    )
+    assert response.status_code == 400
+    assert IssueType.objects.count() == count
+
+
 def test_type_default_is_project_unique_and_metadata_requires_version(session_client, core):
     response = session_client.post(core.base + "issue-types/", {"name": "Task", "is_default": True}, format="json")
     assert response.status_code == 201, response.data

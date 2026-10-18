@@ -646,9 +646,12 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         name = serializers.CharField(max_length=255).run_validation(request.data.get("name"))
         if ProjectIssueType.objects.filter(project=project, issue_type__name=name).exists():
             workflow_error("WORKFLOW_DUPLICATE_TYPE")
+        level = serializers.IntegerField(min_value=0, max_value=2147483647).run_validation(request.data.get("level", 0))
         issue_type = IssueType.objects.create(
             workspace_id=project.workspace_id,
             name=name,
+            level=level,
+            is_epic=level > 0,
             description=serializers.CharField(allow_blank=True).run_validation(request.data.get("description", "")),
             logo_props=serializers.JSONField().run_validation(request.data.get("logo_props", {})),
         )
@@ -659,7 +662,9 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         if default:
             ProjectIssueType.objects.filter(project=project, is_default=True).update(is_default=False)
         workflow = self.workflow(project, request.data["workflow_id"]) if request.data.get("workflow_id") else None
-        ProjectIssueType.objects.create(project=project, issue_type=issue_type, is_default=default, workflow=workflow)
+        ProjectIssueType.objects.create(
+            project=project, issue_type=issue_type, level=level, is_default=default, workflow=workflow
+        )
         bump_policy(project)
         return Response(next(t for t in self.types_representation(project) if t["id"] == issue_type.pk), status=201)
 
@@ -692,6 +697,8 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
                     description=issue_type.description,
                     logo_props=issue_type.logo_props,
                     is_active=issue_type.is_active,
+                    level=issue_type.level,
+                    is_epic=issue_type.is_epic,
                 )
                 Issue.objects.filter(project=project, type=issue_type).update(type=clone)
                 binding.issue_type = clone
