@@ -9,15 +9,6 @@ import { isEmpty } from "lodash-es";
 import { useForm } from "react-hook-form";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
-import { Button } from "@makeplane/propel/components/button";
-import {
-  DialogActions,
-  DialogBody,
-  DialogHeader,
-  DialogHeading,
-  DialogMain,
-  DialogTitle,
-} from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
 import type { TInstanceGoogleAuthenticationConfigurationKeys } from "@plane/types";
 // components
@@ -28,7 +19,7 @@ import type { TControllerSwitchFormField } from "@/components/common/controller-
 import { ControllerSwitch } from "@/components/common/controller-switch";
 import { ControllerInput } from "@/components/common/controller-input";
 import type { TCopyField } from "@/components/common/copy-field";
-import { PlaneDetailsPanel } from "./plane-details-panel";
+import { ProviderConfigFormLayout } from "./provider-config-form-layout";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
@@ -191,59 +182,28 @@ export function InstanceGoogleConfigForm(props: Props) {
   };
 
   return (
-    <>
-      <DialogMain>
-        <DialogHeader>
-          <DialogHeading>
-            <DialogTitle>{t("admin.authentication.configure_provider", { provider: "Google" })}</DialogTitle>
-          </DialogHeading>
-        </DialogHeader>
-        <DialogBody>
-          <div className="grid w-full grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
-            <div className="flex flex-col gap-y-4">
-              <div className="text-14 font-medium">
-                {t("admin.authentication.oauth.provider_details_for_plane", { provider: "Google" })}
-              </div>
-              {GOOGLE_FORM_FIELDS.map((field) => (
-                <ControllerInput
-                  key={field.key}
-                  control={control}
-                  type={field.type}
-                  name={field.key}
-                  label={field.label}
-                  description={field.description}
-                  placeholder={field.placeholder}
-                  error={field.error}
-                  required={field.required}
-                />
-              ))}
-              <ControllerSwitch control={control} field={GOOGLE_FORM_SWITCH_FIELD} />
-            </div>
-            <PlaneDetailsPanel
-              title={t("admin.authentication.oauth.plane_details_for_provider", { provider: "Google" })}
-              fields={[...GOOGLE_COMMON_SERVICE_DETAILS, ...GOOGLE_SERVICE_DETAILS]}
-            />
-          </div>
-        </DialogBody>
-      </DialogMain>
-      <DialogActions>
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          onClick={() => handleClose()}
-          label={t("admin.common.cancel")}
+    <ProviderConfigFormLayout
+      provider="Google"
+      serviceFields={[...GOOGLE_COMMON_SERVICE_DETAILS, ...GOOGLE_SERVICE_DETAILS]}
+      isDirty={isDirty}
+      isSubmitting={isSubmitting}
+      onCancel={() => handleClose()}
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+    >
+      {GOOGLE_FORM_FIELDS.map((field) => (
+        <ControllerInput
+          key={field.key}
+          control={control}
+          type={field.type}
+          name={field.key}
+          label={field.label}
+          description={field.description}
+          placeholder={field.placeholder}
+          error={field.error}
+          required={field.required}
         />
-        <Button
-          variant="primary"
-          size="md"
-          stretch="auto"
-          onClick={(e) => void handleSubmit(onSubmit)(e)}
-          loading={isSubmitting}
-          disabled={!isDirty}
-          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
-        />
-      </DialogActions>
-    </>
+      ))}
+      <ControllerSwitch control={control} field={GOOGLE_FORM_SWITCH_FIELD} />
+    </ProviderConfigFormLayout>
   );
 }

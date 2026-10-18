@@ -9,15 +9,6 @@ import { isEmpty } from "lodash-es";
 import { Controller, useForm } from "react-hook-form";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
-import { Button } from "@makeplane/propel/components/button";
-import {
-  DialogActions,
-  DialogBody,
-  DialogHeader,
-  DialogHeading,
-  DialogMain,
-  DialogTitle,
-} from "@makeplane/propel/components/dialog";
 import { Switch } from "@makeplane/propel/components/switch";
 import { setToast } from "@plane/blocks/toast";
 import type { TInstanceOIDCAuthenticationConfigurationKeys } from "@plane/types";
@@ -29,7 +20,7 @@ import { ControllerInput } from "@/components/common/controller-input";
 import type { TControllerSwitchFormField } from "@/components/common/controller-switch";
 import { ControllerSwitch } from "@/components/common/controller-switch";
 import type { TCopyField } from "@/components/common/copy-field";
-import { PlaneDetailsPanel } from "./plane-details-panel";
+import { ProviderConfigFormLayout } from "./provider-config-form-layout";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
@@ -175,79 +166,48 @@ export function InstanceOIDCConfigForm(props: Props) {
   };
 
   return (
-    <>
-      <DialogMain>
-        <DialogHeader>
-          <DialogHeading>
-            <DialogTitle>{t("admin.authentication.configure_provider", { provider: "OIDC" })}</DialogTitle>
-          </DialogHeading>
-        </DialogHeader>
-        <DialogBody>
-          <div className="grid w-full grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
-            <div className="flex flex-col gap-y-4">
-              <div className="text-14 font-medium">
-                {t("admin.authentication.oauth.provider_details_for_plane", { provider: "OIDC" })}
-              </div>
-              {OIDC_FORM_FIELDS.map((field) => (
-                <ControllerInput
-                  key={field.key}
-                  control={control}
-                  type={field.type}
-                  name={field.key}
-                  label={field.label}
-                  description={field.description}
-                  placeholder={field.placeholder}
-                  error={field.error}
-                  required={field.required}
-                />
-              ))}
-              <ControllerSwitch control={control} field={OIDC_FORM_SWITCH_FIELD} />
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-1">
-                  <h4 id={trustEmailLabelId} className="text-13 text-tertiary">
-                    {t("admin.authentication.oauth.oidc_trust_email")}
-                  </h4>
-                  <Controller
-                    control={control}
-                    name="OIDC_TRUST_EMAIL"
-                    render={({ field: { value, onChange } }) => (
-                      <Switch
-                        checked={value === "1"}
-                        onCheckedChange={() => onChange(value === "1" ? "0" : "1")}
-                        size="sm"
-                        aria-labelledby={trustEmailLabelId}
-                      />
-                    )}
-                  />
-                </div>
-                <p className="text-11 text-tertiary">{t("admin.authentication.oauth.oidc_trust_email_description")}</p>
-              </div>
-            </div>
-            <PlaneDetailsPanel
-              title={t("admin.authentication.oauth.plane_details_for_provider", { provider: "OIDC" })}
-              fields={OIDC_SERVICE_FIELD}
-            />
-          </div>
-        </DialogBody>
-      </DialogMain>
-      <DialogActions>
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          onClick={() => handleClose()}
-          label={t("admin.common.cancel")}
+    <ProviderConfigFormLayout
+      provider="OIDC"
+      serviceFields={OIDC_SERVICE_FIELD}
+      isDirty={isDirty}
+      isSubmitting={isSubmitting}
+      onCancel={() => handleClose()}
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+    >
+      {OIDC_FORM_FIELDS.map((field) => (
+        <ControllerInput
+          key={field.key}
+          control={control}
+          type={field.type}
+          name={field.key}
+          label={field.label}
+          description={field.description}
+          placeholder={field.placeholder}
+          error={field.error}
+          required={field.required}
         />
-        <Button
-          variant="primary"
-          size="md"
-          stretch="auto"
-          onClick={(e) => void handleSubmit(onSubmit)(e)}
-          loading={isSubmitting}
-          disabled={!isDirty}
-          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
-        />
-      </DialogActions>
-    </>
+      ))}
+      <ControllerSwitch control={control} field={OIDC_FORM_SWITCH_FIELD} />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-1">
+          <h4 id={trustEmailLabelId} className="text-13 text-tertiary">
+            {t("admin.authentication.oauth.oidc_trust_email")}
+          </h4>
+          <Controller
+            control={control}
+            name="OIDC_TRUST_EMAIL"
+            render={({ field: { value, onChange } }) => (
+              <Switch
+                checked={value === "1"}
+                onCheckedChange={() => onChange(value === "1" ? "0" : "1")}
+                size="sm"
+                aria-labelledby={trustEmailLabelId}
+              />
+            )}
+          />
+        </div>
+        <p className="text-11 text-tertiary">{t("admin.authentication.oauth.oidc_trust_email_description")}</p>
+      </div>
+    </ProviderConfigFormLayout>
   );
 }
