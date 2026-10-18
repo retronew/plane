@@ -11,7 +11,6 @@ import useSWR from "swr";
 import { ENotificationLoader, ENotificationQueryParamType } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
-import { cn } from "@plane/utils";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
 // hooks
@@ -39,7 +38,7 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
     getNotifications,
   } = useWorkspaceNotifications();
   const { fetchUserProjectInfo } = useUserPermissions();
-  const { isWorkItem, PeekOverviewComponent, setPeekWorkItem } = useNotificationPreview();
+  const { PeekOverviewComponent, setPeekWorkItem } = useNotificationPreview();
   // derived values
   const { workspace_slug, project_id, issue_id, is_inbox_issue } =
     notificationLiteByNotificationId(currentSelectedNotificationId);
@@ -48,27 +47,24 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
   useWorkspaceIssueProperties(workspaceSlug);
 
   // fetch workspace notifications
-  const notificationMutation =
-    currentWorkspace && notificationIdsByWorkspaceId(currentWorkspace.id)
-      ? ENotificationLoader.MUTATION_LOADER
-      : ENotificationLoader.INIT_LOADER;
-  const notificationLoader =
-    currentWorkspace && notificationIdsByWorkspaceId(currentWorkspace.id)
-      ? ENotificationQueryParamType.CURRENT
-      : ENotificationQueryParamType.INIT;
-  useSWR(
-    currentWorkspace?.slug ? `WORKSPACE_NOTIFICATION_${currentWorkspace?.slug}` : null,
-    currentWorkspace?.slug
-      ? () => getNotifications(currentWorkspace?.slug, notificationMutation, notificationLoader)
-      : null
+  const workspaceId = currentWorkspace?.id;
+  const workspaceNotificationSlug = currentWorkspace?.slug;
+  const hasNotifications = workspaceId ? Boolean(notificationIdsByWorkspaceId(workspaceId)) : false;
+  useSWR(workspaceNotificationSlug ? `WORKSPACE_NOTIFICATION_${workspaceNotificationSlug}` : null, () =>
+    workspaceNotificationSlug
+      ? getNotifications(
+          workspaceNotificationSlug,
+          hasNotifications ? ENotificationLoader.MUTATION_LOADER : ENotificationLoader.INIT_LOADER,
+          hasNotifications ? ENotificationQueryParamType.CURRENT : ENotificationQueryParamType.INIT
+        )
+      : undefined
   );
 
+  const intakeProject = is_inbox_issue && workspace_slug && project_id;
   // fetching user project member info
   const { isLoading: projectMemberInfoLoader } = useSWR(
-    workspace_slug && project_id && is_inbox_issue
-      ? `PROJECT_MEMBER_PERMISSION_INFO_${workspace_slug}_${project_id}`
-      : null,
-    workspace_slug && project_id && is_inbox_issue ? () => fetchUserProjectInfo(workspace_slug, project_id) : null
+    intakeProject ? `PROJECT_MEMBER_PERMISSION_INFO_${workspace_slug}_${project_id}` : null,
+    () => (intakeProject ? fetchUserProjectInfo(workspace_slug!, project_id!) : undefined)
   );
 
   const embedRemoveCurrentNotification = useCallback(
@@ -85,7 +81,7 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
   );
 
   return (
-    <div className={cn("h-full w-full overflow-hidden", isWorkItem && "overflow-y-auto")}>
+    <div className="h-full min-h-0 w-full min-w-0 overflow-hidden">
       {!currentSelectedNotificationId ? (
         <div className="flex size-full items-center justify-center">
           <EmptyStateDetailed
@@ -98,7 +94,7 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
         </div>
       ) : (
         <>
-          {is_inbox_issue === true && workspace_slug && project_id && issue_id ? (
+          {intakeProject && issue_id ? (
             <>
               {projectMemberInfoLoader ? (
                 <div className="flex h-full w-full items-center justify-center">

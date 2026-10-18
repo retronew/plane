@@ -10,6 +10,7 @@ import { observer } from "mobx-react";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
 import { EFileAssetType } from "@plane/types";
+import { getDate } from "@plane/utils";
 import type { TNameDescriptionLoader } from "@plane/types";
 // components
 import { DescriptionVersionsRoot } from "@/components/core/description-versions";
@@ -40,14 +41,65 @@ type Props = {
   issueId: string;
   issueOperations: TIssueOperations;
   disabled: boolean;
+  embedIssue?: boolean;
   isArchived: boolean;
   isSubmitting: TNameDescriptionLoader;
   setIsSubmitting: (value: TNameDescriptionLoader) => void;
 };
 
+function PeekDescriptionVersions({
+  workspaceSlug,
+  projectId,
+  issueId,
+  createdAt,
+  createdByDisplayName,
+  isArchived,
+  editorRef,
+  className,
+}: {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+  createdAt: Date;
+  createdByDisplayName: string;
+  isArchived: boolean;
+  editorRef: Props["editorRef"];
+  className?: string;
+}) {
+  return (
+    <DescriptionVersionsRoot
+      className={className}
+      entityInformation={{
+        createdAt,
+        createdByDisplayName: createdByDisplayName,
+        id: issueId,
+        isRestoreDisabled: isArchived,
+      }}
+      fetchHandlers={{
+        listDescriptionVersions: (issueId) =>
+          workItemVersionService.listDescriptionVersions(workspaceSlug, projectId, issueId),
+        retrieveDescriptionVersion: (issueId, versionId) =>
+          workItemVersionService.retrieveDescriptionVersion(workspaceSlug, projectId, issueId, versionId),
+      }}
+      handleRestore={(descriptionHTML) => editorRef.current?.setEditorValue(descriptionHTML, true)}
+      projectId={projectId}
+      workspaceSlug={workspaceSlug}
+    />
+  );
+}
+
 export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetails(props: Props) {
-  const { editorRef, workspaceSlug, issueId, issueOperations, disabled, isArchived, isSubmitting, setIsSubmitting } =
-    props;
+  const {
+    editorRef,
+    workspaceSlug,
+    issueId,
+    issueOperations,
+    disabled,
+    isArchived,
+    isSubmitting,
+    setIsSubmitting,
+    embedIssue = false,
+  } = props;
   // store hooks
   const { data: currentUser } = useUser();
   const {
@@ -70,19 +122,17 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
   }, [isSubmitting, setShowAlert, setIsSubmitting]);
 
   // derived values
-  const issue = issueId ? getIssueById(issueId) : undefined;
+  const issue = getIssueById(issueId);
 
   if (!issue || !issue.project_id) return <></>;
 
-  const issueDescription =
-    issue.description_html !== undefined || issue.description_html !== null
-      ? issue.description_html != ""
-        ? issue.description_html
-        : "<p></p>"
-      : undefined;
+  const issueProjectId = issue.project_id;
+  const issueDescription = issue.description_html || "<p></p>";
+  const readOnly = disabled || isArchived;
+  const createdAt = getDate(issue.created_at);
 
   return (
-    <div className="space-y-2">
+    <div className={embedIssue ? "space-y-4 pb-4" : "space-y-2"}>
       {issue.parent_id && (
         <IssueParentDetail
           workspaceSlug={workspaceSlug}
@@ -93,7 +143,7 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
         />
       )}
       <div className="flex items-center justify-between gap-2">
-        <IssueTypeSwitcher issueId={issueId} disabled={isArchived || disabled} />
+        <IssueTypeSwitcher issueId={issueId} disabled={readOnly} />
       </div>
       <IssueTitleInput
         workspaceSlug={workspaceSlug}
@@ -102,7 +152,7 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
         isSubmitting={isSubmitting}
         setIsSubmitting={(value) => setIsSubmitting(value)}
         issueOperations={issueOperations}
-        disabled={disabled || isArchived}
+        disabled={readOnly}
         value={issue.name}
       />
 
@@ -110,21 +160,20 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
         workspaceSlug={workspaceSlug}
         projectId={issue.project_id}
         issueId={issueId}
-        disabled={isArchived || disabled}
+        disabled={readOnly}
       />
 
       <DescriptionInput
         issueSequenceId={issue.sequence_id}
         containerClassName="-ml-3 border-none"
-        disabled={disabled || isArchived}
+        disabled={readOnly}
         editorRef={editorRef}
         entityId={issue.id}
         fileAssetType={EFileAssetType.ISSUE_DESCRIPTION}
         initialValue={issueDescription}
         key={issue.id}
         onSubmit={async (value, isMigrationUpdate) => {
-          if (!issue.id || !issue.project_id) return;
-          await issueOperations.update(workspaceSlug, issue.project_id, issue.id, {
+          await issueOperations.update(workspaceSlug, issueProjectId, issue.id, {
             description_html: value.description_html,
             ...(isMigrationUpdate ? { skip_activity: "true" } : {}),
           });
@@ -142,35 +191,19 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
             issueId={issueId}
             currentUser={currentUser}
             disabled={isArchived}
+            className={embedIssue ? "mt-0 flex items-center" : undefined}
           />
         )}
-        {!disabled && (
-          <DescriptionVersionsRoot
-            className="flex-shrink-0"
-            entityInformation={{
-              createdAt: issue.created_at ? new Date(issue.created_at) : new Date(),
-              createdByDisplayName: getUserDetails(issue.created_by ?? "")?.display_name ?? "",
-              id: issueId,
-              isRestoreDisabled: disabled || isArchived,
-            }}
-            fetchHandlers={{
-              listDescriptionVersions: (issueId) =>
-                workItemVersionService.listDescriptionVersions(
-                  workspaceSlug,
-                  issue.project_id?.toString() ?? "",
-                  issueId
-                ),
-              retrieveDescriptionVersion: (issueId, versionId) =>
-                workItemVersionService.retrieveDescriptionVersion(
-                  workspaceSlug,
-                  issue.project_id?.toString() ?? "",
-                  issueId,
-                  versionId
-                ),
-            }}
-            handleRestore={(descriptionHTML) => editorRef.current?.setEditorValue(descriptionHTML, true)}
-            projectId={issue.project_id}
+        {!disabled && createdAt && (
+          <PeekDescriptionVersions
+            className={embedIssue ? "ml-auto flex-shrink-0" : "flex-shrink-0"}
             workspaceSlug={workspaceSlug}
+            projectId={issue.project_id}
+            issueId={issueId}
+            createdAt={createdAt}
+            createdByDisplayName={getUserDetails(issue.created_by ?? "")?.display_name ?? ""}
+            isArchived={isArchived}
+            editorRef={editorRef}
           />
         )}
       </div>

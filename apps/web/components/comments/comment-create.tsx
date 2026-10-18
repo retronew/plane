@@ -25,6 +25,7 @@ type TCommentCreate = {
   activityOperations: TCommentsOperations;
   showToolbarInitially?: boolean;
   isIntakeIssue?: boolean;
+  variant?: "default" | "compact";
   projectId?: string;
   onSubmitCallback?: (elementId: string) => void;
 };
@@ -39,9 +40,11 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
     activityOperations,
     showToolbarInitially = false,
     isIntakeIssue = false,
+    variant = "default",
     projectId,
     onSubmitCallback,
   } = props;
+  const compact = isIntakeIssue || variant === "compact";
   // states
   const [uploadedAssetIds, setUploadedAssetIds] = useState<string[]>([]);
   // refs
@@ -117,7 +120,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
                 }}
                 ref={editorRef}
                 initialValue={value ?? "<p></p>"}
-                containerClassName={isIntakeIssue ? "max-h-[200px] overflow-y-auto" : "min-h-min"}
+                containerClassName={compact ? "max-h-[200px] overflow-y-auto" : "min-h-min"}
                 onChange={(comment_json, comment_html) => onChange(comment_html)}
                 accessSpecifier={accessValue ?? EIssueCommentAccessSpecifier.INTERNAL}
                 handleAccessChange={onAccessChange}
@@ -134,11 +137,11 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
                 }}
                 showToolbarInitially={showToolbarInitially}
                 parentClassName={
-                  isIntakeIssue
+                  compact
                     ? "overflow-hidden rounded-xl border-subtle-1 bg-layer-2 !p-0 transition-[background-color,border-color,box-shadow] hover:border-strong hover:bg-layer-2-hover focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:hover:border-accent-strong focus-within:ring-2 focus-within:ring-accent-strong/20"
                     : "p-2"
                 }
-                compactCommentToolbar={isIntakeIssue}
+                compactCommentToolbar={compact}
                 displayConfig={{
                   fontSize: "small-font",
                 }}

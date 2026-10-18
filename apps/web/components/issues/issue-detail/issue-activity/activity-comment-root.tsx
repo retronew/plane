@@ -19,7 +19,7 @@ import { CommentCard } from "@/components/comments/card/root";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // local imports
 import { IssueActivityItem } from "./activity/activity-list";
-import { IntakeActivityContext } from "./intake-activity-context";
+import { ActivityDisplayContext, IntakeActivityContext } from "./intake-activity-context";
 import { IssueActivityLoader } from "./loader";
 
 type TIssueActivityCommentRoot = {
@@ -27,6 +27,7 @@ type TIssueActivityCommentRoot = {
   projectId: string;
   isIntakeIssue: boolean;
   intakeTab?: TIntakeActivityTab;
+  variant?: "default" | "tabs";
   issueId: string;
   selectedFilters: TActivityFilters[];
   activityOperations: TCommentsOperations;
@@ -40,6 +41,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
     workspaceSlug,
     isIntakeIssue,
     intakeTab = "all",
+    variant = "default",
     issueId,
     selectedFilters,
     activityOperations,
@@ -55,13 +57,14 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
     comment: { getCommentById },
   } = useIssueDetail();
   // derived values
+  const showTabs = isIntakeIssue || variant === "tabs";
   const activityAndComments = getActivityAndCommentsByIssueId(issueId, sortOrder);
 
   if (!activityAndComments) return <IssueActivityLoader />;
 
   const filteredActivityAndComments = filterActivityOnSelectedFilters(activityAndComments, selectedFilters).filter(
     (item) => {
-      if (!isIntakeIssue || intakeTab === "all") return true;
+      if (!showTabs || intakeTab === "all") return true;
       if (intakeTab === "comments") return item.activity_type === "COMMENT";
       if (item.activity_type === "COMMENT") return false;
       const activity = getActivityById(item.id);
@@ -72,7 +75,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
   );
 
   if (filteredActivityAndComments.length === 0) {
-    if (!isIntakeIssue || intakeTab === "comments") return null;
+    if (!showTabs || intakeTab === "comments") return null;
     const emptyKey =
       intakeTab === "transitions" ? "no_transitions" : intakeTab === "history" ? "no_history" : "no_activity";
     return (
@@ -92,7 +95,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
             comment={comment}
             activityOperations={activityOperations}
             ends={
-              isIntakeIssue && filteredActivityAndComments.length === 1
+              showTabs && filteredActivityAndComments.length === 1
                 ? "only"
                 : index === 0
                   ? "top"
@@ -106,26 +109,29 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
             projectId={projectId}
             enableReplies
             isIntakeIssue={isIntakeIssue}
+            variant={showTabs ? "compact" : "default"}
           />
         ) : BASE_ACTIVITY_FILTER_TYPES.includes(activityComment.activity_type as EActivityFilterType) ? (
           <div
             key={activityComment.id}
             className={
-              isIntakeIssue
+              showTabs
                 ? "relative text-body-xs-regular [&>div.flex]:text-body-xs-regular [&>div.flex>div:last-child]:text-caption-sm-regular"
                 : undefined
             }
           >
-            {isIntakeIssue && filteredActivityAndComments.length > 1 && (
+            {showTabs && filteredActivityAndComments.length > 1 && (
               <div aria-hidden className="absolute top-0 bottom-0 left-[13px] w-px bg-layer-3" />
             )}
-            <IntakeActivityContext.Provider value={isIntakeIssue}>
-              <IssueActivityItem
-                activityId={activityComment.id}
-                ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
-              />
-            </IntakeActivityContext.Provider>
-            {isIntakeIssue && intakeTab === "history" && (
+            <ActivityDisplayContext.Provider value={showTabs}>
+              <IntakeActivityContext.Provider value={isIntakeIssue}>
+                <IssueActivityItem
+                  activityId={activityComment.id}
+                  ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
+                />
+              </IntakeActivityContext.Provider>
+            </ActivityDisplayContext.Provider>
+            {showTabs && intakeTab === "history" && (
               <div className="ml-10 flex min-w-0 items-center gap-3 pb-3 text-body-xs-regular text-secondary">
                 {["old_value", "new_value"].map((key, valueIndex) => {
                   const activity = getActivityById(activityComment.id);

@@ -22,7 +22,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TNameDescriptionLoader } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 import { Select } from "@plane/blocks/select";
-import { copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
+import { cn, copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -57,6 +57,10 @@ const PEEK_OPTIONS: TPeekOption[] = [
     i18n_title: "common.full_screen",
   },
 ];
+
+function renderPeekOptionIcon(mode: TPeekOption) {
+  return <mode.icon className="-my-1 h-4 w-4 flex-shrink-0" />;
+}
 
 export type PeekOverviewHeaderProps = {
   peekMode: TPeekModes;
@@ -129,7 +133,7 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
     e.stopPropagation();
     e.preventDefault();
     copyUrlToClipboard(workItemLink).then(() => {
-      setToast({
+      return setToast({
         type: "success",
         title: t("common.link_copied"),
         message: t("common.link_copied_to_clipboard"),
@@ -141,9 +145,8 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
     try {
       const deleteIssue = issueDetails?.archived_at ? removeArchivedIssue : removeIssue;
 
-      return deleteIssue(workspaceSlug, projectId, issueId).then(() => {
-        setPeekIssue(undefined);
-      });
+      await deleteIssue(workspaceSlug, projectId, issueId);
+      setPeekIssue(undefined);
     } catch (_error) {
       setToast({
         title: t("toast.error"),
@@ -163,19 +166,31 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
 
   return (
     <div
-      className={`relative flex items-center justify-between p-4 ${
-        currentMode?.key === "full-screen" ? "border-b border-subtle" : ""
-      }`}
+      className={cn(
+        "relative flex shrink-0 items-center justify-between gap-2",
+        embedIssue ? "min-h-[52px] border-b border-subtle px-page-x py-2" : "p-4",
+        currentMode?.key === "full-screen" && "border-b border-subtle"
+      )}
     >
       <div className="flex items-center gap-4">
         <Tooltip label={t("common.close_peek_view")} disabled={isMobile}>
-          <button onClick={removeRoutePeekId}>
+          <button
+            type="button"
+            aria-label={t("common.close_peek_view")}
+            className={embedIssue ? "flex size-7.5 shrink-0 items-center justify-center rounded-sm p-1.5" : undefined}
+            onClick={removeRoutePeekId}
+          >
             <ArrowNarrowRightOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
           </button>
         </Tooltip>
 
         <Tooltip label={t("issue.open_in_full_screen")} disabled={isMobile}>
-          <Link href={workItemLink} onClick={() => removeRoutePeekId()}>
+          <Link
+            href={workItemLink}
+            aria-label={t("issue.open_in_full_screen")}
+            className={embedIssue ? "flex size-7.5 shrink-0 items-center justify-center rounded-sm p-1.5" : undefined}
+            onClick={() => removeRoutePeekId()}
+          >
             <DragDropOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
           </Link>
         </Tooltip>
@@ -187,7 +202,7 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
               onChange={(val) => setPeekMode(val as TPeekModes)}
               getOptionValue={(mode) => mode.key}
               getOptionLabel={(mode) => t(mode.i18n_title)}
-              getOptionIcon={(mode) => <mode.icon className="-my-1 h-4 w-4 flex-shrink-0" />}
+              getOptionIcon={renderPeekOptionIcon}
               showSearch={false}
               pinSelected={false}
             >

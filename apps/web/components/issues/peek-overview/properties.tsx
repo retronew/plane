@@ -49,12 +49,70 @@ interface IPeekOverviewProperties {
   projectId: string;
   issueId: string;
   disabled: boolean;
+  embedIssue?: boolean;
   issueOperations: TIssueOperations;
 }
 
-export const PeekOverviewProperties = observer(function PeekOverviewProperties(props: IPeekOverviewProperties) {
-  const { workspaceSlug, projectId, issueId, issueOperations, disabled } = props;
+function CreatedByProperty({ id, displayName, embedIssue }: { id: string; displayName?: string; embedIssue: boolean }) {
   const { t } = useTranslation();
+  const isIntakeCreator = displayName?.includes("-intake");
+  return (
+    <SidebarPropertyListItem
+      variant={embedIssue ? "detail" : "default"}
+      icon={UserOutline}
+      label={t("common.created_by")}
+      childrenClassName="px-2"
+    >
+      <ButtonAvatars showTooltip userIds={isIntakeCreator ? null : id} />
+      <span
+        className={cn(
+          "grow leading-5 text-secondary",
+          embedIssue ? "min-w-0 text-13 break-words" : "truncate text-body-xs-medium"
+        )}
+      >
+        {isIntakeCreator ? "Plane" : displayName}
+      </span>
+    </SidebarPropertyListItem>
+  );
+}
+
+function EstimateProperty({
+  workspaceSlug,
+  projectId,
+  issueId,
+  disabled,
+  issueOperations,
+  estimatePoint,
+  variant,
+}: {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+  disabled: boolean;
+  issueOperations: TIssueOperations;
+  estimatePoint: string | null | undefined;
+  variant: "detail" | "default";
+}) {
+  const { t } = useTranslation();
+  return (
+    <SidebarPropertyListItem variant={variant} icon={EstimateOutline} label={t("common.estimate")}>
+      <EstimateSelect
+        value={estimatePoint ?? undefined}
+        onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { estimate_point: val })}
+        projectId={projectId}
+        disabled={disabled}
+        variant="select-ghost-md"
+        placeholder={t("common.none")}
+        tooltip
+      />
+    </SidebarPropertyListItem>
+  );
+}
+
+export const PeekOverviewProperties = observer(function PeekOverviewProperties(props: IPeekOverviewProperties) {
+  const { workspaceSlug, projectId, issueId, issueOperations, disabled, embedIssue = false } = props;
+  const { t } = useTranslation();
+  const propertyVariant = embedIssue ? "detail" : "default";
   // store hooks
   const { getProjectById } = useProject();
   const {
@@ -66,26 +124,24 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
   // derived values
   const issue = getIssueById(issueId);
   if (!issue) return <></>;
-  const createdByDetails = getUserDetails(issue?.created_by);
+  const createdByDetails = getUserDetails(issue.created_by);
   const projectDetails = getProjectById(issue.project_id);
   const isEstimateEnabled = projectDetails?.estimate;
   const stateDetails = getStateById(issue.state_id);
 
   const minDate = getDate(issue.start_date);
-  minDate?.setDate(minDate.getDate());
 
   const maxDate = getDate(issue.target_date);
-  maxDate?.setDate(maxDate.getDate());
 
   return (
     <div>
-      <h6 className="text-body-xs-medium">{t("common.properties")}</h6>
+      <h6 className={embedIssue ? "text-body-sm-medium" : "text-body-xs-medium"}>{t("common.properties")}</h6>
       <div className={`mt-3 w-full space-y-3 ${disabled ? "opacity-60" : ""}`}>
-        <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={StateOutline} label={t("common.state")}>
           <StateSelect
             issueTypeId={issue.type_id}
             testId="work-item-state-select"
-            value={issue?.state_id}
+            value={issue.state_id}
             onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { state_id: val })}
             projectId={projectId}
             disabled={disabled}
@@ -94,25 +150,25 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
           />
         </SidebarPropertyListItem>
 
-        <SidebarPropertyListItem icon={MembersOutline} label={t("common.assignees")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={MembersOutline} label={t("common.assignees")}>
           <MemberSelect
             testId="work-item-assignee-select"
-            value={issue?.assignee_ids ?? []}
+            value={issue.assignee_ids ?? []}
             onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { assignee_ids: val })}
             disabled={disabled}
             projectId={projectId}
             placeholder={t("issue.add.assignee")}
             multiple
             variant="select-ghost-md"
-            showLabel={(issue?.assignee_ids?.length ?? 0) <= 1}
+            showLabel={(issue.assignee_ids?.length ?? 0) <= 1}
             tooltip={{ heading: t("common.assignees") }}
           />
         </SidebarPropertyListItem>
 
-        <SidebarPropertyListItem icon={PriorityOutline} label={t("common.priority")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={PriorityOutline} label={t("common.priority")}>
           <PrioritySelect
             testId="work-item-priority-select"
-            value={issue?.priority}
+            value={issue.priority}
             onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { priority: val })}
             disabled={disabled}
             variant="select-ghost-md"
@@ -121,18 +177,18 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         </SidebarPropertyListItem>
 
         {createdByDetails && (
-          <SidebarPropertyListItem icon={UserOutline} label={t("common.created_by")} childrenClassName="px-2">
-            <ButtonAvatars
-              showTooltip
-              userIds={createdByDetails?.display_name?.includes("-intake") ? null : createdByDetails?.id}
-            />
-            <span className="grow truncate text-body-xs-medium leading-5 text-secondary">
-              {createdByDetails?.display_name?.includes("-intake") ? "Plane" : createdByDetails?.display_name}
-            </span>
-          </SidebarPropertyListItem>
+          <CreatedByProperty
+            id={createdByDetails.id}
+            displayName={createdByDetails.display_name}
+            embedIssue={embedIssue}
+          />
         )}
 
-        <SidebarPropertyListItem icon={StartDateOutline} label={t("common.order_by.start_date")}>
+        <SidebarPropertyListItem
+          variant={propertyVariant}
+          icon={StartDateOutline}
+          label={t("common.order_by.start_date")}
+        >
           <DateSelect
             testId="work-item-start-date-select"
             value={getDate(issue.start_date) ?? null}
@@ -152,7 +208,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
           />
         </SidebarPropertyListItem>
 
-        <SidebarPropertyListItem icon={DueDateOutline} label={t("common.order_by.due_date")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={DueDateOutline} label={t("common.order_by.due_date")}>
           <div className="flex w-full items-center gap-2">
             <DateSelect
               testId="work-item-due-date-select"
@@ -178,21 +234,19 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         </SidebarPropertyListItem>
 
         {isEstimateEnabled && (
-          <SidebarPropertyListItem icon={EstimateOutline} label={t("common.estimate")}>
-            <EstimateSelect
-              value={issue.estimate_point ?? undefined}
-              onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { estimate_point: val })}
-              projectId={projectId}
-              disabled={disabled}
-              variant="select-ghost-md"
-              placeholder={t("common.none")}
-              tooltip
-            />
-          </SidebarPropertyListItem>
+          <EstimateProperty
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            issueId={issueId}
+            disabled={disabled}
+            issueOperations={issueOperations}
+            estimatePoint={issue.estimate_point}
+            variant={propertyVariant}
+          />
         )}
 
         {projectDetails?.module_view && (
-          <SidebarPropertyListItem icon={ModuleOutline} label={t("common.modules")}>
+          <SidebarPropertyListItem variant={propertyVariant} icon={ModuleOutline} label={t("common.modules")}>
             <IssueModuleSelect
               className="w-full grow"
               workspaceSlug={workspaceSlug}
@@ -205,7 +259,12 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         )}
 
         {projectDetails?.cycle_view && (
-          <SidebarPropertyListItem icon={CyclesOutline} label={t("common.cycle")} appendElement={null}>
+          <SidebarPropertyListItem
+            variant={propertyVariant}
+            icon={CyclesOutline}
+            label={t("common.cycle")}
+            appendElement={null}
+          >
             <IssueCycleSelect
               className="h-7.5 w-full grow"
               workspaceSlug={workspaceSlug}
@@ -217,7 +276,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
           </SidebarPropertyListItem>
         )}
 
-        <SidebarPropertyListItem icon={ParentOutline} label={t("common.parent")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={ParentOutline} label={t("common.parent")}>
           <IssueParentSelectRoot
             className="h-7.5 w-full grow"
             disabled={disabled}
@@ -228,7 +287,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
           />
         </SidebarPropertyListItem>
 
-        <SidebarPropertyListItem icon={LabelsOutline} label={t("common.labels")}>
+        <SidebarPropertyListItem variant={propertyVariant} icon={LabelsOutline} label={t("common.labels")}>
           <IssueLabel workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={disabled} />
         </SidebarPropertyListItem>
         <IssueCustomProperties

@@ -5,9 +5,9 @@
  */
 
 import { useContext, type ReactNode } from "react";
-import { IntakeActivityContext } from "../../../intake-activity-context";
+import { ActivityDisplayContext, IntakeActivityContext } from "../../../intake-activity-context";
 import { Avatar } from "@makeplane/propel/components/avatar";
-import { getFileURL } from "@plane/utils";
+import { cn, getFileURL } from "@plane/utils";
 import { useMember } from "@/hooks/store/use-member";
 
 import { HierarchyOutline } from "@makeplane/propel/icons";
@@ -57,6 +57,16 @@ type TIssueActivityBlockComponent = {
   customUserName?: string;
 };
 
+function ActivityTimestamp({ createdAt, isMobile }: { createdAt: string; isMobile: boolean }) {
+  return (
+    <div className={cn("shrink-0", "text-11")}>
+      <Tooltip label={`${renderFormattedDate(createdAt)}, ${renderFormattedTime(createdAt)}`} disabled={isMobile}>
+        <span className="whitespace-nowrap text-tertiary"> {calculateTimeAgo(createdAt)}</span>
+      </Tooltip>
+    </div>
+  );
+}
+
 export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent) {
   const { icon, activityId, ends, children, customUserName } = props;
   // hooks
@@ -66,23 +76,26 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
 
   const activity = getActivityById(activityId);
   const isIntakeIssue = useContext(IntakeActivityContext);
+  const detailDisplay = useContext(ActivityDisplayContext) || isIntakeIssue;
   const { isMobile } = usePlatformOS();
   if (!activity) return <></>;
   return (
     <div
-      className={`relative flex items-center gap-3 text-caption-sm-regular ${
-        ends === "top" ? `pb-2` : ends === "bottom" ? `pt-2` : `py-2`
-      }`}
+      className={cn(
+        "relative flex items-center gap-3",
+        "text-caption-sm-regular",
+        ends === "top" ? "pb-2" : ends === "bottom" ? "pt-2" : "py-2"
+      )}
     >
       <div className="absolute top-0 bottom-0 left-[13px] w-px bg-layer-3" aria-hidden />
       <div className="z-[4] flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-subtle bg-layer-2 text-secondary shadow-raised-100 [&_svg]:size-4">
         {icon ? icon : <HierarchyOutline className="h-3.5 w-3.5" />}
       </div>
       <div className="min-w-0 flex-1 break-words text-secondary">
-        {isIntakeIssue && !customUserName && <IntakeActivityActor activityId={activityId} />}
+        {detailDisplay && !customUserName && <IntakeActivityActor activityId={activityId} />}
         <Tooltip
           label={customUserName ?? activity.actor_detail?.display_name ?? ""}
-          disabled={!isIntakeIssue || !activity.actor_detail?.display_name}
+          disabled={!detailDisplay || !activity.actor_detail?.display_name}
         >
           <span>
             {!activity?.field && activity?.verb === "created" ? (
@@ -94,14 +107,7 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
         </Tooltip>
         <ActivitySentence> {children} </ActivitySentence>
       </div>
-      <div className="shrink-0 text-11">
-        <Tooltip
-          label={`${renderFormattedDate(activity.created_at)}, ${renderFormattedTime(activity.created_at)}`}
-          disabled={isMobile}
-        >
-          <span className="whitespace-nowrap text-tertiary"> {calculateTimeAgo(activity.created_at)}</span>
-        </Tooltip>
-      </div>
+      <ActivityTimestamp createdAt={activity.created_at} isMobile={isMobile} />
     </div>
   );
 }

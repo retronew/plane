@@ -2,6 +2,8 @@
 
 本文描述当前仓库实现的项目级工作流。包含类型与多工作流、创建及流转约束、审批、真实 JavaScript Runner、SDK、执行记录与部署。实现保留 `workflows/default/` 兼容入口；不声称兼容官方全部 SDK、任意 npm/Python 依赖或工作区级治理。
 
+面向产品使用者的概念、层级拆分示例与配置步骤见[项目工作项、类型、工作流与层级使用指南](./project-work-items.md)。
+
 Runner 的 HTTP 协议、错误码及引擎限制详见 [Workflow Runner README](../apps/workflow-runner/README.md)。
 
 ## 1. 配置模型与兼容行为

@@ -24,6 +24,7 @@ type TCommentCard = {
   showCopyLinkOption: boolean;
   enableReplies: boolean;
   isIntakeIssue?: boolean;
+  variant?: "default" | "compact";
   disabled?: boolean;
   projectId?: string;
 };
@@ -39,8 +40,10 @@ export const CommentCard = observer(function CommentCard(props: TCommentCard) {
     showCopyLinkOption,
     disabled = false,
     isIntakeIssue = false,
+    variant = "default",
     projectId,
   } = props;
+  const compact = isIntakeIssue || variant === "compact";
   // states
   const [isEditing, setIsEditing] = useState(false);
   // refs
@@ -51,13 +54,14 @@ export const CommentCard = observer(function CommentCard(props: TCommentCard) {
   if (!comment || !workspaceId) return null;
 
   return (
-    <CommentBlock comment={comment} ends={ends} isIntakeIssue={isIntakeIssue}>
+    <CommentBlock comment={comment} ends={ends} isIntakeIssue={isIntakeIssue} variant={variant}>
       <CommentCardDisplay
         activityOperations={activityOperations}
         entityId={entityId}
         comment={comment}
         disabled={disabled}
         isIntakeIssue={isIntakeIssue}
+        variant={compact ? "compact" : "default"}
         projectId={projectId}
         readOnlyEditorRef={readOnlyEditorRef}
         showAccessSpecifier={showAccessSpecifier}

@@ -95,6 +95,20 @@ it("history includes records with old/new values", () => {
   expect(screen.getByText("rename")).toBeTruthy();
   expect(screen.queryByText("created")).toBeNull();
 });
+it.each(["comments", "transitions", "history"] as const)(
+  "filters normal notification tabs by %s without switching comment business mode",
+  (intakeTab) => {
+    render(<IssueActivityCommentRoot {...props} isIntakeIssue={false} variant="tabs" intakeTab={intakeTab} />);
+    if (intakeTab === "comments") {
+      expect(screen.getByTestId("comment").getAttribute("data-intake")).toBe("false");
+      expect(screen.queryByText("created")).toBeNull();
+    } else {
+      expect(screen.queryByTestId("comment")).toBeNull();
+      expect(screen.getByText(intakeTab === "transitions" ? "transition" : "rename")).toBeTruthy();
+      expect(screen.queryByText("created")).toBeNull();
+    }
+  }
+);
 it("preserves normal work item filtering regardless of intake tab", () => {
   render(<IssueActivityCommentRoot {...props} isIntakeIssue={false} intakeTab="comments" />);
   expect(screen.getByText("created")).toBeTruthy();

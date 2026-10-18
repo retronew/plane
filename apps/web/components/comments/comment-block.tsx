@@ -18,10 +18,12 @@ type TCommentBlock = {
   ends: "top" | "bottom" | "only" | undefined;
   children: ReactNode;
   isIntakeIssue?: boolean;
+  variant?: "default" | "compact";
 };
 
 export const CommentBlock = observer(function CommentBlock(props: TCommentBlock) {
-  const { comment, ends, children, isIntakeIssue = false } = props;
+  const { comment, ends, children, isIntakeIssue = false, variant = "default" } = props;
+  const compact = isIntakeIssue || variant === "compact";
   const commentBlockRef = useRef<HTMLDivElement>(null);
 
   if (!comment) return null;
@@ -31,7 +33,7 @@ export const CommentBlock = observer(function CommentBlock(props: TCommentBlock)
       className={`relative flex gap-3 ${ends === "top" ? `pb-2` : ends === "bottom" ? `pt-2` : `py-2`}`}
       ref={commentBlockRef}
     >
-      {(!isIntakeIssue || ends !== "only") && (
+      {(!compact || ends !== "only") && (
         <div
           className="transition-border absolute top-0 bottom-0 left-[13px] w-px bg-layer-3 duration-1000"
           aria-hidden
@@ -42,7 +44,7 @@ export const CommentBlock = observer(function CommentBlock(props: TCommentBlock)
           "transition-border relative z-[3] flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-subtle bg-layer-2 uppercase shadow-raised-100 duration-1000"
         )}
       >
-        {isIntakeIssue ? (
+        {compact ? (
           <ChatOutline width={14} height={14} className="text-secondary" aria-hidden="true" />
         ) : (
           <ReplyOutline width={14} height={14} className="text-secondary" aria-hidden="true" />
@@ -52,7 +54,7 @@ export const CommentBlock = observer(function CommentBlock(props: TCommentBlock)
         <div
           className={cn(
             "mb-2 border border-subtle bg-layer-2 text-body-sm-regular shadow-raised-100",
-            isIntakeIssue ? "rounded-xl p-2.5" : "rounded-lg p-3"
+            compact ? "rounded-xl p-2.5" : "rounded-lg p-3"
           )}
         >
           {children}

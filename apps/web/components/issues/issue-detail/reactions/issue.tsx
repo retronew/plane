@@ -6,6 +6,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { observer } from "mobx-react";
+import { ReactionOutline } from "@makeplane/propel/icons";
 import { stringToEmoji } from "@plane/blocks/emoji-icon-picker";
 import { EmojiReactionGroup, EmojiReactionPicker } from "@plane/blocks/emoji-reaction";
 import type { EmojiReactionType } from "@plane/blocks/emoji-reaction";
@@ -107,13 +108,14 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
   // Transform reactions data to Propel EmojiReactionType format
   const reactions: EmojiReactionType[] = useMemo(() => {
     if (!reactionIds) return [];
+    const userReactionSet = new Set(userReactions);
 
     return Object.keys(reactionIds)
       .filter((reaction) => reactionIds[reaction]?.length > 0)
       .map((reaction) => ({
         emoji: stringToEmoji(reaction),
         count: reactionIds[reaction].length,
-        reacted: userReactions.includes(reaction),
+        reacted: userReactionSet.has(reaction),
         users: getReactionUsers(reaction),
       }));
   }, [reactionIds, userReactions, getReactionUsers]);
@@ -133,21 +135,20 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
 
   return (
     <div className={cn("relative mt-4", className)}>
-      <EmojiReactionPicker
-        isOpen={isPickerOpen}
-        handleToggle={setIsPickerOpen}
-        onChange={handleEmojiSelect}
-        disabled={disabled}
-        label={
-          <EmojiReactionGroup
-            reactions={reactions}
-            onReactionClick={handleReactionClick}
-            showAddButton={!disabled}
-            onAddReaction={() => setIsPickerOpen(true)}
+      <div className="flex flex-wrap items-center gap-2">
+        <EmojiReactionGroup reactions={reactions} onReactionClick={handleReactionClick} showAddButton={false} />
+        {!disabled && (
+          <EmojiReactionPicker
+            isOpen={isPickerOpen}
+            handleToggle={setIsPickerOpen}
+            onChange={handleEmojiSelect}
+            tooltip={translate("common.actions.add_reaction")}
+            buttonClassName="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-secondary hover:bg-layer-2-hover"
+            label={<ReactionOutline className="size-3.5" />}
+            placement="bottom-start"
           />
-        }
-        placement="bottom-start"
-      />
+        )}
+      </div>
     </div>
   );
 });

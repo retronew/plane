@@ -12,7 +12,7 @@ export default function ProjectInboxIssuesLayout() {
   return (
     <div className="relative flex h-full w-full items-center overflow-hidden">
       <NotificationsSidebarRoot />
-      <div className="h-full w-full overflow-hidden overflow-y-auto">
+      <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
         <Outlet />
       </div>
     </div>

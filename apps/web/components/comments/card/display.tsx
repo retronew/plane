@@ -32,6 +32,7 @@ export type TCommentCardDisplayProps = {
   comment: TIssueComment;
   disabled: boolean;
   isIntakeIssue?: boolean;
+  variant?: "default" | "compact";
   entityId: string;
   projectId?: string;
   readOnlyEditorRef: React.RefObject<EditorRefApi | null>;
@@ -44,12 +45,58 @@ export type TCommentCardDisplayProps = {
   renderQuickActions?: () => ReactNode;
 };
 
+function CommentTimestamp({ comment, compact }: { comment: TIssueComment; compact: boolean }) {
+  return (
+    <div className="text-caption-sm-regular text-tertiary">
+      {compact ? (
+        <Tooltip
+          label={translate("web.ui.date_at_time", {
+            date: renderFormattedDate(comment.created_at),
+            time: renderFormattedTime(comment.created_at),
+          })}
+          side="bottom"
+          layout="single"
+          delay={200}
+        >
+          <span className="text-12 text-tertiary">
+            · {calculateTimeAgo(comment.created_at)}
+            {comment.edited_at && translate("web.ui.edited")}
+          </span>
+        </Tooltip>
+      ) : (
+        <Translation
+          translationKey="web.ui.commented_at"
+          components={{
+            time: (
+              <Tooltip
+                label={translate("web.ui.date_at_time", {
+                  date: renderFormattedDate(comment.created_at),
+                  time: renderFormattedTime(comment.created_at),
+                })}
+                side="bottom"
+                layout="single"
+                delay={200}
+              >
+                <span className="text-tertiary">
+                  {calculateTimeAgo(comment.created_at)}
+                  {comment.edited_at && translate("web.ui.edited")}
+                </span>
+              </Tooltip>
+            ),
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export const CommentCardDisplay = observer(function CommentCardDisplay(props: TCommentCardDisplayProps) {
   const {
     activityOperations,
     comment,
     disabled,
     isIntakeIssue = false,
+    variant = "default",
     projectId,
     readOnlyEditorRef,
     showAccessSpecifier,
@@ -60,6 +107,7 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
     renderFooter,
     renderQuickActions,
   } = props;
+  const compact = isIntakeIssue || variant === "compact";
   // states
   const [highlightClassName, setHighlightClassName] = useState("");
   // state
@@ -121,55 +169,16 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
           )}
         </div>
       )}
-      <div className={cn("relative flex w-full items-center gap-2", !isIntakeIssue && "mb-3")}>
+      <div className={cn("relative flex w-full items-center gap-2", !compact && "mb-3")}>
         <Avatar
           alt={displayName}
           fallback={displayName?.[0]?.toUpperCase()}
-          size={isIntakeIssue ? "xs" : "2xs"}
+          size={compact ? "xs" : "2xs"}
           src={getFileURL(avatarUrl)}
         />
         <div className="flex flex-1 flex-wrap items-center gap-1">
-          <div className={isIntakeIssue ? "text-body-xs-medium" : "text-caption-sm-medium"}>{displayName}</div>
-          <div className="text-caption-sm-regular text-tertiary">
-            {isIntakeIssue ? (
-              <Tooltip
-                label={translate("web.ui.date_at_time", {
-                  date: renderFormattedDate(comment.created_at),
-                  time: renderFormattedTime(comment.created_at),
-                })}
-                side="bottom"
-                layout="single"
-                delay={200}
-              >
-                <span className="text-12 text-tertiary">
-                  · {calculateTimeAgo(comment.created_at)}
-                  {comment.edited_at && translate("web.ui.edited")}
-                </span>
-              </Tooltip>
-            ) : (
-              <Translation
-                translationKey="web.ui.commented_at"
-                components={{
-                  time: (
-                    <Tooltip
-                      label={translate("web.ui.date_at_time", {
-                        date: renderFormattedDate(comment.created_at),
-                        time: renderFormattedTime(comment.created_at),
-                      })}
-                      side="bottom"
-                      layout="single"
-                      delay={200}
-                    >
-                      <span className="text-tertiary">
-                        {calculateTimeAgo(comment.created_at)}
-                        {comment.edited_at && translate("web.ui.edited")}
-                      </span>
-                    </Tooltip>
-                  ),
-                }}
-              />
-            )}
-          </div>
+          <div className={compact ? "text-body-xs-medium" : "text-caption-sm-medium"}>{displayName}</div>
+          <CommentTimestamp comment={comment} compact={compact} />
         </div>
         {!disabled && (
           <div className="flex shrink-0 items-center gap-1">
@@ -207,14 +216,14 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
             workspaceSlug={workspaceSlug}
             containerClassName={cn(
               "transition-[border-color] duration-500",
-              isIntakeIssue ? "!px-0 !pt-1.5 !pb-0" : "!py-1",
+              compact ? "!px-0 !pt-1.5 !pb-0" : "!py-1",
               highlightClassName
             )}
             projectId={projectId?.toString()}
             displayConfig={{
               fontSize: "small-font",
             }}
-            parentClassName={cn("border-none", isIntakeIssue && "ml-7")}
+            parentClassName={cn("border-none", compact && "ml-7")}
           />
           {shouldRenderReactions &&
             (renderFooter ? (
