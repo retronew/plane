@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useId } from "react";
 // types
 import { useTranslation } from "@plane/i18n";
 import type { TWebhookEventTypes } from "@plane/types";
@@ -27,6 +28,7 @@ const WEBHOOK_EVENT_TYPES: { key: TWebhookEventTypes; i18n_label: string }[] = [
 export function WebhookOptions(props: Props) {
   const { value, onChange } = props;
   const { t } = useTranslation();
+  const groupId = useId();
 
   return (
     <>
@@ -35,13 +37,14 @@ export function WebhookOptions(props: Props) {
         {WEBHOOK_EVENT_TYPES.map((option) => (
           <div key={option.key} className="flex items-center gap-2">
             <input
-              id={option.key}
+              id={`${groupId}-${option.key}`}
+              name={groupId}
               type="radio"
               value={option.key}
               checked={value == option.key}
               onChange={() => onChange(option.key)}
             />
-            <label className="text-13" htmlFor={option.key}>
+            <label className="text-13" htmlFor={`${groupId}-${option.key}`}>
               {t(option.i18n_label)}
             </label>
           </div>

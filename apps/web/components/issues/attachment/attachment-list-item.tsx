@@ -62,7 +62,7 @@ export const IssueAttachmentsListItem = observer(function IssueAttachmentsListIt
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.open(fileURL, "_blank");
+          window.open(fileURL, "_blank", "noopener");
         }}
       >
         <div className="group flex h-11 items-center justify-between gap-3 px-3 hover:bg-surface-2">

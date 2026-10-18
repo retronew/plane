@@ -90,7 +90,7 @@ export const RelationIssueListItem = observer(function RelationIssueListItem(pro
   const handleIssuePeekOverview = (targetIssue: TIssue) => {
     if (targetIssue.is_epic) {
       // open epics in new tab
-      window.open(workItemLink, "_blank");
+      window.open(workItemLink, "_blank", "noopener");
       return;
     }
     handleRedirection(workspaceSlug, targetIssue, isMobile);

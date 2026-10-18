@@ -141,7 +141,7 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
       })
     );
 
-  const handleOpenInNewTab = () => window.open(workItemLink, "_blank");
+  const handleOpenInNewTab = () => window.open(workItemLink, "_blank", "noopener");
 
   const handleIssueRestore = async () => {
     if (!handleRestore) {

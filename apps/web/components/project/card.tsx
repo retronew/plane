@@ -137,7 +137,7 @@ export const ProjectCard = observer(function ProjectCard(props: Props) {
         message: translate("web.project_link_copied_to_clipboard"),
       })
     );
-  const handleOpenInNewTab = () => window.open(`/${projectLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${projectLink}`, "_blank", "noopener");
 
   const MENU_ITEMS: TContextMenuItem[] = [
     {

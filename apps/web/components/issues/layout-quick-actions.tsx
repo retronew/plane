@@ -40,7 +40,7 @@ export const LayoutQuickActions = observer(function LayoutQuickActions(props: Pr
     });
   };
 
-  const handleOpenInNewTab = () => window.open(`/${layoutLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${layoutLink}`, "_blank", "noopener");
 
   const menuResult = useLayoutMenuItems({
     workspaceSlug,

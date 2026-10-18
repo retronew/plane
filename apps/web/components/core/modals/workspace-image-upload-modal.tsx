@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { useDropzone } from "react-dropzone";
@@ -47,6 +47,17 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
   const { handleRemove, isOpen, onClose, onSuccess, value } = props;
   // states
   const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<{ file: File; url: string }>();
+
+  useEffect(() => {
+    if (!image) {
+      setPreview(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(image);
+    setPreview({ file: image, url });
+    return () => URL.revokeObjectURL(url);
+  }, [image]);
   const [isRemoving, setIsRemoving] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
   // router
@@ -86,6 +97,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
       );
       updateWorkspaceLogo(workspaceSlug.toString(), asset_url);
       onSuccess(asset_url);
+      setImage(null);
     } catch (error: any) {
       console.log("error", error);
       setToast({
@@ -152,7 +164,15 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                           {translate("web.edit")}
                         </button>
                         <img
-                          src={image ? URL.createObjectURL(image) : value ? getFileURL(value) : ""}
+                          src={
+                            image
+                              ? preview?.file === image
+                                ? preview.url
+                                : undefined
+                              : value
+                                ? getFileURL(value)
+                                : undefined
+                          }
                           alt={translate("web.workspace_logo_preview")}
                           className="absolute top-0 left-0 h-full w-full rounded-md object-cover"
                         />

@@ -68,7 +68,7 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
         message: t("web.view_link_copied_to_clipboard"),
       });
     });
-  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank", "noopener");
 
   const menuResult = useViewMenuItems({
     isOwner,
