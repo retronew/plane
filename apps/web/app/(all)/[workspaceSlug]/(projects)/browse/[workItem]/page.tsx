@@ -12,12 +12,12 @@ import useSWR from "swr";
 import { useTranslation } from "@plane/i18n";
 import type { TIssue } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
-import { Loader } from "@plane/blocks/skeleton";
 // assets
 import emptyIssueDark from "@/app/assets/empty-state/search/issues-dark.webp?url";
 import emptyIssueLight from "@/app/assets/empty-state/search/issues-light.webp?url";
 // components
 import { EmptyState } from "@/components/common/empty-state";
+import { IssueDetailSkeleton } from "@/components/common/loaders/issue-detail-skeleton";
 import { PageHead } from "@/components/core/page-title";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
@@ -106,22 +106,7 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   }
 
   if (issueLoader) {
-    return (
-      <Loader className="flex h-full gap-5 p-5">
-        <div className="basis-2/3 space-y-2">
-          <Loader.Item height="30px" width="40%" />
-          <Loader.Item height="15px" width="60%" />
-          <Loader.Item height="15px" width="60%" />
-          <Loader.Item height="15px" width="40%" />
-        </div>
-        <div className="basis-1/3 space-y-3">
-          <Loader.Item height="30px" />
-          <Loader.Item height="30px" />
-          <Loader.Item height="30px" />
-          <Loader.Item height="30px" />
-        </div>
-      </Loader>
-    );
+    return <IssueDetailSkeleton />;
   }
 
   return (

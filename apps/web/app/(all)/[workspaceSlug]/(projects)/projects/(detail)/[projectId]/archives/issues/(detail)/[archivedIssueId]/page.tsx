@@ -13,8 +13,8 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { ArchiveOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { Loader } from "@plane/blocks/skeleton";
 // components
+import { IssueDetailSkeleton } from "@/components/common/loaders/issue-detail-skeleton";
 import { PageHead } from "@/components/core/page-title";
 import { IssueDetailRoot } from "@/components/issues/issue-detail";
 // constants
@@ -54,20 +54,7 @@ function ArchivedIssueDetailsPage({ params }: Route.ComponentProps) {
     <>
       <PageHead title={pageTitle} />
       {issueLoader ? (
-        <Loader className="flex h-full gap-5 p-5">
-          <div className="basis-2/3 space-y-2">
-            <Loader.Item height="30px" width="40%" />
-            <Loader.Item height="15px" width="60%" />
-            <Loader.Item height="15px" width="60%" />
-            <Loader.Item height="15px" width="40%" />
-          </div>
-          <div className="basis-1/3 space-y-3">
-            <Loader.Item height="30px" />
-            <Loader.Item height="30px" />
-            <Loader.Item height="30px" />
-            <Loader.Item height="30px" />
-          </div>
-        </Loader>
+        <IssueDetailSkeleton />
       ) : (
         <>
           <Banner
