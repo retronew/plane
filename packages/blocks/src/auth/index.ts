@@ -5,6 +5,7 @@
  */
 
 export * from "./oauth/oauth-options";
+export * from "./oauth/use-core-oauth-config";
 export * from "./password/indicator";
 export * from "./password/helper";
 export * from "./password/password-input";
