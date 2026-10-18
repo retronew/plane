@@ -5,19 +5,8 @@
  */
 
 // components
-import { Outlet } from "react-router";
-import { AppHeader } from "@/components/core/app-header";
-import { ContentWrapper } from "@/components/core/content-wrapper";
-import { ProjectsListMobileHeader } from "@/components/projects/mobile-header";
-import { ProjectsBaseHeader } from "@/components/project/header";
+import { ProjectsLayoutShell } from "@/components/projects/layout-shell";
 
 export default function ProjectListLayout() {
-  return (
-    <>
-      <AppHeader header={<ProjectsBaseHeader />} mobileHeader={<ProjectsListMobileHeader />} />
-      <ContentWrapper>
-        <Outlet />
-      </ContentWrapper>
-    </>
-  );
+  return <ProjectsLayoutShell />;
 }
