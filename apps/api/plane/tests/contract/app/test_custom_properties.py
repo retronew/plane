@@ -893,3 +893,407 @@ def test_merge_serializes_concurrent_value_write(property_ctx, monkeypatch):
     assert written.status_code == 400, written.data
     ctx.issue.refresh_from_db()
     assert ctx.issue.custom_properties == {str(merged.data["property"]["id"]): "Before"}
+
+
+def patch_property_options(client, url, data, format="json"):
+    if "options" in data:
+        data = {**data, "options_version": client.get(url).data["options_version"]}
+    return client.patch(url, data, format=format)
+
+
+@pytest.mark.parametrize("multiple", [False, True])
+def test_atomic_property_create_maps_temporary_defaults(session_client, property_ctx, multiple):
+    ctx = property_ctx
+    response = session_client.post(
+        ctx.base + "custom-properties/",
+        {
+            "name": "Atomic dropdown",
+            "property_type": "dropdown",
+            "type_id": str(ctx.issue_type.pk),
+            "config": {"multiple": multiple, "default_value": ["new-high"] if multiple else "new-high"},
+            "options": [{"client_id": "new-high", "name": "High", "color": "#123456", "sort_order": 2}],
+        },
+        format="json",
+    )
+    assert response.status_code == 201, response.data
+    option = response.data["options"][0]
+    expected = [str(option["id"])] if multiple else str(option["id"])
+    assert response.data["config"]["default_value"] == expected
+    assert "client_id" not in option
+    assert option["color"] == "#123456"
+    assert option["sort_order"] == 2
+    assert IssueTypeCustomProperty.objects.filter(
+        property_id=response.data["id"], project_issue_type=ctx.binding
+    ).exists()
+
+
+def test_atomic_property_patch_preserves_history_and_restores_options(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    old = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Old")
+    inactive = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Inactive", is_active=False)
+    archived = CustomPropertyOption.objects.create(
+        project=ctx.project, property=prop, name="Archived", is_active=False, is_archived=True
+    )
+    ctx.issue.custom_properties = {str(prop.pk): str(old.pk)}
+    ctx.issue.save()
+    prop.config["default_value"] = str(old.pk)
+    prop.save()
+    url = ctx.base + f"custom-properties/{prop.pk}/"
+    response = patch_property_options(
+        session_client,
+        url,
+        {
+            "name": "Updated atomically",
+            "config": {"default_value": "new-choice"},
+            "options": [
+                {"id": str(inactive.pk), "name": "Still inactive"},
+                {"id": str(archived.pk), "name": "Restored", "is_active": True},
+                {"client_id": "new-choice", "name": "New"},
+            ],
+        },
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    new = CustomPropertyOption.objects.get(property=prop, name="New")
+    prop.refresh_from_db()
+    old.refresh_from_db()
+    inactive.refresh_from_db()
+    archived.refresh_from_db()
+    ctx.issue.refresh_from_db()
+    assert prop.name == "Updated atomically"
+    assert prop.config["default_value"] == str(new.pk)
+    assert old.is_archived and not old.is_active
+    assert not inactive.is_archived and not inactive.is_active
+    assert not archived.is_archived and archived.is_active
+    assert ctx.issue.custom_properties == {str(prop.pk): str(old.pk)}
+    assert len(response.data["options"]) == 4
+    assert (
+        patch_property_options(
+            session_client, url, {"options": [], "config": {"default_value": None}}, format="json"
+        ).status_code
+        == 200
+    )
+    assert not CustomPropertyOption.objects.filter(property=prop, is_archived=False).exists()
+    assert CustomPropertyOption.objects.filter(property=prop).count() == 4
+
+
+def test_atomic_property_patch_can_swap_names_and_clear_default(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown", config={"multiple": True})
+    first = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="First")
+    second = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Second")
+    prop.config["default_value"] = [str(first.pk)]
+    prop.save()
+    url = ctx.base + f"custom-properties/{prop.pk}/"
+    response = patch_property_options(
+        session_client,
+        url,
+        {"options": [{"id": str(first.pk), "name": "Second"}, {"id": str(second.pk), "name": "First"}]},
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    first.refresh_from_db()
+    assert first.name == "Second" and first.is_active
+    response = patch_property_options(
+        session_client, url, {"options": [], "config": {"default_value": []}}, format="json"
+    )
+    assert response.status_code == 200, response.data
+    assert response.data["config"]["default_value"] == []
+
+
+@pytest.mark.parametrize(
+    "options,default",
+    [
+        ([{"client_id": "same", "name": "One"}, {"client_id": "same", "name": "Two"}], None),
+        ([{"name": " Same "}, {"name": "Same"}], None),
+        ([{"client_id": 123, "name": "Numeric temporary ID"}], None),
+        ([{"client_id": " ", "name": "Empty temporary ID"}], None),
+        ([{"client_id": "x" * 256, "name": "Long temporary ID"}], None),
+        ([{"name": "Valid", "client_id": "new", "is_active": False}], "new"),
+        ([{"name": "Valid", "client_id": "new"}], "unknown"),
+        ([{"name": "Valid", "client_id": "new"}], {"invalid": True}),
+        ([{"name": "Valid", "client_id": "new"}], ["new"]),
+        ([{"name": "Valid", "sort_order": "Infinity"}], None),
+        ([{"name": "Valid", "color": "red"}], None),
+        (None, None),
+        ({"name": "Not a list"}, None),
+        ([{"name": str(index)} for index in range(501)], None),
+    ],
+)
+def test_atomic_property_create_rejects_invalid_options_without_writes(session_client, property_ctx, options, default):
+    ctx = property_ctx
+    response = session_client.post(
+        ctx.base + "custom-properties/",
+        {
+            "name": "Must roll back",
+            "property_type": "dropdown",
+            "config": {"default_value": default},
+            "options": options,
+        },
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    assert not ProjectCustomProperty.objects.filter(project=ctx.project).exists()
+    assert not CustomPropertyOption.objects.filter(project=ctx.project).exists()
+
+
+@pytest.mark.parametrize(
+    "case", ["foreign_project", "foreign_property", "missing", "duplicate", "both", "collision", "deleted"]
+)
+def test_atomic_property_patch_rejects_invalid_ids_without_writes(session_client, property_ctx, case):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    local = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Original")
+    other = make_property(ctx, "dropdown")
+    foreign_project = Project.objects.create(workspace=ctx.workspace, name="Foreign", identifier="FOREIGN")
+    foreign_prop = ProjectCustomProperty.objects.create(
+        project=foreign_project, name="Foreign", property_type="dropdown"
+    )
+    foreign = CustomPropertyOption.objects.create(project=foreign_project, property=foreign_prop, name="Foreign")
+    other_option = CustomPropertyOption.objects.create(project=ctx.project, property=other, name="Other")
+    deleted = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Deleted")
+    from django.utils import timezone
+
+    CustomPropertyOption.all_objects.filter(pk=deleted.pk).update(deleted_at=timezone.now())
+    rows = {
+        "foreign_project": [{"id": str(foreign.pk), "name": "Injected"}],
+        "foreign_property": [{"id": str(other_option.pk), "name": "Injected"}],
+        "missing": [{"id": str(uuid4()), "name": "Injected"}],
+        "duplicate": [{"id": str(local.pk), "name": "One"}, {"id": str(local.pk), "name": "Two"}],
+        "both": [{"id": str(local.pk), "client_id": "new", "name": "Injected"}],
+        "collision": [{"client_id": str(local.pk).upper(), "name": "Injected"}],
+        "deleted": [{"id": str(deleted.pk), "name": "Injected"}],
+    }[case]
+    response = patch_property_options(
+        session_client,
+        ctx.base + f"custom-properties/{prop.pk}/",
+        {"name": "Must roll back", "options": rows},
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    prop.refresh_from_db()
+    local.refresh_from_db()
+    assert prop.name != "Must roll back"
+    assert local.name == "Original" and local.is_active and not local.is_archived
+    assert CustomPropertyOption.objects.filter(property=prop).count() == 1
+
+
+@pytest.mark.parametrize("multiple", [False, True])
+@pytest.mark.parametrize("deactivate", [False, True])
+def test_atomic_property_patch_invalid_default_rolls_back_everything(
+    session_client, property_ctx, multiple, deactivate
+):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown", config={"multiple": multiple})
+    option = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Original")
+    default = [str(option.pk)] if multiple else str(option.pk)
+    prop.config["default_value"] = default
+    prop.save()
+    ctx.issue.custom_properties = {str(prop.pk): default}
+    ctx.issue.save()
+    options = [{"id": str(option.pk), "name": "Renamed", "is_active": False}] if deactivate else []
+    options.append({"client_id": "new", "name": "Must roll back"})
+    response = patch_property_options(
+        session_client,
+        ctx.base + f"custom-properties/{prop.pk}/",
+        {"name": "Must roll back", "options": options},
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    assert "default_value" in response.data["config"]
+    prop.refresh_from_db()
+    option.refresh_from_db()
+    ctx.issue.refresh_from_db()
+    assert prop.name != "Must roll back" and prop.config["default_value"] == default
+    assert option.name == "Original" and option.is_active and not option.is_archived
+    assert CustomPropertyOption.objects.filter(property=prop).count() == 1
+    assert ctx.issue.custom_properties == {str(prop.pk): default}
+
+
+def test_atomic_property_create_rejects_existing_ids_and_foreign_defaults(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    option = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Original")
+    for payload in (
+        {"options": [{"id": str(option.pk), "name": "Injected"}]},
+        {"config": {"default_value": str(option.pk)}},
+        {"type_id": str(uuid4()), "options": [{"client_id": "new", "name": "Rollback"}]},
+    ):
+        response = session_client.post(
+            ctx.base + "custom-properties/",
+            {"name": "Must roll back", "property_type": "dropdown", **payload},
+            format="json",
+        )
+        assert response.status_code in (400, 404), response.data
+        assert ProjectCustomProperty.objects.filter(project=ctx.project).count() == 1
+        assert CustomPropertyOption.objects.filter(project=ctx.project).count() == 1
+
+
+def test_atomic_property_options_limit_excludes_archived_history(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    CustomPropertyOption.objects.bulk_create(
+        [
+            CustomPropertyOption(
+                project=ctx.project, workspace=ctx.workspace, property=prop, name=str(index), is_archived=True
+            )
+            for index in range(501)
+        ]
+    )
+    response = patch_property_options(
+        session_client,
+        ctx.base + f"custom-properties/{prop.pk}/",
+        {"options": [{"client_id": "new", "name": "Current"}], "config": {"default_value": "new"}},
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    assert len(response.data["options"]) == 502
+    response = patch_property_options(
+        session_client,
+        ctx.base + f"custom-properties/{prop.pk}/",
+        {"options": [{"name": str(index)} for index in range(501)]},
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    assert CustomPropertyOption.objects.filter(property=prop, is_archived=False).count() == 1
+
+
+def test_atomic_property_patch_mixed_defaults_and_legacy_endpoints(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown", config={"multiple": True})
+    url = ctx.base + f"custom-properties/{prop.pk}/"
+    legacy = session_client.post(url + "options/", {"name": "Existing"}, format="json")
+    assert legacy.status_code == 201, legacy.data
+    existing_id = str(legacy.data["id"])
+    response = patch_property_options(
+        session_client,
+        url,
+        {
+            "options": [{"id": existing_id, "name": "Existing"}, {"client_id": "new", "name": "New"}],
+            "config": {"default_value": [existing_id, "new"]},
+        },
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    new_id = str(CustomPropertyOption.objects.get(property=prop, name="New").pk)
+    assert response.data["config"]["default_value"] == [existing_id, new_id]
+    response = patch_property_options(session_client, url, {"description": "No options supplied"}, format="json")
+    assert response.status_code == 200, response.data
+    assert response.data["config"]["default_value"] == [existing_id, new_id]
+    assert CustomPropertyOption.objects.filter(property=prop, is_archived=False).count() == 2
+    response = patch_property_options(session_client, url + f"options/{new_id}/", {"is_active": False}, format="json")
+    assert response.status_code == 200, response.data
+    prop.refresh_from_db()
+    assert prop.config["default_value"] == [existing_id]
+
+
+@pytest.mark.parametrize("kind", ["text", "dropdown"])
+def test_atomic_property_empty_options_and_legacy_create(session_client, property_ctx, kind):
+    ctx = property_ctx
+    response = session_client.post(
+        ctx.base + "custom-properties/",
+        {"name": "Legacy", "property_type": kind, "options": [] if kind == "text" else [{"name": "Legacy option"}]},
+        format="json",
+    )
+    assert response.status_code == 201, response.data
+    url = ctx.base + f"custom-properties/{response.data['id']}/"
+    response = patch_property_options(session_client, url, {"options": []}, format="json")
+    assert response.status_code == 200, response.data
+    if kind == "text":
+        response = patch_property_options(session_client, url, {"options": [{"name": "Invalid"}]}, format="json")
+        assert response.status_code == 400, response.data
+
+
+def test_atomic_property_allows_500_current_options(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    response = patch_property_options(
+        session_client,
+        ctx.base + f"custom-properties/{prop.pk}/",
+        {"options": [{"client_id": f"new-{index}", "name": str(index)} for index in range(500)]},
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    assert CustomPropertyOption.objects.filter(property=prop, is_archived=False, is_active=True).count() == 500
+
+
+@pytest.mark.parametrize("multiple", [False, True])
+def test_atomic_property_preserves_opaque_client_ids(session_client, property_ctx, multiple):
+    ctx = property_ctx
+    response = session_client.post(
+        ctx.base + "custom-properties/",
+        {
+            "name": "Opaque IDs",
+            "property_type": "dropdown",
+            "options": [{"client_id": " new-choice ", "name": "Choice"}],
+            "config": {"multiple": multiple, "default_value": [" new-choice "] if multiple else " new-choice "},
+        },
+        format="json",
+    )
+    assert response.status_code == 201, response.data
+    option_id = str(response.data["options"][0]["id"])
+    assert response.data["config"]["default_value"] == ([option_id] if multiple else option_id)
+
+
+def test_atomic_property_stale_options_conflict_without_writes(session_client, property_ctx):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    option = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Original")
+    url = ctx.base + f"custom-properties/{prop.pk}/"
+    first_read = session_client.get(url).data
+    second_read = session_client.get(url).data
+    assert first_read["options_version"] == second_read["options_version"]
+    added = session_client.patch(
+        url,
+        {
+            "options_version": second_read["options_version"],
+            "options": [{"id": str(option.pk), "name": "Original"}, {"client_id": "new-y", "name": "Y"}],
+        },
+        format="json",
+    )
+    assert added.status_code == 200, added.data
+    assert added.data["options_version"] != first_read["options_version"]
+    before = session_client.get(url).data
+    stale = session_client.patch(
+        url,
+        {
+            "name": "Must not change",
+            "options_version": first_read["options_version"],
+            "options": [{"id": str(option.pk), "name": "Stale rename"}],
+            "config": {"default_value": str(option.pk)},
+        },
+        format="json",
+    )
+    assert stale.status_code == 409, stale.data
+    assert stale.data == {"code": "CUSTOM_PROPERTY_OPTIONS_CONFLICT"}
+    assert session_client.get(url).data == before
+    assert CustomPropertyOption.objects.get(property=prop, name="Y").is_archived is False
+    assert session_client.patch(url, {"options": []}, format="json").status_code == 409
+    assert session_client.get(url).data == before
+    assert session_client.patch(url, {"description": "Legacy patch"}, format="json").status_code == 200
+
+
+@pytest.mark.parametrize("mutation", ["create", "name", "color", "sort_order", "is_active", "archive", "property"])
+def test_atomic_property_version_detects_legacy_mutations(session_client, property_ctx, mutation):
+    ctx = property_ctx
+    prop = make_property(ctx, "dropdown")
+    option = CustomPropertyOption.objects.create(project=ctx.project, property=prop, name="Original")
+    url = ctx.base + f"custom-properties/{prop.pk}/"
+    before = session_client.get(url).data
+    if mutation == "create":
+        changed = session_client.post(url + "options/", {"name": "Concurrent"}, format="json")
+        assert changed.status_code == 201, changed.data
+    elif mutation == "archive":
+        assert session_client.delete(url + f"options/{option.pk}/").status_code == 204
+    elif mutation == "property":
+        assert session_client.patch(url, {"description": "Concurrent"}, format="json").status_code == 200
+    else:
+        value = {"name": "Renamed", "color": "#123456", "sort_order": 3, "is_active": False}[mutation]
+        changed = session_client.patch(url + f"options/{option.pk}/", {mutation: value}, format="json")
+        assert changed.status_code == 200, changed.data
+    current = session_client.get(url).data
+    assert current["options_version"] != before["options_version"]
+    stale = session_client.patch(url, {"options": [], "options_version": before["options_version"]}, format="json")
+    assert stale.status_code == 409, stale.data
+    assert session_client.get(url).data == current

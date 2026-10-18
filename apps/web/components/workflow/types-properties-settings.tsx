@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import useSWR, { unstable_serialize, useSWRConfig } from "swr";
 import {
   MoreHorizontalOutline,
@@ -15,7 +15,6 @@ import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Switch } from "@makeplane/propel/components/switch";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { ExpandableSearch } from "@makeplane/propel/components/expandable-search";
-import { InputField } from "@makeplane/propel/components/input-field";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import {
   Dialog,
@@ -55,7 +54,7 @@ export function WorkItemPropertiesSettings({
   onChanged,
 }: WorkItemPropertiesSettingsProps) {
   const [search, setSearch] = useState("");
-  const { error, mutate, isLoading, canManage, busy, properties, filtered, perform, toggle, propertyById, candidates } =
+  const { error, mutate, isLoading, canManage, busy, properties, filtered, perform, toggle, candidates } =
     usePropertiesData(workspaceSlug, projectId, typeId, search, onChanged);
   const { draft, setDraft, editorOpen, setEditorOpen, edit, save } = usePropertyEditor(
     workspaceSlug,
@@ -67,7 +66,6 @@ export function WorkItemPropertiesSettings({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [merging, setMerging] = useState(false);
-  const [optionProperty, setOptionProperty] = useState<TCustomProperty | null>(null);
   return (
     <div className="space-y-4">
       <PropertiesHeader
@@ -89,7 +87,7 @@ export function WorkItemPropertiesSettings({
         busy={busy}
         typeId={typeId}
         onEdit={edit}
-        onOptions={setOptionProperty}
+        onOptions={edit}
         onDelete={(property) => {
           setDeleting(property);
           setDeleteOpen(true);
@@ -151,20 +149,6 @@ export function WorkItemPropertiesSettings({
           })
         }
       />
-      {optionProperty && (
-        <PropertyOptionsDialog
-          key={optionProperty.id}
-          property={propertyById.get(optionProperty.id)}
-          busy={busy}
-          onComplete={() => setOptionProperty(null)}
-          onRemove={(propertyId, optionId) =>
-            perform(() => service.removeOption(workspaceSlug, projectId, propertyId, optionId))
-          }
-          onSave={(propertyId, name, optionId) =>
-            perform(() => service.saveOption(workspaceSlug, projectId, propertyId, { name }, optionId))
-          }
-        />
-      )}
     </div>
   );
 }
@@ -418,104 +402,6 @@ function AddPropertiesDialog({
     </Dialog>
   );
 }
-function PropertyOptionsDialog({
-  property,
-  busy,
-  onComplete,
-  onRemove,
-  onSave,
-}: {
-  property?: TCustomProperty;
-  busy: boolean;
-  onComplete: () => void;
-  onRemove: (propertyId: string, optionId: string) => Promise<boolean>;
-  onSave: (propertyId: string, name: string, optionId?: string) => Promise<boolean>;
-}) {
-  const { t } = useTranslation();
-  const label = usePropertyLabel();
-  const [open, setOpen] = useState(false);
-  useLayoutEffect(() => {
-    const frame = requestAnimationFrame(() => setOpen(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-  const [optionName, setOptionName] = useState("");
-  const [editingOptionId, setEditingOptionId] = useState<string | undefined>();
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-      onOpenChangeComplete={(nextOpen) => {
-        if (!nextOpen) onComplete();
-      }}
-    >
-      <DialogContent size="sm">
-        <DialogMain>
-          <DialogHeader>
-            <DialogHeading>
-              <DialogTitle>{label("options")}</DialogTitle>
-            </DialogHeading>
-          </DialogHeader>
-          <DialogBody>
-            <div className="space-y-3">
-              {(property?.options ?? []).map((option) => (
-                <div key={option.id} className="flex items-center justify-between gap-3 text-13">
-                  <button
-                    type="button"
-                    className="text-left hover:text-accent-primary"
-                    disabled={busy}
-                    onClick={() => {
-                      setEditingOptionId(option.id);
-                      setOptionName(option.name);
-                    }}
-                  >
-                    {option.name}
-                  </button>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    aria-label={`${t("delete")} ${option.name}`}
-                    icon={<DeleteOutline className="size-4" />}
-                    onClick={() => {
-                      if (property) void onRemove(property.id, option.id);
-                    }}
-                  />
-                </div>
-              ))}
-              <InputField
-                orientation="vertical"
-                size="md"
-                label={label("option_name")}
-                value={optionName}
-                onChange={(event) => setOptionName(event.target.value)}
-              />
-            </div>
-          </DialogBody>
-          <DialogActions>
-            <Button stretch="auto" variant="ghost" size="md" label={t("close")} onClick={() => setOpen(false)} />
-            <Button
-              stretch="auto"
-              variant="primary"
-              size="md"
-              disabled={busy || !optionName.trim()}
-              label={t(editingOptionId ? "save" : "add")}
-              onClick={() => {
-                if (property)
-                  void onSave(property.id, optionName.trim(), editingOptionId).then((ok) => {
-                    if (ok) {
-                      setOptionName("");
-                      setEditingOptionId(undefined);
-                    }
-                    return ok;
-                  });
-              }}
-            />
-          </DialogActions>
-        </DialogMain>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 type PerformPropertyOperation = (
   operation: () => Promise<unknown>,
@@ -607,11 +493,10 @@ function usePropertiesData(
           })
         : service.save(workspaceSlug, projectId, { [field]: value }, property.id)
     );
-  const propertyById = new Map(properties.map((property) => [property.id, property]));
   const candidates = (available?.results ?? []).filter(
     (property) => !property.type_settings.some((binding) => binding.type_id === typeId && binding.is_active)
   );
-  return { error, mutate, isLoading, canManage, busy, properties, filtered, perform, toggle, propertyById, candidates };
+  return { error, mutate, isLoading, canManage, busy, properties, filtered, perform, toggle, candidates };
 }
 function usePropertyEditor(
   workspaceSlug: string,
@@ -624,32 +509,43 @@ function usePropertyEditor(
   const edit = (property?: TCustomProperty) => {
     setDraft(
       property
-        ? { ...property, description: property.description ?? "", config: property.config ?? {} }
+        ? {
+            ...property,
+            description: property.description ?? "",
+            config: property.config ?? {},
+            options: property.options.filter((option) => !option.is_archived),
+          }
         : { name: "", description: "", property_type: "text", config: {}, is_active: true, is_required: false }
     );
     setEditorOpen(true);
   };
   const save = async (value: PropertyDraft) => {
     const saved = await perform(async () => {
-      const { id, options, name, description, property_type, config, is_active, is_required } = value;
+      const { id, options, options_version, name, description, property_type, config, is_active, is_required } = value;
       const payload = { name, description, property_type, config, is_active, is_required };
       await service.save(
         workspaceSlug,
         projectId,
         {
           ...payload,
-          ...(!id
+          ...(!id ? { type_id: typeId } : {}),
+          ...(property_type === "dropdown"
             ? {
-                type_id: typeId,
-                options: options
-                  ?.filter((option) => option.name.trim())
-                  .map((option) => ({ name: option.name.trim(), color: option.color, sort_order: option.sort_order })),
+                ...(id ? { options_version } : {}),
+                options: (options ?? []).map((option, sort_order) =>
+                  Object.assign(option.id ? { id: option.id } : { client_id: option.client_id }, {
+                    name: option.name.trim(),
+                    color: option.color,
+                    sort_order,
+                    is_active: option.is_active,
+                  })
+                ),
               }
             : {}),
         },
         id
       );
-    });
+    }, true);
     if (saved) setEditorOpen(false);
   };
   return { draft, setDraft, editorOpen, setEditorOpen, edit, save };

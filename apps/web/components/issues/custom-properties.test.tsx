@@ -17,6 +17,7 @@ const property: TCustomProperty = {
   is_required: false,
   sort_order: 0,
   options: [],
+  options_version: "v1",
   type_settings: [],
 };
 beforeEach(() => vi.clearAllMocks());

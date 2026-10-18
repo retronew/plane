@@ -1,25 +1,51 @@
-import type { ReactNode } from "react";
+import type { ComponentProps } from "react";
+import type { EmojiPicker } from "@plane/blocks/emoji-icon-picker";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import type { TProjectIssueType, TProjectWorkflow } from "@plane/types";
+import type { TLogoProps, TProjectIssueType, TProjectWorkflow } from "@plane/types";
 import { TypesEditor } from "./types-editor";
 import { TypesActions } from "./types-actions";
 
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/blocks/emoji-icon-picker", () => ({
-  Logo: () => null,
+  LUCIDE_ICONS_LIST: [{ name: "Bug" }],
+  MATERIAL_ICONS_LIST: [{ name: "circle" }],
+  Logo: ({ logo }: { logo: { in_use: string } }) => <span data-testid="type-logo">{logo.in_use}</span>,
   EmojiPicker: ({
     buttonClassName,
     label,
     disabled,
-  }: {
-    buttonClassName: string;
-    label: ReactNode;
-    disabled: boolean;
-  }) => (
-    <button type="button" className={buttonClassName} disabled={disabled}>
-      {label}
-    </button>
+    isOpen,
+    handleToggle,
+    onChange,
+  }: ComponentProps<typeof EmojiPicker>) => (
+    <>
+      <button type="button" className={buttonClassName} disabled={disabled} onClick={() => handleToggle(!isOpen)}>
+        {label}
+      </button>
+      {isOpen && (
+        <fieldset aria-label="picker choices">
+          <button
+            type="button"
+            onClick={() => {
+              onChange({ type: "icon", value: { name: "Bug", color: "#ff0000" } });
+              handleToggle(false);
+            }}
+          >
+            Bug icon
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onChange({ type: "emoji", value: "128027" });
+              handleToggle(false);
+            }}
+          >
+            Bug emoji
+          </button>
+        </fieldset>
+      )}
+    </>
   ),
 }));
 afterEach(() => {
@@ -60,8 +86,16 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
     expect(description.parentElement?.className).toContain("h-[96px]");
     expect(description.parentElement?.className).toContain("resize-none");
     const icon = screen.getByRole("button", { name: "web.workflow_ui.types_settings.choose_icon" });
-    expect(icon.className).toContain("size-8");
-    expect(icon.parentElement?.className).toContain("items-end");
+    expect(icon.parentElement?.parentElement).toBe(name.parentElement);
+    expect(icon.parentElement?.className).toContain("items-center");
+    expect(icon.parentElement?.className).toContain("-ml-2");
+    expect(icon.className).toContain("size-6");
+    expect(icon.className).toContain("items-center");
+    expect(icon.className).toContain("justify-center");
+    expect(icon.className).not.toMatch(/\bborder\b/);
+    expect(icon.closest("label")).toBeNull();
+    expect(name.closest("button")).toBeNull();
+    expect(name.labels?.[0]?.textContent).toBe("name");
     expect(dialog.className).toContain("w-168");
     expect(screen.queryByRole("combobox")).toBeNull();
     const submit = screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" });
@@ -86,7 +120,7 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
         {
           name: "Bug",
           description: "Defect",
-          logo_props: { in_use: "icon", icon: { name: "circle", color: "#6d7b8a" } },
+          logo_props: {},
         },
         value.id
       )
@@ -94,10 +128,55 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
   }
 );
 
+it.each<Partial<TProjectIssueType>>([{}, type])(
+  "saves icon and emoji selections from the name field: %j",
+  async (value) => {
+    const { props } = setup(value);
+    fireEvent.change(screen.getByRole("textbox", { name: "name" }), { target: { value: "Bug" } });
+    const selectAndSave = async (selection: { name: string; logo: TLogoProps }) => {
+      fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.choose_icon" }));
+      fireEvent.click(screen.getByRole("button", { name: selection.name }));
+      expect(screen.queryByRole("group", { name: "picker choices" })).toBeNull();
+      expect(screen.getByTestId("type-logo").textContent).toBe(selection.logo.in_use);
+      const picker = screen.getByRole("button", { name: "web.workflow_ui.types_settings.choose_icon" });
+      const clear = screen.getByRole("button", { name: "common.clear" });
+      expect(clear.parentElement).toBe(picker.parentElement);
+      expect(picker.nextElementSibling).toBe(clear);
+      fireEvent.click(screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" }));
+      await waitFor(() =>
+        expect(props.onSave).toHaveBeenLastCalledWith(
+          { name: "Bug", description: value.description ?? "", logo_props: selection.logo },
+          value.id
+        )
+      );
+    };
+    await selectAndSave({ name: "Bug icon", logo: { in_use: "icon", icon: { name: "Bug", color: "#ff0000" } } });
+    await selectAndSave({ name: "Bug emoji", logo: { in_use: "emoji", emoji: { value: "128027" } } });
+    fireEvent.click(screen.getByRole("button", { name: "common.clear" }));
+    expect(screen.queryByTestId("type-logo")).toBeNull();
+    expect(screen.queryByRole("button", { name: "common.clear" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" }));
+    await waitFor(() =>
+      expect(props.onSave).toHaveBeenLastCalledWith(
+        { name: "Bug", description: value.description ?? "", logo_props: {} },
+        value.id
+      )
+    );
+  }
+);
+
 it("blocks edits, submission and dismissal while saving", () => {
-  const { props } = setup(type, true);
+  const { props } = setup({ ...type, logo_props: { in_use: "icon", icon: { name: "Bug" } } }, true);
+  const clear = screen.getByRole("button", { name: "common.clear" });
+  expect(clear.matches(":disabled")).toBe(true);
+  fireEvent.click(clear);
+  expect(screen.getByTestId("type-logo").textContent).toBe("icon");
   expect(screen.getByRole("textbox", { name: "name" }).matches(":disabled")).toBe(true);
   expect(screen.getByRole("textbox", { name: "description" }).matches(":disabled")).toBe(true);
+  const icon = screen.getByRole("button", { name: "web.workflow_ui.types_settings.choose_icon" });
+  expect(icon.matches(":disabled")).toBe(true);
+  fireEvent.click(icon);
+  expect(screen.queryByRole("group", { name: "picker choices" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "cancel" }));
   fireEvent.click(screen.getByRole("button", { name: "close" }));
   fireEvent.submit(screen.getByRole("textbox", { name: "name" }).closest("form")!);

@@ -50,6 +50,7 @@ const property = (overrides: Partial<TCustomProperty> = {}): TCustomProperty => 
   is_required: false,
   sort_order: 0,
   options: [],
+  options_version: "v1",
   type_settings: [],
   ...overrides,
 });
@@ -86,7 +87,7 @@ async function newProperty(typeId?: string) {
 }
 async function chooseType(type: string) {
   fireEvent.click(screen.getByRole("combobox", { name: label("property_type") }));
-  const option = await screen.findByRole("option", { name: label(`types.${type}`) });
+  const option = await screen.findByRole("option", { name: new RegExp(label(`types.${type}`)) });
   fireEvent.pointerDown(option, { pointerType: "mouse" });
   fireEvent.click(option);
   await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
@@ -196,23 +197,31 @@ it("prevents boolean/read-only required toggles but persists normal required cha
   await waitFor(() => expect(service.list).toHaveBeenCalledTimes(2));
 });
 
-it("retains a failed creation draft and retries with a trimmed payload", async () => {
-  service.save.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(property({ id: "created" }));
+it("retains a failed creation draft with inline server errors and retries with a trimmed payload", async () => {
+  service.save
+    .mockRejectedValueOnce({ response: { data: { name: ["A property with this name already exists."] } } })
+    .mockResolvedValue(property({ id: "created" }));
   setup();
   await newProperty();
   await chooseType("text");
-  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "  Customer code  " } });
+  fireEvent.change(screen.getByRole("textbox", { name: label("name_label") }), {
+    target: { value: "  Customer code  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: label("add_description") }));
   fireEvent.change(screen.getByRole("textbox", { name: "description" }), { target: { value: "External reference" } });
-  clickControl(screen.getByRole("checkbox", { name: label("required") }));
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(label("more_settings")) }));
+  clickControl(screen.getByRole("switch", { name: label("required") }));
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
-  await waitFor(() =>
-    expect(toast).toHaveBeenCalledWith({ type: "error", title: "error", message: label("save_failed") })
+  expect(await screen.findByText(label("invalid_name"))).toBeTruthy();
+  expect(screen.getByRole("textbox", { name: label("name_label") }).getAttribute("aria-invalid")).toBe("true");
+  expect(toast).not.toHaveBeenCalled();
+  expect((screen.getByRole("textbox", { name: label("name_label") }) as HTMLInputElement).value).toBe(
+    "  Customer code  "
   );
-  expect((screen.getByRole("textbox", { name: label("title") }) as HTMLInputElement).value).toBe("  Customer code  ");
   expect((screen.getByRole("textbox", { name: "description" }) as HTMLTextAreaElement).value).toBe(
     "External reference"
   );
-  expect(screen.getByRole("checkbox", { name: label("required") }).getAttribute("aria-checked")).toBe("true");
+  expect(screen.getByRole("switch", { name: label("required") }).getAttribute("aria-checked")).toBe("true");
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
   await waitFor(() => expect(service.save).toHaveBeenCalledTimes(2));
   expect(service.save).toHaveBeenLastCalledWith(
@@ -226,17 +235,18 @@ it("retains a failed creation draft and retries with a trimmed payload", async (
       is_active: true,
       is_required: true,
       type_id: undefined,
-      options: undefined,
     },
     undefined
   );
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });
 
-it("creates initial dropdown options with blank names excluded and names trimmed", async () => {
-  setup();
-  await newProperty();
-  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Priority" } });
+it("atomically creates dropdown options with client IDs and blocks blank options inline", async () => {
+  setup("bug");
+  const dialog = await newProperty("bug");
+  const nameInput = within(dialog).getByRole("textbox", { name: label("name_label") });
+  expect(nameInput.getAttribute("placeholder")).toBe(label("name_placeholder"));
+  fireEvent.change(nameInput, { target: { value: "  Priority  " } });
   await chooseType("dropdown");
   for (const name of ["  Low  ", "   ", "High"]) {
     fireEvent.click(screen.getByRole("button", { name: label("add_option") }));
@@ -244,25 +254,88 @@ it("creates initial dropdown options with blank names excluded and names trimmed
     fireEvent.change(inputs[inputs.length - 1], { target: { value: name } });
   }
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
-  await waitFor(() =>
-    expect(service.save).toHaveBeenCalledWith(
-      "workspace",
-      "project",
-      {
-        name: "Priority",
-        description: "",
-        property_type: "dropdown",
-        config: {},
-        is_active: true,
-        is_required: false,
-        type_id: undefined,
-        options: [
-          { name: "Low", sort_order: 0 },
-          { name: "High", sort_order: 2 },
-        ],
-      },
-      undefined
-    )
+  expect(service.save).not.toHaveBeenCalled();
+  expect(within(dialog).getByText(label("option_required"))).toBeTruthy();
+  const inputs = within(dialog).getAllByRole("textbox", { name: new RegExp(label("option_name")) });
+  expect((inputs[0] as HTMLInputElement).value).toBe("  Low  ");
+  expect((inputs[2] as HTMLInputElement).value).toBe("High");
+  fireEvent.change(inputs[1], { target: { value: "  Medium  " } });
+  fireEvent.click(screen.getByRole("combobox", { name: label("default_value") }));
+  const highOption = await screen.findByRole("option", { name: "High" });
+  fireEvent.pointerDown(highOption, { pointerType: "mouse" });
+  fireEvent.click(highOption);
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: label("create") }));
+  await waitFor(() => expect(service.save).toHaveBeenCalledTimes(1));
+  const payload = service.save.mock.calls[0][2];
+  expect(service.save).toHaveBeenCalledWith(
+    "workspace",
+    "project",
+    {
+      name: "Priority",
+      description: "",
+      property_type: "dropdown",
+      config: { default_value: payload.options[2].client_id },
+      is_active: true,
+      is_required: false,
+      type_id: "bug",
+      options: ["Low", "Medium", "High"].map((name, sort_order) => ({
+        client_id: expect.any(String),
+        name,
+        sort_order,
+        color: undefined,
+        is_active: undefined,
+      })),
+    },
+    undefined
+  );
+  expect(payload).not.toHaveProperty("options_version");
+  expect(new Set(payload.options.map((option: { client_id: string }) => option.client_id)).size).toBe(3);
+  expect(payload.options.every((option: { client_id: string }) => option.client_id.length > 0)).toBe(true);
+  expect(service.bindType).not.toHaveBeenCalled();
+  expect(service.saveOption).not.toHaveBeenCalled();
+  expect(service.removeOption).not.toHaveBeenCalled();
+  expect(toast).not.toHaveBeenCalled();
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+it("starts optional sections collapsed and expands a saved description when editing", async () => {
+  setup();
+  let dialog = await newProperty();
+  for (const key of ["add_description", "more_settings"]) {
+    expect(
+      within(dialog)
+        .getByRole("button", { name: new RegExp(label(key)) })
+        .getAttribute("aria-expanded")
+    ).toBe("false");
+  }
+  fireEvent.click(within(dialog).getByRole("button", { name: "cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "Estimate" }));
+  dialog = await screen.findByRole("dialog");
+  expect(
+    within(dialog)
+      .getByRole("button", { name: /^description/ })
+      .getAttribute("aria-expanded")
+  ).toBe("true");
+  expect((within(dialog).getByRole("textbox", { name: "description" }) as HTMLTextAreaElement).value).toBe(
+    "Planning effort"
+  );
+  expect(
+    within(dialog)
+      .getByRole("button", { name: new RegExp(label("more_settings")) })
+      .getAttribute("aria-expanded")
+  ).toBe("false");
+  fireEvent.click(within(dialog).getByRole("button", { name: /^description/ }));
+  expect(
+    within(dialog)
+      .getByRole("button", { name: /^description/ })
+      .getAttribute("aria-expanded")
+  ).toBe("false");
+  await waitFor(() => expect(within(dialog).queryByRole("textbox", { name: "description" })).toBeNull());
+  fireEvent.click(within(dialog).getByRole("button", { name: /^description/ }));
+  expect((within(dialog).getByRole("textbox", { name: "description" }) as HTMLTextAreaElement).value).toBe(
+    "Planning effort"
   );
 });
 
@@ -270,8 +343,9 @@ it("atomically creates and binds a field through type_id and refreshes both list
   setup("bug");
   await newProperty("bug");
   await chooseType("text");
-  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Severity" } });
-  clickControl(screen.getByRole("checkbox", { name: label("required") }));
+  fireEvent.change(screen.getByRole("textbox", { name: label("name_label") }), { target: { value: "Severity" } });
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(label("more_settings")) }));
+  clickControl(screen.getByRole("switch", { name: label("required") }));
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
   await waitFor(() =>
     expect(service.save).toHaveBeenCalledWith(
@@ -285,7 +359,6 @@ it("atomically creates and binds a field through type_id and refreshes both list
         is_active: true,
         is_required: true,
         type_id: "bug",
-        options: undefined,
       },
       undefined
     )
@@ -417,39 +490,156 @@ it("shows explicit inactive type bindings but excludes unbound and other-type pr
   );
 });
 
-it("does not replace persisted dropdown options when editing metadata", async () => {
+it.each(["name", "options"])(
+  "edits dropdown metadata and options atomically through the %s entry and retains failed input",
+  async (entry) => {
+    service.list.mockResolvedValue(
+      response([
+        property({
+          property_type: "dropdown",
+          options: [
+            { id: "low", name: "Low", color: "#fff", sort_order: 0, is_active: true },
+            { id: "high", name: "High", color: "#000", sort_order: 1, is_active: true },
+            { id: "archived", name: "Archived", color: "#999", sort_order: 2, is_active: false, is_archived: true },
+          ],
+        }),
+      ])
+    );
+    service.save.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(property());
+    setup();
+    if (entry === "options") {
+      await menu();
+      fireEvent.click(screen.getByRole("menuitem", { name: label("options") }));
+    } else fireEvent.click(await screen.findByRole("button", { name: "Estimate" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: label("edit_property") })).toBeTruthy();
+    expect((within(dialog).getByRole("combobox", { name: label("property_type") }) as HTMLButtonElement).disabled).toBe(
+      true
+    );
+    expect(within(dialog).getAllByRole("textbox", { name: new RegExp(label("option_name")) })).toHaveLength(2);
+    fireEvent.change(within(dialog).getByRole("textbox", { name: label("name_label") }), {
+      target: { value: "  Renamed  " },
+    });
+    fireEvent.change(within(dialog).getByRole("textbox", { name: `${label("option_name")} 1` }), {
+      target: { value: "  Lower  " },
+    });
+    fireEvent.click(within(dialog).getAllByRole("button", { name: "remove" })[1]);
+    fireEvent.click(within(dialog).getByRole("button", { name: label("add_option") }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "save" }));
+    expect(service.save).not.toHaveBeenCalled();
+    expect(within(dialog).getByText(label("option_required"))).toBeTruthy();
+    fireEvent.change(within(dialog).getByRole("textbox", { name: `${label("option_name")} 2` }), {
+      target: { value: "New" },
+    });
+    fireEvent.click(within(dialog).getByRole("combobox", { name: label("default_value") }));
+    const option = await screen.findByRole("option", { name: "New" });
+    fireEvent.pointerDown(option, { pointerType: "mouse" });
+    fireEvent.click(option);
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+    fireEvent.click(within(dialog).getByRole("button", { name: "save" }));
+    expect(await within(dialog).findByRole("alert")).toHaveProperty("textContent", label("save_failed"));
+    expect(toast).not.toHaveBeenCalled();
+    expect((within(dialog).getByRole("textbox", { name: label("name_label") }) as HTMLInputElement).value).toBe(
+      "  Renamed  "
+    );
+    expect((within(dialog).getByRole("textbox", { name: `${label("option_name")} 1` }) as HTMLInputElement).value).toBe(
+      "  Lower  "
+    );
+    expect((within(dialog).getByRole("textbox", { name: `${label("option_name")} 2` }) as HTMLInputElement).value).toBe(
+      "New"
+    );
+    const firstPayload = service.save.mock.calls[0][2];
+    expect(service.save).toHaveBeenCalledWith(
+      "workspace",
+      "project",
+      {
+        name: "Renamed",
+        description: "Planning effort",
+        property_type: "dropdown",
+        config: { default_value: firstPayload.options[1].client_id },
+        options_version: "v1",
+        is_active: true,
+        is_required: false,
+        options: [
+          { id: "low", name: "Lower", color: "#fff", sort_order: 0, is_active: true },
+          { client_id: expect.any(String), name: "New", color: undefined, sort_order: 1, is_active: undefined },
+        ],
+      },
+      "estimate"
+    );
+    expect(firstPayload).not.toHaveProperty("type_id");
+    expect(firstPayload.options[1].client_id).not.toBe("");
+    fireEvent.click(within(dialog).getByRole("button", { name: "save" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(service.save).toHaveBeenCalledTimes(2);
+    expect(service.save).toHaveBeenLastCalledWith("workspace", "project", firstPayload, "estimate");
+    expect(service.saveOption).not.toHaveBeenCalled();
+    expect(service.removeOption).not.toHaveBeenCalled();
+  }
+);
+
+it("retains a conflicting dropdown draft inline without automatically retrying or overwriting newer options", async () => {
   service.list.mockResolvedValue(
     response([
       property({
         property_type: "dropdown",
+        config: { default_value: "low" },
         options: [{ id: "low", name: "Low", color: "#fff", sort_order: 0, is_active: true }],
       }),
     ])
   );
+  service.save.mockRejectedValue({ response: { status: 409, data: { code: "CUSTOM_PROPERTY_OPTIONS_CONFLICT" } } });
   setup();
   fireEvent.click(await screen.findByRole("button", { name: "Estimate" }));
-  await screen.findByRole("dialog");
-  expect((screen.getByRole("combobox", { name: label("property_type") }) as HTMLButtonElement).disabled).toBe(true);
-  expect(screen.queryByRole("button", { name: label("add_option") })).toBeNull();
-  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Renamed" } });
-  fireEvent.click(screen.getByRole("combobox", { name: label("default_value") }));
-  const option = await screen.findByRole("option", { name: "Low" });
-  fireEvent.pointerDown(option, { pointerType: "mouse" });
-  fireEvent.click(option);
-  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
-  fireEvent.click(screen.getByRole("button", { name: "save" }));
-  await waitFor(() => expect(service.save).toHaveBeenCalledTimes(1));
-  expect(service.save.mock.calls[0][2]).toEqual({
-    name: "Renamed",
-    description: "Planning effort",
-    property_type: "dropdown",
-    config: { default_value: "low" },
-    is_active: true,
-    is_required: false,
+  const dialog = await screen.findByRole("dialog");
+  fireEvent.change(within(dialog).getByRole("textbox", { name: label("name_label") }), {
+    target: { value: "My draft" },
   });
-  expect(service.save.mock.calls[0][2]).not.toHaveProperty("options");
-  expect(service.save.mock.calls[0][2]).not.toHaveProperty("type_id");
-  expect(service.save.mock.calls[0][3]).toBe("estimate");
+  fireEvent.change(within(dialog).getByRole("textbox", { name: `${label("option_name")} 1` }), {
+    target: { value: "My option" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: label("add_option") }));
+  fireEvent.change(within(dialog).getByRole("textbox", { name: `${label("option_name")} 2` }), {
+    target: { value: "New option" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "save" }));
+  expect((await within(dialog).findByText(label("options_conflict"))).getAttribute("role")).toBe("alert");
+  await waitFor(() =>
+    expect((within(dialog).getByRole("button", { name: "save" }) as HTMLButtonElement).disabled).toBe(false)
+  );
+  expect(screen.getByRole("dialog")).toBe(dialog);
+  expect((within(dialog).getByRole("textbox", { name: label("name_label") }) as HTMLInputElement).value).toBe(
+    "My draft"
+  );
+  expect((within(dialog).getByRole("textbox", { name: `${label("option_name")} 1` }) as HTMLInputElement).value).toBe(
+    "My option"
+  );
+  expect((within(dialog).getByRole("textbox", { name: `${label("option_name")} 2` }) as HTMLInputElement).value).toBe(
+    "New option"
+  );
+  expect(service.save).toHaveBeenCalledTimes(1);
+  expect(service.save).toHaveBeenCalledWith(
+    "workspace",
+    "project",
+    {
+      name: "My draft",
+      description: "Planning effort",
+      property_type: "dropdown",
+      config: { default_value: "low" },
+      options_version: "v1",
+      is_active: true,
+      is_required: false,
+      options: [
+        { id: "low", name: "My option", color: "#fff", sort_order: 0, is_active: true },
+        { client_id: expect.any(String), name: "New option", color: undefined, sort_order: 1, is_active: undefined },
+      ],
+    },
+    "estimate"
+  );
+  expect(service.list).toHaveBeenCalledTimes(1);
+  expect(service.saveOption).not.toHaveBeenCalled();
+  expect(service.removeOption).not.toHaveBeenCalled();
+  expect(toast).not.toHaveBeenCalled();
 });
 
 it("retains deletion confirmation on failure so the same field can be retried", async () => {
@@ -499,12 +689,15 @@ it.each(["existing", "options"])(
       const dialog = await screen.findByRole("dialog");
       await waitFor(() => expect(dialog.hasAttribute("data-starting-style")).toBe(false));
       if (kind === "existing") clickControl(within(dialog).getByRole("checkbox", { name: "Estimate" }));
-      fireEvent.click(within(dialog).getByRole("button", { name: kind === "existing" ? "cancel" : "close" }));
+      fireEvent.click(within(dialog).getByRole("button", { name: "cancel" }));
       expect(dialog.isConnected).toBe(true);
       expect(dialog.hasAttribute("data-ending-style")).toBe(true);
       if (kind === "existing")
         expect(within(dialog).getByRole("checkbox", { name: "Estimate" }).getAttribute("aria-checked")).toBe("true");
-      else expect(within(dialog).getByRole("button", { name: "Low" })).toBeTruthy();
+      else
+        expect(
+          (within(dialog).getByRole("textbox", { name: `${label("option_name")} 1` }) as HTMLInputElement).value
+        ).toBe("Low");
       await act(async () => finishAnimation());
       await waitFor(() => expect(dialog.isConnected).toBe(false));
       if (kind === "existing") {
@@ -540,7 +733,7 @@ it("closes a successfully saved draft even if refreshing parent counts fails", a
   setup(undefined, onChanged);
   await newProperty();
   await chooseType("text");
-  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Customer code" } });
+  fireEvent.change(screen.getByRole("textbox", { name: label("name_label") }), { target: { value: "Customer code" } });
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
   await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -548,7 +741,7 @@ it("closes a successfully saved draft even if refreshing parent counts fails", a
   expect(toast).toHaveBeenCalledWith({ type: "error", title: "error", message: label("load_failed") });
   expect(toast).not.toHaveBeenCalledWith(expect.objectContaining({ message: label("save_failed") }));
   await newProperty();
-  expect((screen.getByRole("textbox", { name: label("title") }) as HTMLInputElement).value).toBe("");
+  expect((screen.getByRole("textbox", { name: label("name_label") }) as HTMLInputElement).value).toBe("");
   expect(service.save).toHaveBeenCalledTimes(1);
 });
 

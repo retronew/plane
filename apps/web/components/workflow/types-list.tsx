@@ -22,7 +22,7 @@ import type { DataTableColumn } from "@/components/common/data-table";
 import { TypesActions } from "./types-actions";
 const key = "web.workflow_ui.types_settings";
 const emptyWorkflows: TProjectWorkflow[] = [];
-const logo = (type: TProjectIssueType) => <TypesLogo type={type} />;
+const logo = (type: TProjectIssueType) => <TypesLogo type={type} size={14} backgroundSize={20} />;
 import { filterIssueTypes } from "./types-settings-utils";
 import type { TypesStatusFilter } from "./types-settings-utils";
 export function TypesList({

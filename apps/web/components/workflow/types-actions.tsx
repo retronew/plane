@@ -7,6 +7,7 @@ import {
   PauseOutline,
   PlayOutline,
   TickOutline,
+  WorkflowsOutline,
 } from "@makeplane/propel/icons";
 import { Button } from "@makeplane/propel/components/button";
 import {
@@ -87,6 +88,7 @@ export function TypesActions({
             <MenuItem
               disabled={busy}
               label={t("common.workflows")}
+              icon={<WorkflowsOutline className="size-4" />}
               onClick={() => {
                 setWorkflowId(currentWorkflowId);
                 setBindingOpen(true);

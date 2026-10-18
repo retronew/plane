@@ -5,7 +5,7 @@ import { TypesLogo } from "./types-logo";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectIssueType } from "@plane/types";
 const key = "web.workflow_ui.types_settings";
-const logo = (type: TProjectIssueType) => <TypesLogo type={type} />;
+const logo = (type: TProjectIssueType) => <TypesLogo type={type} size={12} backgroundSize={16} />;
 import { groupIssueTypeLevels } from "./types-settings-utils";
 export function TypesHierarchy({ types, base }: { types: TProjectIssueType[]; base: string }) {
   const { t } = useTranslation();
@@ -32,9 +32,9 @@ export function TypesHierarchy({ types, base }: { types: TProjectIssueType[]; ba
                   <Link
                     key={type.id}
                     to={`${base}types/${type.id}/properties/`}
-                    className="inline-flex h-6 items-center gap-1 rounded-md bg-layer-3 px-1.5 text-body-xs-medium text-secondary [&_svg]:size-3 [&_svg]:shrink-0"
+                    className="inline-flex h-6 items-center gap-1 rounded-md bg-layer-3 px-1.5 text-body-xs-medium text-secondary"
                   >
-                    {logo(type)}
+                    <span className="grid w-4 shrink-0 place-items-center">{logo(type)}</span>
                     {type.name}
                   </Link>
                 ))}

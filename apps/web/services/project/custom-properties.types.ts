@@ -8,6 +8,7 @@ export type TCustomPropertyOption = {
   color: string;
   sort_order: number;
   is_active: boolean;
+  is_archived?: boolean;
 };
 
 export type TCustomProperty = {
@@ -27,6 +28,7 @@ export type TCustomProperty = {
   is_required: boolean;
   sort_order: number;
   options: TCustomPropertyOption[];
+  options_version: string;
   type_settings: { type_id: string; project_issue_type_id: string; is_active: boolean; is_required: boolean }[];
   effective_is_active?: boolean;
   effective_is_required?: boolean;
@@ -58,6 +60,7 @@ export type TCustomPropertyInput = Pick<TCustomProperty, "name" | "property_type
   Partial<Pick<TCustomProperty, "description" | "config" | "is_active" | "is_required" | "sort_order">> & {
     options?: TCustomPropertyOptionInput[];
     type_id?: string;
+    options_version?: string;
   };
 export type TCustomPropertyOptionInput = Pick<TCustomPropertyOption, "name"> &
-  Partial<Pick<TCustomPropertyOption, "color" | "sort_order" | "is_active">>;
+  Partial<Pick<TCustomPropertyOption, "color" | "sort_order" | "is_active">> & { id?: string; client_id?: string };

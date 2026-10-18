@@ -1,4 +1,7 @@
+import hashlib
+import json
 import math
+from uuid import UUID
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -50,12 +53,99 @@ class OptionSerializer(serializers.Serializer):
         return PropertySerializer().validate_sort_order(value)
 
 
+class PropertyOptionSerializer(OptionSerializer):
+    id = serializers.UUIDField(required=False)
+    client_id = serializers.CharField(required=False, max_length=255, trim_whitespace=False)
+
+    def validate_client_id(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Must not be blank.")
+        return value
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict) and "client_id" in data and not isinstance(data["client_id"], str):
+            raise serializers.ValidationError({"client_id": "Must be a string."})
+        return super().to_internal_value(data)
+
+    def validate(self, data):
+        if "id" in data and "client_id" in data:
+            raise serializers.ValidationError("CUSTOM_PROPERTY_INVALID_OPTIONS")
+        return data
+
+
+def save_property_options(project, prop, raw_options):
+    """Replace the unarchived set while holding the caller's Project lock.
+
+    Omitted options are archived, never deleted. Explicit existing IDs restore
+    archived options; omitted is_active retains their previous activation state.
+    """
+    try:
+        rows = serializers.ListField(child=PropertyOptionSerializer(), max_length=500).run_validation(raw_options)
+    except ValidationError as exc:
+        raise ValidationError({"options": exc.detail}) from exc
+    if rows and prop.property_type != "dropdown":
+        raise ValidationError({"options": "CUSTOM_PROPERTY_INVALID_OPTIONS"})
+    existing = {option.pk: option for option in CustomPropertyOption.objects.filter(project=project, property=prop)}
+    ids = [row["id"] for row in rows if "id" in row]
+    client_ids = [row["client_id"] for row in rows if "client_id" in row]
+    if len(set(ids)) != len(ids) or any(key not in existing for key in ids):
+        raise ValidationError({"options": "CUSTOM_PROPERTY_INVALID_OPTIONS"})
+    if len(set(client_ids)) != len(client_ids):
+        raise ValidationError({"options": "CUSTOM_PROPERTY_INVALID_OPTIONS"})
+    for client_id in client_ids:
+        try:
+            existing_id = UUID(client_id)
+        except ValueError:
+            continue
+        if existing_id in existing:
+            raise ValidationError({"options": "CUSTOM_PROPERTY_INVALID_OPTIONS"})
+    if len({row["name"] for row in rows}) != len(rows):
+        raise ValidationError({"options": "CUSTOM_PROPERTY_DUPLICATE_OPTION"})
+
+    # Release the conditional unique names before restoring the requested set.
+    # This permits rename swaps and replacing an omitted option with its name.
+    prop.options.filter(is_archived=False).update(is_archived=True, is_active=False)
+    mapped_ids = {}
+    for row in rows:
+        option_id = row.pop("id", None)
+        client_id = row.pop("client_id", None)
+        if option_id is not None:
+            option = existing[option_id]
+            for key, value in row.items():
+                setattr(option, key, value)
+            option.is_archived = False
+            option.save()
+        else:
+            option = CustomPropertyOption.objects.create(project=project, property=prop, **row)
+        if client_id is not None:
+            mapped_ids[client_id] = str(option.pk)
+    return mapped_ids
+
+
+def save_dropdown_default(prop, project, mapped_ids):
+    default = prop.config.get("default_value")
+    if isinstance(default, str):
+        default = mapped_ids.get(default, default)
+    elif isinstance(default, list):
+        default = [mapped_ids.get(value, value) if isinstance(value, str) else value for value in default]
+    try:
+        prop.config["default_value"] = validate_value(prop, default, project.pk)
+    except ValidationError as exc:
+        raise ValidationError({"config": {"default_value": exc.detail[str(prop.pk)]}}) from exc
+
+
 class TypePropertySerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
     is_required = serializers.BooleanField()
 
 
+def options_version(prop, options):
+    snapshot = [str(prop.pk), prop.updated_at.isoformat(), sorted(options, key=lambda option: str(option["id"]))]
+    return hashlib.sha256(json.dumps(snapshot, sort_keys=True, default=str).encode()).hexdigest()
+
+
 def representation(prop):
+    options = [option_representation(o) for o in prop.options.filter(deleted_at__isnull=True)]
     return {
         "id": prop.pk,
         "name": prop.name,
@@ -66,7 +156,8 @@ def representation(prop):
         "is_archived": prop.is_archived,
         "is_required": prop.is_required,
         "sort_order": prop.sort_order,
-        "options": [option_representation(o) for o in prop.options.filter(deleted_at__isnull=True)],
+        "options": options,
+        "options_version": options_version(prop, options),
         "type_settings": [
             {
                 "type_id": b.project_issue_type.issue_type_id,
@@ -143,18 +234,10 @@ class ProjectCustomPropertyEndpoint(CustomPropertyBaseView):
         data["config"] = validate_config(data["property_type"], data.get("config", {}), data.get("is_required", False))
         if ProjectCustomProperty.objects.filter(project=project, name=data["name"], is_archived=False).exists():
             raise ValidationError({"name": "CUSTOM_PROPERTY_DUPLICATE_NAME"})
-        options = OptionSerializer(many=True, data=request.data.get("options", []))
-        options.is_valid(raise_exception=True)
-        rows = options.validated_data
-        if len(rows) > 500 or (rows and data["property_type"] != "dropdown"):
-            raise ValidationError({"options": "CUSTOM_PROPERTY_INVALID_OPTIONS"})
-        if len({row["name"] for row in rows}) != len(rows):
-            raise ValidationError({"options": "CUSTOM_PROPERTY_DUPLICATE_OPTION"})
         prop = ProjectCustomProperty.objects.create(project=project, **data)
-        for row in rows:
-            CustomPropertyOption.objects.create(project=project, property=prop, **row)
+        mapped_ids = save_property_options(project, prop, request.data.get("options", []))
         if prop.property_type == "dropdown":
-            prop.config["default_value"] = validate_value(prop, prop.config.get("default_value"), project.pk)
+            save_dropdown_default(prop, project, mapped_ids)
             prop.save(update_fields=["config", "updated_at"])
         if request.data.get("type_id"):
             type_id = serializers.UUIDField().run_validation(request.data["type_id"])
@@ -172,6 +255,10 @@ class ProjectCustomPropertyEndpoint(CustomPropertyBaseView):
     def patch(self, request, slug, project_id, property_id):
         project, _ = self.project(request, slug, project_id, write=True)
         prop = self.property(project, property_id)
+        if "options" in request.data:
+            options = [option_representation(option) for option in prop.options.filter(deleted_at__isnull=True)]
+            if request.data.get("options_version") != options_version(prop, options):
+                return Response({"code": "CUSTOM_PROPERTY_OPTIONS_CONFLICT"}, status=409)
         serializer = PropertySerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -196,11 +283,9 @@ class ProjectCustomPropertyEndpoint(CustomPropertyBaseView):
         data["config"] = config
         for key, value in data.items():
             setattr(prop, key, value)
-        if "options" in request.data:
-            raise ValidationError({"options": "Use the options endpoint to edit existing options."})
-        if prop.property_type == "dropdown" and "default_value" in data.get("config", {}):
-            prop.config["default_value"] = validate_value(prop, prop.config.get("default_value"), project.pk)
-            prop.save(update_fields=["config", "updated_at"])
+        mapped_ids = save_property_options(project, prop, request.data["options"]) if "options" in request.data else {}
+        if prop.property_type == "dropdown":
+            save_dropdown_default(prop, project, mapped_ids)
         prop.save()
         return Response(representation(prop))
 

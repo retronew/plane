@@ -15,9 +15,10 @@ import {
   DialogActions,
   DialogCloseGroup,
 } from "@makeplane/propel/components/dialog";
-import { EmojiPicker, Logo } from "@plane/blocks/emoji-icon-picker";
+import { EmojiPicker } from "@plane/blocks/emoji-icon-picker";
 import { useTranslation } from "@plane/i18n";
 import type { TLogoProps, TProjectIssueType } from "@plane/types";
+import { TypesLogo } from "./types-logo";
 
 export function TypesEditor({
   type,
@@ -38,9 +39,8 @@ export function TypesEditor({
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState(type.name ?? "");
   const [description, setDescription] = useState(type.description ?? "");
-  const [logo, setLogo] = useState<TLogoProps>(
-    (type.logo_props as TLogoProps) ?? { in_use: "icon", icon: { name: "circle", color: "#6d7b8a" } }
-  );
+  const [logo, setLogo] = useState<Partial<TLogoProps>>((type.logo_props as TLogoProps) ?? {});
+  const hasLogo = logo.in_use === "emoji" ? !!logo.emoji?.value : logo.in_use === "icon" && !!logo.icon?.name;
   const [pickerOpen, setPickerOpen] = useState(false);
   useLayoutEffect(() => {
     // Synchronize external Dialog presence before paint after committing the initial closed root.
@@ -89,39 +89,56 @@ export function TypesEditor({
                 void submit();
               }}
             >
-              <div className="flex items-end gap-3">
-                <EmojiPicker
-                  isOpen={pickerOpen}
-                  handleToggle={setPickerOpen}
-                  disabled={busy}
-                  defaultOpen={logo.in_use}
-                  defaultIconColor={logo.icon?.color}
-                  buttonClassName="flex size-8 shrink-0 items-center justify-center rounded-md border border-subtle"
-                  label={
-                    <span aria-label={t("web.workflow_ui.types_settings.choose_icon")}>
-                      <Logo logo={logo} size={20} />
-                    </span>
-                  }
-                  onChange={(value) =>
-                    setLogo(
-                      value.type === "emoji"
-                        ? { in_use: "emoji", emoji: { value: value.value as string } }
-                        : { in_use: "icon", icon: value.value as TLogoProps["icon"] }
-                    )
-                  }
-                />
-                <div className="min-w-0 flex-1">
-                  <InputField
-                    orientation="vertical"
-                    size="lg"
-                    label={t("name")}
-                    placeholder={t("web.workflow_ui.types_settings.name_placeholder")}
-                    value={name}
-                    disabled={busy}
-                    onChange={(event) => setName(event.target.value)}
-                  />
-                </div>
-              </div>
+              <InputField
+                orientation="vertical"
+                size="lg"
+                label={t("name")}
+                placeholder={t("web.workflow_ui.types_settings.name_placeholder")}
+                value={name}
+                disabled={busy}
+                onChange={(event) => setName(event.target.value)}
+                startIcon={
+                  <div className="-ml-2 flex shrink-0 items-center">
+                    <EmojiPicker
+                      isOpen={pickerOpen}
+                      handleToggle={setPickerOpen}
+                      disabled={busy}
+                      iconType="lucide"
+                      defaultOpen={logo.in_use ?? "icon"}
+                      defaultIconColor={logo.icon?.color}
+                      buttonClassName="flex size-6 shrink-0 items-center justify-center rounded-sm"
+                      label={
+                        <span
+                          className="flex items-center justify-center"
+                          aria-label={t("web.workflow_ui.types_settings.choose_icon")}
+                        >
+                          <TypesLogo type={{ ...type, logo_props: logo }} />
+                        </span>
+                      }
+                      onChange={(value) =>
+                        setLogo(
+                          value.type === "emoji"
+                            ? { in_use: "emoji", emoji: { value: value.value as string } }
+                            : { in_use: "icon", icon: value.value as TLogoProps["icon"] }
+                        )
+                      }
+                    />
+                    {hasLogo && (
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        icon={<CloseOutline />}
+                        aria-label={t("common.clear")}
+                        disabled={busy}
+                        onClick={() => {
+                          setLogo({});
+                          setPickerOpen(false);
+                        }}
+                      />
+                    )}
+                  </div>
+                }
+              />
               <label className="block space-y-2 text-body-xs-regular text-secondary">
                 <span>{t("description")}</span>
                 <TextAreaGroup resize="none" render={<div className="h-[96px]" />}>
