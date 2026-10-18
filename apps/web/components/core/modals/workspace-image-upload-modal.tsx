@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { useDropzone } from "react-dropzone";
@@ -48,6 +48,20 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
   // states
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<{ file: File; url: string }>();
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) clearCloseTimer();
+  }, [isOpen, clearCloseTimer]);
+
+  useEffect(() => clearCloseTimer, [clearCloseTimer]);
 
   useEffect(() => {
     if (!image) {
@@ -65,7 +79,10 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
   // store hooks
   const { currentWorkspace, updateWorkspaceLogo } = useWorkspace();
 
-  const onDrop = (acceptedFiles: File[]) => setImage(acceptedFiles[0]);
+  const onDrop = (acceptedFiles: File[]) => {
+    clearCloseTimer();
+    setImage(acceptedFiles[0]);
+  };
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
@@ -75,11 +92,13 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
   });
 
   const handleClose = () => {
+    clearCloseTimer();
     setIsImageUploading(false);
-    onClose();
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null;
       setImage(null);
     }, 300);
+    onClose();
   };
 
   const handleSubmit = async () => {

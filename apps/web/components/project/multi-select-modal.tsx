@@ -13,6 +13,7 @@ import { Combobox, ComboboxItem, ComboboxList, ComboboxSearch } from "@makeplane
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
+import { setToast } from "@plane/blocks/toast";
 import { CloseOutline } from "@makeplane/propel/icons";
 import { Dialog, DialogActions, DialogContent, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 // assets
@@ -71,10 +72,16 @@ export const ProjectMultiSelectModal = observer(function ProjectMultiSelectModal
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
-    await onSubmit(selectedProjectIds);
-    setIsSubmitting(false);
-    handleClose();
+    try {
+      await onSubmit(selectedProjectIds);
+      handleClose();
+    } catch {
+      setToast({ type: "error", title: t("something_went_wrong_please_try_again") });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSelectedProjectChange = (val: string[]) => {

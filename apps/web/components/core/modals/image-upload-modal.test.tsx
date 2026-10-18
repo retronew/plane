@@ -120,6 +120,11 @@ for (const [name, Modal] of [
       fireEvent.click(view.getByText("web.cancel"));
       expect(view.props.onClose).toHaveBeenCalledOnce();
       if (name === "workspace") {
+        view.rerender(
+          <StrictMode>
+            <Modal {...view.props} isOpen={false} />
+          </StrictMode>
+        );
         expect(URL.revokeObjectURL).not.toHaveBeenCalled();
         act(() => vi.advanceTimersByTime(299));
         expect(URL.revokeObjectURL).not.toHaveBeenCalled();
@@ -128,6 +133,55 @@ for (const [name, Modal] of [
       expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview-1");
       expect(view.queryByRole("img")).toBeNull();
     });
+
+    if (name === "workspace") {
+      it("keeps the preview when reopened before the exit delay finishes", () => {
+        vi.useFakeTimers();
+        const view = setup();
+        pick("first.png");
+        fireEvent.click(view.getByText("web.cancel"));
+        view.rerender(
+          <StrictMode>
+            <Modal {...view.props} isOpen={false} />
+          </StrictMode>
+        );
+        act(() => vi.advanceTimersByTime(100));
+        view.rerender(
+          <StrictMode>
+            <Modal {...view.props} />
+          </StrictMode>
+        );
+        act(() => vi.advanceTimersByTime(300));
+        expect(view.getByRole("img").getAttribute("src")).toBe("blob:preview-1");
+        expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
+      it("keeps a newly selected image instead of clearing it with an old close timer", () => {
+        vi.useFakeTimers();
+        const view = setup();
+        pick("first.png");
+        fireEvent.click(view.getByText("web.cancel"));
+        act(() => vi.advanceTimersByTime(100));
+        pick("second.png");
+        expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview-1");
+        act(() => vi.advanceTimersByTime(300));
+        expect(view.getByRole("img").getAttribute("src")).toBe("blob:preview-2");
+        expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+        expect(vi.getTimerCount()).toBe(0);
+      });
+
+      it("cancels pending close cleanup on unmount and releases the preview", () => {
+        vi.useFakeTimers();
+        const view = setup();
+        pick("first.png");
+        fireEvent.click(view.getByText("web.cancel"));
+        expect(vi.getTimerCount()).toBe(1);
+        view.unmount();
+        expect(vi.getTimerCount()).toBe(0);
+        expect(URL.revokeObjectURL).toHaveBeenCalledExactlyOnceWith("blob:preview-1");
+      });
+    }
 
     it("keeps the preview URL alive while upload is pending", async () => {
       let finish!: (result: { asset_url: string }) => void;

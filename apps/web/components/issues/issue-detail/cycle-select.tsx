@@ -6,6 +6,7 @@
 
 import { useCallback, useState } from "react";
 import { observer } from "mobx-react";
+import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
 import { cn } from "@plane/utils";
 // components
@@ -54,11 +55,20 @@ export const IssueCycleSelect = observer(function IssueCycleSelect(props: TIssue
     async (cycleId: string | null) => {
       if (!issue || issue.cycle_id === cycleId) return;
       setIsUpdating(true);
-      if (cycleId) await issueOperations.addCycleToIssue?.(workspaceSlug, projectId, cycleId, issueId);
-      else await issueOperations.removeIssueFromCycle?.(workspaceSlug, projectId, issue.cycle_id ?? "", issueId);
-      setIsUpdating(false);
+      try {
+        if (cycleId) await issueOperations.addCycleToIssue?.(workspaceSlug, projectId, cycleId, issueId);
+        else await issueOperations.removeIssueFromCycle?.(workspaceSlug, projectId, issue.cycle_id ?? "", issueId);
+      } catch {
+        setToast({
+          type: "error",
+          title: t("common.error.label"),
+          message: t(cycleId ? "issue.add.cycle.failed" : "issue.remove.cycle.failed"),
+        });
+      } finally {
+        setIsUpdating(false);
+      }
     },
-    [issue, issueOperations, workspaceSlug, projectId, issueId]
+    [issue, issueOperations, workspaceSlug, projectId, issueId, t]
   );
 
   return (
