@@ -88,7 +88,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
   } = useWorkspaceNavigationPreferences();
 
   // local state for limited projects count input
-  const [projectCountInput, setProjectCountInput] = useState(projectPreferences.limitedProjectsCount.toString());
+  const [projectCountInput, setProjectCountInput] = useState(() => projectPreferences.limitedProjectsCount.toString());
 
   // Filter personal items by feature flags
   const filteredPersonalItems = PERSONAL_ITEMS;

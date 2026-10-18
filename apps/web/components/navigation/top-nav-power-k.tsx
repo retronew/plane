@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useEffectEvent } from "react";
 import { Command } from "cmdk";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -55,6 +55,9 @@ export const TopNavPowerK = observer(() => {
     openPanel,
   } = useExpandableSearch();
   const [panelMounted, setPanelMounted] = useState(false);
+  // Reading the close handler through an effect event keeps a new callback identity from restarting
+  // the exit timer, which would leave the panel mounted.
+  const onClose = useEffectEvent(handleOnClose);
   useEffect(() => {
     if (isOpen) {
       setPanelMounted(true);
@@ -62,10 +65,10 @@ export const TopNavPowerK = observer(() => {
     }
     const timer = setTimeout(() => {
       setPanelMounted(false);
-      handleOnClose();
+      onClose();
     }, 220);
     return () => clearTimeout(timer);
-  }, [isOpen, handleOnClose]);
+  }, [isOpen]);
 
   // derived values
   const {
