@@ -12,6 +12,7 @@ export type { ColorSwatchPickerLabels, ColorSwatchPickerProps } from "./color-sw
 export * from "./drag-handle";
 export * from "./drop-indicator";
 export * from "./favorite-star";
+export * from "./logo-spinner";
 export * from "./sortable/sortable";
 export { toSideAndAlign } from "./popover-menu/helpers";
 export type { TPopoverMenuPlacement } from "./popover-menu/helpers";

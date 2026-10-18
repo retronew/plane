@@ -20,7 +20,7 @@ import { setToast } from "@plane/blocks/toast";
 
 import { checkEmailValidity } from "@plane/utils";
 // hooks
-import useTimer from "@/hooks/use-timer";
+import { useTimer } from "@plane/hooks";
 // services
 import { AuthService } from "@/services/auth.service";
 // local components

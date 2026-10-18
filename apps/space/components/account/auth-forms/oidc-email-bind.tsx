@@ -17,7 +17,7 @@ import { checkEmailValidity } from "@plane/utils";
 import type { TAuthErrorInfo } from "@/helpers/authentication.helper";
 import { EAuthenticationErrorCodes, authErrorHandler } from "@/helpers/authentication.helper";
 // hooks
-import useTimer from "@/hooks/use-timer";
+import { useTimer } from "@plane/hooks";
 // local components
 import { AuthBanner } from "./auth-banner";
 

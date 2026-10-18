@@ -12,7 +12,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { AuthService } from "@plane/services";
 import { Input } from "@makeplane/propel/components/input";
 // hooks
-import useTimer from "@/hooks/use-timer";
+import { useTimer } from "@plane/hooks";
 // types
 import { EAuthModes } from "@/types/auth";
 import { translate } from "@plane/i18n";

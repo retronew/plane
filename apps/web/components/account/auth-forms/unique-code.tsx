@@ -14,7 +14,7 @@ import { Button } from "@makeplane/propel/components/button";
 // helpers
 import { EAuthModes } from "@/helpers/authentication.helper";
 // hooks
-import useTimer from "@/hooks/use-timer";
+import { useTimer } from "@plane/hooks";
 // services
 import { AuthService } from "@/services/auth.service";
 

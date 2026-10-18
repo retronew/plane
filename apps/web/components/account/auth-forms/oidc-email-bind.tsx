@@ -21,7 +21,7 @@ import type { TAuthErrorInfo } from "@/helpers/authentication.helper";
 import { EAuthenticationErrorCodes, authErrorHandler } from "@/helpers/authentication.helper";
 // hooks
 import { useAppRouter } from "@/hooks/use-app-router";
-import useTimer from "@/hooks/use-timer";
+import { useTimer } from "@plane/hooks";
 // services
 import { AuthService } from "@/services/auth.service";
 // local components

@@ -4,11 +4,12 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const TIMER = 30;
 
-const useTimer = (initialValue: number = TIMER) => {
+/** Counts down once per second from `initialValue`; callers can also set the value directly. */
+export const useTimer = (initialValue: number = TIMER) => {
   const [timer, setTimer] = useState(initialValue);
 
   useEffect(() => {
@@ -21,5 +22,3 @@ const useTimer = (initialValue: number = TIMER) => {
 
   return { timer, setTimer };
 };
-
-export default useTimer;
