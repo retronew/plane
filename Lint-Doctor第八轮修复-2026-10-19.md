@@ -9,8 +9,8 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 | 检查               | 第六轮前 | 第七轮结束 | 现在 |
 | ------------------ | -------- | ---------- | ---- |
 | Doctor errors      | 6        | 5          | 5    |
-| Doctor warnings    | 371      | 333        | 314  |
-| Doctor 总诊断      | 377      | 338        | 319  |
+| Doctor warnings    | 371      | 333        | 308  |
+| Doctor 总诊断      | 377      | 338        | 313  |
 | Doctor 总分        | 61       | 61         | 61   |
 | 常规 lint warnings | 2        | 1          | 1    |
 
@@ -68,3 +68,19 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 ## 数据库
 
 本轮全部改动位于 `apps/web`、`apps/admin`、`packages/editor`、`packages/blocks` 的前端代码，**没有任何数据库模型、迁移或 `apps/api` 变动**，因此无需执行迁移或同步线上环境。
+
+## 收尾批次（同一轮内继续）
+
+| 提交         | 内容                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `c5887c7638` | `IssueDateActivity`（开始/目标日期活动行）与 `FilterSearchInput`（三处筛选面板搜索框，`focusOnOpen` 参数化以避免 a11y 规则误报） |
+| `49be4de0a3` | `PageEditorSkeleton`：页面内容加载器与版本预览共用（36 行骨架）                                                                  |
+| `103a85acc0` | `FilterStartDate` 统一到 `isInDateFormat` 判断（issues 版此前用 `includes("-")` 会误判），选项查找改用 Set                       |
+
+最终全量：**313 条**（5 errors / 308 warnings），`duplicate-jsx-subtree` 由 17 条降至 4 条（其余 4 条是 web / space / admin 三个应用之间的历史重复，需要提取到 `@plane/blocks`，属架构调整）；`js-set-map-lookups` 由 70 降至 68。
+
+收尾验证：全仓 `pnpm check` 60 任务通过；Web 全量 1636 项、Editor 全量 54 项通过；每批次 `doctor --scope changed` 均为 0 诊断。
+
+## 边界说明
+
+本轮把「低风险且可回归」的项全部处理完：共享组件提取、数据流修正、误报核实。剩下 313 条中约 250 条集中在需要成规模重构的规则上（组件拆分、跨应用共享、页面级懒加载），逐条改动的回归面大于收益，已在「未修的结构性类别」中逐类说明理由。
