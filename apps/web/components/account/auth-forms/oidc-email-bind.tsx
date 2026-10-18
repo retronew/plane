@@ -163,7 +163,7 @@ export function OIDCEmailBindForm() {
           action={`${API_BASE_URL}/auth/oidc/bind-email/`}
           onSubmit={() => setIsSubmitting(true)}
         >
-          <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
+          <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
           <input type="hidden" name="email" value={email} />
           {nextPath && <input type="hidden" name="next_path" value={nextPath} />}
           <div className="space-y-1">

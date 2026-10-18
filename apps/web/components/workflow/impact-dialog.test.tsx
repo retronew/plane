@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { WorkflowImpactDialog } from "./impact-dialog";
 const state = vi.hoisted(() => ({
@@ -89,4 +89,54 @@ it("requires a new preview token after mapping changes before applying", async (
     )
   );
   await waitFor(() => expect(state.onApplied).toHaveBeenCalled());
+});
+
+it("does not notify a parent after an in-flight apply is unmounted", async () => {
+  let finish!: () => void;
+  state.apply.mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const { unmount } = render(
+    <WorkflowImpactDialog
+      workspaceSlug="w"
+      projectId="p"
+      request={{ operation: "states", workflow_id: "flow", state_ids: ["target"] }}
+      impact={{ ...impact, required_state_ids: [] }}
+      onClose={vi.fn()}
+      onApplied={state.onApplied}
+    />
+  );
+  fireEvent.click(screen.getByRole("button", { name: "confirm" }));
+  expect(state.apply).toHaveBeenCalledTimes(1);
+  unmount();
+  await act(async () => finish());
+  expect(state.refresh).toHaveBeenCalledWith("w", "p");
+  expect(state.onApplied).not.toHaveBeenCalled();
+});
+it("suppresses errors from a preview after the dialog closes", async () => {
+  let fail!: (reason: Error) => void;
+  state.toast.mockClear();
+  state.preview.mockImplementation(
+    () =>
+      new Promise((_, reject) => {
+        fail = reject;
+      })
+  );
+  const props = {
+    workspaceSlug: "w",
+    projectId: "p",
+    request: { operation: "states" as const, workflow_id: "flow", state_ids: ["target"] },
+    impact,
+    onClose: vi.fn(),
+    onApplied: state.onApplied,
+  };
+  const { rerender } = render(<WorkflowImpactDialog {...props} />);
+  fireEvent.change(screen.getByLabelText("mapping"), { target: { value: "target" } });
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.refresh_preview" }));
+  rerender(<WorkflowImpactDialog {...props} open={false} />);
+  await act(async () => fail(new Error("late failure")));
+  expect(state.toast).not.toHaveBeenCalled();
 });

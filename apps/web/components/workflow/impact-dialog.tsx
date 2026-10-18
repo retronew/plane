@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import {
   Dialog,
@@ -44,6 +44,14 @@ export function WorkflowImpactDialog({
     [changed, setChanged] = useState(false);
   // Initialize the root closed so newly fetched previews animate in on first mount.
   const [mounted, setMounted] = useState(false);
+  const active = useRef(false);
+  const submitting = useRef(false);
+  useEffect(() => {
+    active.current = open;
+    return () => {
+      active.current = false;
+    };
+  }, [open]);
   useEffect(() => {
     // Synchronize Base UI's external transition lifecycle: the root must commit closed before opening.
     // eslint-disable-next-line react/set-state-in-effect
@@ -59,18 +67,23 @@ export function WorkflowImpactDialog({
         ? store.lists[projectId]?.results.find((item) => item.is_default)?.states.map((state) => state.id)
         : workflow?.states.map((state) => state.id);
   const submit = async () => {
+    if (!active.current || submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     try {
       const payload = { ...request, state_mapping: mapping };
       if (changed) {
-        setPreview(await store.service.preview(workspaceSlug, projectId, payload));
+        const updated = await store.service.preview(workspaceSlug, projectId, payload);
+        if (!active.current) return;
+        setPreview(updated);
         setChanged(false);
       } else {
         await store.service.apply(workspaceSlug, projectId, { ...payload, token: preview.token });
         await store.refresh(workspaceSlug, projectId);
-        onApplied();
+        if (active.current) onApplied();
       }
     } catch (error) {
+      if (!active.current) return;
       const code = getWorkflowErrorCode(error);
       setToast({
         type: "error",
@@ -78,7 +91,8 @@ export function WorkflowImpactDialog({
         message: code ? t(`web.workflow_errors.${code}`) : t("web.workflow_ui.save_failed"),
       });
     } finally {
-      setBusy(false);
+      submitting.current = false;
+      if (active.current) setBusy(false);
     }
   };
   return (

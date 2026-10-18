@@ -93,6 +93,30 @@ describe("One-click AI optimization", () => {
     renderAssistant();
     await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("web.ai_writing_quota"));
   });
+  it("recovers from a context failure and allows retry", async () => {
+    const getContext = vi
+      .fn(() => context)
+      .mockImplementationOnce(() => {
+        throw new Error("editor unavailable");
+      });
+    stream.mockResolvedValue("result");
+    render(
+      <WritingAssistant
+        workspaceSlug="test"
+        getContext={getContext}
+        onApply={vi.fn(() => true)}
+        onClose={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    await screen.findByRole("alert");
+    expect(screen.getByRole("alert").textContent).toBe("web.ai_writing_failed");
+    expect(stream).not.toHaveBeenCalled();
+    expect(screen.queryByText("web.ai_writing_stop")).toBeNull();
+    fireEvent.click(screen.getByText("web.ai_writing_retry"));
+    await screen.findByText("web.ai_writing_replace");
+    expect(stream).toHaveBeenCalledOnce();
+  });
   it("preserves paragraphs while escaping model HTML", () => {
     expect(textToHtml('a & b\nline\n\n<img src="x">')).toBe(
       "<p>a &amp; b<br/>line</p><p>&lt;img src=&quot;x&quot;&gt;</p>"

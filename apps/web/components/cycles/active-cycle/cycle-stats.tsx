@@ -120,61 +120,65 @@ export const ActiveCycleStats = observer(function ActiveCycleStats(props: Active
                       if (!issue) return null;
 
                       return (
-                        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- row contains nested interactive controls; keyboard users open the work item via its link
                         <div
                           key={issue.id}
-                          className="group flex cursor-pointer items-center justify-between gap-2 rounded-md p-1 hover:bg-surface-2"
-                          onClick={() => {
-                            if (issue.id) {
-                              setPeekIssue({
-                                workspaceSlug,
-                                projectId,
-                                issueId: issue.id,
-                                isArchived: !!issue.archived_at,
-                              });
-                              handleFiltersUpdate([
-                                { property: "priority", operator: "in", value: ["urgent", "high"] },
-                              ]);
-                            }
-                          }}
+                          className="group flex items-center justify-between gap-2 rounded-md p-1 hover:bg-surface-2"
                         >
-                          <div className="flex w-full min-w-24 flex-grow items-center gap-1.5 truncate">
-                            <IssueIdentifier issueId={issue.id} projectId={projectId} size="xs" variant="secondary" />
-                            <Tooltip
-                              label={translate("web.runtime.title_value", { name: issue.name })}
-                              layout="stacked"
-                              align="start"
-                            >
-                              <span className="truncate text-13 text-primary">{issue.name}</span>
-                            </Tooltip>
-                          </div>
-                          <PriorityIcon priority={issue.priority} />
-                          <div className="flex flex-shrink-0 items-center gap-1.5">
-                            <StateSelect
-                              issueTypeId={issue.type_id}
-                              value={issue.state_id}
-                              onChange={() => {}}
-                              projectId={projectId?.toString() ?? ""}
-                              disabled
-                              variant="pill-sm"
-                              className="max-w-24"
-                              tooltip
-                            />
-                            {issue.target_date && (
+                          <IssueIdentifier issueId={issue.id} projectId={projectId} size="xs" variant="secondary" />
+                          <button
+                            type="button"
+                            className="focus-visible:outline-primary flex min-w-0 flex-1 items-center justify-between gap-2 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+                            onClick={() => {
+                              if (issue.id) {
+                                setPeekIssue({
+                                  workspaceSlug,
+                                  projectId,
+                                  issueId: issue.id,
+                                  isArchived: !!issue.archived_at,
+                                });
+                                handleFiltersUpdate([
+                                  { property: "priority", operator: "in", value: ["urgent", "high"] },
+                                ]);
+                              }
+                            }}
+                          >
+                            <div className="flex w-full min-w-24 flex-grow items-center gap-1.5 truncate">
                               <Tooltip
-                                label={translate("web.runtime.target_date", {
-                                  date: renderFormattedDate(issue.target_date) ?? "",
-                                })}
+                                label={translate("web.runtime.title_value", { name: issue.name })}
+                                layout="stacked"
+                                align="start"
                               >
-                                <div className="flex h-full cursor-pointer items-center gap-1.5 truncate rounded-sm bg-layer-1 px-2 py-0.5 text-11 group-hover:bg-surface-1">
-                                  <CompletedAtOutline className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate text-11">
-                                    {renderFormattedDateWithoutYear(issue.target_date)}
-                                  </span>
-                                </div>
+                                <span className="truncate text-13 text-primary">{issue.name}</span>
                               </Tooltip>
-                            )}
-                          </div>
+                            </div>
+                            <PriorityIcon priority={issue.priority} />
+                            <div className="flex flex-shrink-0 items-center gap-1.5">
+                              {issue.target_date && (
+                                <Tooltip
+                                  label={translate("web.runtime.target_date", {
+                                    date: renderFormattedDate(issue.target_date) ?? "",
+                                  })}
+                                >
+                                  <div className="flex h-full cursor-pointer items-center gap-1.5 truncate rounded-sm bg-layer-1 px-2 py-0.5 text-11 group-hover:bg-surface-1">
+                                    <CompletedAtOutline className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate text-11">
+                                      {renderFormattedDateWithoutYear(issue.target_date)}
+                                    </span>
+                                  </div>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </button>
+                          <StateSelect
+                            issueTypeId={issue.type_id}
+                            value={issue.state_id}
+                            onChange={() => {}}
+                            projectId={projectId?.toString() ?? ""}
+                            disabled
+                            variant="pill-sm"
+                            className="max-w-24"
+                            tooltip
+                          />
                         </div>
                       );
                     })}

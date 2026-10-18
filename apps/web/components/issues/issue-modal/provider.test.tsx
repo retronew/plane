@@ -163,3 +163,15 @@ it("loads draft values from its payload and never calls the issue values endpoin
   });
   expect(payload).toEqual({ bug: 3 });
 });
+
+it("preserves the context value when only the provider parent rerenders", async () => {
+  const view = render(<TestProvider typeId="bug" />);
+  // Schema arrival also schedules a defaults effect. Flush that state update before
+  // comparing identities, so this measures a parent render rather than schema loading.
+  await act(async () => {
+    await screen.findByText("bug");
+  });
+  const previousContext = context;
+  view.rerender(<TestProvider typeId="bug" />);
+  expect(context).toBe(previousContext);
+});

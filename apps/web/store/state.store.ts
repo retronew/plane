@@ -125,14 +125,10 @@ export class StateStore implements IStateStore {
     const groupedStates = groupBy(this.projectStates, "group") as Record<string, IState[]>;
 
     // Ensure all STATE_GROUPS are present
-    const allGroups = Object.keys(STATE_GROUPS).reduce(
-      (acc, group) => ({
-        // oxlint-disable-next-line oxc/no-accumulating-spread
-        ...acc,
-        [group]: groupedStates[group] || [],
-      }),
-      {} as Record<string, IState[]>
-    );
+    const allGroups: Record<string, IState[]> = {};
+    for (const group of Object.keys(STATE_GROUPS)) {
+      allGroups[group] = groupedStates[group] || [];
+    }
 
     return allGroups;
   }

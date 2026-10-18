@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import { runInAction } from "mobx";
+import { autorun, runInAction } from "mobx";
+import { STATE_GROUPS } from "@plane/constants";
 import type { IState, TProjectWorkflow } from "@plane/types";
 import type { RootStore } from "./root.store";
 import { StateStore } from "./state.store";
@@ -43,6 +44,30 @@ it("calculates icon progress within the owning project independently of the curr
   expect(s.getStatePercentageInGroup("c")).toBe(50);
   expect(s.getStatePercentageInGroup("d")).toBe(100);
   expect(s.getStatePercentageInGroup("b")).toBe(100);
+});
+
+it("fills groups in constant order and reacts to state moves without including other projects", () => {
+  const s = makeStore();
+  runInAction(() => {
+    s.stateMap.c = { ...s.stateMap.b, id: "c", sequence: 50 };
+    s.stateMap.d = { ...s.stateMap.b, id: "d", project_id: "other" };
+  });
+  expect(Object.keys(s.groupedProjectStates!)).toEqual(Object.keys(STATE_GROUPS));
+  expect(s.groupedProjectStates!.started.map((state) => state.id)).toEqual(["c", "b"]);
+  expect(s.groupedProjectStates!.completed).toEqual([]);
+  const seen: string[][] = [];
+  const dispose = autorun(() => seen.push(s.groupedProjectStates!.started.map((state) => state.id)));
+  runInAction(() => {
+    s.stateMap.c.group = "completed";
+  });
+  dispose();
+  expect(seen).toEqual([["c", "b"], ["b"]]);
+  runInAction(() => {
+    s.fetchedMap.p = false;
+  });
+  expect(Object.values(s.groupedProjectStates!).every((states) => states.length === 0)).toBe(true);
+  s.router.projectId = undefined;
+  expect(s.groupedProjectStates).toBeUndefined();
 });
 
 it("keeps an optimistic move after it is persisted", async () => {

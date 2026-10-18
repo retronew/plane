@@ -104,11 +104,12 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
     };
 
     const issueFiltersParams: Partial<Record<TIssueParams, boolean | string>> = {};
+    const acceptableParams = new Set(acceptableParamsByLayout);
     Object.keys(computedDisplayFilters).forEach((key) => {
       const _key = key as TIssueParams;
       const _value: string | boolean | string[] | undefined = computedDisplayFilters[_key];
       const nonEmptyArrayValue = Array.isArray(_value) && _value.length === 0 ? undefined : _value;
-      if (nonEmptyArrayValue != undefined && acceptableParamsByLayout.includes(_key))
+      if (nonEmptyArrayValue != undefined && acceptableParams.has(_key))
         issueFiltersParams[_key] = Array.isArray(nonEmptyArrayValue)
           ? nonEmptyArrayValue.join(",")
           : nonEmptyArrayValue;

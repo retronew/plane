@@ -4,9 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
-import { useForm } from "react-hook-form";
 // Plane imports
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
@@ -28,18 +27,24 @@ type Props = {
   projectId: string;
 };
 
-const defaultValues: Partial<IModule> = {
-  name: "",
-  description: "",
-  status: "backlog",
-  lead_id: null,
-  member_ids: [],
-};
-
 export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal(props: Props) {
   const { isOpen, onClose, data, workspaceSlug, projectId } = props;
   // states
-  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const initialProject = data?.project_id ?? projectId;
+  const identity = `${workspaceSlug}/${projectId}/${data?.id ?? "create"}`;
+  const [session, setSession] = useState({ identity, isOpen, generation: 0 });
+  const [activeProject, setActiveProject] = useState<string | null>(initialProject);
+  if (session.identity !== identity || session.isOpen !== isOpen) {
+    setSession({ identity, isOpen, generation: session.generation + (isOpen ? 1 : 0) });
+    if (isOpen) setActiveProject(initialProject);
+  }
+  const currentSession = useRef(session);
+  useLayoutEffect(() => {
+    currentSession.current = session;
+    return () => {
+      currentSession.current = { ...session, isOpen: false };
+    };
+  }, [session]);
   // plane hooks
   const { t } = useTranslation();
   // store hooks
@@ -48,20 +53,17 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
   const { isMobile } = usePlatformOS();
 
   const handleClose = () => {
-    reset(defaultValues);
     onClose();
   };
-
-  const { reset } = useForm<IModule>({
-    defaultValues,
-  });
 
   const handleCreateModule = async (payload: Partial<IModule>) => {
     if (!workspaceSlug || !projectId) return;
 
-    const selectedProjectId = payload.project_id ?? projectId.toString();
+    const requestSession = currentSession.current;
+    const selectedProjectId = data?.project_id ?? payload.project_id ?? activeProject ?? projectId.toString();
     await createModule(workspaceSlug.toString(), selectedProjectId, payload)
       .then((_res) => {
+        if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
         handleClose();
         setToast({
           type: "success",
@@ -71,6 +73,7 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
         return undefined;
       })
       .catch((err) => {
+        if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
         setToast({
           type: "error",
           title: t("toast.error"),
@@ -82,9 +85,11 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
   const handleUpdateModule = async (payload: Partial<IModule>) => {
     if (!workspaceSlug || !projectId || !data) return;
 
-    const selectedProjectId = payload.project_id ?? projectId.toString();
+    const requestSession = currentSession.current;
+    const selectedProjectId = data?.project_id ?? payload.project_id ?? activeProject ?? projectId.toString();
     await updateModuleDetails(workspaceSlug.toString(), selectedProjectId, data.id, payload)
       .then((_res) => {
+        if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
         handleClose();
 
         setToast({
@@ -95,6 +100,7 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
         return undefined;
       })
       .catch((err) => {
+        if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
         setToast({
           type: "error",
           title: t("toast.error"),
@@ -113,27 +119,6 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
     else await handleUpdateModule(payload);
   };
 
-  useEffect(() => {
-    // if modal is closed, reset active project to null
-    // and return to avoid activeProject being set to some other project
-    if (!isOpen) {
-      setActiveProject(null);
-      return;
-    }
-
-    // if data is present, set active project to the project of the
-    // issue. This has more priority than the project in the url.
-    if (data && data.project_id) {
-      setActiveProject(data.project_id);
-      return;
-    }
-
-    // if data is not present, set active project to the project
-    // in the url. This has the least priority.
-    if (workspaceProjectIds && workspaceProjectIds.length > 0 && !activeProject)
-      setActiveProject(projectId ?? workspaceProjectIds?.[0] ?? null);
-  }, [activeProject, data, projectId, workspaceProjectIds, isOpen]);
-
   return (
     <Dialog
       open={isOpen}
@@ -150,10 +135,11 @@ export const CreateUpdateModuleModal = observer(function CreateUpdateModuleModal
         aria-label={translate("web.runtime.module_dialog_title", { mode: data ? "update" : "create" })}
       >
         <ModuleForm
+          key={`${session.identity}/${session.generation}`}
           handleFormSubmit={handleFormSubmit}
           handleClose={handleClose}
           status={!!data}
-          projectId={activeProject ?? ""}
+          projectId={activeProject ?? workspaceProjectIds?.[0] ?? ""}
           setActiveProject={setActiveProject}
           data={data}
           isMobile={isMobile}

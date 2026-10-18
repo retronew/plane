@@ -5,7 +5,7 @@
  */
 
 import type { MutableRefObject } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
@@ -126,6 +126,64 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
   const { workflowDisabledSource, isWorkflowDropDisabled, handleWorkFlowState, getIsWorkflowWorkItemCreationDisabled } =
     useWorkFlowFDragNDrop(group_by, sub_group_by);
 
+  const onDragEnter = useEffectEvent(
+    (payload: Parameters<NonNullable<Parameters<typeof dropTargetForElements>[0]["onDragEnter"]>>[0]) => {
+      const source = getSourceFromDropPayload(payload);
+      setIsDraggingOverColumn(true);
+      // handle if dragging a workflowState
+      if (source) {
+        handleWorkFlowState(
+          source?.groupId,
+          groupId,
+          source?.subGroupId,
+          sub_group_id,
+          issuesMap[source.id ?? ""]?.type_id
+        );
+      }
+    }
+  );
+  const onDragStart = useEffectEvent(
+    (payload: Parameters<NonNullable<Parameters<typeof dropTargetForElements>[0]["onDragStart"]>>[0]) => {
+      const source = getSourceFromDropPayload(payload);
+      setIsDraggingOverColumn(true);
+      // handle if dragging a workflowState
+      if (source) {
+        handleWorkFlowState(
+          source?.groupId,
+          groupId,
+          source?.subGroupId,
+          sub_group_id,
+          issuesMap[source.id ?? ""]?.type_id
+        );
+      }
+    }
+  );
+  const onDrop = useEffectEvent(
+    (payload: Parameters<NonNullable<Parameters<typeof dropTargetForElements>[0]["onDrop"]>>[0]) => {
+      setIsDraggingOverColumn(false);
+      const source = getSourceFromDropPayload(payload);
+      const destination = getDestinationFromDropPayload(payload);
+
+      if (!source || !destination) return;
+
+      if (isWorkflowDropDisabled || isDropDisabled) {
+        if (dropErrorMessage)
+          setToast({
+            type: "warning",
+            title: t("common.warning"),
+            message: dropErrorMessage,
+          });
+        return;
+      }
+
+      handleOnDrop(source, destination);
+
+      highlightIssueOnDrop(
+        getIssueBlockId(source.id, destination?.groupId, destination?.subGroupId),
+        orderBy !== "sort_order"
+      );
+    }
+  );
   // Enable Kanban Columns as Drop Targets
   useEffect(() => {
     const element = columnRef.current;
@@ -136,77 +194,18 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
       dropTargetForElements({
         element,
         getData: () => ({ groupId, subGroupId: sub_group_id, columnId: `${groupId}__${sub_group_id}`, type: "COLUMN" }),
-        onDragEnter: (payload) => {
-          const source = getSourceFromDropPayload(payload);
-          setIsDraggingOverColumn(true);
-          // handle if dragging a workflowState
-          if (source) {
-            handleWorkFlowState(
-              source?.groupId,
-              groupId,
-              source?.subGroupId,
-              sub_group_id,
-              issuesMap[source.id ?? ""]?.type_id
-            );
-          }
-        },
+        onDragEnter: (payload) => onDragEnter(payload),
         onDragLeave: () => {
           setIsDraggingOverColumn(false);
         },
-        onDragStart: (payload) => {
-          const source = getSourceFromDropPayload(payload);
-          setIsDraggingOverColumn(true);
-          // handle if dragging a workflowState
-          if (source) {
-            handleWorkFlowState(
-              source?.groupId,
-              groupId,
-              source?.subGroupId,
-              sub_group_id,
-              issuesMap[source.id ?? ""]?.type_id
-            );
-          }
-        },
-        onDrop: (payload) => {
-          setIsDraggingOverColumn(false);
-          const source = getSourceFromDropPayload(payload);
-          const destination = getDestinationFromDropPayload(payload);
-
-          if (!source || !destination) return;
-
-          if ((isWorkflowDropDisabled || isDropDisabled) && dropErrorMessage) {
-            setToast({
-              type: "warning",
-              title: t("common.warning"),
-              message: dropErrorMessage,
-            });
-            return;
-          }
-
-          handleOnDrop(source, destination);
-
-          highlightIssueOnDrop(
-            getIssueBlockId(source.id, destination?.groupId, destination?.subGroupId),
-            orderBy !== "sort_order"
-          );
-        },
+        onDragStart: (payload) => onDragStart(payload),
+        onDrop: (payload) => onDrop(payload),
       }),
       autoScrollForElements({
         element,
       })
     );
-    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-  }, [
-    columnRef,
-    groupId,
-    sub_group_id,
-    setIsDraggingOverColumn,
-    orderBy,
-    isDropDisabled,
-    isWorkflowDropDisabled,
-    dropErrorMessage,
-    handleOnDrop,
-  ]);
+  }, [groupId, sub_group_id]);
 
   const prePopulateQuickAddData = (
     groupByKey: string | undefined,

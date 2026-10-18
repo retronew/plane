@@ -5,7 +5,7 @@
  */
 
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { CloseOutline, InfoOutline, TickOutline } from "@makeplane/propel/icons";
 import { EEstimateSystem, MAX_ESTIMATE_POINT_INPUT_LENGTH } from "@plane/constants";
@@ -55,11 +55,22 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
   const { t } = useTranslation();
   // states
   const [loader, setLoader] = useState(false);
-  const [estimateInputValue, setEstimateInputValue] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (estimateInputValue === undefined && estimatePoint) setEstimateInputValue(estimatePoint?.value || "");
-  }, [estimateInputValue, estimatePoint]);
+  const identity = `${workspaceSlug}/${projectId}/${estimateId}/${estimatePointId}/${estimatePoint.key}`;
+  const [target, setTarget] = useState({ identity });
+  const [estimateInputValue, setEstimateInputValue] = useState(estimatePoint.value || "");
+  if (target.identity !== identity) {
+    setTarget({ identity });
+    setEstimateInputValue(estimatePoint.value || "");
+    setLoader(false);
+  }
+  const currentTarget = useRef(target);
+  useLayoutEffect(() => {
+    currentTarget.current = target;
+    return () => {
+      currentTarget.current = { ...target };
+    };
+  }, [target]);
+  const pending = useRef<typeof target | null>(null);
 
   const handleSuccess = (value: string) => {
     handleEstimatePointValueUpdate(value);
@@ -82,7 +93,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!workspaceSlug || !projectId) return;
+    if (!workspaceSlug || !projectId || pending.current === target) return;
 
     if (handleEstimatePointError) handleEstimatePointError(estimateInputValue || "", undefined, "delete");
 
@@ -123,6 +134,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
               handleClose();
             } else
               try {
+                pending.current = target;
                 setLoader(true);
 
                 const payload = {
@@ -130,6 +142,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
                 };
                 await updateEstimatePoint(workspaceSlug, projectId, payload);
 
+                if (currentTarget.current !== target) return;
                 setLoader(false);
                 if (handleEstimatePointError) handleEstimatePointError(estimateInputValue, undefined, "delete");
                 handleClose();
@@ -139,6 +152,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
                   message: t("project_settings.estimates.toasts.updated.success.message"),
                 });
               } catch {
+                if (currentTarget.current !== target) return;
                 setLoader(false);
                 if (handleEstimatePointError)
                   handleEstimatePointError(
@@ -150,6 +164,8 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
                   title: t("project_settings.estimates.toasts.updated.error.title"),
                   message: t("project_settings.estimates.toasts.updated.error.message"),
                 });
+              } finally {
+                if (pending.current === target) pending.current = null;
               }
           } else {
             handleSuccess(estimateInputValue);

@@ -31,7 +31,11 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
     section: 0,
     item: 0,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [completedSearch, setCompletedSearch] = useState<{
+    query: string;
+    callback: typeof searchCallback;
+  } | null>(null);
+  const isLoading = query != null && (completedSearch?.query !== query || completedSearch?.callback !== searchCallback);
   // refs
   const dropdownContainer = useRef<HTMLDivElement>(null);
 
@@ -75,47 +79,34 @@ export const MentionsListDropdown = forwardRef(function MentionsListDropdown(pro
     },
   }));
 
-  // initialize the select index to 0 by default
+  // Each query owns both its timer and response lifetime. Canceling debounce alone
+  // cannot invalidate a request that has already started.
   useEffect(() => {
-    setSelectedIndex({
-      section: 0,
-      item: 0,
-    });
-  }, [sections]);
-
-  // debounced search callback
-  // oxlint-disable-next-line react-hooks/exhaustive-deps -- debounced callback is intentionally created once
-  const debouncedSearchCallback = useCallback(
-    debounce(async (searchQuery: string) => {
+    let active = true;
+    const search = debounce(async () => {
       try {
-        const sectionsResponse = await searchCallback?.(searchQuery);
-        if (sectionsResponse) {
-          setSections(sectionsResponse);
+        const sectionsResponse = await searchCallback?.(query);
+        if (active) {
+          setSections(sectionsResponse ?? []);
+          setSelectedIndex({ section: 0, item: 0 });
         }
       } catch (error) {
-        console.error("Failed to fetch suggestions:", error);
+        if (active) {
+          console.error("Failed to fetch suggestions:", error);
+          setSections([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (active) setCompletedSearch({ query, callback: searchCallback });
       }
-    }, 300),
-    [searchCallback]
-  );
-
-  // trigger debounced search when query changes
-  useEffect(() => {
+    }, 300);
     if (query !== undefined && query !== null) {
-      setIsLoading(true);
-      void debouncedSearchCallback(query);
+      void search();
     }
-  }, [query, debouncedSearchCallback]);
-
-  // cancel pending debounced calls on unmount
-  useEffect(
-    () => () => {
-      debouncedSearchCallback.cancel();
-    },
-    [debouncedSearchCallback]
-  );
+    return () => {
+      active = false;
+      search.cancel();
+    };
+  }, [query, searchCallback]);
 
   // scroll to the dropdown item when navigating via keyboard
   useLayoutEffect(() => {

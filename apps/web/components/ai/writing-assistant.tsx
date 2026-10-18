@@ -32,14 +32,15 @@ export function WritingAssistant({ workspaceSlug, getContext, onApply, onClose, 
     controller.current?.abort();
     const current = new AbortController();
     controller.current = current;
-    const context = getContext();
-    snapshot.current = context;
+    snapshot.current = null;
     setResponse("");
     setError("");
     setComplete(false);
     setApplied(false);
     setBusy(true);
     try {
+      const context = getContext();
+      snapshot.current = context;
       const result = await service.streamGptTask(
         workspaceSlug,
         { context },

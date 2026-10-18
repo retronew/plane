@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import {
@@ -41,10 +41,18 @@ export function WorkflowMetadata({
     { getProjectStateIds, getStateById } = useProjectState();
   const [name, setName] = useState(workflow?.name ?? ""),
     [description, setDescription] = useState(workflow?.description ?? ""),
-    [states, setStates] = useState(workflow?.states.map((state) => state.id) ?? []),
+    [states, setStates] = useState(() => workflow?.states.map((state) => state.id) ?? []),
     [busy, setBusy] = useState(false);
   // A conditionally mounted, initially open Base UI root skips its enter transition.
   const [mounted, setMounted] = useState(false);
+  const active = useRef(false);
+  const submitting = useRef(false);
+  useEffect(() => {
+    active.current = open;
+    return () => {
+      active.current = false;
+    };
+  }, [open]);
   useEffect(() => {
     // Synchronize Base UI's external transition lifecycle: the root must commit closed before opening.
     // eslint-disable-next-line react/set-state-in-effect
@@ -56,6 +64,8 @@ export function WorkflowMetadata({
       .filter((state): state is NonNullable<typeof state> => !!state)
   );
   const save = async () => {
+    if (!active.current || submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     try {
       if (workflow) {
@@ -66,6 +76,7 @@ export function WorkflowMetadata({
           workflow.workflow_id ?? workflow.id
         );
         store.set(projectId, updated);
+        if (!active.current) return;
         const previous = workflow.states.map((state) => state.id);
         if (
           !workflow.is_default &&
@@ -83,8 +94,9 @@ export function WorkflowMetadata({
         });
         await store.refresh(workspaceSlug, projectId);
       }
-      onClose();
+      if (active.current) onClose();
     } catch (error) {
+      if (!active.current) return;
       const code = getWorkflowErrorCode(error);
       setToast({
         type: "error",
@@ -92,7 +104,8 @@ export function WorkflowMetadata({
         message: code ? t(`web.workflow_errors.${code}`) : t("web.workflow_ui.save_failed"),
       });
     } finally {
-      setBusy(false);
+      submitting.current = false;
+      if (active.current) setBusy(false);
     }
   };
   return (

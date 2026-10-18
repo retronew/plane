@@ -5,10 +5,9 @@
  */
 
 import type { MutableRefObject } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { CollapsiblePanel } from "@makeplane/propel/components/collapsible";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 // plane imports
@@ -179,88 +178,73 @@ export const ListGroup = observer(function ListGroup(props: Props) {
     return preloadedData;
   };
 
-  // Pre-existing: the drop target re-registers only on the listed deps; the handlers it reads were
-  // left out on purpose, so adding them now would change when it re-registers.
-  /* oxlint-disable react-hooks/exhaustive-deps */
+  const handleDrag = useEffectEvent(
+    ({ source }: Parameters<NonNullable<Parameters<typeof dropTargetForElements>[0]["onDrag"]>>[0]) => {
+      const sourceGroupId = source?.data?.groupId as string | undefined;
+      const currentGroupId = group.id;
+
+      // oxlint-disable-next-line no-unused-expressions
+      sourceGroupId &&
+        handleWorkFlowState(
+          sourceGroupId,
+          currentGroupId,
+          undefined,
+          undefined,
+          issuesMap[String(source.data.id)]?.type_id
+        );
+
+      const sourceIndex = getGroupIndex(sourceGroupId);
+      const currentIndex = getGroupIndex(currentGroupId);
+
+      if (sourceIndex > currentIndex) {
+        setDragColumnOrientation("justify-end");
+      } else {
+        setDragColumnOrientation("justify-start");
+      }
+    }
+  );
+  const handleDrop = useEffectEvent(
+    (payload: Parameters<NonNullable<Parameters<typeof dropTargetForElements>[0]["onDrop"]>>[0]) => {
+      setIsDraggingOverColumn(false);
+      const source = getSourceFromDropPayload(payload);
+      const destination = getDestinationFromDropPayload(payload);
+
+      if (!source || !destination) return;
+
+      if (isWorkflowDropDisabled || group.isDropDisabled) {
+        if (group.dropErrorMessage)
+          setToast({
+            type: "warning",
+            title: t("common.warning"),
+            message: group.dropErrorMessage,
+          });
+        return;
+      }
+
+      handleOnDrop(source, destination);
+
+      highlightIssueOnDrop(getIssueBlockId(source.id, destination?.groupId), orderBy !== "sort_order");
+
+      if (!isExpanded) {
+        handleCollapsedGroups(group.id);
+      }
+    }
+  );
+  const isGroupVisible = validateEmptyIssueGroups(groupIssueCount);
+
   useEffect(() => {
     const element = groupRef.current;
-
-    if (!element) return;
-
-    return combine(
-      dropTargetForElements({
-        element,
-        getData: () => ({ groupId: group.id, type: "COLUMN" }),
-        onDragEnter: () => {
-          setIsDraggingOverColumn(true);
-        },
-        onDragLeave: () => {
-          setIsDraggingOverColumn(false);
-        },
-        onDragStart: () => {
-          setIsDraggingOverColumn(true);
-        },
-        onDrag: ({ source }) => {
-          const sourceGroupId = source?.data?.groupId as string | undefined;
-          const currentGroupId = group.id;
-
-          // oxlint-disable-next-line no-unused-expressions
-          sourceGroupId &&
-            handleWorkFlowState(
-              sourceGroupId,
-              currentGroupId,
-              undefined,
-              undefined,
-              issuesMap[String(source.data.id)]?.type_id
-            );
-
-          const sourceIndex = getGroupIndex(sourceGroupId);
-          const currentIndex = getGroupIndex(currentGroupId);
-
-          if (sourceIndex > currentIndex) {
-            setDragColumnOrientation("justify-end");
-          } else {
-            setDragColumnOrientation("justify-start");
-          }
-        },
-        onDrop: (payload) => {
-          setIsDraggingOverColumn(false);
-          const source = getSourceFromDropPayload(payload);
-          const destination = getDestinationFromDropPayload(payload);
-
-          if (!source || !destination) return;
-
-          if (isWorkflowDropDisabled || group.isDropDisabled) {
-            if (group.dropErrorMessage)
-              setToast({
-                type: "warning",
-                title: t("common.warning"),
-                message: group.dropErrorMessage,
-              });
-            return;
-          }
-
-          handleOnDrop(source, destination);
-
-          highlightIssueOnDrop(getIssueBlockId(source.id, destination?.groupId), orderBy !== "sort_order");
-
-          if (!isExpanded) {
-            handleCollapsedGroups(group.id);
-          }
-        },
-      })
-    );
-  }, [
-    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    groupRef?.current,
-    group,
-    orderBy,
-    getGroupIndex,
-    setDragColumnOrientation,
-    setIsDraggingOverColumn,
-    isWorkflowDropDisabled,
-  ]);
-  /* oxlint-enable react-hooks/exhaustive-deps */
+    if (!element || !isGroupVisible) return;
+    return dropTargetForElements({
+      element,
+      getData: () => ({ groupId: group.id, type: "COLUMN" }),
+      onDragEnter: () => setIsDraggingOverColumn(true),
+      onDragLeave: () => setIsDraggingOverColumn(false),
+      onDragStart: () => setIsDraggingOverColumn(true),
+      onDrag: (payload) => handleDrag(payload),
+      onDrop: (payload) => handleDrop(payload),
+    });
+  }, [group.id, isGroupVisible]);
 
   const isDragAllowed = group_by ? DRAG_ALLOWED_GROUPS.includes(group_by) : true;
   const canOverlayBeVisible = isWorkflowDropDisabled || orderBy !== "sort_order" || !!group.isDropDisabled;
@@ -270,7 +254,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
   const shouldExpand = (!!groupIssueCount && isExpanded) || !group_by;
   const finishVisibilityTransition = useCollapsibleVisibilityUpdates(shouldExpand);
 
-  return validateEmptyIssueGroups(groupIssueCount) ? (
+  return isGroupVisible ? (
     <Collapsible.Root
       open={shouldExpand}
       ref={groupRef}

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { CreateEstimateModal } from "./modal";
 const state = vi.hoisted(() => ({ createEstimate: vi.fn() }));
@@ -94,4 +94,42 @@ it("blocks duplicate submits and changes during saving, and resets when reopened
   rerender(<CreateEstimateModal {...props} isOpen={false} />);
   rerender(<CreateEstimateModal {...props} isOpen />);
   expect(screen.getByRole("combobox").textContent).toContain("systems.points.fibonacci");
+});
+
+it("ignores a previous project's completion after switching targets", async () => {
+  let finish!: () => void;
+  state.createEstimate.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const close = vi.fn();
+  const { rerender } = render(<CreateEstimateModal workspaceSlug="test" projectId="old" isOpen handleClose={close} />);
+  fireEvent.click(screen.getByRole("button", { name: "project_settings.estimates.create.label" }));
+  rerender(<CreateEstimateModal workspaceSlug="test" projectId="new" isOpen handleClose={close} />);
+  expect((screen.getByRole("combobox") as HTMLButtonElement).disabled).toBe(false);
+  await act(async () => finish());
+  expect(close).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "project_settings.estimates.create.label" }));
+  await waitFor(() => expect(close).toHaveBeenCalledOnce());
+  expect(state.createEstimate.mock.calls[1][1]).toBe("new");
+});
+it("does not let a pending request close a reopened dialog", async () => {
+  let finish!: () => void;
+  state.createEstimate.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const close = vi.fn();
+  const props = { workspaceSlug: "test", projectId: "project", handleClose: close };
+  const { rerender } = render(<CreateEstimateModal {...props} isOpen />);
+  fireEvent.click(screen.getByRole("button", { name: "project_settings.estimates.create.label" }));
+  rerender(<CreateEstimateModal {...props} isOpen={false} />);
+  rerender(<CreateEstimateModal {...props} isOpen />);
+  await act(async () => finish());
+  expect(close).not.toHaveBeenCalled();
+  expect((screen.getByRole("combobox") as HTMLButtonElement).disabled).toBe(false);
 });

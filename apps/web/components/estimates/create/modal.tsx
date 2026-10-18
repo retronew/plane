@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { EEstimateSystem, ESTIMATE_SYSTEMS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -37,15 +37,28 @@ export const CreateEstimateModal = observer(function CreateEstimateModal({
   const [templateKey, setTemplateKey] = useState("fibonacci");
   const [saving, setSaving] = useState(false);
   const inFlight = useRef(false);
-  useEffect(() => {
+  const identity = `${workspaceSlug}/${projectId}`;
+  const [session, setSession] = useState({ identity, isOpen, generation: 0 });
+  if (session.identity !== identity || session.isOpen !== isOpen) {
+    setSession({ identity, isOpen, generation: session.generation + 1 });
     if (isOpen) {
       setEstimateSystem(EEstimateSystem.POINTS);
       setTemplateKey("fibonacci");
+      setSaving(false);
     }
-  }, [isOpen]);
+  }
+  const currentSession = useRef(session);
+  useLayoutEffect(() => {
+    currentSession.current = session;
+    inFlight.current = false;
+    return () => {
+      currentSession.current = { ...session, isOpen: false };
+    };
+  }, [session]);
   const handleCreate = async () => {
     const template = ESTIMATE_SYSTEMS[estimateSystem].templates[templateKey];
     if (inFlight.current || !workspaceSlug || !projectId || !template || template.hide) return;
+    const requestSession = currentSession.current;
     inFlight.current = true;
     setSaving(true);
     try {
@@ -54,6 +67,7 @@ export const CreateEstimateModal = observer(function CreateEstimateModal({
         estimate_points: template.values.map((point, index) => ({ id: point.id, key: index + 1, value: point.value })),
       };
       await createEstimate(workspaceSlug, projectId, payload);
+      if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
       setToast({
         type: "success",
         title: t("project_settings.estimates.toasts.created.success.title"),
@@ -61,14 +75,17 @@ export const CreateEstimateModal = observer(function CreateEstimateModal({
       });
       handleClose();
     } catch {
+      if (currentSession.current !== requestSession || !currentSession.current.isOpen) return;
       setToast({
         type: "error",
         title: t("project_settings.estimates.toasts.created.error.title"),
         message: t("project_settings.estimates.toasts.created.error.message"),
       });
     } finally {
-      inFlight.current = false;
-      setSaving(false);
+      if (currentSession.current === requestSession) {
+        inFlight.current = false;
+        setSaving(false);
+      }
     }
   };
   return (

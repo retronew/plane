@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import {
@@ -115,27 +115,40 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
       cancelled = true;
     };
   }, [preloadSlug, preloadProjectId, preloadDraft, preloadIssueId, preloadIssueProject, retryCount, t]);
-  const prepareCustomProperties = (projectId: string, workspaceSlug: string, typeId?: string | null) => {
-    if (
-      contextKey !== `${workspaceSlug}:${projectId}:${typeId ?? ""}` ||
-      !definitions.data ||
-      definitions.error ||
-      (!!dataForPreload?.id &&
-        !context?.isDraft &&
-        (preload?.key !== `${projectId}:${dataForPreload.id}` || preload.error))
-    ) {
-      setToast({
-        type: "error",
-        title: t("web.work_item_properties.load_failed"),
-        message: t("web.work_item_properties.retry_hint"),
-      });
-      return null;
-    }
-    const nextErrors = validateProperties(definitions.properties, customPropertyValues);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return null;
-    return customPropertyPayload(definitions.properties, customPropertyValues);
-  };
+  const prepareCustomProperties = useCallback(
+    (projectId: string, workspaceSlug: string, typeId?: string | null) => {
+      if (
+        contextKey !== `${workspaceSlug}:${projectId}:${typeId ?? ""}` ||
+        !definitions.data ||
+        definitions.error ||
+        (!!dataForPreload?.id &&
+          !context?.isDraft &&
+          (preload?.key !== `${projectId}:${dataForPreload.id}` || preload.error))
+      ) {
+        setToast({
+          type: "error",
+          title: t("web.work_item_properties.load_failed"),
+          message: t("web.work_item_properties.retry_hint"),
+        });
+        return null;
+      }
+      const nextErrors = validateProperties(definitions.properties, customPropertyValues);
+      setErrors(nextErrors);
+      if (Object.keys(nextErrors).length) return null;
+      return customPropertyPayload(definitions.properties, customPropertyValues);
+    },
+    [
+      contextKey,
+      definitions.data,
+      definitions.error,
+      definitions.properties,
+      dataForPreload?.id,
+      context?.isDraft,
+      preload,
+      t,
+      customPropertyValues,
+    ]
+  );
   const handleProjectEntitiesFetch = useCallback(
     async ({
       workItemProjectId,
@@ -160,55 +173,73 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
   // store hooks
   const { projectsWithCreatePermissions } = useUser();
   // derived values
-  const projectIdsWithCreatePermissions = Object.keys(projectsWithCreatePermissions ?? {});
+  const projectIdsWithCreatePermissions = Object.keys(projectsWithCreatePermissions ?? {}).join(",");
 
-  return (
-    <IssueModalContext.Provider
-      // oxlint-disable-next-line react/jsx-no-constructed-context-values
-      value={{
-        allowedProjectIds: allowedProjectIds ?? projectIdsWithCreatePermissions,
-        workItemTemplateId: null,
-        setWorkItemTemplateId: () => {},
-        isApplyingTemplate: false,
-        setIsApplyingTemplate: () => {},
-        selectedParentIssue,
-        setSelectedParentIssue,
-        customProperties: definitions.properties,
-        customPropertyValues,
-        setCustomPropertyValues,
-        customPropertyErrors: errors,
-        customPropertiesLoading:
-          definitions.isLoading ||
-          (!!dataForPreload?.id && !context?.isDraft && preload?.key !== `${context?.projectId}:${dataForPreload.id}`),
-        customPropertiesError: definitions.error || preload?.error,
-        customPropertyContext: contextKey,
-        retryCustomProperties: () => {
-          void definitions.mutate();
-          setPreload(undefined);
-          setRetryCount((count) => count + 1);
-        },
-        prepareCustomProperties,
-        issuePropertyValues: customPropertyValues,
-        setIssuePropertyValues: (next) =>
-          setCustomPropertyValues(
-            (current) => (typeof next === "function" ? next(current) : next) as TCustomPropertyValues
-          ),
-        issuePropertyValueErrors: errors,
-        setIssuePropertyValueErrors: (next) =>
-          setErrors((current) => (typeof next === "function" ? next(current) : next) as Record<string, string>),
-        getIssueTypeIdOnProjectChange: () => null,
-        getActiveAdditionalPropertiesLength: () => definitions.properties.length,
-        handlePropertyValuesValidation: ({ projectId, workspaceSlug, watch }) =>
-          !!projectId && prepareCustomProperties(projectId, workspaceSlug, watch("type_id")) !== null,
-        // The modal sends these values atomically in the work item's POST/PATCH payload.
-        handleCreateUpdatePropertyValues: async () => {},
-        handleProjectEntitiesFetch,
-        handleTemplateChange: () => Promise.resolve(),
-        handleConvert: () => Promise.resolve(),
-        handleCreateSubWorkItem: () => Promise.resolve(),
-      }}
-    >
-      {children}
-    </IssueModalContext.Provider>
+  const { properties, isLoading, error: definitionsError, mutate } = definitions;
+  const value = useMemo<React.ContextType<typeof IssueModalContext>>(
+    () => ({
+      allowedProjectIds:
+        allowedProjectIds ?? (projectIdsWithCreatePermissions ? projectIdsWithCreatePermissions.split(",") : []),
+      workItemTemplateId: null,
+      setWorkItemTemplateId: () => {},
+      isApplyingTemplate: false,
+      setIsApplyingTemplate: () => {},
+      selectedParentIssue,
+      setSelectedParentIssue,
+      customProperties: properties,
+      customPropertyValues,
+      setCustomPropertyValues,
+      customPropertyErrors: errors,
+      customPropertiesLoading:
+        isLoading ||
+        (!!dataForPreload?.id && !context?.isDraft && preload?.key !== `${context?.projectId}:${dataForPreload.id}`),
+      customPropertiesError: definitionsError || preload?.error,
+      customPropertyContext: contextKey,
+      retryCustomProperties: () => {
+        void mutate();
+        setPreload(undefined);
+        setRetryCount((count) => count + 1);
+      },
+      prepareCustomProperties,
+      issuePropertyValues: customPropertyValues,
+      setIssuePropertyValues: (next) =>
+        setCustomPropertyValues(
+          (current) => (typeof next === "function" ? next(current) : next) as TCustomPropertyValues
+        ),
+      issuePropertyValueErrors: errors,
+      setIssuePropertyValueErrors: (next) =>
+        setErrors((current) => (typeof next === "function" ? next(current) : next) as Record<string, string>),
+      getIssueTypeIdOnProjectChange: () => null,
+      getActiveAdditionalPropertiesLength: () => properties.length,
+      handlePropertyValuesValidation: ({ projectId, workspaceSlug, watch }) =>
+        !!projectId && prepareCustomProperties(projectId, workspaceSlug, watch("type_id")) !== null,
+      // The modal sends these values atomically in the work item's POST/PATCH payload.
+      handleCreateUpdatePropertyValues: async () => {},
+      handleProjectEntitiesFetch,
+      handleTemplateChange: () => Promise.resolve(),
+      handleConvert: () => Promise.resolve(),
+      handleCreateSubWorkItem: () => Promise.resolve(),
+    }),
+    [
+      allowedProjectIds,
+      projectIdsWithCreatePermissions,
+      selectedParentIssue,
+      properties,
+      isLoading,
+      definitionsError,
+      mutate,
+      customPropertyValues,
+      setCustomPropertyValues,
+      errors,
+      dataForPreload?.id,
+      context?.isDraft,
+      context?.projectId,
+      preload,
+      contextKey,
+      prepareCustomProperties,
+      handleProjectEntitiesFetch,
+    ]
   );
+
+  return <IssueModalContext.Provider value={value}>{children}</IssueModalContext.Provider>;
 });

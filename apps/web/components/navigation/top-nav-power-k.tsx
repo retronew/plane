@@ -225,7 +225,6 @@ export const TopNavPowerK = observer(() => {
       className={cn("top-nav-command-search relative w-[364px]", isOpen && "w-[554px]")}
     >
       <div className="relative z-30 flex w-full items-center">
-        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- wrapper forwards clicks to its keyboard-accessible input */}
         <div
           className={cn(
             "flex h-7 w-full items-center rounded-lg border border-subtle-1 bg-layer-2 p-2 transition-colors duration-200",
@@ -233,29 +232,32 @@ export const TopNavPowerK = observer(() => {
               "bg-layer-1": isOpen,
             }
           )}
-          // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- clicking the wrapper only forwards focus to the input inside it
-          onClick={() => {
-            openPanel();
-            inputRef.current?.focus();
-          }}
         >
-          <SearchOutline className="mr-2 size-3.5 shrink-0 text-placeholder" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              if (!isOpen) openPanel();
-            }}
-            onMouseDown={handleMouseDown}
-            onFocus={handleFocus}
-            onKeyDown={handleKeyDown}
-            placeholder={translate("web.search_commands")}
-            className="placeholder-text-placeholder min-w-0 flex-1 bg-transparent text-13 text-primary outline-none"
-          />
+          <label className="flex min-w-0 flex-1 items-center">
+            <SearchOutline className="mr-2 size-3.5 shrink-0 text-placeholder" />
+            <input
+              aria-label={translate("web.search_commands")}
+              ref={inputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                if (!isOpen) openPanel();
+              }}
+              onMouseDown={handleMouseDown}
+              onFocus={handleFocus}
+              onKeyDown={handleKeyDown}
+              placeholder={translate("web.search_commands")}
+              className="placeholder-text-placeholder min-w-0 flex-1 bg-transparent text-13 text-primary outline-none"
+            />
+          </label>
           {searchTerm && (
-            <button type="button" onClick={handleClear} className="ml-2 shrink-0">
+            <button
+              type="button"
+              aria-label={translate("power_k.search_menu.clear_search")}
+              onClick={handleClear}
+              className="ml-2 shrink-0"
+            >
               <CloseOutline className="size-3.5 text-placeholder hover:text-primary" />
             </button>
           )}

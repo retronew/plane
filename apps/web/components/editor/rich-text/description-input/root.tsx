@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
 import { debounce } from "lodash-es";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
@@ -140,7 +140,7 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
   // translation
   const { t } = useTranslation();
   // form info
-  const { handleSubmit, reset, control, setValue } = useForm<TFormData>({
+  const { getValues, reset, control, setValue } = useForm<TFormData>({
     defaultValues: {
       id: entityId,
       description_html: initialValue?.trim() ?? "",
@@ -158,11 +158,11 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
         },
         formData.isMigrationUpdate
       );
-      // Update lastSavedContent after successful save
-      lastSavedContent.current = formData.description_html;
     },
     [onSubmit]
   );
+
+  const saveContext = useMemo(() => ({ entityId, revision: 0, active: true, inFlight: new Set<number>() }), [entityId]);
 
   // reset form values
   useEffect(() => {
@@ -182,43 +182,45 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
     });
     // Reset unsaved changes flag when form is reset
     hasUnsavedChanges.current = false;
-  }, [entityId, initialValue, reset]);
+    saveContext.revision += 1;
+  }, [entityId, initialValue, reset, saveContext]);
+  const latestSave = useRef({ handleDescriptionFormSubmit, setIsSubmitting });
 
-  // ADDING handleDescriptionFormSubmit TO DEPENDENCY ARRAY PRODUCES ADVERSE EFFECTS
-  // TODO: Verify the exhaustive-deps warning
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedFormSave = useCallback(
-    debounce(async () => {
-      handleSubmit(handleDescriptionFormSubmit)()
-        .catch((error) => console.error(`Failed to save description for ${entityId}:`, error))
-        .finally(() => {
-          setIsSubmitting("submitted");
+  const saveDescription = useCallback(() => {
+    const revision = saveContext.revision;
+    if (!hasUnsavedChanges.current || saveContext.inFlight.has(revision)) return;
+    saveContext.inFlight.add(revision);
+    const { handleDescriptionFormSubmit: submit, setIsSubmitting: setStatus } = latestSave.current;
+    // Snapshot before an entity reset; this form has no validation rules.
+    const data = getValues();
+    void submit(data)
+      .then(() => {
+        if (saveContext.active && saveContext.revision === revision) {
           hasUnsavedChanges.current = false;
-        });
-    }, 1500),
-    [entityId, handleSubmit]
-  );
+          lastSavedContent.current = data.description_html;
+          setStatus("submitted");
+        }
+        return undefined;
+      })
+      .catch((error) => console.error(`Failed to save description for ${entityId}:`, error))
+      .finally(() => saveContext.inFlight.delete(revision));
+  }, [entityId, getValues, saveContext]);
 
-  // Save on unmount if there are unsaved changes
-  useEffect(
-    () => () => {
+  const debouncedFormSave = useMemo(() => debounce(saveDescription, 1500), [saveDescription]);
+
+  // Flush the current form before an entity reset or unmount, using the latest callbacks.
+  useLayoutEffect(() => {
+    saveContext.active = true;
+    return () => {
       debouncedFormSave.cancel();
+      saveDescription();
+      saveContext.active = false;
+    };
+  }, [debouncedFormSave, saveDescription, saveContext]);
 
-      if (hasUnsavedChanges.current) {
-        handleSubmit(handleDescriptionFormSubmit)()
-          .catch((error) => {
-            console.error("Failed to save description on unmount:", error);
-          })
-          .finally(() => {
-            setIsSubmitting("submitted");
-            hasUnsavedChanges.current = false;
-          });
-      }
-    },
-    // since we don't want to save on unmount if there are no unsaved changes, no deps are needed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  useLayoutEffect(() => {
+    latestSave.current = { handleDescriptionFormSubmit, setIsSubmitting };
+  }, [handleDescriptionFormSubmit, setIsSubmitting]);
 
   if (!workspaceDetails) return null;
 
@@ -243,12 +245,13 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
           projectId={projectId}
           dragDropEnabled
           onChange={(description_json, description_html, options) => {
-            if (description_html === lastSavedContent.current) return;
+            if (!hasUnsavedChanges.current && description_html === lastSavedContent.current) return;
             setIsSubmitting("submitting");
             onChange(description_html);
             setValue("isMigrationUpdate", !!options?.isMigrationUpdate);
             setValue("description_json", description_json);
             hasUnsavedChanges.current = true;
+            saveContext.revision += 1;
             debouncedFormSave();
           }}
           placeholder={placeholder ?? ((isFocused, value) => t(getDescriptionPlaceholderI18n(isFocused, value)))}

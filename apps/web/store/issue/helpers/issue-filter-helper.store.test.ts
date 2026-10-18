@@ -1,9 +1,25 @@
+import { autorun, observable, runInAction } from "mobx";
 import { expect, it } from "vitest";
-import type { IIssueDisplayFilterOptions } from "@plane/types";
+import type { IIssueDisplayFilterOptions, TIssueParams } from "@plane/types";
 import { EIssueLayoutTypes } from "@plane/types";
 import { IssueFilterHelperStore } from "./issue-filter-helper.store";
 
 const helper = new IssueFilterHelperStore();
+it("filters allowed display params without dropping false or layout and tracks allowed-list edits", () => {
+  const allowed = observable<TIssueParams>(["sub_issue", "sub_issue", "order_by"]);
+  const seen: unknown[] = [];
+  const dispose = autorun(() => seen.push(helper.computedFilteredParams({}, defaults, allowed)));
+  runInAction(() => allowed.replace([]));
+  dispose();
+  expect(seen).toEqual([
+    { sub_issue: false, order_by: "-created_at", layout: EIssueLayoutTypes.LIST, filters: "{}" },
+    { layout: EIssueLayoutTypes.LIST, filters: "{}" },
+  ]);
+  expect(helper.computedFilteredParams({}, undefined, ["sub_issue", "group_by"])).toEqual({
+    sub_issue: true,
+    filters: "{}",
+  });
+});
 const defaults: IIssueDisplayFilterOptions = {
   layout: EIssueLayoutTypes.LIST,
   group_by: "priority",

@@ -66,9 +66,10 @@ export const filterProjectMembersByRole = (
 ): TProjectMembership[] => {
   if (roleFilters.length === 0) return members;
 
+  const roles = new Set(roleFilters);
   return members.filter((member) => {
     const memberRole = String(member.role ?? member.original_role ?? "");
-    return roleFilters.includes(memberRole);
+    return roles.has(memberRole);
   });
 };
 

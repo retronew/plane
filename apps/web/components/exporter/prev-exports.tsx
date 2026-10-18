@@ -4,9 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { ArrowNarrowLeftOutline, ArrowNarrowRightOutline, RefreshOutline } from "@makeplane/propel/icons";
 // plane imports
 import { useTranslation } from "@plane/i18n";
@@ -36,43 +35,32 @@ type RowData = IExportData;
 export const PrevExports = observer(function PrevExports(props: Props) {
   // props
   const { workspaceSlug, cursor, per_page, setCursor } = props;
-  // state
-  const [refreshing, setRefreshing] = useState(false);
   // hooks
   const { t } = useTranslation();
   const columns = useExportColumns();
 
-  const { data: exporterServices } = useSWR(
+  const {
+    data: exporterServices,
+    isValidating: refreshing,
+    mutate: refresh,
+  } = useSWR(
     workspaceSlug && cursor ? EXPORT_SERVICES_LIST(workspaceSlug, cursor, `${per_page}`) : null,
-    workspaceSlug && cursor ? () => integrationService.getExportsServicesList(workspaceSlug, cursor, per_page) : null
+    workspaceSlug && cursor ? () => integrationService.getExportsServicesList(workspaceSlug, cursor, per_page) : null,
+    {
+      refreshInterval: (data) =>
+        data?.results.some((service) => service.status === "processing" || service.status === "queued") ? 3000 : 0,
+    }
   );
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
+  const handleRefresh = async () => {
+    if (!workspaceSlug || !cursor || refreshing) return;
     try {
-      await mutate(EXPORT_SERVICES_LIST(workspaceSlug, `${cursor}`, `${per_page}`));
+      await refresh();
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to refresh export services list", error);
-    } finally {
-      setRefreshing(false);
     }
-  }, [workspaceSlug, cursor, per_page]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (
-        Array.isArray(exporterServices?.results) &&
-        exporterServices.results.some((service) => service.status === "processing" || service.status === "queued")
-      ) {
-        handleRefresh();
-      } else {
-        clearInterval(interval);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [exporterServices, handleRefresh]);
+  };
 
   return (
     <div>

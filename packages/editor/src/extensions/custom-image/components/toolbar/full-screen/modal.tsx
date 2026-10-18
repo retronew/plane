@@ -45,9 +45,9 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
 
   const setImageRef = useCallback(
     (node: HTMLImageElement | null) => {
-      if (!node || !isFullScreenEnabled) return;
-
       imgRef.current = node;
+      if (!node || !isFullScreenEnabled) return;
+      setIsDragging(false);
 
       const viewportWidth = window.innerWidth * 0.9;
       const viewportHeight = window.innerHeight * 0.75;
@@ -67,12 +67,16 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
     [isFullScreenEnabled, widthInNumber, aspectRatio]
   );
 
-  const handleClose = useCallback(() => {
-    if (isDragging) return;
-    toggleFullScreenMode(false);
-    setMagnification(1);
-    setInitialMagnification(1);
-  }, [isDragging, toggleFullScreenMode]);
+  const handleClose = useCallback(
+    (force = false) => {
+      if (isDragging && !force) return;
+      setIsDragging(false);
+      toggleFullScreenMode(false);
+      setMagnification(1);
+      setInitialMagnification(1);
+    },
+    [isDragging, toggleFullScreenMode]
+  );
 
   const handleMagnification = useCallback((direction: "increase" | "decrease") => {
     setMagnification((prev) => {
@@ -103,7 +107,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         e.preventDefault();
         e.stopPropagation();
 
-        if (e.key === "Escape") handleClose();
+        if (e.key === "Escape") handleClose(true);
         if (e.key === "+" || e.key === "=") handleMagnification("increase");
         if (e.key === "-") handleMagnification("decrease");
       }
@@ -213,7 +217,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
       >
         <button
           type="button"
-          onClick={handleClose}
+          onClick={() => handleClose(true)}
           className="absolute top-10 right-10 grid size-8 place-items-center"
           aria-label={translate("web.close_image_viewer")}
         >
