@@ -9,13 +9,12 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import type { TModuleStatus } from "@plane/blocks/icons";
 // plane imports
-import { CloseOutline, SearchOutline } from "@makeplane/propel/icons";
 import type { TModuleDisplayFilters, TModuleFilters } from "@plane/types";
 // components
 import { FilterOption } from "@/components/issues/issue-layouts/filters";
 import { FilterLead, FilterMembers, FilterStartDate, FilterStatus, FilterTargetDate } from "@/components/modules";
 // hooks
-import { usePlatformOS } from "@/hooks/use-platform-os";
+import { FilterSearchInput } from "@/components/common/filters/filter-search-input";
 import { translate } from "@plane/i18n";
 
 type Props = {
@@ -39,28 +38,16 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(p
   // states
   const [filtersSearchQuery, setFiltersSearchQuery] = useState("");
   // store
-  const { isMobile } = usePlatformOS();
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="bg-surface-1 p-2.5 pb-0">
-        <div className="flex items-center gap-1.5 rounded-sm border-[0.5px] border-subtle bg-surface-2 px-1.5 py-1 text-11">
-          <SearchOutline className="text-placeholder" width={12} height={12} />
-          <input
-            type="text"
-            className="w-full bg-surface-2 outline-none placeholder:text-placeholder"
-            placeholder={translate("web.search")}
-            value={filtersSearchQuery}
-            onChange={(e) => setFiltersSearchQuery(e.target.value)}
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-            autoFocus={!isMobile}
-          />
-          {filtersSearchQuery !== "" && (
-            <button type="button" className="grid place-items-center" onClick={() => setFiltersSearchQuery("")}>
-              <CloseOutline className="text-tertiary" height={12} width={12} />
-            </button>
-          )}
-        </div>
+        <FilterSearchInput
+          value={filtersSearchQuery}
+          onChange={setFiltersSearchQuery}
+          placeholder={translate("web.search")}
+          focusOnOpen
+        />
       </div>
       <div className="vertical-scrollbar scrollbar-sm h-full w-full divide-y divide-subtle-1 overflow-y-auto px-2.5">
         {!isArchived && (

@@ -5,45 +5,17 @@
  */
 
 import { observer } from "mobx-react";
-import { CalendarOutline } from "@makeplane/propel/icons";
-// hooks
-import { renderFormattedDate } from "@plane/utils";
-import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
-import { IssueActivityBlockComponent, IssueLink } from "./";
-import { translate } from "@plane/i18n";
-// helpers
+import { IssueDateActivity } from "./date-activity";
 
 type TIssueStartDateActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
 export const IssueStartDateActivity = observer(function IssueStartDateActivity(props: TIssueStartDateActivity) {
-  const { activityId, showIssue = true, ends } = props;
-  // hooks
-  const {
-    activity: { getActivityById },
-  } = useIssueDetail();
-
-  const activity = getActivityById(activityId);
-
-  if (!activity) return <></>;
   return (
-    <IssueActivityBlockComponent
-      icon={<CalendarOutline width={14} height={14} className="text-secondary" aria-hidden="true" />}
-      activityId={activityId}
-      ends={ends}
-    >
-      <>
-        {activity.new_value ? translate("web.set_the_start_date_to") : translate("web.removed_the_start_date_2")}
-        {activity.new_value && (
-          <>
-            <span data-activity-part="" className="font-medium text-primary">
-              {renderFormattedDate(activity.new_value)}
-            </span>
-          </>
-        )}
-        {showIssue && (activity.new_value ? ` for ` : ` from `)}
-        {showIssue && <IssueLink activityId={activityId} />}.
-      </>
-    </IssueActivityBlockComponent>
+    <IssueDateActivity
+      {...props}
+      setLabelKey="web.set_the_start_date_to"
+      removedLabelKey="web.removed_the_start_date_2"
+    />
   );
 });
