@@ -77,16 +77,19 @@ export const EstimatePointItemPreview = observer(function EstimatePointItemPrevi
               <span className="text-placeholder">{t("project_settings.estimates.create.enter_estimate_point")}</span>
             )}
           </div>
-          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-          <div
+
+          <button
+            type="button"
+            aria-label={t("edit")}
             className="relative flex h-6 w-6 flex-shrink-0 cursor-pointer items-center justify-center rounded-xs transition-colors hover:bg-layer-1"
             onClick={() => setEstimatePointEditToggle(true)}
           >
             <EditOutline width={14} height={14} className="text-secondary" />
-          </div>
+          </button>
           {estimatePoints.length > estimateCount.min && (
-            // oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions
-            <div
+            <button
+              type="button"
+              aria-label={t("delete")}
               className="relative flex h-6 w-6 flex-shrink-0 cursor-pointer items-center justify-center rounded-xs transition-colors hover:bg-layer-1"
               onClick={() =>
                 estimateId && estimatePointId
@@ -95,7 +98,7 @@ export const EstimatePointItemPreview = observer(function EstimatePointItemPrevi
               }
             >
               <DeleteOutline width={14} height={14} className="text-secondary" />
-            </div>
+            </button>
           )}
         </div>
       )}

@@ -150,16 +150,18 @@ export const getDifference = (
 ): { [EIssueGroupedAction.ADD]: string[]; [EIssueGroupedAction.DELETE]: string[] } => {
   const ADD = [];
   const DELETE = [];
+  const previousValues = new Set(previous);
+  const currentValues = new Set(current);
 
   // For all the current issues values that are not in the previous array, Add them to the ADD array
   for (const currentValue of current) {
-    if (previous.includes(currentValue)) continue;
+    if (previousValues.has(currentValue)) continue;
     ADD.push(currentValue);
   }
 
   // For all the previous issues values that are not in the current array, Add them to the ADD array
   for (const previousValue of previous) {
-    if (current.includes(previousValue)) continue;
+    if (currentValues.has(previousValue)) continue;
     DELETE.push(previousValue);
   }
 
@@ -250,6 +252,22 @@ export const getFilteredWorkItems = (workItems: TIssue[], filters: IIssueFilterO
     return workItems;
   }
 
+  // Rebuild per evaluation so observable filter changes remain tracked.
+  const filterValueSets = new Map(
+    activeFilters
+      .filter(([key]) => key !== "start_date" && key !== "target_date")
+      .map(
+        ([key, values]) =>
+          [
+            key,
+            {
+              scalar: new Set(values),
+              array: new Set(values!.filter(() => true)), // some skips holes, unlike includes.
+            },
+          ] as const
+      )
+  );
+
   return workItems.filter((workItem) =>
     // Check all filter conditions (AND operation between different filters)
     activeFilters.every(([filterKey, filterValues]) => {
@@ -262,10 +280,15 @@ export const getFilteredWorkItems = (workItems: TIssue[], filters: IIssueFilterO
       if (!issueKey) return true; // Skip if no mapping exists
       const issueValue = workItem[issueKey];
       // Handle array-based properties vs single value properties
+      const filterValueSet = filterValueSets.get(filterKey)!;
       if (Array.isArray(issueValue)) {
-        return filterValues!.some((filterValue: any) => issueValue.includes(filterValue));
+        // includes observes holes as undefined; preserve that behavior for sparse arrays.
+        for (const value of issueValue) {
+          if (filterValueSet.array.has(value)) return true;
+        }
+        return false;
       } else {
-        return filterValues!.includes(issueValue as string);
+        return filterValueSet.scalar.has(issueValue as string);
       }
     })
   );

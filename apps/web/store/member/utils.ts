@@ -78,14 +78,13 @@ export const filterWorkspaceMembersByRole = <T extends { role: string | EUserPer
 ): T[] => {
   if (roleFilters.length === 0) return members;
 
+  // Build once per evaluation to preserve observable filter tracking.
+  const activeRoleFilters = new Set(roleFilters);
+  const hasSuspendedFilter = activeRoleFilters.delete("suspended");
+
   return members.filter((member) => {
     const memberRole = String(member.role ?? "");
     const isSuspended = member.is_active === false;
-
-    // Check if suspended is in the role filters
-    const hasSuspendedFilter = roleFilters.includes("suspended");
-    // Get non-suspended role filters
-    const activeRoleFilters = roleFilters.filter((role) => role !== "suspended");
 
     // For suspended users, include them only if suspended filter is selected
     if (isSuspended) {
@@ -93,7 +92,7 @@ export const filterWorkspaceMembersByRole = <T extends { role: string | EUserPer
     }
 
     // For active users, include them only if their role matches any active role filter
-    return activeRoleFilters.includes(memberRole);
+    return activeRoleFilters.has(memberRole);
   });
 };
 

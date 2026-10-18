@@ -77,14 +77,14 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
             <Fragment key={group}>
               {groupedIssues[group] > 0 && (
                 <div key={group}>
-                  {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
-                  <div
-                    className="flex cursor-pointer items-center justify-between gap-2 text-13"
+                  <button
+                    type="button"
+                    className="flex w-full cursor-pointer items-center justify-between gap-2 text-left text-13"
                     onClick={() => {
                       handleFiltersUpdate([{ property: "state_group", operator: "in", value: [group] }]);
                     }}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5">
                       <span
                         className="block h-3 w-3 rounded-full"
                         style={{
@@ -92,11 +92,11 @@ export const ActiveCycleProgress = observer(function ActiveCycleProgress(props: 
                         }}
                       />
                       <span className="w-16 font-medium text-tertiary capitalize">{group}</span>
-                    </div>
+                    </span>
                     <span className="text-tertiary">{`${groupedIssues[group]} ${
                       groupedIssues[group] > 1 ? "Work items" : "Work item"
                     }`}</span>
-                  </div>
+                  </button>
                 </div>
               )}
             </Fragment>

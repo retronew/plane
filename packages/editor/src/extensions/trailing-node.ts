@@ -33,9 +33,10 @@ export const TrailingNode = Extension.create<TrailingNodeOptions>({
 
   addProseMirrorPlugins() {
     const plugin = new PluginKey(this.name);
+    const notAfter = new Set(this.options.notAfter);
     const disabledNodes = Object.entries(this.editor.schema.nodes)
       .map(([, value]) => value)
-      .filter((node) => this.options.notAfter.includes(node.name));
+      .filter((node) => notAfter.has(node.name));
 
     return [
       new Plugin({

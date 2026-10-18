@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { getDateTimeFormatter } from "@plane/utils";
 import React from "react";
 import { CHART_SERIES_COLORS } from "@plane/constants";
 // plane imports
@@ -11,7 +12,7 @@ import { AreaChart } from "@plane/blocks/charts/area-chart";
 import type { TModuleCompletionChartDistribution } from "@plane/types";
 import { StatisticsNote } from "@/components/analytics/statistics-note";
 import { progressChartData } from "./progress-data";
-import { getCurrentLanguage, translate } from "@plane/i18n";
+import { translate } from "@plane/i18n";
 
 type Props = {
   distribution: TModuleCompletionChartDistribution;
@@ -62,7 +63,7 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
           scale: "time",
           domain: [chartData[0]?.timestamp ?? 0, chartData.at(-1)?.timestamp ?? 0],
           tickFormatter: (value) =>
-            new Intl.DateTimeFormat(getCurrentLanguage(), {
+            getDateTimeFormatter({
               year: "numeric",
               month: "short",
               day: "numeric",

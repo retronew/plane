@@ -4,13 +4,13 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { Checkbox } from "@makeplane/propel/components/checkbox";
 // plane imports
 import { ROLE } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import type { IWorkspaceMemberInvitation } from "@plane/types";
-import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { Spinner } from "@plane/blocks/spinner";
 import { truncateText } from "@plane/utils";
 // constants
@@ -34,6 +34,7 @@ const workspaceService = new WorkspaceService();
 export function WorkspaceJoinInvitesStep(props: Props) {
   const { invitations, handleNextStep, handleCurrentViewChange } = props;
   // states
+  const checkboxId = useId();
   const [isJoiningWorkspaces, setIsJoiningWorkspaces] = useState(false);
   const [invitationsRespond, setInvitationsRespond] = useState<string[]>([]);
   // store hooks
@@ -43,7 +44,9 @@ export function WorkspaceJoinInvitesStep(props: Props) {
   // handle invitation
   const handleInvitation = (workspace_invitation: IWorkspaceMemberInvitation, action: "accepted" | "withdraw") => {
     if (action === "accepted") {
-      setInvitationsRespond((prevData) => [...prevData, workspace_invitation.id]);
+      setInvitationsRespond((prevData) =>
+        prevData.includes(workspace_invitation.id) ? prevData : [...prevData, workspace_invitation.id]
+      );
     } else if (action === "withdraw") {
       setInvitationsRespond((prevData) => prevData.filter((item: string) => item !== workspace_invitation.id));
     }
@@ -81,11 +84,10 @@ export function WorkspaceJoinInvitesStep(props: Props) {
             const isSelected = invitationsRespond.includes(invitation.id);
             const invitedWorkspace = invitation.workspace;
             return (
-              // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
-              <div
+              <label
                 key={invitation.id}
+                htmlFor={`${checkboxId}-${invitation.id}`}
                 className={`flex cursor-pointer items-center gap-2 rounded-lg border border-subtle px-3 py-2 hover:bg-surface-2`}
-                onClick={() => handleInvitation(invitation, isSelected ? "withdraw" : "accepted")}
               >
                 <div className="flex-shrink-0">
                   <WorkspaceLogo
@@ -98,13 +100,16 @@ export function WorkspaceJoinInvitesStep(props: Props) {
                   <div className="text-13 font-medium">{truncateText(invitedWorkspace?.name, 30)}</div>
                   <p className="text-11 text-secondary">{ROLE[invitation.role]}</p>
                 </div>
-                <span className="pointer-events-none flex-shrink-0">
+                <span className="flex-shrink-0">
                   <Checkbox
+                    id={`${checkboxId}-${invitation.id}`}
                     checked={isSelected}
+                    disabled={isJoiningWorkspaces}
+                    onCheckedChange={(checked) => handleInvitation(invitation, checked ? "accepted" : "withdraw")}
                     aria-label={invitedWorkspace?.name ?? translate("web.select_workspace_invitation")}
                   />
                 </span>
-              </div>
+              </label>
             );
           })}
       </div>

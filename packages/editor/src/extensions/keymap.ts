@@ -38,7 +38,8 @@ function autoJoin(ranges: Array<number>, newTr: Transaction, nodeTypes: NodeType
   const doc = newTr.doc;
   // Figure out which joinable points exist inside those ranges,
   // by checking all node boundaries in their parent nodes.
-  const joinable: number[] = [];
+  const joinablePositions = new Set<number>();
+  const nodeTypeSet = new Set(nodeTypes);
   for (let i = 0; i < ranges.length; i += 2) {
     const from = ranges[i],
       to = ranges[i + 1];
@@ -49,9 +50,9 @@ function autoJoin(ranges: Array<number>, newTr: Transaction, nodeTypes: NodeType
     for (let index = $from.indexAfter(depth), pos = $from.after(depth + 1); pos <= to; ++index) {
       const after = parent.maybeChild(index);
       if (!after) break;
-      if (index && joinable.indexOf(pos) == -1) {
+      if (index && !joinablePositions.has(pos)) {
         const before = parent.child(index - 1);
-        if (before.type == after.type && nodeTypes.includes(before.type)) joinable.push(pos);
+        if (before.type == after.type && nodeTypeSet.has(before.type)) joinablePositions.add(pos);
       }
       pos += after.nodeSize;
     }
@@ -60,7 +61,7 @@ function autoJoin(ranges: Array<number>, newTr: Transaction, nodeTypes: NodeType
   let joined = false;
 
   // Join the joinable points (reverse order to keep positions stable)
-  joinable.sort((a, b) => a - b);
+  const joinable = Array.from(joinablePositions).toSorted((a, b) => a - b);
   for (let i = joinable.length - 1; i >= 0; i--) {
     if (canJoin(doc, joinable[i])) {
       newTr.join(joinable[i]);

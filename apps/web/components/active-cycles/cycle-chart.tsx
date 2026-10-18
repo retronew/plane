@@ -13,7 +13,8 @@ import {
 } from "recharts";
 import type { TooltipContentProps } from "recharts";
 import { ChartTooltipContent } from "@plane/blocks/charts";
-import { getCurrentLanguage, useTranslation } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
+import { getDateTimeFormatter } from "@plane/utils";
 import type { CycleChartData } from "./chart-data";
 import { CYCLE_CHART_COLORS, workspaceCycleChartData } from "./chart-data";
 
@@ -32,7 +33,7 @@ function CycleDateTick({
 }) {
   const { t } = useTranslation();
   const value = Number(payload?.value ?? endDay);
-  const month = new Intl.DateTimeFormat(getCurrentLanguage(), { month: "short", timeZone: "UTC" }).format(value);
+  const month = getDateTimeFormatter({ month: "short", timeZone: "UTC" }).format(value);
   return (
     <g transform={`translate(${x},${y})`}>
       <text textAnchor={value === endDay ? "end" : "middle"} fill="var(--text-color-tertiary)" fontSize="10">
@@ -65,9 +66,7 @@ export function CycleTooltip({
   };
   return (
     <ChartTooltipContent
-      label={new Intl.DateTimeFormat(getCurrentLanguage(), { dateStyle: "medium", timeZone: "UTC" }).format(
-        Number(label)
-      )}
+      label={getDateTimeFormatter({ dateStyle: "medium", timeZone: "UTC" }).format(Number(label))}
       rows={payload
         .filter(
           (entry) =>

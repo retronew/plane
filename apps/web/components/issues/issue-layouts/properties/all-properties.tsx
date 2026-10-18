@@ -409,9 +409,10 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           shouldRenderProperty={(properties) => !!properties.sub_issue_count && !!subIssueCount}
         >
           <Tooltip label={translate("web.runtime.sub_items_count", { count: subIssueCount ?? 0 })} disabled={isMobile}>
-            {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-            <div
-              onFocus={handleEventPropagation}
+            <button
+              type="button"
+              aria-label={translate("web.runtime.sub_items_count", { count: subIssueCount ?? 0 })}
+              onFocus={(event) => event.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -426,7 +427,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             >
               <ViewsOutline className="h-3 w-3 flex-shrink-0" />
               <div className="text-caption-sm-regular">{subIssueCount}</div>
-            </div>
+            </button>
           </Tooltip>
         </WithDisplayPropertiesHOC>
       )}

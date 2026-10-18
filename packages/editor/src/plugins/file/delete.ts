@@ -55,21 +55,25 @@ export const TrackFileDeletionPlugin = (editor: Editor, deleteHandler: TFileHand
         }
       });
 
-      removedFiles.forEach(async (node) => {
-        const nodeType = node.type.name as keyof NodeFileMapType;
-        const src = node.attrs.src;
-        const nodeFileSetDetails = NODE_FILE_MAP[nodeType];
-        if (!nodeFileSetDetails || !src) return;
-        try {
-          editor.storage[nodeType]?.[nodeFileSetDetails.fileSetName]?.set(src, true);
-          // update assets list storage value
-          editor.commands.updateAssetsList?.({
-            idToRemove: node.attrs.id,
-          });
-          await deleteHandler(src);
-        } catch (error) {
-          console.error("Error deleting file via delete utility plugin:", error);
-        }
+      void Promise.all(
+        removedFiles.map(async (node) => {
+          const nodeType = node.type.name as keyof NodeFileMapType;
+          const src = node.attrs.src;
+          const nodeFileSetDetails = NODE_FILE_MAP[nodeType];
+          if (!nodeFileSetDetails || !src) return;
+          try {
+            editor.storage[nodeType]?.[nodeFileSetDetails.fileSetName]?.set(src, true);
+            // update assets list storage value
+            editor.commands.updateAssetsList?.({
+              idToRemove: node.attrs.id,
+            });
+            await deleteHandler(src);
+          } catch (error) {
+            console.error("Error deleting file via delete utility plugin:", error);
+          }
+        })
+      ).catch((error: unknown) => {
+        console.error("Error deleting file via delete utility plugin:", error);
       });
 
       return null;

@@ -30,6 +30,22 @@ it("writes the real default ID after types load asynchronously", () => {
   rerender({ types: [type] });
   expect(setValue).toHaveBeenCalledWith("type_id", "bug", { shouldValidate: true });
 });
+it("preserves a user selection when project types arrive", () => {
+  const setValue = vi.fn();
+  const { rerender } = renderHook(
+    ({ types }: { types?: TProjectIssueType[] }) =>
+      useDefaultIssueType({
+        projectId: "p",
+        types,
+        getValues: (() => "selected") as unknown as UseFormGetValues<TIssue>,
+        setValue: setValue as UseFormSetValue<TIssue>,
+        getDefault: () => null,
+      }),
+    { initialProps: { types: undefined as TProjectIssueType[] | undefined } }
+  );
+  rerender({ types: [type] });
+  expect(setValue).not.toHaveBeenCalled();
+});
 it.each([{ id: "existing", type_id: null }, { type_id: null }])(
   "preserves explicit null and existing item type",
   (data) => {

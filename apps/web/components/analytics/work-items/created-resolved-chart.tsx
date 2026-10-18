@@ -3,6 +3,7 @@ import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartTooltipContent, useChartLegend } from "@plane/blocks/charts";
 import { useTranslation } from "@plane/i18n";
+import { getDateTimeFormatter } from "@plane/utils";
 import type { IChartResponse } from "@plane/types";
 
 export function CreatedResolvedChart({
@@ -14,14 +15,14 @@ export function CreatedResolvedChart({
   height?: number;
   granularity?: "day" | "month";
 }) {
-  const { t, currentLocale } = useTranslation();
+  const { t } = useTranslation();
   const series = [
     { key: "created_issues", label: t("web.created"), color: CHART_SEMANTIC_COLORS.primary },
     { key: "completed_issues", label: t("web.resolved"), color: CHART_SEMANTIC_COLORS.completed },
   ];
   const legendState = useChartLegend(series.map((item) => item.key));
   const month = (key: string) =>
-    new Intl.DateTimeFormat(currentLocale, {
+    getDateTimeFormatter({
       year: "numeric",
       month: "short",
       ...(granularity === "day" ? { day: "numeric" as const } : {}),

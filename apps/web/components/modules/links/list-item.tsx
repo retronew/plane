@@ -67,6 +67,7 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
           {isEditingAllowed && (
             <button
               type="button"
+              aria-label={translate("edit")}
               className="grid place-items-center rounded-sm p-1 text-secondary hover:bg-layer-transparent-hover"
               onClick={(e) => {
                 e.preventDefault();
@@ -79,6 +80,7 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
           )}
           <button
             type="button"
+            aria-label={translate("copy_link")}
             onClick={() => copyToClipboard(link.url)}
             className="grid place-items-center rounded-sm p-1 text-secondary hover:bg-layer-transparent-hover"
           >
@@ -87,6 +89,7 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
           {isEditingAllowed && (
             <button
               type="button"
+              aria-label={translate("delete")}
               className="grid place-items-center rounded-sm p-1 text-secondary hover:bg-layer-transparent-hover"
               onClick={(e) => {
                 e.preventDefault();

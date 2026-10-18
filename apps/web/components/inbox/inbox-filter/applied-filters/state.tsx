@@ -32,31 +32,34 @@ export const InboxIssueAppliedFiltersState = observer(function InboxIssueApplied
       <div className="text-11 text-secondary">{translate("web.state")}</div>
       {filteredValues.map((value) => {
         const optionDetail = currentOptionDetail(value);
-        if (!optionDetail) return <></>;
+        if (!optionDetail) return null;
         return (
           <div key={value} className="relative flex items-center gap-1 rounded-sm bg-layer-1 p-1 text-11">
             <div className="relative flex h-3 w-3 flex-shrink-0 items-center justify-center overflow-hidden">
               <StateGroupIcon color={optionDetail.color} stateGroup={optionDetail.group} size={EIconSize.SM} />
             </div>
             <div className="truncate text-11">{optionDetail?.name}</div>
-            {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
-            <div
+
+            <button
               className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
               onClick={() => handleInboxIssueFilters("state", handleFilterValue(optionDetail?.id))}
+              type="button"
+              aria-label={translate("remove")}
             >
               <CloseOutline className={`h-3 w-3`} />
-            </div>
+            </button>
           </div>
         );
       })}
 
-      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
-      <div
+      <button
         className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
         onClick={clearFilter}
+        type="button"
+        aria-label={translate("remove")}
       >
         <CloseOutline className={`h-3 w-3`} />
-      </div>
+      </button>
     </div>
   );
 });

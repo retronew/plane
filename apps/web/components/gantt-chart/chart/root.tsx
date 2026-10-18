@@ -110,6 +110,13 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     setPortalContainer(document.getElementById("full-screen-portal"));
   }, []);
   const savedScroll = useRef<{ left: number; top: number } | null>(null);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (scrollTimeout.current !== null) clearTimeout(scrollTimeout.current);
+    },
+    []
+  );
   const toggleFullScreenMode = () => {
     const element = document.getElementById("gantt-container");
     if (element) savedScroll.current = { left: element.scrollLeft, top: element.scrollTop };
@@ -158,19 +165,20 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
       if (side === "left") {
         updateCurrentView(selectedCurrentView);
         updateRenderView(mergeRenderPayloads(currentRender.payload, renderView));
-        updateItemsContainerWidth(currentRender.scrollWidth);
         if (!targetDate) updateCurrentLeftScrollPosition(currentRender.scrollWidth);
         updateAllBlocksOnChartChangeWhileDragging(currentRender.scrollWidth);
-        setItemsContainerWidth(itemsContainerWidth + currentRender.scrollWidth);
+        setItemsContainerWidth((width) => width + currentRender.scrollWidth);
       } else if (side === "right") {
         updateCurrentView(view);
         updateRenderView(mergeRenderPayloads(renderView, currentRender.payload));
-        setItemsContainerWidth(itemsContainerWidth + currentRender.scrollWidth);
+        setItemsContainerWidth((width) => width + currentRender.scrollWidth);
       } else {
         updateCurrentView(view);
         updateRenderView(currentRender.payload);
         setItemsContainerWidth(currentRender.scrollWidth);
-        setTimeout(() => {
+        if (scrollTimeout.current !== null) clearTimeout(scrollTimeout.current);
+        scrollTimeout.current = setTimeout(() => {
+          scrollTimeout.current = null;
           handleScrollToCurrentSelectedDate(currentRender.state, currentRender.state.data.currentDate);
         }, 50);
       }
@@ -186,12 +194,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     handleToday();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const updateItemsContainerWidth = (width: number) => {
-    const scrollContainer = document.querySelector("#gantt-container") as HTMLDivElement;
-    if (!scrollContainer) return;
-    setItemsContainerWidth(width + scrollContainer?.scrollLeft);
-  };
 
   const content = (
     <div

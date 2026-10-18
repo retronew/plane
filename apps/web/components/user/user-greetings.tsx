@@ -6,11 +6,13 @@
 
 // plane types
 import { useTranslation } from "@plane/i18n";
-import { getDateLocale } from "@plane/utils";
+import { getDateTimeFormatter } from "@plane/utils";
 // hooks
 import type { IUser } from "@plane/types";
 import { useCurrentTime } from "@/hooks/use-current-time";
 // types
+
+const greetingHourFormatter = new Intl.DateTimeFormat("en-US", { hour12: false, hour: "numeric" });
 
 export interface IUserGreetingsView {
   user: IUser;
@@ -23,22 +25,17 @@ export function UserGreetingsView(props: IUserGreetingsView) {
   // store hooks
   const { t } = useTranslation();
 
-  const hour = new Intl.DateTimeFormat("en-US", {
-    hour12: false,
-    hour: "numeric",
-  }).format(currentTime);
-
-  const locale = getDateLocale();
+  const hour = greetingHourFormatter.format(currentTime);
 
   // e.g. "Wednesday, Oct 14" (en) / "10月14日星期三" (zh-CN)
-  const dateString = new Intl.DateTimeFormat(locale, {
+  const dateString = getDateTimeFormatter({
     timeZone: user?.user_timezone,
     weekday: "long",
     month: "short",
     day: "numeric",
   }).format(currentTime);
 
-  const timeString = new Intl.DateTimeFormat(locale, {
+  const timeString = getDateTimeFormatter({
     timeZone: user?.user_timezone,
     hourCycle: "h23", // Use 24-hour format
     hour: "2-digit",

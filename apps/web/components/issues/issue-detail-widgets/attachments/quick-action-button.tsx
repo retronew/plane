@@ -24,7 +24,7 @@ type Props = {
   workspaceSlug: string;
   projectId: string;
   issueId: string;
-  customButton?: React.ReactNode;
+  customButton?: React.ReactElement<React.ComponentPropsWithRef<"button">>;
   disabled?: boolean;
   issueServiceType: TIssueServiceType;
 };
@@ -88,25 +88,40 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
     [attachmentOperations, maxFileSize, workspaceSlug, handleFetchPropertyActivities, setLastWidgetAction]
   );
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { getInputProps, open } = useDropzone({
     onDrop,
+    noClick: true,
+    noKeyboard: true,
     maxSize: maxFileSize,
     multiple: false,
     disabled: isLoading || disabled,
   });
 
   return (
-    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
-    <div
-      onClick={(e) => {
-        // TODO: Remove extra div and move event propagation to button
-        e.stopPropagation();
-      }}
-    >
-      <button {...getRootProps()} type="button" disabled={disabled}>
-        <input {...getInputProps()} />
-        {customButton ? customButton : <AddOutline className="h-4 w-4" />}
-      </button>
-    </div>
+    <>
+      {customButton ? (
+        React.cloneElement(customButton, {
+          disabled: isLoading || disabled,
+          onClick: (event) => {
+            event.stopPropagation();
+            customButton.props.onClick?.(event);
+            if (!event.defaultPrevented) open();
+          },
+        })
+      ) : (
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            open();
+          }}
+          type="button"
+          aria-label={translate("common.attachment")}
+          disabled={isLoading || disabled}
+        >
+          <AddOutline className="h-4 w-4" />
+        </button>
+      )}
+      <input {...getInputProps()} />
+    </>
   );
 });

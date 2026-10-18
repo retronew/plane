@@ -34,20 +34,26 @@ export const ReadonlyState = observer(function ReadonlyState(props: TReadonlySta
   const state = getStateById(value);
 
   useEffect(() => {
-    // fetch states if not provided
+    let cancelled = false;
+    const stateIds = getProjectStateIds(projectId);
+    const needsFetch = Boolean(projectId && (!stateIds || stateIds.length === 0));
+    setStateLoader(needsFetch);
+
     const fetchStates = async () => {
-      const stateIds = getProjectStateIds(projectId);
-      if ((stateIds === undefined || stateIds.length === 0) && projectId) {
-        setStateLoader(true);
-        try {
-          await fetchProjectStates(workspaceSlug, projectId);
-        } finally {
-          setStateLoader(false);
-        }
+      if (!needsFetch || !projectId) return;
+      try {
+        await fetchProjectStates(workspaceSlug, projectId);
+      } catch (error) {
+        if (!cancelled) console.error("Failed to fetch project states", error);
+      } finally {
+        if (!cancelled) setStateLoader(false);
       }
     };
 
-    fetchStates();
+    void fetchStates();
+    return () => {
+      cancelled = true;
+    };
   }, [projectId, workspaceSlug, getProjectStateIds, fetchProjectStates]);
 
   if (stateLoader) {

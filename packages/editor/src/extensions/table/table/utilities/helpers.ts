@@ -127,9 +127,9 @@ export const getSelectedRows = (selection: Selection, map: TableMap): number[] =
 export const isRectSelected = (rect: Rect, selection: CellSelection): boolean => {
   const map = TableMap.get(selection.$anchorCell.node(-1));
   const cells = map.cellsInRect(rect);
-  const selectedCells = map.cellsInRect(getSelectedRect(selection, map));
+  const selectedCells = new Set(map.cellsInRect(getSelectedRect(selection, map)));
 
-  return cells.every((cell) => selectedCells.includes(cell));
+  return cells.every((cell) => selectedCells.has(cell));
 };
 
 /**

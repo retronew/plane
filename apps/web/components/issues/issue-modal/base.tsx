@@ -135,43 +135,55 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     if (cacheKey) saveComposerDraft(cacheKey);
   };
 
-  const fetchIssueDetail = async (issueId: string | undefined) => {
-    setDescription(undefined);
-    if (!workspaceSlug) return;
-
-    if (!projectId || issueId === undefined || !fetchIssueDetails) {
-      // Set description to the issue description from the props if available
-      setDescription(cachedDraft?.values.description_html ?? data?.description_html ?? "<p></p>");
-      return;
-    }
-    const response = await fetchIssue(workspaceSlug.toString(), projectId.toString(), issueId);
-    if (response) setDescription(response?.description_html || "<p></p>");
-  };
+  const issueIdToFetch = data?.id ?? data?.sourceIssueId;
+  const descriptionFallback = cachedDraft?.values.description_html ?? data?.description_html ?? "<p></p>";
+  const workspaceSlugValue = workspaceSlug?.toString();
 
   useEffect(() => {
-    // fetching issue details
-    if (isOpen) fetchIssueDetail(data?.id ?? data?.sourceIssueId);
+    if (!isOpen) return;
+    let cancelled = false;
+    setDescription(undefined);
+    if (!workspaceSlugValue || !projectId || issueIdToFetch === undefined || !fetchIssueDetails) {
+      setDescription(descriptionFallback);
+      return;
+    }
+    void fetchIssue(workspaceSlugValue, projectId, issueIdToFetch)
+      .then((response) => {
+        if (!cancelled && response) setDescription(response.description_html || "<p></p>");
+        return response;
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          console.error(error);
+          setDescription(descriptionFallback);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, workspaceSlugValue, projectId, issueIdToFetch, fetchIssueDetails, fetchIssue, descriptionFallback]);
 
+  const dataProjectId = data?.project_id;
+  const cachedProjectId = cachedDraft?.values.project_id;
+  useEffect(() => {
     // Preserve the current project and description while the dialog exits.
     if (!isOpen) return;
 
     // if data is present, set active project to the project of the
     // issue. This has more priority than the project in the url.
-    if (data && data.project_id) {
-      setActiveProjectId(data.project_id);
+    if (dataProjectId) {
+      setActiveProjectId(dataProjectId);
       return;
     }
 
     // if data is not present, set active project to the first project in the allowedProjectIds array
     if (allowedProjectIds && allowedProjectIds.length > 0 && !activeProjectId)
       setActiveProjectId(
-        cachedDraft?.values.project_id && allowedProjectIds.includes(cachedDraft.values.project_id)
-          ? cachedDraft.values.project_id
+        cachedProjectId && allowedProjectIds.includes(cachedProjectId)
+          ? cachedProjectId
           : (projectId?.toString() ?? allowedProjectIds?.[0])
       );
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.project_id, data?.id, data?.sourceIssueId, projectId, isOpen, activeProjectId]);
+  }, [dataProjectId, projectId, isOpen, activeProjectId, allowedProjectIds, cachedProjectId]);
 
   const addIssueToCycle = async (issue: TIssue, targetCycleId: string) => {
     if (!workspaceSlug || !issue.project_id) return;

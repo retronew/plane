@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { CloseOutline, DragDropOutline } from "@makeplane/propel/icons";
@@ -63,6 +63,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
 ) {
   const { isOpen, onClose } = props;
   const { t } = useTranslation();
+  const controlId = useId();
 
   // router
   const { workspaceSlug } = useParams();
@@ -238,13 +239,17 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                       <div className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-200 hover:bg-surface-2">
                         <DragDropOutline className="size-4 cursor-grab text-placeholder transition-colors active:cursor-grabbing" />
                         <Checkbox
+                          id={`${controlId}-${item.key}`}
                           checked={!!personalPreferences.items[item.key]?.enabled}
                           onCheckedChange={(checked) => togglePersonalItem(item.key, checked)}
                           aria-label={t(item.labelTranslationKey)}
                         />
                         <div className="flex flex-1 items-center gap-2">
                           {getSidebarNavigationItemIcon(item.key)}
-                          <label className="flex-1 cursor-pointer text-13 text-primary">
+                          <label
+                            htmlFor={`${controlId}-${item.key}`}
+                            className="flex-1 cursor-pointer text-13 text-primary"
+                          >
                             {t(item.labelTranslationKey)}
                           </label>
                         </div>
@@ -345,8 +350,11 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                         <div className="pl-8">
                           <div className="flex w-full flex-col gap-1">
                             <div className="flex w-full flex-col gap-2 pb-1.5">
-                              <label className="w-full text-11 text-secondary">{t("enter_number_of_projects")}</label>
+                              <label htmlFor={`${controlId}-project-count`} className="w-full text-11 text-secondary">
+                                {t("enter_number_of_projects")}
+                              </label>
                               <input
+                                id={`${controlId}-project-count`}
                                 type="number"
                                 min="1"
                                 step="1"

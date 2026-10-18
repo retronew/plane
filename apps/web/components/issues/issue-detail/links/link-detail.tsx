@@ -48,39 +48,43 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
   return (
     <div key={linkId}>
       <div className="relative flex flex-col rounded-md bg-surface-2 p-2.5">
-        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is */}
-        <div
-          className="flex w-full cursor-pointer items-start justify-between gap-2"
-          onClick={() => {
-            copyTextToClipboard(linkDetail.url);
-            setToast({
-              type: "success",
-              title: translate("web.link_copied_2bb0"),
-              message: translate("web.link_copied_to_clipboard"),
-            });
-          }}
-        >
-          <div className="flex items-start gap-2 truncate">
-            <span className="py-1">
-              {createElement(getIconForLink(linkDetail.url), {
-                className: "size-3 flex-shrink-0 stroke-2 text-tertiary group-hover:text-primary",
-              })}
-            </span>
-            <Tooltip
-              label={linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}
-              layout="stacked"
-              disabled={isMobile}
-            >
-              <span className="truncate text-11">
-                {linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}
+        <div className="flex w-full items-start justify-between gap-2">
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 cursor-pointer items-start gap-2 text-left"
+            aria-label={translate("copy_link")}
+            onClick={() => {
+              copyTextToClipboard(linkDetail.url);
+              setToast({
+                type: "success",
+                title: translate("web.link_copied_2bb0"),
+                message: translate("web.link_copied_to_clipboard"),
+              });
+            }}
+          >
+            <div className="flex items-start gap-2 truncate">
+              <span className="py-1">
+                {createElement(getIconForLink(linkDetail.url), {
+                  className: "size-3 flex-shrink-0 stroke-2 text-tertiary group-hover:text-primary",
+                })}
               </span>
-            </Tooltip>
-          </div>
+              <Tooltip
+                label={linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}
+                layout="stacked"
+                disabled={isMobile}
+              >
+                <span className="truncate text-11">
+                  {linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}
+                </span>
+              </Tooltip>
+            </div>
+          </button>
 
           {!isNotAllowed && (
             <div className="z-[1] flex flex-shrink-0 items-center gap-2">
               <button
                 type="button"
+                aria-label={translate("edit")}
                 className="flex items-center justify-center p-1 hover:bg-layer-1"
                 onClick={(e) => {
                   e.preventDefault();
@@ -91,6 +95,7 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
                 <EditOutline className="h-3 w-3 stroke-[1.5] text-secondary" />
               </button>
               <a
+                aria-label={linkDetail.title || linkDetail.url}
                 href={linkDetail.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -100,6 +105,7 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
               </a>
               <button
                 type="button"
+                aria-label={translate("web.remove")}
                 className="flex items-center justify-center p-1 hover:bg-layer-1"
                 onClick={(e) => {
                   e.preventDefault();

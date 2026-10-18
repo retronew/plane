@@ -61,8 +61,8 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
         openOnHover
         delay={100}
         render={
-          // oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions
-          <div
+          <button
+            type="button"
             id={`issue-${issueId}`}
             className="space-between relative flex h-full w-full cursor-pointer items-center rounded-sm"
             style={blockStyle}
@@ -75,7 +75,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
             >
               {issueDetails?.name}
             </div>
-          </div>
+          </button>
         }
       />
       <PopoverContent side="bottom" align="start" sideOffset={8}>

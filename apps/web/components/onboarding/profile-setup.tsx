@@ -274,7 +274,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     <div className="flex flex-col items-center justify-between">
                       <div className="relative h-14 w-14 overflow-hidden">
                         <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center rounded-full bg-accent-primary text-24 font-medium text-on-color uppercase">
-                          {watch("first_name")[0] ?? "R"}
+                          {watch("first_name")?.[0] ?? "R"}
                         </div>
                       </div>
                       <div className="pt-1 text-13 font-medium text-accent-secondary hover:text-tertiary">
@@ -474,13 +474,10 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
           {/* user role once the password is set */}
           {profileSetupStep !== EProfileSetupSteps.USER_DETAILS && (
             <>
-              <div className="space-y-1">
-                <label
-                  className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
-                  htmlFor="role"
-                >
+              <fieldset className="space-y-1">
+                <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
                   {translate("web.what_role_choose_one")}
-                </label>
+                </legend>
                 <Controller
                   control={control}
                   name="role"
@@ -490,8 +487,9 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   render={({ field: { value, onChange } }) => (
                     <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
                       {USER_ROLE.map((userRole) => (
-                        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
-                        <div
+                        <button
+                          type="button"
+                          aria-pressed={value === userRole}
                           key={userRole}
                           className={cn(
                             "shrink-0 rounded border-[0.5px] px-3 py-1.5 text-13 font-medium hover:cursor-pointer hover:bg-surface-2",
@@ -503,20 +501,17 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                           onClick={() => onChange(userRole)}
                         >
                           {userRole}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
                 />
                 {errors.role && <span className="text-13 text-danger-primary">{errors.role.message}</span>}
-              </div>
-              <div className="space-y-1">
-                <label
-                  className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
-                  htmlFor="use_case"
-                >
+              </fieldset>
+              <fieldset className="space-y-1">
+                <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
                   {translate("web.domain_expertise_choose")}
-                </label>
+                </legend>
                 <Controller
                   control={control}
                   name="use_case"
@@ -529,8 +524,9 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                       {USER_DOMAIN.map((userDomain) => {
                         const isSelected = value?.includes(userDomain) || false;
                         return (
-                          // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pre-existing mouse-only interaction, kept as-is
-                          <div
+                          <button
+                            type="button"
+                            aria-pressed={isSelected}
                             key={userDomain}
                             className={`flex-shrink-0 border-[0.5px] hover:cursor-pointer hover:bg-surface-2 ${
                               isSelected ? "border-accent-strong" : "border-strong"
@@ -545,14 +541,14 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                             }}
                           >
                             {userDomain}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
                   )}
                 />
                 {errors.use_case && <span className="text-13 text-danger-primary">{errors.use_case.message}</span>}
-              </div>
+              </fieldset>
             </>
           )}
           <Button variant="primary" type="submit" size="lg" stretch="full" disabled={isButtonDisabled}>

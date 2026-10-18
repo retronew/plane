@@ -28,11 +28,13 @@ export const restorePublicImages = (editor: Editor, restoreImageFn: TFileHandler
     }
   });
 
-  imageSources.forEach(async (src) => {
-    try {
-      await restoreImageFn(src);
-    } catch (error) {
-      console.error("Error restoring image: ", error);
-    }
-  });
+  return Promise.all(
+    Array.from(imageSources, async (src) => {
+      try {
+        await restoreImageFn(src);
+      } catch (error) {
+        console.error("Error restoring image: ", error);
+      }
+    })
+  );
 };

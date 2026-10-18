@@ -103,6 +103,7 @@ type InsertFilesSafelyArgs = {
 export const insertFilesSafely = async (args: InsertFilesSafelyArgs) => {
   const { disabledExtensions, editor, event, files, initialPos, type } = args;
   let pos = initialPos;
+  const imageDisabled = disabledExtensions?.includes("image");
 
   for (const file of files) {
     // safe insertion
@@ -120,7 +121,7 @@ export const insertFilesSafely = async (args: InsertFilesSafelyArgs) => {
         else if (ACCEPTED_ATTACHMENT_MIME_TYPES.includes(file.type)) fileType = "attachment";
       }
       // insert file depending on the type at the current position
-      if (fileType === "image" && !disabledExtensions?.includes("image")) {
+      if (fileType === "image" && !imageDisabled) {
         editor.commands.insertImageComponent({
           file,
           pos,

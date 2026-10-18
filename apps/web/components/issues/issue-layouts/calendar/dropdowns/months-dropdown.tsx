@@ -14,7 +14,7 @@ import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane
 import { ChevronDownOutline } from "@makeplane/propel/icons";
 import { getCalendarLocale } from "@plane/blocks/property-select";
 import { useTranslation } from "@plane/i18n";
-import { getCalendarFormatters, getDate } from "@plane/utils";
+import { getCalendarFormatters, getDate, getDateTimeFormatter } from "@plane/utils";
 import { useCalendarView } from "@/hooks/store/use-calendar-view";
 
 interface Props {
@@ -26,7 +26,7 @@ export const CalendarMonthsDropdown = observer(function CalendarMonthsDropdown({
   const issueCalendarView = useCalendarView();
   const calendarLayout = issuesFilterStore.issueFilters?.displayFilters?.calendar?.layout ?? "month";
   const { activeMonthDate, activeWeekDate } = issueCalendarView.calendarFilters;
-  const formatter = new Intl.DateTimeFormat(currentLocale, { month: "long", year: "numeric" });
+  const formatter = getDateTimeFormatter({ month: "long", year: "numeric" });
   let label = formatter.format(activeMonthDate);
   if (calendarLayout === "week") {
     const days = Object.keys(issueCalendarView.allDaysOfActiveWeek ?? {});

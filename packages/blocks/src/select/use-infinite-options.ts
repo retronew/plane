@@ -96,6 +96,12 @@ export function useInfiniteOptions<T>(
     }
   }, []);
 
+  const invalidateRequests = useCallback(() => {
+    generationRef.current++;
+    inFlightRef.current = null;
+    fetchedRef.current = false;
+  }, []);
+
   const debouncedSearchRef = useRef<ReturnType<typeof debounce<(q: string) => void>> | null>(null);
   useEffect(() => {
     const debouncedSearch = debounce((q: string) => {
@@ -105,8 +111,10 @@ export function useInfiniteOptions<T>(
     return () => {
       debouncedSearch.cancel();
       debouncedSearchRef.current = null;
+      // Invalidate pending work on unmount, and re-arm open for StrictMode effect replay.
+      invalidateRequests();
     };
-  }, [loadPage]);
+  }, [invalidateRequests, loadPage]);
 
   const onSearchChange = useCallback(
     (q: string) => {
@@ -157,15 +165,17 @@ export function useInfiniteOptions<T>(
   // Consumers whose popup UNMOUNTS on close (flyout bodies) never need it — unmount is the reset.
   const onClose = useCallback(() => {
     debouncedSearchRef.current?.cancel();
-    fetchedRef.current = false;
+    invalidateRequests();
     nextCursorRef.current = undefined;
+    queryRef.current = "";
+    setIsLoading(false);
     setQuery("");
     setItems([]);
     setHasMore(false);
     setError(null);
     setErrorKind(null);
     errorKindRef.current = null;
-  }, []);
+  }, [invalidateRequests]);
 
   // A reset with a live query is a SEARCH: the list has already been seen, so the surface shows a
   // "searching" line rather than the first-open skeleton. Clearing the query resets too, but with an

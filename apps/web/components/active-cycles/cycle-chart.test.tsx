@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { CycleTooltip } from "./cycle-chart";
 
+const language = vi.hoisted(() => ({ current: "en" }));
+
 vi.mock("@plane/i18n", () => ({
-  getCurrentLanguage: () => "en",
+  getCurrentLanguage: () => language.current,
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
@@ -27,4 +29,28 @@ it("omits the range-fill payload and invalid values from the tooltip", () => {
   expect(screen.getByText("19")).toBeTruthy();
   expect(screen.queryByText("workspace_cycles.started")).toBeNull();
   expect(screen.queryByText("NaN")).toBeNull();
+});
+
+it("updates cached tooltip dates when the language switches and keeps UTC date boundaries", () => {
+  cleanup();
+  const timestamp = Date.parse("2026-01-01T00:05:00Z");
+  const props = {
+    active: true,
+    burnup: false,
+    label: timestamp,
+    payload: [{ graphicalItemId: "actual", dataKey: "actual", value: 1 }],
+  };
+  language.current = "en";
+  const view = render(<CycleTooltip {...props} />);
+  expect(
+    screen.getByText(new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" }).format(timestamp))
+  ).toBeTruthy();
+  language.current = "zh-CN";
+  view.rerender(<CycleTooltip {...props} />);
+  expect(
+    screen.getByText(new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeZone: "UTC" }).format(timestamp))
+  ).toBeTruthy();
+  language.current = "en";
+  view.rerender(<CycleTooltip {...props} />);
+  expect(screen.getByText("Jan 1, 2026")).toBeTruthy();
 });

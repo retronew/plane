@@ -1,6 +1,8 @@
 import { createRef } from "react";
-import { render, screen } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+
+afterEach(cleanup);
 import type { ICycle } from "@plane/types";
 import { CycleListItemAction } from "./cycle-list-item-action";
 
@@ -37,7 +39,33 @@ vi.mock("@/components/dropdowns/merged-date", () => ({
   MergedDateDisplay: () => <span>October 1 – October 18</span>,
 }));
 vi.mock("../quick-actions", () => ({ CycleQuickActions: () => <button>cycle-options</button> }));
-vi.mock("../transfer-issues-modal", () => ({ TransferIssuesModal: () => null }));
+vi.mock("../transfer-issues-modal", () => ({
+  TransferIssuesModal: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <dialog open>Transfer</dialog> : null),
+}));
+
+it("opens transfer from a focusable native button without activating the containing cycle row", () => {
+  const onRowClick = vi.fn();
+  render(
+    <div onClick={onRowClick} onKeyDown={onRowClick} role="presentation">
+      <CycleListItemAction
+        workspaceSlug="demo"
+        projectId="project"
+        cycleId="cycle"
+        cycleDetails={
+          { id: "cycle", status: "completed", total_issues: 5, completed_issues: 2, cancelled_issues: 0 } as ICycle
+        }
+        parentRef={createRef<HTMLDivElement>()}
+      />
+    </div>
+  );
+  const transfer = screen.getByRole("button", { name: "project_cycles.transfer_work_items" });
+  expect(transfer.getAttribute("type")).toBe("button");
+  transfer.focus();
+  expect(document.activeElement).toBe(transfer);
+  fireEvent.click(transfer);
+  expect(screen.getByRole("dialog").textContent).toBe("Transfer");
+  expect(onRowClick).not.toHaveBeenCalled();
+});
 
 it("centers the active date, timezone and actual owner together, even when the creator differs", () => {
   render(

@@ -92,8 +92,7 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
         workspaceLevelToggle
       />
 
-      <button
-        type="button"
+      <div
         className={cn(
           "group flex items-center gap-2 rounded-sm px-2 py-0.5 outline-none",
           {
@@ -103,8 +102,6 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
           },
           className
         )}
-        onClick={() => toggleRelationModal(issueId, relationKey)}
-        disabled={disabled}
       >
         <div className="flex w-full items-start justify-between">
           {relationIssueIds.length > 0 ? (
@@ -143,8 +140,9 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
                     </Tooltip>
                     {!disabled && (
                       <Tooltip label={translate("web.remove")} side="bottom" disabled={isMobile}>
-                        {/* eslint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-                        <span
+                        <button
+                          type="button"
+                          aria-label={translate("web.remove")}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -152,7 +150,7 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
                           }}
                         >
                           <CloseOutline className="h-2.5 w-2.5 text-tertiary hover:text-danger-primary" />
-                        </span>
+                        </button>
                       </Tooltip>
                     )}
                   </div>
@@ -160,19 +158,29 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
               })}
             </div>
           ) : (
-            <span className="text-body-xs-regular text-placeholder">{currRelationOption?.placeholder}</span>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => toggleRelationModal(issueId, relationKey)}
+              className="flex-1 text-left text-body-xs-regular text-placeholder"
+            >
+              {currRelationOption?.placeholder}
+            </button>
           )}
-          {!disabled && (
-            <span
-              className={cn("flex-shrink-0 p-1 opacity-0 group-hover:opacity-100", {
+          {!disabled && relationIssueIds.length > 0 && (
+            <button
+              type="button"
+              aria-label={translate("edit")}
+              onClick={() => toggleRelationModal(issueId, relationKey)}
+              className={cn("flex-shrink-0 p-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100", {
                 "text-placeholder": relationIssueIds.length === 0,
               })}
             >
               <EditOutline className="h-2.5 w-2.5 flex-shrink-0" />
-            </span>
+            </button>
           )}
         </div>
-      </button>
+      </div>
     </>
   );
 });
