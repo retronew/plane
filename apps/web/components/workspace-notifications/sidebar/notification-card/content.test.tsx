@@ -69,6 +69,23 @@ describe("notification sentence localization", () => {
     );
     expect(container.textContent).toBe("待审批");
   });
+  it.each([
+    ["requested", "pending", "Alice为此工作项申请了审批。"],
+    ["approved", "approved", "Alice批准了此工作项。"],
+    ["rejected", "rejected", "Alice拒绝了此工作项。"],
+    ["cancelled", "cancelled", "Alice取消了此工作项的审批。"],
+    ["updated", "pending", "Alice更新了此工作项的审批。"],
+  ])("localizes approval activity %s without leaking raw status values", (verb, status, expected) => {
+    const { container } = render(
+      <NotificationContent
+        notification={notification("approval", verb, status)}
+        workspaceId="w"
+        workspaceSlug="workspace"
+        projectId="p"
+      />
+    );
+    expect(container.textContent?.replace(/\s/g, "")).toBe(expected);
+  });
   it("uses the title when an activity snapshot is missing", () => {
     const item = { title: "A notification", data: {} } as TNotification;
     const { container } = render(

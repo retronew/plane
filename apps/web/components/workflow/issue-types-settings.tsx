@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
+import { mutate } from "swr";
 import { runInAction } from "mobx";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { WorkItemsOutline, PropertiesOutline, HierarchyOutline } from "@makeplane/propel/icons";
@@ -9,7 +10,7 @@ import { Tabs, Tab, TabsList, TabsPanel } from "@makeplane/propel/components/tab
 import { TypesLogo } from "./types-logo";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
-import type { TProjectIssueType, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
+import type { TProjectIssueHierarchy, TProjectIssueType, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
 import { SettingsHeading } from "@/components/settings/heading";
 import { SettingsPageHeader } from "@/components/settings/page-header";
@@ -35,6 +36,7 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
   const navigate = useNavigate();
   const tab = ["properties", "hierarchy"].includes(params.get("tab") ?? "") ? params.get("tab")! : "types";
   const types = store.issueTypes[projectId];
+  const [hierarchy, setHierarchy] = useState<TProjectIssueHierarchy | null>(null);
   const [draft, setDraft] = useState<Partial<TProjectIssueType> | null>(null),
     [editorOpen, setEditorOpen] = useState(false);
   const [busy, setBusy] = useState(false),
@@ -44,7 +46,14 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     [impactOpen, setImpactOpen] = useState(false);
   useEffect(() => {
     let current = true;
-    Promise.all([store.fetchTypes(workspaceSlug, projectId), store.fetchList(workspaceSlug, projectId)])
+    Promise.all([
+      store.fetchTypes(workspaceSlug, projectId),
+      store.fetchList(workspaceSlug, projectId),
+      store.service.hierarchy(workspaceSlug, projectId).then((config) => {
+        if (current) setHierarchy(config);
+        return config;
+      }),
+    ])
       .catch(() => {
         if (current) setLoadError(true);
       })
@@ -59,7 +68,10 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     setLoading(true);
     setLoadError(false);
     try {
-      await store.refresh(workspaceSlug, projectId);
+      await Promise.all([
+        store.refresh(workspaceSlug, projectId),
+        store.service.hierarchy(workspaceSlug, projectId).then(setHierarchy),
+      ]);
     } catch {
       setLoadError(true);
     } finally {
@@ -103,7 +115,15 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
           for (const issue of Object.values(issueMap))
             if (issue.project_id === projectId && issue.type_id === id) issue.type_id = saved.id;
         });
-      await store.refresh(workspaceSlug, projectId);
+      setEditorOpen(false);
+      try {
+        await Promise.all([
+          store.refresh(workspaceSlug, projectId),
+          store.service.hierarchy(workspaceSlug, projectId).then(setHierarchy),
+        ]);
+      } catch {
+        setLoadError(true);
+      }
       if (id && saved.id !== id && typeId === id)
         void navigate(
           `/${workspaceSlug}/settings/projects/${projectId}/work-item-types/types/${saved.id}/properties/`,
@@ -154,7 +174,37 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
           onChanged={() => store.fetchTypes(workspaceSlug, projectId)}
         />
       );
-    if (tab === "hierarchy") return <TypesHierarchy types={types.results} base={base} />;
+    if (tab === "hierarchy")
+      return hierarchy ? (
+        <TypesHierarchy
+          key={projectId}
+          config={hierarchy}
+          base={base}
+          service={store.service}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          canManage={types.can_manage}
+          onApplied={async (config) => {
+            setHierarchy(config);
+            runInAction(() => {
+              for (const issue of Object.values(issueMap)) {
+                const mapped = issue.type_id && config.type_id_map?.[issue.type_id];
+                if (issue.project_id === projectId && mapped) issue.type_id = mapped;
+              }
+            });
+            try {
+              await Promise.all([
+                mutate(["issue-hierarchy", workspaceSlug, projectId], config, { revalidate: false }),
+                store.refresh(workspaceSlug, projectId),
+              ]);
+            } catch {
+              setLoadError(true);
+            }
+          }}
+        />
+      ) : (
+        <p>{t("loading")}</p>
+      );
     return (
       <TypesList
         types={types.results}
@@ -252,6 +302,11 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
         <TypesEditor
           key={draft.id ?? "new"}
           type={draft}
+          hierarchy={hierarchy ?? undefined}
+          onConfigureHierarchy={() => {
+            setEditorOpen(false);
+            setParams({ tab: "hierarchy" });
+          }}
           open={editorOpen}
           busy={busy}
           onClose={() => setEditorOpen(false)}

@@ -43,6 +43,7 @@ from .. import BaseViewSet
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.issue_filters import issue_filters
 from plane.utils.host import base_host
+from plane.services.hierarchy import validate_hierarchy_write
 
 
 class WorkspaceDraftIssueViewSet(BaseViewSet):
@@ -256,8 +257,12 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
         # Explicit user submissions remain in the payload so normal validation rejects them.
         issue_data["custom_properties"] = {**inherited_properties, **submitted_properties}
         issue_data["is_draft"] = False
-        if "type" not in issue_data and "type_id" not in issue_data and draft_issue.type_id is not None:
-            issue_data["type_id"] = str(draft_issue.type_id)
+        if "type" not in issue_data and "type_id" not in issue_data:
+            # Null is a deliberate draft selection; do not replace it with the
+            # project's current default type during publication.
+            issue_data["type_id"] = str(draft_issue.type_id) if draft_issue.type_id else None
+        if "parent" not in issue_data and "parent_id" not in issue_data:
+            issue_data["parent_id"] = str(draft_issue.parent_id) if draft_issue.parent_id else None
 
         serializer = IssueCreateSerializer(
             data=issue_data,
@@ -270,6 +275,9 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
         )
 
         if serializer.is_valid():
+            # Publishing always revalidates the final relationship, including
+            # inherited values on drafts saved before hierarchy was enabled.
+            validate_hierarchy_write(draft_issue.project_id, serializer.validated_data)
             serializer.save()
 
             def schedule_activity(**payload):

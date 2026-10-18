@@ -65,6 +65,14 @@ def preview_migration(project, data):
             workflow_error("WORKFLOW_INVALID_TYPE")
         if operation == "remove_type" and binding.is_default:
             workflow_error("WORKFLOW_DEFAULT_PROTECTED")
+        if operation == "remove_type" and project.hierarchy_enabled:
+            from plane.services.hierarchy import hierarchy_error
+
+            remaining = set(
+                ProjectIssueType.objects.filter(project=project).exclude(pk=binding.pk).values_list("level", flat=True)
+            ) | {0}
+            if project.hierarchy_default_level not in remaining or sorted(remaining) != list(range(len(remaining))):
+                hierarchy_error("HIERARCHY_PREVIEW_REQUIRED")
         issues = Issue.objects.filter(
             project=project, type_id=binding.issue_type_id, is_draft=False, archived_at__isnull=True
         )
@@ -177,8 +185,18 @@ def apply_migration(project, data, actor):
         binding.workflow = workflow
         binding.save()
     elif operation == "remove_type":
+        # Type removal changes the effective level to zero. It must never silently
+        # break incoming or outgoing hierarchy edges, including archived items/drafts.
+        from plane.db.models import DraftIssue
+        from plane.services.hierarchy import validate_hierarchy_write
+
+        for issue in Issue.objects.filter(project=project, type_id=binding.issue_type_id).order_by("id"):
+            validate_hierarchy_write(project.pk, {"type": None}, issue)
+        for draft in DraftIssue.objects.filter(project=project, type_id=binding.issue_type_id).order_by("id"):
+            validate_hierarchy_write(project.pk, {"type": None}, draft)
         # Preserve the shared workspace IssueType; only unlink this project.
         Issue.objects.filter(project=project, type_id=binding.issue_type_id).update(type=None)
+        DraftIssue.objects.filter(project=project, type_id=binding.issue_type_id).update(type=None)
         binding.delete(soft=False)
     elif operation == "states":
         workflow.states.set(data["state_ids"])

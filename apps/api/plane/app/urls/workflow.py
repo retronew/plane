@@ -2,6 +2,7 @@ from django.urls import path
 
 from plane.app.views.project.workflow import (
     ProjectIssueTypeEndpoint,
+    ProjectHierarchyEndpoint,
     ProjectWorkflowEndpoint,
     ProjectWorkflowListEndpoint,
     WorkflowActivityEndpoint,
@@ -25,6 +26,9 @@ from plane.app.views.project.custom_property import (
 
 prefix = "workspaces/<str:slug>/projects/<uuid:project_id>/"
 urlpatterns = [
+    path(prefix + "issue-hierarchy/", ProjectHierarchyEndpoint.as_view()),
+    path(prefix + "issue-hierarchy/preview/", ProjectHierarchyEndpoint.as_view()),
+    path(prefix + "issue-hierarchy/apply/", ProjectHierarchyEndpoint.as_view(), {"apply": True}),
     path(prefix + "custom-properties/", ProjectCustomPropertyEndpoint.as_view()),
     path(prefix + "custom-properties/merge/", CustomPropertyMergeEndpoint.as_view()),
     path(prefix + "custom-properties/merge/preview/", CustomPropertyMergeEndpoint.as_view(), {"preview": True}),

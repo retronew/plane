@@ -20,21 +20,21 @@ export function TypesLogo({
   backgroundSize?: number;
 }) {
   const logo = type.logo_props as TLogoProps | undefined;
-  if (logo?.in_use === "emoji" && logo.emoji?.value) return <Logo logo={logo} size={size} />;
   const renderer = getIconRenderer(logo);
-  if (renderer) {
-    if (backgroundSize) {
-      return (
-        <span
-          className="inline-flex shrink-0 items-center justify-center rounded-sm [&_.material-symbols-rounded]:scale-100!"
-          style={{ ...getIconBackgroundStyle(logo), width: backgroundSize, height: backgroundSize }}
-        >
-          <Logo logo={logo} size={size} type={renderer} background={false} />
-        </span>
-      );
-    }
-    return <Logo logo={logo} size={size} type={renderer} />;
-  }
   const Icon = type.is_epic || (type.level ?? 0) > 0 ? EpicOutline : WorkItemsOutline;
-  return <Icon className="shrink-0 text-secondary" style={{ width: size, height: size }} />;
+  const background = getIconBackgroundStyle(logo);
+  const backgroundStyle = background?.backgroundColor === "transparent" ? undefined : background;
+  const hasEmoji = logo?.in_use === "emoji" && !!logo.emoji?.value;
+  return (
+    <span
+      className="inline-flex shrink-0 items-center justify-center rounded-sm bg-layer-3 [&_.material-symbols-rounded]:scale-100!"
+      style={{ ...backgroundStyle, width: backgroundSize ?? size, height: backgroundSize ?? size }}
+    >
+      {renderer || hasEmoji ? (
+        <Logo logo={logo} size={size} type={renderer} background={false} />
+      ) : (
+        <Icon className="shrink-0 text-secondary" style={{ width: size, height: size }} />
+      )}
+    </span>
+  );
 }

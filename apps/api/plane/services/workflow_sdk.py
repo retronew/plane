@@ -31,6 +31,7 @@ from plane.db.models.workflow_runner import (
     WorkflowExecutionStep,
     WorkflowScriptVersion,
 )
+from plane.services.hierarchy import validate_hierarchy_write
 from plane.services.workflow_http_transport import WorkflowHTTPTransportError, bounded_http
 from plane.utils.workflow import finish_workflow_write, prepare_workflow_write, verify_workflow_write
 
@@ -269,6 +270,7 @@ def _internal(execution, project, actor, method, params, prepared):
     if method == "createWorkItem":
         attrs = dict(prepared["attrs"])
         verify_workflow_write(prepared, attrs=attrs, actor=actor)
+        validate_hierarchy_write(project.pk, attrs)
         if execution.dry_run:
             payload = {
                 key: (
@@ -361,6 +363,10 @@ def _internal(execution, project, actor, method, params, prepared):
         # Recheck dates against the locked issue, including concurrent partial updates.
         _fields(value, issue=issue, project_id=project.pk)
         verify_workflow_write(prepared, instance=issue, attrs=attrs, actor=actor)
+        # A type mutation must preserve both the incoming parent edge and every
+        # outgoing child edge, using the final values under Project -> Issue locks.
+        if "type" in attrs or "type_id" in attrs:
+            validate_hierarchy_write(project.pk, attrs, instance=issue)
         if execution.dry_run:
             return _plan(method, {"issue_id": str(issue.pk), "changes": value})
         for key, item in attrs.items():

@@ -4,8 +4,9 @@
  * See the LICENSE file for details.
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { setLanguage } from "@plane/i18n";
 import type { TNotification } from "@plane/types";
 import { NotificationItem } from "./item";
 
@@ -56,6 +57,46 @@ it("renders an existing approval notification without an issue activity", () => 
   expect(screen.getByText("Awaiting approval")).toBeTruthy();
   expect(screen.getByText("Approval requested: Review release")).toBeTruthy();
   expect(markNotificationAsRead).not.toHaveBeenCalled();
+});
+
+afterEach(async () => {
+  await act(async () => {
+    await setLanguage("en");
+  });
+});
+
+it("localizes existing approval titles and responds to language changes", async () => {
+  await setLanguage("zh-CN");
+  render(<NotificationItem workspaceSlug="workspace" notificationId="approval-notification" />);
+  expect(screen.getByText("待审批")).toBeTruthy();
+  expect(screen.getByText("审批请求：Review release")).toBeTruthy();
+  expect(screen.queryByText(/Approval requested/)).toBeNull();
+  await act(async () => {
+    await setLanguage("en");
+  });
+  expect(screen.getByText("Approval requested: Review release")).toBeTruthy();
+});
+
+it("preserves colons and repeated approval prefixes in work item names", async () => {
+  await setLanguage("zh-CN");
+  state.notification!.title = "Approval requested: Approval requested: release: v2";
+  render(<NotificationItem workspaceSlug="workspace" notificationId="approval-notification" />);
+  expect(screen.getByText("审批请求：Approval requested: release: v2")).toBeTruthy();
+});
+
+it("renders approval notifications with no title", async () => {
+  await setLanguage("zh-CN");
+  state.notification!.title = undefined;
+  render(<NotificationItem workspaceSlug="workspace" notificationId="approval-notification" />);
+  expect(screen.getAllByText("待审批")).toHaveLength(2);
+});
+
+it("preserves ordinary notification titles", async () => {
+  await setLanguage("zh-CN");
+  state.notification!.data = {} as TNotification["data"];
+  state.notification!.title = "Approval requested: user-written title";
+  render(<NotificationItem workspaceSlug="workspace" notificationId="approval-notification" />);
+  expect(screen.getAllByText("Approval requested: user-written title")).toHaveLength(2);
 });
 
 it("opens the work item referenced by an approval notification", async () => {

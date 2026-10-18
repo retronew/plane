@@ -163,6 +163,9 @@ export type TProjectIssuesSearchParams = {
   module?: string;
   sub_issue?: boolean;
   issue_id?: string;
+  /** Final type context for parent/sub-item search. Use "null" for an explicitly untyped item. */
+  type_id?: string;
+  parent_type_id?: string;
   workspace_search: boolean;
   target_date?: string;
   epic?: boolean;

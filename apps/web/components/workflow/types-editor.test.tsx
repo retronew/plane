@@ -10,6 +10,7 @@ vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key
 vi.mock("@plane/blocks/emoji-icon-picker", () => ({
   LUCIDE_ICONS_LIST: [{ name: "Bug" }],
   MATERIAL_ICONS_LIST: [{ name: "circle" }],
+  getIconBackgroundStyle: () => undefined,
   Logo: ({ logo }: { logo: { in_use: string } }) => <span data-testid="type-logo">{logo.in_use}</span>,
   EmojiPicker: ({
     buttonClassName,
@@ -97,7 +98,7 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
     expect(name.closest("button")).toBeNull();
     expect(name.labels?.[0]?.textContent).toBe("name");
     expect(dialog.className).toContain("w-168");
-    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.getByRole("combobox", { name: "web.issue_hierarchy.type_level" })).toBeTruthy();
     const submit = screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" });
     expect(submit.getAttribute("form")).toBe(name.closest("form")?.id);
     expect(submit.parentElement?.parentElement).toBe(name.closest("form")?.parentElement?.parentElement?.parentElement);
@@ -121,6 +122,7 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
           name: "Bug",
           description: "Defect",
           logo_props: {},
+          level: 0,
         },
         value.id
       )
@@ -145,7 +147,7 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
       fireEvent.click(screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" }));
       await waitFor(() =>
         expect(props.onSave).toHaveBeenLastCalledWith(
-          { name: "Bug", description: value.description ?? "", logo_props: selection.logo },
+          { name: "Bug", description: value.description ?? "", logo_props: selection.logo, level: 0 },
           value.id
         )
       );
@@ -158,7 +160,7 @@ it.each<Partial<TProjectIssueType>>([{}, type])(
     fireEvent.click(screen.getByRole("button", { name: value.id ? "save" : "web.workflow_ui.types_settings.add" }));
     await waitFor(() =>
       expect(props.onSave).toHaveBeenLastCalledWith(
-        { name: "Bug", description: value.description ?? "", logo_props: {} },
+        { name: "Bug", description: value.description ?? "", logo_props: {}, level: 0 },
         value.id
       )
     );

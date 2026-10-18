@@ -199,6 +199,12 @@ def resolve_workflow_transition(project_id, attrs, instance=None, actor=None):
 
 def validate_workflow_write(project_id, attrs, instance=None, actor=None, raw_data=None):
     normalize_issue_type(project_id, attrs, instance, raw_data)
+    from plane.services.hierarchy import validate_hierarchy_write
+
+    if instance is None or any(
+        key in attrs for key in ("type", "type_id", "parent", "parent_id", "project", "project_id", "is_draft")
+    ):
+        validate_hierarchy_write(project_id, attrs, instance)
     from plane.services.custom_properties import issue_property_values
 
     issue_property_values(project_id, attrs, instance)
@@ -320,8 +326,17 @@ class WorkflowIssueWriteMixin(WorkflowIssueTypeMixin):
             from plane.services.custom_properties import issue_property_values
 
             attrs["custom_properties"] = issue_property_values(project_id, attrs, self.instance)
+            from plane.services.hierarchy import hierarchy_error, hierarchy_level
+
+            project = Project.objects.get(pk=project_id)
             for child in self._workflow_children_prepared:
                 verify_workflow_write(child, actor=actor)
+                if (
+                    project.hierarchy_enabled
+                    and hierarchy_level(project_id, attrs.get("type"))
+                    != hierarchy_level(project_id, child["attrs"].get("type")) + 1
+                ):
+                    hierarchy_error("HIERARCHY_INVALID_LEVEL")
                 child["attrs"]["custom_properties"] = issue_property_values(project_id, child["attrs"])
             issue = super().save(**kwargs)
             finish_workflow_write(prepared, issue, actor)

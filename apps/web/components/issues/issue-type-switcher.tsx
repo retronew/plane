@@ -19,6 +19,7 @@ import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 import { IssueTypeSelect } from "@/components/dropdowns/issue-type-select";
 import { StateSelect } from "@/components/dropdowns/state/state-select";
+import { hierarchyErrorKey } from "@/helpers/issue-hierarchy";
 import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
 
 export type TIssueTypeSwitcherProps = { issueId: string; disabled: boolean };
@@ -49,9 +50,10 @@ export const IssueTypeSwitcher = observer(function IssueTypeSwitcher({ issueId, 
         setToast({
           type: "error",
           title: t("error"),
-          message:
-            getWorkflowErrorReason(error) ??
-            (code ? t(`web.workflow_errors.${code}`) : t("web.workflow_ui.save_failed")),
+          message: hierarchyErrorKey(error, "")
+            ? t(hierarchyErrorKey(error))
+            : (getWorkflowErrorReason(error) ??
+              (code ? t(`web.workflow_errors.${code}`) : t("web.workflow_ui.save_failed"))),
         });
     } finally {
       setBusy(false);

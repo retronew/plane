@@ -41,6 +41,16 @@ export type TNotificationContentMap = {
 
 // Base notification content map for core fields
 export const BASE_NOTIFICATION_CONTENT_MAP: TNotificationContentMap = {
+  approval: ({ verb }) => ({
+    translationKey: "approval_activity",
+    value: (
+      <Translation
+        translationKey={`web.workflow_ui.approval_activity.${
+          ["requested", "approved", "rejected", "cancelled"].includes(verb ?? "") ? verb : "updated"
+        }`}
+      />
+    ),
+  }),
   duplicate: ({ verb }) => ({ translationKey: verb === "created" ? "duplicate_added" : "duplicate_removed" }),
   assignees: ({ newValue, oldValue }) => ({
     translationKey: newValue ? "assignee_added" : "assignee_removed",
@@ -114,6 +124,19 @@ const getNotificationContentDetails = (
 
   return null;
 };
+
+export function NotificationTitle({ notification }: { notification: TNotification }) {
+  if (notification.data?.event === "approval_requested") {
+    // Older approval notifications only store the work item name in the title.
+    const name = notification.data.issue?.name ?? notification.title?.replace(/^Approval requested: /, "");
+    return name ? (
+      <Translation translationKey="web.notifications.approval_requested_title" values={{ name }} />
+    ) : (
+      <Translation translationKey="web.workflow_ui.pending_approval" />
+    );
+  }
+  return <>{notification.title}</>;
+}
 
 export function NotificationContent({
   notification,

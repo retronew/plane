@@ -4,6 +4,8 @@
 
 # Python imports
 import json
+from functools import partial
+from uuid import UUID
 
 # Django imports
 from django.core.serializers.json import DjangoJSONEncoder
@@ -22,6 +24,7 @@ from plane.api.views.base import BaseAPIView
 from plane.app.permissions import ProjectEntityPermission, ROLE
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.db.models import CycleIssue, Issue, ModuleIssue, Project, ProjectMember
+from plane.services.hierarchy import hierarchy_error, validate_hierarchy_write
 from plane.utils.host import base_host
 from plane.utils.openapi import DELETED_RESPONSE, create_paginated_response
 from plane.utils.openapi.decorators import work_item_docs
@@ -141,45 +144,46 @@ class WorkItemSubItemsAPIEndpoint(WorkItemLifecycleMixin, BaseAPIView):
         responses={200: OpenApiResponse(description="Updated sub work items", response=IssueSerializer(many=True))},
     )
     def post(self, request, slug, project_id, work_item_id):
-        parent = self.get_parent(slug, project_id, work_item_id)
-        if parent is None:
-            return Response({"error": "Work item not found"}, status=status.HTTP_404_NOT_FOUND)
         ids, error = _id_list(request, "sub_work_item_ids")
         if error:
             return error
+        try:
+            ids = {UUID(str(value)) for value in ids}
+        except (ValueError, TypeError, AttributeError):
+            hierarchy_error("HIERARCHY_INVALID_ISSUE")
 
-        sub_items = list(Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id, pk__in=ids))
-        if len(sub_items) != len(set(map(str, ids))):
-            return Response(
-                {"error": "Some work items were not found in this project"}, status=status.HTTP_400_BAD_REQUEST
+        with transaction.atomic():
+            project = Project.objects.select_for_update().filter(pk=project_id, workspace__slug=slug).first()
+            if project is None:
+                return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+            locked_items = list(
+                Issue.issue_objects.select_for_update(of=("self",))
+                .filter(workspace__slug=slug, project_id=project_id, pk__in=ids | {UUID(str(work_item_id))})
+                .order_by("id")
             )
-
-        # The parent and every ancestor above it must stay out of the new children, or the tree would loop
-        ancestor_ids = {parent.id}
-        current = parent
-        while current.parent_id and current.parent_id not in ancestor_ids:
-            ancestor_ids.add(current.parent_id)
-            current = Issue.all_objects.only("id", "parent_id").filter(pk=current.parent_id).first()
-            if current is None:
-                break
-        looping = [str(item.id) for item in sub_items if item.id in ancestor_ids]
-        if looping:
-            return Response(
-                {"error": "A work item cannot be a child of itself or its descendants", "work_item_ids": looping},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        previous_parents = {item.id: item.parent_id for item in sub_items}
-        for item in sub_items:
-            item.parent = parent
-        Issue.objects.bulk_update(sub_items, ["parent"], batch_size=50)
-        for item in sub_items:
-            if previous_parents[item.id] != parent.id:
-                self.record_update(
-                    item,
-                    {"parent": str(parent.id)},
-                    {"parent": str(previous_parents[item.id]) if previous_parents[item.id] else None},
-                )
+            items_by_id = {item.id: item for item in locked_items}
+            parent = items_by_id.get(UUID(str(work_item_id)))
+            if parent is None:
+                return Response({"error": "Work item not found"}, status=status.HTTP_404_NOT_FOUND)
+            if not ids.issubset(items_by_id):
+                hierarchy_error("HIERARCHY_INVALID_ISSUE")
+            sub_items = [items_by_id[item_id] for item_id in sorted(ids)]
+            previous_parents = {item.id: item.parent_id for item in sub_items}
+            for item in sub_items:
+                validate_hierarchy_write(project_id, {"type": item.type, "parent": parent}, instance=item)
+            for item in sub_items:
+                item.parent = parent
+            Issue.objects.bulk_update(sub_items, ["parent"], batch_size=50)
+            for item in sub_items:
+                if previous_parents[item.id] != parent.id:
+                    transaction.on_commit(
+                        partial(
+                            self.record_update,
+                            item,
+                            {"parent": str(parent.id)},
+                            {"parent": str(previous_parents[item.id]) if previous_parents[item.id] else None},
+                        )
+                    )
         return Response(self.serialize(sub_items), status=status.HTTP_200_OK)
 
 
@@ -192,14 +196,22 @@ class WorkItemSubItemDetailAPIEndpoint(WorkItemLifecycleMixin, BaseAPIView):
         responses={204: DELETED_RESPONSE},
     )
     def delete(self, request, slug, project_id, work_item_id, sub_item_id):
-        sub_item = Issue.issue_objects.filter(
-            workspace__slug=slug, project_id=project_id, pk=sub_item_id, parent_id=work_item_id
-        ).first()
-        if sub_item is None:
-            return Response({"error": "Sub work item not found"}, status=status.HTTP_404_NOT_FOUND)
-        sub_item.parent = None
-        sub_item.save(update_fields=["parent", "updated_at"])
-        self.record_update(sub_item, {"parent": None}, {"parent": str(work_item_id)})
+        with transaction.atomic():
+            project = Project.objects.select_for_update().filter(pk=project_id, workspace__slug=slug).first()
+            if project is None:
+                return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+            sub_item = (
+                Issue.issue_objects.select_for_update(of=("self",))
+                .filter(workspace__slug=slug, project_id=project_id, pk=sub_item_id, parent_id=work_item_id)
+                .first()
+            )
+            if sub_item is None:
+                return Response({"error": "Sub work item not found"}, status=status.HTTP_404_NOT_FOUND)
+            sub_item.parent = None
+            sub_item.save(update_fields=["parent", "updated_at"])
+            transaction.on_commit(
+                partial(self.record_update, sub_item, {"parent": None}, {"parent": str(work_item_id)})
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

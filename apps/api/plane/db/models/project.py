@@ -111,6 +111,8 @@ class Project(BaseModel):
     is_issue_type_enabled = models.BooleanField(default=False)
     workflow_enabled = models.BooleanField(default=False)
     workflow_version = models.PositiveIntegerField(default=0)
+    hierarchy_enabled = models.BooleanField(default=False)
+    hierarchy_default_level = models.PositiveIntegerField(default=0)
     guest_view_all_features = models.BooleanField(default=False)
     cover_image = models.TextField(blank=True, null=True)
     cover_image_asset = models.ForeignKey(

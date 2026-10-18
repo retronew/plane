@@ -12,16 +12,21 @@ export const IssueTypeSelect = observer(function IssueTypeSelect({
   onChange,
   variant = "pill-md",
   disabled,
+  allowedTypeIds,
 }: {
   projectId?: string | null;
   value?: string | null;
   onChange: (id: string | null) => void;
   variant?: SelectVariant;
   disabled?: boolean;
+  allowedTypeIds?: string[];
 }) {
   const store = useProjectWorkflow(projectId ?? undefined),
     { t } = useTranslation();
-  const types = store.issueTypes[projectId ?? ""]?.results.filter((type) => type.is_active) ?? [];
+  const allowed = allowedTypeIds ? new Set(allowedTypeIds) : undefined;
+  const types =
+    store.issueTypes[projectId ?? ""]?.results.filter((type) => type.is_active && (!allowed || allowed.has(type.id))) ??
+    [];
   const placeholder = t(value === null ? "web.workflow_ui.no_type" : "web.workflow_ui.select_type");
   const selected =
     types.find((type) => type.id === value) ??

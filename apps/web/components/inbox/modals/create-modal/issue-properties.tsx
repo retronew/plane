@@ -219,6 +219,7 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
             }}
             projectId={projectId}
             issueId={undefined}
+            typeId={data.type_id}
           />
         </div>
       )}

@@ -1,6 +1,10 @@
 import { API_BASE_URL } from "@plane/constants";
 import type {
   TProjectWorkflow,
+  TProjectIssueHierarchy,
+  THierarchyRequest,
+  THierarchyPreview,
+  THierarchyApplyResult,
   TProjectWorkflowList,
   TProjectIssueType,
   TProjectIssueTypeList,
@@ -106,6 +110,19 @@ export class ProjectWorkflowService extends APIService {
   }
   async apply(slug: string, projectId: string, data: TWorkflowImpactRequest & { token: string }): Promise<unknown> {
     return (await this.post(`${this.projectBase(slug, projectId)}workflows/apply/`, data)).data;
+  }
+  async hierarchy(slug: string, projectId: string): Promise<TProjectIssueHierarchy> {
+    return (await this.get(`${this.projectBase(slug, projectId)}issue-hierarchy/`, { timeout: 15000 })).data;
+  }
+  async previewHierarchy(slug: string, projectId: string, data: THierarchyRequest): Promise<THierarchyPreview> {
+    return (await this.post(`${this.projectBase(slug, projectId)}issue-hierarchy/preview/`, data)).data;
+  }
+  async applyHierarchy(
+    slug: string,
+    projectId: string,
+    data: THierarchyRequest & { token: string; confirm_detach: boolean }
+  ): Promise<THierarchyApplyResult> {
+    return (await this.post(`${this.projectBase(slug, projectId)}issue-hierarchy/apply/`, data)).data;
   }
   async types(slug: string, projectId: string): Promise<TProjectIssueTypeList> {
     return (await this.get(`${this.projectBase(slug, projectId)}issue-types/`)).data;

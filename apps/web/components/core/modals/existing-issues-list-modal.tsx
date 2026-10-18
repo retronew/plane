@@ -5,6 +5,7 @@
  */
 
 import { Translation } from "@plane/i18n";
+import { hierarchyErrorKey } from "@/helpers/issue-hierarchy";
 import { useEffect, useState, useRef } from "react";
 import { Combobox, ComboboxItem, ComboboxList, ComboboxSearch } from "@makeplane/propel/components/combobox";
 import {
@@ -68,80 +69,57 @@ export function ExistingIssuesListModal(props: Props) {
     workItemSearchServiceCallback,
   } = props;
   // states
-  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
-  const [selectedIssues, setSelectedIssues] = useState<ISearchIssueResponse[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [selection, setSelectedIssues] = useState<ISearchIssueResponse[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isWorkspaceLevel, setIsWorkspaceLevel] = useState(false);
   const { isMobile } = usePlatformOS();
   const debouncedSearchTerm: string = useDebounce(searchTerm, 500);
   const { baseTabIndex } = getTabIndex(undefined, isMobile);
-  const hasInitializedSelection = useRef(false);
+  const [retry, setRetry] = useState(0);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const searchParamsKey = JSON.stringify(searchParams);
+  const { issues, isLoading, isSearching, searchFailed, invalidateSearch } = useExistingIssuesSearch({
+    isOpen,
+    workspaceSlug,
+    projectId,
+    searchParamsKey,
+    debouncedSearchTerm,
+    isWorkspaceLevel,
+    workItemSearchServiceCallback,
+    retry,
+  });
+  const selectedIdSet = new Set(selectedWorkItemIds);
+  const selectedIssues = selection ?? issues.filter((issue) => selectedIdSet.has(issue.id));
 
   const handleClose = () => {
+    if (isSubmitting) return;
+    invalidateSearch();
+    setSaveError(null);
     onClose();
     setSearchTerm("");
-    setSelectedIssues([]);
+    setSelectedIssues(null);
     setIsWorkspaceLevel(false);
-    hasInitializedSelection.current = false;
   };
 
-  const onSubmit = async () => {
-    if (selectedIssues.length === 0) {
-      setToast({
-        type: "error",
-        title: t("toast.error"),
-        message: t("issue.select.error"),
-      });
-
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    await handleOnSubmit(selectedIssues).finally(() => setIsSubmitting(false));
-
-    handleClose();
-  };
-
-  const handleSearch = () => {
-    if (!isOpen || !workspaceSlug) return;
-    setIsLoading(true);
-    const searchService =
-      workItemSearchServiceCallback ??
-      (projectId
-        ? projectService.projectIssuesSearch.bind(projectService, workspaceSlug?.toString(), projectId?.toString())
-        : undefined);
-    if (!searchService) return;
-    searchService({
-      search: debouncedSearchTerm,
-      ...searchParams,
-      workspace_search: isWorkspaceLevel,
-    })
-      .then((res) => setIssues(res))
-      .finally(() => {
-        setIsSearching(false);
-        setIsLoading(false);
-      });
-  };
+  const onSubmit = () =>
+    submitSelection(
+      selectedIssues,
+      handleOnSubmit,
+      searchParams.sub_issue === true,
+      t,
+      setIsSubmitting,
+      setSaveError,
+      () => {
+        onClose();
+        setSearchTerm("");
+        setSelectedIssues(null);
+      }
+    );
 
   const handleSelectIssues = () => {
-    setSelectedIssues((prevData) => (prevData.length === filteredIssues.length ? [] : [...filteredIssues]));
+    setSelectedIssues(selectedIssues.length === filteredIssues.length ? [] : [...filteredIssues]);
   };
-
-  useEffect(() => {
-    if (isOpen && !hasInitializedSelection.current && selectedWorkItemIds && issues.length > 0) {
-      setSelectedIssues(issues.filter((issue) => selectedWorkItemIds.includes(issue.id)));
-      hasInitializedSelection.current = true;
-    }
-  }, [isOpen, issues, selectedWorkItemIds]);
-
-  useEffect(() => {
-    handleSearch();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- search only when the query or scope changes
-  }, [debouncedSearchTerm, isOpen, isWorkspaceLevel, projectId, workspaceSlug]);
 
   const filteredIssues = issues.filter((issue) => !shouldHideIssue?.(issue));
 
@@ -169,7 +147,9 @@ export function ExistingIssuesListModal(props: Props) {
             if (!open) handleClose();
           }}
           value={selectedIssues}
-          onValueChange={(next) => setSelectedIssues(next)}
+          onValueChange={(next) => {
+            if (!isSubmitting) setSelectedIssues(next);
+          }}
           // Re-searching returns fresh objects, so rows are matched to the selection by id.
           isItemEqualToValue={(itemValue, value) => itemValue.id === value.id}
           itemToStringLabel={(issue) => issue.name}
@@ -178,6 +158,7 @@ export function ExistingIssuesListModal(props: Props) {
             // Base UI clears the query after every pick in multiple mode; letting that through
             // would re-run the debounced server search on each toggle.
             if (details.reason === "input-clear") return;
+            invalidateSearch();
             setSearchTerm(next);
           }}
         >
@@ -187,6 +168,23 @@ export function ExistingIssuesListModal(props: Props) {
             tabIndex={baseTabIndex}
           />
           <DialogMain>
+            {saveError && (
+              <p role="alert" className="text-13 text-danger-primary">
+                {t(saveError)}
+              </p>
+            )}
+            {searchFailed && (
+              <div role="alert" className="py-3 text-13">
+                <p>{t("web.issue_hierarchy.search_failed")}</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  stretch="auto"
+                  label={t("web.retry")}
+                  onClick={() => setRetry((attempt) => attempt + 1)}
+                />
+              </div>
+            )}
             <div className="flex flex-shrink-0 flex-col-reverse gap-4 text-13 text-secondary sm:flex-row sm:items-center sm:justify-between">
               {selectedIssues.length > 0 ? (
                 <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -206,7 +204,7 @@ export function ExistingIssuesListModal(props: Props) {
                       <button
                         type="button"
                         className="group p-1"
-                        onClick={() => setSelectedIssues((prevData) => prevData.filter((i) => i.id !== issue.id))}
+                        onClick={() => setSelectedIssues(selectedIssues.filter((i) => i.id !== issue.id))}
                       >
                         <CloseOutline className="h-3 w-3 text-secondary group-hover:text-primary" />
                       </button>
@@ -243,86 +241,15 @@ export function ExistingIssuesListModal(props: Props) {
               )}
             </div>
 
-            <div className="vertical-scrollbar scrollbar-md max-h-80 min-h-0 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain">
-              {/* TODO: Translate here */}
-              {searchTerm !== "" && (
-                <h5 className="text-13 text-secondary">
-                  <Translation
-                    translationKey="web.ui.project_search_results"
-                    components={{ query: <span className="text-primary">{searchTerm}</span> }}
-                  />
-                </h5>
-              )}
-
-              {isSearching || isLoading ? (
-                <Loader className="space-y-3 p-3">
-                  <Loader.Item height="40px" />
-                  <Loader.Item height="40px" />
-                  <Loader.Item height="40px" />
-                  <Loader.Item height="40px" />
-                </Loader>
-              ) : (
-                <>
-                  {filteredIssues.length === 0 ? (
-                    <IssueSearchModalEmptyState
-                      debouncedSearchTerm={debouncedSearchTerm}
-                      isSearching={isSearching}
-                      issues={filteredIssues}
-                      searchTerm={searchTerm}
-                    />
-                  ) : (
-                    <ComboboxList aria-label={t("issue.add.existing")}>
-                      {filteredIssues.map((issue) => (
-                        // `selection="checkbox"` replaces the hand-placed checkbox and the
-                        // `as="label"` wrapper the old row needed to make it clickable.
-                        <ComboboxItem
-                          key={issue.id}
-                          value={issue}
-                          selection="checkbox"
-                          label={issue.name}
-                          icon={
-                            <span className="flex flex-shrink-0 items-center gap-2">
-                              <span
-                                className="block h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                                style={{
-                                  backgroundColor: issue.state__color,
-                                }}
-                              />
-                              <IssueIdentifier
-                                projectId={issue.project_id}
-                                issueTypeId={issue.type_id}
-                                projectIdentifier={issue.project__identifier}
-                                issueSequenceId={issue.sequence_id}
-                                size="xs"
-                                variant="secondary"
-                              />
-                            </span>
-                          }
-                          trailing={
-                            <a
-                              href={generateWorkItemLink({
-                                workspaceSlug,
-                                projectId: issue?.project_id,
-                                issueId: issue?.id,
-                                projectIdentifier: issue.project__identifier,
-                                sequenceId: issue?.sequence_id,
-                              })}
-                              target="_blank"
-                              className="relative z-1 hidden flex-shrink-0 text-secondary group-hover/item:block hover:text-primary"
-                              rel="noopener noreferrer"
-                              aria-label={t("common.actions.open_in_new_tab")}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <RocketOutline className="h-4 w-4" />
-                            </a>
-                          }
-                        />
-                      ))}
-                    </ComboboxList>
-                  )}
-                </>
-              )}
-            </div>
+            <ExistingIssuesSearchResults
+              workspaceSlug={workspaceSlug}
+              searchTerm={searchTerm}
+              debouncedSearchTerm={debouncedSearchTerm}
+              isSearching={isSearching}
+              isLoading={isLoading}
+              searchFailed={searchFailed}
+              filteredIssues={filteredIssues}
+            />
           </DialogMain>
         </Combobox>
         <DialogActions>
@@ -351,5 +278,213 @@ export function ExistingIssuesListModal(props: Props) {
         </DialogActions>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function useExistingIssuesSearch({
+  isOpen,
+  workspaceSlug,
+  projectId,
+  searchParamsKey,
+  debouncedSearchTerm,
+  isWorkspaceLevel,
+  workItemSearchServiceCallback,
+  retry,
+}: {
+  isOpen: boolean;
+  workspaceSlug?: string;
+  projectId?: string;
+  searchParamsKey: string;
+  debouncedSearchTerm: string;
+  isWorkspaceLevel: boolean;
+  workItemSearchServiceCallback?: Props["workItemSearchServiceCallback"];
+  retry: number;
+}) {
+  const requestGeneration = useRef(0);
+  const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  useEffect(() => {
+    if (!isOpen || !workspaceSlug) return;
+    const generation = ++requestGeneration.current;
+    const searchService =
+      workItemSearchServiceCallback ??
+      (projectId ? projectService.projectIssuesSearch.bind(projectService, workspaceSlug, projectId) : undefined);
+    if (!searchService) return;
+    // Search context changed: mark the asynchronous request pending and discard stale candidates.
+    // oxlint-disable-next-line react/set-state-in-effect
+    setIsLoading(true);
+    setIsSearching(true);
+    setSearchFailed(false);
+    setIssues([]);
+    const params = JSON.parse(searchParamsKey) as Partial<TProjectIssuesSearchParams>;
+    searchService({ search: debouncedSearchTerm, ...params, workspace_search: isWorkspaceLevel })
+      .then((res) => {
+        if (generation === requestGeneration.current) setIssues(res);
+        return undefined;
+      })
+      .catch(() => {
+        if (generation === requestGeneration.current) setSearchFailed(true);
+      })
+      .finally(() => {
+        if (generation !== requestGeneration.current) return;
+        setIsSearching(false);
+        setIsLoading(false);
+      });
+    return () => {
+      // This ref is a request counter, not a DOM node; invalidate the current generation on cleanup.
+      // oxlint-disable-next-line react-hooks/exhaustive-deps
+      requestGeneration.current++;
+    };
+    // retry intentionally restarts the same request after an error.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+  }, [
+    debouncedSearchTerm,
+    isOpen,
+    isWorkspaceLevel,
+    projectId,
+    workspaceSlug,
+    searchParamsKey,
+    workItemSearchServiceCallback,
+    retry,
+  ]);
+  return {
+    issues,
+    isLoading,
+    isSearching,
+    searchFailed,
+    invalidateSearch: () => {
+      requestGeneration.current++;
+      setIssues([]);
+      setIsSearching(true);
+    },
+  };
+}
+
+async function submitSelection(
+  selectedIssues: ISearchIssueResponse[],
+  submit: Props["handleOnSubmit"],
+  isSubIssue: boolean,
+  t: (key: string) => string,
+  setSubmitting: (value: boolean) => void,
+  setError: (value: string | null) => void,
+  onSuccess: () => void
+) {
+  if (!selectedIssues.length) {
+    setToast({ type: "error", title: t("toast.error"), message: t("issue.select.error") });
+    return;
+  }
+  setSubmitting(true);
+  setError(null);
+  try {
+    await submit(selectedIssues);
+    onSuccess();
+  } catch (error) {
+    setError(isSubIssue ? hierarchyErrorKey(error) : "common.something_went_wrong");
+  } finally {
+    setSubmitting(false);
+  }
+}
+
+function ExistingIssuesSearchResults({
+  workspaceSlug,
+  searchTerm,
+  debouncedSearchTerm,
+  isSearching,
+  isLoading,
+  searchFailed,
+  filteredIssues,
+}: {
+  workspaceSlug?: string;
+  searchTerm: string;
+  debouncedSearchTerm: string;
+  isSearching: boolean;
+  isLoading: boolean;
+  searchFailed: boolean;
+  filteredIssues: ISearchIssueResponse[];
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="vertical-scrollbar scrollbar-md max-h-80 min-h-0 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain">
+      {/* TODO: Translate here */}
+      {searchTerm !== "" && (
+        <h5 className="text-13 text-secondary">
+          <Translation
+            translationKey="web.ui.project_search_results"
+            components={{ query: <span className="text-primary">{searchTerm}</span> }}
+          />
+        </h5>
+      )}
+
+      {isSearching || isLoading ? (
+        <Loader className="space-y-3 p-3">
+          <Loader.Item height="40px" />
+          <Loader.Item height="40px" />
+          <Loader.Item height="40px" />
+          <Loader.Item height="40px" />
+        </Loader>
+      ) : (
+        <>
+          {searchFailed ? null : filteredIssues.length === 0 ? (
+            <IssueSearchModalEmptyState
+              debouncedSearchTerm={debouncedSearchTerm}
+              isSearching={isSearching}
+              issues={filteredIssues}
+              searchTerm={searchTerm}
+            />
+          ) : (
+            <ComboboxList aria-label={t("issue.add.existing")}>
+              {filteredIssues.map((issue) => (
+                // `selection="checkbox"` replaces the hand-placed checkbox and the
+                // `as="label"` wrapper the old row needed to make it clickable.
+                <ComboboxItem
+                  key={issue.id}
+                  value={issue}
+                  selection="checkbox"
+                  label={issue.name}
+                  icon={
+                    <span className="flex flex-shrink-0 items-center gap-2">
+                      <span
+                        className="block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: issue.state__color,
+                        }}
+                      />
+                      <IssueIdentifier
+                        projectId={issue.project_id}
+                        issueTypeId={issue.type_id}
+                        projectIdentifier={issue.project__identifier}
+                        issueSequenceId={issue.sequence_id}
+                        size="xs"
+                        variant="secondary"
+                      />
+                    </span>
+                  }
+                  trailing={
+                    <a
+                      href={generateWorkItemLink({
+                        workspaceSlug,
+                        projectId: issue?.project_id,
+                        issueId: issue?.id,
+                        projectIdentifier: issue.project__identifier,
+                        sequenceId: issue?.sequence_id,
+                      })}
+                      target="_blank"
+                      className="relative z-1 hidden flex-shrink-0 text-secondary group-hover/item:block hover:text-primary"
+                      rel="noopener noreferrer"
+                      aria-label={t("common.actions.open_in_new_tab")}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <RocketOutline className="h-4 w-4" />
+                    </a>
+                  }
+                />
+              ))}
+            </ComboboxList>
+          )}
+        </>
+      )}
+    </div>
   );
 }

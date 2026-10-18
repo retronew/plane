@@ -47,7 +47,7 @@ const state = vi.hoisted(() => ({
     fetchTypes: vi.fn(),
     fetchList: vi.fn(),
     refresh: vi.fn(),
-    service: { saveType: vi.fn(), preview: vi.fn() },
+    service: { saveType: vi.fn(), preview: vi.fn(), hierarchy: vi.fn() },
   },
 }));
 vi.mock("react-router", () => ({
@@ -63,7 +63,11 @@ vi.mock("react-router", () => ({
 }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn() }));
-vi.mock("@plane/blocks/emoji-icon-picker", () => ({ Logo: () => <span>logo</span>, EmojiPicker: () => null }));
+vi.mock("@plane/blocks/emoji-icon-picker", () => ({
+  Logo: () => <span>logo</span>,
+  EmojiPicker: () => null,
+  getIconBackgroundStyle: () => undefined,
+}));
 vi.mock("@/hooks/store/use-project-workflow", () => ({ useProjectWorkflow: () => state.store }));
 vi.mock("@/hooks/store/use-issues", () => ({ useIssues: () => ({ issueMap: {} }) }));
 vi.mock("@/components/core/page-title", () => ({ PageHead: () => null }));
@@ -108,6 +112,14 @@ beforeEach(() => {
   state.params = new URLSearchParams();
   state.properties.mockClear();
   state.store.issueTypes = { p: { results: fixtures, policy_version: 2, can_manage: true } };
+  state.store.service.hierarchy.mockReset().mockResolvedValue({
+    enabled: false,
+    default_level: 0,
+    policy_version: 2,
+    can_manage: false,
+    levels: [0, 1],
+    issue_types: fixtures.map((type) => ({ ...type, level: type.level ?? (type.is_epic ? 1 : 0) })),
+  });
   state.store.fetchTypes.mockReset().mockResolvedValue({});
   state.store.fetchList.mockReset().mockResolvedValue({});
   state.store.refresh.mockReset().mockResolvedValue({});
@@ -181,12 +193,12 @@ it("searches with the expandable control and restores rows when cleared", () => 
   fireEvent.click(screen.getByRole("button", { name: "common.clear" }));
   expect(screen.getAllByRole("row")).toHaveLength(4);
 });
-it("renders numeric hierarchy levels and type links without default badges or management actions", () => {
+it("renders numeric hierarchy levels and type links without default badges or management actions", async () => {
   state.params = new URLSearchParams("tab=hierarchy");
   state.store.issueTypes.p.can_manage = false;
   render(<IssueTypesSettings />);
-  expect(screen.getByRole("heading", { name: "web.workflow_ui.types_settings.hierarchy" })).toBeTruthy();
-  expect(screen.getByRole("heading", { name: "1" })).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: "web.workflow_ui.types_settings.hierarchy" })).toBeTruthy();
+  expect(await screen.findByRole("heading", { name: "1" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "0" })).toBeTruthy();
   expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Epic", "Task", "Bug"]);
   expect(screen.getByRole("link", { name: /Task/ }).getAttribute("href")).toBe(
@@ -297,4 +309,15 @@ it("shows a retry action after load failure and reloads through the store", asyn
   fireEvent.click(retry);
   await waitFor(() => expect(state.store.refresh).toHaveBeenCalledWith("w", "p"));
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+});
+
+it("closes a successfully saved type editor even if refreshing fails and prevents repeating creation", async () => {
+  state.store.refresh.mockRejectedValueOnce(new Error("refresh offline"));
+  render(<IssueTypesSettings />);
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.add" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "name" }), { target: { value: "New type" } });
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.add", hidden: false }));
+  await waitFor(() => expect(state.store.service.saveType).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(await screen.findByRole("alert")).toBeTruthy();
 });

@@ -5,7 +5,9 @@
  */
 
 import { Translation } from "@plane/i18n";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Button } from "@makeplane/propel/components/button";
+import { hierarchyErrorKey, hierarchyTypeSearchParam } from "@/helpers/issue-hierarchy";
 import { useParams } from "next/navigation";
 // icons
 import { RocketOutline } from "@makeplane/propel/icons";
@@ -32,7 +34,8 @@ type Props = {
   isOpen: boolean;
   handleClose: () => void;
   value?: any;
-  onChange: (issue: ISearchIssueResponse) => void;
+  onChange: (issue: ISearchIssueResponse) => void | Promise<void>;
+  typeId?: string | null;
   projectId: string | undefined;
   issueId?: string;
   searchEpic?: boolean;
@@ -48,6 +51,7 @@ export function ParentIssuesListModal({
   onChange,
   projectId,
   issueId,
+  typeId,
   searchEpic = false,
 }: Props) {
   // i18n
@@ -57,6 +61,12 @@ export function ParentIssuesListModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const requestGeneration = useRef(0);
   const { isMobile } = usePlatformOS();
   const debouncedSearchTerm: string = useDebounce(searchTerm, 500);
 
@@ -64,33 +74,75 @@ export function ParentIssuesListModal({
 
   const { baseTabIndex } = getTabIndex(undefined, isMobile);
   // derived values
-  const selectedIssueId = typeof value?.id === "string" ? value.id : null;
+  const selectedIssueId = selectedId ?? (typeof value?.id === "string" ? value.id : null);
 
   const handleClose = () => {
+    if (isSaving) return;
+    requestGeneration.current++;
     onClose();
     setSearchTerm("");
+    setSelectedId(null);
+    setSaveError(null);
+  };
+
+  const selectParent = async (id: string | null) => {
+    const issue = issues.find((item) => item.id === id);
+    if (!issue || isSaving) return;
+    setSelectedId(issue.id);
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await onChange(issue);
+      onClose();
+      setSearchTerm("");
+      setSelectedId(null);
+    } catch (error) {
+      setSaveError(hierarchyErrorKey(error));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   useEffect(() => {
     if (!isOpen || !workspaceSlug || !projectId) return;
 
+    const generation = ++requestGeneration.current;
+    // Search context changed: mark the asynchronous request pending and discard stale candidates.
+    // oxlint-disable-next-line react/set-state-in-effect
     setIsSearching(true);
     setIsLoading(true);
+    setSearchFailed(false);
+    setIssues([]);
 
     projectService
       .projectIssuesSearch(workspaceSlug, projectId, {
         search: debouncedSearchTerm,
         parent: searchEpic ? undefined : true,
         issue_id: issueId,
+        type_id: hierarchyTypeSearchParam(typeId),
         workspace_search: false,
         epic: searchEpic ? true : undefined,
       })
-      .then((res) => setIssues(res))
+      .then((res) => {
+        if (generation === requestGeneration.current) setIssues(res);
+        return undefined;
+      })
+      .catch(() => {
+        if (generation === requestGeneration.current) setSearchFailed(true);
+      })
       .finally(() => {
+        if (generation !== requestGeneration.current) return;
         setIsSearching(false);
         setIsLoading(false);
       });
-  }, [debouncedSearchTerm, isOpen, issueId, projectId, searchEpic, workspaceSlug]);
+    return () => {
+      // This ref is a request counter, not a DOM node; invalidate the current generation on cleanup.
+      // oxlint-disable-next-line react-hooks/exhaustive-deps
+      requestGeneration.current++;
+    };
+    // retry intentionally restarts the same request after an error.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+  }, [debouncedSearchTerm, isOpen, issueId, projectId, searchEpic, typeId, workspaceSlug, retry]);
 
   return (
     <Dialog
@@ -114,18 +166,34 @@ export function ParentIssuesListModal({
             // Base UI also reports its own clears (on item press, on close); only a keystroke
             // should move the server-side search.
             if (details.reason !== "input-change") return;
+            requestGeneration.current++;
+            setIssues([]);
+            setIsSearching(true);
             setSearchTerm(next);
           }}
           value={selectedIssueId}
-          onValueChange={(id) => {
-            const issue = issues.find((item) => item.id === id);
-            if (!issue) return;
-            onChange(issue);
-            handleClose();
-          }}
+          onValueChange={(id) => void selectParent(id)}
+          disabled={isSaving}
         >
           <ComboboxSearch placeholder={t("common.search.placeholder")} tabIndex={baseTabIndex} />
           <DialogMain>
+            {saveError && (
+              <p role="alert" className="px-3 text-13 text-danger-primary">
+                {t(saveError)}
+              </p>
+            )}
+            {searchFailed && (
+              <div role="alert" className="p-3 text-13">
+                <p>{t("web.issue_hierarchy.search_failed")}</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  stretch="auto"
+                  label={t("web.retry")}
+                  onClick={() => setRetry((attempt) => attempt + 1)}
+                />
+              </div>
+            )}
             <div className="vertical-scrollbar scrollbar-md max-h-80 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain">
               {searchTerm !== "" && (
                 <h5 className="mx-2 text-13 text-secondary">
@@ -145,7 +213,7 @@ export function ParentIssuesListModal({
                 </Loader>
               ) : (
                 <>
-                  {issues.length === 0 ? (
+                  {searchFailed ? null : issues.length === 0 ? (
                     <IssueSearchModalEmptyState
                       debouncedSearchTerm={debouncedSearchTerm}
                       isSearching={isSearching}

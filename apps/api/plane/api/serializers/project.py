@@ -104,6 +104,8 @@ class ProjectCreateSerializer(BaseSerializer):
             "logo_props",
             "workflow_enabled",
             "workflow_version",
+            "hierarchy_enabled",
+            "hierarchy_default_level",
             "is_issue_type_enabled",
             "archived_at",
             "deleted_at",
@@ -243,6 +245,8 @@ class ProjectSerializer(BaseSerializer):
             "archived_at",
             "workflow_enabled",
             "workflow_version",
+            "hierarchy_enabled",
+            "hierarchy_default_level",
             "is_issue_type_enabled",
             "cover_image_url",
         ]

@@ -376,6 +376,9 @@ def create_intake_issues(workspace, project, user_id, intake_issue_count):
 
 
 def create_issue_parent(workspace, project, user_id, issue_count):
+    # Random sample nesting is only meaningful for legacy unrestricted projects.
+    if Project.objects.filter(pk=project.pk, hierarchy_enabled=True).exists():
+        return
     parent_count = issue_count / 4
 
     parent_issues = Issue.objects.filter(project=project).values_list("id", flat=True)[: int(parent_count)]

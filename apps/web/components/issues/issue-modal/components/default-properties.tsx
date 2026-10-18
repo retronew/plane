@@ -37,6 +37,8 @@ import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useIssueHierarchy } from "@/hooks/use-issue-hierarchy";
+import { legalChildTypeIds } from "@/helpers/issue-hierarchy";
 import { workflowIsActive } from "@/helpers/workflow";
 import { useUserProfile } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -83,6 +85,11 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
   const { data: userProfile } = useUserProfile();
   // derived values
   const projectDetails = getProjectById(projectId);
+  const { data: hierarchy } = useIssueHierarchy(projectId);
+  const allowedTypeIds =
+    hierarchy?.enabled && parentId && selectedParentIssue
+      ? legalChildTypeIds(hierarchy.issue_types, selectedParentIssue.type_id)
+      : undefined;
 
   const { getIndex } = getTabIndex(ETabIndices.ISSUE_FORM, isMobile);
 
@@ -101,6 +108,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
           <IssueTypeSelect
             projectId={projectId}
             value={value}
+            allowedTypeIds={allowedTypeIds}
             onChange={(typeId) => {
               onChange(typeId);
               handleFormChange();
@@ -345,6 +353,7 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
             }}
             projectId={projectId ?? undefined}
             issueId={isDraft ? undefined : id}
+            typeId={issueTypeId}
           />
         )}
       />

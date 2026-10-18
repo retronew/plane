@@ -71,12 +71,12 @@ export const IssueParentSelect = observer(function IssueParentSelect(props: TIss
       <ParentIssuesListModal
         projectId={projectId}
         issueId={issueId}
+        typeId={issue.type_id}
         isOpen={isParentIssueModalOpen === issueId}
         handleClose={() => toggleParentIssueModal(null)}
-        onChange={(issue: any) => handleParentIssue(issue?.id)}
+        onChange={(candidate) => handleParentIssue(candidate.id)}
       />
-      <button
-        type="button"
+      <div
         className={cn(
           "group flex items-center justify-between gap-2 rounded-sm px-2 py-0.5 outline-none",
           {
@@ -86,8 +86,6 @@ export const IssueParentSelect = observer(function IssueParentSelect(props: TIss
           },
           className
         )}
-        onClick={() => toggleParentIssueModal(issue.id)}
-        disabled={disabled}
       >
         {issue.parent_id && parentIssue ? (
           <div className="flex items-center gap-1.5">
@@ -112,7 +110,9 @@ export const IssueParentSelect = observer(function IssueParentSelect(props: TIss
 
             {!disabled && (
               <Tooltip label={t("common.remove")} side="bottom" disabled={isMobile}>
-                <span
+                <button
+                  type="button"
+                  aria-label={t("common.remove")}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -120,23 +120,33 @@ export const IssueParentSelect = observer(function IssueParentSelect(props: TIss
                   }}
                 >
                   <CloseOutline className="h-2.5 w-2.5 text-tertiary hover:text-danger-primary" />
-                </span>
+                </button>
               </Tooltip>
             )}
           </div>
         ) : (
-          <span className="text-body-xs-medium text-placeholder">{t("issue.add.parent")}</span>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => toggleParentIssueModal(issue.id)}
+            className="text-body-xs-medium text-placeholder"
+          >
+            {t("issue.add.parent")}
+          </button>
         )}
         {!disabled && (
-          <span
+          <button
+            type="button"
+            aria-label={t("change_parent_issue")}
+            onClick={() => toggleParentIssueModal(issue.id)}
             className={cn("flex-shrink-0 p-1 opacity-0 group-hover:opacity-100", {
               "text-placeholder": !issue.parent_id && !parentIssue,
             })}
           >
             <EditOutline className="h-2.5 w-2.5 flex-shrink-0" />
-          </span>
+          </button>
         )}
-      </button>
+      </div>
     </>
   );
 });

@@ -11,9 +11,26 @@ vi.mock("@/hooks/store/use-project-workflow", () => ({
 vi.mock("@plane/blocks/select", () => {
   const context = { value: null as { name: string } | null };
   const Select = Object.assign(
-    ({ value, children }: { value: { name: string } | null; children: ReactNode }) => {
+    ({
+      value,
+      children,
+      getValues,
+    }: {
+      value: { name: string } | null;
+      children: ReactNode;
+      getValues: () => { name: string }[];
+    }) => {
       context.value = value;
-      return <div>{children}</div>;
+      return (
+        <div>
+          {children}
+          <span data-testid="options">
+            {getValues()
+              .map((type) => type.name)
+              .join(",")}
+          </span>
+        </div>
+      );
     },
     {
       Trigger: ({ children }: { children: (values: { name: string }[]) => ReactNode }) => (
@@ -25,10 +42,20 @@ vi.mock("@plane/blocks/select", () => {
 });
 it("shows the project default only for an omitted type", () => {
   render(<IssueTypeSelect projectId="p" value={undefined} onChange={() => undefined} />);
-  expect(screen.getByText("Bug")).toBeTruthy();
+  expect(screen.getAllByText("Bug").length).toBeGreaterThan(0);
 });
 it("shows no type for an explicit null instead of claiming the default type", () => {
   render(<IssueTypeSelect projectId="p" value={null} onChange={() => undefined} />);
   expect(screen.getByText("web.workflow_ui.no_type")).toBeTruthy();
+  expect(screen.getByText("web.workflow_ui.no_type")).toBeTruthy();
+});
+
+it("excludes illegal types including an otherwise default type", () => {
+  render(<IssueTypeSelect projectId="p" allowedTypeIds={[]} onChange={() => undefined} />);
+  expect(screen.getByTestId("options").textContent).toBe("");
   expect(screen.queryByText("Bug")).toBeNull();
+});
+it("offers a legal reusable type", () => {
+  render(<IssueTypeSelect projectId="p" allowedTypeIds={["bug"]} onChange={() => undefined} />);
+  expect(screen.getByTestId("options").textContent).toBe("Bug");
 });

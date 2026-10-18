@@ -627,6 +627,59 @@ class WorkflowMigrationEndpoint(WorkflowBaseView):
         )
 
 
+class HierarchyIntegerField(serializers.IntegerField):
+    def to_internal_value(self, data):
+        if isinstance(data, bool) or isinstance(data, float):
+            self.fail("invalid")
+        return super().to_internal_value(data)
+
+
+class HierarchyTypeLevelSerializer(serializers.Serializer):
+    type_id = serializers.UUIDField()
+    level = HierarchyIntegerField(min_value=0, max_value=2147483647)
+
+
+class HierarchyConfigurationSerializer(serializers.Serializer):
+    enabled = serializers.BooleanField()
+    default_level = HierarchyIntegerField(min_value=0, max_value=2147483647)
+    policy_version = HierarchyIntegerField(min_value=0)
+    type_levels = HierarchyTypeLevelSerializer(many=True)
+    token = serializers.CharField(required=False)
+    confirm_detach = serializers.BooleanField(required=False, default=False)
+
+
+class ProjectHierarchyEndpoint(WorkflowBaseView):
+    def get(self, request, slug, project_id):
+        from plane.services.hierarchy import hierarchy_config
+
+        project, can_manage = self.project(request, slug, project_id)
+        return Response(hierarchy_config(project, can_manage, self.types_representation(project)))
+
+    @transaction.atomic
+    def post(self, request, slug, project_id, apply=False):
+        from plane.services.hierarchy import apply_hierarchy, hierarchy_config, preview_hierarchy
+
+        project, can_manage = self.project(request, slug, project_id, write=True)
+        serializer = HierarchyConfigurationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        if not apply:
+            preview, *_ = preview_hierarchy(project, data)
+            return Response(preview)
+        preview, type_id_map = apply_hierarchy(project, data, request.user)
+        config = hierarchy_config(project, can_manage, self.types_representation(project))
+        config["type_id_map"] = type_id_map
+        return Response(
+            {
+                "applied": True,
+                "detached_count": preview["conflict_count"],
+                "policy_version": project.workflow_version,
+                "type_id_map": type_id_map,
+                "config": config,
+            }
+        )
+
+
 class ProjectIssueTypeEndpoint(WorkflowBaseView):
     def get(self, request, slug, project_id):
         project, can_manage = self.project(request, slug, project_id)
@@ -646,12 +699,22 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         name = serializers.CharField(max_length=255).run_validation(request.data.get("name"))
         if ProjectIssueType.objects.filter(project=project, issue_type__name=name).exists():
             workflow_error("WORKFLOW_DUPLICATE_TYPE")
-        level = serializers.IntegerField(min_value=0, max_value=2147483647).run_validation(request.data.get("level", 0))
+        from plane.services.hierarchy import hierarchy_error
+
+        level = HierarchyIntegerField(min_value=0, max_value=2147483647).run_validation(
+            request.data.get("level", project.hierarchy_default_level)
+        )
+        if project.hierarchy_enabled:
+            existing_levels = set(ProjectIssueType.objects.filter(project=project).values_list("level", flat=True)) | {
+                0
+            }
+            if level not in existing_levels and level != max(existing_levels) + 1:
+                hierarchy_error("HIERARCHY_INVALID_LEVEL")
         issue_type = IssueType.objects.create(
             workspace_id=project.workspace_id,
             name=name,
             level=level,
-            is_epic=level > 0,
+            is_epic=False,
             description=serializers.CharField(allow_blank=True).run_validation(request.data.get("description", "")),
             logo_props=serializers.JSONField().run_validation(request.data.get("logo_props", {})),
         )
@@ -677,6 +740,15 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         self.check_project_version(request, project)
         if "workflow_id" in request.data:
             workflow_error("WORKFLOW_PREVIEW_REQUIRED")
+        from plane.services.hierarchy import ensure_project_type_owned, hierarchy_error
+
+        target_level = binding.level
+        if "level" in request.data:
+            target_level = HierarchyIntegerField(min_value=0, max_value=2147483647).run_validation(
+                request.data["level"]
+            )
+            if project.hierarchy_enabled and target_level != binding.level:
+                hierarchy_error("HIERARCHY_PREVIEW_REQUIRED")
         if "is_default" in request.data:
             default = serializers.BooleanField().run_validation(request.data["is_default"])
             if default:
@@ -687,22 +759,11 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         if binding.is_default and request.data.get("is_active") is not None:
             if not serializers.BooleanField().run_validation(request.data["is_active"]):
                 workflow_error("WORKFLOW_DEFAULT_PROTECTED")
-        if any(k in request.data for k in ("name", "description", "logo_props", "is_active")):
-            # Clone shared types before editing; the original may be used by another project.
-            issue_type = binding.issue_type
-            if ProjectIssueType.objects.filter(issue_type=issue_type).exclude(project=project).exists():
-                clone = IssueType.objects.create(
-                    workspace_id=project.workspace_id,
-                    name=issue_type.name,
-                    description=issue_type.description,
-                    logo_props=issue_type.logo_props,
-                    is_active=issue_type.is_active,
-                    level=issue_type.level,
-                    is_epic=issue_type.is_epic,
-                )
-                Issue.objects.filter(project=project, type=issue_type).update(type=clone)
-                binding.issue_type = clone
-                issue_type = clone
+        type_id_map = {}
+        if any(k in request.data for k in ("name", "description", "logo_props", "is_active", "level")):
+            issue_type, type_id_map = ensure_project_type_owned(binding)
+            binding.level = target_level
+            issue_type.level = target_level
             for key in ("name", "description", "logo_props", "is_active"):
                 if key in request.data:
                     field = (
@@ -716,14 +777,19 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
                     if (
                         key == "is_active"
                         and not value
-                        and Issue.objects.filter(project=project, type=issue_type).exists()
+                        and (
+                            Issue.objects.filter(project=project, type=issue_type).exists()
+                            or issue_type.draft_issue_type.filter(project=project).exists()
+                        )
                     ):
                         workflow_error("WORKFLOW_PREVIEW_REQUIRED")
                     setattr(issue_type, key, value)
             issue_type.save()
         binding.save()
         bump_policy(project)
-        return Response(next(t for t in self.types_representation(project) if t["id"] == binding.issue_type_id))
+        result = next(t for t in self.types_representation(project) if t["id"] == binding.issue_type_id)
+        result["type_id_map"] = type_id_map
+        return Response(result)
 
     @transaction.atomic
     def delete(self, request, slug, project_id, type_id):
@@ -732,8 +798,23 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
         self.check_project_version(request, project)
         if binding.is_default:
             workflow_error("WORKFLOW_DEFAULT_PROTECTED")
-        if Issue.objects.filter(project=project, type_id=type_id).exists():
+        from plane.db.models import DraftIssue
+
+        if (
+            Issue.objects.filter(project=project, type_id=type_id).exists()
+            or DraftIssue.objects.filter(project=project, type_id=type_id).exists()
+        ):
             workflow_error("WORKFLOW_PREVIEW_REQUIRED")
+        if project.hierarchy_enabled:
+            from plane.services.hierarchy import hierarchy_error
+
+            remaining_levels = set(
+                ProjectIssueType.objects.filter(project=project).exclude(pk=binding.pk).values_list("level", flat=True)
+            ) | {0}
+            if project.hierarchy_default_level not in remaining_levels or sorted(remaining_levels) != list(
+                range(len(remaining_levels))
+            ):
+                hierarchy_error("HIERARCHY_PREVIEW_REQUIRED")
         binding.delete(soft=False)
         bump_policy(project)
         return Response(status=204)

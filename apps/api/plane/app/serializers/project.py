@@ -48,6 +48,8 @@ class ProjectSerializer(BaseSerializer):
             "archived_at",
             "workflow_enabled",
             "workflow_version",
+            "hierarchy_enabled",
+            "hierarchy_default_level",
             "is_issue_type_enabled",
         ]
 

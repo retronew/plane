@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { hierarchyErrorKey } from "@/helpers/issue-hierarchy";
 import { useMemo } from "react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
@@ -71,17 +72,13 @@ export const useSubIssueOperations = (issueServiceType: TIssueServiceType): TSub
                   : t("issue.label", { count: issueIds.length }),
             }),
           });
-        } catch {
+        } catch (error) {
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: t("entity.add.failed", {
-              entity:
-                issueServiceType === EIssueServiceType.ISSUES
-                  ? t("common.sub_work_items")
-                  : t("issue.label", { count: issueIds.length }),
-            }),
+            message: t(hierarchyErrorKey(error)),
           });
+          throw error;
         }
       },
       updateSubIssue: async (

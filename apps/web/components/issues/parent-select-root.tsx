@@ -43,14 +43,13 @@ export const IssueParentSelectRoot = observer(function IssueParentSelectRoot(pro
   const parentIssue = issue?.parent_id ? getIssueById(issue.parent_id) : undefined;
 
   const handleParentIssue = async (_issueId: string | null = null) => {
-    try {
-      await issueOperations.update(workspaceSlug, projectId, issueId, { parent_id: _issueId });
-      await issueOperations.fetch(workspaceSlug, projectId, issueId, false);
-      if (_issueId) await fetchSubIssues(workspaceSlug, projectId, _issueId);
-      toggleParentIssueModal(null);
-    } catch (_error) {
-      console.error("something went wrong while fetching the issue");
-    }
+    await issueOperations.update(workspaceSlug, projectId, issueId, { parent_id: _issueId });
+    // Persistence has succeeded. A refresh failure must not invite repeating the mutation.
+    toggleParentIssueModal(null);
+    await Promise.allSettled([
+      issueOperations.fetch(workspaceSlug, projectId, issueId, false),
+      ...(_issueId ? [fetchSubIssues(workspaceSlug, projectId, _issueId)] : []),
+    ]);
   };
 
   const handleRemoveSubIssue = async (

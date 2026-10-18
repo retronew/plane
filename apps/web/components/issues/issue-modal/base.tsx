@@ -18,6 +18,7 @@ import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { TBaseIssue, TIssue } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
+import { hierarchyErrorKey } from "@/helpers/issue-hierarchy";
 import { getDialogInitialFocusProps } from "@/helpers/dialog";
 // hooks
 import { useIssueModal } from "@/hooks/context/use-issue-modal";
@@ -291,7 +292,9 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       setToast({
         type: "error",
         title: t("error"),
-        message: error?.error ?? t(is_draft_issue ? "draft_creation_failed" : "issue_creation_failed"),
+        message: hierarchyErrorKey(error, "")
+          ? t(hierarchyErrorKey(error))
+          : (error?.error ?? t(is_draft_issue ? "draft_creation_failed" : "issue_creation_failed")),
       });
       throw error;
     }
@@ -385,7 +388,9 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       setToast({
         type: "error",
         title: t("error"),
-        message: error?.error ?? t("issue_could_not_be_updated"),
+        message: hierarchyErrorKey(error, "")
+          ? t(hierarchyErrorKey(error))
+          : (error?.error ?? t("issue_could_not_be_updated")),
       });
       throw error;
     }

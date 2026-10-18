@@ -18,7 +18,7 @@ import { useNotification } from "@/hooks/store/notifications/use-notification";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 // local imports
-import { NotificationContent } from "./content";
+import { NotificationContent, NotificationTitle } from "./content";
 import { NotificationOption } from "./options";
 import { translate } from "@plane/i18n";
 
@@ -126,7 +126,7 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
                   {notification.data.issue.name}
                 </>
               ) : (
-                notification.title
+                <NotificationTitle notification={notification} />
               )}
             </div>
             <div className="flex-shrink-0">

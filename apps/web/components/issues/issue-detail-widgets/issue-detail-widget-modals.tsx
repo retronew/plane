@@ -7,7 +7,13 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { setToast } from "@plane/blocks/toast";
-import type { ISearchIssueResponse, TIssue, TIssueServiceType, TWorkItemWidgets } from "@plane/types";
+import type {
+  ISearchIssueResponse,
+  TIssue,
+  TIssueServiceType,
+  TProjectIssueHierarchy,
+  TWorkItemWidgets,
+} from "@plane/types";
 // components
 import { ExistingIssuesListModal } from "@/components/core/modals/existing-issues-list-modal";
 // hooks
@@ -18,6 +24,8 @@ import { IssueLinkCreateUpdateModal } from "../issue-detail/links/create-update-
 import { CreateUpdateIssueModal } from "../issue-modal/modal";
 import { useLinkOperations } from "./links/helper";
 import { useSubIssueOperations } from "./sub-issues/helper";
+import { hierarchyTypeSearchParam, legalChildTypeIds } from "@/helpers/issue-hierarchy";
+import { useIssueHierarchy } from "@/hooks/use-issue-hierarchy";
 import { translate } from "@plane/i18n";
 
 type Props = {
@@ -32,6 +40,7 @@ export const IssueDetailWidgetModals = observer(function IssueDetailWidgetModals
   const { workspaceSlug, projectId, issueId, issueServiceType, hideWidgets } = props;
   // store hooks
   const {
+    issue: { getIssueById },
     isIssueLinkModalOpen,
     toggleIssueLinkModal: toggleIssueLinkModalStore,
     setIssueLinkData,
@@ -91,7 +100,7 @@ export const IssueDetailWidgetModals = observer(function IssueDetailWidgetModals
 
   const handleCreateUpdateModalOnSubmit = async (_issue: TIssue) => {
     if (_issue.parent_id) {
-      await subIssueOperations.addSubIssue(workspaceSlug, projectId, _issue.parent_id, [_issue.id]);
+      await subIssueOperations.fetchSubIssues(workspaceSlug, projectId, _issue.parent_id);
     }
   };
 
@@ -130,13 +139,19 @@ export const IssueDetailWidgetModals = observer(function IssueDetailWidgetModals
   };
 
   // helpers
+  const parent = getIssueById(issueCrudOperationState?.create?.parentIssueId ?? issueId);
+  const existingParent = getIssueById(issueCrudOperationState?.existing?.parentIssueId ?? issueId);
+  const { data: hierarchy } = useIssueHierarchy(projectId);
+  const defaultChildType = getDefaultChildType(hierarchy, parent?.type_id);
   const createUpdateModalData: Partial<TIssue> = {
+    ...(defaultChildType ? { type_id: defaultChildType } : {}),
     parent_id: issueCrudOperationState?.create?.parentIssueId,
     project_id: projectId,
   };
 
   const existingIssuesModalSearchParams = {
     sub_issue: true,
+    type_id: hierarchyTypeSearchParam(existingParent?.type_id),
     issue_id: issueCrudOperationState?.existing?.parentIssueId,
   };
 
@@ -199,3 +214,10 @@ export const IssueDetailWidgetModals = observer(function IssueDetailWidgetModals
     </>
   );
 });
+
+function getDefaultChildType(hierarchy: TProjectIssueHierarchy | undefined, parentTypeId: string | null | undefined) {
+  if (!hierarchy?.enabled) return undefined;
+  const childTypes = legalChildTypeIds(hierarchy.issue_types, parentTypeId);
+  const allowed = new Set(childTypes);
+  return hierarchy.issue_types.find((type) => type.is_default && allowed.has(type.id))?.id ?? childTypes[0];
+}

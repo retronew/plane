@@ -31,7 +31,8 @@ from plane.utils.content_validator import (
     validate_binary_data,
 )
 from plane.app.permissions import ROLE
-from plane.utils.workflow import WorkflowIssueTypeMixin
+from plane.utils.workflow import WorkflowIssueTypeMixin, normalize_issue_type
+from plane.services.hierarchy import validate_hierarchy_write
 
 
 class DraftIssueCreateSerializer(WorkflowIssueTypeMixin, BaseSerializer):
@@ -49,9 +50,24 @@ class DraftIssueCreateSerializer(WorkflowIssueTypeMixin, BaseSerializer):
                 self.instance = DraftIssue.objects.select_for_update().get(pk=self.instance.pk)
                 if self.instance.project_id and str(self.instance.project_id) not in project_ids:
                     raise serializers.ValidationError({"project_id": "CUSTOM_PROPERTY_PROJECT_CHANGED"})
+            # Partial updates inherit the freshly locked parent/type. A project
+            # move must validate those inherited values against its destination.
+            normalize_issue_type(project_id, self.validated_data, self.instance)
+            if (
+                self.instance is None
+                or str(project_id) != str(self.instance.project_id)
+                or any(key in self.validated_data for key in ("parent", "parent_id", "type", "type_id"))
+            ):
+                validate_hierarchy_write(project_id, self.validated_data, self.instance)
             self.validated_data["custom_properties"] = issue_property_values(
                 project_id, self.validated_data, self.instance, draft=True
             )
+            # The view resolves the destination project once. Persist that same
+            # project rather than allowing an independent relation field to bypass
+            # the locks and validation above.
+            self.validated_data.pop("project", None)
+            if self.instance:
+                self.validated_data["project_id"] = project_id
             return super().save(**kwargs)
 
     # ids

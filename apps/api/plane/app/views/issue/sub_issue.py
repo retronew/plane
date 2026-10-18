@@ -4,9 +4,12 @@
 
 # Python imports
 import json
+from functools import partial
+from uuid import UUID
 
 # Django imports
 from django.utils import timezone
+from django.db import transaction
 from django.db.models import OuterRef, F, Value, UUIDField, Subquery, Count, IntegerField
 from django.utils.decorators import method_decorator
 from django.views.decorators.gzip import gzip_page
@@ -22,7 +25,8 @@ from rest_framework import status
 from .. import BaseAPIView
 from plane.app.serializers import IssueSerializer
 from plane.app.permissions import ProjectEntityPermission
-from plane.db.models import Issue, IssueLink, FileAsset, CycleIssue, IssueLabel, IssueAssignee, ModuleIssue
+from plane.db.models import Issue, IssueLink, FileAsset, CycleIssue, IssueLabel, IssueAssignee, ModuleIssue, Project
+from plane.services.hierarchy import hierarchy_error, validate_hierarchy_write
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.timezone_converter import user_timezone_converter
 from collections import defaultdict
@@ -207,56 +211,65 @@ class SubIssuesEndpoint(BaseAPIView):
 
     # Assign multiple sub issues
     def post(self, request, slug, project_id, issue_id):
-        # SECURITY: bind the parent issue to the URL workspace + project. A bare
-        # pk lookup let any project member re-parent issues under a parent in a
-        # different project/workspace.
-        parent_issue = Issue.issue_objects.filter(pk=issue_id, workspace__slug=slug, project_id=project_id).first()
-        if parent_issue is None:
-            return Response(
-                {"error": "Parent issue not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
         sub_issue_ids = request.data.get("sub_issue_ids", [])
-
-        if not len(sub_issue_ids):
+        if not isinstance(sub_issue_ids, list) or not sub_issue_ids:
             return Response(
                 {"error": "Sub Issue IDs are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        try:
+            sub_issue_ids = {UUID(str(value)) for value in sub_issue_ids}
+        except (ValueError, TypeError, AttributeError):
+            hierarchy_error("HIERARCHY_INVALID_ISSUE")
 
-        # Scope to workspace + project to prevent cross-project/cross-tenant IDOR
-        sub_issues = Issue.issue_objects.filter(id__in=sub_issue_ids, workspace__slug=slug, project_id=project_id)
+        with transaction.atomic():
+            # Serialize relation writes and policy changes in the same lock order.
+            project = Project.objects.select_for_update().filter(pk=project_id, workspace__slug=slug).first()
+            if project is None:
+                return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+            locked_issues = list(
+                Issue.issue_objects.select_for_update(of=("self",))
+                .filter(pk__in=sub_issue_ids | {UUID(str(issue_id))}, workspace__slug=slug, project_id=project_id)
+                .order_by("id")
+            )
+            issues_by_id = {item.id: item for item in locked_issues}
+            parent_issue = issues_by_id.get(UUID(str(issue_id)))
+            if parent_issue is None:
+                return Response({"error": "Parent issue not found"}, status=status.HTTP_404_NOT_FOUND)
+            if not sub_issue_ids.issubset(issues_by_id):
+                hierarchy_error("HIERARCHY_INVALID_ISSUE")
+            sub_issues = [issues_by_id[item_id] for item_id in sorted(sub_issue_ids)]
+            previous_parents = {item.id: item.parent_id for item in sub_issues}
+            # Validate every edge before changing any instance or writing any rows.
+            for item in sub_issues:
+                validate_hierarchy_write(project_id, {"type": item.type, "parent": parent_issue}, instance=item)
+            for item in sub_issues:
+                item.parent = parent_issue
+            Issue.objects.bulk_update(sub_issues, ["parent"], batch_size=10)
+            for item in sub_issues:
+                if previous_parents[item.id] != parent_issue.id:
+                    transaction.on_commit(
+                        partial(
+                            issue_activity.delay,
+                            type="issue.activity.updated",
+                            requested_data=json.dumps({"parent": str(parent_issue.id)}),
+                            actor_id=str(request.user.id),
+                            issue_id=str(item.id),
+                            project_id=str(project_id),
+                            current_instance=json.dumps(
+                                {"parent": str(previous_parents[item.id]) if previous_parents[item.id] else None}
+                            ),
+                            epoch=int(timezone.now().timestamp()),
+                            notification=True,
+                            origin=base_host(request=request, is_app=True),
+                        )
+                    )
 
-        for sub_issue in sub_issues:
-            sub_issue.parent = parent_issue
-
-        _ = Issue.objects.bulk_update(sub_issues, ["parent"], batch_size=10)
-
-        # Only the issues that were actually re-parented — i.e. the project-scoped
-        # `sub_issues`, not the raw caller-supplied ids. Otherwise a cross-project id
-        # (excluded from the update above) would still fire issue_activity, whose task
-        # does an unscoped Issue.objects.get and bumps updated_at on a foreign issue.
         scoped_sub_issue_ids = [str(sub_issue.id) for sub_issue in sub_issues]
 
         updated_sub_issues = Issue.issue_objects.filter(
             id__in=scoped_sub_issue_ids, workspace__slug=slug, project_id=project_id
         ).annotate(state_group=F("state__group"))
-
-        # Track the issue
-        _ = [
-            issue_activity.delay(
-                type="issue.activity.updated",
-                requested_data=json.dumps({"parent": str(issue_id)}),
-                actor_id=str(request.user.id),
-                issue_id=sub_issue_id,
-                project_id=str(project_id),
-                current_instance=json.dumps({"parent": sub_issue_id}),
-                epoch=int(timezone.now().timestamp()),
-                notification=True,
-                origin=base_host(request=request, is_app=True),
-            )
-            for sub_issue_id in scoped_sub_issue_ids
-        ]
 
         # create's a dict with state group name with their respective issue id's
         result = defaultdict(list)

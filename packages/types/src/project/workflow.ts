@@ -67,6 +67,42 @@ export type TProjectIssueTypeList = {
   policy_version: number;
   can_manage: boolean;
 };
+export type TProjectIssueHierarchy = {
+  type_id_map?: Record<string, string>;
+  enabled: boolean;
+  default_level: number;
+  policy_version: number;
+  can_manage: boolean;
+  levels: number[];
+  issue_types: TProjectIssueType[];
+};
+export type THierarchyRequest = {
+  enabled: boolean;
+  default_level: number;
+  policy_version: number;
+  type_levels: { type_id: string; level: number }[];
+};
+export type THierarchyPreview = THierarchyRequest & {
+  levels: number[];
+  conflict_count: number;
+  examples: {
+    kind: "issue" | "draft";
+    id: string;
+    name: string;
+    parent_id: string;
+    parent_name: string;
+    level: number;
+    parent_level: number;
+    reason: string;
+  }[];
+  token: string;
+};
+export type THierarchyApplyResult = {
+  applied: true;
+  detached_count: number;
+  policy_version: number;
+  config: TProjectIssueHierarchy;
+};
 export type TWorkflowImpactRequest = {
   operation: "bind_type" | "states" | "delete" | "enable" | "remove_type";
   workflow_id?: string;
