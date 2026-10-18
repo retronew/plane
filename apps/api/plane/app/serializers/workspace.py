@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import math
+
+from django.db.models import Min
+
 # Third party imports
 from rest_framework import serializers
 
@@ -178,6 +182,11 @@ class WorkspaceUserPropertiesSerializer(BaseSerializer):
 
 
 class WorkspaceUserLinkSerializer(BaseSerializer):
+    def validate_sort_order(self, value):
+        if not math.isfinite(value):
+            raise serializers.ValidationError("Sort order must be a finite number.")
+        return value
+
     class Meta:
         model = WorkspaceUserLink
         fields = "__all__"
@@ -213,6 +222,11 @@ class WorkspaceUserLinkSerializer(BaseSerializer):
         if workspace_user_link.exists():
             raise serializers.ValidationError({"error": "URL already exists for this workspace and owner"})
 
+        minimum = WorkspaceUserLink.objects.filter(
+            workspace_id=validated_data.get("workspace_id"),
+            owner_id=validated_data.get("owner_id"),
+        ).aggregate(minimum=Min("sort_order"))["minimum"]
+        validated_data["sort_order"] = minimum - 10000 if minimum is not None else 0
         return super().create(validated_data)
 
     def update(self, instance, validated_data):

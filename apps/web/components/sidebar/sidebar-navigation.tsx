@@ -6,6 +6,14 @@
 
 import { cn } from "@plane/utils";
 
+export const SIDEBAR_ROW_CLASS_NAME =
+  "relative flex h-8 w-full items-center gap-2 rounded-lg px-2 text-body-sm-medium hover:bg-layer-transparent-hover active:bg-layer-transparent-active";
+
+export const SIDEBAR_ROW_LINK_CLASS_NAME = "flex h-full min-w-0 flex-grow items-center gap-2";
+
+export const SIDEBAR_ROW_ACTIONS_CLASS_NAME =
+  "hidden shrink-0 items-center group-focus-within/project-item:flex group-hover/project-item:flex";
+
 type TSidebarNavItem = {
   className?: string;
   isActive?: boolean;
@@ -17,10 +25,12 @@ export function SidebarNavItem(props: TSidebarNavItem) {
   return (
     <div
       className={cn(
-        "group relative flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 py-1 outline-none",
+        SIDEBAR_ROW_CLASS_NAME,
+        "group cursor-pointer justify-between outline-none",
         {
-          "!bg-layer-transparent-active text-primary": isActive,
-          "text-secondary hover:bg-layer-transparent-hover active:bg-layer-transparent-active": !isActive,
+          "bg-layer-transparent-selected text-primary hover:bg-layer-transparent-selected active:bg-layer-transparent-selected":
+            isActive,
+          "text-secondary": !isActive,
         },
         className
       )}

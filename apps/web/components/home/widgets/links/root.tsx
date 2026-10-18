@@ -48,7 +48,7 @@ export const DashboardQuickLinks = observer(function DashboardQuickLinks(props: 
         linkOperations={linkOperations}
         preloadedData={linkData}
       />
-      <div className="mb-2">
+      <div className="mb-2 w-full min-w-0">
         <div className="mb-4 flex items-center justify-between">
           <div className="text-14 font-semibold text-tertiary">{t("home.quick_links.title_plural")}</div>
           <Button

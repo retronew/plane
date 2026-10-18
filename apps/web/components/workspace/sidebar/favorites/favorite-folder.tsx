@@ -15,6 +15,7 @@ import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/ut
 import { attachInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/attach-instruction";
 
 import { orderBy } from "lodash-es";
+import { GripVertical } from "lucide-react";
 import { useParams } from "next/navigation";
 import { createRoot } from "react-dom/client";
 import { ChevronRightOutline, DraftsOutline, DragDropOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
@@ -26,9 +27,14 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IFavorite, InstructionType } from "@plane/types";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { DropIndicator, DragHandle } from "@plane/blocks/common";
+import { DropIndicator } from "@plane/blocks/common";
 // helpers
 import { cn } from "@plane/utils";
+import {
+  SIDEBAR_ROW_CLASS_NAME,
+  SIDEBAR_ROW_LINK_CLASS_NAME,
+  SIDEBAR_ROW_ACTIONS_CLASS_NAME,
+} from "@/components/sidebar/sidebar-navigation";
 // hooks
 import { useFavorite } from "@/hooks/store/use-favorite";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -158,12 +164,9 @@ export function FavoriteFolder(props: Props) {
         {/* draggable drop top indicator */}
         <DropIndicator isVisible={instruction === "reorder-above"} />
         <div
-          className={cn(
-            "group/project-item relative flex w-full items-center rounded-md px-2 py-1.5 text-primary hover:bg-layer-1-hover",
-            {
-              "bg-surface-2": isMenuActive,
-            }
-          )}
+          className={cn(SIDEBAR_ROW_CLASS_NAME, "group/project-item text-primary", {
+            "bg-surface-2": isMenuActive,
+          })}
         >
           {/* draggable indicator */}
 
@@ -173,10 +176,10 @@ export function FavoriteFolder(props: Props) {
 
           <>
             <Tooltip label={`${favorite.name}`} layout="stacked" side="right" sideOffset={40} disabled={isMobile}>
-              <div className="flex flex-grow truncate">
+              <div className="flex h-full min-w-0 flex-grow truncate">
                 <button
                   type="button"
-                  className="flex w-full flex-grow items-center gap-1.5 text-left select-none"
+                  className={cn(SIDEBAR_ROW_LINK_CLASS_NAME, "w-full text-left select-none")}
                   aria-expanded={isOpen}
                   onClick={() => setIsOpen(!isOpen)}
                 >
@@ -198,24 +201,23 @@ export function FavoriteFolder(props: Props) {
                         }
                       )}
                     >
-                      <DragHandle className="bg-transparent" />
+                      <span className="flex rounded-sm p-0.5">
+                        <GripVertical aria-hidden="true" focusable="false" className="size-3.5 text-placeholder" />
+                      </span>
                     </span>
                   </Tooltip>
                   <div className="grid size-5 flex-shrink-0 place-items-center">
                     <FavoriteFolderIcon />
                   </div>
-                  <p className="truncate text-13 font-medium text-secondary">{favorite.name}</p>
+                  <p className="truncate text-body-sm-medium text-secondary">{favorite.name}</p>
                 </button>
               </div>
             </Tooltip>
             <div
               ref={actionSectionRef}
-              className={cn(
-                "pointer-events-none flex-shrink-0 opacity-0 group-hover/project-item:pointer-events-auto group-hover/project-item:opacity-100",
-                {
-                  "pointer-events-auto opacity-100": isMenuActive,
-                }
-              )}
+              className={cn(SIDEBAR_ROW_ACTIONS_CLASS_NAME, {
+                flex: isMenuActive,
+              })}
             >
               <Menu onOpenChange={setIsMenuActive}>
                 <MenuTrigger
@@ -245,9 +247,12 @@ export function FavoriteFolder(props: Props) {
             </div>
             <button
               type="button"
-              className={cn("hidden rounded-sm p-0.5 group-hover/project-item:inline-block hover:bg-layer-1", {
-                "inline-block": isMenuActive,
-              })}
+              className={cn(
+                "hidden shrink-0 rounded-sm p-0.5 group-focus-within/project-item:inline-block group-hover/project-item:inline-block hover:bg-layer-1",
+                {
+                  "inline-block": isMenuActive,
+                }
+              )}
               aria-expanded={isOpen}
               aria-label={t(
                 isOpen ? "aria_labels.projects_sidebar.close_folder" : "aria_labels.projects_sidebar.open_folder"

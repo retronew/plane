@@ -70,9 +70,9 @@ export const SidebarItemBase = observer(function SidebarItemBase({
   return (
     <Link href={itemHref} onClick={handleLinkClick}>
       <SidebarNavItem isActive={item.highlight(pathname, itemHref)}>
-        <div className="flex items-center gap-1.5 py-[1px]">
+        <div className="flex items-center gap-2">
           {icon}
-          <p className="text-13 leading-5 font-medium">{t(item.labelTranslationKey)}</p>
+          <p className="text-body-sm-medium">{t(item.labelTranslationKey)}</p>
         </div>
         {additionalRender?.(item.key, slug)}
       </SidebarNavItem>

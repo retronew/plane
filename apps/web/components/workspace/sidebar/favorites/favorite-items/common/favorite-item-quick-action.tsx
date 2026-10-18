@@ -15,6 +15,7 @@ import { useTranslation } from "@plane/i18n";
 import type { IFavorite } from "@plane/types";
 // helpers
 import { cn } from "@plane/utils";
+import { SIDEBAR_ROW_ACTIONS_CLASS_NAME } from "@/components/sidebar/sidebar-navigation";
 
 type Props = {
   ref: React.MutableRefObject<HTMLDivElement | null>;
@@ -32,12 +33,9 @@ export const FavoriteItemQuickAction = observer(function FavoriteItemQuickAction
   return (
     <div
       ref={ref}
-      className={cn(
-        "pointer-events-none flex-shrink-0 opacity-0 group-hover/project-item:pointer-events-auto group-hover/project-item:opacity-100",
-        {
-          "pointer-events-auto opacity-100": isMenuActive,
-        }
-      )}
+      className={cn(SIDEBAR_ROW_ACTIONS_CLASS_NAME, {
+        flex: isMenuActive,
+      })}
     >
       <Menu onOpenChange={onChange}>
         <MenuTrigger

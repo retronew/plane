@@ -125,7 +125,7 @@ export const FavoriteRoot = observer(function FavoriteRoot(props: Props) {
       {isDragging && <DropIndicator isVisible={instruction === "reorder-above"} />}
       <FavoriteItemWrapper elementRef={elementRef} isMenuActive={isMenuActive}>
         <FavoriteItemDragHandle isDragging={isDragging} sort_order={favorite.sort_order} />
-        <FavoriteItemTitle href={itemLink} icon={itemIcon} title={itemTitle} />
+        <FavoriteItemTitle href={itemLink} icon={itemIcon} title={itemTitle} className="h-full" />
         <FavoriteItemQuickAction
           favorite={favorite}
           ref={actionSectionRef}

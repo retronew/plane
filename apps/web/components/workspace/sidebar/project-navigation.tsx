@@ -205,14 +205,14 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
         return (
           <Link key={item.key} href={item.href} onClick={handleProjectClick}>
             <SidebarNavItem isActive={!!isActive(item)}>
-              <div className="flex w-full items-center justify-between gap-1.5 py-[1px]">
-                <div className="flex items-center gap-1.5">
+              <div className="flex w-full items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   <item.icon
                     className={`size-4 flex-shrink-0 ${item.name === "Intake" ? "stroke-1" : "stroke-[1.5]"}`}
                   />
-                  <span className="text-13 font-medium">{t(item.i18n_key)}</span>
+                  <span className="text-body-sm-medium">{t(item.i18n_key)}</span>
                 </div>
-                {shouldShowCount && <span className="text-13 font-medium text-tertiary">{project.intake_count}</span>}
+                {shouldShowCount && <span className="text-body-sm-medium text-tertiary">{project.intake_count}</span>}
               </div>
             </SidebarNavItem>
           </Link>

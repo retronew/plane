@@ -17,6 +17,7 @@ export interface IWorkspaceLinkStoreActions {
   createLink: (workspaceSlug: string, data: Partial<TLink>) => Promise<TLink>;
   updateLink: (workspaceSlug: string, linkId: string, data: Partial<TLink>) => Promise<TLink>;
   removeLink: (workspaceSlug: string, linkId: string) => Promise<void>;
+  reorderLink: (workspaceSlug: string, linkId: string, destinationIndex: number) => Promise<void>;
   setLinkData: (link: TLink | undefined) => void;
   toggleLinkModal: (isOpen: boolean) => void;
 }
@@ -27,6 +28,7 @@ export interface IWorkspaceLinkStore extends IWorkspaceLinkStoreActions {
   linkMap: TLinkMap;
   linkData: TLink | undefined;
   isLinkModalOpen: boolean;
+  isReorderingLinks: Record<string, boolean>;
   // helper methods
   getLinksByWorkspaceId: (projectId: string) => string[] | undefined;
   getLinkById: (linkId: string) => TLink | undefined;
@@ -38,6 +40,7 @@ export class WorkspaceLinkStore implements IWorkspaceLinkStore {
   linkMap: TLinkMap = {};
   linkData: TLink | undefined = undefined;
   isLinkModalOpen = false;
+  isReorderingLinks: Record<string, boolean> = {};
   // services
   workspaceService: WorkspaceService;
 
@@ -48,6 +51,8 @@ export class WorkspaceLinkStore implements IWorkspaceLinkStore {
       linkMap: observable,
       linkData: observable,
       isLinkModalOpen: observable,
+      isReorderingLinks: observable,
+      reorderLink: action,
       // actions
       addLinks: actionBound,
       fetchLinks: action,
@@ -88,7 +93,12 @@ export class WorkspaceLinkStore implements IWorkspaceLinkStore {
   addLinks = (workspaceSlug: string, links: TLink[]) => {
     runInAction(() => {
       this.links[workspaceSlug] = links.map((link) => link.id);
-      links.forEach((link) => set(this.linkMap, link.id, link));
+      links.forEach((link, index) =>
+        set(this.linkMap, link.id, {
+          ...link,
+          sort_order: Number.isFinite(link.sort_order) ? link.sort_order : index * 10000,
+        })
+      );
     });
   };
 
@@ -103,7 +113,13 @@ export class WorkspaceLinkStore implements IWorkspaceLinkStore {
 
     runInAction(() => {
       this.links[workspaceSlug] = [response.id, ...(this.links[workspaceSlug] ?? [])];
-      set(this.linkMap, response.id, response);
+      const nextLink = this.linkMap[this.links[workspaceSlug][1]];
+      set(this.linkMap, response.id, {
+        ...response,
+        sort_order: Number.isFinite(response.sort_order)
+          ? response.sort_order
+          : (nextLink?.sort_order ?? 10000) - 10000,
+      });
     });
     return response;
   };
@@ -117,6 +133,76 @@ export class WorkspaceLinkStore implements IWorkspaceLinkStore {
 
     const response = await this.workspaceService.updateWorkspaceLink(workspaceSlug, linkId, data);
     return response;
+  };
+
+  reorderLink = async (workspaceSlug: string, linkId: string, destinationIndex: number) => {
+    const ids = this.links[workspaceSlug];
+    const link = this.linkMap[linkId];
+    const sourceIndex = ids?.indexOf(linkId) ?? -1;
+    if (this.isReorderingLinks[workspaceSlug]) throw new Error("Quick link sorting is already being saved");
+    if (
+      !ids ||
+      !link ||
+      sourceIndex < 0 ||
+      !Number.isInteger(destinationIndex) ||
+      destinationIndex < 0 ||
+      destinationIndex >= ids.length ||
+      destinationIndex === sourceIndex
+    )
+      return;
+
+    const previousIds = [...ids];
+    const previousSortOrder = link.sort_order;
+    const nextIds = ids.filter((id) => id !== linkId);
+    const before = this.linkMap[nextIds[destinationIndex - 1]]?.sort_order;
+    const after = this.linkMap[nextIds[destinationIndex]]?.sort_order;
+    const sortOrder =
+      before === undefined ? (after ?? 10000) - 10000 : after === undefined ? before + 10000 : before / 2 + after / 2;
+    if (
+      !Number.isFinite(sortOrder) ||
+      (before !== undefined && sortOrder <= before) ||
+      (after !== undefined && sortOrder >= after)
+    ) {
+      throw new Error("Cannot calculate a finite quick link sort order");
+    }
+    nextIds.splice(destinationIndex, 0, linkId);
+    runInAction(() => {
+      this.isReorderingLinks[workspaceSlug] = true;
+      this.links[workspaceSlug] = nextIds;
+      link.sort_order = sortOrder;
+    });
+    try {
+      await this.workspaceService.updateWorkspaceLink(workspaceSlug, linkId, { sort_order: sortOrder });
+    } catch (error) {
+      runInAction(() => {
+        const currentIds = this.links[workspaceSlug] ?? [];
+        if (currentIds.includes(linkId) && this.linkMap[linkId]) {
+          const restoredIds = currentIds.filter((id) => id !== linkId);
+          const remainingIds = new Set(restoredIds);
+          const nextAnchor = previousIds.slice(sourceIndex + 1).find((id) => remainingIds.has(id));
+          let previousAnchor: string | undefined;
+          for (let index = sourceIndex - 1; index >= 0; index--) {
+            if (remainingIds.has(previousIds[index])) {
+              previousAnchor = previousIds[index];
+              break;
+            }
+          }
+          const restoreIndex = nextAnchor
+            ? restoredIds.indexOf(nextAnchor)
+            : previousAnchor
+              ? restoredIds.indexOf(previousAnchor) + 1
+              : restoredIds.length;
+          restoredIds.splice(restoreIndex, 0, linkId);
+          this.links[workspaceSlug] = restoredIds;
+          this.linkMap[linkId].sort_order = previousSortOrder;
+        }
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this.isReorderingLinks[workspaceSlug] = false;
+      });
+    }
   };
 
   removeLink = async (workspaceSlug: string, linkId: string) => {

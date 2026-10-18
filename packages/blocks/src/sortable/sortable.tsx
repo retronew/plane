@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable, useSortable } from "@dnd-kit/react/sortable";
-import { AutoScroller } from "@dnd-kit/dom";
+import { AutoScroller, KeyboardSensor, PointerSensor, PointerActivationConstraints } from "@dnd-kit/dom";
 import { cn } from "@plane/utils";
 
 export type SortableChange = {
@@ -61,6 +61,7 @@ export function SortableItem({
   group,
   disabled = false,
   className,
+  activation = "handle",
   children,
 }: {
   id: string;
@@ -68,6 +69,8 @@ export function SortableItem({
   group?: string;
   disabled?: boolean | { draggable?: boolean; droppable?: boolean };
   className?: string;
+  /** Bind handleRef to a row; descendants marked data-sortable-no-drag keep their own interactions. */
+  activation?: "handle" | "row";
   children: (props: { handleRef: (element: Element | null) => void; isDragging: boolean }) => ReactNode;
 }) {
   const { ref, handleRef, isDragSource } = useSortable({
@@ -75,6 +78,21 @@ export function SortableItem({
     index,
     group,
     disabled,
+    sensors:
+      activation === "row"
+        ? [
+            PointerSensor.configure({
+              activationConstraints: (event) =>
+                event.pointerType === "touch"
+                  ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
+                  : [new PointerActivationConstraints.Distance({ value: 5 })],
+              preventActivation: (event, source) =>
+                (event.target instanceof Element && !!event.target.closest("[data-sortable-no-drag]")) ||
+                PointerSensor.defaults.preventActivation?.(event, source) === true,
+            }),
+            KeyboardSensor,
+          ]
+        : undefined,
     transition: { duration: 220, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", idle: true },
   });
   return (
@@ -84,7 +102,8 @@ export function SortableItem({
       data-dragging={isDragSource || undefined}
       className={cn(
         className,
-        isDragSource && "shadow-sm z-20 rounded-md bg-layer-2 ring-1 ring-[color:var(--border-subtle)]/50"
+        isDragSource && "shadow-sm z-20 bg-layer-2 ring-1 ring-[color:var(--border-subtle)]/50",
+        isDragSource && (activation === "row" ? "rounded-lg" : "rounded-md")
       )}
     >
       {children({ handleRef, isDragging: isDragSource })}

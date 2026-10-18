@@ -18,7 +18,7 @@ import {
 import { useTranslation } from "@plane/i18n";
 import { orderBy } from "lodash-es";
 // components
-import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
+import { SidebarNavItem, SIDEBAR_ROW_LINK_CLASS_NAME } from "@/components/sidebar/sidebar-navigation";
 // store hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import useLocalStorage from "@/hooks/use-local-storage";
@@ -125,7 +125,7 @@ export const SidebarMenuItems = observer(function SidebarMenuItems() {
             <button
               type="button"
               onClick={() => toggleExtendedSidebar()}
-              className="flex flex-grow items-center gap-1.5 text-13 font-medium text-tertiary"
+              className={SIDEBAR_ROW_LINK_CLASS_NAME}
               id="extended-sidebar-toggle"
               aria-label={t(
                 isExtendedSidebarOpened

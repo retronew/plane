@@ -58,13 +58,13 @@ export const SidebarWorkspaceMenuItem = observer(function SidebarWorkspaceMenuIt
   return (
     <Link href={item.href} onClick={() => handleLinkClick()}>
       <SidebarNavItem isActive={isActive}>
-        <div className="flex items-center gap-1.5 py-[1px]">
+        <div className="flex items-center gap-2">
           <item.Icon
             className={cn("size-4", {
               "rotate-180": item.key === "active_cycles",
             })}
           />
-          <p className="text-13 leading-5 font-medium">{t(item.labelTranslationKey)}</p>
+          <p className="text-body-sm-medium">{t(item.labelTranslationKey)}</p>
         </div>
         <div className="flex-shrink-0">
           <UpgradeBadge />

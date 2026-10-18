@@ -354,6 +354,7 @@ class WorkspaceUserProperties(BaseModel):
 
 
 class WorkspaceUserLink(WorkspaceBaseModel):
+    sort_order = models.FloatField(default=0)
     title = models.CharField(max_length=255, null=True, blank=True)
     url = models.TextField()
     metadata = models.JSONField(default=dict)
@@ -367,7 +368,7 @@ class WorkspaceUserLink(WorkspaceBaseModel):
         verbose_name = "Workspace User Link"
         verbose_name_plural = "Workspace User Links"
         db_table = "workspace_user_links"
-        ordering = ("-created_at",)
+        ordering = ("sort_order", "-created_at", "id")
 
     def __str__(self):
         return f"{self.workspace.id} {self.url}"

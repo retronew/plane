@@ -35,6 +35,7 @@ it("keeps menu actions independent from opening the link and separates deletion"
   );
   const trigger = screen.getByRole("button", { name: "aria_labels.common.more_actions" });
   expect(trigger.closest("button")).toBe(trigger);
+  expect(trigger.closest("[data-sortable-no-drag]")).not.toBeNull();
   fireEvent.click(trigger);
   const editAction = await screen.findByRole("menuitem", { name: "Edit" });
   expect(screen.getAllByRole("separator")).toHaveLength(1);

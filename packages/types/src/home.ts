@@ -62,6 +62,7 @@ export type TLink = TLinkEditableFields & {
   id: string;
   metadata: any;
   workspace_slug: string;
+  sort_order: number;
 
   //need
   created_at: Date;

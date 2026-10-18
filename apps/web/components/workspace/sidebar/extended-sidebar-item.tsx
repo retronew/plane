@@ -10,6 +10,7 @@ import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-d
 import { attachInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/attach-instruction";
 import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/extract-instruction";
 import { observer } from "mobx-react";
+import { GripVertical } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { PinOutline, UnpinOutline } from "@makeplane/propel/icons";
@@ -18,10 +19,14 @@ import type { IWorkspaceSidebarNavigationItem } from "@plane/constants";
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import { DragHandle, DropIndicator } from "@plane/blocks/common";
+import { DropIndicator } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // components
-import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
+import {
+  SidebarNavItem,
+  SIDEBAR_ROW_LINK_CLASS_NAME,
+  SIDEBAR_ROW_ACTIONS_CLASS_NAME,
+} from "@/components/sidebar/sidebar-navigation";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
@@ -165,12 +170,7 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
       ref={navigationIemRef}
     >
       <DropIndicator classNames="absolute top-0" isVisible={instruction === "DRAG_OVER"} />
-      <div
-        className={cn(
-          "group/project-item relative flex w-full items-center rounded-md text-primary hover:bg-surface-2"
-        )}
-        id={`${item.key}`}
-      >
+      <div className={cn("group/project-item relative flex w-full items-center text-primary")} id={`${item.key}`}>
         {!disableDrag && (
           <Tooltip label={t("drag_to_rearrange")} align="start" disabled={isDragging}>
             <button
@@ -183,19 +183,22 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
                 }
               )}
               ref={dragHandleRef}
+              aria-label={t("drag_to_rearrange")}
             >
-              <DragHandle className="bg-transparent" />
+              <span className="flex rounded-sm p-0.5">
+                <GripVertical aria-hidden="true" focusable="false" className="size-3.5 text-placeholder" />
+              </span>
             </button>
           </Tooltip>
         )}
         <SidebarNavItem isActive={isActive}>
-          <Link href={itemHref} onClick={() => handleLinkClick()} className="group flex-grow">
-            <div className="flex items-center gap-1.5 py-[1px]">
+          <Link href={itemHref} onClick={() => handleLinkClick()} className={SIDEBAR_ROW_LINK_CLASS_NAME}>
+            <div className="flex min-w-0 items-center gap-2">
               {icon}
-              <p className="text-13 leading-5 font-medium">{t(item.labelTranslationKey)}</p>
+              <p className="truncate text-body-sm-medium">{t(item.labelTranslationKey)}</p>
             </div>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className={SIDEBAR_ROW_ACTIONS_CLASS_NAME}>
             {isPinned ? (
               <Tooltip label={t("web.unpin")}>
                 <UnpinOutline

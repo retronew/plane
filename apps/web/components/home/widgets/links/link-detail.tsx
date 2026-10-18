@@ -22,11 +22,12 @@ import type { TLinkOperations } from "./use-links";
 export type TProjectLinkDetail = {
   linkId: string;
   linkOperations: TLinkOperations;
+  sortableRef?: (element: Element | null) => void;
 };
 
 export const ProjectLinkDetail = observer(function ProjectLinkDetail(props: TProjectLinkDetail) {
   // props
-  const { linkId, linkOperations } = props;
+  const { linkId, linkOperations, sortableRef } = props;
   // hooks
   const {
     quickLinks: { getLinkById, toggleLinkModal, setLinkData },
@@ -105,6 +106,7 @@ export const ProjectLinkDetail = observer(function ProjectLinkDetail(props: TPro
       createdAt={linkDetail.created_at}
       menuItems={menuItems}
       onClick={handleOpenInNewTab}
+      sortableRef={sortableRef}
     />
   );
 });

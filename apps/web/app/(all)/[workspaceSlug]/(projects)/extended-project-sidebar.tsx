@@ -16,7 +16,7 @@ import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { copyUrlToClipboard, orderJoinedProjects } from "@plane/utils";
+import { copyUrlToClipboard } from "@plane/utils";
 // components
 import { CreateProjectModal } from "@/components/project/create-project-modal";
 import { SidebarProjectsListItem } from "@/components/workspace/sidebar/projects-list-item";
@@ -24,7 +24,8 @@ import { SidebarProjectsListItem } from "@/components/workspace/sidebar/projects
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
-import type { TProject } from "@plane/types";
+import { SortableProvider } from "@plane/blocks/sortable";
+import { useSidebarProjectSorting } from "@/components/workspace/sidebar/use-sidebar-project-sorting";
 import { ExtendedSidebarWrapper } from "./extended-sidebar-wrapper";
 
 export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar() {
@@ -38,38 +39,8 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
   // store hooks
   const { t } = useTranslation();
   const { isExtendedProjectSidebarOpened, toggleExtendedProjectSidebar } = useAppTheme();
-  const { getPartialProjectById, joinedProjectIds: joinedProjects, updateProjectView } = useProject();
+  const { getPartialProjectById, joinedProjectIds: joinedProjects } = useProject();
   const { allowPermissions } = useUserPermissions();
-
-  const handleOnProjectDrop = (
-    sourceId: string | undefined,
-    destinationId: string | undefined,
-    shouldDropAtEnd: boolean
-  ) => {
-    if (!sourceId || !destinationId || !workspaceSlug) return;
-    if (sourceId === destinationId) return;
-
-    const joinedProjectsList: TProject[] = [];
-    joinedProjects.map((projectId) => {
-      const projectDetails = getPartialProjectById(projectId);
-      if (projectDetails) joinedProjectsList.push(projectDetails);
-    });
-
-    const sourceIndex = joinedProjects.indexOf(sourceId);
-    const destinationIndex = shouldDropAtEnd ? joinedProjects.length : joinedProjects.indexOf(destinationId);
-
-    if (joinedProjectsList.length <= 0) return;
-
-    const updatedSortOrder = orderJoinedProjects(sourceIndex, destinationIndex, sourceId, joinedProjectsList);
-    if (updatedSortOrder != undefined)
-      updateProjectView(workspaceSlug.toString(), sourceId, { sort_order: updatedSortOrder }).catch(() => {
-        setToast({
-          type: "error",
-          title: t("error"),
-          message: t("something_went_wrong"),
-        });
-      });
-  };
 
   // filter projects based on search query
   const filteredProjects = joinedProjects.filter((projectId) => {
@@ -77,6 +48,8 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
     if (!project) return false;
     return project.name.toLowerCase().includes(searchQuery.toLowerCase()) || project.identifier.includes(searchQuery);
   });
+
+  const sorting = useSidebarProjectSorting(workspaceSlug?.toString() ?? "", filteredProjects, "extended");
 
   // auth
   const isAuthorizedUser = allowPermissions(
@@ -157,20 +130,19 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
             />
           </div>
         ) : (
-          <div className="vertical-scrollbar mt-4 scrollbar-sm flex flex-grow flex-col gap-0.5 overflow-x-hidden overflow-y-auto pr-2 pl-9">
-            {filteredProjects.map((projectId, index) => (
-              <SidebarProjectsListItem
-                key={projectId}
-                projectId={projectId}
-                handleCopyText={() => handleCopyText(projectId)}
-                projectListType={"JOINED"}
-                disableDrag={false}
-                disableDrop={false}
-                isLastChild={index === filteredProjects.length - 1}
-                handleOnProjectDrop={handleOnProjectDrop}
-                renderInExtendedSidebar
-              />
-            ))}
+          <div className="vertical-scrollbar mt-4 scrollbar-sm flex flex-grow flex-col gap-px overflow-x-hidden overflow-y-auto pr-2 pl-3">
+            <SortableProvider onSortEnd={sorting.onSortEnd} disabled={sorting.isSaving}>
+              {filteredProjects.map((projectId, index) => (
+                <SidebarProjectsListItem
+                  key={projectId}
+                  projectId={projectId}
+                  handleCopyText={() => handleCopyText(projectId)}
+                  index={index}
+                  group={sorting.group}
+                  disabled={sorting.isSaving}
+                />
+              ))}
+            </SortableProvider>
           </div>
         )}
       </ExtendedSidebarWrapper>

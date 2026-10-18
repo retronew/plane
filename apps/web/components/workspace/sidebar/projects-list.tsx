@@ -5,8 +5,6 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 import { useParams, usePathname } from "next/navigation";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
@@ -19,10 +17,14 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Loader } from "@plane/blocks/skeleton";
-import { copyUrlToClipboard, cn, orderJoinedProjects } from "@plane/utils";
+import { copyUrlToClipboard, cn } from "@plane/utils";
 // components
 import { CreateProjectModal } from "@/components/project/create-project-modal";
-import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
+import {
+  SidebarNavItem,
+  SIDEBAR_ROW_CLASS_NAME,
+  SIDEBAR_ROW_LINK_CLASS_NAME,
+} from "@/components/sidebar/sidebar-navigation";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
@@ -30,7 +32,8 @@ import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useProjectNavigationPreferences } from "@/hooks/use-navigation-preferences";
 // plane web imports
-import type { TProject } from "@plane/types";
+import { SortableProvider } from "@plane/blocks/sortable";
+import { useSidebarProjectSorting } from "./use-sidebar-project-sorting";
 // local imports
 import { SidebarProjectsListItem } from "./projects-list-item";
 
@@ -48,7 +51,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
   const { preferences: projectPreferences } = useProjectNavigationPreferences();
   const { isExtendedProjectSidebarOpened, toggleExtendedProjectSidebar } = useAppTheme();
 
-  const { loader, getPartialProjectById, joinedProjectIds: joinedProjects, updateProjectView } = useProject();
+  const { loader, joinedProjectIds: joinedProjects } = useProject();
   // router params
   const { workspaceSlug } = useParams();
   const pathname = usePathname();
@@ -77,35 +80,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
     });
   };
 
-  const handleOnProjectDrop = (
-    sourceId: string | undefined,
-    destinationId: string | undefined,
-    shouldDropAtEnd: boolean
-  ) => {
-    if (!sourceId || !destinationId || !workspaceSlug) return;
-    if (sourceId === destinationId) return;
-
-    const joinedProjectsList: TProject[] = [];
-    joinedProjects.map((projectId) => {
-      const projectDetails = getPartialProjectById(projectId);
-      if (projectDetails) joinedProjectsList.push(projectDetails);
-    });
-
-    const sourceIndex = joinedProjects.indexOf(sourceId);
-    const destinationIndex = shouldDropAtEnd ? joinedProjects.length : joinedProjects.indexOf(destinationId);
-
-    if (joinedProjectsList.length <= 0) return;
-
-    const updatedSortOrder = orderJoinedProjects(sourceIndex, destinationIndex, sourceId, joinedProjectsList);
-    if (updatedSortOrder != undefined)
-      updateProjectView(workspaceSlug.toString(), sourceId, { sort_order: updatedSortOrder }).catch(() => {
-        setToast({
-          type: "error",
-          title: t("error"),
-          message: t("something_went_wrong"),
-        });
-      });
-  };
+  const sorting = useSidebarProjectSorting(workspaceSlug?.toString() ?? "", displayedProjects, "main");
 
   /**
    * Implementing scroll animation styles based on the scroll length of the container
@@ -126,20 +101,6 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
         currentContainerRef.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [containerRef]);
-
-  useEffect(() => {
-    const element = containerRef.current;
-
-    if (!element) return;
-
-    return combine(
-      autoScrollForElements({
-        element,
-        canScroll: ({ source }) => source?.data?.dragInstanceId === "PROJECTS",
-        getAllowedAxis: () => "vertical",
-      })
-    );
   }, [containerRef]);
 
   const toggleListDisclosure = (isOpen: boolean) => {
@@ -194,33 +155,33 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
               ) : null
             }
           >
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-px">
               {loader === "init-loader" && (
                 <Loader className="w-full space-y-1.5">
                   {Array.from({ length: 4 }).map((_, index) => (
                     // oxlint-disable-next-line react/no-array-index-key
-                    <Loader.Item key={index} height="28px" />
+                    <Loader.Item key={index} height="32px" />
                   ))}
                 </Loader>
               )}
-              {displayedProjects.map((projectId, index) => (
-                <SidebarProjectsListItem
-                  key={projectId}
-                  projectId={projectId}
-                  handleCopyText={() => handleCopyText(projectId)}
-                  projectListType={"JOINED"}
-                  disableDrag={false}
-                  disableDrop={false}
-                  isLastChild={index === displayedProjects.length - 1}
-                  handleOnProjectDrop={handleOnProjectDrop}
-                />
-              ))}
+              <SortableProvider onSortEnd={sorting.onSortEnd} disabled={sorting.isSaving}>
+                {displayedProjects.map((projectId, index) => (
+                  <SidebarProjectsListItem
+                    key={projectId}
+                    projectId={projectId}
+                    handleCopyText={() => handleCopyText(projectId)}
+                    index={index}
+                    group={sorting.group}
+                    disabled={sorting.isSaving}
+                  />
+                ))}
+              </SortableProvider>
               {hasMoreProjects && (
-                <SidebarNavItem>
+                <SidebarNavItem className="py-0">
                   <button
                     type="button"
                     onClick={() => toggleExtendedProjectSidebar()}
-                    className="flex flex-grow items-center gap-1.5 text-13 font-medium text-tertiary"
+                    className={cn(SIDEBAR_ROW_LINK_CLASS_NAME, "text-tertiary")}
                     id="extended-project-sidebar-toggle"
                     aria-label={t(
                       isExtendedProjectSidebarOpened
@@ -240,7 +201,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
         {isAuthorizedUser && joinedProjects?.length === 0 && (
           <button
             type="button"
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-13 leading-5 font-medium text-secondary hover:bg-surface-2"
+            className={cn(SIDEBAR_ROW_CLASS_NAME, "w-full text-secondary")}
             onClick={() => {
               toggleCreateProjectModal(true);
             }}

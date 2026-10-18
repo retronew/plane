@@ -21,11 +21,12 @@ export type TLinkItemBlockProps = {
   createdAt?: Date | string;
   menuItems?: TContextMenuItem[];
   onClick?: () => void;
+  sortableRef?: (element: Element | null) => void;
 };
 
 export function LinkItemBlock(props: TLinkItemBlockProps) {
   // props
-  const { title, url, createdAt, menuItems, onClick } = props;
+  const { title, url, createdAt, menuItems, onClick, sortableRef } = props;
   // plane hooks
   const { t } = useTranslation();
   // icons
@@ -35,6 +36,7 @@ export function LinkItemBlock(props: TLinkItemBlockProps) {
     <div className="group flex h-[51px] min-w-0 items-center gap-4 rounded-lg border-[0.5px] border-subtle-1 bg-layer-2 p-2">
       {/* the card body is its own button so the menu trigger is not nested inside a clickable ancestor */}
       <button
+        ref={sortableRef}
         type="button"
         onClick={onClick}
         className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-strong"
@@ -50,7 +52,10 @@ export function LinkItemBlock(props: TLinkItemBlockProps) {
         </span>
       </button>
       {items.length > 0 && (
-        <div className="flex shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-popup-open]]:opacity-100">
+        <div
+          data-sortable-no-drag
+          className="flex shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-popup-open]]:opacity-100"
+        >
           <Menu>
             <MenuTrigger
               render={
