@@ -92,6 +92,7 @@ export const SidebarQuickActions = observer(function SidebarQuickActions() {
       <div className="flex cursor-pointer items-center justify-between gap-2">
         <SidebarAddButton
           data-new-work-item-trigger=""
+          className="rounded-[8px] transition-colors hover:border-strong! hover:bg-layer-1-hover! motion-reduce:transition-none"
           label={
             <>
               <AddWorkItemOutline className="size-4" />

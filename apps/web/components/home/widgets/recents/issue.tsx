@@ -9,16 +9,16 @@ import { translate } from "@plane/i18n";
 import { observer } from "mobx-react";
 // plane types
 import { PriorityIcon, StateGroupIcon } from "@plane/blocks/icons";
-import { WorkItemsOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TActivityEntityData, TIssueEntityData } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
 // plane ui
-import { calculateTimeAgo, generateWorkItemLink } from "@plane/utils";
+import { calculateTimeAgo, getDateTimeFormatter, generateWorkItemLink } from "@plane/utils";
 // components
 import { ListItem } from "@/components/core/list";
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { WorkItemsOutline } from "@makeplane/propel/icons";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
@@ -72,8 +72,12 @@ export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
       id={`issue-${issueDetails?.id}`}
       itemLink={workItemLink}
       title={issueDetails?.name}
+      prependTitleTooltip={`${issueDetails.project_identifier}-${issueDetails.sequence_id}`}
       prependTitleElement={
         <div className="flex flex-shrink-0 items-center gap-1.5">
+          <span className="grid size-5 shrink-0 place-items-center">
+            <WorkItemsOutline className="size-4 text-tertiary" />
+          </span>
           {issueDetails.type ? (
             <IssueIdentifier
               size="lg"
@@ -85,9 +89,6 @@ export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
             />
           ) : (
             <div className="flex items-center justify-center gap-1.5">
-              <div className="grid size-4 flex-shrink-0 place-items-center">
-                <WorkItemsOutline className="size-4 text-tertiary" />
-              </div>
               <div className="text-caption-md-regular whitespace-nowrap text-tertiary">
                 {issueDetails?.project_identifier}-{issueDetails?.sequence_id}
               </div>
@@ -95,6 +96,9 @@ export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
           )}
         </div>
       }
+      appendTitleTooltip={getDateTimeFormatter({ dateStyle: "full", timeStyle: "medium" }).format(
+        new Date(activity.visited_at)
+      )}
       appendTitleElement={
         <div className="flex-shrink-0 text-caption-md-regular text-tertiary">
           {calculateTimeAgo(activity.visited_at)}
@@ -133,6 +137,7 @@ export const RecentIssue = observer(function RecentIssue(props: BlockProps) {
                 disabled
                 multiple
                 variant="avatar-group-sm"
+                tooltip
               />
             </div>
           )}

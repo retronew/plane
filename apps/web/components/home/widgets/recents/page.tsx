@@ -6,11 +6,12 @@
 
 import { useRouter } from "next/navigation";
 import { Avatar } from "@makeplane/propel/components/avatar";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
 import { PagesOutline } from "@makeplane/propel/icons";
 // plane import
 import type { TActivityEntityData, TPageEntityData } from "@plane/types";
-import { calculateTimeAgo, getFileURL, getPageName } from "@plane/utils";
+import { calculateTimeAgo, getDateTimeFormatter, getFileURL, getPageName } from "@plane/utils";
 import { ListItem } from "@/components/core/list";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
@@ -43,9 +44,10 @@ export function RecentPage(props: BlockProps) {
       key={activity.id}
       itemLink={pageLink}
       title={getPageName(pageDetails?.name)}
+      prependTitleTooltip={pageDetails.project_identifier || getPageName(pageDetails.name)}
       prependTitleElement={
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="grid size-4 flex-shrink-0 place-items-center">
+          <div className="grid size-5 flex-shrink-0 place-items-center">
             {pageDetails?.logo_props?.in_use ? (
               <Logo logo={pageDetails?.logo_props} size={16} type="lucide" />
             ) : (
@@ -59,6 +61,9 @@ export function RecentPage(props: BlockProps) {
           )}
         </div>
       }
+      appendTitleTooltip={getDateTimeFormatter({ dateStyle: "full", timeStyle: "medium" }).format(
+        new Date(activity.visited_at)
+      )}
       appendTitleElement={
         <div className="flex-shrink-0 text-caption-md-regular text-tertiary">
           {calculateTimeAgo(activity.visited_at)}
@@ -66,12 +71,16 @@ export function RecentPage(props: BlockProps) {
       }
       quickActionElement={
         <div className="flex shrink-0 items-center gap-2">
-          <Avatar
-            alt={ownerDetails?.display_name}
-            fallback={ownerDetails?.display_name?.[0]?.toUpperCase()}
-            src={getFileURL(ownerDetails?.avatar_url ?? "")}
-            size="xs"
-          />
+          <Tooltip label={ownerDetails?.display_name ?? ""} disabled={!ownerDetails?.display_name}>
+            <span className="flex">
+              <Avatar
+                alt={ownerDetails?.display_name}
+                fallback={ownerDetails?.display_name?.[0]?.toUpperCase()}
+                src={getFileURL(ownerDetails?.avatar_url ?? "")}
+                size="xs"
+              />
+            </span>
+          </Tooltip>
         </div>
       }
       parentRef={ref}

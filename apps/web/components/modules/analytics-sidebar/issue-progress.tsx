@@ -185,7 +185,7 @@ export const ModuleAnalyticsProgress = observer(function ModuleAnalyticsProgress
             <span className="relative flex w-full items-center gap-2">
               <span className="text-13 font-medium text-secondary">{t("common.progress")}</span>
               {progressHeaderPercentage > 0 && (
-                <span className="bg-amber-500/20 text-amber-500 flex h-5 w-9 items-center justify-center rounded-sm text-11 font-medium">{`${progressHeaderPercentage}%`}</span>
+                <span className="bg-amber-500/20 text-amber-500 inline-flex shrink-0 items-center justify-center rounded-sm px-1 py-px text-11 leading-[14px] font-medium">{`${progressHeaderPercentage}%`}</span>
               )}
             </span>
           }

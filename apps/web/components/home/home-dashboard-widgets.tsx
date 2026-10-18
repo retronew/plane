@@ -73,6 +73,11 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
   const { t } = useTranslation();
   // derived values
   const noWidgetsResolvedPath = resolvedTheme === "light" ? lightWidgetsAsset : darkWidgetsAsset;
+  const displayWidgets: THomeWidgetKeys[] = orderedWidgets.filter((key) => key !== "my_stickies");
+  const stickiesIndex = orderedWidgets.includes("recents")
+    ? displayWidgets.indexOf("recents") + 1
+    : displayWidgets.length;
+  if (orderedWidgets.includes("my_stickies")) displayWidgets.splice(stickiesIndex, 0, "my_stickies");
 
   // derived values
   const isWikiApp = pathname.includes(`/${workspaceSlug.toString()}/pages`);
@@ -90,7 +95,7 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
 
       {isAnyWidgetEnabled ? (
         <div className="flex flex-col">
-          {orderedWidgets.map((key) => {
+          {displayWidgets.map((key) => {
             const WidgetComponent = HOME_WIDGETS_LIST[key]?.component;
             const isEnabled = widgetsMap[key]?.is_enabled;
             if (!WidgetComponent || !isEnabled) return null;

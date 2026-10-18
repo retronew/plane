@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 // plane types
 import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import type { TActivityEntityData, TProjectEntityData } from "@plane/types";
-import { calculateTimeAgo } from "@plane/utils";
+import { calculateTimeAgo, getDateTimeFormatter } from "@plane/utils";
 // components
 import { ListItem } from "@/components/core/list";
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
@@ -36,14 +36,18 @@ export function RecentProject(props: BlockProps) {
       key={activity.id}
       itemLink={projectLink}
       title={projectDetails?.name}
+      prependTitleTooltip={`${projectDetails.identifier} · ${projectDetails.name}`}
       prependTitleElement={
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="grid size-4 flex-shrink-0 place-items-center">
-            <ProjectLogo logo={projectDetails?.logo_props} size={16} />
+          <div className="grid size-5 flex-shrink-0 place-items-center rounded-[4px] bg-layer-2">
+            <ProjectLogo logo={projectDetails?.logo_props} size={16} background />
           </div>
           <div className="text-caption-md-regular whitespace-nowrap text-tertiary">{projectDetails?.identifier}</div>
         </div>
       }
+      appendTitleTooltip={getDateTimeFormatter({ dateStyle: "full", timeStyle: "medium" }).format(
+        new Date(activity.visited_at)
+      )}
       appendTitleElement={
         <div className="flex-shrink-0 text-caption-md-regular text-tertiary">
           {calculateTimeAgo(activity.visited_at)}
@@ -60,6 +64,7 @@ export function RecentProject(props: BlockProps) {
                 disabled
                 multiple
                 variant="avatar-group-sm"
+                tooltip
               />
             </div>
           )}

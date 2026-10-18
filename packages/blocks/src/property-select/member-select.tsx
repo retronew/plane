@@ -48,7 +48,7 @@ function isAvatarGroupVariant(variant: MemberSelectVariant): variant is `avatar-
  *  chrome and fill the same height as sibling pills. `min-h-0` overrides flex `min-height: auto`
  *  so a default `md` (28px) Avatar cannot stretch the pill and reflow the form. */
 const AVATAR_GROUP_TRIGGER_CLASSNAME =
-  "max-w-none min-h-0 border-transparent bg-transparent px-0 py-0 hover:border-transparent hover:bg-transparent active:border-transparent active:bg-transparent";
+  "max-w-none min-h-0 border-transparent bg-transparent px-0 py-0 hover:border-transparent hover:bg-transparent active:border-transparent active:bg-transparent disabled:border-transparent disabled:bg-transparent";
 
 /** Face size matching the pill height — `xs` (20px) = `pill-sm` / `h-5`, same as sibling state
  *  and priority chips. Propel Avatar defaults to `md` (28px) when `size` is omitted; that
@@ -300,7 +300,10 @@ export function MemberSelect(props: MemberSelectProps) {
         <>
           {members.length > 0 && (
             <span
-              className={cn("flex items-center gap-1", !(showLabel && (members.length > 0 || !!placeholder)) && "grow")}
+              className={cn(
+                "flex items-center gap-1 group-hover/list-item:[&>div]:space-x-1 [&>div]:hover:space-x-1 [&>div>*]:transition-[margin] [&>div>*]:duration-200 motion-reduce:[&>div>*]:transition-none",
+                !(showLabel && (members.length > 0 || !!placeholder)) && "grow"
+              )}
             >
               {/* Resolve one more than `MAX_TRIGGER_AVATARS` so `AvatarGroup` can render the real extra face
                   instead of a "+1" chip when `total` is exactly `max + 1`; `total` covers the rest. */}

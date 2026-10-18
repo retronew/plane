@@ -91,7 +91,7 @@ export const RecentActivityWidget = observer(function RecentActivityWidget(props
   return (
     <ContentOverflowWrapper
       maxHeight={415}
-      containerClassName="box-border min-h-[250px]"
+      containerClassName="-mx-2 box-border min-h-[250px] px-2"
       fallback={<></>}
       buttonClassName="bg-surface-2/20"
     >

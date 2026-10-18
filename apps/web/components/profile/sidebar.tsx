@@ -183,7 +183,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
                           {project.assigned_issues > 0 && (
                             <Tooltip label={t("web.completion_percentage")} side="left" disabled={isMobile}>
                               <span
-                                className={`rounded-sm px-1 py-0.5 text-11 font-medium ${
+                                className={`inline-flex shrink-0 items-center rounded-sm px-1 py-px text-11 leading-[14px] font-medium ${
                                   completedIssuePercentage <= 35
                                     ? "bg-danger-subtle text-danger-primary"
                                     : completedIssuePercentage <= 70

@@ -1,6 +1,6 @@
 .card {
   border: 1px solid color-mix(in oklab, var(--sticky-color) 20%, var(--border-color-subtle-1));
-  border-radius: 8px;
+  border-radius: 12px;
   background: color-mix(in oklab, var(--sticky-color) 18%, var(--background-color-layer-2));
   box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
   transition:
