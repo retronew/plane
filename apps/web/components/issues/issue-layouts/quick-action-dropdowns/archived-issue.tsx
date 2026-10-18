@@ -1,4 +1,3 @@
-import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -11,14 +10,6 @@ import { useParams } from "next/navigation";
 // ui
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { EIssuesStoreType } from "@plane/types";
-import { useTranslation } from "@plane/i18n";
-import { Icon } from "@makeplane/propel/components/icon";
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
-import { MoreHorizontalOutline } from "@makeplane/propel/icons";
-import { toSideAndAlign } from "@plane/blocks/common";
-import { ContextMenu } from "@plane/blocks/context-menu";
-import { IssueQuickActionMenuItems } from "./menu-items";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
@@ -26,12 +17,8 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { DeleteIssueModal } from "../../delete-issue-modal";
 import type { IQuickActionProps } from "../list/list-view-types";
 import type { MenuItemFactoryProps } from "./helper";
-import {
-  useArchivedIssueMenuItems,
-  quickActionTriggerGuard,
-  isNativeQuickActionTrigger,
-  stopQuickActionPropagation,
-} from "./helper";
+import { useArchivedIssueMenuItems } from "./helper";
+import { IssueQuickActionMenu } from "./quick-action-menu";
 
 export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickActions(props: IQuickActionProps) {
   const {
@@ -47,7 +34,6 @@ export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickAct
   const [deleteIssueModal, setDeleteIssueModal] = useState(false);
   // router
   const { workspaceSlug } = useParams();
-  const { t } = useTranslation();
   // store hooks
   const { allowPermissions } = useUserPermissions();
 
@@ -77,15 +63,6 @@ export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickAct
 
   const MENU_ITEMS = useArchivedIssueMenuItems(menuItemProps);
 
-  const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
-    return {
-      ...item,
-
-      onClick: () => {
-        item.action();
-      },
-    };
-  });
   return (
     <>
       {/* Modals */}
@@ -96,28 +73,12 @@ export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickAct
         onSubmit={handleDelete}
       />
 
-      <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
-      <Menu>
-        <MenuTrigger
-          {...quickActionTriggerGuard}
-          nativeButton={isNativeQuickActionTrigger(customActionButton)}
-          aria-label={t("aria_labels.common.more_actions")}
-          render={
-            customActionButton ?? (
-              // Icon-only fallback trigger, so it needs an explicit accessible name.
-              <IconButton
-                variant="ghost"
-                size="sm"
-                aria-label={t("aria_labels.common.more_actions")}
-                icon={<Icon icon={MoreHorizontalOutline} />}
-              />
-            )
-          }
-        />
-        <MenuContent {...toSideAndAlign(placements)} onClick={stopQuickActionPropagation}>
-          <IssueQuickActionMenuItems items={MENU_ITEMS} />
-        </MenuContent>
-      </Menu>
+      <IssueQuickActionMenu
+        parentRef={parentRef}
+        menuItems={MENU_ITEMS}
+        placements={placements}
+        customActionButton={customActionButton}
+      />
     </>
   );
 });

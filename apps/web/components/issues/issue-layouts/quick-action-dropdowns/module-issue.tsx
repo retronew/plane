@@ -1,4 +1,3 @@
-import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -13,14 +12,7 @@ import { useParams } from "next/navigation";
 import { ARCHIVABLE_STATE_GROUPS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { TIssue } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
-import { useTranslation, translate } from "@plane/i18n";
-import { Icon } from "@makeplane/propel/components/icon";
-import { IconButton } from "@makeplane/propel/components/icon-button";
-import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
-import { MoreHorizontalOutline } from "@makeplane/propel/icons";
-import { toSideAndAlign } from "@plane/blocks/common";
-import { ContextMenu } from "@plane/blocks/context-menu";
-import { IssueQuickActionMenuItems } from "./menu-items";
+import { translate } from "@plane/i18n";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
@@ -32,12 +24,8 @@ import { DeleteIssueModal } from "../../delete-issue-modal";
 import { CreateUpdateIssueModal } from "../../issue-modal/modal";
 import type { IQuickActionProps } from "../list/list-view-types";
 import type { MenuItemFactoryProps } from "./helper";
-import {
-  useModuleIssueMenuItems,
-  quickActionTriggerGuard,
-  isNativeQuickActionTrigger,
-  stopQuickActionPropagation,
-} from "./helper";
+import { useModuleIssueMenuItems } from "./helper";
+import { IssueQuickActionMenu } from "./quick-action-menu";
 
 export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions(props: IQuickActionProps) {
   const {
@@ -59,7 +47,6 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
   const [_, setDuplicateWorkItemModal] = useState(false);
   // router
   const { workspaceSlug, moduleId } = useParams();
-  const { t } = useTranslation();
   // store hooks
   const { issuesFilter } = useIssues(EIssuesStoreType.MODULE);
   const { allowPermissions } = useUserPermissions();
@@ -111,15 +98,6 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
 
   const MENU_ITEMS = useModuleIssueMenuItems(menuItemProps);
 
-  const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
-    return {
-      ...item,
-
-      onClick: () => {
-        item.action();
-      },
-    };
-  });
   return (
     <>
       {/* Modals */}
@@ -148,28 +126,12 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
         storeType={EIssuesStoreType.MODULE}
       />
 
-      <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
-      <Menu>
-        <MenuTrigger
-          {...quickActionTriggerGuard}
-          nativeButton={isNativeQuickActionTrigger(customActionButton)}
-          aria-label={t("aria_labels.common.more_actions")}
-          render={
-            customActionButton ?? (
-              // Icon-only fallback trigger, so it needs an explicit accessible name.
-              <IconButton
-                variant="ghost"
-                size="sm"
-                aria-label={t("aria_labels.common.more_actions")}
-                icon={<Icon icon={MoreHorizontalOutline} />}
-              />
-            )
-          }
-        />
-        <MenuContent {...toSideAndAlign(placements)} onClick={stopQuickActionPropagation}>
-          <IssueQuickActionMenuItems items={MENU_ITEMS} />
-        </MenuContent>
-      </Menu>
+      <IssueQuickActionMenu
+        parentRef={parentRef}
+        menuItems={MENU_ITEMS}
+        placements={placements}
+        customActionButton={customActionButton}
+      />
     </>
   );
 });
