@@ -26,9 +26,9 @@ import { Copy } from "lucide-react";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TDescriptionVersion } from "@plane/types";
-import { Loader } from "@plane/blocks/skeleton";
 import { calculateTimeAgo, cn, getFileURL } from "@plane/utils";
 // components
+import { DescriptionSkeleton } from "@/components/common/loaders/description-skeleton";
 import { RichTextEditor } from "@/components/editor/rich-text";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
@@ -168,20 +168,7 @@ export const DescriptionVersionsModal = observer(function DescriptionVersionsMod
                 workspaceSlug={workspaceSlug}
               />
             ) : (
-              <div className="space-y-1">
-                <Loader.Item width="300px" height="15px" />
-                <Loader.Item width="400px" height="15px" />
-                <div className="flex items-center gap-2">
-                  <Loader.Item width="20px" height="15px" />
-                  <Loader.Item width="500px" height="15px" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Loader.Item width="20px" height="15px" />
-                  <Loader.Item width="200px" height="15px" />
-                </div>
-                <Loader.Item width="300px" height="15px" />
-                <Loader.Item width="200px" height="15px" />
-              </div>
+              <DescriptionSkeleton />
             )}
           </DialogBody>
           {/* End version description */}

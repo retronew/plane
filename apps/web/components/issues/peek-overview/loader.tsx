@@ -7,6 +7,8 @@
 import { ArrowNarrowRightOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Loader } from "@plane/blocks/skeleton";
+// components
+import { DescriptionSkeleton } from "@/components/common/loaders/description-skeleton";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { translate } from "@plane/i18n";
@@ -43,20 +45,7 @@ export function IssuePeekOverviewLoader(props: TIssuePeekOverviewLoader) {
       <div className="space-y-3">
         <Loader.Item width="100px" height="20px" />
 
-        <div className="space-y-1">
-          <Loader.Item width="300px" height="15px" />
-          <Loader.Item width="400px" height="15px" />
-          <div className="flex items-center gap-2">
-            <Loader.Item width="20px" height="15px" />
-            <Loader.Item width="500px" height="15px" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Loader.Item width="20px" height="15px" />
-            <Loader.Item width="200px" height="15px" />
-          </div>
-          <Loader.Item width="300px" height="15px" />
-          <Loader.Item width="200px" height="15px" />
-        </div>
+        <DescriptionSkeleton />
 
         <Loader.Item width="30px" height="30px" />
       </div>
