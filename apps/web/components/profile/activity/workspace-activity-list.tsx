@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 // services
@@ -12,7 +11,6 @@ import { USER_PROFILE_ACTIVITY } from "@plane/constants";
 import { UserService } from "@/services/user.service";
 // components
 import { ActivityList } from "./activity-list";
-// fetch-keys
 
 // services
 const userService = new UserService();
@@ -20,15 +18,14 @@ const userService = new UserService();
 type Props = {
   cursor: string;
   perPage: number;
-  updateResultsCount: (count: number) => void;
-  updateTotalPages: (count: number) => void;
 };
 
 export function WorkspaceActivityListPage(props: Props) {
-  const { cursor, perPage, updateResultsCount, updateTotalPages } = props;
+  const { cursor, perPage } = props;
   // router
   const { workspaceSlug, userId } = useParams();
 
+  // The page's own request drives the paging affordance; this entry shares its SWR cache.
   const { data: userProfileActivity } = useSWR(
     workspaceSlug && userId
       ? USER_PROFILE_ACTIVITY(workspaceSlug.toString(), userId.toString(), {
@@ -43,13 +40,6 @@ export function WorkspaceActivityListPage(props: Props) {
           })
       : null
   );
-
-  useEffect(() => {
-    if (!userProfileActivity) return;
-
-    updateTotalPages(userProfileActivity.total_pages);
-    updateResultsCount(userProfileActivity.results.length);
-  }, [updateResultsCount, updateTotalPages, userProfileActivity]);
 
   return <ActivityList activity={userProfileActivity} />;
 }

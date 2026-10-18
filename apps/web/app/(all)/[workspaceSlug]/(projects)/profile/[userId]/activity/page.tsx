@@ -6,10 +6,14 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
+import { useParams } from "next/navigation";
+import useSWR from "swr";
 // plane imports
-import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel, USER_PROFILE_ACTIVITY } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
+// services
+import { UserService } from "@/services/user.service";
 // components
 import { PageHead } from "@/components/core/page-title";
 import { DownloadActivityButton } from "@/components/profile/activity/download-button";
@@ -19,33 +23,41 @@ import { useUserPermissions } from "@/hooks/store/user";
 
 const PER_PAGE = 100;
 
+// services
+const userService = new UserService();
+
 function ProfileActivityPage() {
   // states
   const [pageCount, setPageCount] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [resultsCount, setResultsCount] = useState(0);
   // router
+  const { workspaceSlug, userId } = useParams();
   const { allowPermissions } = useUserPermissions();
   //hooks
   const { t } = useTranslation();
 
-  const updateTotalPages = (count: number) => setTotalPages(count);
-
-  const updateResultsCount = (count: number) => setResultsCount(count);
+  // The first page owns the paging affordance; the list components share this SWR cache entry,
+  // so nothing is fetched twice.
+  const firstPageCursor = `${PER_PAGE}:0:0`;
+  const { data: firstPage } = useSWR(
+    workspaceSlug && userId
+      ? USER_PROFILE_ACTIVITY(workspaceSlug.toString(), userId.toString(), { cursor: firstPageCursor })
+      : null,
+    workspaceSlug && userId
+      ? () =>
+          userService.getUserProfileActivity(workspaceSlug.toString(), userId.toString(), {
+            cursor: firstPageCursor,
+            per_page: PER_PAGE,
+          })
+      : null
+  );
+  const totalPages = firstPage?.total_pages ?? 0;
+  const resultsCount = firstPage?.results.length ?? 0;
 
   const handleLoadMore = () => setPageCount((prev) => prev + 1);
 
   const activityPages: React.ReactNode[] = [];
   for (let i = 0; i < pageCount; i++)
-    activityPages.push(
-      <WorkspaceActivityListPage
-        key={i}
-        cursor={`${PER_PAGE}:${i}:0`}
-        perPage={PER_PAGE}
-        updateResultsCount={updateResultsCount}
-        updateTotalPages={updateTotalPages}
-      />
-    );
+    activityPages.push(<WorkspaceActivityListPage key={i} cursor={`${PER_PAGE}:${i}:0`} perPage={PER_PAGE} />);
 
   const canDownloadActivity = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
