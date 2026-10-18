@@ -29,7 +29,7 @@ type ProjectCrumbProps = { projectId: string; projectName: string } & TCrumbLabe
 function ProjectCrumb(props: ProjectCrumbProps) {
   const { projectName } = props;
   return (
-    <a href={`#/projects/${props.projectId}`}>
+    <a href={`#/projects/${props.projectId}`} aria-label={projectName}>
       <Breadcrumbs.ItemWrapper label={projectName} type="link">
         <Breadcrumbs.Label>{projectName}</Breadcrumbs.Label>
       </Breadcrumbs.ItemWrapper>

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { createElement } from "react";
 import { Translation } from "@plane/i18n";
 import { DeleteOutline, EditOutline, NewTabOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
@@ -37,8 +38,6 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
   const linkDetail = getLinkById(linkId);
   if (!linkDetail) return <></>;
 
-  const Icon = getIconForLink(linkDetail.url);
-
   const toggleIssueLinkModal = (modalToggle: boolean) => {
     toggleIssueLinkModalStore(modalToggle);
     setIssueLinkData(linkDetail);
@@ -63,7 +62,9 @@ export function IssueLinkDetail(props: TIssueLinkDetail) {
         >
           <div className="flex items-start gap-2 truncate">
             <span className="py-1">
-              <Icon className="size-3 flex-shrink-0 stroke-2 text-tertiary group-hover:text-primary" />
+              {createElement(getIconForLink(linkDetail.url), {
+                className: "size-3 flex-shrink-0 stroke-2 text-tertiary group-hover:text-primary",
+              })}
             </span>
             <Tooltip
               label={linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}

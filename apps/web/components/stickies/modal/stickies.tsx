@@ -53,9 +53,8 @@ export const Stickies = observer(function Stickies(props: TProps) {
             <AddOutline className="my-auto size-4" /> <span>{translate("web.add_sticky")}</span>
             {creatingSticky && (
               <div className="ml-2 flex items-center justify-center">
-                <div
+                <output
                   className={`h-4 w-4 animate-spin rounded-full border-2 border-accent-strong border-t-transparent`}
-                  role="status"
                   aria-label={translate("loading")}
                 />
               </div>

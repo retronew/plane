@@ -13,6 +13,10 @@ import type { IModule } from "@plane/types";
 // local imports
 import { PowerKMenuBuilder } from "./builder";
 
+const getIconNode = (module: IModule) => (
+  <ModuleStatusIcon status={module.status ?? "backlog"} className="size-3.5 shrink-0" />
+);
+
 type Props = {
   modules: IModule[];
   onSelect: (module: IModule) => void;
@@ -25,7 +29,7 @@ export const PowerKModulesMenu = observer(function PowerKModulesMenu({ modules, 
     <PowerKMenuBuilder
       items={modules}
       getKey={(module) => module.id}
-      getIconNode={(module) => <ModuleStatusIcon status={module.status ?? "backlog"} className="size-3.5 shrink-0" />}
+      getIconNode={getIconNode}
       getValue={(module) => module.name}
       getLabel={(module) => module.name}
       isSelected={(module) => !!value?.includes(module.id)}

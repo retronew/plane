@@ -152,6 +152,9 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                     id={`emails.${index}.email`}
                     name={`emails.${index}.email`}
                     type="text"
+                    onKeyDown={(event) => {
+                      if (event.code === "Enter") event.preventDefault();
+                    }}
                     value={value}
                     onChange={(event) => {
                       emailOnChange(event);
@@ -299,13 +302,7 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
   }, [fields, append]);
 
   return (
-    <form
-      className="flex flex-col gap-10"
-      onSubmit={handleSubmit(onSubmit)}
-      onKeyDown={(e) => {
-        if (e.code === "Enter") e.preventDefault();
-      }}
-    >
+    <form className="flex flex-col gap-10" onSubmit={handleSubmit(onSubmit)}>
       <CommonOnboardingHeader
         title={translate("web.invite_your_teammates")}
         description={translate("web.work_in_plane_happens_best_with_your_team_invite_them_now_to")}

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from "react";
 import { BProgress } from "@bprogress/core";
 import { useNavigation } from "react-router";
-import "@bprogress/core/css";
+import progressStyles from "@bprogress/core/css?url";
 
 /**
  * Progress bar configuration options
@@ -66,7 +66,7 @@ const PROGRESS_CONFIG: Readonly<ProgressConfig> = {
  * }
  * ```
  */
-export function AppProgressBar(): null {
+export function AppProgressBar() {
   const navigation = useNavigation();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedRef = useRef<boolean>(false);
@@ -139,5 +139,5 @@ export function AppProgressBar(): null {
     };
   }, [navigation.state]);
 
-  return null;
+  return <link rel="stylesheet" href={progressStyles} />;
 }

@@ -42,12 +42,14 @@ export type EmojiReactionButtonProps = React.ComponentPropsWithRef<"button"> & {
   onAddReaction?: () => void;
 };
 
+const EMPTY_USERS: string[] = [];
+
 const EmojiReaction = React.forwardRef(function EmojiReaction(
   {
     emoji,
     count,
     reacted = false,
-    users = [],
+    users = EMPTY_USERS,
     onReactionClick,
     className,
     showCount = true,
@@ -146,9 +148,9 @@ const EmojiReactionGroup = React.forwardRef(function EmojiReactionGroup(
 ) {
   return (
     <div ref={ref} className={cn("flex flex-wrap items-center gap-2", className)} {...props}>
-      {reactions.map((reaction, index) => (
+      {reactions.map((reaction) => (
         <EmojiReaction
-          key={`${reaction.emoji}-${index}`}
+          key={reaction.emoji}
           emoji={reaction.emoji}
           count={reaction.count}
           reacted={reaction.reacted}

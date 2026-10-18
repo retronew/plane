@@ -41,7 +41,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIss
   const isModalPeekOpen = !!peekId && (peekMode === "modal" || peekMode === "full");
   // exactly one of the two panels is ever mounted, so both share the panel ref
   const isPeekOpen = isSidePeekOpen || isModalPeekOpen;
-  const panelRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDialogElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -164,16 +164,16 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIss
   return (
     <>
       {isSidePeekOpen && (
-        <div
+        <dialog
+          open
           ref={panelRef}
-          role="dialog"
           aria-modal="true"
           aria-label={panelLabel}
           tabIndex={-1}
-          className="fixed top-0 right-0 z-20 h-full w-1/2 border-l border-subtle-1 bg-surface-1 shadow-raised-200 outline-none"
+          className="fixed top-0 right-0 left-auto z-20 m-0 h-full max-h-none w-1/2 max-w-none border-l border-subtle-1 bg-surface-1 text-inherit shadow-raised-200 outline-none"
         >
           <SidePeekView anchor={anchor} handleClose={handleClose} issueDetails={issueDetails} />
-        </div>
+        </dialog>
       )}
       {isModalPeekOpen && (
         <>
@@ -181,13 +181,13 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIss
             aria-hidden="true"
             className="fixed inset-0 z-20 animate-fade-in bg-backdrop motion-reduce:animate-none"
           />
-          <div
+          <dialog
+            open
             ref={panelRef}
-            role="dialog"
             aria-modal="true"
             aria-label={panelLabel}
             tabIndex={-1}
-            className={`fixed top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 animate-fade-in rounded-lg bg-surface-1 transition-all duration-300 outline-none motion-reduce:animate-none ${
+            className={`fixed top-1/2 left-1/2 z-20 m-0 max-h-none max-w-none -translate-x-1/2 -translate-y-1/2 animate-fade-in rounded-lg border-0 bg-surface-1 p-0 text-inherit transition-all duration-300 outline-none motion-reduce:animate-none ${
               peekMode === "modal" ? "h-[70%] w-3/5" : "size-[95%]"
             }`}
           >
@@ -197,7 +197,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIss
             {peekMode === "full" && (
               <FullScreenPeekView anchor={anchor} handleClose={handleClose} issueDetails={issueDetails} />
             )}
-          </div>
+          </dialog>
         </>
       )}
     </>

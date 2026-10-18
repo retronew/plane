@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Command } from "cmdk";
 import { CloseOutline, SearchOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
@@ -23,6 +23,10 @@ type Props = {
 
 export function PowerKModalHeader(props: Props) {
   const { context, searchTerm, onSearchChange, activePage } = props;
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
   // translation
   const { t } = useTranslation();
   // derived values
@@ -44,11 +48,11 @@ export function PowerKModalHeader(props: Props) {
       <div className="flex items-center gap-2 px-4 py-3">
         <SearchOutline className="size-4 shrink-0 text-placeholder" />
         <Command.Input
+          ref={inputRef}
           value={searchTerm}
           onValueChange={onSearchChange}
           placeholder={placeholder}
           className="flex-1 bg-transparent text-13 text-primary placeholder-(--text-color-placeholder) outline-none"
-          autoFocus
         />
         {searchTerm && (
           <button

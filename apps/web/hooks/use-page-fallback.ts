@@ -76,7 +76,9 @@ export const usePageFallback = (args: TArgs) => {
 
   useEffect(() => {
     if (hasConnectionFailed) {
-      handleUpdateDescription();
+      // Schedule backup synchronization so obsolete connection transitions can cancel it.
+      const timeoutId = window.setTimeout(() => void handleUpdateDescription(), 0);
+      return () => window.clearTimeout(timeoutId);
     } else {
       // Reset toast flag when connection is restored
       hasShownFallbackToast.current = false;

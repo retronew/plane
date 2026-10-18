@@ -44,7 +44,7 @@ function StoreWrapper(props: TStoreWrapper) {
     const localValue = localStorage && localStorage.getItem("app_sidebar_collapsed");
     const localBoolValue = localValue === "true";
     if (localValue && sidebarCollapsed === undefined) toggleSidebar(localBoolValue);
-  }, [sidebarCollapsed, setTheme, toggleSidebar]);
+  }, [sidebarCollapsed, toggleSidebar]);
 
   /**
    * Effect 1: Initial theme sync from server (one-time only)

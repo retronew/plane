@@ -54,8 +54,8 @@ export const useTitleEditor = (props: TUseTitleEditorProps) => {
 
   const editor = useEditor(
     {
-      onUpdate: ({ editor }) => {
-        updatePageProperties?.(id, "property_updated", { name: editor?.getText() });
+      onUpdate: ({ editor: activeEditor }) => {
+        updatePageProperties?.(id, "property_updated", { name: activeEditor?.getText() });
       },
       editable,
       immediatelyRender: false,

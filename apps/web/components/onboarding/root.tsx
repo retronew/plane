@@ -23,7 +23,9 @@ type Props = {
   invitations?: IWorkspaceMemberInvitation[];
 };
 
-export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [] }: Props) {
+const EMPTY_INVITATIONS: IWorkspaceMemberInvitation[] = [];
+
+export const OnboardingRoot = observer(function OnboardingRoot({ invitations = EMPTY_INVITATIONS }: Props) {
   const [currentStep, setCurrentStep] = useState<TOnboardingStep>(EOnboardingSteps.PROFILE_SETUP);
   // store hooks
   const { data: user } = useUser();

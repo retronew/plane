@@ -29,9 +29,7 @@ function EmptySpace({ title, description, children, Icon, link }: EmptySpaceProp
 
         <h2 className="text-16 font-medium text-primary">{title}</h2>
         <div className="mt-1 text-13 text-secondary">{description}</div>
-        <ul role="list" className="mt-6 divide-y divide-subtle-1 border-t border-b border-subtle">
-          {children}
-        </ul>
+        <ul className="mt-6 divide-y divide-subtle-1 border-t border-b border-subtle">{children}</ul>
         {link ? (
           <div className="mt-6 flex">
             <Link href={link.href}>
@@ -74,15 +72,23 @@ function EmptySpaceItem({ title, description, Icon, action, href }: EmptySpaceIt
   );
 
   if (href) {
-    spaceItem = <Link href={href}>{spaceItem}</Link>;
+    spaceItem = (
+      <Link href={href} onClick={action}>
+        {spaceItem}
+      </Link>
+    );
   }
 
   return (
-    <>
-      <li className="cursor-pointer" onClick={action} role="button">
-        {spaceItem}
-      </li>
-    </>
+    <li className="cursor-pointer">
+      {action && !href ? (
+        <button type="button" className="w-full text-left" onClick={action}>
+          {spaceItem}
+        </button>
+      ) : (
+        spaceItem
+      )}
+    </li>
   );
 }
 

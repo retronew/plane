@@ -81,7 +81,13 @@ export function InstanceSetupForm() {
     retypePassword: false,
   });
   const [csrfToken, setCsrfToken] = useState<string | undefined>(undefined);
-  const [formData, setFormData] = useState<TFormData>(defaultFromData);
+  const [formData, setFormData] = useState<TFormData>(() => ({
+    ...defaultFromData,
+    first_name: firstNameParam ?? "",
+    last_name: lastNameParam ?? "",
+    company_name: companyParam ?? "",
+    email: emailParam ?? "",
+  }));
   const [isPasswordInputFocused, setIsPasswordInputFocused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRetryPasswordInputFocused, setIsRetryPasswordInputFocused] = useState(false);
@@ -96,13 +102,6 @@ export function InstanceSetupForm() {
     if (csrfToken === undefined)
       authService.requestCSRFToken().then((data) => data?.csrf_token && setCsrfToken(data.csrf_token));
   }, [csrfToken]);
-
-  useEffect(() => {
-    if (firstNameParam) setFormData((prev) => ({ ...prev, first_name: firstNameParam }));
-    if (lastNameParam) setFormData((prev) => ({ ...prev, last_name: lastNameParam }));
-    if (companyParam) setFormData((prev) => ({ ...prev, company_name: companyParam }));
-    if (emailParam) setFormData((prev) => ({ ...prev, email: emailParam }));
-  }, [firstNameParam, lastNameParam, companyParam, emailParam]);
 
   // derived values
   const errorData: TError = useMemo(() => {
@@ -150,9 +149,8 @@ export function InstanceSetupForm() {
             method="POST"
             action={`${API_BASE_URL}/api/instances/admins/sign-up/`}
             onSubmit={() => setIsSubmitting(true)}
-            onError={() => setIsSubmitting(false)}
           >
-            <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
+            <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
 
             <div className="flex flex-col items-center gap-4 sm:flex-row">
               <div className="w-full min-w-0 space-y-1">

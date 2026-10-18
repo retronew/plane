@@ -156,6 +156,9 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                     id={`emails.${index}.email`}
                     name={`emails.${index}.email`}
                     type="text"
+                    onKeyDown={(event) => {
+                      if (event.code === "Enter") event.preventDefault();
+                    }}
                     value={value}
                     onChange={(event) => {
                       emailOnChange(event);
@@ -308,13 +311,7 @@ export function InviteMembers(props: Props) {
               {translate("web.work_in_plane_happens_best_with_your_team_invite_them_now_to")}
             </p>
           </div>
-          <form
-            className="mx-auto mt-2 w-full space-y-4"
-            onSubmit={handleSubmit(onSubmit)}
-            onKeyDown={(e) => {
-              if (e.code === "Enter") e.preventDefault();
-            }}
-          >
+          <form className="mx-auto mt-2 w-full space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <div className="w-full py-4 text-13">
               <div className="group relative mx-8 grid grid-cols-10 gap-4 py-2">
                 <div className="col-span-6 px-1 text-13 font-medium text-secondary">{translate("web.email")}</div>

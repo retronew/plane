@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from "react";
 // plane imports
 import type { EditorRefApi, IMarking } from "@plane/editor";
 import { cn } from "@plane/utils";
@@ -20,19 +20,17 @@ type Props = {
   showOutline?: boolean;
 };
 
+const EMPTY_HEADINGS: IMarking[] = [];
+const getEmptyHeadings = () => EMPTY_HEADINGS;
+
 export function PageContentBrowser(props: Props) {
   const { className, editorRef, emptyState, setSidePeekVisible, showOutline = false } = props;
-  // states
-  const [headings, setHeadings] = useState<IMarking[]>([]);
-
-  useEffect(() => {
-    const unsubscribe = editorRef?.onHeadingChange(setHeadings);
-    // for initial render of this component to get the editor headings
-    setHeadings(editorRef?.getHeadings() ?? []);
-    return () => {
-      unsubscribe?.();
-    };
+  const subscribe = useCallback((notify: () => void) => editorRef?.onHeadingChange(notify) ?? (() => {}), [editorRef]);
+  const getSnapshot = useCallback(() => {
+    const headings = editorRef?.getHeadings();
+    return headings?.length ? headings : EMPTY_HEADINGS;
   }, [editorRef]);
+  const headings = useSyncExternalStore(subscribe, getSnapshot, getEmptyHeadings);
 
   const handleOnClick = useCallback(
     (marking: IMarking) => {

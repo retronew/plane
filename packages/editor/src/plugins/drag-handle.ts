@@ -221,42 +221,46 @@ export const DragHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOp
       dragHandleElement?.classList.add("drag-handle-hidden");
   };
 
-  const view = (view: EditorView, sideMenu: HTMLDivElement | null) => {
-    dragHandleElement = createDragHandleElement();
-    dragHandleElement.addEventListener("dragstart", (e) => handleDragStart(e, view));
-    dragHandleElement.addEventListener("dragend", (e) => handleDragEnd(e, view));
-    dragHandleElement.addEventListener("click", (e) => handleClick(e, view));
-    dragHandleElement.addEventListener("contextmenu", (e) => handleClick(e, view));
+  const dragOverHandler = (e: DragEvent) => {
+    e.preventDefault();
+    if (isDragging) {
+      lastClientY = e.clientY;
+    }
+  };
 
-    const dragOverHandler = (e: DragEvent) => {
-      e.preventDefault();
-      if (isDragging) {
-        lastClientY = e.clientY;
+  const dragLeaveHandler = (e: DragEvent) => {
+    if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+      isMouseInsideWhileDragging = true;
+
+      const windowMiddleY = window.innerHeight / 2;
+
+      if (lastClientY < windowMiddleY) {
+        isDraggedOutsideWindow = "top";
+      } else {
+        isDraggedOutsideWindow = "bottom";
       }
-    };
+    }
+  };
+
+  const dragEnterHandler = () => {
+    isDraggedOutsideWindow = false;
+  };
+
+  const createView = (view: EditorView, sideMenu: HTMLDivElement | null) => {
+    dragHandleElement = createDragHandleElement();
+    const dragstartHandler = (e: DragEvent) => handleDragStart(e, view);
+    dragHandleElement.addEventListener("dragstart", dragstartHandler);
+    const dragendHandler = (e: DragEvent) => handleDragEnd(e, view);
+    dragHandleElement.addEventListener("dragend", dragendHandler);
+    const clickHandler = (e: MouseEvent) => handleClick(e, view);
+    dragHandleElement.addEventListener("click", clickHandler);
+    const contextmenuHandler = (e: MouseEvent) => handleClick(e, view);
+    dragHandleElement.addEventListener("contextmenu", contextmenuHandler);
 
     const mouseMoveHandler = (e: MouseEvent) => {
       if (isMouseInsideWhileDragging) {
         handleDragEnd(e, view);
       }
-    };
-
-    const dragLeaveHandler = (e: DragEvent) => {
-      if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
-        isMouseInsideWhileDragging = true;
-
-        const windowMiddleY = window.innerHeight / 2;
-
-        if (lastClientY < windowMiddleY) {
-          isDraggedOutsideWindow = "top";
-        } else {
-          isDraggedOutsideWindow = "bottom";
-        }
-      }
-    };
-
-    const dragEnterHandler = () => {
-      isDraggedOutsideWindow = false;
     };
 
     window.addEventListener("dragleave", dragLeaveHandler);
@@ -271,6 +275,10 @@ export const DragHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOp
 
     return {
       destroy: () => {
+        dragHandleElement?.removeEventListener("dragstart", dragstartHandler);
+        dragHandleElement?.removeEventListener("dragend", dragendHandler);
+        dragHandleElement?.removeEventListener("click", clickHandler);
+        dragHandleElement?.removeEventListener("contextmenu", contextmenuHandler);
         dragHandleElement?.remove?.();
         dragHandleElement = null;
         isDragging = false;
@@ -349,7 +357,7 @@ export const DragHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOp
   };
 
   return {
-    view,
+    view: createView,
     domEvents,
   };
 };

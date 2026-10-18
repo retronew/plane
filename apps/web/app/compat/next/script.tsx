@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 type ScriptProps = {
   src?: string;
@@ -19,19 +19,24 @@ type ScriptProps = {
 
 // Minimal shim for next/script that creates a script tag
 function Script({ src, id, strategy: _strategy, onLoad, onError, children, ...rest }: ScriptProps) {
+  const handleLoad = useEffectEvent(() => onLoad?.());
+  const handleError = useEffectEvent(() => onError?.());
+
   useEffect(() => {
     if (src) {
       const script = document.createElement("script");
       if (id) script.id = id;
       script.src = src;
-      if (onLoad) script.onload = onLoad;
-      if (onError) script.onerror = onError;
+      script.addEventListener("load", handleLoad);
+      script.addEventListener("error", handleError);
       Object.keys(rest).forEach((key) => {
         script.setAttribute(key, rest[key]);
       });
       document.body.appendChild(script);
 
       return () => {
+        script.removeEventListener("load", handleLoad);
+        script.removeEventListener("error", handleError);
         if (script.parentNode) {
           document.body.removeChild(script);
         }
@@ -51,7 +56,7 @@ function Script({ src, id, strategy: _strategy, onLoad, onError, children, ...re
         }
       };
     }
-  }, [src, id, children, onLoad, onError, rest]);
+  }, [src, id, children, rest]);
 
   return null;
 }

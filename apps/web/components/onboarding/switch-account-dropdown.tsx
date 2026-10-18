@@ -41,7 +41,11 @@ export const SwitchAccountDropdown = observer(function SwitchAccountDropdown(pro
       <Menu>
         <MenuTrigger
           render={
-            <button type="button" className="z-10 flex items-center gap-x-2.5 rounded-lg bg-layer-1 px-2 py-1.5" />
+            <button
+              type="button"
+              aria-label={displayName}
+              className="z-10 flex items-center gap-x-2.5 rounded-lg bg-layer-1 px-2 py-1.5"
+            />
           }
         >
           <Avatar

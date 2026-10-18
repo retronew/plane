@@ -35,7 +35,7 @@ export const updateFloatingUIFloaterPosition: UpdateFloatingUIFloaterPosition = 
       middleware: [shift(), flip()],
     })
       .then(({ x, y, strategy }) => {
-        Object.assign(element.style, {
+        return Object.assign(element.style, {
           width: "max-content",
           position: strategy,
           left: `${x}px`,

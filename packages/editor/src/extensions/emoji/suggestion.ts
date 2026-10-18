@@ -20,6 +20,8 @@ import type { ExtendedEmojiStorage } from "./emoji";
 
 const DEFAULT_EMOJIS = ["+1", "-1", "smile", "orange_heart", "eyes"];
 
+const noop = () => {};
+
 export const emojiSuggestion: EmojiOptions["suggestion"] = {
   items: ({ editor, query }: { editor: Editor; query: string }): EmojiItem[] => {
     const { emojis } = editor.storage.emoji as EmojiStorage;
@@ -47,7 +49,7 @@ export const emojiSuggestion: EmojiOptions["suggestion"] = {
 
   render: () => {
     let component: ReactRenderer<CommandListInstance, EmojisListDropdownProps> | null = null;
-    let cleanup: () => void = () => {};
+    let cleanup: () => void = noop;
     let editorRef: Editor | null = null;
 
     const handleClose = (editor?: Editor) => {

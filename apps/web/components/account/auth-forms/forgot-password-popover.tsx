@@ -16,7 +16,13 @@ export function ForgotPasswordPopover() {
   return (
     <Popover>
       <PopoverTrigger
-        render={<button type="button" className="text-11 font-medium text-accent-primary outline-none" />}
+        render={
+          <button
+            type="button"
+            className="text-11 font-medium text-accent-primary outline-none"
+            aria-label={t("auth.common.forgot_password")}
+          />
+        }
       >
         {t("auth.common.forgot_password")}
       </PopoverTrigger>

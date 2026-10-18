@@ -40,19 +40,19 @@ const Titles: TAuthHeaderDetails = {
   },
 };
 
+const getHeaderSubHeader = (mode: EAuthModes | null): TAuthHeaderContent => {
+  if (mode) {
+    return Titles[mode];
+  }
+
+  return {
+    header: translate("web.comment_or_react_to_work_items"),
+    subHeader: translate("web.runtime.public_auth_subtitle"),
+  };
+};
+
 export function AuthHeader(props: TAuthHeader) {
   const { authMode } = props;
-
-  const getHeaderSubHeader = (mode: EAuthModes | null): TAuthHeaderContent => {
-    if (mode) {
-      return Titles[mode];
-    }
-
-    return {
-      header: translate("web.comment_or_react_to_work_items"),
-      subHeader: translate("web.runtime.public_auth_subtitle"),
-    };
-  };
 
   const { header, subHeader } = getHeaderSubHeader(authMode);
 

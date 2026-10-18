@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -41,7 +41,9 @@ export const CreateUpdateIssueModal = observer(function CreateUpdateIssueModal(p
   if (opening.open !== props.isOpen) {
     setOpening({ open: props.isOpen, generation: opening.generation + (props.isOpen ? 1 : 0) });
   }
-  if (props.isOpen) lastOpenProps.current = props;
+  useLayoutEffect(() => {
+    if (props.isOpen) lastOpenProps.current = props;
+  }, [props]);
   const displayedProps = props.isOpen ? props : lastOpenProps.current;
   const [isMounted, setIsMounted] = useState(props.isOpen);
   if (props.isOpen && !isMounted) setIsMounted(true);

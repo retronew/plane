@@ -25,6 +25,8 @@ export type IconsListConfig = {
   searchDisabled?: boolean;
 };
 
+const toHex = (value: number): string => value.toString(16).padStart(2, "0");
+
 /**
  * Adjusts the given hex color to ensure it has enough contrast.
  * @param {string} hex - The hex color code input by the user.
@@ -61,11 +63,6 @@ export const adjustColorForContrast = (hex: string): string => {
   }
 
   // Convert RGB back to hex
-  const toHex = (value: number): string => {
-    const hex = value.toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  };
-
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
 

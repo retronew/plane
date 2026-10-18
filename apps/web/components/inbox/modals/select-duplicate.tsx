@@ -43,7 +43,7 @@ export function SelectDuplicateInboxIssueModal(props: Props) {
   // states
   const [query, setQuery] = useState("");
   const [issues, setIssues] = useState<ISearchIssueResponse[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(Boolean(isOpen && workspaceSlug && projectId));
   // theme hook
   const { resolvedTheme } = useTheme();
   // hooks
@@ -54,17 +54,32 @@ export function SelectDuplicateInboxIssueModal(props: Props) {
   const searchResolvedPath = resolvedTheme === "light" ? lightSearchAsset : darkSearchAsset;
   const issuesResolvedPath = resolvedTheme === "light" ? lightIssuesAsset : darkIssuesAsset;
 
+  const requestKey = JSON.stringify([isOpen, workspaceSlug, projectId, debouncedSearchTerm]);
+  const [previousRequestKey, setPreviousRequestKey] = useState(requestKey);
+  if (previousRequestKey !== requestKey) {
+    setPreviousRequestKey(requestKey);
+    if (isOpen && workspaceSlug && projectId) setIsSearching(true);
+  }
+
   useEffect(() => {
     if (!isOpen || !workspaceSlug || !projectId) return;
 
-    setIsSearching(true);
+    let active = true;
     projectService
       .projectIssuesSearch(workspaceSlug.toString(), projectId.toString(), {
         search: debouncedSearchTerm,
         workspace_search: false,
       })
-      .then((res: ISearchIssueResponse[]) => setIssues(res))
-      .finally(() => setIsSearching(false));
+      .then((res: ISearchIssueResponse[]) => {
+        if (active) setIssues(res);
+        return res;
+      })
+      .finally(() => {
+        if (active) setIsSearching(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [debouncedSearchTerm, isOpen, projectId, workspaceSlug]);
 
   const filteredIssues = issues.filter((issue) => issue.id !== issueId);

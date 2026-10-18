@@ -305,6 +305,18 @@ export const getOrderedWorkItems = (workItems: TIssue[], orderByKey: TIssueOrder
   }
 };
 
+// Get the default key for the group by key
+const getDefaultGroupKey = (groupByKey: TIssueGroupByOptions) => {
+  switch (groupByKey) {
+    case "state_detail.group":
+      return "state__group";
+    case null:
+      return null;
+    default:
+      return ISSUE_GROUP_BY_KEY[groupByKey];
+  }
+};
+
 export const getGroupedWorkItemIds = (
   workItems: TIssue[],
   groupByKey?: TIssueGroupByOptions,
@@ -317,18 +329,6 @@ export const getGroupedWorkItemIds = (
     };
   }
 
-  // Get the default key for the group by key
-  const getDefaultGroupKey = (groupByKey: TIssueGroupByOptions) => {
-    switch (groupByKey) {
-      case "state_detail.group":
-        return "state__group";
-      case null:
-        return null;
-      default:
-        return ISSUE_GROUP_BY_KEY[groupByKey];
-    }
-  };
-
   // Group work items
   const groupKey = getDefaultGroupKey(groupByKey);
   const groupedWorkItems = groupBy(workItems, (item) => {
@@ -336,7 +336,9 @@ export const getGroupedWorkItemIds = (
     if (Array.isArray(value)) {
       if (value.length === 0) return "None";
       // Sort & join to build deterministic set-like key
-      return value.slice().sort().join(",");
+      const sortedValues = [...value];
+      sortedValues.sort();
+      return sortedValues.join(",");
     }
     return value ?? "None";
   });

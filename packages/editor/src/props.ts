@@ -14,7 +14,7 @@ type TArgs = {
   editorClassName: string;
 };
 
-export const CoreEditorProps = (props: TArgs): EditorProps => {
+export const coreEditorProps = (props: TArgs): EditorProps => {
   const { editorClassName } = props;
 
   return {

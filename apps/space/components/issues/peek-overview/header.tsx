@@ -37,6 +37,15 @@ type TPeekModeOption = {
   label: string;
 };
 
+function renderPeekModeIcon(mode: TPeekModeOption) {
+  return <mode.icon className="size-4 shrink-0" />;
+}
+
+function renderSelectedPeekModeIcon(modes: TPeekModeOption[]) {
+  const Icon = modes[0]?.icon ?? SidePeekOutline;
+  return <Icon className="size-4" />;
+}
+
 const PEEK_MODES: TPeekModeOption[] = [
   {
     key: "side",
@@ -106,15 +115,12 @@ export const PeekOverviewHeader = observer(function PeekOverviewHeader(props: Pr
             pinSelected={false}
             getOptionValue={(mode) => mode.key}
             getOptionLabel={(mode) => mode.label}
-            getOptionIcon={(mode) => <mode.icon className="size-4 shrink-0" />}
+            getOptionIcon={renderPeekModeIcon}
           >
             <Select.Trigger<TPeekModeOption>
               variant="icon-sm"
               className={cn("text-tertiary hover:text-secondary", { "rotate-45": peekMode === "full" })}
-              prependIcon={(modes) => {
-                const SelectedIcon = modes[0]?.icon ?? SidePeekOutline;
-                return <SelectedIcon className="size-4" />;
-              }}
+              prependIcon={renderSelectedPeekModeIcon}
             />
           </Select>
         </div>

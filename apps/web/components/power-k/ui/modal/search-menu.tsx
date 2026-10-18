@@ -34,19 +34,28 @@ type Props = {
 
 export function PowerKModalSearchMenu(props: Props) {
   const { activePage, context, isWorkspaceLevel, searchTerm, updateSearchTerm, handleSearchMenuClose } = props;
-  // states
-  const [resultsCount, setResultsCount] = useState(0);
-  const [isSearching, setIsSearching] = useState(false);
-  const [results, setResults] = useState<IWorkspaceSearchResults>(WORKSPACE_DEFAULT_SEARCH_RESULT);
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   // navigation
   const { workspaceSlug, projectId } = useParams();
+  // states
+  const [resultsCount, setResultsCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(() => !activePage && Boolean(workspaceSlug && searchTerm));
+  const [results, setResults] = useState<IWorkspaceSearchResults>(WORKSPACE_DEFAULT_SEARCH_RESULT);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   // store hooks
   const { togglePowerKModal } = usePowerK();
 
+  const searchKey = JSON.stringify([debouncedSearchTerm, isWorkspaceLevel, projectId, workspaceSlug, activePage]);
+  const [previousSearchKey, setPreviousSearchKey] = useState(searchKey);
+  if (previousSearchKey !== searchKey) {
+    setPreviousSearchKey(searchKey);
+    if (!activePage && workspaceSlug) {
+      setIsSearching(Boolean(debouncedSearchTerm));
+      if (!debouncedSearchTerm) setResults(WORKSPACE_DEFAULT_SEARCH_RESULT);
+    }
+  }
+
   useEffect(() => {
     if (activePage || !workspaceSlug) return;
-    setIsSearching(true);
 
     if (debouncedSearchTerm) {
       workspaceService
@@ -69,9 +78,6 @@ export function PowerKModalSearchMenu(props: Props) {
           setResultsCount(0);
         })
         .finally(() => setIsSearching(false));
-    } else {
-      setResults(WORKSPACE_DEFAULT_SEARCH_RESULT);
-      setIsSearching(false);
     }
   }, [debouncedSearchTerm, isWorkspaceLevel, projectId, workspaceSlug, activePage]);
 

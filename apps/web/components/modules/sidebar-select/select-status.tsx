@@ -21,6 +21,10 @@ import { Select } from "@plane/blocks/select";
 
 type ModuleStatusOption = (typeof MODULE_STATUS)[number];
 
+const renderModuleStatusIcon = (option: ModuleStatusOption) => (
+  <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: option.color }} />
+);
+
 type Props = {
   control: Control<Partial<IModule>, any>;
   submitChanges: (formData: Partial<IModule>) => void;
@@ -48,9 +52,7 @@ export function SidebarStatusSelect({ control, submitChanges, watch }: Props) {
               }}
               getOptionValue={(option) => option.value}
               getOptionLabel={(option) => t(option.i18n_label)}
-              getOptionIcon={(option) => (
-                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: option.color }} />
-              )}
+              getOptionIcon={renderModuleStatusIcon}
               showSearch={false}
               pinSelected={false}
             >

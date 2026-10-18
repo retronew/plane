@@ -7,7 +7,7 @@
 import { useState } from "react";
 import type { PageProps } from "@react-pdf/renderer";
 import { pdf } from "@react-pdf/renderer";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useParams } from "react-router";
 // plane editor
 import type { EditorRefApi } from "@plane/editor";
@@ -143,18 +143,20 @@ export function ExportPageModal(props: Props) {
   // params
   const { workspaceSlug, projectId } = useParams();
   // form info
-  const { control, reset, watch } = useForm<TFormValues>({
+  const { control, reset, getValues } = useForm<TFormValues>({
     defaultValues,
   });
+  useWatch({ control });
+  const values = getValues();
   // parse editor content
   const { replaceCustomComponentsFromHTMLContent, replaceCustomComponentsFromMarkdownContent } = useParseEditorContent({
     projectId,
     workspaceSlug: workspaceSlug ?? "",
   });
   // derived values
-  const selectedExportFormat = watch("export_format");
-  const selectedPageFormat = watch("page_format");
-  const selectedContentVariety = watch("content_variety");
+  const selectedExportFormat = values.export_format;
+  const selectedPageFormat = values.page_format;
+  const selectedContentVariety = values.content_variety;
   const isPDFSelected = selectedExportFormat === "pdf";
   const fileName = pageTitle
     ?.toLowerCase()

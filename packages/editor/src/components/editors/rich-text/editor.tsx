@@ -9,18 +9,20 @@ import { forwardRef, useCallback } from "react";
 import { EditorWrapper } from "@/components/editors";
 import { BlockMenu, EditorBubbleMenu } from "@/components/menus";
 // extensions
-import { SideMenuExtension } from "@/extensions";
+import { sideMenuExtension } from "@/extensions";
 // plane editor imports
 import { RichTextEditorAdditionalExtensions } from "@/extensions/rich-text-extensions";
 // types
 import type { EditorRefApi, IRichTextEditorProps } from "@/types";
+
+const EMPTY_EXTENSIONS: NonNullable<IRichTextEditorProps["extensions"]> = [];
 
 function RichTextEditor(props: IRichTextEditorProps) {
   const {
     bubbleMenuEnabled = true,
     disabledExtensions,
     dragDropEnabled,
-    extensions: externalExtensions = [],
+    extensions: externalExtensions = EMPTY_EXTENSIONS,
     fileHandler,
     flaggedExtensions,
     extendedEditorProps,
@@ -30,7 +32,7 @@ function RichTextEditor(props: IRichTextEditorProps) {
   const getExtensions = useCallback(() => {
     const extensions = [
       ...externalExtensions,
-      SideMenuExtension({
+      sideMenuExtension({
         aiEnabled: false,
         dragDropEnabled: !!dragDropEnabled,
       }),

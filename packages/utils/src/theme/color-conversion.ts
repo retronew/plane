@@ -100,16 +100,17 @@ export function hexToRgb(hex: string): RGB {
   return { r, g, b };
 }
 
+const toHex = (n: number) => {
+  const hex = Math.round(Math.max(0, Math.min(255, n))).toString(16);
+  return hex.length === 1 ? "0" + hex : hex;
+};
+
 /**
  * Convert RGB to hex color
  * Legacy function for backward compatibility
  */
 export function rgbToHex(rgb: RGB): string {
   const { r, g, b } = rgb;
-  const toHex = (n: number) => {
-    const hex = Math.round(Math.max(0, Math.min(255, n))).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  };
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }

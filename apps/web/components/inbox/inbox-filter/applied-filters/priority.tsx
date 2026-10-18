@@ -13,14 +13,15 @@ import type { TIssuePriorities } from "@plane/types";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 
+const currentOptionDetail = (priority: TIssuePriorities) =>
+  ISSUE_PRIORITIES.find((p) => p.key === priority) || undefined;
+
 export const InboxIssueAppliedFiltersPriority = observer(function InboxIssueAppliedFiltersPriority() {
   // hooks
   const { t } = useTranslation();
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
   // derived values
   const filteredValues = inboxFilters?.priority || [];
-  const currentOptionDetail = (priority: TIssuePriorities) =>
-    ISSUE_PRIORITIES.find((p) => p.key === priority) || undefined;
 
   const handleFilterValue = (value: TIssuePriorities): TIssuePriorities[] =>
     filteredValues?.includes(value) ? filteredValues.filter((v) => v !== value) : [...filteredValues, value];
@@ -40,22 +41,26 @@ export const InboxIssueAppliedFiltersPriority = observer(function InboxIssueAppl
               <PriorityIcon priority={optionDetail.key} className="h-3 w-3" />
             </div>
             <div className="truncate text-11">{optionDetail?.title}</div>
-            <div
+            <button
+              type="button"
+              aria-label={t("close")}
               className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
               onClick={() => handleInboxIssueFilters("priority", handleFilterValue(optionDetail?.key))}
             >
               <CloseOutline className={`h-3 w-3`} />
-            </div>
+            </button>
           </div>
         );
       })}
 
-      <div
+      <button
+        type="button"
+        aria-label={t("close")}
         className="relative flex h-3 w-3 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden text-tertiary transition-all hover:text-secondary"
         onClick={clearFilter}
       >
         <CloseOutline className={`h-3 w-3`} />
-      </div>
+      </button>
     </div>
   );
 });

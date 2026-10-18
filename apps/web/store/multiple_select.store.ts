@@ -25,8 +25,8 @@ export type IMultipleSelectStore = {
   getActiveEntityDetails: () => TEntityDetails | null;
   getEntityDetailsFromEntityID: (entityID: string) => TEntityDetails | null;
   // entity actions
-  updateSelectedEntityDetails: (entityDetails: TEntityDetails, action: "add" | "remove") => void;
-  bulkUpdateSelectedEntityDetails: (entitiesList: TEntityDetails[], action: "add" | "remove") => void;
+  updateSelectedEntityDetails: (entityDetails: TEntityDetails, selectionAction: "add" | "remove") => void;
+  bulkUpdateSelectedEntityDetails: (entitiesList: TEntityDetails[], selectionAction: "add" | "remove") => void;
   updateLastSelectedEntityDetails: (entityDetails: TEntityDetails | null) => void;
   updatePreviousActiveEntity: (entityDetails: TEntityDetails | null) => void;
   updateNextActiveEntity: (entityDetails: TEntityDetails | null) => void;
@@ -140,8 +140,8 @@ export class MultipleSelectStore implements IMultipleSelectStore {
    * @param {TEntityDetails} entityDetails
    * @param {"add" | "remove"} action
    */
-  updateSelectedEntityDetails = (entityDetails: TEntityDetails, action: "add" | "remove") => {
-    if (action === "add") {
+  updateSelectedEntityDetails = (entityDetails: TEntityDetails, selectionAction: "add" | "remove") => {
+    if (selectionAction === "add") {
       runInAction(() => {
         if (this.getIsEntitySelected(entityDetails.entityID)) {
           remove(this.selectedEntityDetails, (en) => en.entityID === entityDetails.entityID);
@@ -164,8 +164,8 @@ export class MultipleSelectStore implements IMultipleSelectStore {
    * @param {TEntityDetails[]} entitiesList
    * @param {"add" | "remove"} action
    */
-  bulkUpdateSelectedEntityDetails = (entitiesList: TEntityDetails[], action: "add" | "remove") => {
-    if (action === "add") {
+  bulkUpdateSelectedEntityDetails = (entitiesList: TEntityDetails[], selectionAction: "add" | "remove") => {
+    if (selectionAction === "add") {
       runInAction(() => {
         let newEntities: TEntityDetails[] = [];
         newEntities = differenceWith(this.selectedEntityDetails, entitiesList, isEqual);

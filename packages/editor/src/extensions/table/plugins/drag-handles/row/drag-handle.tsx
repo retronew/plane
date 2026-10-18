@@ -161,9 +161,9 @@ export function RowDragHandle(props: RowDragHandleProps) {
           let tr = editor.state.tr;
           const selection = editor.state.selection;
           if (isCellSelection(selection)) {
-            const table = findTable(selection);
-            if (table) {
-              tr = moveSelectedRows(editor, table, selection, dropIndex, tr);
+            const selectedTable = findTable(selection);
+            if (selectedTable) {
+              tr = moveSelectedRows(editor, selectedTable, selection, dropIndex, tr);
             }
           }
           editor.view.dispatch(tr);
@@ -225,7 +225,9 @@ export function RowDragHandle(props: RowDragHandleProps) {
     <>
       <div className="table-row-handle-container absolute top-0 left-0 z-20 flex h-full -translate-x-1/2 items-center justify-center">
         <button
-          ref={refs.setReference}
+          ref={(element) => {
+            refs.setReference(element);
+          }}
           {...getReferenceProps()}
           type="button"
           onMouseDown={handleMouseDown}
@@ -248,7 +250,9 @@ export function RowDragHandle(props: RowDragHandleProps) {
           />
           <div
             className="max-h-[90vh] w-[12rem] overflow-y-auto rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200"
-            ref={refs.setFloating}
+            ref={(element) => {
+              refs.setFloating(element);
+            }}
             {...getFloatingProps()}
             style={{
               ...floatingStyles,

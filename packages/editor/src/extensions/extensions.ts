@@ -7,8 +7,8 @@
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { Extensions } from "@tiptap/core";
 import { CharacterCount } from "@tiptap/extension-character-count";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { TaskList } from "@tiptap/extension-task-list";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import { Markdown } from "tiptap-markdown";
@@ -62,7 +62,7 @@ type TArguments = Pick<
   provider: HocuspocusProvider | undefined;
 };
 
-export const CoreEditorExtensions = (args: TArguments): Extensions => {
+export const coreEditorExtensions = (args: TArguments): Extensions => {
   const {
     disabledExtensions,
     enableHistory,

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 
 type TArgs = {
   elementId: string;
@@ -19,6 +19,39 @@ type TReturnType = {
 };
 
 /**
+ * Extracts multiple IDs from hash string
+ * Supports various delimiters: comma, space, pipe, semicolon
+ * @param {string} hashString - The hash part of the URL
+ * @returns {string[]} - Array of clean ID strings
+ */
+const extractIdsFromHash = (hashString: string | null): string[] => {
+  if (!hashString) return [];
+
+  // Split by common delimiters and clean up
+  return hashString
+    .split(/[,\s|;]+/) // Split by comma, space, pipe, or semicolon
+    .map((id) => id.trim()) // Remove whitespace
+    .filter((id) => id.length > 0); // Remove empty strings
+};
+
+/**
+ * Get current hash from window.location
+ * @returns {string | null} - Current hash without the # symbol
+ */
+const getCurrentHash = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash;
+  return hash ? hash.slice(1) : null; // Remove the # symbol
+};
+
+const subscribeToHash = (onStoreChange: () => void) => {
+  window.addEventListener("hashchange", onStoreChange);
+  return () => window.removeEventListener("hashchange", onStoreChange);
+};
+
+const getServerHash = () => null;
+
+/**
  * Custom hook for handling hash-based scrolling to a specific element
  * Supports multiple IDs in URL hash (comma-separated, space-separated, or other delimiters)
  *
@@ -27,10 +60,11 @@ type TReturnType = {
  */
 export const useHashScroll = (args: TArgs): TReturnType => {
   const { elementId, pathname, scrollDelay = 200 } = args;
-  // State to track if the current hash contains the provided element ID
-  const [isHashMatch, setIsHashMatch] = useState(false);
-  // State to track all IDs found in the hash
-  const [hashIds, setHashIds] = useState<string[]>([]);
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hash = useSyncExternalStore(subscribeToHash, getCurrentHash, getServerHash);
+  const hashIds = useMemo(() => (elementId ? extractIdsFromHash(hash) : []), [elementId, hash]);
+  const isHashMatch = hashIds.includes(elementId);
+  const scrollTarget = useMemo(() => ({ hash, pathname, isHashMatch }), [hash, pathname, isHashMatch]);
 
   /**
    * Scrolls to the element with the provided ID
@@ -41,7 +75,8 @@ export const useHashScroll = (args: TArgs): TReturnType => {
       const element = document.getElementById(elementId);
 
       if (element) {
-        setTimeout(() => {
+        if (scrollTimeout.current !== null) clearTimeout(scrollTimeout.current);
+        scrollTimeout.current = setTimeout(() => {
           element.scrollIntoView({
             behavior: "smooth",
             block: "nearest",
@@ -58,67 +93,17 @@ export const useHashScroll = (args: TArgs): TReturnType => {
     }
   }, [elementId, scrollDelay]);
 
-  /**
-   * Extracts multiple IDs from hash string
-   * Supports various delimiters: comma, space, pipe, semicolon
-   * @param {string} hashString - The hash part of the URL
-   * @returns {string[]} - Array of clean ID strings
-   */
-  const extractIdsFromHash = (hashString: string | null): string[] => {
-    if (!hashString) return [];
+  useEffect(
+    () => () => {
+      if (scrollTimeout.current !== null) clearTimeout(scrollTimeout.current);
+    },
+    []
+  );
 
-    // Split by common delimiters and clean up
-    return hashString
-      .split(/[,\s|;]+/) // Split by comma, space, pipe, or semicolon
-      .map((id) => id.trim()) // Remove whitespace
-      .filter((id) => id.length > 0); // Remove empty strings
-  };
-
-  /**
-   * Get current hash from window.location
-   * @returns {string | null} - Current hash without the # symbol
-   */
-  const getCurrentHash = (): string | null => {
-    if (typeof window === "undefined") return null;
-    const hash = window.location.hash;
-    return hash ? hash.slice(1) : null; // Remove the # symbol
-  };
-
-  // Effect to handle hash changes and initial load
+  // Scroll on hash matches and route changes.
   useEffect(() => {
-    if (!elementId) {
-      setIsHashMatch(false);
-      setHashIds([]);
-      return;
-    }
-
-    const handleHashChange = () => {
-      const hash = getCurrentHash();
-
-      // Extract all IDs from the hash
-      const idsInHash = extractIdsFromHash(hash);
-      setHashIds(idsInHash);
-
-      // Check if provided element ID is present in the hash
-      const hashMatches = idsInHash.includes(elementId);
-      setIsHashMatch(hashMatches);
-
-      // If hash matches, attempt to scroll to the element
-      if (hashMatches) {
-        scrollToElement();
-      }
-    };
-
-    // Handle initial load
-    handleHashChange();
-
-    // Listen for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, [elementId, pathname, scrollToElement]); // Include pathname to handle route changes
+    if (scrollTarget.isHashMatch) scrollToElement();
+  }, [scrollTarget, scrollToElement]);
 
   // Return object with hash match status and utility functions
   return {

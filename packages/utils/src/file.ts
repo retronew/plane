@@ -44,7 +44,7 @@ export const getBase64Image = async (url: string): Promise<string> => {
 
   // Try to create a URL object to validate the URL
   try {
-    new URL(url);
+    new URL(url).toString();
   } catch {
     throw new Error("Invalid URL format");
   }
@@ -59,17 +59,17 @@ export const getBase64Image = async (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onloadend = () => {
+    reader.addEventListener("loadend", () => {
       if (reader.result) {
         resolve(reader.result as string);
       } else {
         reject(new Error("Failed to convert image to base64."));
       }
-    };
+    });
 
-    reader.onerror = () => {
+    reader.addEventListener("error", () => {
       reject(new Error("Failed to read the image file."));
-    };
+    });
 
     reader.readAsDataURL(blob);
   });

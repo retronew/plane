@@ -155,7 +155,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             setBannerMessage(true);
           }
         }}
-        onError={() => {
+        onErrorCapture={() => {
           setIsSubmitting(false);
         }}
       >

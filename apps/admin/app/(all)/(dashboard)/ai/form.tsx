@@ -221,7 +221,9 @@ export function InstanceAIForm(props: IInstanceAIForm) {
     <div className="space-y-8">
       <div className="grid w-full max-w-4xl grid-cols-1 items-start gap-x-10 gap-y-8 lg:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <label className="text-13 text-tertiary">{t("admin.ai.provider")}</label>
+          <label htmlFor="ai-provider" className="text-13 text-tertiary">
+            {t("admin.ai.provider")}
+          </label>
           <Combobox<string>
             items={providerKeys}
             value={selectedProvider}
@@ -230,7 +232,9 @@ export function InstanceAIForm(props: IInstanceAIForm) {
             }}
             filter={(key, query) => matchesProvider(key, query)}
           >
-            <ComboboxTrigger size="lg">{providerLabel(selectedProvider)}</ComboboxTrigger>
+            <ComboboxTrigger id="ai-provider" size="lg">
+              {providerLabel(selectedProvider)}
+            </ComboboxTrigger>
             <ComboboxContent
               aria-label={t("admin.ai.provider")}
               search={<ComboboxSearch placeholder={t("admin.ai.search_provider")} />}
@@ -245,7 +249,9 @@ export function InstanceAIForm(props: IInstanceAIForm) {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-13 text-tertiary">{t("admin.ai.protocol")}</label>
+          <label htmlFor="ai-protocol" className="text-13 text-tertiary">
+            {t("admin.ai.protocol")}
+          </label>
           <Controller
             control={control}
             name="LLM_PROVIDER"
@@ -258,7 +264,7 @@ export function InstanceAIForm(props: IInstanceAIForm) {
                   setModels([]);
                 }}
               >
-                <SelectTrigger size="lg" />
+                <SelectTrigger id="ai-protocol" size="lg" />
                 <SelectContent>
                   <SelectList>
                     {AI_PROTOCOLS.map((p) => (

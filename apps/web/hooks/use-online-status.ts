@@ -10,9 +10,8 @@ const useOnlineStatus = () => {
   // states
   const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
 
-  const updateOnlineStatus = () => setIsOnline(navigator.onLine);
-
   useEffect(() => {
+    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
     window.addEventListener("online", updateOnlineStatus);
     window.addEventListener("offline", updateOnlineStatus);
 

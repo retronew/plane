@@ -187,7 +187,12 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
             <>{watch("first_name")[0] ?? "R"}</>
           )}
         </button>
-        <input type="file" className="hidden" id="profile-image-input" />
+        <input
+          type="file"
+          className="hidden"
+          id="profile-image-input"
+          aria-label={translate("web.upload_image_0ff5")}
+        />
         <button
           className="flex items-center gap-1.5 px-2 py-1 text-13 text-tertiary hover:text-secondary"
           type="button"

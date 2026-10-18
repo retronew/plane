@@ -7,6 +7,7 @@
 import { useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { useDialogDismissal } from "@plane/hooks";
+import { useTranslation } from "@plane/i18n";
 import { cn } from "@plane/utils";
 import { PORTAL_WIDTH_CLASSES, PORTAL_POSITION_CLASSES, DEFAULT_PORTAL_ID, MODAL_Z_INDEX } from "./constants";
 import type { PortalWidth, PortalPosition } from "./constants";
@@ -14,6 +15,10 @@ import { PortalWrapper } from "./portal-wrapper";
 
 export type ModalPortalProps = {
   children: ReactNode;
+  /** Prefer a descriptive label or the ID of the visible heading. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
   className?: string;
   isOpen: boolean;
   onClose?: () => void;
@@ -46,6 +51,9 @@ export type ModalPortalProps = {
  */
 export function ModalPortal({
   children,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-describedby": ariaDescribedBy,
   isOpen,
   onClose,
   portalId = DEFAULT_PORTAL_ID,
@@ -59,6 +67,7 @@ export function ModalPortal({
   closeOnEscape = true,
   onOutsideClick,
 }: ModalPortalProps) {
+  const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useDialogDismissal({
@@ -84,10 +93,19 @@ export function ModalPortal({
   if (!isOpen) return null;
 
   const content = (
-    <div
-      className={cn("absolute inset-0 h-full w-full overflow-y-auto", className)}
+    <dialog
+      open
+      // A non-modal dialog preserves the existing document stacking and dismissal contract.
+      // Reset UA dialog margins/borders/padding so positioning remains relative to the portal.
+      className={cn(
+        "absolute inset-0 m-0 h-full max-h-none w-full max-w-none overflow-y-auto border-0 bg-transparent p-0 text-inherit",
+        className
+      )}
       style={{ zIndex: MODAL_Z_INDEX }}
-      role="dialog"
+      aria-label={ariaLabel?.trim() || (ariaLabelledBy?.trim() ? undefined : t("web.modal"))}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
+      onCancel={(event) => event.preventDefault()}
     >
       <div
         className={cn(
@@ -103,7 +121,7 @@ export function ModalPortal({
       <div ref={contentRef} className={cn(modalClasses)} style={{ zIndex: MODAL_Z_INDEX + 1 }} role="document">
         {children}
       </div>
-    </div>
+    </dialog>
   );
 
   return <PortalWrapper portalId={portalId}>{content}</PortalWrapper>;

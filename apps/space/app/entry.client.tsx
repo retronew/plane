@@ -25,4 +25,5 @@ void initPromise
         </StrictMode>
       );
     });
+    return undefined;
   });

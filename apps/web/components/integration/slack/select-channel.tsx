@@ -14,6 +14,7 @@ import type { IWorkspaceIntegration, ISlackIntegration } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
 // fetch-keys
 import { SLACK_CHANNEL_INFO } from "@plane/constants";
+import { translate } from "@plane/i18n";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
 import useIntegrationPopup from "@/hooks/use-integration-popup";
@@ -72,6 +73,7 @@ export const SelectChannel = observer(function SelectChannel({ integration }: Pr
     }).then(() => {
       setSlackChannelAvailabilityToggle(false);
       setSlackChannel(null);
+      return undefined;
     });
     appInstallationService
       .removeSlackChannel(workspaceSlug, projectId, integration.id, slackChannel?.id)
@@ -90,8 +92,13 @@ export const SelectChannel = observer(function SelectChannel({ integration }: Pr
           className={`bg-gray-700 relative inline-flex h-4 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
           role="switch"
           aria-checked
+          aria-label={translate("slack_integration.project_updates.project_updates_form.channel_dropdown.label")}
           onClick={() => {
-            slackChannelAvailabilityToggle ? handleDelete() : handleAuth();
+            if (slackChannelAvailabilityToggle) {
+              void handleDelete();
+            } else {
+              void handleAuth();
+            }
           }}
         >
           <span

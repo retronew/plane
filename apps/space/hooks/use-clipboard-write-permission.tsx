@@ -20,6 +20,7 @@ const useClipboardWritePermission = () => {
           } else {
             setClipboardWriteAllowed(false);
           }
+          return undefined;
         })
         .catch(() => {
           setClipboardWriteAllowed(false);

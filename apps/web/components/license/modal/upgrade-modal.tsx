@@ -32,22 +32,21 @@ export type PaidPlanUpgradeModalProps = {
   handleClose: () => void;
 };
 
+const handleRedirection = ({ planVariant, priceId }: TCheckoutParams) => {
+  // Get the product and price using plane community constants
+  const product = PLANE_COMMUNITY_PRODUCTS[planVariant];
+  const price = product.prices.find((candidatePrice) => candidatePrice.id === priceId);
+  const frequency = price?.recurring ?? "year";
+  // Redirect to the appropriate URL
+  const redirectUrl = SUBSCRIPTION_REDIRECTION_URLS[planVariant][frequency] ?? TALK_TO_SALES_URL;
+  window.open(redirectUrl, "_blank", "noopener,noreferrer");
+};
+
 export const PaidPlanUpgradeModal = observer(function PaidPlanUpgradeModal(props: PaidPlanUpgradeModalProps) {
   const { isOpen, handleClose } = props;
   // derived values
   const isSelfHosted = true;
   const isTrialAllowed = false;
-
-  const handleRedirection = ({ planVariant, priceId }: TCheckoutParams) => {
-    // Get the product and price using plane community constants
-    const product = PLANE_COMMUNITY_PRODUCTS[planVariant];
-    // oxlint-disable-next-line no-shadow
-    const price = product.prices.find((price) => price.id === priceId);
-    const frequency = price?.recurring ?? "year";
-    // Redirect to the appropriate URL
-    const redirectUrl = SUBSCRIPTION_REDIRECTION_URLS[planVariant][frequency] ?? TALK_TO_SALES_URL;
-    window.open(redirectUrl, "_blank");
-  };
 
   return (
     <Dialog

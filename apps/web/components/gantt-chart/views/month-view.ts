@@ -138,7 +138,7 @@ export const getMonthsBetweenTwoDates = (startDate: Date, endDate: Date): IMonth
 
   const currentDate = new Date(startYear, startMonth);
 
-  while (currentDate <= endDate) {
+  while (currentDate.getTime() <= endDate.getTime()) {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
 

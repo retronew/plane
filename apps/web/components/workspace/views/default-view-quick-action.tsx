@@ -53,7 +53,7 @@ export const DefaultWorkspaceViewQuickActions = observer(function DefaultWorkspa
       console.error("Failed to copy the view link:", error);
     }
   };
-  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank", "noopener");
 
   const MENU_ITEMS: TContextMenuItem[] = [
     {

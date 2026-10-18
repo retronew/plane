@@ -81,9 +81,8 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
       method="POST"
       action={`${API_BASE_URL}/auth/spaces/${mode === EAuthModes.SIGN_IN ? "magic-sign-in" : "magic-sign-up"}/`}
       onSubmit={() => setIsSubmitting(true)}
-      onError={() => setIsSubmitting(false)}
     >
-      <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
+      <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
       <input type="hidden" value={uniqueCodeFormData.email} name="email" />
       <input type="hidden" value={nextPath} name="next_path" />
       <div className="space-y-1">

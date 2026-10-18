@@ -12,18 +12,18 @@ import { cn } from "@plane/utils";
 // components
 import type { EditorMenuItem } from "@/components/menus";
 import {
-  BulletListItem,
-  HeadingOneItem,
-  HeadingThreeItem,
-  HeadingTwoItem,
-  NumberedListItem,
-  QuoteItem,
-  CodeItem,
-  TodoListItem,
-  TextItem,
-  HeadingFourItem,
-  HeadingFiveItem,
-  HeadingSixItem,
+  bulletListItem,
+  headingOneItem,
+  headingThreeItem,
+  headingTwoItem,
+  numberedListItem,
+  quoteItem,
+  codeItem,
+  todoListItem,
+  textItem,
+  headingFourItem,
+  headingFiveItem,
+  headingSixItem,
 } from "@/components/menus";
 // types
 import type { TEditorCommands } from "@/types";
@@ -41,18 +41,18 @@ export function BubbleMenuNodeSelector(props: Props) {
   const { options, getReferenceProps, getFloatingProps } = useFloatingMenu({});
   const { context } = options;
   const items: EditorMenuItem<TEditorCommands>[] = [
-    TextItem(editor),
-    HeadingOneItem(editor),
-    HeadingTwoItem(editor),
-    HeadingThreeItem(editor),
-    HeadingFourItem(editor),
-    HeadingFiveItem(editor),
-    HeadingSixItem(editor),
-    BulletListItem(editor),
-    NumberedListItem(editor),
-    TodoListItem(editor),
-    QuoteItem(editor),
-    CodeItem(editor),
+    textItem(editor),
+    headingOneItem(editor),
+    headingTwoItem(editor),
+    headingThreeItem(editor),
+    headingFourItem(editor),
+    headingFiveItem(editor),
+    headingSixItem(editor),
+    bulletListItem(editor),
+    numberedListItem(editor),
+    todoListItem(editor),
+    quoteItem(editor),
+    codeItem(editor),
   ] as EditorMenuItem<TEditorCommands>[];
 
   // oxlint-disable-next-line unicorn/prefer-array-find -- needs the last active item; findLast is ES2023 and consumers target ES2022

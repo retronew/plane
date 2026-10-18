@@ -42,9 +42,12 @@ export function OnboardingStepRoot(props: Props) {
   const { currentStep } = props;
   // ref for the scrollable container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrolledStepRef = useRef<EOnboardingSteps | null>(null);
 
   // scroll to top when step changes
   useEffect(() => {
+    if (lastScrolledStepRef.current === currentStep) return;
+    lastScrolledStepRef.current = currentStep;
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: 0,

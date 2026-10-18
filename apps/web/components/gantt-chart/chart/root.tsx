@@ -105,6 +105,10 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
   // states
   const [itemsContainerWidth, setItemsContainerWidth] = useState(0);
   const [fullScreenMode, setFullScreenMode] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    setPortalContainer(document.getElementById("full-screen-portal"));
+  }, []);
   const savedScroll = useRef<{ left: number; top: number } | null>(null);
   const toggleFullScreenMode = () => {
     const element = document.getElementById("gantt-container");
@@ -188,8 +192,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     if (!scrollContainer) return;
     setItemsContainerWidth(width + scrollContainer?.scrollLeft);
   };
-
-  const portalContainer = document.getElementById("full-screen-portal") as HTMLElement;
 
   const content = (
     <div

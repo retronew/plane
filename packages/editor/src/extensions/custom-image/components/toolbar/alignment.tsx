@@ -40,6 +40,7 @@ export function ImageAlignmentAction(props: Props) {
     <div ref={dropdownRef} className="relative h-full">
       <Tooltip disabled={isTouchDevice} label={translate("web.align")}>
         <button
+          aria-label={translate("web.align")}
           type="button"
           className="flex h-full items-center gap-1 text-white/60 transition-colors hover:text-white"
           onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -53,6 +54,7 @@ export function ImageAlignmentAction(props: Props) {
           {IMAGE_ALIGNMENT_OPTIONS.map((option) => (
             <Tooltip disabled={isTouchDevice} key={option.value} label={option.label}>
               <button
+                aria-label={option.label}
                 type="button"
                 className="grid h-full flex-shrink-0 place-items-center text-white/60 transition-colors hover:text-white"
                 onClick={() => {

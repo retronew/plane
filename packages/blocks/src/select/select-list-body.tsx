@@ -86,17 +86,17 @@ function ListShell(props: {
 
 type OptionRowProps<T> = Pick<
   SelectListCommonProps<T>,
-  "onSelect" | "getOptionValue" | "getOptionDisabled" | "renderOption"
+  "onSelect" | "getOptionValue" | "getOptionLabel" | "getOptionDisabled" | "renderOption"
 >;
 
 function OptionRow<T>(props: OptionRowProps<T> & { option: T }) {
-  const { option, onSelect, getOptionValue, getOptionDisabled, renderOption } = props;
+  const { option, onSelect, getOptionValue, getOptionLabel, getOptionDisabled, renderOption } = props;
   const disabled = getOptionDisabled?.(option) ?? false;
   return (
     <MenuRow
       disabled={disabled}
       onClick={() => onSelect(getOptionValue(option))}
-      render={<button type="button" disabled={disabled} />}
+      render={<button type="button" disabled={disabled} aria-label={getOptionLabel(option)} />}
     >
       {renderOption(option)}
     </MenuRow>
@@ -136,6 +136,7 @@ function StaticListBody<T>(props: SelectListCommonProps<T> & { getValues: () => 
               onSelect={onSelect}
               getOptionValue={getOptionValue}
               getOptionDisabled={getOptionDisabled}
+              getOptionLabel={getOptionLabel}
               renderOption={renderOption}
             />
           )}
@@ -162,7 +163,7 @@ function InfiniteListBody<T>(
     pinnedOptions?: T[];
   }
 ) {
-  const { getOptionValue, onSelect, getOptionDisabled, renderOption, messages, pinnedOptions } = props;
+  const { getOptionValue, getOptionLabel, onSelect, getOptionDisabled, renderOption, messages, pinnedOptions } = props;
   const { items, hasMore, query, isLoading, error, onSearchChange, onLoadMore, onOpen, onRetry } = useInfiniteOptions(
     props.getValues,
     getOptionValue
@@ -221,6 +222,7 @@ function InfiniteListBody<T>(
                 onSelect={onSelect}
                 getOptionValue={getOptionValue}
                 getOptionDisabled={getOptionDisabled}
+                getOptionLabel={getOptionLabel}
                 renderOption={renderOption}
               />
             )}

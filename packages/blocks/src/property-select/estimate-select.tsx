@@ -46,6 +46,10 @@ export type EstimateSelectProps = {
   tabIndex?: number;
 };
 
+function renderEstimateIcon() {
+  return <EstimateOutline className="size-4 shrink-0 text-primary" />;
+}
+
 /**
  * Presentational, data-source-agnostic estimate picker built on the generic single-select `Select`.
  * The client supplies `getValues` (bound to the project's active estimate system), the selected
@@ -90,7 +94,7 @@ export function EstimateSelect(props: EstimateSelectProps) {
       headerItems={clearable ? [clearOption] : undefined}
       getOptionValue={(estimate) => estimate.id}
       getOptionLabel={(estimate) => estimate.displayValue}
-      getOptionIcon={() => <EstimateOutline className="size-4 shrink-0 text-primary" />}
+      getOptionIcon={renderEstimateIcon}
     >
       <Select.Trigger<EstimateOption>
         disabled={disabled}

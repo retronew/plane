@@ -14,13 +14,13 @@ import { PageRenderer } from "@/components/editors";
 // constants
 import { DEFAULT_DISPLAY_CONFIG } from "@/constants/config";
 // extensions
-import { HeadingListExtension, SideMenuExtension } from "@/extensions";
+import { HeadingListExtension, sideMenuExtension } from "@/extensions";
 // helpers
 import { getEditorClassNames } from "@/helpers/common";
 // hooks
 import { useEditor } from "@/hooks/use-editor";
 // plane editor extensions
-import { DocumentEditorAdditionalExtensions } from "@/extensions/document-extensions";
+import { documentEditorAdditionalExtensions } from "@/extensions/document-extensions";
 // types
 import type { EditorRefApi, IDocumentEditorProps } from "@/types";
 
@@ -48,12 +48,12 @@ function DocumentEditor(props: IDocumentEditorProps) {
   const extensions: Extensions = useMemo(() => {
     const additionalExtensions: Extensions = [];
     additionalExtensions.push(
-      SideMenuExtension({
+      sideMenuExtension({
         aiEnabled: !disabledExtensions?.includes("ai"),
         dragDropEnabled: true,
       }),
       HeadingListExtension,
-      ...DocumentEditorAdditionalExtensions({
+      ...documentEditorAdditionalExtensions({
         disabledExtensions,
         extendedEditorProps,
         flaggedExtensions,

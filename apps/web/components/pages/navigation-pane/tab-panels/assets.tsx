@@ -70,6 +70,7 @@ const AssetItem = observer(function AssetItem(props: AssetItemProps) {
     return (
       <a
         href={asset.href}
+        aria-label={asset.name}
         className="group/asset-item relative flex h-12 items-center gap-2 rounded-sm border border-subtle pr-2 transition-colors hover:bg-layer-1"
       >
         <div

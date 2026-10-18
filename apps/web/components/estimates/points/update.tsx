@@ -75,7 +75,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
   const handleEstimateInputValue = (value: string) => {
     if (value.length <= MAX_ESTIMATE_POINT_INPUT_LENGTH) {
       setEstimateInputValue(() => value);
-      handleEstimatePointError && handleEstimatePointError(value, undefined);
+      if (handleEstimatePointError) handleEstimatePointError(value, undefined);
     }
   };
 
@@ -84,7 +84,7 @@ export const EstimatePointUpdate = observer(function EstimatePointUpdate(props: 
 
     if (!workspaceSlug || !projectId) return;
 
-    handleEstimatePointError && handleEstimatePointError(estimateInputValue || "", undefined, "delete");
+    if (handleEstimatePointError) handleEstimatePointError(estimateInputValue || "", undefined, "delete");
 
     if (estimateInputValue) {
       const currentEstimateType: EEstimateSystem | undefined = estimateType;

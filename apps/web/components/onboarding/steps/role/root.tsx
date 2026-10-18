@@ -160,6 +160,7 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
 
                 return (
                   <button
+                    type="button"
                     key={role.id}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -177,13 +178,12 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
                       <span className="text-body-sm-semibold">{role.label}</span>
                     </div>
                     {isSelected && (
-                      <>
-                        <button
-                          className={`border-blue-500 flex size-4 items-center justify-center rounded-sm border-2 bg-accent-primary`}
-                        >
-                          <TickOutline className="h-3 w-3 text-on-color" />
-                        </button>
-                      </>
+                      <span
+                        aria-hidden="true"
+                        className="border-blue-500 flex size-4 items-center justify-center rounded-sm border-2 bg-accent-primary"
+                      >
+                        <TickOutline className="h-3 w-3 text-on-color" />
+                      </span>
                     )}
                   </button>
                 );
@@ -208,7 +208,7 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
           onClick={handleSkip}
           stretch="full"
           size="lg"
-          render={<button type="button" className="text-tertiary" />}
+          render={<button type="button" aria-label={translate("web.skip")} className="text-tertiary" />}
           label={translate("web.skip")}
         />
       </div>

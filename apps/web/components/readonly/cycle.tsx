@@ -33,7 +33,7 @@ export const ReadonlyCycle = observer(function ReadonlyCycle(props: TReadonlyCyc
     if (projectId) {
       fetchAllCycles(workspaceSlug, projectId);
     }
-  }, [projectId, workspaceSlug]);
+  }, [projectId, workspaceSlug, fetchAllCycles]);
 
   return (
     <div className={cn("flex items-center gap-1 text-13", className)}>

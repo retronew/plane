@@ -128,7 +128,13 @@ export function Invitations(props: Props) {
         variant="ghost"
         size="lg"
         stretch="full"
-        render={<button type="button" className="bg-surface-2 text-14" />}
+        render={
+          <button
+            type="button"
+            aria-label={translate("web.create_your_own_workspace")}
+            className="bg-surface-2 text-14"
+          />
+        }
         onClick={handleCurrentViewChange}
         disabled={isJoiningWorkspaces}
         label={translate("web.create_your_own_workspace")}

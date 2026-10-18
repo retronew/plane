@@ -109,13 +109,15 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
     iconElement.innerHTML = sparklesIcon;
     aiHandleElement.appendChild(iconElement);
     // bind events
-    aiHandleElement.addEventListener("click", (e) => handleClick(e, view));
+    const clickHandler = (e: MouseEvent) => handleClick(e, view);
+    aiHandleElement.addEventListener("click", clickHandler);
 
     sideMenu?.appendChild(aiHandleElement);
 
     return {
       // destroy the handle element on un-initialize
       destroy: () => {
+        aiHandleElement?.removeEventListener("click", clickHandler);
         aiHandleElement?.remove();
         aiHandleElement = null;
       },

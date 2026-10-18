@@ -46,7 +46,7 @@ export const ReadonlyModule = observer(function ReadonlyModule(props: TReadonlyM
     if (moduleIds.length > 0 && projectId) {
       fetchModules(workspaceSlug, projectId);
     }
-  }, [value, projectId, workspaceSlug]);
+  }, [value, moduleIds.length, projectId, workspaceSlug, fetchModules]);
 
   if (modules.length === 0) {
     return (

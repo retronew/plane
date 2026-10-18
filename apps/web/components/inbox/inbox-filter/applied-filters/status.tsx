@@ -12,13 +12,14 @@ import type { TInboxIssueStatus } from "@plane/types";
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 import { InboxStatusIcon } from "../../inbox-status-icon";
 
+const currentOptionDetail = (status: TInboxIssueStatus) => INBOX_STATUS.find((s) => s.status === status) || undefined;
+
 export const InboxIssueAppliedFiltersStatus = observer(function InboxIssueAppliedFiltersStatus() {
   // hooks
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
   const { t } = useTranslation();
   // derived values
   const filteredValues = inboxFilters?.status || [];
-  const currentOptionDetail = (status: TInboxIssueStatus) => INBOX_STATUS.find((s) => s.status === status) || undefined;
 
   const handleFilterValue = (value: TInboxIssueStatus): TInboxIssueStatus[] =>
     filteredValues?.includes(value) ? filteredValues.filter((v) => v !== value) : [...filteredValues, value];

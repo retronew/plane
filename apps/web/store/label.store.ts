@@ -301,7 +301,7 @@ export class LabelStore implements ILabelStore {
   deleteLabel = async (workspaceSlug: string, projectId: string, labelId: string) => {
     if (!this.labelMap[labelId]) return;
     await this.issueLabelService.deleteIssueLabel(workspaceSlug, projectId, labelId).then(() => {
-      runInAction(() => {
+      return runInAction(() => {
         delete this.labelMap[labelId];
       });
     });

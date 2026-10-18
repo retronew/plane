@@ -6,16 +6,16 @@
 
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import type { Extensions } from "@tiptap/core";
-import Collaboration from "@tiptap/extension-collaboration";
+import { Collaboration } from "@tiptap/extension-collaboration";
 // react
 import type React from "react";
 import { useEffect, useMemo } from "react";
 // extensions
-import { HeadingListExtension, SideMenuExtension } from "@/extensions";
+import { HeadingListExtension, sideMenuExtension } from "@/extensions";
 // hooks
 import { useEditor } from "@/hooks/use-editor";
 // plane editor extensions
-import { DocumentEditorAdditionalExtensions } from "@/extensions/document-extensions";
+import { documentEditorAdditionalExtensions } from "@/extensions/document-extensions";
 // types
 import type {
   TCollaborativeEditorHookProps,
@@ -72,7 +72,7 @@ export const useCollaborativeEditor = (props: UseCollaborativeEditorArgs) => {
   // Memoize extensions to avoid unnecessary editor recreations
   const editorExtensions = useMemo(
     () => [
-      SideMenuExtension({
+      sideMenuExtension({
         aiEnabled: !disabledExtensions?.includes("ai"),
         dragDropEnabled,
       }),
@@ -82,7 +82,7 @@ export const useCollaborativeEditor = (props: UseCollaborativeEditorArgs) => {
         field: "default",
       }),
       ...extensions,
-      ...DocumentEditorAdditionalExtensions({
+      ...documentEditorAdditionalExtensions({
         disabledExtensions,
         extendedEditorProps,
         fileHandler,

@@ -52,12 +52,17 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
     workspaceId,
     ...rest
   } = props;
-  function isMutableRefObject<T>(ref: React.ForwardedRef<T>): ref is React.MutableRefObject<T | null> {
-    return !!ref && typeof ref === "object" && "current" in ref;
-  }
+  const [editorApi, setEditorApi] = React.useState<EditorRefApi | null>(null);
+  const attachEditor = React.useCallback(
+    (instance: EditorRefApi | null) => {
+      setEditorApi(instance);
+      if (typeof ref === "function") ref(instance);
+      else if (ref) ref.current = instance;
+    },
+    [ref]
+  );
   // derived values
   const isEmpty = isCommentEmpty(props.initialValue);
-  const editorRef = isMutableRefObject<EditorRefApi>(ref) ? ref.current : null;
   const { liteText: liteTextEditorExtensions } = useEditorFlagging(anchor);
   // parse content
   const { getEditorMetaData } = useParseEditorContent({
@@ -67,7 +72,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   return (
     <div className="space-y-3 rounded-sm border border-subtle p-3">
       <LiteTextEditorWithRef
-        ref={ref}
+        ref={attachEditor}
         disabledExtensions={[...liteTextEditorExtensions.disabled, ...additionalDisabledExtensions]}
         flaggedExtensions={liteTextEditorExtensions.flagged}
         editable={editable}
@@ -78,7 +83,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
         })}
         getEditorMetaData={getEditorMetaData}
         mentionHandler={{
-          renderComponent: (props) => <EditorMentionsRoot {...props} />,
+          renderComponent: (mentionProps) => <EditorMentionsRoot {...mentionProps} />,
         }}
         extendedEditorProps={{}}
         {...rest}
@@ -90,7 +95,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
           executeCommand={(item) => {
             // TODO: update this while toolbar homogenization
             // @ts-expect-error type mismatch here
-            editorRef?.executeMenuItemCommand({
+            editorApi?.executeMenuItemCommand({
               itemKey: item.itemKey,
               ...item.extraProps,
             });
@@ -99,7 +104,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
           showSubmitButton={showSubmitButton}
           handleSubmit={(e) => rest.onEnterKeyPress?.(e)}
           isCommentEmpty={isEmpty}
-          editorRef={editorRef}
+          editorRef={editorApi}
         />
       )}
     </div>

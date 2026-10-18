@@ -64,6 +64,7 @@ export function BlockMenu(props: Props) {
 
   const openBlockMenu = useCallback(() => {
     if (!isOpen) {
+      setIsAnimatedIn(false);
       setIsOpen(true);
       editor.commands.addActiveDropbarExtension(CORE_EXTENSIONS.SIDE_MENU);
     }
@@ -71,6 +72,7 @@ export function BlockMenu(props: Props) {
 
   const closeBlockMenu = useCallback(() => {
     if (isOpen) {
+      setIsAnimatedIn(false);
       setIsOpen(false);
       editor.commands.removeActiveDropbarExtension(CORE_EXTENSIONS.SIDE_MENU);
     }
@@ -129,12 +131,11 @@ export function BlockMenu(props: Props) {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("scroll", handleScroll, true);
     };
-  }, [editor.commands, handleClickDragHandle, closeBlockMenu]);
+  }, [handleClickDragHandle, closeBlockMenu]);
 
   // Animation effect
   useEffect(() => {
     if (isOpen) {
-      setIsAnimatedIn(false);
       // Add a small delay before starting the animation
       const timeout = setTimeout(() => {
         requestAnimationFrame(() => {
@@ -143,8 +144,6 @@ export function BlockMenu(props: Props) {
       }, 50);
 
       return () => clearTimeout(timeout);
-    } else {
-      setIsAnimatedIn(false);
     }
   }, [isOpen]);
 

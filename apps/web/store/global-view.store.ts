@@ -196,7 +196,7 @@ export class GlobalViewStore implements IGlobalViewStore {
    */
   deleteGlobalView = async (workspaceSlug: string, viewId: string): Promise<any> =>
     await this.workspaceService.deleteView(workspaceSlug, viewId).then(() => {
-      runInAction(() => {
+      return runInAction(() => {
         delete this.globalViewMap[viewId];
       });
     });

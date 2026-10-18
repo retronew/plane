@@ -123,6 +123,7 @@ export function SelectTriggerChrome({
         render={
           <button
             type="button"
+            aria-label={buttonProps["aria-label"] ?? (typeof label === "string" ? label : undefined)}
             className={cn(
               "outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-strong focus-visible:outline-solid",
               className

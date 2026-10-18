@@ -58,7 +58,7 @@ export const WorkspaceViewQuickActions = observer(function WorkspaceViewQuickAct
     });
   };
 
-  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank");
+  const handleOpenInNewTab = () => window.open(`/${viewLink}`, "_blank", "noopener");
 
   const MENU_ITEMS = useViewMenuItems({
     isOwner,

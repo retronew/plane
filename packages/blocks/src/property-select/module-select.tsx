@@ -61,6 +61,14 @@ function triggerLabel(
   return selected.map((module) => module.name).join(", ");
 }
 
+function renderModuleIcon() {
+  return <ModuleOutline className="size-4 shrink-0 text-primary" />;
+}
+
+function renderModuleTrailing(module: ModuleOption) {
+  return module.identifier ? <ProjectIdentifierElement show identifier={module.identifier} /> : undefined;
+}
+
 /**
  * Presentational, data-source-agnostic module picker.
  * Pass `multiple={true}` for multi-select (issue sidebar); omit or pass `multiple={false}` for
@@ -96,13 +104,8 @@ export function ModuleSelect(props: ModuleSelectProps) {
         onClose={onClose}
         getOptionValue={(module) => module.id}
         getOptionLabel={(module) => module.name}
-        getOptionIcon={() => <ModuleOutline className="size-4 shrink-0 text-primary" />}
-        getOptionTrailing={
-          showIdentifier
-            ? (module) =>
-                module.identifier ? <ProjectIdentifierElement show identifier={module.identifier} /> : undefined
-            : undefined
-        }
+        getOptionIcon={renderModuleIcon}
+        getOptionTrailing={showIdentifier ? renderModuleTrailing : undefined}
       >
         <Select.Trigger<ModuleOption>
           disabled={disabled}
@@ -140,6 +143,8 @@ export function ModuleSelect(props: ModuleSelectProps) {
 
   // "table-cell" / "pill" summarise as "N modules"; "select" / "select-ghost" list per-module pills instead.
   const showCountOnMultiple = variant === "table-cell" || variant.startsWith("pill-");
+  const renderTriggerIcon = (modules: ModuleOption[]) =>
+    !showCountOnMultiple && modules.length > 0 ? undefined : <ModuleOutline />;
 
   return (
     <Select<ModuleOption>
@@ -154,20 +159,15 @@ export function ModuleSelect(props: ModuleSelectProps) {
       onClose={onClose}
       getOptionValue={(module) => module.id}
       getOptionLabel={(module) => module.name}
-      getOptionIcon={() => <ModuleOutline className="size-4 shrink-0 text-primary" />}
-      getOptionTrailing={
-        showIdentifier
-          ? (module) =>
-              module.identifier ? <ProjectIdentifierElement show identifier={module.identifier} /> : undefined
-          : undefined
-      }
+      getOptionIcon={renderModuleIcon}
+      getOptionTrailing={showIdentifier ? renderModuleTrailing : undefined}
     >
       <Select.Trigger<ModuleOption>
         disabled={disabled}
         variant={variant}
         tabIndex={tabIndex}
         className={className}
-        prependIcon={(modules) => (!showCountOnMultiple && modules.length > 0 ? undefined : <ModuleOutline />)}
+        prependIcon={renderTriggerIcon}
         label={(modules) =>
           triggerLabel(
             modules,

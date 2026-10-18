@@ -5,8 +5,9 @@
  */
 
 import { NodeSelection } from "@tiptap/pm/state";
-import React, { useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
+import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 // plane imports
+import { translate } from "@plane/i18n";
 import { cn } from "@plane/utils";
 // local imports
 import { ECustomImageAttributeNames } from "../types";
@@ -52,12 +53,23 @@ export function CustomImageBlock(props: CustomImageBlockProps) {
     status,
   } = node.attrs;
   // states
-  const [size, setSize] = useState<TCustomImageSize>({
+  const [sizeDraft, setSize] = useState<TCustomImageSize>({
     width: ensurePixelString(nodeWidth, "35%") ?? "35%",
     height: ensurePixelString(nodeHeight, "auto") ?? "auto",
     aspectRatio: nodeAspectRatio || null,
   });
   const [isResizing, setIsResizing] = useState(false);
+  const size = useMemo<TCustomImageSize>(
+    () =>
+      isResizing
+        ? sizeDraft
+        : {
+            width: ensurePixelString(nodeWidth, "35%") ?? "35%",
+            height: ensurePixelString(nodeHeight, "auto") ?? "auto",
+            aspectRatio: nodeAspectRatio || sizeDraft.aspectRatio,
+          },
+    [isResizing, sizeDraft, nodeWidth, nodeHeight, nodeAspectRatio]
+  );
   const [initialResizeComplete, setInitialResizeComplete] = useState(false);
   // refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,28 +132,20 @@ export function CustomImageBlock(props: CustomImageBlockProps) {
       // as the aspect ratio in not stored for old images, we need to update the attrs
       // or if aspectRatioCalculated from the image's width and height doesn't match stored aspectRatio then also we'll update the attrs
       if (!nodeAspectRatio || nodeAspectRatio !== aspectRatioCalculated) {
-        setSize((prevSize) => {
-          const newSize = { ...prevSize, aspectRatio: aspectRatioCalculated };
-          updateAttributesSafely(
-            newSize,
-            "Failed to update attributes while initializing images with width but no aspect ratio:"
-          );
-          return newSize;
-        });
+        const newSize: TCustomImageSize = {
+          width: ensurePixelString(nodeWidth, "35%") ?? "35%",
+          height: ensurePixelString(nodeHeight, "auto") ?? "auto",
+          aspectRatio: aspectRatioCalculated,
+        };
+        setSize(newSize);
+        updateAttributesSafely(
+          newSize,
+          "Failed to update attributes while initializing images with width but no aspect ratio:"
+        );
       }
     }
     setInitialResizeComplete(true);
-  }, [nodeWidth, updateAttributesSafely, editorContainer, nodeAspectRatio, setEditorContainer]);
-
-  // for real time resizing
-  useLayoutEffect(() => {
-    setSize((prevSize) => ({
-      ...prevSize,
-      width: ensurePixelString(nodeWidth) ?? "35%",
-      height: ensurePixelString(nodeHeight) ?? "auto",
-      aspectRatio: nodeAspectRatio,
-    }));
-  }, [nodeWidth, nodeHeight, nodeAspectRatio]);
+  }, [nodeWidth, nodeHeight, updateAttributesSafely, editorContainer, nodeAspectRatio, setEditorContainer]);
 
   const handleResize = useCallback(
     (e: MouseEvent | TouchEvent) => {
@@ -182,7 +186,7 @@ export function CustomImageBlock(props: CustomImageBlockProps) {
       window.addEventListener("mousemove", handleResize);
       window.addEventListener("mouseup", handleResizeEnd);
       window.addEventListener("mouseleave", handleResizeEnd);
-      window.addEventListener("touchmove", handleResize);
+      window.addEventListener("touchmove", handleResize, { passive: true });
       window.addEventListener("touchend", handleResizeEnd);
 
       return () => {
@@ -235,10 +239,11 @@ export function CustomImageBlock(props: CustomImageBlockProps) {
         "ml-[100%] -translate-x-full": nodeAlignment === "right",
       })}
     >
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Pointer selection sets ProseMirror's NodeSelection (and blurs the virtual keyboard on touch); this selectable editor node already uses ProseMirror keyboard navigation. */}
       <div
         ref={containerRef}
-        className="group/image-component relative inline-block max-w-full"
         onMouseDown={handleImageMouseDown}
+        className="group/image-component relative inline-block max-w-full"
         style={{
           width: size.width,
           ...(size.aspectRatio && { aspectRatio: size.aspectRatio }),
@@ -333,7 +338,9 @@ export function CustomImageBlock(props: CustomImageBlockProps) {
                 }
               )}
             />
-            <div
+            <button
+              type="button"
+              aria-label={translate("web.image")}
               className={cn(
                 "absolute bottom-0 size-4 translate-y-1/2 rounded-full border-2 border-white bg-accent-primary transition-opacity duration-100 ease-in-out",
                 {

@@ -6,7 +6,7 @@
 
 import type { Editor } from "@tiptap/core";
 import { Extension } from "@tiptap/core";
-import { useCallback, useRef } from "react";
+import { useState } from "react";
 
 /**
  * Creates a title editor extension that enables keyboard navigation to the main editor
@@ -145,31 +145,20 @@ export const createMainNavigationExtension = (getTitleEditor: () => Editor | nul
  * @returns Object with editor setters and extensions
  */
 export const useEditorNavigation = () => {
-  // Create refs to store editor instances
-  const titleEditorRef = useRef<Editor | null>(null);
-  const mainEditorRef = useRef<Editor | null>(null);
-
-  // Create stable getter functions
-  const getTitleEditor = useCallback(() => titleEditorRef.current, []);
-  const getMainEditor = useCallback(() => mainEditorRef.current, []);
-
-  // Create stable setter functions
-  const setTitleEditor = useCallback((editor: Editor | null) => {
-    titleEditorRef.current = editor;
-  }, []);
-
-  const setMainEditor = useCallback((editor: Editor | null) => {
-    mainEditorRef.current = editor;
-  }, []);
-
-  // Create extension factories that access editor refs
-  const titleNavigationExtension = createTitleNavigationExtension(getMainEditor);
-  const mainNavigationExtension = createMainNavigationExtension(getTitleEditor);
-
-  return {
-    setTitleEditor,
-    setMainEditor,
-    titleNavigationExtension,
-    mainNavigationExtension,
-  };
+  // The registry belongs to the extension event handlers, not React rendering.
+  const [navigation] = useState(() => {
+    let titleEditor: Editor | null = null;
+    let mainEditor: Editor | null = null;
+    return {
+      setTitleEditor: (editor: Editor | null) => {
+        titleEditor = editor;
+      },
+      setMainEditor: (editor: Editor | null) => {
+        mainEditor = editor;
+      },
+      titleNavigationExtension: createTitleNavigationExtension(() => mainEditor),
+      mainNavigationExtension: createMainNavigationExtension(() => titleEditor),
+    };
+  });
+  return navigation;
 };

@@ -67,7 +67,7 @@ export type EditorMenuItem<T extends TEditorCommands> = {
   isActive: isActiveFunction<T>;
 };
 
-export const TextItem = (editor: Editor): EditorMenuItem<"text"> => ({
+export const textItem = (editor: Editor): EditorMenuItem<"text"> => ({
   key: "text",
   name: "Text",
   isActive: () => editor.isActive(CORE_EXTENSIONS.PARAGRAPH),
@@ -91,25 +91,25 @@ const HeadingItem = <T extends SupportedHeadingLevels>(
   icon,
 });
 
-export const HeadingOneItem = (editor: Editor): EditorMenuItem<"h1"> =>
+export const headingOneItem = (editor: Editor): EditorMenuItem<"h1"> =>
   HeadingItem(editor, 1, "h1", "Heading 1", H1Outline);
 
-export const HeadingTwoItem = (editor: Editor): EditorMenuItem<"h2"> =>
+export const headingTwoItem = (editor: Editor): EditorMenuItem<"h2"> =>
   HeadingItem(editor, 2, "h2", "Heading 2", H2Outline);
 
-export const HeadingThreeItem = (editor: Editor): EditorMenuItem<"h3"> =>
+export const headingThreeItem = (editor: Editor): EditorMenuItem<"h3"> =>
   HeadingItem(editor, 3, "h3", "Heading 3", H3Outline);
 
-export const HeadingFourItem = (editor: Editor): EditorMenuItem<"h4"> =>
+export const headingFourItem = (editor: Editor): EditorMenuItem<"h4"> =>
   HeadingItem(editor, 4, "h4", "Heading 4", H4Outline);
 
-export const HeadingFiveItem = (editor: Editor): EditorMenuItem<"h5"> =>
+export const headingFiveItem = (editor: Editor): EditorMenuItem<"h5"> =>
   HeadingItem(editor, 5, "h5", "Heading 5", H5Outline);
 
-export const HeadingSixItem = (editor: Editor): EditorMenuItem<"h6"> =>
+export const headingSixItem = (editor: Editor): EditorMenuItem<"h6"> =>
   HeadingItem(editor, 6, "h6", "Heading 6", H6Outline);
 
-export const BoldItem = (editor: Editor): EditorMenuItem<"bold"> => ({
+export const boldItem = (editor: Editor): EditorMenuItem<"bold"> => ({
   key: "bold",
   name: "Bold",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.BOLD),
@@ -117,7 +117,7 @@ export const BoldItem = (editor: Editor): EditorMenuItem<"bold"> => ({
   icon: BoldOutline,
 });
 
-export const ItalicItem = (editor: Editor): EditorMenuItem<"italic"> => ({
+export const italicItem = (editor: Editor): EditorMenuItem<"italic"> => ({
   key: "italic",
   name: "Italic",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.ITALIC),
@@ -125,7 +125,7 @@ export const ItalicItem = (editor: Editor): EditorMenuItem<"italic"> => ({
   icon: ItalicOutline,
 });
 
-export const UnderLineItem = (editor: Editor): EditorMenuItem<"underline"> => ({
+export const underLineItem = (editor: Editor): EditorMenuItem<"underline"> => ({
   key: "underline",
   name: "Underline",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.UNDERLINE),
@@ -133,7 +133,7 @@ export const UnderLineItem = (editor: Editor): EditorMenuItem<"underline"> => ({
   icon: UnderlineOutline,
 });
 
-export const StrikeThroughItem = (editor: Editor): EditorMenuItem<"strikethrough"> => ({
+export const strikeThroughItem = (editor: Editor): EditorMenuItem<"strikethrough"> => ({
   key: "strikethrough",
   name: "Strikethrough",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.STRIKETHROUGH),
@@ -141,7 +141,7 @@ export const StrikeThroughItem = (editor: Editor): EditorMenuItem<"strikethrough
   icon: StrikethroughOutline,
 });
 
-export const BulletListItem = (editor: Editor): EditorMenuItem<"bulleted-list"> => ({
+export const bulletListItem = (editor: Editor): EditorMenuItem<"bulleted-list"> => ({
   key: "bulleted-list",
   name: "Bulleted list",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.BULLET_LIST),
@@ -149,7 +149,7 @@ export const BulletListItem = (editor: Editor): EditorMenuItem<"bulleted-list"> 
   icon: ListOutline,
 });
 
-export const NumberedListItem = (editor: Editor): EditorMenuItem<"numbered-list"> => ({
+export const numberedListItem = (editor: Editor): EditorMenuItem<"numbered-list"> => ({
   key: "numbered-list",
   name: "Numbered list",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.ORDERED_LIST),
@@ -157,7 +157,7 @@ export const NumberedListItem = (editor: Editor): EditorMenuItem<"numbered-list"
   icon: NumberedListOutline,
 });
 
-export const TodoListItem = (editor: Editor): EditorMenuItem<"to-do-list"> => ({
+export const todoListItem = (editor: Editor): EditorMenuItem<"to-do-list"> => ({
   key: "to-do-list",
   name: "To-do list",
   isActive: () => editor.isActive(CORE_EXTENSIONS.TASK_ITEM),
@@ -165,7 +165,7 @@ export const TodoListItem = (editor: Editor): EditorMenuItem<"to-do-list"> => ({
   icon: CheckSquareOutline,
 });
 
-export const QuoteItem = (editor: Editor): EditorMenuItem<"quote"> => ({
+export const quoteItem = (editor: Editor): EditorMenuItem<"quote"> => ({
   key: "quote",
   name: "Quote",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.BLOCKQUOTE),
@@ -173,7 +173,7 @@ export const QuoteItem = (editor: Editor): EditorMenuItem<"quote"> => ({
   icon: QuoteOutline,
 });
 
-export const CodeItem = (editor: Editor): EditorMenuItem<"code"> => ({
+export const codeItem = (editor: Editor): EditorMenuItem<"code"> => ({
   key: "code",
   name: "Code",
   isActive: () => editor?.isActive(CORE_EXTENSIONS.CODE_INLINE) || editor?.isActive(CORE_EXTENSIONS.CODE_BLOCK),
@@ -249,7 +249,7 @@ export const BackgroundColorItem = (editor: Editor): EditorMenuItem<"background-
   icon: PaletteOutline,
 });
 
-export const TextAlignItem = (editor: Editor): EditorMenuItem<"text-align"> => ({
+export const textAlignItem = (editor: Editor): EditorMenuItem<"text-align"> => ({
   key: "text-align",
   name: "Text align",
   isActive: (props) => editor.isActive({ textAlign: props?.alignment }),
@@ -264,28 +264,28 @@ export const getEditorMenuItems = (editor: Editor | null): EditorMenuItem<TEdito
   if (!editor) return [];
 
   return [
-    TextItem(editor),
-    HeadingOneItem(editor),
-    HeadingTwoItem(editor),
-    HeadingThreeItem(editor),
-    HeadingFourItem(editor),
-    HeadingFiveItem(editor),
-    HeadingSixItem(editor),
-    BoldItem(editor),
-    ItalicItem(editor),
-    UnderLineItem(editor),
-    StrikeThroughItem(editor),
-    BulletListItem(editor),
-    TodoListItem(editor),
-    CodeItem(editor),
-    NumberedListItem(editor),
-    QuoteItem(editor),
+    textItem(editor),
+    headingOneItem(editor),
+    headingTwoItem(editor),
+    headingThreeItem(editor),
+    headingFourItem(editor),
+    headingFiveItem(editor),
+    headingSixItem(editor),
+    boldItem(editor),
+    italicItem(editor),
+    underLineItem(editor),
+    strikeThroughItem(editor),
+    bulletListItem(editor),
+    todoListItem(editor),
+    codeItem(editor),
+    numberedListItem(editor),
+    quoteItem(editor),
     TableItem(editor),
     ImageItem(editor),
     HorizontalRuleItem(editor),
     LinkItem(editor),
     TextColorItem(editor),
     BackgroundColorItem(editor),
-    TextAlignItem(editor),
+    textAlignItem(editor),
   ] as EditorMenuItem<TEditorCommands>[];
 };

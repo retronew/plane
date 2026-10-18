@@ -18,14 +18,13 @@ type SkeletonProps = {
 function SkeletonRoot({ children, className = "", ariaLabel }: SkeletonProps) {
   const { t } = useTranslation();
   return (
-    <div
+    <output
       data-slot="skeleton"
-      className={cn("animate-pulse", className)}
-      role="status"
+      className={cn("block animate-pulse", className)}
       aria-label={ariaLabel ?? t("web.ui.loading_content")}
     >
       {children}
-    </div>
+    </output>
   );
 }
 

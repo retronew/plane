@@ -48,7 +48,7 @@ export function PageSearchInput(props: Props) {
         <IconButton
           variant="ghost"
           size="md"
-          render={<button type="button" className="my-auto -mr-1 shrink-0" />}
+          render={<button type="button" className="my-auto -mr-1 shrink-0" aria-label={t("search")} />}
           onClick={() => {
             setIsSearchOpen(true);
             inputRef.current?.focus();
@@ -70,6 +70,7 @@ export function PageSearchInput(props: Props) {
           ref={inputRef}
           className="ml-2 w-full max-w-[234px] border-none bg-transparent text-13 text-primary placeholder:text-placeholder focus:outline-none"
           placeholder={t("web.search_pages")}
+          aria-label={t("web.search_pages")}
           value={searchQuery}
           onChange={(e) => updateSearchQuery(e.target.value)}
           onKeyDown={handleInputKeyDown}
@@ -78,6 +79,7 @@ export function PageSearchInput(props: Props) {
           <button
             type="button"
             className="grid place-items-center"
+            aria-label={t("close")}
             onClick={() => {
               updateSearchQuery("");
               setIsSearchOpen(false);

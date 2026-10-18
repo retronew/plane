@@ -16,6 +16,8 @@ type TickProps = {
   offset?: number;
 };
 const tickClassName = "fill-secondary text-11";
+const standardNumberFormatter = new Intl.NumberFormat(undefined, { notation: "standard", maximumFractionDigits: 1 });
+const compactNumberFormatter = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 const labelFor = ({ payload, getLabel }: TickProps) => {
   const value = payload?.value ?? "";
   return getLabel ? getLabel(value) : String(value);
@@ -35,10 +37,7 @@ export const CustomYAxisTick = memo(function CustomYAxisTick({ x = 0, y = 0, pay
   const value = payload?.value ?? "";
   const label =
     typeof value === "number"
-      ? new Intl.NumberFormat(undefined, {
-          notation: Math.abs(value) >= 10000 ? "compact" : "standard",
-          maximumFractionDigits: 1,
-        }).format(value)
+      ? (Math.abs(value) >= 10000 ? compactNumberFormatter : standardNumberFormatter).format(value)
       : value;
   return (
     <g transform={`translate(${x},${y})`}>

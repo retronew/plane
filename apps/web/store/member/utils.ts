@@ -109,7 +109,8 @@ export const sortMembers = <T>(
 
   const { field, direction } = parseOrderKey(orderBy);
 
-  return [...members].sort((a, b) => {
+  const sortedMembers = [...members];
+  sortedMembers.sort((a, b) => {
     const aKey = getMemberKey(a);
     const bKey = getMemberKey(b);
     const aMemberDetails = memberDetailsMap[aKey];
@@ -144,6 +145,7 @@ export const sortMembers = <T>(
 
     return direction === "desc" ? -comparison : comparison;
   });
+  return sortedMembers;
 };
 
 // Specific implementations using the unified functions

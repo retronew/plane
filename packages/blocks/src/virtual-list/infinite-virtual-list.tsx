@@ -129,8 +129,8 @@ export function InfiniteVirtualList({
     });
   }, []);
 
-  // Observe the sentinel against the OWNED scroll container (not the viewport). `count` is in the deps
-  // so the observer re-arms after each appended page: if the freshly loaded rows still don't fill the
+  // Observe the sentinel against the OWNED scroll container (not the viewport). The sentinel is keyed
+  // by count so observation re-arms after each appended page: if the freshly loaded rows still don't fill the
   // viewport the sentinel stays visible and the next page loads — bounded by the container height,
   // never a cascade because requestLoadMore short-circuits while a fetch is in flight.
   useEffect(() => {
@@ -143,7 +143,7 @@ export function InfiniteVirtualList({
     );
     observer.observe(sentinelEl);
     return () => observer.disconnect();
-  }, [scrollEl, sentinelEl, hasMore, loadMoreMargin, count, requestLoadMore]);
+  }, [scrollEl, sentinelEl, hasMore, loadMoreMargin, requestLoadMore]);
 
   return (
     <div ref={setScrollEl} {...scrollContainerProps}>
@@ -161,7 +161,7 @@ export function InfiniteVirtualList({
         {children}
       </VirtualList>
       {hasMore && (
-        <div ref={setSentinelEl} className={loaderClassName}>
+        <div key={count} ref={setSentinelEl} className={loaderClassName}>
           {isLoadingMore
             ? (loader ?? (
                 <VirtualListSkeleton

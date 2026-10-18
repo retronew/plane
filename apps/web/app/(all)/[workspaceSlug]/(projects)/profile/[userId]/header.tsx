@@ -81,6 +81,7 @@ export const UserProfileHeader = observer(function UserProfileHeader(props: TUse
               render={
                 <button
                   type="button"
+                  aria-label={type ? t(type) : undefined}
                   className="flex grow items-center justify-center gap-2 rounded-md border border-subtle px-2 py-1.5 text-13 text-secondary"
                 />
               }

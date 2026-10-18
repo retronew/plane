@@ -72,6 +72,7 @@ export function BubbleMenuColorSelector(props: Props) {
             {COLORS_LIST.map((color) => (
               <button
                 key={color.key}
+                aria-label={color.label}
                 type="button"
                 className="size-6 flex-shrink-0 rounded-sm border-[0.5px] border-strong-1 transition-opacity hover:opacity-60"
                 style={{
@@ -83,6 +84,7 @@ export function BubbleMenuColorSelector(props: Props) {
             <button
               type="button"
               className="grid size-6 flex-shrink-0 place-items-center rounded-sm border-[0.5px] border-strong-1 text-tertiary transition-colors hover:bg-layer-1"
+              aria-label={translate("web.text_colors")}
               onClick={() => TextColorItem(editor).command({ color: undefined })}
             >
               <Ban className="size-4" />
@@ -95,6 +97,7 @@ export function BubbleMenuColorSelector(props: Props) {
             {COLORS_LIST.map((color) => (
               <button
                 key={color.key}
+                aria-label={color.label}
                 type="button"
                 className="size-6 flex-shrink-0 rounded-sm border-[0.5px] border-strong-1 transition-opacity hover:opacity-60"
                 style={{
@@ -106,6 +109,7 @@ export function BubbleMenuColorSelector(props: Props) {
             <button
               type="button"
               className="grid size-6 flex-shrink-0 place-items-center rounded-sm border-[0.5px] border-strong-1 text-tertiary transition-colors hover:bg-layer-1"
+              aria-label={translate("web.background_colors")}
               onClick={() => BackgroundColorItem(editor).command({ color: undefined })}
             >
               <Ban className="size-4" />

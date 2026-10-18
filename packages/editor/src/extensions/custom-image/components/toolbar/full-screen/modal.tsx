@@ -86,15 +86,16 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         targetZoom = [...ZOOM_STEPS].reverse().find((step) => step < prev) ?? MIN_ZOOM;
       }
 
-      // Reset position when zoom matches initial magnification
-      if (targetZoom === 1 && imgRef.current) {
-        imgRef.current.style.left = "0px";
-        imgRef.current.style.top = "0px";
-      }
-
       return targetZoom;
     });
   }, []);
+
+  useEffect(() => {
+    if (magnification === 1 && imgRef.current) {
+      imgRef.current.style.left = "0px";
+      imgRef.current.style.top = "0px";
+    }
+  }, [magnification]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -165,12 +166,6 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
           const newZoom = prev * (1 - delta * ZOOM_SPEED);
           const clampedZoom = Math.min(Math.max(newZoom, MIN_ZOOM), MAX_ZOOM);
 
-          // Reset position when zoom matches initial magnification
-          if (clampedZoom === 1 && imgRef.current) {
-            imgRef.current.style.left = "0px";
-            imgRef.current.style.top = "0px";
-          }
-
           return clampedZoom;
         });
         return;
@@ -205,6 +200,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         "cursor-default": !isDragging,
         "cursor-grabbing": isDragging,
       })}
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Keep the viewer in the editor portal's z-index stack; a modal native dialog would enter the browser top layer and change nested overlay/focus behavior.
       role="dialog"
       aria-modal="true"
       aria-label={translate("web.fullscreen_image_viewer")}
@@ -223,7 +219,9 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         >
           <CloseOutline className="size-8 text-white/60 transition-colors hover:text-white" />
         </button>
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Mousedown starts coordinate-based panning only for oversized images; the image retains its semantics, while zoom and close have buttons and keyboard shortcuts. */}
         <img
+          onMouseDown={handleMouseDown}
           ref={setImageRef}
           src={src}
           alt={translate("web.image")}
@@ -238,7 +236,6 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
             transformOrigin: "center",
             transition: "width 0.2s ease, transform 0.2s ease",
           }}
-          onMouseDown={handleMouseDown}
         />
         <div className="fixed bottom-10 left-1/2 flex -translate-x-1/2 items-center justify-center gap-1 divide-x divide-subtle-1 rounded-md border border-subtle-1 bg-black py-2">
           <div className="flex items-center">
@@ -277,7 +274,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
           {!isTouchDevice && (
             <button
               type="button"
-              onClick={() => window.open(downloadSrc, "_blank")}
+              onClick={() => window.open(downloadSrc, "_blank", "noopener,noreferrer")}
               className="grid size-8 flex-shrink-0 place-items-center text-white/60 transition-colors duration-200 hover:text-white"
               aria-label={translate("web.download_image")}
             >
@@ -287,7 +284,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
           {!isTouchDevice && (
             <button
               type="button"
-              onClick={() => window.open(src, "_blank")}
+              onClick={() => window.open(src, "_blank", "noopener,noreferrer")}
               className="grid size-8 flex-shrink-0 place-items-center text-white/60 transition-colors duration-200 hover:text-white"
               aria-label={translate("web.open_image_in_new_tab")}
             >

@@ -32,6 +32,13 @@ type Props = {
   state?: TCollabValue["state"];
 };
 
+const handleContainerMouseLeave = () => {
+  const dragHandleElement = document.querySelector("#editor-side-menu");
+  if (!dragHandleElement?.classList.contains("side-menu-hidden")) {
+    dragHandleElement?.classList.add("side-menu-hidden");
+  }
+};
+
 export function EditorContainer(props: Props) {
   const { children, displayConfig, editor, editorContainerClassName, id, isTouchDevice, provider, state } = props;
   // refs
@@ -108,60 +115,57 @@ export function EditorContainer(props: Props) {
     }
   }, [scrollToNode, provider, state]);
 
-  const handleContainerClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (event.target !== event.currentTarget) return;
-    if (!editor) return;
-    if (!editor.isEditable) return;
-    try {
-      if (editor.isFocused) return; // If editor is already focused, do nothing
+  const handleContainerClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      if (event.target !== event.currentTarget) return;
+      if (!editor) return;
+      if (!editor.isEditable) return;
+      try {
+        if (editor.isFocused) return; // If editor is already focused, do nothing
 
-      const { selection } = editor.state;
-      const currentNode = selection.$from.node();
+        const { selection } = editor.state;
+        const currentNode = selection.$from.node();
 
-      editor?.chain().focus("end", { scrollIntoView: false }).run(); // Focus the editor at the end
+        editor?.chain().focus("end", { scrollIntoView: false }).run(); // Focus the editor at the end
 
-      if (
-        currentNode.content.size === 0 && // Check if the current node is empty
-        !(
-          editor.isActive(CORE_EXTENSIONS.ORDERED_LIST) ||
-          editor.isActive(CORE_EXTENSIONS.BULLET_LIST) ||
-          editor.isActive(CORE_EXTENSIONS.TASK_ITEM) ||
-          editor.isActive(CORE_EXTENSIONS.TABLE) ||
-          editor.isActive(CORE_EXTENSIONS.BLOCKQUOTE) ||
-          editor.isActive(CORE_EXTENSIONS.CODE_BLOCK)
-        ) // Check if it's an empty node within an orderedList, bulletList, taskItem, table, quote or code block
-      ) {
-        return;
-      }
-
-      // Get the last child node in the document
-      const doc = editor.state.doc;
-      const lastNode = doc.lastChild;
-
-      // Check if its last node and add new node
-      if (lastNode) {
-        const isLastNodeParagraph = lastNode.type.name === CORE_EXTENSIONS.PARAGRAPH;
-        // Insert a new paragraph if the last node is not a paragraph and not a doc node
-        if (!isLastNodeParagraph && lastNode.type.name !== CORE_EXTENSIONS.DOCUMENT) {
-          // Only insert a new paragraph if the last node is not an empty paragraph and not a doc node
-          const endPosition = editor?.state.doc.content.size;
-          editor?.chain().insertContentAt(endPosition, { type: "paragraph" }).focus("end").run();
+        if (
+          currentNode.content.size === 0 && // Check if the current node is empty
+          !(
+            editor.isActive(CORE_EXTENSIONS.ORDERED_LIST) ||
+            editor.isActive(CORE_EXTENSIONS.BULLET_LIST) ||
+            editor.isActive(CORE_EXTENSIONS.TASK_ITEM) ||
+            editor.isActive(CORE_EXTENSIONS.TABLE) ||
+            editor.isActive(CORE_EXTENSIONS.BLOCKQUOTE) ||
+            editor.isActive(CORE_EXTENSIONS.CODE_BLOCK)
+          ) // Check if it's an empty node within an orderedList, bulletList, taskItem, table, quote or code block
+        ) {
+          return;
         }
-      }
-    } catch (error) {
-      console.error("An error occurred while handling container click to insert new empty node at bottom:", error);
-    }
-  };
 
-  const handleContainerMouseLeave = () => {
-    const dragHandleElement = document.querySelector("#editor-side-menu");
-    if (!dragHandleElement?.classList.contains("side-menu-hidden")) {
-      dragHandleElement?.classList.add("side-menu-hidden");
-    }
-  };
+        // Get the last child node in the document
+        const doc = editor.state.doc;
+        const lastNode = doc.lastChild;
+
+        // Check if its last node and add new node
+        if (lastNode) {
+          const isLastNodeParagraph = lastNode.type.name === CORE_EXTENSIONS.PARAGRAPH;
+          // Insert a new paragraph if the last node is not a paragraph and not a doc node
+          if (!isLastNodeParagraph && lastNode.type.name !== CORE_EXTENSIONS.DOCUMENT) {
+            // Only insert a new paragraph if the last node is not an empty paragraph and not a doc node
+            const endPosition = editor?.state.doc.content.size;
+            editor?.chain().insertContentAt(endPosition, { type: "paragraph" }).focus("end").run();
+          }
+        }
+      } catch (error) {
+        console.error("An error occurred while handling container click to insert new empty node at bottom:", error);
+      }
+    },
+    [editor]
+  );
 
   return (
     <>
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- Clicking editor padding places the caret; keyboard editing and node-boundary navigation belong to the nested ProseMirror contenteditable. */}
       <div
         ref={containerRef}
         id={`editor-container-${id}`}

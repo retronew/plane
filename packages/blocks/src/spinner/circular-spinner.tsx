@@ -17,7 +17,7 @@ export interface ISpinner extends React.SVGAttributes<SVGElement> {
 
 export function Spinner({ height = "32px", width = "32px", className = "" }: ISpinner) {
   return (
-    <div role="status">
+    <output className="block">
       <svg
         aria-hidden="true"
         height={height}
@@ -37,6 +37,6 @@ export function Spinner({ height = "32px", width = "32px", className = "" }: ISp
         />
       </svg>
       <span className="sr-only">{translate("web.loading")}</span>
-    </div>
+    </output>
   );
 }

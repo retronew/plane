@@ -63,10 +63,11 @@ export const shouldFilterProject = (
   displayFilters: TProjectDisplayFilters,
   filters: TProjectFilters
 ): boolean => {
+  const labelIds = new Set(project.labels);
   let fallsInFilters =
     (!filters.priority?.length || filters.priority.includes(project.priority ?? "none")) &&
     (!filters.status?.length || filters.status.includes(project.status ?? "")) &&
-    (!filters.labels?.length || filters.labels.some((id) => project.labels?.includes(id)));
+    (!filters.labels?.length || filters.labels.some((id) => labelIds.has(id)));
   Object.keys(filters).forEach((key) => {
     const filterKey = key as keyof TProjectFilters;
     if (filterKey === "access" && filters.access && filters.access.length > 0)
@@ -74,8 +75,8 @@ export const shouldFilterProject = (
     if (filterKey === "lead" && filters.lead && filters.lead.length > 0)
       fallsInFilters = fallsInFilters && filters.lead.includes(`${project.project_lead}`);
     if (filterKey === "members" && filters.members && filters.members.length > 0) {
-      const memberIds = project.members;
-      fallsInFilters = fallsInFilters && filters.members.some((memberId) => memberIds?.includes(memberId));
+      const memberIds = new Set(project.members);
+      fallsInFilters = fallsInFilters && filters.members.some((memberId) => memberIds.has(memberId));
     }
     if (filterKey === "created_at" && filters.created_at && filters.created_at.length > 0) {
       const createdDate = getDate(project.created_at);

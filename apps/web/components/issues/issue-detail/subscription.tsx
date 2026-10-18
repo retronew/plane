@@ -86,7 +86,12 @@ export const IssueSubscription = observer(function IssueSubscription(props: TIss
         variant="secondary"
         size="md"
         stretch="auto"
-        render={<button type="button" />}
+        render={
+          <button
+            type="button"
+            aria-label={isSubscribed ? t("common.actions.unsubscribe") : t("common.actions.subscribe")}
+          />
+        }
         onClick={handleSubscription}
         disabled={!isEditable || loading}
       >

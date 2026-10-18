@@ -18,27 +18,27 @@ type Props = {
   values: string[];
 };
 
+const getDateLabel = (value: string): string => {
+  let dateLabel = "";
+
+  const dateDetails = DATE_AFTER_FILTER_OPTIONS.find((d) => d.value === value);
+
+  if (dateDetails) dateLabel = dateDetails.name;
+  else {
+    const dateParts = value.split(";");
+
+    if (dateParts.length === 2) {
+      const [date, time] = dateParts;
+
+      dateLabel = `${capitalizeFirstLetter(time)} ${renderFormattedDate(date)}`;
+    }
+  }
+
+  return dateLabel;
+};
+
 export const AppliedDateFilters = observer(function AppliedDateFilters(props: Props) {
   const { editable, handleRemove, values } = props;
-
-  const getDateLabel = (value: string): string => {
-    let dateLabel = "";
-
-    const dateDetails = DATE_AFTER_FILTER_OPTIONS.find((d) => d.value === value);
-
-    if (dateDetails) dateLabel = dateDetails.name;
-    else {
-      const dateParts = value.split(";");
-
-      if (dateParts.length === 2) {
-        const [date, time] = dateParts;
-
-        dateLabel = `${capitalizeFirstLetter(time)} ${renderFormattedDate(date)}`;
-      }
-    }
-
-    return dateLabel;
-  };
 
   return (
     <>

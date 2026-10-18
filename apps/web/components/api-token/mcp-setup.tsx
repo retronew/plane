@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useSyncExternalStore } from "react";
 import { observer } from "mobx-react";
 
 import { setToast } from "@plane/blocks/toast";
@@ -19,6 +20,10 @@ type Props = {
   token: string;
 };
 
+const subscribeToOrigin = () => () => {};
+const getOrigin = () => window.location.origin;
+const getServerOrigin = () => "";
+
 /** Copyable MCP client configuration for a freshly created API token. */
 export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Props) {
   const { t } = useTranslation();
@@ -26,7 +31,8 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
   const { workspaces } = useWorkspace();
 
   // The MCP endpoint is served by the API, next to /api
-  const mcpUrl = `${API_BASE_URL || window.location.origin}/mcp`;
+  const origin = useSyncExternalStore(subscribeToOrigin, getOrigin, getServerOrigin);
+  const mcpUrl = `${API_BASE_URL || origin}/mcp`;
   const workspaceList = Object.values(workspaces);
   const workspace =
     workspaceList.find((item) => item.id === currentUser?.last_workspace_id) ?? workspaceList[0] ?? undefined;

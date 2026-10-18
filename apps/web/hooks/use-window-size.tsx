@@ -4,22 +4,24 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-const useSize = () => {
-  const [windowSize, setWindowSize] = useState([window.innerWidth, window.innerHeight]);
+const serverSize = [0, 0];
+let cachedSize = serverSize;
 
-  useEffect(() => {
-    const windowSizeHandler = () => {
-      setWindowSize([window.innerWidth, window.innerHeight]);
-    };
-    window.addEventListener("resize", windowSizeHandler);
-    return () => {
-      window.removeEventListener("resize", windowSizeHandler);
-    };
-  }, []);
-
-  return windowSize;
+const getSnapshot = () => {
+  if (cachedSize[0] !== window.innerWidth || cachedSize[1] !== window.innerHeight) {
+    cachedSize = [window.innerWidth, window.innerHeight];
+  }
+  return cachedSize;
 };
+
+const getServerSnapshot = () => serverSize;
+const subscribe = (onChange: () => void) => {
+  window.addEventListener("resize", onChange);
+  return () => window.removeEventListener("resize", onChange);
+};
+
+const useSize = () => useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
 export default useSize;

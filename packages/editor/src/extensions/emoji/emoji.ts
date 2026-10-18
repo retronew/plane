@@ -22,7 +22,7 @@ import { Fragment } from "@tiptap/pm/model";
 import type { Transaction } from "@tiptap/pm/state";
 import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import type { SuggestionOptions } from "@tiptap/suggestion";
-import Suggestion from "@tiptap/suggestion";
+import { Suggestion } from "@tiptap/suggestion";
 import emojiRegex from "emoji-regex";
 import { isEmojiSupported } from "is-emoji-supported";
 // helpers
@@ -150,17 +150,18 @@ export const Emoji = Node.create<EmojiOptions, EmojiStorage>({
   },
 
   addStorage() {
-    const { emojis } = this.options;
-    const supportMap: Record<number, boolean> = removeDuplicates(emojis.map((item) => item.version))
+    const { emojis: configuredEmojis } = this.options;
+    const supportMap: Record<number, boolean> = removeDuplicates(configuredEmojis.map((item) => item.version))
       .filter((version) => typeof version === "number")
-      .reduce((versions, version) => {
-        const emoji = emojis.find((item) => item.version === version && item.emoji);
+      .reduce(
+        (versions, version) => {
+          const emoji = configuredEmojis.find((item) => item.version === version && item.emoji);
 
-        return {
-          ...versions,
-          [version]: emoji ? isEmojiSupported(emoji.emoji as string) : false,
-        };
-      }, {});
+          versions[version] = emoji ? isEmojiSupported(emoji.emoji as string) : false;
+          return versions;
+        },
+        {} as Record<number, boolean>
+      );
 
     return {
       emojis: this.options.emojis,

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useSyncExternalStore, useCallback } from "react";
 // plane imports
 import { TOOLBAR_ITEMS } from "@plane/editor";
 import type { ToolbarMenuItem, EditorRefApi } from "@plane/editor";
@@ -26,33 +26,28 @@ const toolbarItems = TOOLBAR_ITEMS.lite;
 
 export function IssueCommentToolbar(props: Props) {
   const { executeCommand, handleSubmit, isCommentEmpty, editorRef, isSubmitting, showSubmitButton } = props;
-  // states
-  const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
-
-  // Function to update active states
-  const updateActiveStates = useCallback(() => {
-    if (!editorRef) return;
-    const newActiveStates: Record<string, boolean> = {};
+  const subscribe = useCallback(
+    (onChange: () => void) => editorRef?.onStateChange(onChange) ?? (() => {}),
+    [editorRef]
+  );
+  const getSnapshot = useCallback(
+    () =>
+      Object.values(toolbarItems)
+        .flat()
+        .map((item) => {
+          // TODO: update this while toolbar homogenization
+          // @ts-expect-error type mismatch here
+          return editorRef?.isMenuItemActive({ itemKey: item.itemKey, ...item.extraProps }) ? "1" : "0";
+        })
+        .join(""),
+    [editorRef]
+  );
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => "");
+  const activeStates = Object.fromEntries(
     Object.values(toolbarItems)
       .flat()
-      .forEach((item) => {
-        // TODO: update this while toolbar homogenization
-        // @ts-expect-error type mismatch here
-        newActiveStates[item.renderKey] = editorRef.isMenuItemActive({
-          itemKey: item.itemKey,
-          ...item.extraProps,
-        });
-      });
-    setActiveStates(newActiveStates);
-  }, [editorRef]);
-
-  // useEffect to call updateActiveStates when isActive prop changes
-  useEffect(() => {
-    if (!editorRef) return;
-    const unsubscribe = editorRef.onStateChange(updateActiveStates);
-    updateActiveStates();
-    return () => unsubscribe();
-  }, [editorRef, updateActiveStates]);
+      .map((item, index) => [item.renderKey, snapshot[index] === "1"])
+  );
 
   return (
     <div className="flex h-9 w-full items-stretch gap-1.5 overflow-x-scroll">
@@ -76,6 +71,7 @@ export function IssueCommentToolbar(props: Props) {
                   >
                     <button
                       type="button"
+                      aria-label={item.name}
                       onClick={() => executeCommand(item)}
                       className={cn(
                         "grid aspect-square place-items-center rounded-xs p-0.5 text-placeholder hover:bg-layer-transparent-hover",

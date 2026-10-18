@@ -41,6 +41,8 @@ import { useUserPermissions, useUserProfile } from "@/hooks/store/user";
 // plane web constants
 type ModuleStatusOption = (typeof MODULE_STATUS)[number];
 
+const renderModuleStatusIcon = (status: ModuleStatusOption) => <ModuleStatusIcon status={status.value} />;
+
 const defaultValues: Partial<IModule> = {
   lead_id: "",
   member_ids: [],
@@ -298,7 +300,7 @@ export const ModuleAnalyticsSidebar = observer(function ModuleAnalyticsSidebar(p
                   }}
                   getOptionValue={(status) => status.value}
                   getOptionLabel={(status) => t(status.i18n_label)}
-                  getOptionIcon={(status) => <ModuleStatusIcon status={status.value} />}
+                  getOptionIcon={renderModuleStatusIcon}
                   disabled={!isEditingAllowed || isArchived}
                   showSearch={false}
                   pinSelected={false}

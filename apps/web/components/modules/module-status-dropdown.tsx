@@ -15,6 +15,8 @@ import type { IModule } from "@plane/types";
 
 type ModuleStatusOption = (typeof MODULE_STATUS)[number];
 
+const renderModuleStatusIcon = (status: ModuleStatusOption) => <ModuleStatusIcon status={status.value} />;
+
 type Props = {
   isDisabled: boolean;
   moduleDetails: IModule;
@@ -37,7 +39,7 @@ export const ModuleStatusDropdown = observer(function ModuleStatusDropdown(props
       }}
       getOptionValue={(status) => status.value}
       getOptionLabel={(status) => t(status.i18n_label)}
-      getOptionIcon={(status) => <ModuleStatusIcon status={status.value} />}
+      getOptionIcon={renderModuleStatusIcon}
       disabled={isDisabled}
       showSearch={false}
       pinSelected={false}

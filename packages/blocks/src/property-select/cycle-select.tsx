@@ -53,6 +53,26 @@ export type CycleSelectProps = {
   tabIndex?: number;
 };
 
+function renderCycleIcon(cycle: CycleOption) {
+  return cycle.status ? (
+    <CycleGroupIcon cycleGroup={cycle.status} className="size-4 shrink-0" />
+  ) : (
+    <CyclesOutline className="size-4 shrink-0 text-primary" />
+  );
+}
+
+function renderCycleTrailing(cycle: CycleOption) {
+  return cycle.identifier ? <ProjectIdentifierElement show identifier={cycle.identifier} /> : undefined;
+}
+
+function renderCycleTriggerIcon(cycles: CycleOption[]) {
+  return cycles[0]?.status ? (
+    <CycleGroupIcon cycleGroup={cycles[0].status} className="size-3.5 shrink-0" />
+  ) : (
+    <CyclesOutline />
+  );
+}
+
 /**
  * Presentational, data-source-agnostic cycle picker built on the generic single-select `Select`.
  * The client supplies `getValues` (bound to the cycle lite list), the selected `value` object, and
@@ -98,31 +118,15 @@ export function CycleSelect(props: CycleSelectProps) {
       headerItems={clearable ? [clearOption] : undefined}
       getOptionValue={(cycle) => cycle.id}
       getOptionLabel={(cycle) => cycle.name}
-      getOptionIcon={(cycle) =>
-        cycle.status ? (
-          <CycleGroupIcon cycleGroup={cycle.status} className="size-4 shrink-0" />
-        ) : (
-          <CyclesOutline className="size-4 shrink-0 text-primary" />
-        )
-      }
-      getOptionTrailing={
-        showIdentifier
-          ? (cycle) => (cycle.identifier ? <ProjectIdentifierElement show identifier={cycle.identifier} /> : undefined)
-          : undefined
-      }
+      getOptionIcon={renderCycleIcon}
+      getOptionTrailing={showIdentifier ? renderCycleTrailing : undefined}
     >
       <Select.Trigger<CycleOption>
         disabled={disabled}
         variant={variant}
         tabIndex={tabIndex}
         className={className}
-        prependIcon={(cycles) =>
-          cycles[0]?.status ? (
-            <CycleGroupIcon cycleGroup={cycles[0].status} className="size-3.5 shrink-0" />
-          ) : (
-            <CyclesOutline />
-          )
-        }
+        prependIcon={renderCycleTriggerIcon}
         label={(cycles) => cycles[0]?.name ?? placeholder}
         tooltip={tooltip}
       >

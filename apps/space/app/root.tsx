@@ -20,10 +20,10 @@ import type { Route } from "./+types/root";
 import ErrorPage from "./error";
 import { AppProviders } from "./providers";
 // fonts
-import "@fontsource-variable/inter";
+import interStyles from "@fontsource-variable/inter/index.css?url";
 import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
-import "@fontsource/material-symbols-rounded";
-import "@fontsource/ibm-plex-mono";
+import symbolStyles from "@fontsource/material-symbols-rounded/index.css?url";
+import monoStyles from "@fontsource/ibm-plex-mono/index.css?url";
 
 export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", sizes: "180x180", href: appleTouchIcon },
@@ -32,6 +32,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "shortcut icon", href: faviconIco },
   { rel: "manifest", href: siteWebmanifest },
   { rel: "stylesheet", href: globalStyles },
+  ...[interStyles, symbolStyles, monoStyles].map((href) => ({ rel: "stylesheet", href })),
   {
     rel: "preload",
     href: interVariableWoff2,

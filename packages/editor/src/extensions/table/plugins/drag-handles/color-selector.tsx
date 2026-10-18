@@ -53,6 +53,7 @@ export function TableDragHandleDropdownColorSelector(props: Props) {
             {COLORS_LIST.map((color) => (
               <button
                 key={color.key}
+                aria-label={color.label}
                 type="button"
                 className="flex-shrink-0 size-6 rounded-sm border-[0.5px] border-strong-1 hover:opacity-60 transition-opacity"
                 style={{
@@ -62,6 +63,7 @@ export function TableDragHandleDropdownColorSelector(props: Props) {
               />
             ))}
             <button
+              aria-label={translate("web.background_colors")}
               type="button"
               className="flex-shrink-0 size-6 grid place-items-center rounded-sm text-tertiary border-[0.5px] border-strong-1 hover:bg-layer-1 transition-colors"
               onClick={() => handleTextColorChange(editor, null)}
@@ -76,6 +78,7 @@ export function TableDragHandleDropdownColorSelector(props: Props) {
             {COLORS_LIST.map((color) => (
               <button
                 key={color.key}
+                aria-label={color.label}
                 type="button"
                 className="size-6 flex-shrink-0 rounded-sm border-[0.5px] border-strong-1 transition-opacity hover:opacity-60"
                 style={{
@@ -88,6 +91,7 @@ export function TableDragHandleDropdownColorSelector(props: Props) {
               />
             ))}
             <button
+              aria-label={translate("web.background_colors")}
               type="button"
               className="grid size-6 flex-shrink-0 place-items-center rounded-sm border-[0.5px] border-strong-1 text-tertiary transition-colors hover:bg-layer-1-hover"
               onClick={() => {

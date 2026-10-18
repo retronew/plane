@@ -67,7 +67,9 @@ function Link({ href, children }: CustomComponentProps) {
   );
 }
 
-export function MarkdownRenderer({ markdown, options = {} }: Props) {
+const DEFAULT_OPTIONS = {};
+
+export function MarkdownRenderer({ markdown, options = DEFAULT_OPTIONS }: Props) {
   const customComponents = {
     h1: HeadingPrimary,
     h3: HeadingSecondary,

@@ -16,6 +16,7 @@ import {
   WORKSPACE_SIDEBAR_STATIC_PINNED_NAVIGATION_ITEMS_LINKS,
 } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { orderBy } from "lodash-es";
 // components
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 // store hooks
@@ -81,14 +82,17 @@ export const SidebarMenuItems = observer(function SidebarMenuItems() {
 
   const sortedNavigationItems = useMemo(
     () =>
-      // oxlint-disable-next-line oxc/no-map-spread
-      WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS_LINKS.map((item) => {
-        const preference = workspacePreferences.items[item.key];
-        return {
-          ...item,
-          sort_order: preference ? preference.sort_order : 0,
-        };
-      }).sort((a, b) => a.sort_order - b.sort_order),
+      orderBy(
+        Array.from(WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS_LINKS, (item) => {
+          const preference = workspacePreferences.items[item.key];
+          return {
+            ...item,
+            sort_order: preference ? preference.sort_order : 0,
+          };
+        }),
+        ["sort_order"],
+        ["asc"]
+      ),
     [workspacePreferences]
   );
 

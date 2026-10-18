@@ -44,6 +44,7 @@ export const DescriptionVersionsDropdown = observer(function DescriptionVersions
         render={
           <button
             type="button"
+            aria-label={t("description_versions.previously_edited_by")}
             className={cn(
               "flex items-center justify-between gap-1 rounded-md px-2.5 py-1 text-11 whitespace-nowrap text-secondary duration-300 data-[popup-open]:text-primary",
               disabled ? "cursor-not-allowed" : "cursor-pointer hover:bg-layer-transparent-hover"

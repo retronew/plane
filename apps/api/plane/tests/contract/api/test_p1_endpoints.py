@@ -113,7 +113,9 @@ class TestModuleLinks:
         assert created.status_code == 201, created.data
         link_id = created.data["id"]
         assert [link["id"] for link in api_key_client.get(url).data] == [link_id]
-        patched = api_key_client.patch(f"{url}{link_id}/", {"title": "Spec v2", "url": "https://example.com/spec"}, format="json")
+        patched = api_key_client.patch(
+            f"{url}{link_id}/", {"title": "Spec v2", "url": "https://example.com/spec"}, format="json"
+        )
         assert patched.status_code == 200, (patched.status_code, patched.data)
         assert ModuleLink.objects.get(pk=link_id).title == "Spec v2"
         assert api_key_client.delete(f"{url}{link_id}/").status_code == 204

@@ -117,7 +117,6 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
         }
         setIsSubmitting(true);
       }}
-      onError={() => setIsSubmitting(false)}
     >
       <input type="hidden" name="csrfmiddlewaretoken" />
       <input type="hidden" value={passwordFormData.email} name="email" />

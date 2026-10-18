@@ -12,6 +12,12 @@ import type { IIssueLabel } from "@plane/types";
 // local imports
 import { PowerKMenuBuilder } from "./builder";
 
+const getIconNode = (label: IIssueLabel) => (
+  <span className="grid size-3.5 shrink-0 place-items-center">
+    <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />
+  </span>
+);
+
 type Props = {
   labels: IIssueLabel[];
   onSelect: (label: IIssueLabel) => void;
@@ -23,11 +29,7 @@ export const PowerKLabelsMenu = observer(function PowerKLabelsMenu({ labels, onS
   return (
     <PowerKMenuBuilder
       items={labels}
-      getIconNode={(label) => (
-        <span className="grid size-3.5 shrink-0 place-items-center">
-          <span className="size-2.5 rounded-full" style={{ backgroundColor: label.color }} />
-        </span>
-      )}
+      getIconNode={getIconNode}
       getKey={(label) => label.id}
       getValue={(label) => label.name}
       getLabel={(label) => label.name}

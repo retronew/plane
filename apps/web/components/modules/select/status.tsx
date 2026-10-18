@@ -20,6 +20,8 @@ import { cn } from "@plane/utils";
 
 type ModuleStatusOption = (typeof MODULE_STATUS)[number];
 
+const renderModuleStatusIcon = (status: ModuleStatusOption) => <ModuleStatusIcon status={status.value} />;
+
 type Props = {
   control: Control<IModule, any>;
   error?: FieldError;
@@ -42,7 +44,7 @@ export function ModuleStatusSelect({ control, error, tabIndex }: Props) {
             onChange={(val) => onChange(val as TModuleStatus)}
             getOptionValue={(status) => status.value}
             getOptionLabel={(status) => t(status.i18n_label)}
-            getOptionIcon={(status) => <ModuleStatusIcon status={status.value} />}
+            getOptionIcon={renderModuleStatusIcon}
             showSearch={false}
             pinSelected={false}
           >

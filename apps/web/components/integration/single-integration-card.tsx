@@ -147,7 +147,12 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
             disabled={isUserAdmin || isMobile}
           >
             <Button
-              render={<button className={!isUserAdmin ? "hover:cursor-not-allowed" : ""} />}
+              render={
+                <button
+                  className={!isUserAdmin ? "hover:cursor-not-allowed" : ""}
+                  aria-label={deletingIntegration ? translate("web.uninstalling") : translate("web.uninstall")}
+                />
+              }
               variant="danger"
               size="sm"
               stretch="auto"
@@ -167,7 +172,12 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
             disabled={isUserAdmin || isMobile}
           >
             <Button
-              render={<button className={!isUserAdmin ? "hover:cursor-not-allowed" : ""} />}
+              render={
+                <button
+                  className={!isUserAdmin ? "hover:cursor-not-allowed" : ""}
+                  aria-label={isInstalling ? translate("web.installing") : translate("web.install")}
+                />
+              }
               variant="primary"
               size="sm"
               stretch="auto"

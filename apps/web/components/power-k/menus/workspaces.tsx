@@ -13,6 +13,10 @@ import { WorkspaceLogo } from "@/components/workspace/logo";
 // local imports
 import { PowerKMenuBuilder } from "./builder";
 
+const getIconNode = (workspace: IWorkspace) => (
+  <WorkspaceLogo logo={workspace.logo_url} name={workspace.name} classNames="shrink-0" />
+);
+
 type Props = {
   workspaces: IWorkspace[];
   onSelect: (workspace: IWorkspace) => void;
@@ -24,9 +28,7 @@ export function PowerKWorkspacesMenu({ workspaces, onSelect }: Props) {
     <PowerKMenuBuilder
       items={workspaces}
       getKey={(workspace) => workspace.id}
-      getIconNode={(workspace) => (
-        <WorkspaceLogo logo={workspace.logo_url} name={workspace.name} classNames="shrink-0" />
-      )}
+      getIconNode={getIconNode}
       getValue={(workspace) => workspace.name}
       getLabel={(workspace) => workspace.name}
       onSelect={onSelect}

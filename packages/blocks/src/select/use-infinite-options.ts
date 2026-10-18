@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { debounce } from "lodash-es";
 import type { TPaginatedResponse } from "@plane/types";
 import { SELECT_SEARCH_DEBOUNCE_MS } from "./select.constants";
@@ -96,32 +96,30 @@ export function useInfiniteOptions<T>(
     }
   }, []);
 
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(
-        (q: string) =>
-          void loadPage({
-            search: q || undefined,
-            reset: true,
-          }),
-        SELECT_SEARCH_DEBOUNCE_MS
-      ),
-    [loadPage]
-  );
-  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
+  const debouncedSearchRef = useRef<ReturnType<typeof debounce<(q: string) => void>> | null>(null);
+  useEffect(() => {
+    const debouncedSearch = debounce((q: string) => {
+      void loadPage({ search: q || undefined, reset: true });
+    }, SELECT_SEARCH_DEBOUNCE_MS);
+    debouncedSearchRef.current = debouncedSearch;
+    return () => {
+      debouncedSearch.cancel();
+      debouncedSearchRef.current = null;
+    };
+  }, [loadPage]);
 
   const onSearchChange = useCallback(
     (q: string) => {
       setQuery(q);
       // Clearing applies instantly; typing debounces.
       if (q.trim() === "") {
-        debouncedSearch.cancel();
+        debouncedSearchRef.current?.cancel();
         void loadPage({ reset: true });
         return;
       }
-      debouncedSearch(q);
+      debouncedSearchRef.current?.(q);
     },
-    [debouncedSearch, loadPage]
+    [loadPage]
   );
 
   const onLoadMore = useCallback(() => {
@@ -158,7 +156,7 @@ export function useInfiniteOptions<T>(
   // and re-arm `onOpen` to refetch. Without this the stale query + filtered list survive the close.
   // Consumers whose popup UNMOUNTS on close (flyout bodies) never need it — unmount is the reset.
   const onClose = useCallback(() => {
-    debouncedSearch.cancel();
+    debouncedSearchRef.current?.cancel();
     fetchedRef.current = false;
     nextCursorRef.current = undefined;
     setQuery("");
@@ -167,7 +165,7 @@ export function useInfiniteOptions<T>(
     setError(null);
     setErrorKind(null);
     errorKindRef.current = null;
-  }, [debouncedSearch]);
+  }, []);
 
   // A reset with a live query is a SEARCH: the list has already been seen, so the surface shows a
   // "searching" line rather than the first-open skeleton. Clearing the query resets too, but with an

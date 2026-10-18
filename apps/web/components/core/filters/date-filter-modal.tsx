@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { Button } from "@makeplane/propel/components/button";
 import { Calendar } from "@makeplane/propel/components/calendar";
 import {
@@ -44,9 +44,12 @@ const defaultValues: TFormValues = {
 export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props) {
   // plane hooks
   const { t } = useTranslation();
-  const { handleSubmit, watch, control } = useForm<TFormValues>({
+  const { handleSubmit, getValues, control } = useForm<TFormValues>({
     defaultValues,
   });
+
+  useWatch({ control });
+  const values = getValues();
 
   const handleFormSubmit = (formData: TFormValues) => {
     const { filterType, date1, date2 } = formData;
@@ -58,10 +61,10 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
     handleClose();
   };
 
-  const date1 = getDate(watch("date1"));
-  const date2 = getDate(watch("date1"));
+  const date1 = getDate(values.date1);
+  const date2 = getDate(values.date1);
 
-  const isInvalid = watch("filterType") === "range" && date1 && date2 ? date1 > date2 : false;
+  const isInvalid = values.filterType === "range" && date1 && date2 ? date1 > date2 : false;
 
   return (
     <Dialog
@@ -99,7 +102,7 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                     name="date1"
                     render={({ field: { value, onChange } }) => {
                       const dateValue = getDate(value);
-                      const date2Value = getDate(watch("date2"));
+                      const date2Value = getDate(values.date2);
                       return (
                         <Calendar
                           formatters={getCalendarFormatters()}
@@ -116,13 +119,13 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                       );
                     }}
                   />
-                  {watch("filterType") === "range" && (
+                  {values.filterType === "range" && (
                     <Controller
                       control={control}
                       name="date2"
                       render={({ field: { value, onChange } }) => {
                         const dateValue = getDate(value);
-                        const date1Value = getDate(watch("date1"));
+                        const date1Value = getDate(values.date1);
                         return (
                           <Calendar
                             formatters={getCalendarFormatters()}
@@ -141,12 +144,12 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                     />
                   )}
                 </div>
-                {watch("filterType") === "range" && (
+                {values.filterType === "range" && (
                   <h6 className="flex items-center gap-1 text-11">
                     <span className="text-secondary">{t("web.after")}</span>
-                    <span>{renderFormattedDate(watch("date1"))}</span>
+                    <span>{renderFormattedDate(values.date1)}</span>
                     <span className="ml-1 text-secondary">{t("web.before")}</span>
-                    {!isInvalid && <span>{renderFormattedDate(watch("date2"))}</span>}
+                    {!isInvalid && <span>{renderFormattedDate(values.date2)}</span>}
                   </h6>
                 )}
               </div>

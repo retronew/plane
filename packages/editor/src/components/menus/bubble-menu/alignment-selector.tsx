@@ -10,7 +10,7 @@ import { AlignCenterOutline, AlignLeftOutline, AlignRightOutline } from "@makepl
 // plane utils
 import { cn } from "@plane/utils";
 // components
-import { TextAlignItem } from "@/components/menus";
+import { textAlignItem } from "@/components/menus";
 // types
 import type { TEditorCommands } from "@/types";
 import type { EditorStateType } from "./root";
@@ -22,7 +22,7 @@ type Props = {
 
 export function TextAlignmentSelector(props: Props) {
   const { editor, editorState } = props;
-  const menuItem = TextAlignItem(editor);
+  const menuItem = textAlignItem(editor);
 
   const textAlignmentOptions: {
     itemKey: TEditorCommands;
@@ -69,6 +69,7 @@ export function TextAlignmentSelector(props: Props) {
       {textAlignmentOptions.map((item) => (
         <button
           key={item.renderKey}
+          aria-label={item.renderKey}
           type="button"
           onClick={(e) => {
             e.stopPropagation();

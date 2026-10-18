@@ -77,6 +77,11 @@ const USER_DOMAIN = [
 
 const authService = new AuthService();
 
+const handleSetPassword = async (password: string) => {
+  const token = await authService.requestCSRFToken().then((data) => data?.csrf_token);
+  await authService.setPassword(token, { password });
+};
+
 export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   const { user, totalSteps, stepChange, finishOnboarding } = props;
   // states
@@ -116,11 +121,6 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
 
   const handleShowPassword = (key: keyof typeof showPassword) =>
     setShowPassword((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  const handleSetPassword = async (password: string) => {
-    const token = await authService.requestCSRFToken().then((data) => data?.csrf_token);
-    await authService.setPassword(token, { password });
-  };
 
   const handleSubmitProfileSetup = async (formData: TProfileSetupFormValues) => {
     const userDetailsPayload: Partial<IUser> = {
@@ -283,11 +283,9 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     </div>
                   ) : (
                     <div className="relative mr-3 h-16 w-16 overflow-hidden">
-                      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- pre-existing mouse-only interaction, kept as-is */}
                       <img
                         src={getFileURL(userAvatar ?? "")}
                         className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
-                        onClick={() => setIsImageUploadModalOpen(true)}
                         alt={user?.display_name}
                       />
                     </div>

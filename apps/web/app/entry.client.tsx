@@ -39,7 +39,7 @@ if (import.meta.env.PROD) {
 void initPromise
   .catch(() => {})
   .then(() => {
-    startTransition(() => {
+    return startTransition(() => {
       hydrateRoot(
         document,
         <StrictMode>

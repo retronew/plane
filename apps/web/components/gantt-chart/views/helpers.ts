@@ -75,8 +75,6 @@ export const getDateFromPositionOnGantt = (position: number, chartData: ChartDat
 
   const newDate = addDaysToDate(chartData.data.startDate, numberOfDaysSinceStart);
 
-  if (!newDate) undefined;
-
   return newDate;
 };
 

@@ -8,11 +8,11 @@ import { useEditorState, useEditor as useTiptapEditor } from "@tiptap/react";
 import { useImperativeHandle, useEffect } from "react";
 import type { MarkdownStorage } from "tiptap-markdown";
 // extensions
-import { CoreEditorExtensions } from "@/extensions";
+import { coreEditorExtensions } from "@/extensions";
 // helpers
 import { getEditorRefHelpers } from "@/helpers/editor-ref";
 // props
-import { CoreEditorProps } from "@/props";
+import { coreEditorProps } from "@/props";
 // types
 import type { TEditorHookProps } from "@/types";
 
@@ -37,7 +37,7 @@ export const useEditor = (props: TEditorHookProps) => {
     forwardedRef,
     getEditorMetaData,
     handleEditorReady,
-    id = "",
+    id: _id = "",
     initialValue,
     isTouchDevice,
     mentionHandler,
@@ -60,13 +60,13 @@ export const useEditor = (props: TEditorHookProps) => {
       autofocus,
       parseOptions: { preserveWhitespace: true },
       editorProps: {
-        ...CoreEditorProps({
+        ...coreEditorProps({
           editorClassName,
         }),
         ...editorProps,
       },
       extensions: [
-        ...CoreEditorExtensions({
+        ...coreEditorExtensions({
           disabledExtensions,
           editable,
           enableHistory,
@@ -88,10 +88,10 @@ export const useEditor = (props: TEditorHookProps) => {
       onTransaction: () => {
         onTransaction?.();
       },
-      onUpdate: ({ editor, transaction }) => {
+      onUpdate: ({ editor: activeEditor, transaction }) => {
         // Check if this update is only due to migration update
         const isMigrationUpdate = transaction?.getMeta("uniqueIdOnlyChange") === true;
-        onChange?.(editor.getJSON(), editor.getHTML(), { isMigrationUpdate });
+        onChange?.(activeEditor.getJSON(), activeEditor.getHTML(), { isMigrationUpdate });
       },
       onDestroy: () => handleEditorReady?.(false),
       onFocus: onEditorFocus,
@@ -121,7 +121,7 @@ export const useEditor = (props: TEditorHookProps) => {
         }
       }
     }
-  }, [editor, value, id]);
+  }, [editor, value]);
 
   // update assets upload status
   useEffect(() => {
@@ -133,8 +133,8 @@ export const useEditor = (props: TEditorHookProps) => {
   // subscribe to assets list changes
   const assetsList = useEditorState({
     editor,
-    selector: ({ editor }) => ({
-      assets: editor?.storage.utility?.assetsList ?? [],
+    selector: ({ editor: activeEditor }) => ({
+      assets: activeEditor?.storage.utility?.assetsList ?? [],
     }),
   });
   // trigger callback when assets list changes

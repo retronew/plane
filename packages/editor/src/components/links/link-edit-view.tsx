@@ -6,7 +6,7 @@
 
 import type { Node } from "@tiptap/pm/model";
 import { UnlinkOutline } from "@makeplane/propel/icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 // components
 import type { LinkViewProps, LinkViews } from "@/components/links";
 // helpers
@@ -22,10 +22,14 @@ type InputViewProps = {
 };
 
 function InputView({ label, value, placeholder, onChange, autoFocus }: InputViewProps) {
+  const inputId = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label className="inline-block text-11 font-semibold text-placeholder">{label}</label>
+      <label htmlFor={inputId} className="inline-block text-11 font-semibold text-placeholder">
+        {label}
+      </label>
       <input
+        id={inputId}
         placeholder={placeholder}
         onClick={(e) => e.stopPropagation()}
         className="w-[280px] rounded-md border border-strong bg-layer-1 p-2 text-13 text-primary outline-none"
@@ -48,8 +52,12 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
 
   // State
   const [positionRef] = useState({ from, to });
-  const [localUrl, setLocalUrl] = useState(initialUrl);
-  const [localText, setLocalText] = useState(initialText ?? "");
+  const [urlDraft, setUrlDraft] = useState({ source: initialUrl, value: initialUrl });
+  const localUrl = urlDraft.source === initialUrl ? urlDraft.value : initialUrl;
+  const setLocalUrl = useCallback((value: string) => setUrlDraft({ source: initialUrl, value }), [initialUrl]);
+  const [textDraft, setTextDraft] = useState({ source: initialText, value: initialText ?? "" });
+  const localText = textDraft.source === initialText ? textDraft.value : (initialText ?? "");
+  const setLocalText = useCallback((value: string) => setTextDraft({ source: initialText, value }), [initialText]);
   const [linkRemoved, setLinkRemoved] = useState(false);
   const hasSubmitted = useRef(false);
 
@@ -75,19 +83,13 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
     [removeLink, linkRemoved, initialUrl]
   );
 
-  // Sync state with props
-  useEffect(() => {
-    setLocalUrl(initialUrl);
-  }, [initialUrl]);
-
-  useEffect(() => {
-    if (initialText) setLocalText(initialText);
-  }, [initialText]);
-
   // Handlers
-  const handleTextChange = useCallback((value: string) => {
-    if (value.trim() !== "") setLocalText(value);
-  }, []);
+  const handleTextChange = useCallback(
+    (value: string) => {
+      if (value.trim() !== "") setLocalText(value);
+    },
+    [setLocalText]
+  );
 
   const applyChanges = useCallback((): boolean => {
     if (linkRemoved) return false;
@@ -123,29 +125,18 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
     return true;
   }, [linkRemoved, positionRef, editor, from, to, initialText, localText, localUrl]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.stopPropagation();
-        if (applyChanges()) {
-          closeLinkView();
-          setLocalUrl("");
-          setLocalText("");
-        }
-      }
-    },
-    [applyChanges, closeLinkView]
-  );
-
   return (
     // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc
-    <div
-      onKeyDown={handleKeyDown}
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (applyChanges()) closeLinkView();
+      }}
       className="shadow-md animate-in fade-in flex translate-y-1 flex-col gap-3 rounded-sm border-2 border-subtle bg-layer-1 p-2"
       style={{
-        transition: "all 0.1s cubic-bezier(.55, .085, .68, .53)",
+        transition: "opacity 0.1s cubic-bezier(.55, .085, .68, .53)",
       }}
-      tabIndex={0}
     >
       <InputView
         label="URL"
@@ -161,13 +152,16 @@ export function LinkEditView({ viewProps }: LinkEditViewProps) {
         value={localText}
         onChange={handleTextChange}
       />
+      <button type="submit" className="sr-only">
+        {translate("save")}
+      </button>
       <div className="bg-strong mb-1 h-[1px] w-full gap-2" />
       <div className="flex items-center gap-2 text-13 text-secondary">
         <UnlinkOutline width={14} height={14} className="inline-block" />
-        <button onClick={removeLink} className="cursor-pointer transition-colors hover:text-placeholder">
+        <button type="button" onClick={removeLink} className="cursor-pointer transition-colors hover:text-placeholder">
           {translate("web.remove_link")}
         </button>
       </div>
-    </div>
+    </form>
   );
 }

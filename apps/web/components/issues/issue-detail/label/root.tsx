@@ -55,10 +55,15 @@ export const IssueLabel = observer(function IssueLabel(props: TIssueLabel) {
 
   const labelOperations: TLabelOperations = useMemo(
     () => ({
-      updateIssue: async (workspaceSlug: string, projectId: string, issueId: string, data: Partial<TIssue>) => {
+      updateIssue: async (
+        targetWorkspaceSlug: string,
+        targetProjectId: string,
+        targetIssueId: string,
+        data: Partial<TIssue>
+      ) => {
         try {
           if (onLabelUpdate) onLabelUpdate(data.label_ids || []);
-          else await updateIssue(workspaceSlug, projectId, issueId, data);
+          else await updateIssue(targetWorkspaceSlug, targetProjectId, targetIssueId, data);
         } catch {
           setToast({
             title: t("toast.error"),

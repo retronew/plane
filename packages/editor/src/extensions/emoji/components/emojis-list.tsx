@@ -34,7 +34,17 @@ export const EmojisListDropdown = forwardRef(function EmojisListDropdown(
 ) {
   const { items, command, query, onClose, forceOpen = false } = props;
   // states
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [selection, setSelection] = useState({ items, index: 0 });
+  const selectedIndex = selection.items === items ? selection.index : 0;
+  const setSelectedIndex = useCallback(
+    (update: number | ((index: number) => number)) => {
+      setSelection((previous) => ({
+        items,
+        index: typeof update === "function" ? update(previous.items === items ? previous.index : 0) : update,
+      }));
+    },
+    [items]
+  );
   const [isVisible, setIsVisible] = useState(false);
   // refs
   const dropdownContainerRef = useRef<HTMLDivElement>(null);
@@ -78,18 +88,14 @@ export const EmojisListDropdown = forwardRef(function EmojisListDropdown(
 
       return false;
     },
-    [items.length, query.length, forceOpen, selectItem, selectedIndex]
+    [items, query.length, forceOpen, selectItem, selectedIndex, setSelectedIndex]
   );
 
   // Show animation
   useEffect(() => {
-    setIsVisible(false);
     const timeout = setTimeout(() => setIsVisible(true), 50);
     return () => clearTimeout(timeout);
   }, []);
-
-  // Reset selection when items change
-  useEffect(() => setSelectedIndex(0), [items]);
 
   // Scroll selected item into view
   useEffect(() => {

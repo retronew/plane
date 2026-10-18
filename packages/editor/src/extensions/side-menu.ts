@@ -37,7 +37,7 @@ export type SideMenuHandleOptions = {
   };
 };
 
-export const SideMenuExtension = (props: Props) => {
+export const sideMenuExtension = (props: Props) => {
   const { aiEnabled, dragDropEnabled } = props;
 
   return Extension.create({

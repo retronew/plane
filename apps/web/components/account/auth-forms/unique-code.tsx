@@ -57,10 +57,10 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
   const handleFormChange = (key: keyof TUniqueCodeFormValues, value: string) =>
     setUniqueCodeFormData((prev) => ({ ...prev, [key]: value }));
 
-  const generateNewCode = async (email: string) => {
+  const generateNewCode = async (emailAddress: string) => {
     try {
       setIsRequestingNewCode(true);
-      const uniqueCode = await generateEmailUniqueCode(email);
+      const uniqueCode = await generateEmailUniqueCode(emailAddress);
       setResendCodeTimer(defaultResetTimerValue);
       handleFormChange("code", uniqueCode?.code || "");
       setIsRequestingNewCode(false);
@@ -87,7 +87,7 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
       onSubmit={() => {
         setIsSubmitting(true);
       }}
-      onError={() => {
+      onErrorCapture={() => {
         setIsSubmitting(false);
       }}
     >
@@ -136,7 +136,6 @@ export function AuthUniqueCodeForm(props: TAuthUniqueCodeForm) {
             onChange={(e) => handleFormChange("code", e.target.value)}
             placeholder={t("auth.common.unique_code.placeholder")}
             autoComplete="off"
-            autoFocus
           />
         </InputGroup>
         <div className="flex w-full items-center justify-between px-1 pt-1 text-11">

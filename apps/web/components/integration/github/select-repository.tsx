@@ -26,6 +26,12 @@ type Props = {
 
 const projectService = new ProjectService();
 
+const fetchGithubRepos = async (url: string) => {
+  const data = await projectService.getGithubRepositories(url);
+
+  return data;
+};
+
 export function SelectRepository(props: Props) {
   const { integration, value, label, onChange, characterLimit = 25 } = props;
   // router
@@ -37,12 +43,6 @@ export function SelectRepository(props: Props) {
     return `${process.env.VITE_API_BASE_URL}/api/workspaces/${workspaceSlug}/workspace-integrations/${
       integration.id
     }/github-repositories/?page=${++pageIndex}`;
-  };
-
-  const fetchGithubRepos = async (url: string) => {
-    const data = await projectService.getGithubRepositories(url);
-
-    return data;
   };
 
   const { data: paginatedData, size, setSize, isValidating } = useSWRInfinite(getKey, fetchGithubRepos);

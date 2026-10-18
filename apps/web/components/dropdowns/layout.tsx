@@ -16,6 +16,10 @@ import { IssueLayoutIcon } from "@/components/issues/issue-layouts/layout-icon";
 
 type TLayoutOption = { key: EIssueLayoutTypes; i18n_label: string };
 
+const getLayoutOptionIcon = (option: TLayoutOption) => (
+  <IssueLayoutIcon layout={option.key} className="size-4 shrink-0 text-primary" />
+);
+
 type TLayoutDropDown = {
   onChange: (value: EIssueLayoutTypes) => void;
   value: EIssueLayoutTypes;
@@ -42,7 +46,7 @@ export const LayoutDropDown = observer(function LayoutDropDown(props: TLayoutDro
       onChange={(next) => onChange(next as EIssueLayoutTypes)}
       getOptionValue={(option) => option.key}
       getOptionLabel={(option) => t(option.i18n_label)}
-      getOptionIcon={(option) => <IssueLayoutIcon layout={option.key} className="size-4 shrink-0 text-primary" />}
+      getOptionIcon={getLayoutOptionIcon}
       showSearch={false}
       pinSelected={false}
     >

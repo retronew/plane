@@ -7,7 +7,9 @@
 // plane admin store
 import { StoreContext, rootStore } from "./store-context";
 
-function initializeStore(initialData = {}) {
+const EMPTY_INITIAL_STATE = {};
+
+function initializeStore(initialData = EMPTY_INITIAL_STATE) {
   // Hydrate the shared client-side store with any initial data before use.
   if (initialData) {
     rootStore.hydrate(initialData);
@@ -21,7 +23,7 @@ export type StoreProviderProps = {
   initialState?: any;
 };
 
-export function StoreProvider({ children, initialState = {} }: StoreProviderProps) {
+export function StoreProvider({ children, initialState = EMPTY_INITIAL_STATE }: StoreProviderProps) {
   const store = initializeStore(initialState);
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
 }

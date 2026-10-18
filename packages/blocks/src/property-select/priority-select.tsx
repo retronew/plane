@@ -35,6 +35,15 @@ export type PrioritySelectProps = {
   tabIndex?: number;
 };
 
+function renderPriorityIcon(option: PriorityOption) {
+  return <PriorityIcon priority={option.key} className="size-4" />;
+}
+
+function renderPriorityTriggerIcon(priorities: PriorityOption[]) {
+  const priority = priorities[0]?.key ?? "none";
+  return <PriorityIcon priority={priority} />;
+}
+
 /**
  * Presentational priority picker built on the generic single-select `Select`. Unlike the other
  * property selects it owns its (hardcoded) option list — `ISSUE_PRIORITIES` — so it takes no
@@ -73,7 +82,7 @@ export function PrioritySelect(props: PrioritySelectProps) {
       pinSelected={false}
       getOptionValue={(option) => option.key}
       getOptionLabel={labelOf}
-      getOptionIcon={(option) => <PriorityIcon priority={option.key} className="size-4" />}
+      getOptionIcon={renderPriorityIcon}
     >
       <Select.Trigger<PriorityOption>
         disabled={disabled}
@@ -81,10 +90,7 @@ export function PrioritySelect(props: PrioritySelectProps) {
         tabIndex={tabIndex}
         className={className}
         data-testid={testId}
-        prependIcon={(priorities) => {
-          const priority = priorities[0]?.key ?? "none";
-          return <PriorityIcon priority={priority} />;
-        }}
+        prependIcon={renderPriorityTriggerIcon}
         label={(priorities) => (priorities[0] ? labelOf(priorities[0]) : placeholder)}
         tooltip={tooltip}
       >

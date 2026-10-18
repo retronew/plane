@@ -310,14 +310,7 @@ export const useMultipleSelect = (props: Props) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [
-    disabled,
-    getActiveEntityDetails,
-    handleEntitySelection,
-    getLastSelectedEntityDetails,
-    getNextActiveEntity,
-    getPreviousActiveEntity,
-  ]);
+  }, [disabled, getActiveEntityDetails, handleEntitySelection, getNextActiveEntity, getPreviousActiveEntity]);
 
   useEffect(() => {
     if (disabled) return;
@@ -354,7 +347,7 @@ export const useMultipleSelect = (props: Props) => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [disabled, getActiveEntityDetails, entitiesList, groups, getPreviousAndNextEntities, handleActiveEntityChange]);
+  }, [disabled, getActiveEntityDetails, entitiesList, getPreviousAndNextEntities, handleActiveEntityChange]);
 
   // clear selection on route change
   // useEffect(() => {

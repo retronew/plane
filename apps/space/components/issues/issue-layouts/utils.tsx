@@ -150,8 +150,8 @@ const getPriorityColumns = () => {
   }));
 };
 
-const getLabelsColumns = (label: IIssueLabelStore) => {
-  const { labels: storeLabels } = label;
+const getLabelsColumns = (labelStore: IIssueLabelStore) => {
+  const { labels: storeLabels } = labelStore;
 
   if (!storeLabels) return;
 
@@ -167,8 +167,8 @@ const getLabelsColumns = (label: IIssueLabelStore) => {
   }));
 };
 
-const getAssigneeColumns = (member: IIssueMemberStore) => {
-  const { members } = member;
+const getAssigneeColumns = (memberStore: IIssueMemberStore) => {
+  const { members } = memberStore;
 
   if (!members) return;
 
@@ -190,8 +190,8 @@ const getAssigneeColumns = (member: IIssueMemberStore) => {
   return assigneeColumns;
 };
 
-const getCreatedByColumns = (member: IIssueMemberStore) => {
-  const { members } = member;
+const getCreatedByColumns = (memberStore: IIssueMemberStore) => {
+  const { members } = memberStore;
 
   if (!members) return;
 

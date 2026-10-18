@@ -105,7 +105,7 @@ export const ModuleViewHeader = observer(function ModuleViewHeader() {
           <IconButton
             variant="ghost"
             size="md"
-            render={<button type="button" className="-mr-1" />}
+            render={<button type="button" className="-mr-1" aria-label={t("common.search.label")} />}
             onClick={() => {
               setIsSearchOpen(true);
               inputRef.current?.focus();

@@ -4,9 +4,10 @@
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
 import { Translation } from "@plane/i18n";
 import { useParams } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 // plane imports
 import { allTimeIn30MinutesInterval12HoursFormat } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
@@ -69,11 +70,13 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
     reset,
     handleSubmit,
     control,
-    watch,
     setValue,
   } = useForm({
     defaultValues,
   });
+
+  const [minDate, setMinDate] = useState(() => new Date());
+  const [formDataDate, selectedPeriod] = useWatch({ control, name: ["date", "period"] });
 
   const handleClose = () => {
     // This is a workaround to fix the issue of the Notification popover modal close on closing this modal
@@ -84,13 +87,13 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
 
     const timeout = setTimeout(() => {
       reset({ ...defaultValues });
+      setMinDate(new Date());
       clearTimeout(timeout);
     }, 500);
   };
 
   const getTimeStamp = () => {
     const today = new Date();
-    const formDataDate = watch("date");
 
     if (!formDataDate) return timeStamps;
 
@@ -105,9 +108,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
       let optionHours = parseInt(optionTime.value.split(":")[0]);
       const optionMinutes = parseInt(optionTime.value.split(":")[1]);
 
-      const period = watch("period");
-
-      if (period === "PM" && optionHours !== 12) optionHours += 12;
+      if (selectedPeriod === "PM" && optionHours !== 12) optionHours += 12;
 
       if (optionHours < hours) return false;
       if (optionHours === hours && optionMinutes < minutes) return false;
@@ -178,7 +179,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                           setValue("time", undefined);
                           onChange(val ?? undefined);
                         }}
-                        minDate={new Date()}
+                        minDate={minDate}
                         clearable
                         weekStartsOn={userProfile?.start_of_the_week}
                         variant="select-lg"
@@ -212,8 +213,8 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                               className={cn(
                                 "flex h-full w-1/2 cursor-pointer items-center justify-center text-center",
                                 {
-                                  "bg-accent-primary/90 text-on-color": watch("period") === "AM",
-                                  "bg-layer-1": watch("period") !== "AM",
+                                  "bg-accent-primary/90 text-on-color": selectedPeriod === "AM",
+                                  "bg-layer-1": selectedPeriod !== "AM",
                                 }
                               )}
                             >
@@ -227,8 +228,8 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                               className={cn(
                                 "flex h-full w-1/2 cursor-pointer items-center justify-center text-center",
                                 {
-                                  "bg-accent-primary/90 text-on-color": watch("period") === "PM",
-                                  "bg-layer-1": watch("period") !== "PM",
+                                  "bg-accent-primary/90 text-on-color": selectedPeriod === "PM",
+                                  "bg-layer-1": selectedPeriod !== "PM",
                                 }
                               )}
                             >
@@ -241,7 +242,7 @@ export function NotificationSnoozeModal(props: TNotificationSnoozeModal) {
                           <span className="min-w-0 grow truncate text-left">
                             {value ? (
                               <span>
-                                {value} {watch("period").toLowerCase()}
+                                {value} {selectedPeriod.toLowerCase()}
                               </span>
                             ) : (
                               <span className="text-body-xs-medium text-placeholder">{t("web.select_a_time")}</span>

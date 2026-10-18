@@ -39,6 +39,7 @@
     "unicorn/filename-case": "off",
     "unicorn/no-null": "off",
     "no-underscore-dangle": "off",
+    "import/no-unassigned-import": ["warn", { "allow": ["reflect-metadata"] }],
     "no-unused-vars": [
       "warn",
       {

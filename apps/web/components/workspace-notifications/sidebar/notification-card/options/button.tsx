@@ -34,7 +34,7 @@ export function NotificationItemOptionButton(props: TNotificationItemOptionButto
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          callBack && callBack();
+          if (callBack) callBack();
         }}
       >
         {children}

@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { EmojiReactionPicker } from "./emoji-reaction-picker";
+import { EmojiReactionGroup } from "./emoji-reaction";
 
 vi.mock("../emoji-icon-picker/emoji/emoji", () => ({
   EmojiRoot: () => (
@@ -34,6 +35,21 @@ function ControlledPicker({ tooltip }: { tooltip?: string }) {
     />
   );
 }
+
+describe("EmojiReactionGroup", () => {
+  it("preserves the focused reaction when reactions are reordered or removed", () => {
+    const first = { emoji: "128077", count: 1 };
+    const second = { emoji: "128512", count: 2 };
+    const { container, rerender } = render(<EmojiReactionGroup reactions={[first, second]} showAddButton={false} />);
+    const button = container.querySelectorAll("button")[1];
+    button.focus();
+    rerender(<EmojiReactionGroup reactions={[second, first]} showAddButton={false} />);
+    expect(container.querySelectorAll("button")[0]).toBe(button);
+    expect(document.activeElement).toBe(button);
+    rerender(<EmojiReactionGroup reactions={[second]} showAddButton={false} />);
+    expect(document.activeElement).toBe(button);
+  });
+});
 
 describe("EmojiReactionPicker popover", () => {
   it("anchors a named tooltip and the picker to the same icon button", async () => {

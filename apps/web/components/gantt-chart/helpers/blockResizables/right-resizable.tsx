@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { translate } from "@plane/i18n";
 import { useState } from "react";
 import { observer } from "mobx-react";
 // plane utils
@@ -15,7 +16,7 @@ import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 
 type RightResizableProps = {
   enableBlockRightResize: boolean;
-  handleBlockDrag: (e: React.MouseEvent<HTMLDivElement, MouseEvent>, dragDirection: "left" | "right" | "move") => void;
+  handleBlockDrag: (e: React.MouseEvent<HTMLElement, MouseEvent>, dragDirection: "left" | "right" | "move") => void;
   isMoving: "left" | "right" | "move" | undefined;
   position?: {
     marginLeft: number;
@@ -42,14 +43,18 @@ export const RightResizable = observer(function RightResizable(props: RightResiz
           <div className="rounded-sm bg-accent-subtle px-2 py-1">{dateString}</div>
         </div>
       )}
-      <div
+      <button
+        type="button"
+        aria-label={translate("due_date")}
         onMouseDown={(e) => handleBlockDrag(e, "right")}
-        onMouseOver={() => {
+        onMouseEnter={() => {
           setIsHovering(true);
         }}
-        onMouseOut={() => {
+        onMouseLeave={() => {
           setIsHovering(false);
         }}
+        onFocus={() => setIsHovering(true)}
+        onBlur={() => setIsHovering(false)}
         className="absolute top-1/2 -right-1.5 z-[6] h-full w-3 -translate-y-1/2 cursor-col-resize rounded-md"
       />
       <div

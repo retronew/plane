@@ -34,6 +34,20 @@ export type IntakeStateSelectProps = {
   tabIndex?: number;
 };
 
+function renderIntakeStateIcon(state: IntakeStateOption) {
+  return <IntakeStateGroupIcon stateGroup={state.group} color={state.color} className="size-4 shrink-0" />;
+}
+
+function renderIntakeStateTriggerIcon(states: IntakeStateOption[]) {
+  return (
+    <IntakeStateGroupIcon
+      stateGroup={states[0]?.group ?? "triage"}
+      color={states[0]?.color ?? "currentColor"}
+      size="md"
+    />
+  );
+}
+
 /**
  * Presentational intake-state picker built on the generic single-select `Select`.
  * Intake state is a project singleton, so this block owns only the intake icon/label markup.
@@ -63,22 +77,14 @@ export function IntakeStateSelect(props: IntakeStateSelectProps) {
       onClose={onClose}
       getOptionValue={(state) => state.id}
       getOptionLabel={(state) => state.name}
-      getOptionIcon={(state) => (
-        <IntakeStateGroupIcon stateGroup={state.group} color={state.color} className="size-4 shrink-0" />
-      )}
+      getOptionIcon={renderIntakeStateIcon}
     >
       <Select.Trigger<IntakeStateOption>
         disabled={disabled}
         variant={variant}
         tabIndex={tabIndex}
         className={className}
-        prependIcon={(states) => (
-          <IntakeStateGroupIcon
-            stateGroup={states[0]?.group ?? "triage"}
-            color={states[0]?.color ?? "currentColor"}
-            size="md"
-          />
-        )}
+        prependIcon={renderIntakeStateTriggerIcon}
         label={(states) => states[0]?.name ?? placeholder}
       >
         {(states) => {

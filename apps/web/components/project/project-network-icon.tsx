@@ -14,22 +14,14 @@ type Props = {
   className?: string;
 };
 
+const PROJECT_NETWORK_ICONS = {
+  Lock: LockOutline,
+  Globe2: GlobeOutline,
+} satisfies Record<TNetworkChoiceIconKey, typeof LockOutline>;
+
 export function ProjectNetworkIcon(props: Props) {
   const { iconKey, className } = props;
-  // Get the icon key
-  const getProjectNetworkIcon = () => {
-    switch (iconKey) {
-      case "Lock":
-        return LockOutline;
-      case "Globe2":
-        return GlobeOutline;
-      default:
-        return null;
-    }
-  };
-
-  // Get the icon
-  const Icon = getProjectNetworkIcon();
+  const Icon = PROJECT_NETWORK_ICONS[iconKey];
   if (!Icon) return null;
 
   return <Icon className={cn("h-3 w-3", className)} />;
