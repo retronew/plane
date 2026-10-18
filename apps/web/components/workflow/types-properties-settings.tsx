@@ -1,7 +1,16 @@
 import { useLayoutEffect, useState } from "react";
-import useSWR from "swr";
-import { MoreHorizontal, Plus, Shapes, Trash2, Pencil } from "lucide-react";
+import useSWR, { unstable_serialize, useSWRConfig } from "swr";
+import {
+  MoreHorizontalOutline,
+  AddOutline,
+  DeleteOutline,
+  EditOutline,
+  ChevronDownOutline,
+  MergeOutline,
+} from "@makeplane/propel/icons";
+import { EmptyStateDetailed, getCompactAsset } from "@plane/blocks/empty-state";
 import { Button } from "@makeplane/propel/components/button";
+import { Badge } from "@makeplane/propel/components/badge";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Switch } from "@makeplane/propel/components/switch";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
@@ -24,7 +33,10 @@ import { useTranslation } from "@plane/i18n";
 import type { TProjectIssueType } from "@plane/types";
 import { CustomPropertiesService } from "@/services/project/custom-properties.service";
 import type { TCustomProperty } from "@/services/project/custom-properties.types";
+import { DataTable } from "@/components/common/data-table";
+import type { DataTableColumn } from "@/components/common/data-table";
 import { PropertyEditor } from "./property-editor";
+import { PropertyMergeDialog } from "./property-merge-dialog";
 import type { PropertyDraft } from "./property-editor";
 
 const service = new CustomPropertiesService();
@@ -54,9 +66,10 @@ export function WorkItemPropertiesSettings({
   const [deleting, setDeleting] = useState<TCustomProperty | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [merging, setMerging] = useState(false);
   const [optionProperty, setOptionProperty] = useState<TCustomProperty | null>(null);
   return (
-    <div className="space-y-6 pt-6">
+    <div className="space-y-4">
       <PropertiesHeader
         typeId={typeId}
         count={properties.length}
@@ -65,6 +78,7 @@ export function WorkItemPropertiesSettings({
         setSearch={setSearch}
         onCreate={() => edit()}
         onAddExisting={() => setAdding(true)}
+        onMerge={() => setMerging(true)}
       />
       <PropertiesContent
         error={error}
@@ -96,6 +110,14 @@ export function WorkItemPropertiesSettings({
           onSave={save}
         />
       )}
+      <PropertyMergeDialog
+        open={merging}
+        onOpenChange={setMerging}
+        properties={properties}
+        busy={busy}
+        onPreview={(ids) => service.previewMerge(workspaceSlug, projectId, ids)}
+        onMerge={(payload) => perform(() => service.merge(workspaceSlug, projectId, payload), true, true)}
+      />
       <DeletePropertyDialog
         open={deleteOpen}
         busy={busy}
@@ -174,92 +196,98 @@ function PropertiesTable({
 }: PropertiesTableProps) {
   const { t } = useTranslation();
   const label = usePropertyLabel();
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left text-13">
-        <thead>
-          <tr className="border-b border-subtle text-tertiary">
-            <th className="font-normal py-3">{label("title")}</th>
-            <th className="font-normal px-3 py-3">{label("property_type")}</th>
-            <th className="font-normal px-3 py-3">{label("active")}</th>
-            <th className="font-normal px-3 py-3">{label("required")}</th>
-            <th className="w-10">
-              <span className="sr-only">{t("aria_labels.common.more_actions")}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {properties.map((property) => (
-            <tr key={property.id} className="border-b border-subtle">
-              <td className="py-4">
-                <button
-                  disabled={!canManage}
-                  className="text-left font-medium text-primary hover:text-accent-primary"
+  // DataTable calls these render callbacks directly; they are not mounted as component types.
+  /* oxlint-disable react/no-unstable-nested-components */
+  const columns: DataTableColumn<TCustomProperty>[] = [
+    {
+      key: "name",
+      content: label("title"),
+      tdRender: (property) => (
+        <div>
+          <button
+            disabled={!canManage}
+            className="text-left font-medium text-primary hover:text-accent-primary"
+            onClick={() => onEdit(property)}
+          >
+            {property.name}
+          </button>
+          {property.description && <p className="mt-1 text-12 text-tertiary">{property.description}</p>}
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      content: label("property_type"),
+      tdRender: (property) => <span className="text-secondary">{label(`types.${property.property_type}`)}</span>,
+    },
+    {
+      key: "active",
+      content: label("active"),
+      tdRender: (property) => (
+        <Switch
+          aria-label={`${property.name} ${label("active")}`}
+          size="sm"
+          disabled={busy || !canManage}
+          checked={typeId ? property.effective_is_active : property.is_active}
+          onCheckedChange={(checked) => toggle(property, "is_active", checked)}
+        />
+      ),
+    },
+    {
+      key: "required",
+      content: label("required"),
+      tdRender: (property) => (
+        <Switch
+          aria-label={`${property.name} ${label("required")}`}
+          size="sm"
+          disabled={busy || !canManage || property.property_type === "boolean" || !!property.config.read_only}
+          checked={typeId ? property.effective_is_required : property.is_required}
+          onCheckedChange={(checked) => toggle(property, "is_required", checked)}
+        />
+      ),
+    },
+    {
+      key: "actions",
+      content: t("aria_labels.common.more_actions"),
+      thRender: () => <span className="sr-only">{t("aria_labels.common.more_actions")}</span>,
+      tdRender: (property) =>
+        canManage && (
+          <div className="flex justify-end">
+            <Menu>
+              <MenuTrigger
+                render={
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${property.name} ${t("aria_labels.common.more_actions")}`}
+                    icon={<MoreHorizontalOutline className="size-4" />}
+                  />
+                }
+              />
+              <ActionMenuContent>
+                <MenuItem
                   onClick={() => onEdit(property)}
-                >
-                  {property.name}
-                </button>
-                {property.description && <p className="mt-1 text-12 text-tertiary">{property.description}</p>}
-              </td>
-              <td className="px-3 text-secondary">{label(`types.${property.property_type}`)}</td>
-              <td className="px-3">
-                <Switch
-                  aria-label={`${property.name} ${label("active")}`}
-                  size="sm"
-                  disabled={busy || !canManage}
-                  checked={typeId ? property.effective_is_active : property.is_active}
-                  onCheckedChange={(checked) => toggle(property, "is_active", checked)}
+                  icon={<EditOutline className="size-4" />}
+                  label={t("edit")}
                 />
-              </td>
-              <td className="px-3">
-                <Switch
-                  aria-label={`${property.name} ${label("required")}`}
-                  size="sm"
-                  disabled={busy || !canManage || property.property_type === "boolean" || !!property.config.read_only}
-                  checked={typeId ? property.effective_is_required : property.is_required}
-                  onCheckedChange={(checked) => toggle(property, "is_required", checked)}
-                />
-              </td>
-              <td>
-                {canManage && (
-                  <Menu>
-                    <MenuTrigger
-                      render={
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          aria-label={`${property.name} ${t("aria_labels.common.more_actions")}`}
-                          icon={<MoreHorizontal className="size-4" />}
-                        />
-                      }
-                    />
-                    <ActionMenuContent>
-                      <MenuItem
-                        onClick={() => onEdit(property)}
-                        icon={<Pencil className="size-3.5" />}
-                        label={t("edit")}
-                      />
-                      {property.property_type === "dropdown" && (
-                        <MenuItem onClick={() => onOptions(property)} label={label("options")} />
-                      )}
-                      {!typeId && (
-                        <MenuItem
-                          disabled={property.is_active}
-                          onClick={() => onDelete(property)}
-                          icon={<Trash2 className="size-3.5" />}
-                          label={t("delete")}
-                        />
-                      )}
-                    </ActionMenuContent>
-                  </Menu>
+                {property.property_type === "dropdown" && (
+                  <MenuItem onClick={() => onOptions(property)} label={label("options")} />
                 )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+                {!typeId && (
+                  <MenuItem
+                    disabled={property.is_active}
+                    onClick={() => onDelete(property)}
+                    icon={<DeleteOutline className="size-4" />}
+                    label={t("delete")}
+                  />
+                )}
+              </ActionMenuContent>
+            </Menu>
+          </div>
+        ),
+    },
+  ];
+  return <DataTable<TCustomProperty> columns={columns} data={properties} keyExtractor={(property) => property.id} />;
 }
 function DeletePropertyDialog({
   open,
@@ -278,6 +306,7 @@ function DeletePropertyDialog({
 }) {
   const { t } = useTranslation();
   const label = usePropertyLabel();
+  /* oxlint-enable react/no-unstable-nested-components */
   return (
     <Dialog
       open={open}
@@ -446,7 +475,7 @@ function PropertyOptionsDialog({
                     size="sm"
                     disabled={busy}
                     aria-label={`${t("delete")} ${option.name}`}
-                    icon={<Trash2 className="size-3.5" />}
+                    icon={<DeleteOutline className="size-4" />}
                     onClick={() => {
                       if (property) void onRemove(property.id, option.id);
                     }}
@@ -488,7 +517,11 @@ function PropertyOptionsDialog({
   );
 }
 
-type PerformPropertyOperation = (operation: () => Promise<unknown>) => Promise<boolean>;
+type PerformPropertyOperation = (
+  operation: () => Promise<unknown>,
+  propagateError?: boolean,
+  refreshAllTypes?: boolean
+) => Promise<boolean>;
 function usePropertiesData(
   workspaceSlug: string,
   projectId: string,
@@ -498,6 +531,7 @@ function usePropertiesData(
 ) {
   const { t } = useTranslation();
   const label = usePropertyLabel();
+  const { mutate: mutateProjectProperties, cache } = useSWRConfig();
   const { data, error, mutate, isLoading } = useSWR(
     ["custom-properties", workspaceSlug, projectId, typeId ?? "all"],
     () => service.list(workspaceSlug, projectId, typeId)
@@ -513,22 +547,52 @@ function usePropertiesData(
   );
   const filtered = properties.filter((property) => property.name.toLowerCase().includes(search.trim().toLowerCase()));
   const reportError = () => setToast({ type: "error", title: t("error"), message: label("save_failed") });
-  const perform = async (operation: () => Promise<unknown>) => {
+  const perform: PerformPropertyOperation = async (operation, propagateError = false, refreshAllTypes = false) => {
     if (busy || !canManage) return false;
     setBusy(true);
     try {
-      await operation();
-      await mutate();
-      await refreshAvailable();
+      try {
+        await operation();
+      } catch (operationError) {
+        if (propagateError) throw operationError;
+        reportError();
+        return false;
+      }
+      // Once the mutation succeeds, a failed refresh must not offer the destructive operation again.
+      try {
+        const refreshedKeys = new Set<string>();
+        if (refreshAllTypes) {
+          await mutateProjectProperties(
+            (key) => {
+              const matches =
+                Array.isArray(key) &&
+                key[0] === "custom-properties" &&
+                key[1] === workspaceSlug &&
+                key[2] === projectId;
+              if (matches) refreshedKeys.add(unstable_serialize(key));
+              return matches;
+            },
+            undefined,
+            { revalidate: true }
+          );
+        } else {
+          await Promise.all([mutate(), refreshAvailable()]);
+          refreshedKeys.add(unstable_serialize(["custom-properties", workspaceSlug, projectId, typeId ?? "all"]));
+          if (typeId) refreshedKeys.add(unstable_serialize(["custom-properties", workspaceSlug, projectId, "all"]));
+        }
+        // SWR revalidation resolves even when its fetcher fails; inspect the resulting cache state.
+        for (const key of refreshedKeys) {
+          if (cache.get(key)?.error) throw cache.get(key)?.error;
+        }
+      } catch {
+        setToast({ type: "error", title: t("error"), message: label("load_failed") });
+      }
       try {
         await onChanged?.();
       } catch {
         setToast({ type: "error", title: t("error"), message: label("load_failed") });
       }
       return true;
-    } catch {
-      reportError();
-      return false;
     } finally {
       setBusy(false);
     }
@@ -599,6 +663,7 @@ function PropertiesHeader({
   setSearch,
   onCreate,
   onAddExisting,
+  onMerge,
 }: {
   typeId?: string;
   count: number;
@@ -607,6 +672,7 @@ function PropertiesHeader({
   setSearch: (search: string) => void;
   onCreate: () => void;
   onAddExisting: () => void;
+  onMerge: () => void;
 }) {
   const { t } = useTranslation();
   const label = usePropertyLabel();
@@ -615,7 +681,7 @@ function PropertiesHeader({
       <div>
         <div className="flex items-center gap-2">
           <h4 className="text-16 font-medium text-primary">{label(typeId ? "custom_properties" : "properties")}</h4>
-          {!typeId && <span className="text-13 text-tertiary">{count}</span>}
+          {!typeId && <Badge size="xs" variant="brand" label={String(count)} />}
         </div>
         {!typeId && <p className="mt-1 text-13 text-tertiary">{label("description")}</p>}
       </div>
@@ -636,8 +702,8 @@ function PropertiesHeader({
                   <Button
                     stretch="auto"
                     variant="primary"
-                    size="sm"
-                    icon={<Plus className="size-3.5" />}
+                    size="md"
+                    icon={<AddOutline className="size-4" />}
                     label={label("add_property")}
                   />
                 }
@@ -653,7 +719,24 @@ function PropertiesHeader({
               </ActionMenuContent>
             </Menu>
           ) : (
-            <Button stretch="auto" variant="primary" size="sm" label={label("add_new")} onClick={onCreate} />
+            <div className="inline-flex items-stretch gap-px [&>button:first-child]:rounded-e-none [&>button:last-child]:rounded-s-none">
+              <Button stretch="auto" variant="primary" size="md" label={label("add_new")} onClick={onCreate} />
+              <Menu>
+                <MenuTrigger
+                  render={
+                    <IconButton
+                      variant="primary"
+                      size="md"
+                      aria-label={t("aria_labels.common.more_actions")}
+                      icon={<ChevronDownOutline className="size-4" />}
+                    />
+                  }
+                />
+                <ActionMenuContent>
+                  <MenuItem onClick={onMerge} icon={<MergeOutline className="size-4" />} label={label("merge.title")} />
+                </ActionMenuContent>
+              </Menu>
+            </div>
           ))}
       </div>
     </div>
@@ -684,10 +767,14 @@ function PropertiesContent({
       ) : isLoading ? (
         <p className="py-6 text-13 text-tertiary">{t("loading")}</p>
       ) : !properties.length ? (
-        <div className="flex min-h-64 flex-col items-center justify-center gap-2 text-center">
-          <Shapes className="mb-3 size-10 text-tertiary" />
-          <h3 className="text-16 font-semibold text-primary">{label(search ? "no_results" : "empty_title")}</h3>
-          <p className="text-13 text-tertiary">{label("empty_description")}</p>
+        <div className="flex items-center justify-center rounded-lg border border-subtle bg-surface-1 py-10">
+          <EmptyStateDetailed
+            align="center"
+            className="gap-3"
+            asset={getCompactAsset("custom-properties")}
+            title={label(search ? "no_results" : "empty_title")}
+            description={label("empty_description")}
+          />
         </div>
       ) : (
         <PropertiesTable {...tableProps} />

@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
+import { Radio, RadioGroup } from "@makeplane/propel/components/radio";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
 import { useTranslation } from "@plane/i18n";
@@ -8,7 +9,13 @@ import { PROPERTY_TYPES } from "./property-editor.types";
 import { DropdownDefault } from "./property-dropdown-default";
 import type { PropertyDraft } from "./property-editor.types";
 type Props = { value: PropertyDraft; setValue: Dispatch<SetStateAction<PropertyDraft>>; busy: boolean };
-export function PropertyConfiguration({ value, setValue, busy }: Props) {
+export function PropertyConfiguration({
+  value,
+  setValue,
+  busy,
+  typeSelected = true,
+  onTypeSelected,
+}: Props & { typeSelected?: boolean; onTypeSelected?: () => void }) {
   const { t } = useTranslation();
   const label = (key: string) => t(`web.work_item_properties.${key}`);
   return (
@@ -17,19 +24,26 @@ export function PropertyConfiguration({ value, setValue, busy }: Props) {
         <p className="text-body-xs-medium">{label("property_type")}</p>
         <Select
           items={PROPERTY_TYPES.map((type) => ({ value: type, label: label(`types.${type}`) }))}
-          value={value.property_type}
+          value={typeSelected ? value.property_type : null}
           disabled={!!value.id || busy}
           onValueChange={(next) => {
-            if (next)
+            if (next) {
+              onTypeSelected?.();
               setValue({
                 ...value,
                 property_type: next as PropertyDraft["property_type"],
                 config: {},
                 is_required: next === "boolean" ? false : value.is_required,
               });
+            }
           }}
         >
-          <SelectTrigger size="md" aria-label={label("property_type")} />
+          <SelectTrigger
+            size="lg"
+            variant="secondary"
+            placeholder={t("web.workflow_ui.select_type")}
+            aria-label={label("property_type")}
+          />
           <SelectContent>
             <SelectList>
               {PROPERTY_TYPES.map((type) => (
@@ -39,7 +53,7 @@ export function PropertyConfiguration({ value, setValue, busy }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <TypeConfiguration value={value} setValue={setValue} busy={busy} />
+      {typeSelected && <TypeConfiguration value={value} setValue={setValue} busy={busy} />}
     </>
   );
 }
@@ -51,36 +65,30 @@ function TextConfiguration({ value, setValue }: Omit<Props, "busy">) {
   return (
     <fieldset className="space-y-2">
       <legend className="mb-2 text-body-xs-medium">{label("text_format")}</legend>
-      <div className="flex flex-wrap gap-6">
+      <RadioGroup
+        name="text-format"
+        aria-label={label("text_format")}
+        density="compact"
+        value={readOnly ? "read_only" : value.config.multiline ? "paragraph" : "single_line"}
+        onValueChange={(format) =>
+          setValue({
+            ...value,
+            config: {
+              ...value.config,
+              multiline: format === "paragraph",
+              read_only: format === "read_only",
+            },
+            is_required: format === "read_only" ? false : value.is_required,
+          })
+        }
+      >
         {["single_line", "paragraph", "read_only"].map((format) => (
           <label key={format} className="flex items-center gap-2 text-body-xs-regular">
-            <input
-              type="radio"
-              name="text-format"
-              value={format}
-              checked={
-                format === "read_only"
-                  ? readOnly
-                  : format === "paragraph"
-                    ? !!value.config.multiline && !readOnly
-                    : !value.config.multiline && !readOnly
-              }
-              onChange={() =>
-                setValue({
-                  ...value,
-                  config: {
-                    ...value.config,
-                    multiline: format === "paragraph",
-                    read_only: format === "read_only",
-                  },
-                  is_required: format === "read_only" ? false : value.is_required,
-                })
-              }
-            />
+            <Radio value={format} />
             {label(format)}
           </label>
         ))}
-      </div>
+      </RadioGroup>
     </fieldset>
   );
 }
@@ -95,7 +103,7 @@ function DropdownConfiguration({ value, setValue }: Omit<Props, "busy">) {
         <div key={option.client_id} className="flex items-center gap-2">
           <InputField
             orientation="vertical"
-            size="md"
+            size="lg"
             aria-label={`${label("option_name")} ${index + 1}`}
             value={option.name}
             onChange={(event) =>
@@ -149,7 +157,7 @@ function DateConfiguration({ value, setValue }: Omit<Props, "busy">) {
         value={String(value.config.format ?? "YYYY-MM-DD")}
         onValueChange={(format) => setValue((current) => ({ ...current, config: { ...current.config, format } }))}
       >
-        <SelectTrigger size="md" aria-label={label("date_format")} />
+        <SelectTrigger size="lg" aria-label={label("date_format")} />
         <SelectContent>
           <SelectList>
             {["YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "DD/MM/YYYY"].map((format) => (
@@ -221,7 +229,7 @@ function DefaultValueConfiguration({ value, setValue }: Omit<Props, "busy">) {
   return (
     <InputField
       orientation="vertical"
-      size="md"
+      size="lg"
       label={t("web.work_item_properties.default_value")}
       type={readOnly ? "text" : "number"}
       required={readOnly}

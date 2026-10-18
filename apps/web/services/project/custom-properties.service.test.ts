@@ -32,6 +32,31 @@ it("uses project and type definition endpoints, and merges value keys with PUT i
   });
 });
 
+it("previews and merges properties with the backend contract", async () => {
+  const service = new CustomPropertiesService();
+  const counts = { work_items_count: 12, draft_count: 2, type_count: 3 };
+  const post = vi.spyOn(service, "post").mockResolvedValue(response(counts));
+  expect(await service.previewMerge("w", "p", ["a", "b"])).toEqual(counts);
+  expect(post).toHaveBeenLastCalledWith("/api/workspaces/w/projects/p/custom-properties/merge/preview/", {
+    source_property_ids: ["a", "b"],
+  });
+  const input = { source_property_ids: ["a", "b"], name: "Combined", description: "Details" };
+  const result = { ...counts, merged_count: 2, property: { id: "new" } };
+  post.mockResolvedValue(response(result));
+  expect(await service.merge("w", "p", input)).toEqual(result);
+  expect(post).toHaveBeenLastCalledWith("/api/workspaces/w/projects/p/custom-properties/merge/", input);
+});
+
+it("preserves merge conflict responses for the dialog", async () => {
+  const service = new CustomPropertiesService();
+  const failure = { response: { status: 400, data: { code: "CUSTOM_PROPERTY_MERGE_TYPE_BINDING_CONFLICT" } } };
+  vi.spyOn(service, "post").mockRejectedValue(failure);
+  await expect(service.previewMerge("w", "p", ["a", "b"])).rejects.toBe(failure);
+  await expect(service.merge("w", "p", { source_property_ids: ["a", "b"], name: "New", description: "" })).rejects.toBe(
+    failure
+  );
+});
+
 it("preserves failures for callers to retain input and offer retry", async () => {
   const service = new CustomPropertiesService();
   const failure = new Error("network");

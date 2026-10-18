@@ -16,6 +16,8 @@ from plane.db.models import (
     ProjectMember,
 )
 from plane.services.custom_properties import (
+    apply_property_merge,
+    merge_property_plan,
     effective_properties,
     issue_property_values,
     validate_config,
@@ -93,6 +95,35 @@ def option_representation(option):
 class CustomPropertyBaseView(WorkflowBaseView):
     def property(self, project, property_id):
         return get_object_or_404(ProjectCustomProperty, project=project, pk=property_id, is_archived=False)
+
+
+class MergeSourcesSerializer(serializers.Serializer):
+    source_property_ids = serializers.ListField(child=serializers.UUIDField(), min_length=2, max_length=100)
+
+    def validate_source_property_ids(self, value):
+        if len(set(value)) != len(value):
+            raise ValidationError("CUSTOM_PROPERTY_MERGE_DUPLICATE_SOURCES")
+        return value
+
+
+class MergePropertySerializer(MergeSourcesSerializer):
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField(allow_blank=True)
+
+
+class CustomPropertyMergeEndpoint(CustomPropertyBaseView):
+    @transaction.atomic
+    def post(self, request, slug, project_id, preview=False):
+        project, _ = self.project(request, slug, project_id, write=True)
+        serializer = (MergeSourcesSerializer if preview else MergePropertySerializer)(data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError({"code": "CUSTOM_PROPERTY_MERGE_INVALID_REQUEST", "errors": serializer.errors})
+        data = serializer.validated_data
+        plan = merge_property_plan(project, data["source_property_ids"])
+        if preview:
+            return Response({"can_merge": True, **plan[-1]})
+        prop, counts = apply_property_merge(project, plan, data["name"], data["description"])
+        return Response({"property": representation(prop), **counts}, status=201)
 
 
 class ProjectCustomPropertyEndpoint(CustomPropertyBaseView):

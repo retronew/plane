@@ -5,6 +5,9 @@ import type {
   TCustomProperty,
   TCustomPropertyInput,
   TCustomPropertyList,
+  TCustomPropertyMergeInput,
+  TCustomPropertyMergePreview,
+  TCustomPropertyMergeResult,
   TCustomPropertyOption,
   TCustomPropertyOptionInput,
   TCustomPropertyValues,
@@ -23,6 +26,22 @@ export class CustomPropertiesService extends APIService {
   async list(slug: string, projectId: string, typeId?: string): Promise<TCustomPropertyList> {
     if (typeId) return this.typeProperties(slug, projectId, typeId);
     return (await this.get(`${this.projectBase(slug, projectId)}custom-properties/`)).data;
+  }
+
+  async previewMerge(
+    slug: string,
+    projectId: string,
+    sourcePropertyIds: string[]
+  ): Promise<TCustomPropertyMergePreview> {
+    return (
+      await this.post(`${this.projectBase(slug, projectId)}custom-properties/merge/preview/`, {
+        source_property_ids: sourcePropertyIds,
+      })
+    ).data;
+  }
+
+  async merge(slug: string, projectId: string, data: TCustomPropertyMergeInput): Promise<TCustomPropertyMergeResult> {
+    return (await this.post(`${this.projectBase(slug, projectId)}custom-properties/merge/`, data)).data;
   }
 
   async save(

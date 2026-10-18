@@ -2,6 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { InputField } from "@makeplane/propel/components/input-field";
+import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ export function PropertyEditor({
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState(draft);
+  const [typeSelected, setTypeSelected] = useState(Boolean(draft.id));
   const [mounted, setMounted] = useState(false);
   useLayoutEffect(() => {
     // Synchronize external Dialog presence before paint after the initial closed commit.
@@ -42,7 +44,7 @@ export function PropertyEditor({
   }, []);
   const label = (key: string) => t(`web.work_item_properties.${key}`);
   const readOnly = value.property_type === "text" && !!value.config.read_only;
-  const valid = !!value.name.trim() && (!readOnly || !!String(value.config.default_value ?? "").trim());
+  const valid = typeSelected && !!value.name.trim() && (!readOnly || !!String(value.config.default_value ?? "").trim());
   return (
     <Dialog
       open={mounted && open}
@@ -68,8 +70,9 @@ export function PropertyEditor({
               <fieldset disabled={busy} className="space-y-5">
                 <InputField
                   orientation="vertical"
-                  size="md"
+                  size="lg"
                   label={label("title")}
+                  placeholder={label("title")}
                   required
                   maxLength={255}
                   value={value.name}
@@ -77,41 +80,57 @@ export function PropertyEditor({
                 />
                 <label className="flex flex-col gap-2 text-body-xs-medium">
                   {t("description")}
-                  <textarea
-                    className="min-h-20 resize-none rounded-md border border-subtle bg-transparent px-3 py-2 text-body-xs-regular outline-none focus:border-accent-strong"
-                    value={value.description}
-                    onChange={(event) => setValue({ ...value, description: event.target.value })}
-                  />
+                  <TextAreaGroup resize="none" render={<div className="h-24" />}>
+                    <TextArea
+                      size="lg"
+                      surface="field"
+                      value={value.description}
+                      onChange={(event) => setValue({ ...value, description: event.target.value })}
+                    />
+                  </TextAreaGroup>
                 </label>
-                <PropertyConfiguration value={value} setValue={setValue} busy={busy} />
+                <PropertyConfiguration
+                  value={value}
+                  setValue={setValue}
+                  busy={busy}
+                  typeSelected={typeSelected}
+                  onTypeSelected={() => setTypeSelected(true)}
+                />
               </fieldset>
             </DialogBody>
-            <DialogActions>
-              <div className="mr-auto flex flex-wrap gap-4">
-                <Checkbox
-                  disabled={busy}
-                  label={label("active")}
-                  checked={value.is_active}
-                  onCheckedChange={(checked) => setValue({ ...value, is_active: checked })}
-                />
-                <Checkbox
-                  disabled={busy || value.property_type === "boolean" || readOnly}
-                  label={label("required")}
-                  checked={value.is_required}
-                  onCheckedChange={(checked) => setValue({ ...value, is_required: checked })}
-                />
-              </div>
-              <Button stretch="auto" variant="ghost" size="md" label={t("cancel")} disabled={busy} onClick={onClose} />
-              <Button
-                stretch="auto"
-                variant="primary"
-                size="md"
-                type="submit"
-                label={value.id ? t("save") : t("web.work_item_properties.create")}
-                disabled={busy || !valid}
-              />
-            </DialogActions>
           </DialogMain>
+          <DialogActions>
+            <div className="mr-auto flex flex-wrap gap-4">
+              <Checkbox
+                disabled={busy}
+                label={label("active")}
+                checked={value.is_active}
+                onCheckedChange={(checked) => setValue({ ...value, is_active: checked })}
+              />
+              <Checkbox
+                disabled={busy || value.property_type === "boolean" || readOnly}
+                label={label("required")}
+                checked={value.is_required}
+                onCheckedChange={(checked) => setValue({ ...value, is_required: checked })}
+              />
+            </div>
+            <Button
+              stretch="auto"
+              variant="secondary"
+              size="md"
+              label={t("cancel")}
+              disabled={busy}
+              onClick={onClose}
+            />
+            <Button
+              stretch="auto"
+              variant="primary"
+              size="md"
+              type="submit"
+              label={value.id ? t("save") : t("web.work_item_properties.create")}
+              disabled={busy || !valid}
+            />
+          </DialogActions>
         </form>
       </DialogContent>
     </Dialog>

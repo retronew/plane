@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { TProjectIssueType } from "@plane/types";
 import { IssueTypesSettings } from "./issue-types-settings";
@@ -80,9 +80,22 @@ vi.mock("./types-properties-settings", () => ({
 }));
 vi.mock("@makeplane/propel/components/menu", () => ({
   Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  MenuTrigger: () => null,
-  MenuItem: ({ label, disabled, onClick }: { label: string; disabled?: boolean; onClick?: () => void }) => (
-    <button disabled={disabled} onClick={onClick}>
+  MenuTrigger: ({ render: trigger }: { render: ReactNode }) => trigger,
+  MenuItem: ({
+    label,
+    disabled,
+    selected,
+    icon,
+    onClick,
+  }: {
+    label: string;
+    disabled?: boolean;
+    selected?: boolean;
+    icon?: ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button disabled={disabled} aria-pressed={selected} onClick={onClick}>
+      {icon}
       {label}
     </button>
   ),
@@ -117,6 +130,13 @@ it("renders table columns, real property counts and detail URLs", () => {
   expect(screen.getByRole("table")).toBeTruthy();
   expect(screen.getByRole("columnheader", { name: "web.workflow_ui.types_settings.property_count" })).toBeTruthy();
   expect(screen.getAllByRole("columnheader")).toHaveLength(3);
+  const table = screen.getByRole("table");
+  expect(table.closest(".rounded-lg.border.border-subtle")).toBeTruthy();
+  for (const header of screen.getAllByRole("columnheader")) {
+    expect(header.classList.contains("h-9!")).toBe(true);
+    expect(header.classList.contains("py-1!")).toBe(true);
+  }
+  for (const cell of screen.getAllByRole("cell")) expect(cell.classList.contains("h-11")).toBe(true);
   expect(screen.getByRole("row", { name: /Task/ }).querySelector("td:last-child span")?.textContent).toBe("3");
   expect(screen.getByRole("link", { name: /Task/ }).getAttribute("href")).toBe(
     "/w/settings/projects/p/work-item-types/types/task/properties/"
@@ -124,8 +144,94 @@ it("renders table columns, real property counts and detail URLs", () => {
   const deletions = screen.getAllByRole("button", { name: "delete" });
   expect(deletions.filter((button) => (button as HTMLButtonElement).disabled)).toHaveLength(1);
   expect(
-    screen.getByRole("row", { name: /Task/ }).querySelector<HTMLButtonElement>("button:last-of-type")?.disabled
+    (within(screen.getByRole("row", { name: /Task/ })).getByRole("button", { name: "delete" }) as HTMLButtonElement)
+      .disabled
   ).toBe(true);
+});
+it("keeps the tab divider and each panel at the full settings content width", () => {
+  const { rerender } = render(<IssueTypesSettings />);
+  const tablist = screen.getByRole("tablist");
+  expect(tablist.closest(".border-b")?.classList.contains("w-full")).toBe(true);
+  expect(screen.getByRole("tabpanel").parentElement?.classList.contains("w-full")).toBe(true);
+  state.params = new URLSearchParams("tab=properties");
+  rerender(<IssueTypesSettings />);
+  expect(screen.getByRole("tabpanel").parentElement?.classList.contains("w-full")).toBe(true);
+  state.params = new URLSearchParams("tab=hierarchy");
+  rerender(<IssueTypesSettings />);
+  expect(screen.getByRole("tabpanel").parentElement?.classList.contains("w-full")).toBe(true);
+});
+it("uses Propel fields in the type editor and resets the draft after dismissal", async () => {
+  render(<IssueTypesSettings />);
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.add" }));
+  const name = screen.getByRole("textbox", { name: "name" });
+  fireEvent.change(name, { target: { value: "Unsaved type" } });
+  expect(screen.getByRole("textbox", { name: "description" }).tagName).toBe("TEXTAREA");
+  fireEvent.click(screen.getByRole("button", { name: "cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.add" }));
+  expect((screen.getByRole("textbox", { name: "name" }) as HTMLInputElement).value).toBe("");
+});
+it("searches with the expandable control and restores rows when cleared", () => {
+  render(<IssueTypesSettings />);
+  fireEvent.click(screen.getByRole("button", { name: "web.workflow_ui.types_settings.search" }));
+  const input = screen.getByRole("searchbox", { name: "web.workflow_ui.types_settings.search" });
+  fireEvent.change(input, { target: { value: "defect" } });
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getByRole("row", { name: /Bug/ })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "common.clear" }));
+  expect(screen.getAllByRole("row")).toHaveLength(4);
+});
+it("renders numeric hierarchy levels and type links without default badges or management actions", () => {
+  state.params = new URLSearchParams("tab=hierarchy");
+  state.store.issueTypes.p.can_manage = false;
+  render(<IssueTypesSettings />);
+  expect(screen.getByRole("heading", { name: "web.workflow_ui.types_settings.hierarchy" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "1" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "0" })).toBeTruthy();
+  expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Epic", "Task", "Bug"]);
+  expect(screen.getByRole("link", { name: /Task/ }).getAttribute("href")).toBe(
+    "/w/settings/projects/p/work-item-types/types/task/properties/"
+  );
+  expect(screen.queryByText("common.default")).toBeNull();
+  expect(screen.queryByRole("button", { name: "web.workflow_ui.types_settings.add" })).toBeNull();
+});
+it("matches the icon-only filter chrome to sort and keeps icons alongside selected filter choices", () => {
+  render(<IssueTypesSettings />);
+  const filter = screen.getByRole("button", { name: "web.workflow_ui.types_settings.filter_status" });
+  const sort = screen.getByRole("button", { name: "web.workflow_ui.types_settings.sort" });
+  expect(filter.textContent).toBe("");
+  expect(filter.classList.contains("size-(--control-height-md)")).toBe(true);
+  for (const className of ["border", "border-strong", "bg-layer-2", "shadow-raised-100"]) {
+    expect(filter.classList.contains(className)).toBe(true);
+    expect(sort.classList.contains(className)).toBe(true);
+  }
+  expect(filter.querySelector("svg")).toBeTruthy();
+  for (const name of [
+    "common.all",
+    "web.workflow_ui.active",
+    "web.workflow_ui.inactive",
+    "web.workflow_ui.sort_name",
+    "web.workflow_ui.sort_name_desc",
+  ]) {
+    expect(screen.getByRole("button", { name }).querySelector("svg")).toBeTruthy();
+  }
+  const all = screen.getByRole("button", { name: "common.all" });
+  const active = screen.getByRole("button", { name: "web.workflow_ui.active" });
+  const inactive = screen.getByRole("button", { name: "web.workflow_ui.inactive" });
+  expect(all.getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(inactive);
+  expect(filter.textContent).toBe("");
+  expect(filter.classList.contains("border-strong")).toBe(true);
+  expect(inactive.getAttribute("aria-pressed")).toBe("true");
+  expect(all.getAttribute("aria-pressed")).toBe("false");
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getByRole("row", { name: /Bug/ })).toBeTruthy();
+  fireEvent.click(active);
+  expect(active.getAttribute("aria-pressed")).toBe("true");
+  expect(inactive.getAttribute("aria-pressed")).toBe("false");
+  expect(screen.getAllByRole("row")).toHaveLength(3);
+  fireEvent.click(all);
+  expect(screen.getAllByRole("row")).toHaveLength(4);
 });
 it("sorts through two menu choices with a stable sort trigger", () => {
   render(<IssueTypesSettings />);

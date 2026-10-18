@@ -17,6 +17,7 @@ from plane.app.views.project.workflow_approval import (
 
 from plane.app.views.project.custom_property import (
     ProjectCustomPropertyEndpoint,
+    CustomPropertyMergeEndpoint,
     CustomPropertyOptionEndpoint,
     IssueTypeCustomPropertyEndpoint,
     IssueCustomPropertyValueEndpoint,
@@ -25,6 +26,8 @@ from plane.app.views.project.custom_property import (
 prefix = "workspaces/<str:slug>/projects/<uuid:project_id>/"
 urlpatterns = [
     path(prefix + "custom-properties/", ProjectCustomPropertyEndpoint.as_view()),
+    path(prefix + "custom-properties/merge/", CustomPropertyMergeEndpoint.as_view()),
+    path(prefix + "custom-properties/merge/preview/", CustomPropertyMergeEndpoint.as_view(), {"preview": True}),
     path(prefix + "custom-properties/<uuid:property_id>/", ProjectCustomPropertyEndpoint.as_view()),
     path(prefix + "custom-properties/<uuid:property_id>/options/", CustomPropertyOptionEndpoint.as_view()),
     path(

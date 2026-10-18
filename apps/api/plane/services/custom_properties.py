@@ -10,6 +10,112 @@ from rest_framework.exceptions import ValidationError
 
 from plane.db.models import CustomPropertyOption, IssueTypeCustomProperty, ProjectCustomProperty, ProjectMember
 
+
+def merge_error(code):
+    raise ValidationError({"code": code})
+
+
+def merge_property_plan(project, source_ids):
+    """Caller must hold the Project lock, including for a consistent preview."""
+    from plane.db.models import DraftIssue, Issue
+
+    properties = list(ProjectCustomProperty.objects.filter(project=project, pk__in=source_ids, is_archived=False))
+    if len(properties) != len(source_ids):
+        merge_error("CUSTOM_PROPERTY_MERGE_INVALID_SOURCES")
+    by_id = {p.pk: p for p in properties}
+    properties = [by_id[key] for key in source_ids]
+    first = properties[0]
+    config = validate_config(first.property_type, first.config, first.is_required)
+    for prop in properties[1:]:
+        if prop.property_type != first.property_type:
+            merge_error("CUSTOM_PROPERTY_MERGE_TYPE_MISMATCH")
+        other_config = validate_config(prop.property_type, prop.config, prop.is_required)
+        if other_config.get("multiple") != config.get("multiple"):
+            merge_error("CUSTOM_PROPERTY_MERGE_CONFIG_CONFLICT")
+        if first.property_type == "dropdown":
+            comparable = {k: v for k, v in config.items() if k != "default_value"}
+            other_comparable = {k: v for k, v in other_config.items() if k != "default_value"}
+            defaults = [config.get("default_value"), other_config.get("default_value")]
+            if config.get("multiple"):
+                config["default_value"] = (
+                    list(dict.fromkeys(v for default in defaults for v in (default or []))) or None
+                )
+            else:
+                nonempty_defaults = [v for v in defaults if v is not None]
+                if len(set(nonempty_defaults)) > 1:
+                    merge_error("CUSTOM_PROPERTY_MERGE_DEFAULT_CONFLICT")
+                config["default_value"] = next(iter(nonempty_defaults), None)
+        else:
+            comparable, other_comparable = config, other_config
+        if comparable != other_comparable or (prop.is_active, prop.is_required) != (first.is_active, first.is_required):
+            merge_error("CUSTOM_PROPERTY_MERGE_CONFIG_CONFLICT")
+
+    if first.property_type == "dropdown" and config.get("multiple") and len(config.get("default_value") or []) > 500:
+        merge_error("CUSTOM_PROPERTY_MERGE_DEFAULT_CONFLICT")
+
+    bindings = list(IssueTypeCustomProperty.all_objects.filter(property_id__in=source_ids).order_by("id"))
+    type_ids = [b.project_issue_type_id for b in bindings]
+    if len(set(type_ids)) != len(type_ids):
+        merge_error("CUSTOM_PROPERTY_MERGE_TYPE_BINDING_CONFLICT")
+    options = list(CustomPropertyOption.all_objects.filter(property_id__in=source_ids).order_by("id"))
+    names = [o.name for o in options if not o.is_archived and o.deleted_at is None]
+    if len(set(names)) != len(names):
+        merge_error("CUSTOM_PROPERTY_MERGE_OPTION_CONFLICT")
+    keys = [str(p.pk) for p in properties]
+    rows = []
+    counts = {}
+    for model, count_key in ((Issue, "work_items_count"), (DraftIssue, "draft_count")):
+        count = 0
+        for row in (
+            model.all_objects.filter(project_id=project.pk, custom_properties__has_any_keys=keys)
+            .only("id", "custom_properties")
+            .iterator(chunk_size=500)
+        ):
+            values = row.custom_properties
+            present = [values[key] for key in keys if key in values]
+            nonempty = [v for v in present if not (v is None or v == [] or (isinstance(v, str) and not v.strip()))]
+            if len(nonempty) > 1:
+                merge_error("CUSTOM_PROPERTY_MERGE_VALUE_CONFLICT")
+            # Keep an explicit empty value when all source values are empty.
+            value = nonempty[0] if nonempty else present[0]
+            rows.append((model, row.pk, {k: v for k, v in values.items() if k not in keys}, value))
+            count += 1
+        counts[count_key] = count
+    return (
+        properties,
+        config,
+        bindings,
+        options,
+        rows,
+        {"merged_count": len(properties), **counts, "type_count": len(set(type_ids))},
+    )
+
+
+def apply_property_merge(project, plan, name, description):
+    """Apply a validated plan inside the caller's Project-locked transaction."""
+    properties, config, bindings, options, rows, counts = plan
+    if ProjectCustomProperty.objects.filter(project=project, name=name, is_archived=False).exists():
+        merge_error("CUSTOM_PROPERTY_DUPLICATE_NAME")
+    first = properties[0]
+    target = ProjectCustomProperty.objects.create(
+        project=project,
+        name=name,
+        description=description,
+        property_type=first.property_type,
+        config=config,
+        is_active=first.is_active,
+        is_required=first.is_required,
+        sort_order=min(p.sort_order for p in properties),
+    )
+    target_key = str(target.pk)
+    for model, pk, remaining, value in rows:
+        model.all_objects.filter(pk=pk).update(custom_properties={**remaining, target_key: value})
+    CustomPropertyOption.all_objects.filter(pk__in=[o.pk for o in options]).update(property=target)
+    IssueTypeCustomProperty.all_objects.filter(pk__in=[b.pk for b in bindings]).update(property=target)
+    ProjectCustomProperty.objects.filter(pk__in=[p.pk for p in properties]).update(is_archived=True, is_active=False)
+    return target, counts
+
+
 DATE_FORMATS = ("YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "DD/MM/YYYY")
 CONFIG_DEFAULTS = {
     "text": {"multiline": False, "read_only": False, "default_value": ""},

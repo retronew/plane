@@ -504,3 +504,392 @@ def test_draft_readonly_defaults_publish_but_explicit_writes_are_rejected(sessio
     assert response.status_code == 201, response.data
     assert Issue.objects.get(pk=response.data["id"]).custom_properties[key] == "Current default"
     assert not DraftIssue.objects.filter(pk=draft.pk).exists()
+
+
+def merge_sources(ctx, kind="text", configs=None):
+    return [
+        ProjectCustomProperty.objects.create(
+            project=ctx.project,
+            name=f"Source {i}",
+            property_type=kind,
+            config=validate_config(kind, (configs or [{}, {}])[i]),
+        )
+        for i in range(2)
+    ]
+
+
+def merge_request(client, ctx, sources, preview=False, **overrides):
+    return client.post(
+        ctx.base + "custom-properties/merge/" + ("preview/" if preview else ""),
+        {"source_property_ids": [str(p.pk) for p in sources], "name": "Merged", "description": "Combined", **overrides},
+        format="json",
+    )
+
+
+@pytest.mark.parametrize("kind,value", [("number", 0), ("boolean", False), ("text", "History")])
+def test_merge_migrates_history_and_drafts(session_client, property_ctx, kind, value):
+    from django.utils import timezone
+
+    ctx = property_ctx
+    sources = merge_sources(ctx, kind)
+    keys = [str(p.pk) for p in sources]
+    Issue.all_objects.filter(pk=ctx.issue.pk).update(
+        custom_properties={keys[0]: value, keys[1]: None, "unrelated": "keep"},
+        deleted_at=timezone.now(),
+        archived_at=timezone.now(),
+    )
+    draft = DraftIssue.objects.create(project=ctx.project, workspace=ctx.workspace, custom_properties={keys[1]: value})
+    IssueTypeCustomProperty.objects.create(project=ctx.project, property=sources[0], project_issue_type=ctx.binding)
+    preview = merge_request(session_client, ctx, sources, preview=True)
+    assert preview.status_code == 200, preview.data
+    assert preview.data == {
+        "can_merge": True,
+        "merged_count": 2,
+        "work_items_count": 1,
+        "draft_count": 1,
+        "type_count": 1,
+    }
+    assert not ProjectCustomProperty.objects.filter(name="Merged", project=ctx.project).exists()
+    response = merge_request(session_client, ctx, sources)
+    assert response.status_code == 201, response.data
+    target = response.data["property"]
+    key = str(target["id"])
+    assert key not in keys
+    assert target["name"] == "Merged" and target["description"] == "Combined"
+    ctx.issue.refresh_from_db()
+    draft.refresh_from_db()
+    assert ctx.issue.custom_properties == {key: value, "unrelated": "keep"}
+    assert draft.custom_properties == {key: value}
+    assert len(target["type_settings"]) == 1
+    assert (
+        ProjectCustomProperty.objects.filter(pk__in=[p.pk for p in sources], is_archived=True, is_active=False).count()
+        == 2
+    )
+    assert merge_request(session_client, ctx, sources).status_code == 400
+
+
+@pytest.mark.parametrize("kind,value", [("number", 0), ("boolean", False), ("text", "same")])
+@pytest.mark.parametrize("draft", [False, True])
+def test_merge_value_conflict_never_discards_values(session_client, property_ctx, kind, value, draft):
+    ctx = property_ctx
+    sources = merge_sources(ctx, kind)
+    values = {str(p.pk): value for p in sources}
+    if draft:
+        DraftIssue.objects.create(project=ctx.project, workspace=ctx.workspace, custom_properties=values)
+    else:
+        Issue.all_objects.filter(pk=ctx.issue.pk).update(custom_properties=values, type=None)
+    for preview in (True, False):
+        response = merge_request(session_client, ctx, sources, preview=preview)
+        assert response.status_code == 400, response.data
+        assert response.data["code"] == "CUSTOM_PROPERTY_MERGE_VALUE_CONFLICT"
+    assert not ProjectCustomProperty.objects.filter(project=ctx.project, is_archived=True).exists()
+    assert not ProjectCustomProperty.objects.filter(project=ctx.project, name="Merged").exists()
+
+
+@pytest.mark.parametrize("inactive", [False, True])
+def test_merge_rejects_overlapping_bindings(session_client, property_ctx, inactive):
+    ctx = property_ctx
+    sources = merge_sources(ctx)
+    for p in sources:
+        IssueTypeCustomProperty.objects.create(
+            project=ctx.project, property=p, project_issue_type=ctx.binding, is_active=not inactive
+        )
+    response = merge_request(session_client, ctx, sources)
+    assert response.status_code == 400
+    assert response.data["code"] == "CUSTOM_PROPERTY_MERGE_TYPE_BINDING_CONFLICT"
+
+
+def test_merge_dropdown_preserves_option_ids_and_multiselect_defaults(session_client, property_ctx):
+    ctx = property_ctx
+    sources = merge_sources(ctx, "dropdown", [{"multiple": True}, {"multiple": True}])
+    options = [
+        CustomPropertyOption.objects.create(project=ctx.project, property=p, name=f"Option {i}")
+        for i, p in enumerate(sources)
+    ]
+    for p, o in zip(sources, options):
+        p.config["default_value"] = [str(o.pk)]
+        p.save()
+    ctx.issue.custom_properties = {str(sources[0].pk): [str(options[0].pk)]}
+    ctx.issue.save()
+    response = merge_request(session_client, ctx, sources)
+    assert response.status_code == 201, response.data
+    target = response.data["property"]
+    assert target["config"]["default_value"] == [str(o.pk) for o in options]
+    assert {str(o["id"]) for o in target["options"]} == {str(o.pk) for o in options}
+    assert CustomPropertyOption.objects.filter(property_id=target["id"]).count() == 2
+    ctx.issue.refresh_from_db()
+    assert ctx.issue.custom_properties == {str(target["id"]): [str(options[0].pk)]}
+
+
+@pytest.mark.parametrize(
+    "case", ["duplicate", "one", "many", "foreign", "archived", "type", "config", "multiple", "name"]
+)
+def test_merge_rejects_invalid_sources_and_config(session_client, property_ctx, case):
+    ctx = property_ctx
+    sources = merge_sources(ctx)
+    payload = {}
+    if case == "duplicate":
+        sources = [sources[0], sources[0]]
+    elif case == "one":
+        sources = sources[:1]
+    elif case == "many":
+        payload["source_property_ids"] = [str(uuid4()) for _ in range(101)]
+    elif case == "foreign":
+        other = Project.objects.create(workspace=ctx.workspace, name="Other", identifier="OTH")
+        sources[1].project = other
+        sources[1].save()
+    elif case == "archived":
+        sources[1].is_archived = True
+        sources[1].save()
+    elif case == "type":
+        sources[1].property_type = "number"
+        sources[1].save()
+    elif case == "config":
+        sources[1].config["multiline"] = True
+        sources[1].save()
+    elif case == "multiple":
+        for i, p in enumerate(sources):
+            p.property_type = "member"
+            p.config = {"multiple": bool(i)}
+            p.save()
+    else:
+        payload["name"] = sources[0].name
+    response = merge_request(session_client, ctx, sources, **payload)
+    assert response.status_code == 400, response.data
+    assert "code" in response.data
+    assert not ProjectCustomProperty.objects.filter(project=ctx.project, name="Merged").exists()
+
+
+@pytest.mark.parametrize("preview", [True, False])
+def test_merge_requires_schema_management_permission(session_client, property_ctx, preview):
+    ctx = property_ctx
+    sources = merge_sources(ctx)
+    ProjectMember.objects.filter(project=ctx.project, member=ctx.user).update(role=15)
+    WorkspaceMember.objects.filter(workspace=ctx.workspace, member=ctx.user).update(role=15)
+    assert merge_request(session_client, ctx, sources, preview=preview).status_code == 403
+
+
+def test_merge_rolls_back_after_partial_migration(session_client, property_ctx, monkeypatch):
+    ctx = property_ctx
+    sources = merge_sources(ctx, "dropdown")
+    option = CustomPropertyOption.objects.create(project=ctx.project, property=sources[0], name="Rollback option")
+    binding = IssueTypeCustomProperty.objects.create(
+        project=ctx.project, property=sources[0], project_issue_type=ctx.binding
+    )
+    draft = DraftIssue.objects.create(
+        project=ctx.project, workspace=ctx.workspace, custom_properties={str(sources[0].pk): str(option.pk)}
+    )
+    values = {str(sources[0].pk): str(option.pk)}
+    Issue.all_objects.filter(pk=ctx.issue.pk).update(custom_properties=values)
+    from django.db.models.query import QuerySet
+
+    original = QuerySet.update
+
+    def fail_binding_update(queryset, **kwargs):
+        if queryset.model is IssueTypeCustomProperty:
+            raise RuntimeError("Injected failure after values migration")
+        return original(queryset, **kwargs)
+
+    monkeypatch.setattr(QuerySet, "update", fail_binding_update)
+    response = merge_request(session_client, ctx, sources)
+    assert response.status_code == 500
+    ctx.issue.refresh_from_db()
+    assert ctx.issue.custom_properties == values
+    assert ProjectCustomProperty.objects.filter(project=ctx.project).count() == 2
+    assert not ProjectCustomProperty.objects.filter(project=ctx.project, is_archived=True).exists()
+    option.refresh_from_db()
+    binding.refresh_from_db()
+    draft.refresh_from_db()
+    assert option.property_id == sources[0].pk
+    assert binding.property_id == sources[0].pk
+    assert draft.custom_properties == values
+
+
+@pytest.mark.parametrize("conflict", ["option", "default"])
+def test_merge_dropdown_conflicts(session_client, property_ctx, conflict):
+    ctx = property_ctx
+    sources = merge_sources(ctx, "dropdown")
+    for i, prop in enumerate(sources):
+        option = CustomPropertyOption.objects.create(
+            project=ctx.project, property=prop, name="Same" if conflict == "option" else str(i)
+        )
+        if conflict == "default":
+            prop.config["default_value"] = str(option.pk)
+            prop.save()
+    for preview in (True, False):
+        response = merge_request(session_client, ctx, sources, preview=preview)
+        assert response.status_code == 400
+        assert response.data["code"] == (
+            "CUSTOM_PROPERTY_MERGE_OPTION_CONFLICT"
+            if conflict == "option"
+            else "CUSTOM_PROPERTY_MERGE_DEFAULT_CONFLICT"
+        )
+
+
+def test_merge_single_dropdown_default_and_archived_option_history(session_client, property_ctx):
+    ctx = property_ctx
+    sources = merge_sources(ctx, "dropdown")
+    default = CustomPropertyOption.objects.create(project=ctx.project, property=sources[0], name="Default")
+    old = CustomPropertyOption.objects.create(
+        project=ctx.project, property=sources[1], name="Old", is_active=False, is_archived=True
+    )
+    sources[0].config["default_value"] = str(default.pk)
+    sources[0].save()
+    ctx.issue.custom_properties = {str(sources[1].pk): str(old.pk)}
+    ctx.issue.save()
+    response = merge_request(session_client, ctx, sources)
+    assert response.status_code == 201, response.data
+    target = response.data["property"]
+    assert target["config"]["default_value"] == str(default.pk)
+    assert len(target["options"]) == 2
+    old.refresh_from_db()
+    assert old.property_id == target["id"]
+    assert old.is_archived and not old.is_active
+    ctx.issue.refresh_from_db()
+    assert ctx.issue.custom_properties == {str(target["id"]): str(old.pk)}
+
+
+def test_unarchive_stale_issue_cannot_overwrite_merged_values(session_client, property_ctx, monkeypatch):
+    from django.utils import timezone
+    from plane.app.views.issue import archive
+
+    ctx = property_ctx
+    sources = merge_sources(ctx)
+    Issue.all_objects.filter(pk=ctx.issue.pk).update(
+        archived_at=timezone.now(), custom_properties={str(sources[0].pk): "Retain"}
+    )
+    merged = []
+
+    def merge_after_unarchive_reads(**kwargs):
+        response = merge_request(session_client, ctx, sources)
+        assert response.status_code == 201, response.data
+        merged.append(response.data["property"]["id"])
+
+    monkeypatch.setattr(archive.issue_activity, "delay", merge_after_unarchive_reads)
+    response = session_client.delete(ctx.base + f"issues/{ctx.issue.pk}/archive/")
+    assert response.status_code == 204, response.data
+    ctx.issue.refresh_from_db()
+    assert ctx.issue.archived_at is None
+    assert ctx.issue.custom_properties == {str(merged[0]): "Retain"}
+
+
+def test_merge_rejects_oversized_combined_multiselect_default(session_client, property_ctx):
+    ctx = property_ctx
+    sources = merge_sources(ctx, "dropdown", [{"multiple": True}, {"multiple": True}])
+    for i, prop in enumerate(sources):
+        options = [
+            CustomPropertyOption(project=ctx.project, workspace=ctx.workspace, property=prop, name=f"{i}-{j}")
+            for j in range(300)
+        ]
+        CustomPropertyOption.objects.bulk_create(options)
+        prop.config["default_value"] = [str(o.pk) for o in options]
+        prop.save()
+        assert len(validate_value(prop, prop.config["default_value"], ctx.project.pk)) == 300
+    for preview in (True, False):
+        response = merge_request(session_client, ctx, sources, preview=preview)
+        assert response.status_code == 400, response.data
+        assert response.data["code"] == "CUSTOM_PROPERTY_MERGE_DEFAULT_CONFLICT"
+    assert ProjectCustomProperty.objects.filter(project=ctx.project).count() == 2
+    assert CustomPropertyOption.objects.filter(property=sources[0]).count() == 300
+    assert CustomPropertyOption.objects.filter(property=sources[1]).count() == 300
+
+
+def test_draft_publish_activities_wait_for_commit(
+    session_client, property_ctx, monkeypatch, django_capture_on_commit_callbacks
+):
+    from plane.app.views.workspace import draft as views
+
+    ctx = property_ctx
+    draft = DraftIssue.objects.create(project=ctx.project, workspace=ctx.workspace, name="Commit")
+    DraftIssue.objects.filter(pk=draft.pk).update(created_by=ctx.user)
+    activity = Mock()
+    monkeypatch.setattr(views.issue_activity, "delay", activity)
+    monkeypatch.setattr("plane.db.mixins.soft_delete_related_objects.delay", Mock())
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        response = session_client.post(
+            f"/api/workspaces/{ctx.workspace.slug}/draft-to-issue/{draft.pk}/", {"name": "Committed"}, format="json"
+        )
+        assert response.status_code == 201, response.data
+        activity.assert_not_called()
+    assert len(callbacks) >= 1
+    activity.assert_called_once()
+    assert activity.call_args.kwargs["issue_id"] == str(response.data["id"])
+
+
+def test_draft_removed_while_waiting_for_publish_returns_404(session_client, property_ctx, monkeypatch):
+    from django.db.models.query import QuerySet
+    from django.utils import timezone
+
+    ctx = property_ctx
+    draft = DraftIssue.objects.create(project=ctx.project, workspace=ctx.workspace, name="Race")
+    DraftIssue.objects.filter(pk=draft.pk).update(created_by=ctx.user)
+    original = QuerySet.select_for_update
+
+    def remove_before_lock(queryset, *args, **kwargs):
+        if queryset.model is DraftIssue:
+            DraftIssue.all_objects.filter(pk=draft.pk).update(deleted_at=timezone.now())
+        return original(queryset, *args, **kwargs)
+
+    monkeypatch.setattr(QuerySet, "select_for_update", remove_before_lock)
+    response = session_client.post(
+        f"/api/workspaces/{ctx.workspace.slug}/draft-to-issue/{draft.pk}/", {"name": "No duplicate"}, format="json"
+    )
+    assert response.status_code == 404, response.data
+    assert not Issue.objects.filter(project=ctx.project, name="No duplicate").exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_merge_serializes_concurrent_value_write(property_ctx, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+
+    from django.db import close_old_connections
+    from rest_framework.test import APIClient
+    from plane.app.views.project import custom_property as views
+
+    ctx = property_ctx
+    sources = merge_sources(ctx)
+    source_key = str(sources[0].pk)
+    Issue.all_objects.filter(pk=ctx.issue.pk).update(custom_properties={source_key: "Before"})
+    locked, release, write_started, write_done = Event(), Event(), Event(), Event()
+    original = views.apply_property_merge
+
+    def paused_merge(*args, **kwargs):
+        locked.set()
+        assert release.wait(10)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(views, "apply_property_merge", paused_merge)
+
+    def call(merge):
+        close_old_connections()
+        try:
+            client = APIClient()
+            client.force_authenticate(user=ctx.user)
+            if merge:
+                return merge_request(client, ctx, sources)
+            write_started.set()
+            response = client.put(
+                ctx.base + f"issues/{ctx.issue.pk}/custom-properties/",
+                {"values": {source_key: "Concurrent"}},
+                format="json",
+            )
+            write_done.set()
+            return response
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        merging = executor.submit(call, True)
+        try:
+            assert locked.wait(10)
+            writing = executor.submit(call, False)
+            assert write_started.wait(10)
+            assert not write_done.wait(0.2)
+        finally:
+            release.set()
+        merged, written = merging.result(timeout=10), writing.result(timeout=10)
+    assert merged.status_code == 201, merged.data
+    assert written.status_code == 400, written.data
+    ctx.issue.refresh_from_db()
+    assert ctx.issue.custom_properties == {str(merged.data["property"]["id"]): "Before"}

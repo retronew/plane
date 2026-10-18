@@ -42,10 +42,13 @@ class DraftIssueCreateSerializer(WorkflowIssueTypeMixin, BaseSerializer):
 
         project_id = self.context.get("project_id")
         with transaction.atomic():
-            if project_id:
-                Project.objects.select_for_update().get(pk=project_id)
+            # A move must serialize against schema changes in both projects.
+            project_ids = {str(pk) for pk in (project_id, getattr(self.instance, "project_id", None)) if pk}
+            list(Project.objects.select_for_update().filter(pk__in=project_ids).order_by("pk"))
             if self.instance:
                 self.instance = DraftIssue.objects.select_for_update().get(pk=self.instance.pk)
+                if self.instance.project_id and str(self.instance.project_id) not in project_ids:
+                    raise serializers.ValidationError({"project_id": "CUSTOM_PROPERTY_PROJECT_CHANGED"})
             self.validated_data["custom_properties"] = issue_property_values(
                 project_id, self.validated_data, self.instance, draft=True
             )

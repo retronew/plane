@@ -4,6 +4,7 @@
 
 # Python imports
 import json
+from functools import partial
 
 # Django imports
 from django.utils import timezone
@@ -11,6 +12,7 @@ from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
+from django.db import transaction
 from django.db.models import Q, UUIDField, Value, Subquery, OuterRef
 from django.db.models.functions import Coalesce
 from django.utils.decorators import method_decorator
@@ -205,6 +207,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
         draft_issue.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @transaction.atomic
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def create_draft_to_issue(self, request, slug, draft_id):
         # Drafts are private to their creator; scope the lookup to the owner so a
@@ -224,6 +227,17 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Match schema/issue writes: Project first, then DraftIssue. Re-read after
+        # acquiring the lock so a concurrent property merge cannot leave stale keys.
+        from plane.db.models import Project
+
+        locked_project_id = draft_issue.project_id
+        Project.objects.select_for_update().get(pk=locked_project_id)
+        draft_issue = DraftIssue.objects.select_for_update().filter(pk=draft_issue.pk, created_by=request.user).first()
+        if draft_issue is None:
+            return Response({"error": "The required object does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        if draft_issue.project_id != locked_project_id:
+            return Response({"project_id": "CUSTOM_PROPERTY_PROJECT_CHANGED"}, status=400)
         issue_data = request.data.copy()
         submitted_properties = issue_data.get("custom_properties", {})
         if not isinstance(submitted_properties, dict):
@@ -258,7 +272,10 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
         if serializer.is_valid():
             serializer.save()
 
-            issue_activity.delay(
+            def schedule_activity(**payload):
+                transaction.on_commit(partial(issue_activity.delay, **payload))
+
+            schedule_activity(
                 type="issue.activity.created",
                 requested_data=json.dumps(self.request.data, cls=DjangoJSONEncoder),
                 actor_id=str(request.user.id),
@@ -280,7 +297,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                     updated_by_id=draft_issue.updated_by_id,
                 )
                 # Capture Issue Activity
-                issue_activity.delay(
+                schedule_activity(
                     type="cycle.activity.created",
                     requested_data=None,
                     actor_id=str(self.request.user.id),
@@ -315,7 +332,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                 )
                 # Update the activity
                 _ = [
-                    issue_activity.delay(
+                    schedule_activity(
                         type="module.activity.created",
                         requested_data=json.dumps({"module_id": str(module)}),
                         actor_id=str(request.user.id),

@@ -299,7 +299,7 @@ class IssueArchiveViewSet(BaseViewSet):
             origin=base_host(request=request, is_app=True),
         )
         issue.archived_at = None
-        issue.save()
+        issue.save(update_fields=["archived_at", "updated_at", "updated_by"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

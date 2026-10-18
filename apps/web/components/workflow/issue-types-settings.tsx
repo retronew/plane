@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { runInAction } from "mobx";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { Shapes } from "lucide-react";
+import { WorkItemsOutline, PropertiesOutline, HierarchyOutline } from "@makeplane/propel/icons";
 import { Button } from "@makeplane/propel/components/button";
 import { Badge } from "@makeplane/propel/components/badge";
 import { Tabs, Tab, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
@@ -158,6 +158,7 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
     return (
       <TypesList
         types={types.results}
+        workflows={store.lists[projectId]?.results ?? []}
         canManage={types.can_manage}
         busy={busy}
         base={base}
@@ -172,7 +173,11 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
       header={
         <SettingsPageHeader
           breadcrumbs={[
-            { label: t("web.workflow_ui.issue_types"), href: base, icon: <Shapes className="size-4 text-tertiary" /> },
+            {
+              label: t("web.workflow_ui.issue_types"),
+              href: base,
+              icon: <WorkItemsOutline className="size-4 text-tertiary" />,
+            },
             ...(selected ? [{ label: selected.name }] : []),
           ]}
         />
@@ -188,6 +193,7 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
             <div className="ml-auto">
               <TypesActions
                 type={selected}
+                workflows={store.lists[projectId]?.results ?? []}
                 canManage={types?.can_manage ?? false}
                 busy={busy}
                 onEdit={edit}
@@ -217,28 +223,40 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
               });
           }}
         >
-          <TabsList aria-label={t("web.workflow_ui.issue_types")}>
-            {(typeId ? ["properties"] : ["types", "properties", "hierarchy"]).map((value) => (
-              <Tab
-                key={value}
-                value={value}
-                label={t(value === "types" ? "web.workflow_ui.issue_types" : `${key}.${value}`)}
-              />
-            ))}
-          </TabsList>
-          <TabsPanel value={typeId ? "properties" : tab}>{renderPanel()}</TabsPanel>
+          <div className="w-full min-w-0 border-b border-subtle-1">
+            <TabsList aria-label={t("web.workflow_ui.issue_types")}>
+              {(typeId ? ["properties"] : ["types", "properties", "hierarchy"]).map((value) => (
+                <Tab
+                  key={value}
+                  value={value}
+                  icon={
+                    value === "types" ? (
+                      <WorkItemsOutline className="size-4 text-tertiary" />
+                    ) : value === "properties" ? (
+                      <PropertiesOutline className="size-4 text-tertiary" />
+                    ) : (
+                      <HierarchyOutline className="size-4 text-tertiary" />
+                    )
+                  }
+                  label={t(value === "types" ? "web.workflow_ui.issue_types" : `${key}.${value}`)}
+                />
+              ))}
+            </TabsList>
+          </div>
+          <div className="w-full min-w-0 pt-3">
+            <TabsPanel value={typeId ? "properties" : tab}>{renderPanel()}</TabsPanel>
+          </div>
         </Tabs>
       </div>
       {draft && (
         <TypesEditor
+          key={draft.id ?? "new"}
           type={draft}
           open={editorOpen}
           busy={busy}
-          workflows={store.lists[projectId]?.results ?? []}
           onClose={() => setEditorOpen(false)}
           onClosed={() => setDraft(null)}
           onSave={save}
-          onPreview={(request) => void preview(request)}
         />
       )}
       {impact && (

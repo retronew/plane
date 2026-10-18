@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { SWRConfig } from "swr";
+import useSWR, { SWRConfig } from "swr";
 import { beforeEach, expect, it, vi } from "vitest";
 import { WorkItemPropertiesSettings } from "./types-properties-settings";
 import type { TCustomProperty, TCustomPropertyList } from "@/services/project/custom-properties.types";
@@ -11,6 +11,8 @@ const service = vi.hoisted(() => ({
   remove: vi.fn(),
   saveOption: vi.fn(),
   removeOption: vi.fn(),
+  previewMerge: vi.fn(),
+  merge: vi.fn(),
 }));
 const toast = vi.hoisted(() => vi.fn());
 vi.mock("@/services/project/custom-properties.service", () => ({
@@ -21,6 +23,8 @@ vi.mock("@/services/project/custom-properties.service", () => ({
     remove = service.remove;
     saveOption = service.saveOption;
     removeOption = service.removeOption;
+    previewMerge = service.previewMerge;
+    merge = service.merge;
   },
 }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -124,6 +128,21 @@ it.each([undefined, "bug"])("honors server can_manage=false in scope %s even whe
   expect(service.bindType).not.toHaveBeenCalled();
 });
 
+it("uses the shared settings table frame, header height and data cell height", async () => {
+  setup();
+  await screen.findByRole("button", { name: "Estimate" });
+  const table = screen.getByRole("table");
+  expect(table.closest(".rounded-lg.border.border-subtle")).toBeTruthy();
+  expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+  expect(screen.getByRole("columnheader", { name: "aria_labels.common.more_actions" })).toBeTruthy();
+  for (const header of screen.getAllByRole("columnheader")) {
+    expect(header.classList.contains("h-9!")).toBe(true);
+    expect(header.classList.contains("py-1!")).toBe(true);
+  }
+  for (const cell of screen.getAllByRole("cell")) expect(cell.classList.contains("h-11")).toBe(true);
+  expect(within(table).getByText("Planning effort")).toBeTruthy();
+});
+
 it("does not expose management before load and retries a failed request through real SWR", async () => {
   service.list.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(response());
   setup();
@@ -181,6 +200,7 @@ it("retains a failed creation draft and retries with a trimmed payload", async (
   service.save.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(property({ id: "created" }));
   setup();
   await newProperty();
+  await chooseType("text");
   fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "  Customer code  " } });
   fireEvent.change(screen.getByRole("textbox", { name: "description" }), { target: { value: "External reference" } });
   clickControl(screen.getByRole("checkbox", { name: label("required") }));
@@ -249,6 +269,7 @@ it("creates initial dropdown options with blank names excluded and names trimmed
 it("atomically creates and binds a field through type_id and refreshes both lists", async () => {
   setup("bug");
   await newProperty("bug");
+  await chooseType("text");
   fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Severity" } });
   clickControl(screen.getByRole("checkbox", { name: label("required") }));
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
@@ -518,6 +539,7 @@ it("closes a successfully saved draft even if refreshing parent counts fails", a
   const onChanged = vi.fn().mockRejectedValue(new Error("counts offline"));
   setup(undefined, onChanged);
   await newProperty();
+  await chooseType("text");
   fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Customer code" } });
   fireEvent.click(screen.getByRole("button", { name: label("create") }));
   await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
@@ -528,6 +550,66 @@ it("closes a successfully saved draft even if refreshing parent counts fails", a
   await newProperty();
   expect((screen.getByRole("textbox", { name: label("title") }) as HTMLInputElement).value).toBe("");
   expect(service.save).toHaveBeenCalledTimes(1);
+});
+
+async function submitMerge() {
+  await screen.findByRole("button", { name: "Estimate" });
+  fireEvent.click(screen.getByRole("button", { name: "aria_labels.common.more_actions" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: label("merge.title") }));
+  await chooseType("text");
+  fireEvent.click(screen.getByRole("button", { name: label("merge.continue") }));
+  clickControl(screen.getByRole("checkbox", { name: "Estimate" }));
+  clickControl(screen.getByRole("checkbox", { name: "Other" }));
+  fireEvent.click(screen.getByRole("button", { name: label("merge.continue") }));
+  await screen.findByRole("textbox", { name: label("title") });
+  fireEvent.change(screen.getByRole("textbox", { name: label("title") }), { target: { value: "Merged" } });
+  fireEvent.change(screen.getByRole("textbox", { name: label("merge.confirmation") }), {
+    target: { value: label("merge.confirmation_word") },
+  });
+  fireEvent.click(screen.getByRole("button", { name: label("merge.action") }));
+}
+
+it("closes a successful merge when definitions refresh rejects and never offers to submit it again", async () => {
+  service.list
+    .mockResolvedValueOnce(response([property(), property({ id: "other", name: "Other" })]))
+    .mockRejectedValue(new Error("refresh offline"));
+  service.previewMerge.mockResolvedValue({ work_items_count: 2, draft_count: 0, type_count: 2 });
+  service.merge.mockResolvedValue({ property: property({ id: "merged" }), merged_count: 2 });
+  const onChanged = vi.fn().mockResolvedValue(undefined);
+  setup(undefined, onChanged);
+  await submitMerge();
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(service.merge).toHaveBeenCalledTimes(1);
+  expect(onChanged).toHaveBeenCalledTimes(1);
+  expect(toast).toHaveBeenCalledWith({ type: "error", title: "error", message: label("load_failed") });
+  expect(toast).not.toHaveBeenCalledWith(expect.objectContaining({ message: label("save_failed") }));
+  expect(screen.queryByRole("button", { name: label("merge.action") })).toBeNull();
+});
+
+it("invalidates every type definition cache in the merged project without touching other projects", async () => {
+  service.list.mockResolvedValue(response([property(), property({ id: "other", name: "Other" })]));
+  service.previewMerge.mockResolvedValue({ work_items_count: 2, draft_count: 0, type_count: 2 });
+  service.merge.mockResolvedValue({ property: property({ id: "merged" }), merged_count: 2 });
+  const fetchDefinition = vi.fn().mockResolvedValue({ version: "before" });
+  function DefinitionProbe({ projectId, typeId }: { projectId: string; typeId: string }) {
+    useSWR(["custom-properties", "workspace", projectId, typeId], () => fetchDefinition(projectId, typeId));
+    return null;
+  }
+  render(
+    <SWRConfig
+      value={{ provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false, revalidateOnFocus: false }}
+    >
+      <WorkItemPropertiesSettings workspaceSlug="workspace" projectId="project" types={[]} />
+      <DefinitionProbe projectId="project" typeId="bug" />
+      <DefinitionProbe projectId="project" typeId="task" />
+      <DefinitionProbe projectId="another-project" typeId="bug" />
+    </SWRConfig>
+  );
+  await waitFor(() => expect(fetchDefinition).toHaveBeenCalledTimes(3));
+  await submitMerge();
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(fetchDefinition.mock.calls.filter(([projectId]) => projectId === "project")).toHaveLength(4);
+  expect(fetchDefinition.mock.calls.filter(([projectId]) => projectId === "another-project")).toHaveLength(1);
 });
 
 it("disables mutations while saving and does not submit a second request", async () => {

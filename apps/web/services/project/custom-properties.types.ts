@@ -38,6 +38,21 @@ export type TCustomPropertyList = {
   can_manage: boolean;
 };
 
+export type TCustomPropertyMergePreview = {
+  work_items_count: number;
+  draft_count: number;
+  type_count: number;
+};
+export type TCustomPropertyMergeInput = {
+  source_property_ids: string[];
+  name: string;
+  description: string;
+};
+export type TCustomPropertyMergeResult = TCustomPropertyMergePreview & {
+  property: TCustomProperty;
+  merged_count: number;
+};
+
 export type TIssueCustomPropertyValues = { values: TCustomPropertyValues };
 export type TCustomPropertyInput = Pick<TCustomProperty, "name" | "property_type"> &
   Partial<Pick<TCustomProperty, "description" | "config" | "is_active" | "is_required" | "sort_order">> & {

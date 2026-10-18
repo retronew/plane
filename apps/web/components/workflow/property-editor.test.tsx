@@ -43,8 +43,37 @@ async function chooseType(type: PropertyDraft["property_type"]) {
   await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
 }
 
+it("starts without a selected type or configuration and blocks submission until a type is selected", async () => {
+  const { props } = setup();
+  const picker = screen.getByRole("combobox", { name: label("property_type") });
+  expect(picker.textContent).toBe("web.workflow_ui.select_type");
+  expect(screen.queryByRole("radio", { name: label("single_line") })).toBeNull();
+  expect(screen.queryByText(label("text_format"))).toBeNull();
+  const title = screen.getByRole("textbox", { name: label("title") });
+  expect(title.getAttribute("placeholder")).toBe(label("title"));
+  expect(screen.getByRole("textbox", { name: "description" }).tagName).toBe("TEXTAREA");
+  expect((screen.getByRole("button", { name: label("create") }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.submit(title.closest("form")!);
+  expect(props.onSave).not.toHaveBeenCalled();
+  await chooseType("text");
+  expect(screen.getByRole("radio", { name: label("single_line") }).getAttribute("aria-checked")).toBe("true");
+  fireEvent.click(screen.getByRole("button", { name: label("create") }));
+  await waitFor(() => expect(props.onSave).toHaveBeenCalledWith(draft));
+});
+
+it("keeps existing fields selected and their type locked while allowing edits", async () => {
+  const existing = { ...draft, id: "estimate" };
+  const { props } = setup(existing);
+  expect((screen.getByRole("combobox", { name: label("property_type") }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByRole("radio", { name: label("single_line") }).getAttribute("aria-checked")).toBe("true");
+  clickControl(screen.getByRole("checkbox", { name: label("active") }));
+  fireEvent.click(screen.getByRole("button", { name: "save" }));
+  await waitFor(() => expect(props.onSave).toHaveBeenCalledWith({ ...existing, is_active: false }));
+});
+
 it("blocks whitespace titles and saves a trimmed title with the edited description", async () => {
   const { props } = setup({ ...draft, name: "" });
+  await chooseType("text");
   const title = screen.getByRole("textbox", { name: label("title") });
   fireEvent.change(title, { target: { value: "   " } });
   expect((screen.getByRole("button", { name: label("create") }) as HTMLButtonElement).disabled).toBe(true);
@@ -78,7 +107,11 @@ it("clears required and incompatible configuration when switching to boolean", a
 
 it("makes read-only text non-required and requires a default before submitting", async () => {
   const { props } = setup();
-  fireEvent.click(screen.getByRole("radio", { name: label("read_only") }));
+  await chooseType("text");
+  const readOnly = screen.getByRole("radio", { name: label("read_only") });
+  const radioInput = readOnly.parentElement?.querySelector<HTMLInputElement>('input[type="radio"]');
+  if (!radioInput) throw new Error("Expected the Base UI radio input");
+  fireEvent.click(radioInput);
   const required = screen.getByRole("checkbox", { name: label("required") }) as HTMLInputElement;
   expect(required.getAttribute("aria-disabled")).toBe("true");
   expect(required.getAttribute("aria-checked")).toBe("false");
@@ -131,7 +164,8 @@ it("adds and removes initial dropdown options and preserves multi-select configu
 });
 
 it("saves numeric defaults as numbers and clearing them as null", async () => {
-  const { props } = setup({ ...draft, property_type: "number", config: { default_value: 3 } });
+  const { props } = setup();
+  await chooseType("number");
   const input = screen.getByRole("spinbutton", { name: label("default_value") });
   fireEvent.change(input, { target: { value: "2.5" } });
   fireEvent.click(screen.getByRole("button", { name: label("create") }));

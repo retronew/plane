@@ -45,7 +45,7 @@ export function DropdownDefault({
           disabled={busy}
           onValueChange={(next) => update(next || null)}
         >
-          <SelectTrigger size="md" aria-label={t("web.work_item_properties.default_value")} />
+          <SelectTrigger size="lg" aria-label={t("web.work_item_properties.default_value")} />
           <SelectContent>
             <SelectList>
               <SelectItem value="" label={t("web.work_item_properties.empty")} />

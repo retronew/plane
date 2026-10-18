@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowDownAZ, Check, Filter, Search } from "lucide-react";
+import {
+  FilterOutline,
+  SortAscendingOutline,
+  SortDescendingOutline,
+  StackLayersOutline,
+  PlayOutline,
+  PauseOutline,
+} from "@makeplane/propel/icons";
+import { ExpandableSearch } from "@makeplane/propel/components/expandable-search";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Badge } from "@makeplane/propel/components/badge";
@@ -8,14 +16,18 @@ import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { ActionMenuContent } from "@plane/blocks/common";
 import { TypesLogo } from "./types-logo";
 import { useTranslation } from "@plane/i18n";
-import type { TProjectIssueType, TWorkflowImpactRequest } from "@plane/types";
+import type { TProjectIssueType, TProjectWorkflow, TWorkflowImpactRequest } from "@plane/types";
+import { DataTable } from "@/components/common/data-table";
+import type { DataTableColumn } from "@/components/common/data-table";
 import { TypesActions } from "./types-actions";
 const key = "web.workflow_ui.types_settings";
+const emptyWorkflows: TProjectWorkflow[] = [];
 const logo = (type: TProjectIssueType) => <TypesLogo type={type} />;
 import { filterIssueTypes } from "./types-settings-utils";
 import type { TypesStatusFilter } from "./types-settings-utils";
 export function TypesList({
   types,
+  workflows = emptyWorkflows,
   canManage,
   busy,
   base,
@@ -24,6 +36,7 @@ export function TypesList({
   onPreview,
 }: {
   types: TProjectIssueType[];
+  workflows?: TProjectWorkflow[];
   canManage: boolean;
   busy: boolean;
   base: string;
@@ -33,46 +46,79 @@ export function TypesList({
 }) {
   const { t } = useTranslation();
   const [search, setSearch] = useState(""),
-    [searchOpen, setSearchOpen] = useState(false),
     [status, setStatus] = useState<TypesStatusFilter>("all"),
     [descending, setDescending] = useState(false);
   const rows = filterIssueTypes(types, search, status, descending);
   const badge = (type: TProjectIssueType) =>
     type.is_default ? <Badge size="xs" variant="neutral" label={t("common.default")} /> : null;
+  // DataTable calls these render callbacks directly; they are not mounted as component types.
+  /* oxlint-disable react/no-unstable-nested-components */
+  const columns: DataTableColumn<TProjectIssueType>[] = [
+    {
+      key: "name",
+      content: t("web.workflow_ui.issue_types"),
+      tdRender: (type) => (
+        <Link to={`${base}types/${type.id}/properties/`} className="flex items-center gap-2 text-primary">
+          {logo(type)}
+          <span>{type.name}</span>
+          {badge(type)}
+        </Link>
+      ),
+    },
+    {
+      key: "status",
+      content: t("web.workflow_ui.columns.status"),
+      tdRender: (type) => (
+        <Badge
+          size="xs"
+          variant={type.is_active ? "success" : "neutral"}
+          label={t(type.is_active ? "web.workflow_ui.active" : "web.workflow_ui.inactive")}
+        />
+      ),
+    },
+    {
+      key: "properties",
+      content: t(`${key}.property_count`),
+      tdRender: (type) => (
+        <div className="flex items-center justify-between gap-3 text-secondary">
+          <span>{type.properties_count ?? "—"}</span>
+          <TypesActions
+            type={type}
+            workflows={workflows}
+            canManage={canManage}
+            busy={busy}
+            onEdit={edit}
+            onSave={onSave}
+            onPreview={onPreview}
+          />
+        </div>
+      ),
+    },
+  ];
+  /* oxlint-enable react/no-unstable-nested-components */
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 py-5">
-        <h4 className="flex items-center gap-2 text-body-sm-medium text-primary">
-          {t(`${key}.types`)}
-          <span className="text-secondary">{types.length}</span>
-        </h4>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {searchOpen && (
-            <input
-              type="search"
-              aria-label={t(`${key}.search`)}
-              className="w-44 rounded border border-subtle bg-layer-1 px-2 py-1 text-body-xs-regular"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          )}
-          <IconButton
-            size="sm"
-            variant="ghost"
-            icon={<Search className="size-4" />}
+          <h4 className="text-h6-medium text-primary">{t(`${key}.types`)}</h4>
+          <Badge size="xs" variant="brand" label={String(types.length)} />
+        </div>
+        <div className="flex items-center gap-2">
+          <ExpandableSearch
+            size="md"
             aria-label={t(`${key}.search`)}
-            onClick={() => {
-              setSearchOpen(!searchOpen);
-              if (searchOpen) setSearch("");
-            }}
+            clearLabel={t("common.clear")}
+            value={search}
+            onValueChange={(value) => setSearch(value ?? "")}
+            placeholder={t(`${key}.search`)}
           />
           <Menu>
             <MenuTrigger
               render={
                 <IconButton
-                  size="sm"
-                  variant={status === "all" ? "ghost" : "secondary"}
-                  icon={<Filter className="size-4" />}
+                  size="md"
+                  variant="secondary"
+                  icon={<FilterOutline className="size-4" />}
                   aria-label={t(`${key}.filter_status`)}
                 />
               }
@@ -81,7 +127,16 @@ export function TypesList({
               {(["all", "active", "inactive"] as const).map((value) => (
                 <MenuItem
                   key={value}
-                  icon={status === value ? <Check className="size-3.5" /> : undefined}
+                  selected={status === value}
+                  icon={
+                    value === "all" ? (
+                      <StackLayersOutline className="size-4" />
+                    ) : value === "active" ? (
+                      <PlayOutline className="size-4" />
+                    ) : (
+                      <PauseOutline className="size-4" />
+                    )
+                  }
                   label={t(value === "all" ? "common.all" : `web.workflow_ui.${value}`)}
                   onClick={() => setStatus(value)}
                 />
@@ -93,9 +148,9 @@ export function TypesList({
               render={
                 <Button
                   stretch="auto"
-                  size="sm"
-                  variant="ghost"
-                  icon={<ArrowDownAZ className="size-4" />}
+                  size="md"
+                  variant="secondary"
+                  icon={<SortAscendingOutline className="size-4" />}
                   label={t("web.workflow_ui.types_settings.sort")}
                 />
               }
@@ -103,11 +158,13 @@ export function TypesList({
             <ActionMenuContent>
               <MenuItem
                 selected={!descending}
+                icon={<SortAscendingOutline className="size-4" />}
                 label={t("web.workflow_ui.sort_name")}
                 onClick={() => setDescending(false)}
               />
               <MenuItem
                 selected={descending}
+                icon={<SortDescendingOutline className="size-4" />}
                 label={t("web.workflow_ui.sort_name_desc")}
                 onClick={() => setDescending(true)}
               />
@@ -116,7 +173,7 @@ export function TypesList({
           {canManage && (
             <Button
               stretch="auto"
-              size="sm"
+              size="md"
               variant="primary"
               label={t(`${key}.add`)}
               onClick={() => edit({ name: "", description: "" })}
@@ -124,51 +181,8 @@ export function TypesList({
           )}
         </div>
       </div>
-      <div className="overflow-x-auto rounded-md">
-        <table className="w-full text-left text-body-xs-regular">
-          <thead className="h-10 bg-layer-1 text-caption-md-semibold text-tertiary">
-            <tr>
-              <th scope="col" className="px-3 py-2">
-                {t("web.workflow_ui.issue_types")}
-              </th>
-              <th scope="col" className="px-3 py-2">
-                {t("web.workflow_ui.columns.status")}
-              </th>
-              <th scope="col" className="px-3 py-2">
-                {t(`${key}.property_count`)}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-subtle">
-            {rows.map((type) => (
-              <tr key={type.id} className="h-12">
-                <td className="px-3 py-2">
-                  <Link to={`${base}types/${type.id}/properties/`} className="flex items-center gap-3 text-primary">
-                    {logo(type)}
-                    <span>{type.name}</span>
-                    {badge(type)}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">
-                  {t(type.is_active ? "web.workflow_ui.active" : "web.workflow_ui.inactive")}
-                </td>
-                <td className="px-3 py-2 text-secondary">
-                  <div className="flex items-center justify-between gap-3">
-                    <span>{type.properties_count ?? "—"}</span>
-                    <TypesActions
-                      type={type}
-                      canManage={canManage}
-                      busy={busy}
-                      onEdit={edit}
-                      onSave={onSave}
-                      onPreview={onPreview}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div>
+        <DataTable<TProjectIssueType> columns={columns} data={rows} keyExtractor={(type) => type.id} />
         {!rows.length && <p className="py-8 text-center text-body-xs-regular text-secondary">{t(`${key}.empty`)}</p>}
       </div>
     </>
