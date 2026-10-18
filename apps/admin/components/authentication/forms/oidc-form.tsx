@@ -64,6 +64,7 @@ export function InstanceOIDCConfigForm(props: Props) {
     handleSubmit,
     control,
     reset,
+    subscribe,
     formState: { errors, isDirty, isSubmitting },
   } = useForm<OIDCConfigFormValues>({
     defaultValues: {
@@ -77,9 +78,15 @@ export function InstanceOIDCConfigForm(props: Props) {
     },
   });
 
+  // Report dirtiness from the form subscription, so the parent updates on the change itself
+  // instead of after an extra render.
   useEffect(() => {
-    onDirtyChange(isDirty);
-  }, [isDirty, onDirtyChange]);
+    const unsubscribe = subscribe({
+      formState: { isDirty: true },
+      callback: ({ isDirty: nextIsDirty }) => onDirtyChange(nextIsDirty ?? false),
+    });
+    return unsubscribe;
+  }, [subscribe, onDirtyChange]);
 
   const originURL = !isEmpty(API_BASE_URL) ? API_BASE_URL : typeof window !== "undefined" ? window.location.origin : "";
 
