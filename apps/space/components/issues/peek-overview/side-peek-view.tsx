@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { Loader } from "@plane/blocks/skeleton";
+import { PeekContentLoader } from "./peek-content-loader";
 // store hooks
 import { usePublish } from "@/hooks/store/publish";
 // types
@@ -53,14 +53,7 @@ export const SidePeekView = observer(function SidePeekView(props: Props) {
           )}
         </div>
       ) : (
-        <Loader className="px-6">
-          <Loader.Item height="30px" />
-          <div className="mt-3 space-y-2">
-            <Loader.Item height="20px" width="70%" />
-            <Loader.Item height="20px" width="60%" />
-            <Loader.Item height="20px" width="60%" />
-          </div>
-        </Loader>
+        <PeekContentLoader />
       )}
     </div>
   );

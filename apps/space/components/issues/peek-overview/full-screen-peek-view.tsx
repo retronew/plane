@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 // plane imports
 import { Loader } from "@plane/blocks/skeleton";
+import { PeekContentLoader } from "./peek-content-loader";
 // types
 import type { IIssue } from "@/types/issue";
 // local imports
@@ -44,14 +45,7 @@ export const FullScreenPeekView = observer(function FullScreenPeekView(props: Pr
             </div>
           </div>
         ) : (
-          <Loader className="px-6">
-            <Loader.Item height="30px" />
-            <div className="mt-3 space-y-2">
-              <Loader.Item height="20px" width="70%" />
-              <Loader.Item height="20px" width="60%" />
-              <Loader.Item height="20px" width="60%" />
-            </div>
-          </Loader>
+          <PeekContentLoader />
         )}
       </div>
       <div className="col-span-3 h-full w-full overflow-y-auto">
