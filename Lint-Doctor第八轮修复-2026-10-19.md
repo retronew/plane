@@ -9,12 +9,12 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 | 检查               | 第六轮前 | 第七轮结束 | 现在 |
 | ------------------ | -------- | ---------- | ---- |
 | Doctor errors      | 6        | 5          | 5    |
-| Doctor warnings    | 371      | 333        | 308  |
-| Doctor 总诊断      | 377      | 338        | 313  |
+| Doctor warnings    | 371      | 333        | 305  |
+| Doctor 总诊断      | 377      | 338        | 310  |
 | Doctor 总分        | 61       | 61         | 61   |
 | 常规 lint warnings | 2        | 1          | 1    |
 
-项目分数（第六轮 → 现在）：**admin 78 → 91**、web 70 → 72、space 86、blocks 84、editor 61、utils 89、live 75，hooks/i18n/types 100。相对 HEAD 的 changed 扫描（`--scope changed --base HEAD --include-untracked`）：**0 errors / 0 warnings**。
+项目分数（第六轮 → 现在）：**admin 78 → 91**、**web 70 → 73**、**space 86 → 87**、blocks 84、editor 61、utils 89、live 75，hooks/i18n/types 100。相对 HEAD 的 changed 扫描（`--scope changed --base HEAD --include-untracked`）：**0 errors / 0 warnings**。
 
 ## 提交清单
 
@@ -77,10 +77,32 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 | `49be4de0a3` | `PageEditorSkeleton`：页面内容加载器与版本预览共用（36 行骨架）                                                                  |
 | `103a85acc0` | `FilterStartDate` 统一到 `isInDateFormat` 判断（issues 版此前用 `includes("-")` 会误判），选项查找改用 Set                       |
 
-最终全量：**313 条**（5 errors / 308 warnings），`duplicate-jsx-subtree` 由 17 条降至 4 条（其余 4 条是 web / space / admin 三个应用之间的历史重复，需要提取到 `@plane/blocks`，属架构调整）；`js-set-map-lookups` 由 70 降至 68。
+最终全量：**310 条**（5 errors / 305 warnings），`duplicate-jsx-subtree` 由 17 条降至 **0**；`js-set-map-lookups` 由 70 降至 68。
 
 收尾验证：全仓 `pnpm check` 60 任务通过；Web 全量 1636 项、Editor 全量 54 项通过；每批次 `doctor --scope changed` 均为 0 诊断。
 
 ## 边界说明
 
 本轮把「低风险且可回归」的项全部处理完：共享组件提取、数据流修正、误报核实。剩下 313 条中约 250 条集中在需要成规模重构的规则上（组件拆分、跨应用共享、页面级懒加载），逐条改动的回归面大于收益，已在「未修的结构性类别」中逐类说明理由。
+
+## 跨应用去重（duplicate 清零）
+
+把 web / space 之间的重复实现按「能否安全共享」分三类处理。
+
+**已共享（4 项）**
+
+| 提交         | 内容                                                                                                                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cac18934d2` | `useTimer` 移入 `@plane/hooks`（web 3 处、space 4 处调用点改为包导入；space 新增 `@plane/hooks` 依赖）                                                                                                                           |
+| `cac18934d2` | `LogoSpinner` 结构移入 `@plane/blocks/common`，各应用只保留自己的 gif 资源与 5 行包装；新增 1 项测试断言两套主题变体的类名                                                                                                       |
+| `b9d590af36` | `useCoreOAuthConfig` 移入 `@plane/blocks/auth`，应用把实例配置、主题、`next_path` 与 logo 资源传入；新增 3 项测试（主题 logo、enabled 标记、带 `next_path` 的跳转）。**顺带修复 space 的 bug：深色主题错误使用浅色 GitHub logo** |
+| `0179f383fc` | `FilterOption` 移入 `@plane/blocks/common`；用 Ego 验证 `text-11` 与 `text-caption-sm-regular` 计算字号都是 11px，space 的视觉不变                                                                                               |
+
+另有一处应用内去重：space 的侧栏/全屏 peek 视图共用 `PeekContentLoader`（`4150e9cf49`，同一次提交删除了 web 中全仓无引用的 371 行 `invite-members.tsx` 死代码）。
+
+**保留的分叉（同源但已按各自需求不同）**
+
+- `authentication.helper.tsx`：web 是超集（多出 `EAuthModes`/`EAuthSteps` 与 4 个错误码），且引用 `next/link` 与 `react-router` 的 `Link`，不能直接合并。
+- `terms-and-conditions.tsx`：外层布局与配色不同（web `text-tertiary` 左对齐，space 居中 `text-secondary` + `whitespace-pre-line`），合并会改变其中一个应用的视觉。
+- `AppProgressBar.tsx`：web 用副作用 CSS 导入，admin/space 用 `?url` + `<link>`，是两种构建集成方式，不是可机械合并的副本。
+- `with-display-properties-HOC.tsx`：`@plane/blocks` 目前不依赖 mobx，搬入会改变包定位；保留两处 `observer` 包装。
