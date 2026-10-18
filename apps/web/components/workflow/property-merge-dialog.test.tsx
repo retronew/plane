@@ -66,6 +66,29 @@ function confirm() {
   });
 }
 
+it("preserves selection order through deselection and preview", async () => {
+  const { props } = setup();
+  await chooseType();
+  toggle("b");
+  toggle("a");
+  toggle("b");
+  expect((screen.getByRole("button", { name: label("continue") }) as HTMLButtonElement).disabled).toBe(true);
+  toggle("b");
+  fireEvent.click(screen.getByRole("button", { name: label("continue") }));
+  await waitFor(() => expect(props.onPreview).toHaveBeenCalledWith(["a", "b"]));
+});
+it("rejects selected IDs whose candidate disappears without rewriting the selection", async () => {
+  const { props, rerender } = setup([property("a"), property("b"), property("c")]);
+  await chooseType();
+  toggle("b");
+  toggle("a");
+  rerender(<PropertyMergeDialog {...props} properties={[property("a"), property("c")]} />);
+  expect((screen.getByRole("button", { name: label("continue") }) as HTMLButtonElement).disabled).toBe(true);
+  expect(props.onPreview).not.toHaveBeenCalled();
+  rerender(<PropertyMergeDialog {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: label("continue") }));
+  await waitFor(() => expect(props.onPreview).toHaveBeenCalledWith(["b", "a"]));
+});
 it("shows only groups with two properties, separates multiple mode, and includes inactive properties", async () => {
   setup([
     property("a"),

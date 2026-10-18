@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { ProjectCategoryFields } from "./project-fields";
+import { ProjectCategoryBadges, ProjectCategoryFields } from "./project-fields";
 const state = vi.hoisted(() => ({
   enabled: true,
   onStatus: vi.fn(),
@@ -67,6 +67,32 @@ function setup(disabled = false) {
     </ProjectCategoryFields>
   );
 }
+it("keeps checkbox membership current and removes every duplicate selected ID", () => {
+  const labels = ["unknown", "product", "product"];
+  const props = { workspaceSlug: "workspace", labels, onStatus: state.onStatus, onLabels: state.onLabels };
+  const { rerender } = render(<ProjectCategoryFields {...props} />);
+  const control = screen.getByRole("checkbox", { name: "Product" });
+  expect(control.getAttribute("aria-checked")).toBe("true");
+  const input = control.parentElement?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (!input) throw new Error("Expected checkbox input");
+  fireEvent.click(input);
+  expect(state.onLabels).toHaveBeenCalledWith(["unknown"]);
+  labels.splice(1);
+  rerender(<ProjectCategoryFields {...props} />);
+  expect(screen.getByRole("checkbox", { name: "Product" }).getAttribute("aria-checked")).toBe("false");
+});
+it("keeps status before labels and ignores duplicate or unknown selected IDs in badges", () => {
+  const labels = ["unknown", "product", "product"];
+  const { container, rerender } = render(
+    <ProjectCategoryBadges workspaceSlug="workspace" status="doing" labels={labels} />
+  );
+  expect(container.textContent).toBe("DoingProduct");
+  labels.splice(1);
+  rerender(<ProjectCategoryBadges workspaceSlug="workspace" status="doing" labels={labels} />);
+  expect(container.textContent).toBe("Doing");
+  rerender(<ProjectCategoryBadges workspaceSlug="workspace" />);
+  expect(container.textContent).toBe("");
+});
 it("keeps the inherited default state and allows choosing another status", async () => {
   setup();
   expect(screen.getAllByRole("button").map((e) => e.textContent)).toEqual(["Draft", "Visibility", "labels"]);

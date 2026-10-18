@@ -5,7 +5,7 @@
  */
 
 import { useCallback } from "react";
-import { xor } from "lodash-es";
+import { getIssueModuleChanges } from "@/helpers/issue-modules";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
@@ -35,13 +35,7 @@ export const SpreadsheetModuleColumn = observer(function SpreadsheetModuleColumn
     async (moduleIds: string[] | null) => {
       if (!workspaceSlug || !issue || !issue.project_id || !issue.module_ids || !moduleIds) return;
 
-      const updatedModuleIds = xor(issue.module_ids, moduleIds);
-      const modulesToAdd: string[] = [];
-      const modulesToRemove: string[] = [];
-      for (const moduleId of updatedModuleIds) {
-        if (issue.module_ids.includes(moduleId)) modulesToRemove.push(moduleId);
-        else modulesToAdd.push(moduleId);
-      }
+      const { modulesToAdd, modulesToRemove } = getIssueModuleChanges(issue.module_ids, moduleIds);
       changeModulesInIssue(workspaceSlug.toString(), issue.project_id, issue.id, modulesToAdd, modulesToRemove);
     },
     [workspaceSlug, issue, changeModulesInIssue]

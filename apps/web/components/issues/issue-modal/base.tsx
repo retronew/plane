@@ -9,7 +9,8 @@
 import "./composer.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isEqual, xor } from "lodash-es";
+import { isEqual } from "lodash-es";
+import { getIssueModuleChanges } from "@/helpers/issue-modules";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // Plane imports
@@ -350,17 +351,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     )
       return;
 
-    const updatedModuleIds = xor(currentIssue.module_ids, payload.module_ids);
-    const modulesToAdd: string[] = [];
-    const modulesToRemove: string[] = [];
-
-    for (const changedModuleId of updatedModuleIds) {
-      if (currentIssue.module_ids?.includes(changedModuleId)) {
-        modulesToRemove.push(changedModuleId);
-      } else {
-        modulesToAdd.push(changedModuleId);
-      }
-    }
+    const { modulesToAdd, modulesToRemove } = getIssueModuleChanges(currentIssue.module_ids, payload.module_ids);
     // update modules if there are modules to add or remove
     if (modulesToAdd.length > 0 || modulesToRemove.length > 0) {
       await issues.changeModulesInIssue(

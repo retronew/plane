@@ -9,7 +9,7 @@ import { useCanCreateProject } from "@/hooks/use-can-create-project";
 import { useTranslation } from "@plane/i18n";
 import { DialogTitle } from "@makeplane/propel/components/dialog";
 import { Button } from "@makeplane/propel/components/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent } from "@makeplane/propel/components/dialog";
 import { getAssetIdFromUrl, checkURLValidity } from "@plane/utils";
 // plane ui
@@ -38,19 +38,39 @@ enum EProjectCreationSteps {
 }
 
 export const CreateProjectModal = observer(function CreateProjectModal(props: Props) {
-  const { isOpen, onClose, setToFavorite = false, workspaceSlug, data, templateId } = props;
+  const { isOpen, onClose, setToFavorite = false, workspaceSlug } = props;
+  // Keep the closing session mounted for Dialog's exit animation. A new open or
+  // workspace starts fresh state and detaches every callback from the old form.
+  const [session, setSession] = useState({ isOpen, workspaceSlug, id: 0 });
+  if (session.isOpen !== isOpen || session.workspaceSlug !== workspaceSlug) {
+    setSession({
+      isOpen,
+      workspaceSlug,
+      id: session.id + (isOpen || session.workspaceSlug !== workspaceSlug ? 1 : 0),
+    });
+  }
+
+  return (
+    <Dialog
+      open={isOpen}
+      disablePointerDismissal
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent size="lg">
+        <ProjectCreationSession key={session.id} {...props} setToFavorite={setToFavorite} />
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const ProjectCreationSession = observer(function ProjectCreationSession(props: Props) {
+  const { isOpen, onClose, setToFavorite, workspaceSlug, data, templateId } = props;
   const canCreate = useCanCreateProject(workspaceSlug);
   const { t } = useTranslation();
-  // states
   const [currentStep, setCurrentStep] = useState<EProjectCreationSteps>(EProjectCreationSteps.CREATE_PROJECT);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentStep(EProjectCreationSteps.CREATE_PROJECT);
-      setCreatedProjectId(null);
-    }
-  }, [isOpen]);
 
   const handleNextStep = (projectId: string) => {
     if (!projectId) return;
@@ -67,38 +87,31 @@ export const CreateProjectModal = observer(function CreateProjectModal(props: Pr
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      disablePointerDismissal
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
-      <DialogContent size="lg">
-        {!canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
-          <div className="p-6">
-            <DialogTitle>{t("create_project")}</DialogTitle>
-            <p className="my-4 text-13 text-secondary">{t("web.workspace_project_creation_restricted")}</p>
-            <Button size="md" stretch="auto" variant="secondary" label={t("close")} onClick={onClose} />
-          </div>
-        )}
-        {canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <CreateProjectForm
-              setToFavorite={setToFavorite}
-              workspaceSlug={workspaceSlug}
-              onClose={onClose}
-              updateCoverImageStatus={handleCoverImageStatusUpdate}
-              handleNextStep={handleNextStep}
-              data={data}
-              templateId={templateId}
-            />
-          </div>
-        )}
-        {currentStep === EProjectCreationSteps.FEATURE_SELECTION && (
-          <ProjectFeatureUpdate projectId={createdProjectId} workspaceSlug={workspaceSlug} onClose={onClose} />
-        )}
-      </DialogContent>
-    </Dialog>
+    <>
+      {!canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
+        <div className="p-6">
+          <DialogTitle>{t("create_project")}</DialogTitle>
+          <p className="my-4 text-13 text-secondary">{t("web.workspace_project_creation_restricted")}</p>
+          <Button size="md" stretch="auto" variant="secondary" label={t("close")} onClick={onClose} />
+        </div>
+      )}
+      {canCreate && currentStep === EProjectCreationSteps.CREATE_PROJECT && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <CreateProjectForm
+            isOpen={isOpen}
+            setToFavorite={setToFavorite}
+            workspaceSlug={workspaceSlug}
+            onClose={onClose}
+            updateCoverImageStatus={handleCoverImageStatusUpdate}
+            handleNextStep={handleNextStep}
+            data={data}
+            templateId={templateId}
+          />
+        </div>
+      )}
+      {currentStep === EProjectCreationSteps.FEATURE_SELECTION && (
+        <ProjectFeatureUpdate projectId={createdProjectId} workspaceSlug={workspaceSlug} onClose={onClose} />
+      )}
+    </>
   );
 });

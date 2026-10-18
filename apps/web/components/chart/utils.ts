@@ -72,8 +72,7 @@ export const parseChartData = (
   const schema = structuredClone(data.schema);
   const allKeys = Object.keys(schema);
   const updatedWidgetData: TChartDatum[] = widgetData.map((datum) => {
-    const keys = Object.keys(datum);
-    const missingKeys = allKeys.filter((key) => !keys.includes(key));
+    const missingKeys = allKeys.filter((key) => !Object.hasOwn(datum, key));
     const missingValues: Record<string, number> = Object.fromEntries(missingKeys.map((key) => [key, 0]));
 
     if (xAxisProperty) {

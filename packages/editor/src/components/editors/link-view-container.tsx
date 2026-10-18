@@ -27,7 +27,7 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
   const editorState = useEditorState({
     editor,
     selector: ({ editor: activeEditor }: { editor: Editor }) => ({
-      linkExtensionStorage: activeEditor.storage.link,
+      isBubbleMenuOpen: activeEditor.storage.link?.isBubbleMenuOpen ?? false,
     }),
   });
 
@@ -67,13 +67,13 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
     clearHoverTimeout();
     hoverTimeoutRef.current = window.setTimeout(() => {
       setIsOpen(false);
-      editorState.linkExtensionStorage.isPreviewOpen = false;
+      editor.storage.link.isPreviewOpen = false;
     }, 400);
-  }, [clearHoverTimeout, editorState.linkExtensionStorage]);
+  }, [clearHoverTimeout, editor]);
 
   const handleLinkHover = useCallback(
     (event: MouseEvent) => {
-      if (!editor || editorState.linkExtensionStorage?.isBubbleMenuOpen) return;
+      if (!editor || editorState.isBubbleMenuOpen) return;
 
       // Find the closest anchor tag from the event target
       const target = (event.target as HTMLElement)?.closest("a");
@@ -103,7 +103,14 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
         clearHoverTimeout();
 
         // Only update if not already open or if hovering over a different link
-        if (!isOpen || (linkViewProps && (linkViewProps.from !== pos || linkViewProps.to !== pos + node.nodeSize))) {
+        if (
+          !isOpen ||
+          (linkViewProps &&
+            (linkViewProps.from !== pos ||
+              linkViewProps.to !== pos + node.nodeSize ||
+              linkViewProps.url !== linkMark.attrs.href ||
+              linkViewProps.text !== (node.text || "")))
+        ) {
           setLinkViewProps({
             view: "LinkPreview", // Always start with preview for new links
             url: linkMark.attrs.href,
@@ -113,7 +120,7 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
             to: pos + node.nodeSize,
             closeLinkView: () => {
               setIsOpen(false);
-              editorState.linkExtensionStorage.isPreviewOpen = false;
+              editor.storage.link.isPreviewOpen = false;
             },
           });
           setIsOpen(true);
@@ -122,7 +129,7 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
         console.error("Error handling link hover:", error);
       }
     },
-    [editor, editorState.linkExtensionStorage, getReferenceProps, isOpen, linkViewProps, clearHoverTimeout]
+    [editor, editorState.isBubbleMenuOpen, getReferenceProps, isOpen, linkViewProps, clearHoverTimeout]
   );
 
   // Handle mouse enter on floating element (cancel close timeout)
@@ -153,9 +160,7 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
       // and is actually leaving the container
       if (
         container &&
-        relatedTarget &&
-        !container.contains(relatedTarget) &&
-        (!floatingElement || !floatingElement.current?.contains(relatedTarget))
+        (!relatedTarget || (!container.contains(relatedTarget) && !floatingElement.current?.contains(relatedTarget)))
       ) {
         setCloseTimeout();
       }
@@ -186,10 +191,10 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
 
   // Close link view when bubble menu opens
   useEffect(() => {
-    if (editorState.linkExtensionStorage?.isBubbleMenuOpen && isOpen) {
+    if (editorState.isBubbleMenuOpen && isOpen) {
       setIsOpen(false);
     }
-  }, [editorState.linkExtensionStorage, isOpen]);
+  }, [editorState.isBubbleMenuOpen, isOpen]);
 
   return (
     <>

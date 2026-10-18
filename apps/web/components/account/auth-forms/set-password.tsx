@@ -8,15 +8,12 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useSearchParams } from "next/navigation";
-// icons
-import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { E_PASSWORD_STRENGTH } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
-import { PasswordStrengthIndicator } from "@plane/blocks/auth";
 // components
 import { getPasswordStrength } from "@plane/utils";
 // hooks
@@ -27,16 +24,18 @@ import { AuthService } from "@/services/auth.service";
 // local components
 import { FormContainer } from "./common/container";
 import { AuthFormHeader } from "./common/header";
+import { PasswordField } from "./password-field";
 
 type TResetPasswordFormValues = {
   email: string;
   password: string;
-  confirm_password?: string;
+  confirm_password: string;
 };
 
 const defaultValues: TResetPasswordFormValues = {
   email: "",
   password: "",
+  confirm_password: "",
 };
 
 // services
@@ -49,29 +48,31 @@ export const SetPasswordForm = observer(function SetPasswordForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   // states
-  const [showPassword, setShowPassword] = useState({
-    password: false,
-    retypePassword: false,
-  });
   const [passwordFormData, setPasswordFormData] = useState<TResetPasswordFormValues>({
     ...defaultValues,
     email: email ? email.toString() : "",
   });
   const [csrfToken, setCsrfToken] = useState<string | undefined>(undefined);
-  const [isPasswordInputFocused, setIsPasswordInputFocused] = useState(false);
-  const [isRetryPasswordInputFocused, setIsRetryPasswordInputFocused] = useState(false);
   // plane hooks
   const { t } = useTranslation();
   // hooks
   const { data: user, handleSetPassword } = useUser();
 
   useEffect(() => {
-    if (csrfToken === undefined)
-      authService.requestCSRFToken().then((data) => data?.csrf_token && setCsrfToken(data.csrf_token));
-  }, [csrfToken]);
-
-  const handleShowPassword = (key: keyof typeof showPassword) =>
-    setShowPassword((prev) => ({ ...prev, [key]: !prev[key] }));
+    let active = true;
+    authService.requestCSRFToken().then(
+      (data) => {
+        if (active && data?.csrf_token) setCsrfToken(data.csrf_token);
+        return undefined;
+      },
+      (error: unknown) => {
+        console.error("Failed to request CSRF token", error);
+      }
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleFormChange = (key: keyof TResetPasswordFormValues, value: string) =>
     setPasswordFormData((prev) => ({ ...prev, [key]: value }));
@@ -106,10 +107,6 @@ export const SetPasswordForm = observer(function SetPasswordForm() {
     }
   };
 
-  const password = passwordFormData?.password ?? "";
-  const confirmPassword = passwordFormData?.confirm_password ?? "";
-  const renderPasswordMatchError = !isRetryPasswordInputFocused || confirmPassword.length >= password.length;
-
   return (
     <FormContainer>
       <AuthFormHeader title={t("web.set_password")} description={t("web.create_a_new_password")} />
@@ -124,82 +121,24 @@ export const SetPasswordForm = observer(function SetPasswordForm() {
               id="email"
               name="email"
               type="email"
-              value={user?.email}
+              value={user?.email ?? ""}
               placeholder={t("auth.common.email.placeholder")}
               autoComplete="off"
               disabled
             />
           </InputGroup>
         </div>
-        <div className="space-y-1">
-          <label className="text-13 font-medium text-tertiary" htmlFor="password">
-            {t("auth.common.password.label")}
-          </label>
-          <InputGroup size="2xl">
-            <Input
-              size="2xl"
-              type={showPassword.password ? "text" : "password"}
-              name="password"
-              id="password"
-              value={passwordFormData.password}
-              onChange={(e) => handleFormChange("password", e.target.value)}
-              placeholder={t("auth.common.password.placeholder")}
-              minLength={8}
-              onFocus={() => setIsPasswordInputFocused(true)}
-              onBlur={() => setIsPasswordInputFocused(false)}
-              autoComplete="new-password"
-              // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => handleShowPassword("password")}
-              className="grid size-5 place-items-center"
-            >
-              {showPassword.password ? (
-                <HideOutline className="size-5 text-placeholder" />
-              ) : (
-                <ShowOutline className="size-5 text-placeholder" />
-              )}
-            </button>
-          </InputGroup>
-          <PasswordStrengthIndicator password={passwordFormData.password} isFocused={isPasswordInputFocused} />
-        </div>
-        <div className="space-y-1">
-          <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
-            {t("auth.common.password.confirm_password.label")}
-          </label>
-          <InputGroup size="2xl">
-            <Input
-              size="2xl"
-              type={showPassword.retypePassword ? "text" : "password"}
-              name="confirm_password"
-              id="confirm_password"
-              value={passwordFormData.confirm_password}
-              onChange={(e) => handleFormChange("confirm_password", e.target.value)}
-              placeholder={t("auth.common.password.confirm_password.placeholder")}
-              onFocus={() => setIsRetryPasswordInputFocused(true)}
-              onBlur={() => setIsRetryPasswordInputFocused(false)}
-              autoComplete="new-password"
-            />
-            <button
-              type="button"
-              onClick={() => handleShowPassword("retypePassword")}
-              className="grid size-5 place-items-center"
-            >
-              {showPassword.retypePassword ? (
-                <HideOutline className="size-5 text-placeholder" />
-              ) : (
-                <ShowOutline className="size-5 text-placeholder" />
-              )}
-            </button>
-          </InputGroup>
-          {!!passwordFormData.confirm_password &&
-            passwordFormData.password !== passwordFormData.confirm_password &&
-            renderPasswordMatchError && (
-              <span className="text-13 text-danger-primary">{t("auth.common.password.errors.match")}</span>
-            )}
-        </div>
+        <PasswordField
+          name="password"
+          value={passwordFormData.password}
+          onChange={(value) => handleFormChange("password", value)}
+        />
+        <PasswordField
+          name="confirm_password"
+          value={passwordFormData.confirm_password}
+          password={passwordFormData.password}
+          onChange={(value) => handleFormChange("confirm_password", value)}
+        />
         <Button
           type="submit"
           variant="primary"

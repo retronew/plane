@@ -83,7 +83,8 @@ export function PropertyMergeDialog({
   }
   const groups = [...grouped.entries()].filter(([, entries]) => entries.length >= 2);
   const candidates = grouped.get(group ?? "") ?? [];
-  const selected = candidates.filter((property) => ids.includes(property.id));
+  const selectedIds = new Set(ids);
+  const selected = candidates.filter((property) => selectedIds.has(property.id));
   const bindings = selected.flatMap((property) => [
     ...new Set(property.type_settings.map((setting) => setting.project_issue_type_id || setting.type_id)),
   ]);
@@ -218,7 +219,7 @@ export function PropertyMergeDialog({
                         <div key={property.id} className="space-y-1">
                           <Checkbox
                             label={property.name}
-                            checked={ids.includes(property.id)}
+                            checked={selectedIds.has(property.id)}
                             disabled={locked}
                             onCheckedChange={(checked) => {
                               setIds(checked ? [...ids, property.id] : ids.filter((id) => id !== property.id));

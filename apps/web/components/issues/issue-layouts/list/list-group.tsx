@@ -75,9 +75,12 @@ interface Props {
   isEpic?: boolean;
 }
 
+// A shared empty list keeps the default stable for the shallow prop comparison in `observer`.
+const EMPTY_ISSUE_IDS: string[] = [];
+
 export const ListGroup = observer(function ListGroup(props: Props) {
   const {
-    groupIssueIds = [],
+    groupIssueIds = EMPTY_ISSUE_IDS,
     group,
     issuesMap,
     group_by,

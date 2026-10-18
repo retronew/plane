@@ -42,12 +42,14 @@ export const BaseListLayout = observer(function BaseListLayout<T extends IBaseLa
         }
   );
 
+  const collapsedGroupIds = new Set(collapsedGroups);
+
   return (
     <div ref={containerRef} className={cn("relative size-full overflow-auto bg-surface-1", className)}>
       <div className="relative flex size-full flex-col">
         {groups.map((group) => {
           const itemIds = groupedItemIds[group.id] || [];
-          const isCollapsed = collapsedGroups.includes(group.id);
+          const isCollapsed = collapsedGroupIds.has(group.id);
 
           if (!showEmptyGroups && itemIds.length === 0) return null;
 

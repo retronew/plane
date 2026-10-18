@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { orderBy, uniqBy, set } from "lodash-es";
-import { action, observable, makeObservable, runInAction, computed } from "mobx";
+import { orderBy, set } from "lodash-es";
+import { action, observable, makeObservable, runInAction, computed, toJS } from "mobx";
 import { v4 as uuidv4 } from "uuid";
 import type { IFavorite } from "@plane/types";
 import { FavoriteService } from "@/services/favorite";
@@ -109,17 +109,24 @@ export class FavoriteStore implements IFavoriteStore {
   }
 
   get groupedFavorites() {
-    const data: { [favoriteId: string]: IFavorite } = JSON.parse(JSON.stringify(this.currentWorkspaceFavorites));
+    // MobX values cannot be structuredClone'd. Keep the grouped result detached,
+    // including nested entity data and children, while tracking in-place updates.
+    const data = Object.fromEntries(
+      Object.entries(this.currentWorkspaceFavorites).map(([id, favorite]) => [id, toJS(favorite)])
+    );
+    const childIdsByParent = new Map<string, Set<string>>();
 
     Object.values(data).forEach((fav) => {
-      if (fav.parent && data[fav.parent]) {
-        if (data[fav.parent].children) {
-          if (!data[fav.parent].children.some((f) => f.id === fav.id)) {
-            data[fav.parent].children.push(fav);
-          }
-        } else {
-          data[fav.parent].children = [fav];
-        }
+      if (!fav.parent || !data[fav.parent]) return;
+      const parent = data[fav.parent];
+      let childIds = childIdsByParent.get(fav.parent);
+      if (!childIds) {
+        childIds = new Set(parent.children?.map((child) => child.id));
+        childIdsByParent.set(fav.parent, childIds);
+      }
+      if (!childIds.has(fav.id)) {
+        (parent.children ??= []).push(fav);
+        childIds.add(fav.id);
       }
     });
     return data;
@@ -402,13 +409,14 @@ export class FavoriteStore implements IFavoriteStore {
     try {
       const response = await this.favoriteService.getGroupedFavorites(workspaceSlug, favoriteId);
       runInAction(() => {
-        // add the favorites to the map
+        // Preserve first-seen ID order while applying the last response for each ID.
+        const favoriteIds = new Set(this.favoriteIds);
         response.forEach((favorite) => {
           set(this.favoriteMap, [favorite.id], favorite);
-          this.favoriteIds.push(favorite.id);
-          this.favoriteIds = uniqBy(this.favoriteIds, (id) => id);
+          favoriteIds.add(favorite.id);
           if (favorite.entity_identifier) set(this.entityMap, [favorite.entity_identifier], favorite);
         });
+        if (response.length > 0) this.favoriteIds = [...favoriteIds];
       });
 
       return response;

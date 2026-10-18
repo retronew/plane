@@ -26,8 +26,11 @@ type TLayoutDropDown = {
   disabledLayouts?: EIssueLayoutTypes[];
 };
 
+// A shared empty list keeps the default stable, so `options` is not rebuilt on every render.
+const EMPTY_LAYOUTS: EIssueLayoutTypes[] = [];
+
 export const LayoutDropDown = observer(function LayoutDropDown(props: TLayoutDropDown) {
-  const { onChange, value = EIssueLayoutTypes.LIST, disabledLayouts = [] } = props;
+  const { onChange, value = EIssueLayoutTypes.LIST, disabledLayouts = EMPTY_LAYOUTS } = props;
   // plane i18n
   const { t } = useTranslation();
   // derived values

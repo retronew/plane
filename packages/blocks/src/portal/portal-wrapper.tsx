@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useLayoutEffect, useState, useMemo } from "react";
+import { Component } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { DEFAULT_PORTAL_ID } from "./constants";
@@ -18,74 +18,114 @@ export type PortalWrapperProps = {
   onUnmount?: () => void;
 };
 
-/**
- * PortalWrapper - A reusable portal component that renders children into a specific DOM element
- * Optimized for SSR compatibility and performance
- *
- * @param children - The content to render inside the portal
- * @param portalId - The ID of the DOM element to render into
- * @param fallbackToDocument - Whether to render directly if portal container is not found
- * @param className - Optional className to apply to the portal container div
- * @param onMount - Callback fired when portal is mounted
- * @param onUnmount - Callback fired when portal is unmounted
- */
-export function PortalWrapper({
-  children,
-  portalId = DEFAULT_PORTAL_ID,
-  fallbackToDocument = true,
-  className,
-  onMount,
-  onUnmount,
-}: PortalWrapperProps) {
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
+type ContainerOwnership = {
+  users: number;
+  observer?: MutationObserver;
+};
 
-  useLayoutEffect(() => {
-    // Ensure we're in browser environment
-    if (typeof window === "undefined") return;
+// A DOM attribute is not proof of ownership: existing application containers
+// must survive even when they happen to use the same data-portal marker.
+const ownedContainers = new WeakMap<HTMLElement, ContainerOwnership>();
 
-    let container = document.getElementById(portalId);
+function acquireContainer(portalId: string) {
+  let container = document.getElementById(portalId);
+  if (!container) {
+    container = document.createElement("div");
+    container.id = portalId;
+    container.setAttribute("data-portal", "true");
+    document.body.appendChild(container);
+    ownedContainers.set(container, { users: 0 });
+  }
+  const ownership = ownedContainers.get(container);
+  if (ownership) {
+    ownership.observer?.disconnect();
+    ownership.observer = undefined;
+    ownership.users += 1;
+  }
+  return container;
+}
 
-    // Create portal container if it doesn't exist
-    if (!container) {
-      container = document.createElement("div");
-      container.id = portalId;
-      container.setAttribute("data-portal", "true");
-      document.body.appendChild(container);
-    }
+function releaseContainer(container: HTMLElement) {
+  const ownership = ownedContainers.get(container);
+  if (!ownership) return;
+  ownership.users -= 1;
+  if (ownership.users !== 0) return;
 
-    setPortalContainer(container);
-    setIsMounted(true);
-    onMount?.();
-
-    return () => {
-      onUnmount?.();
-      // Only remove if we created it and it's empty
-      if (container && container.children.length === 0 && container.hasAttribute("data-portal")) {
-        document.body.removeChild(container);
-      }
+  // Layout cleanup precedes React's removal of portal children. Wait until the
+  // commit ends, and recheck users in case StrictMode or another portal reused it.
+  queueMicrotask(() => {
+    if (ownership.users !== 0) return;
+    const removeIfEmpty = () => {
+      if (ownership.users !== 0 || container.hasChildNodes()) return;
+      ownership.observer?.disconnect();
+      ownership.observer = undefined;
+      container.remove();
+      ownedContainers.delete(container);
     };
-  }, [portalId, onMount, onUnmount]);
+    removeIfEmpty();
+    if (container.hasChildNodes() && !ownership.observer) {
+      // Foreign children retain the container until they leave. Observe only
+      // this idle container; acquiring it again disconnects this observer.
+      ownership.observer = new MutationObserver(removeIfEmpty);
+      ownership.observer.observe(container, { childList: true });
+    }
+  });
+}
 
-  const content = useMemo(() => {
-    if (!children) return null;
-    return className ? <div className={className}>{children}</div> : children;
-  }, [children, className]);
+type PortalState = { container: HTMLElement | null };
 
-  // SSR: render nothing on server
-  if (!isMounted) {
-    return null;
+// This adapter owns an imperative DOM resource in the layout commit phase.
+// Keeping its initial render empty preserves SSR/hydration, while didMount's
+// synchronous update makes portal children available before the browser paints.
+class PortalLifecycle extends Component<PortalWrapperProps, PortalState> {
+  override state: PortalState = { container: null };
+  private container: HTMLElement | null = null;
+
+  override componentDidMount() {
+    this.mountContainer();
   }
 
-  // If portal container exists, render into it
-  if (portalContainer) {
-    return createPortal(content, portalContainer);
+  override componentDidUpdate(previous: PortalWrapperProps) {
+    if (
+      previous.portalId !== this.props.portalId ||
+      previous.onMount !== this.props.onMount ||
+      previous.onUnmount !== this.props.onUnmount
+    ) {
+      this.unmountContainer(previous.onUnmount);
+      this.mountContainer();
+    }
   }
 
-  // Fallback behavior for client-side rendering
-  if (fallbackToDocument) {
-    return content ? (content as React.ReactElement) : null;
+  override componentWillUnmount() {
+    this.unmountContainer(this.props.onUnmount);
   }
 
-  return null;
+  private mountContainer() {
+    const container = acquireContainer(this.props.portalId ?? DEFAULT_PORTAL_ID);
+    this.container = container;
+    if (this.state.container !== container) this.setState({ container });
+    this.props.onMount?.();
+  }
+
+  private unmountContainer(onUnmount: PortalWrapperProps["onUnmount"]) {
+    const container = this.container;
+    this.container = null;
+    try {
+      onUnmount?.();
+    } finally {
+      if (container) releaseContainer(container);
+    }
+  }
+
+  override render() {
+    if (!this.state.container) return null;
+    const { children, className } = this.props;
+    const content = children ? className ? <div className={className}>{children}</div> : children : null;
+    return createPortal(content, this.state.container);
+  }
+}
+
+/** Renders into a shared container acquired during the layout commit, with an empty SSR render. */
+export function PortalWrapper(props: PortalWrapperProps) {
+  return <PortalLifecycle {...props} />;
 }

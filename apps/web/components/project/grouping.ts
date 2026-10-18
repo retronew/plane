@@ -51,16 +51,30 @@ export function groupProjectRecords(
     by === "labels"
       ? labels.map((label) => ({ id: label.id, label, projects: [] }))
       : [...new Set(statuses.map((status) => status.group))].map((phase) => ({ id: phase, phase, projects: [] }));
+  const groupsById = new Map<string, ProjectLayoutGroup[]>();
+  for (const group of groups) {
+    const matches = groupsById.get(group.id);
+    if (matches) matches.push(group);
+    else groupsById.set(group.id, [group]);
+  }
+  const phasesByStatusId = new Map<string, string>();
+  for (const status of statuses) {
+    if (!phasesByStatusId.has(status.id)) phasesByStatusId.set(status.id, status.group);
+  }
   const unassigned: IProject[] = [];
   const defaultStatus = statuses.find((status) => status.is_default);
   for (const project of projects) {
-    const ids =
-      by === "labels"
-        ? (project.labels ?? [])
-        : [statuses.find((status) => status.id === (project.status ?? defaultStatus?.id))?.group];
-    const matches = groups.filter((group) => ids.includes(group.id));
-    if (matches.length) for (const group of matches) group.projects.push(project);
-    else unassigned.push(project);
+    const statusId = project.status ?? defaultStatus?.id;
+    const phase = statusId === undefined ? undefined : phasesByStatusId.get(statusId);
+    const ids = by === "labels" ? new Set(project.labels ?? []) : new Set(phase === undefined ? [] : [phase]);
+    let assigned = false;
+    for (const id of ids) {
+      const matches = groupsById.get(id);
+      if (!matches) continue;
+      for (const group of matches) group.projects.push(project);
+      assigned = true;
+    }
+    if (!assigned) unassigned.push(project);
   }
   groups.push({ id: "unassigned", projects: unassigned });
   return groups;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { CreateProjectForm } from "./root";
 const state = vi.hoisted(() => ({ create: vi.fn(), next: vi.fn() }));
@@ -102,3 +102,31 @@ it("associates an uploaded relative cover URL after creating the project", async
   );
   expect(state.create).toHaveBeenCalledTimes(1);
 });
+
+for (const boundary of ["close", "workspace", "unmount"] as const) {
+  it(`ignores creation completion after ${boundary}`, async () => {
+    let finish!: (value: { id: string }) => void;
+    state.create.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    );
+    const props = {
+      workspaceSlug: "workspace",
+      onClose: vi.fn(),
+      handleNextStep: state.next,
+      updateCoverImageStatus: vi.fn(),
+    };
+    const view = render(<CreateProjectForm {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+    await waitFor(() => expect(state.create).toHaveBeenCalledTimes(1));
+    if (boundary === "unmount") view.unmount();
+    else if (boundary === "workspace") view.rerender(<CreateProjectForm {...props} workspaceSlug="other" />);
+    else {
+      view.rerender(<CreateProjectForm {...props} isOpen={false} />);
+      view.rerender(<CreateProjectForm {...props} isOpen />);
+    }
+    await act(async () => finish({ id: "old-project" }));
+    expect(state.next).not.toHaveBeenCalled();
+  });
+}

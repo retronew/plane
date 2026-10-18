@@ -99,31 +99,34 @@ export function TemplateEditor() {
     label: string,
     entries: { id: string; name: string }[],
     key: "assignee_ids" | "label_ids" | "module_ids"
-  ) => (
-    <details className="rounded-md border border-subtle p-2">
-      <summary className="cursor-pointer text-13">
-        {label}
-        {config[key]?.length ? ` (${config[key]!.length})` : ""}
-      </summary>
-      <div className="flex flex-col gap-2 pt-3">
-        {entries.map((entry) => (
-          <Checkbox
-            key={entry.id}
-            label={entry.name}
-            checked={config[key]?.includes(entry.id) ?? false}
-            onCheckedChange={(checked) =>
-              configure({
-                [key]: checked
-                  ? [...new Set([...(config[key] ?? []), entry.id])]
-                  : (config[key] ?? []).filter((id) => id !== entry.id),
-              })
-            }
-          />
-        ))}
-        {!entries.length && <p className="text-12 text-tertiary">{t("web.configuration_empty")}</p>}
-      </div>
-    </details>
-  );
+  ) => {
+    const selectedIds = new Set(config[key]);
+    return (
+      <details className="rounded-md border border-subtle p-2">
+        <summary className="cursor-pointer text-13">
+          {label}
+          {config[key]?.length ? ` (${config[key]!.length})` : ""}
+        </summary>
+        <div className="flex flex-col gap-2 pt-3">
+          {entries.map((entry) => (
+            <Checkbox
+              key={entry.id}
+              label={entry.name}
+              checked={selectedIds.has(entry.id)}
+              onCheckedChange={(checked) =>
+                configure({
+                  [key]: checked
+                    ? [...new Set([...(config[key] ?? []), entry.id])]
+                    : (config[key] ?? []).filter((id) => id !== entry.id),
+                })
+              }
+            />
+          ))}
+          {!entries.length && <p className="text-12 text-tertiary">{t("web.configuration_empty")}</p>}
+        </div>
+      </details>
+    );
+  };
   const children = (key: "children" | "work_items") => (
     <details className="rounded-lg border border-subtle p-4">
       <summary className="cursor-pointer text-13 font-medium">

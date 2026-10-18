@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // types
@@ -31,8 +31,6 @@ type Props = {
 
 export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props) {
   const { dataId, data, isOpen, handleClose, isSubIssue = false, onSubmit, isEpic = false } = props;
-  // states
-  const [isDeleting, setIsDeleting] = useState(false);
   // store hooks
   const { workspaceSlug } = useParams();
   const { issueMap } = useIssues();
@@ -42,14 +40,25 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
 
   const { data: currentUser } = useUser();
 
-  useEffect(() => {
-    setIsDeleting(false);
-  }, [isOpen]);
+  // A session survives ordinary rerenders, but not reopening or changing the target.
+  // Keep the dialog mounted across close so its exit animation can finish.
+  const issue = data ?? (dataId ? issueMap[dataId] : undefined);
+  const entityId = issue?.id ?? dataId;
+  const projectId = issue?.project_id;
+  const session = useMemo(
+    () => ({ active: false, pending: false, isOpen, entityId, projectId, workspaceSlug, isSubIssue, isEpic }),
+    [isOpen, entityId, projectId, workspaceSlug, isSubIssue, isEpic]
+  );
+  const [submittingSession, setSubmittingSession] = useState<typeof session | null>(null);
+  const isDeleting = submittingSession === session;
+  useLayoutEffect(() => {
+    session.active = isOpen;
+    return () => {
+      session.active = false;
+    };
+  }, [session, isOpen]);
 
   if (!dataId && !data) return null;
-
-  // derived values
-  const issue = data ? data : issueMap[dataId!];
   const projectDetails = getProjectById(issue?.project_id);
   const isIssueCreator = issue?.created_by === currentUser?.id;
 
@@ -63,12 +72,14 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
   const authorized = isIssueCreator || canPerformProjectAdminActions;
 
   const onClose = () => {
-    setIsDeleting(false);
+    if (!session.active) return;
+    session.active = false;
+    setSubmittingSession(null);
     handleClose();
   };
 
   const handleIssueDelete = async () => {
-    setIsDeleting(true);
+    if (!session.active || session.pending) return;
 
     if (!authorized) {
       setToast({
@@ -81,8 +92,11 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
       return;
     }
     if (!onSubmit) return;
+    session.pending = true;
+    setSubmittingSession(session);
     try {
       await onSubmit();
+      if (!session.active) return;
       setToast({
         type: "success",
         title: t("common.success"),
@@ -90,8 +104,8 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
           entity: isSubIssue ? t("common.sub_work_item") : isEpic ? t("common.epic") : t("common.work_item"),
         }),
       });
-      onClose();
     } catch (errors) {
+      if (!session.active) return;
       const isPermissionError =
         (errors as { error?: string } | undefined)?.error ===
         `Only admin or creator can delete the ${isSubIssue ? "sub-work item" : isEpic ? "epic" : "work item"}`;

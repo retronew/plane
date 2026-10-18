@@ -6,11 +6,15 @@ export function groupProjects(projects: IProject[], statuses: ProjectCategory[])
   const groups: { id: string; status: ProjectCategory | undefined; projects: IProject[] }[] = statuses.map(
     (status) => ({ id: status.id, status, projects: [] as IProject[] })
   );
+  const groupsById = new Map<string, (typeof groups)[number]>();
+  for (const group of groups) {
+    if (!groupsById.has(group.id)) groupsById.set(group.id, group);
+  }
   const defaultStatus = statuses.find((status) => status.is_default);
   const ungrouped: IProject[] = [];
   for (const project of projects) {
     const id = project.status ?? defaultStatus?.id;
-    const group = groups.find((entry) => entry.id === id);
+    const group = id === undefined ? undefined : groupsById.get(id);
     if (group) group.projects.push(project);
     else ungrouped.push(project);
   }

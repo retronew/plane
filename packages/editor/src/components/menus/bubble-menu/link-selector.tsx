@@ -85,7 +85,7 @@ export function BubbleMenuLinkSelector(props: Props) {
             defaultValue={editor.getAttributes("link").href || ""}
             onKeyDown={(e) => {
               setError(false);
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                 e.preventDefault();
                 handleLinkSubmit();
               }

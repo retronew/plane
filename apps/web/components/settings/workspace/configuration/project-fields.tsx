@@ -117,6 +117,7 @@ export function ProjectCategoryFields({
       </>
     );
   }
+  const selectedLabelIds = new Set(labels);
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
       {categories.statesEnabled && (
@@ -156,7 +157,7 @@ export function ProjectCategoryFields({
               key={entry.id}
               label={entry.name}
               disabled={disabled}
-              checked={labels?.includes(entry.id) ?? false}
+              checked={selectedLabelIds.has(entry.id)}
               onCheckedChange={(checked) =>
                 onLabels(
                   checked ? [...new Set([...(labels ?? []), entry.id])] : (labels ?? []).filter((id) => id !== entry.id)
@@ -181,9 +182,10 @@ export function ProjectCategoryBadges({
   labels?: string[];
 }) {
   const categories = useProjectCategories(workspaceSlug);
+  const selectedLabelIds = new Set(labels);
   const entries = [
     ...categories.statuses.filter((e) => e.id === status),
-    ...categories.labels.filter((e) => labels?.includes(e.id)),
+    ...categories.labels.filter((e) => selectedLabelIds.has(e.id)),
   ];
   if (!entries.length) return null;
   return (

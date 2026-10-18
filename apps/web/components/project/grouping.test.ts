@@ -41,6 +41,53 @@ it("includes multi-label projects in each label and preserves missing/deleted la
     ["unassigned", ["b", "c"]],
   ]);
 });
+it("matches every duplicate label group once per project and preserves configuration order", () => {
+  const duplicateLabels = [{ id: "b" }, { id: "a" }, { id: "b" }, { id: "empty" }] as ProjectCategory[];
+  const projects = [
+    project("first", { labels: ["a", "b", "b", "deleted"] }),
+    project("second", { labels: ["b"] }),
+    project("unknown", { labels: ["deleted"] }),
+    project("missing"),
+  ];
+  const result = groupProjectRecords(projects, statuses, duplicateLabels, "labels");
+  expect(result.map((group) => [group.id, group.projects.map((item) => item.id)])).toEqual([
+    ["b", ["first", "second"]],
+    ["a", ["first"]],
+    ["b", ["first", "second"]],
+    ["empty", []],
+    ["unassigned", ["unknown", "missing"]],
+  ]);
+  expect(result[0].label).toBe(duplicateLabels[0]);
+  expect(result[2].label).toBe(duplicateLabels[2]);
+  expect(projects[0].labels).toEqual(["a", "b", "b", "deleted"]);
+  expect(duplicateLabels.map((label) => label.id)).toEqual(["b", "a", "b", "empty"]);
+});
+it("uses the first duplicate status mapping while retaining empty phases and the first default", () => {
+  const duplicateStatuses = [
+    { id: "shared", group: "first", is_default: true },
+    { id: "shared", group: "second" },
+    { id: "other", group: "third", is_default: true },
+  ] as ProjectCategory[];
+  const result = groupProjectRecords(
+    [project("implicit"), project("explicit", { status: "shared" }), project("unknown", { status: "deleted" })],
+    duplicateStatuses,
+    labels,
+    "state_group"
+  );
+  expect(result.map((group) => [group.id, group.projects.map((item) => item.id)])).toEqual([
+    ["first", ["implicit", "explicit"]],
+    ["second", []],
+    ["third", []],
+    ["unassigned", ["unknown"]],
+  ]);
+});
+it("retains the unassigned group with empty configurations and empty input", () => {
+  for (const by of ["labels", "state_group"] as const) {
+    expect(groupProjectRecords([], [], [], by)).toEqual([{ id: "unassigned", projects: [] }]);
+    const projects = [project("a"), project("b", { labels: ["deleted"], status: "deleted" })];
+    expect(groupProjectRecords(projects, [], [], by)).toEqual([{ id: "unassigned", projects }]);
+  }
+});
 it("keeps every creator including unknown users and preserves the incoming project order", () => {
   const projects = [project("a", { created_by: "u1" }), project("b"), project("c", { created_by: "u1" })];
   expect(groupProjectRecords(projects, statuses, labels, "created_by").map((g) => g.projects.map((p) => p.id))).toEqual(

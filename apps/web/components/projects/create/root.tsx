@@ -8,7 +8,7 @@ import { ProjectCategoryFields } from "@/components/settings/workspace/configura
 import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
 import type { TemplateConfiguration } from "@/services/workspace-configuration.service";
 import { projectIdentifierSanitizer } from "@plane/utils";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { FormProvider, useForm } from "react-hook-form";
 // plane imports
@@ -28,6 +28,7 @@ import { ProjectAttributes } from "./attributes";
 import { getProjectFormValues } from "./utils";
 
 export type TCreateProjectFormProps = {
+  isOpen?: boolean;
   setToFavorite?: boolean;
   workspaceSlug: string;
   onClose: () => void;
@@ -38,7 +39,14 @@ export type TCreateProjectFormProps = {
 };
 
 export const CreateProjectForm = observer(function CreateProjectForm(props: TCreateProjectFormProps) {
-  const { setToFavorite, workspaceSlug, data, onClose, handleNextStep, updateCoverImageStatus } = props;
+  const { isOpen = true, setToFavorite, workspaceSlug, data, onClose, handleNextStep, updateCoverImageStatus } = props;
+  const session = useRef<object | null>(null);
+  useLayoutEffect(() => {
+    session.current = isOpen ? {} : null;
+    return () => {
+      session.current = null;
+    };
+  }, [isOpen, workspaceSlug]);
   // store
   const { t } = useTranslation();
   const { addProjectToFavorites, createProject, updateProject } = useProject();
@@ -51,7 +59,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
     defaultValues: { ...getProjectFormValues(), ...data },
     reValidateMode: "onChange",
   });
-  const { handleSubmit, reset, setValue, watch } = methods;
+  const { handleSubmit, setValue, watch } = methods;
   const { isMobile } = usePlatformOS();
   const handleAddToFavorites = (projectId: string) => {
     if (!workspaceSlug) return;
@@ -66,6 +74,9 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   };
 
   const onSubmit = async (formData: Partial<TProject>) => {
+    const submittedSession = session.current;
+    const isCurrentSession = () => submittedSession !== null && session.current === submittedSession;
+    if (!isCurrentSession()) return;
     // Upper case identifier
     formData.identifier = formData.identifier?.toUpperCase();
     const coverImage = formData.cover_image_url;
@@ -79,10 +90,13 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
         : {}),
     })
       .then(async (res) => {
+        if (!isCurrentSession()) return;
         if (coverImage) {
           await updateCoverImageStatus(res.id, coverImage);
+          if (!isCurrentSession()) return;
           await updateProject(workspaceSlug.toString(), res.id, { cover_image_url: coverImage });
         }
+        if (!isCurrentSession()) return;
         setToast({
           type: "success",
           title: t("success"),
@@ -95,6 +109,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
         return handleNextStep(res.id);
       })
       .catch((err) => {
+        if (!isCurrentSession()) return;
         try {
           // Handle the new error format where codes are nested in arrays under field names
           const errorData = err?.data ?? {};
@@ -147,11 +162,8 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   };
 
   const handleClose = () => {
+    session.current = null;
     onClose();
-    setShouldAutoSyncIdentifier(true);
-    setTimeout(() => {
-      reset();
-    }, 300);
   };
 
   return (

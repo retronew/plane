@@ -7,7 +7,7 @@
 import { useTranslation } from "@plane/i18n";
 import { observer } from "mobx-react";
 import { EStartOfTheWeek } from "@plane/types";
-import { getOrderedDays, getDateLocale, getDateTimeFormatter } from "@plane/utils";
+import { getOrderedDays, getDateTimeFormatter } from "@plane/utils";
 import { DAYS_LIST } from "@plane/constants";
 // helpers
 // hooks
@@ -43,12 +43,7 @@ export const CalendarWeekHeader = observer(function CalendarWeekHeader(props: Pr
           return null;
 
         return (
-          <div
-            key={new Intl.DateTimeFormat(getDateLocale(), { weekday: "short" }).format(
-              new Date(2023, 0, 1 + day.value)
-            )}
-            className="flex h-11 items-center justify-center bg-layer-1 px-4 md:justify-end"
-          >
+          <div key={day.value} className="flex h-11 items-center justify-center bg-layer-1 px-4 md:justify-end">
             {weekdayFormatter.format(new Date(2023, 0, 1 + day.value))}
           </div>
         );
