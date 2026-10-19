@@ -45,6 +45,16 @@ import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
 
+const toDateValue = (value: string | Date | null | undefined) => getDate(value) ?? null;
+
+const deriveBoundaryDate = (value: string | Date | null | undefined): Date | undefined => {
+  const date = value ? getDate(value) : undefined;
+  date?.setDate(date.getDate());
+  return date;
+};
+
+const toPayloadDate = (value: Date | null) => (value ? renderFormattedPayloadDate(value) : null);
+
 type Props = {
   workspaceSlug: string;
   projectId: string;
@@ -74,18 +84,15 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
   const projectDetails = getProjectById(issue.project_id);
   const stateDetails = getStateById(issue.state_id);
 
-  const minDate = issue.start_date ? getDate(issue.start_date) : null;
-  minDate?.setDate(minDate.getDate());
-
-  const maxDate = issue.target_date ? getDate(issue.target_date) : null;
-  maxDate?.setDate(maxDate.getDate());
+  const minDate = deriveBoundaryDate(issue.start_date);
+  const maxDate = deriveBoundaryDate(issue.target_date);
 
   return (
     <>
       <div className="flex h-full w-full flex-col items-center divide-y-2 divide-subtle-1 overflow-hidden">
         <div className="h-full w-full overflow-y-auto px-6">
           <h5 className="mt-5 text-body-xs-medium">{t("common.properties")}</h5>
-          <div className={`mt-4 mb-2 space-y-2.5 truncate ${!isEditable ? "opacity-60" : ""}`}>
+          <div className={cn("mt-4 mb-2 space-y-2.5 truncate", { "opacity-60": !isEditable })}>
             <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
               <StateSelect
                 issueTypeId={issue.type_id}
@@ -138,13 +145,13 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
               <DateSelect
                 testId="work-item-start-date-select"
                 placeholder={t("issue.add.start_date")}
-                value={getDate(issue.start_date) ?? null}
+                value={toDateValue(issue.start_date)}
                 onChange={(val) =>
                   issueOperations.update(workspaceSlug, projectId, issueId, {
-                    start_date: val ? renderFormattedPayloadDate(val) : null,
+                    start_date: toPayloadDate(val),
                   })
                 }
-                maxDate={maxDate ?? undefined}
+                maxDate={maxDate}
                 disabled={!isEditable}
                 clearable
                 weekStartsOn={userProfile?.start_of_the_week}
@@ -159,13 +166,13 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 <DateSelect
                   testId="work-item-due-date-select"
                   placeholder={t("issue.add.due_date")}
-                  value={getDate(issue.target_date) ?? null}
+                  value={toDateValue(issue.target_date)}
                   onChange={(val) =>
                     issueOperations.update(workspaceSlug, projectId, issueId, {
-                      target_date: val ? renderFormattedPayloadDate(val) : null,
+                      target_date: toPayloadDate(val),
                     })
                   }
-                  minDate={minDate ?? undefined}
+                  minDate={minDate}
                   disabled={!isEditable}
                   clearable
                   className={cn({

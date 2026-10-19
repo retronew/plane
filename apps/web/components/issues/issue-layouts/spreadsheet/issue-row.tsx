@@ -37,6 +37,8 @@ import { isIssueNew } from "../utils";
 import { IssueColumn } from "./issue-column";
 import { translate } from "@plane/i18n";
 
+const getIssueServiceType = (isEpic: boolean) => (isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+
 interface Props {
   displayProperties: IIssueDisplayProperties;
   isEstimateEnabled: boolean;
@@ -78,7 +80,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
   // states
   const [isExpanded, setExpanded] = useIssueRowExpansion(issueId);
   // store hooks
-  const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+  const { subIssues: subIssuesStore } = useIssueDetail(getIssueServiceType(isEpic));
   const { issueMap } = useIssues();
 
   // derived values
@@ -177,6 +179,101 @@ interface IssueRowDetailsProps {
   isEpic?: boolean;
 }
 
+function IssueIdentifierCell({
+  visible,
+  projectId,
+  projectIdentifier,
+  sequenceId,
+}: {
+  visible: boolean;
+  projectId: string | null | undefined;
+  projectIdentifier: string | undefined;
+  sequenceId: number | undefined;
+}) {
+  if (!visible) return null;
+  return (
+    <div className="flex h-full shrink-0 items-center">
+      {projectId && (
+        <Tooltip label={`${projectIdentifier}-${sequenceId}`} align="start">
+          <span
+            data-spreadsheet-identifier
+            className="block max-w-[20ch] shrink-0 truncate text-left text-caption-md-medium! text-tertiary! tabular-nums"
+          >
+            {projectIdentifier}-{sequenceId}
+          </span>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
+
+function IssueSelectionCell({
+  projectId,
+  issueProjectId,
+  canSelect,
+  isSelected,
+  issueId,
+  selectionHelpers,
+}: {
+  projectId: string | undefined;
+  issueProjectId: string | null | undefined;
+  canSelect: boolean;
+  isSelected: boolean;
+  issueId: string;
+  selectionHelpers: TSelectionHelper;
+}) {
+  if (!projectId || !canSelect) return null;
+  return (
+    <Tooltip
+      label={translate("web.only_work_items_within_the_current_project_can_be_selected")}
+      layout="stacked"
+      disabled={issueProjectId === projectId}
+    >
+      <div className="absolute left-1 mr-1 grid w-3.5 flex-shrink-0 place-items-center">
+        <MultipleSelectEntityAction
+          className={cn(
+            "pointer-events-none opacity-0 transition-opacity group-hover/list-block:pointer-events-auto group-hover/list-block:opacity-100",
+            {
+              "pointer-events-auto opacity-100": isSelected,
+            }
+          )}
+          groupId={SPREADSHEET_SELECT_GROUP}
+          id={issueId}
+          selectionHelpers={selectionHelpers}
+          disabled={issueProjectId !== projectId}
+        />
+      </div>
+    </Tooltip>
+  );
+}
+
+function SubIssuesChevron({
+  count,
+  isEpic,
+  isExpanded,
+  onToggle,
+}: {
+  count: number;
+  isEpic: boolean;
+  isExpanded: boolean;
+  onToggle: (e: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  if (count <= 0 || isEpic) return null;
+  return (
+    <button
+      type="button"
+      className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
+      onClick={onToggle}
+    >
+      <ChevronRightOutline
+        className={cn("size-4", {
+          "rotate-90": isExpanded,
+        })}
+      />
+    </button>
+  );
+}
+
 const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetailsProps) {
   const {
     displayProperties,
@@ -204,7 +301,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   const { workspaceSlug, projectId } = useParams();
   // hooks
   const { getProjectIdentifierById } = useProject();
-  const { getIsIssuePeeked, peekIssue } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+  const { getIsIssuePeeked, peekIssue } = useIssueDetail(getIssueServiceType(isEpic));
   const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
   const { isMobile } = usePlatformOS();
 
@@ -293,20 +390,12 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
             )}
           >
             {/* Identifier section - conditionally rendered */}
-            {displayProperties?.key && (
-              <div className="flex h-full shrink-0 items-center">
-                {issueDetail.project_id && (
-                  <Tooltip label={`${projectIdentifier}-${issueDetail.sequence_id}`} align="start">
-                    <span
-                      data-spreadsheet-identifier
-                      className="block max-w-[20ch] shrink-0 truncate text-left text-caption-md-medium! text-tertiary! tabular-nums"
-                    >
-                      {projectIdentifier}-{issueDetail.sequence_id}
-                    </span>
-                  </Tooltip>
-                )}
-              </div>
-            )}
+            <IssueIdentifierCell
+              visible={!!displayProperties?.key}
+              projectId={issueDetail.project_id}
+              projectIdentifier={projectIdentifier}
+              sequenceId={issueDetail.sequence_id}
+            />
 
             {/* Workitem section */}
             <div
@@ -316,47 +405,26 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
               })}
             >
               {/* select checkbox */}
-              {projectId && canSelectIssues && (
-                <Tooltip
-                  label={translate("web.only_work_items_within_the_current_project_can_be_selected")}
-                  layout="stacked"
-                  disabled={issueDetail.project_id === projectId}
-                >
-                  <div className="absolute left-1 mr-1 grid w-3.5 flex-shrink-0 place-items-center">
-                    <MultipleSelectEntityAction
-                      className={cn(
-                        "pointer-events-none opacity-0 transition-opacity group-hover/list-block:pointer-events-auto group-hover/list-block:opacity-100",
-                        {
-                          "pointer-events-auto opacity-100": isIssueSelected,
-                        }
-                      )}
-                      groupId={SPREADSHEET_SELECT_GROUP}
-                      id={issueDetail.id}
-                      selectionHelpers={selectionHelpers}
-                      disabled={issueDetail.project_id !== projectId}
-                    />
-                  </div>
-                </Tooltip>
-              )}
+              <IssueSelectionCell
+                projectId={projectId}
+                issueProjectId={issueDetail.project_id}
+                canSelect={canSelectIssues}
+                isSelected={isIssueSelected}
+                issueId={issueDetail.id}
+                selectionHelpers={selectionHelpers}
+              />
 
               {/* sub issues indentation */}
               {nestingLevel !== 0 && <div style={{ width: subIssueIndentation }} />}
 
               {/* sub-issues chevron */}
               <div className="grid size-4 place-items-center">
-                {subIssuesCount > 0 && !isEpic && (
-                  <button
-                    type="button"
-                    className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
-                    onClick={handleToggleExpand}
-                  >
-                    <ChevronRightOutline
-                      className={cn("size-4", {
-                        "rotate-90": isExpanded,
-                      })}
-                    />
-                  </button>
-                )}
+                <SubIssuesChevron
+                  count={subIssuesCount}
+                  isEpic={isEpic}
+                  isExpanded={isExpanded}
+                  onToggle={handleToggleExpand}
+                />
               </div>
 
               <WorkItemTypeIcon projectId={issueDetail.project_id} typeId={issueDetail.type_id} isEpic={isEpic} />

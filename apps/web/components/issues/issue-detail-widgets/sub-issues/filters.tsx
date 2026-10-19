@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { observer } from "mobx-react";
 import { FilterOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
@@ -30,6 +30,12 @@ type TSubIssueFiltersProps = {
   states?: IState[];
   availableFilters: (keyof IIssueFilterOptions)[];
 };
+
+/** Renders a single filter section only when the filter is available for the current layout. */
+function SubIssueFilterItem({ enabled, children }: { enabled: boolean; children: ReactNode }) {
+  if (!enabled) return null;
+  return <div className="py-2">{children}</div>;
+}
 
 export const SubIssueFilters = observer(function SubIssueFilters(props: TSubIssueFiltersProps) {
   const { handleFiltersUpdate, filters, memberIds, states, availableFilters } = props;
@@ -68,83 +74,69 @@ export const SubIssueFilters = observer(function SubIssueFilters(props: TSubIssu
           </div>
           <div className="vertical-scrollbar scrollbar-sm h-full w-full divide-y divide-subtle-1 overflow-y-auto px-2.5 text-left">
             {/* Priority */}
-            {isFilterEnabled("priority") && (
-              <div className="py-2">
-                <FilterPriority
-                  appliedFilters={filters.priority ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("priority", val)}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("priority")}>
+              <FilterPriority
+                appliedFilters={filters.priority ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("priority", val)}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
 
             {/* state group */}
-            {isFilterEnabled("state_group") && (
-              <div className="py-2">
-                <FilterStateGroup
-                  appliedFilters={filters.state_group ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("state_group", val)}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("state_group")}>
+              <FilterStateGroup
+                appliedFilters={filters.state_group ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("state_group", val)}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
 
             {/* State */}
-            {isFilterEnabled("state") && (
-              <div className="py-2">
-                <FilterState
-                  appliedFilters={filters.state ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("state", val)}
-                  searchQuery={filtersSearchQuery}
-                  states={states}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("state")}>
+              <FilterState
+                appliedFilters={filters.state ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("state", val)}
+                searchQuery={filtersSearchQuery}
+                states={states}
+              />
+            </SubIssueFilterItem>
 
             {/* Projects */}
-            {isFilterEnabled("project") && (
-              <div className="py-2">
-                <FilterProjects
-                  appliedFilters={filters.project ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("project", val)}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("project")}>
+              <FilterProjects
+                appliedFilters={filters.project ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("project", val)}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
 
             {/* Assignees */}
-            {isFilterEnabled("assignees") && (
-              <div className="py-2">
-                <FilterAssignees
-                  appliedFilters={filters.assignees ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("assignees", val)}
-                  memberIds={memberIds}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("assignees")}>
+              <FilterAssignees
+                appliedFilters={filters.assignees ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("assignees", val)}
+                memberIds={memberIds}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
 
             {/* Start Date */}
-            {isFilterEnabled("start_date") && (
-              <div className="py-2">
-                <FilterStartDate
-                  appliedFilters={filters.start_date ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("start_date", val)}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("start_date")}>
+              <FilterStartDate
+                appliedFilters={filters.start_date ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("start_date", val)}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
 
             {/* Target Date */}
-            {isFilterEnabled("target_date") && (
-              <div className="py-2">
-                <FilterDueDate
-                  appliedFilters={filters.target_date ?? null}
-                  handleUpdate={(val) => handleFiltersUpdate("target_date", val)}
-                  searchQuery={filtersSearchQuery}
-                />
-              </div>
-            )}
+            <SubIssueFilterItem enabled={isFilterEnabled("target_date")}>
+              <FilterDueDate
+                appliedFilters={filters.target_date ?? null}
+                handleUpdate={(val) => handleFiltersUpdate("target_date", val)}
+                searchQuery={filtersSearchQuery}
+              />
+            </SubIssueFilterItem>
           </div>
         </div>
       </FiltersDropdown>
