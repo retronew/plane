@@ -52,11 +52,17 @@ export const ArchivedModulesHeader = observer(function ArchivedModulesHeader() {
     (key: keyof TModuleFilters, value: string | string[]) => {
       if (!projectId) return;
       const newValues = currentProjectArchivedFilters?.[key] ?? [];
+      const newValuesSet = new Set(newValues);
 
       if (Array.isArray(value))
         value.forEach((val) => {
-          if (!newValues.includes(val)) newValues.push(val);
-          else newValues.splice(newValues.indexOf(val), 1);
+          if (!newValuesSet.has(val)) {
+            newValues.push(val);
+            newValuesSet.add(val);
+          } else {
+            newValues.splice(newValues.indexOf(val), 1);
+            newValuesSet.delete(val);
+          }
         });
       else {
         if (currentProjectArchivedFilters?.[key]?.includes(value)) newValues.splice(newValues.indexOf(value), 1);

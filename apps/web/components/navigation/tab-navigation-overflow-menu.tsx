@@ -31,6 +31,7 @@ type Props = {
  */
 export function TabNavigationOverflowMenu({ overflowItems, isActive, tabPreferences, onToggleDefault, onShow }: Props) {
   const { t } = useTranslation();
+  const hiddenTabsSet = new Set(tabPreferences.hiddenTabs);
 
   return (
     <Menu>
@@ -49,7 +50,7 @@ export function TabNavigationOverflowMenu({ overflowItems, isActive, tabPreferen
         {overflowItems.map((item) => {
           const itemIsActive = isActive(item);
           // isHidden = true only for user-hidden items (not space-constrained overflow)
-          const isHidden = tabPreferences.hiddenTabs.includes(item.key);
+          const isHidden = hiddenTabsSet.has(item.key);
           const isDefault = item.key === tabPreferences.defaultTab;
 
           return (

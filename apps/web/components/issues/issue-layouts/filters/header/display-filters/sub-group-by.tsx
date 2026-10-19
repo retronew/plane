@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { ISSUE_GROUP_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -31,6 +31,9 @@ export const FilterSubGroupBy = observer(function FilterSubGroupBy(props: Props)
   const selectedGroupBy = displayFilters.group_by ?? null;
   const selectedSubGroupBy = displayFilters.sub_group_by ?? null;
 
+  const subGroupByOptionsSet = useMemo(() => new Set(subGroupByOptions), [subGroupByOptions]);
+  const ignoreGroupedFiltersSet = useMemo(() => new Set(ignoreGroupedFilters), [ignoreGroupedFilters]);
+
   return (
     <>
       <FilterHeader
@@ -41,9 +44,9 @@ export const FilterSubGroupBy = observer(function FilterSubGroupBy(props: Props)
       />
       {previewEnabled && (
         <div>
-          {ISSUE_GROUP_BY_OPTIONS.filter((option) => subGroupByOptions.includes(option.key)).map((subGroupBy) => {
+          {ISSUE_GROUP_BY_OPTIONS.filter((option) => subGroupByOptionsSet.has(option.key)).map((subGroupBy) => {
             if (selectedGroupBy !== null && subGroupBy.key === selectedGroupBy) return null;
-            if (ignoreGroupedFilters.includes(subGroupBy?.key)) return null;
+            if (ignoreGroupedFiltersSet.has(subGroupBy?.key)) return null;
 
             return (
               <FilterOption

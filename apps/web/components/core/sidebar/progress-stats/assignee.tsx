@@ -33,6 +33,7 @@ type TAssigneeStatComponent = {
 export const AssigneeStatComponent = observer(function AssigneeStatComponent(props: TAssigneeStatComponent) {
   const { distribution, isEditable, selectedAssigneeIds, handleAssigneeFiltersUpdate } = props;
   const { t } = useTranslation();
+  const selectedAssigneeIdsSet = new Set(selectedAssigneeIds);
   return (
     <div>
       {distribution && distribution.length > 0 ? (
@@ -56,7 +57,7 @@ export const AssigneeStatComponent = observer(function AssigneeStatComponent(pro
                 total={assignee?.total ?? 0}
                 {...(isEditable && {
                   onClick: () => handleAssigneeFiltersUpdate(assignee.id),
-                  selected: assignee.id ? selectedAssigneeIds.includes(assignee.id) : false,
+                  selected: assignee.id ? selectedAssigneeIdsSet.has(assignee.id) : false,
                 })}
               />
             );

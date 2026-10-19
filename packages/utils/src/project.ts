@@ -68,12 +68,14 @@ export const shouldFilterProject = (
     (!filters.priority?.length || filters.priority.includes(project.priority ?? "none")) &&
     (!filters.status?.length || filters.status.includes(project.status ?? "")) &&
     (!filters.labels?.length || filters.labels.some((id) => labelIds.has(id)));
+  const accessSet = new Set(filters.access);
+  const leadSet = new Set(filters.lead);
   Object.keys(filters).forEach((key) => {
     const filterKey = key as keyof TProjectFilters;
     if (filterKey === "access" && filters.access && filters.access.length > 0)
-      fallsInFilters = fallsInFilters && filters.access.includes(`${project.network}`);
+      fallsInFilters = fallsInFilters && accessSet.has(`${project.network}`);
     if (filterKey === "lead" && filters.lead && filters.lead.length > 0)
-      fallsInFilters = fallsInFilters && filters.lead.includes(`${project.project_lead}`);
+      fallsInFilters = fallsInFilters && leadSet.has(`${project.project_lead}`);
     if (filterKey === "members" && filters.members && filters.members.length > 0) {
       const memberIds = new Set(project.members);
       fallsInFilters = fallsInFilters && filters.members.some((memberId) => memberIds.has(memberId));

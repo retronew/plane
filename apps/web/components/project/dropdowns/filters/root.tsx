@@ -49,6 +49,7 @@ function MemberFilter({
   const [search, setSearch] = useState("");
   const { getUserDetails } = useMember();
   const { t } = useTranslation();
+  const selectedSet = new Set(selected);
   const members = ids
     .map((id) => getUserDetails(id))
     .filter((member) => member && member.display_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
@@ -79,7 +80,7 @@ function MemberFilter({
                   <MenuCheckboxItem
                     key={member.id}
                     label={member.display_name}
-                    checked={selected.includes(member.id)}
+                    checked={selectedSet.has(member.id)}
                     onCheckedChange={() => onChange(member.id)}
                     closeOnClick={false}
                     icon={

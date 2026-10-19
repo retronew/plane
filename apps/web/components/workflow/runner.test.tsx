@@ -46,7 +46,11 @@ const state = vi.hoisted(() => ({
   mutate: vi.fn(),
   toast: vi.fn(),
 }));
-vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("@plane/i18n", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+  // `getDateTimeFormatter` (used for the run timestamps) reads the active language.
+  getCurrentLanguage: () => "en",
+}));
 vi.mock("@plane/blocks/toast", () => ({ setToast: state.toast }));
 vi.mock("@plane/blocks/dialog", () => ({
   ConfirmDialog: ({ isOpen, title, handleClose }: { isOpen: boolean; title: string; handleClose: () => void }) => (

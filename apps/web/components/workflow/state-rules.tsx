@@ -33,10 +33,11 @@ export function WorkflowStateRules({
 }) {
   const [expanded, setExpanded] = useState<string[]>([]),
     { t } = useTranslation();
+  const expandedSet = new Set(expanded);
   return (
     <div className="space-y-3">
       {sortStates(workflow.states).map((state) => {
-        const open = expanded.includes(state.id),
+        const open = expandedSet.has(state.id),
           rules = workflow.transitions.filter((rule) => rule.source_id === state.id),
           initial = state.id === workflow.initial_state_id;
         const preview = draft?.source_id === state.id ? draft : null;

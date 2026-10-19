@@ -37,6 +37,7 @@ export function WorkspaceJoinInvitesStep(props: Props) {
   const checkboxId = useId();
   const [isJoiningWorkspaces, setIsJoiningWorkspaces] = useState(false);
   const [invitationsRespond, setInvitationsRespond] = useState<string[]>([]);
+  const invitationsRespondSet = new Set(invitationsRespond);
   // store hooks
   const { fetchWorkspaces } = useWorkspace();
   const { fetchCurrentUserSettings } = useUserSettings();
@@ -81,7 +82,7 @@ export function WorkspaceJoinInvitesStep(props: Props) {
         {invitations &&
           invitations.length > 0 &&
           invitations.map((invitation) => {
-            const isSelected = invitationsRespond.includes(invitation.id);
+            const isSelected = invitationsRespondSet.has(invitation.id);
             const invitedWorkspace = invitation.workspace;
             return (
               <label

@@ -14,7 +14,11 @@ const state = vi.hoisted(() => ({
   reapply: vi.fn(),
   history: [] as unknown[],
 }));
-vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("@plane/i18n", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+  // `getDateTimeFormatter` (used for the run timestamps) reads the active language.
+  getCurrentLanguage: () => "en",
+}));
 vi.mock("@plane/blocks/toast", () => ({ setToast: state.toast }));
 vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "member" } }) }));
 vi.mock("@/hooks/store/use-issue-detail", () => ({

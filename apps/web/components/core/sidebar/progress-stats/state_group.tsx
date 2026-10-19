@@ -27,6 +27,7 @@ type TStateGroupStatComponent = {
 
 export const StateGroupStatComponent = observer(function StateGroupStatComponent(props: TStateGroupStatComponent) {
   const { distribution, isEditable, totalIssuesCount, selectedStateGroups, handleStateGroupFiltersUpdate } = props;
+  const selectedStateGroupsSet = new Set(selectedStateGroups);
 
   return (
     <div>
@@ -43,7 +44,7 @@ export const StateGroupStatComponent = observer(function StateGroupStatComponent
           total={totalIssuesCount}
           {...(isEditable && {
             onClick: () => group.state && handleStateGroupFiltersUpdate(group.state),
-            selected: group.state ? selectedStateGroups.includes(group.state) : false,
+            selected: group.state ? selectedStateGroupsSet.has(group.state) : false,
           })}
         />
       ))}

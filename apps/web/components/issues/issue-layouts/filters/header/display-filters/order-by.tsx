@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { ISSUE_ORDER_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -28,6 +28,8 @@ export const FilterOrderBy = observer(function FilterOrderBy(props: Props) {
 
   const activeOrderBy = selectedOrderBy ?? "-created_at";
 
+  const orderByOptionsSet = useMemo(() => new Set(orderByOptions), [orderByOptions]);
+
   return (
     <>
       <FilterHeader
@@ -38,7 +40,7 @@ export const FilterOrderBy = observer(function FilterOrderBy(props: Props) {
       />
       {previewEnabled && (
         <div>
-          {ISSUE_ORDER_BY_OPTIONS.filter((option) => orderByOptions.includes(option.key)).map((orderBy) => (
+          {ISSUE_ORDER_BY_OPTIONS.filter((option) => orderByOptionsSet.has(option.key)).map((orderBy) => (
             <FilterOption
               key={orderBy?.key}
               isChecked={activeOrderBy === orderBy?.key}

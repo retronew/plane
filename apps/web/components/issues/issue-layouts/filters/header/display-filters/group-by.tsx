@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import type { IIssueDisplayFilterOptions, TIssueGroupByOptions } from "@plane/types";
@@ -29,6 +29,8 @@ export const FilterGroupBy = observer(function FilterGroupBy(props: Props) {
   const selectedGroupBy = displayFilters?.group_by ?? null;
   const selectedSubGroupBy = displayFilters?.sub_group_by ?? null;
 
+  const ignoreGroupedFiltersSet = useMemo(() => new Set(ignoreGroupedFilters), [ignoreGroupedFilters]);
+
   const options = useGroupByOptions(groupByOptions);
 
   return (
@@ -48,7 +50,7 @@ export const FilterGroupBy = observer(function FilterGroupBy(props: Props) {
               groupBy.key === selectedSubGroupBy
             )
               return null;
-            if (ignoreGroupedFilters.includes(groupBy?.key)) return null;
+            if (ignoreGroupedFiltersSet.has(groupBy?.key)) return null;
 
             return (
               <FilterOption

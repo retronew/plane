@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { ISSUE_PRIORITY_FILTERS } from "@plane/constants";
@@ -30,6 +30,8 @@ export const FilterPriority = observer(function FilterPriority(props: Props) {
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
+
   const filteredOptions = ISSUE_PRIORITY_FILTERS.filter((p) => p.key.includes(searchQuery.toLowerCase()));
 
   return (
@@ -45,7 +47,7 @@ export const FilterPriority = observer(function FilterPriority(props: Props) {
             filteredOptions.map((priority) => (
               <FilterOption
                 key={priority.key}
-                isChecked={appliedFilters?.includes(priority.key) ?? false}
+                isChecked={appliedFiltersSet.has(priority.key)}
                 onClick={() => handleUpdate(priority.key)}
                 icon={<PriorityIcon priority={priority.key} className="h-3.5 w-3.5" />}
                 title={t(priority.titleTranslationKey)}

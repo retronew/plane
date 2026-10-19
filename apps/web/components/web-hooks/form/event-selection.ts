@@ -23,5 +23,6 @@ export function normalizeWebhookEvents(
 }
 
 export function toggleWebhookEvents(selected: string[], targets: string[], checked: boolean): string[] {
-  return checked ? [...new Set([...selected, ...targets])] : selected.filter((event) => !targets.includes(event));
+  const targetsSet = new Set(targets);
+  return checked ? [...new Set([...selected, ...targets])] : selected.filter((event) => !targetsSet.has(event));
 }

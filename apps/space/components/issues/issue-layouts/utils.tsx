@@ -217,8 +217,10 @@ export const getDisplayPropertiesCount = (
 
   let count = 0;
 
+  const ignoreFieldsSet = new Set(ignoreFields);
+
   for (const propertyKey of propertyKeys) {
-    if (ignoreFields && ignoreFields.includes(propertyKey)) continue;
+    if (ignoreFieldsSet.has(propertyKey)) continue;
     if (displayProperties[propertyKey]) count++;
   }
 

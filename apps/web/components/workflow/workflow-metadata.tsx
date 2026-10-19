@@ -43,6 +43,7 @@ export function WorkflowMetadata({
     [description, setDescription] = useState(workflow?.description ?? ""),
     [states, setStates] = useState(() => workflow?.states.map((state) => state.id) ?? []),
     [busy, setBusy] = useState(false);
+  const statesSet = new Set(states);
   // A conditionally mounted, initially open Base UI root skips its enter transition.
   const [mounted, setMounted] = useState(false);
   const active = useRef(false);
@@ -78,10 +79,7 @@ export function WorkflowMetadata({
         store.set(projectId, updated);
         if (!active.current) return;
         const previous = workflow.states.map((state) => state.id);
-        if (
-          !workflow.is_default &&
-          (previous.length !== states.length || previous.some((id) => !states.includes(id)))
-        ) {
+        if (!workflow.is_default && (previous.length !== states.length || previous.some((id) => !statesSet.has(id)))) {
           onPreview({ operation: "states", workflow_id: workflow.workflow_id ?? workflow.id, state_ids: states });
           return;
         }
@@ -150,7 +148,7 @@ export function WorkflowMetadata({
                     <label key={state.id} className="flex items-center gap-2 text-body-xs-regular">
                       <input
                         type="checkbox"
-                        checked={states.includes(state.id)}
+                        checked={statesSet.has(state.id)}
                         onChange={(event) =>
                           setStates((ids) =>
                             event.target.checked ? [...ids, state.id] : ids.filter((id) => id !== state.id)

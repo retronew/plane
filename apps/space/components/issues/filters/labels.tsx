@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 // plane imports
 import { Loader } from "@plane/blocks/skeleton";
 // types
@@ -33,6 +33,8 @@ export function FilterLabels(props: Props) {
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
+
   const filteredOptions = labels?.filter((label) => label.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleViewToggle = () => {
@@ -57,7 +59,7 @@ export function FilterLabels(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((label) => (
                   <FilterOption
                     key={label?.id}
-                    isChecked={Boolean(appliedFilters?.includes(label?.id))}
+                    isChecked={appliedFiltersSet.has(label?.id)}
                     onClick={() => handleUpdate(label?.id)}
                     icon={<LabelIcons color={label.color} />}
                     title={label.name}

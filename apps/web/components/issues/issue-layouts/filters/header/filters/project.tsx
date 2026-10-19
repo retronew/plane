@@ -32,6 +32,7 @@ export const FilterProjects = observer(function FilterProjects(props: Props) {
   // derived values
   const projects = joinedProjectIds?.map((projectId) => getProjectById(projectId)!) ?? null;
   const appliedFiltersCount = appliedFilters?.length ?? 0;
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
 
   const sortedOptions = useMemo(() => {
     const filteredOptions = (projects || []).filter((project) =>
@@ -67,7 +68,7 @@ export const FilterProjects = observer(function FilterProjects(props: Props) {
                 {sortedOptions.slice(0, itemsToRender).map((project) => (
                   <FilterOption
                     key={`project-${project.id}`}
-                    isChecked={Boolean(appliedFilters?.includes(project.id))}
+                    isChecked={appliedFiltersSet.has(project.id)}
                     onClick={() => handleUpdate(project.id)}
                     icon={
                       <span className="grid h-4 w-4 flex-shrink-0 place-items-center">

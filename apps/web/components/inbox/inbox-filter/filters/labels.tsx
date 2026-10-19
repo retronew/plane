@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import type { IIssueLabel } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
@@ -31,7 +31,9 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
 
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
 
-  const filterValue = inboxFilters?.labels || [];
+  const rawFilterValue = inboxFilters?.labels;
+  const filterValue = rawFilterValue || [];
+  const filterValueSet = useMemo(() => new Set<string | undefined>(rawFilterValue ?? []), [rawFilterValue]);
 
   const appliedFiltersCount = filterValue?.length ?? 0;
 
@@ -63,7 +65,7 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((label) => (
                   <FilterOption
                     key={label?.id}
-                    isChecked={Boolean(filterValue?.includes(label?.id))}
+                    isChecked={filterValueSet.has(label?.id)}
                     onClick={() => handleInboxIssueFilters("labels", handleFilterValue(label.id))}
                     icon={<LabelIcons color={label.color} />}
                     title={label.name}

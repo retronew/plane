@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useMemo } from "react";
 // plane imports
 import { ISSUE_LAYOUTS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -25,6 +26,7 @@ export function LayoutSelection(props: Props) {
   const { layouts, onChange, selectedLayout } = props;
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
+  const layoutsSet = useMemo(() => new Set(layouts), [layouts]);
   return (
     <Tabs
       variant="contained"
@@ -35,7 +37,7 @@ export function LayoutSelection(props: Props) {
       }}
     >
       <TabsList aria-label={t("common.layout")}>
-        {ISSUE_LAYOUTS.filter((layout) => layouts.includes(layout.key)).map((layout) => (
+        {ISSUE_LAYOUTS.filter((layout) => layoutsSet.has(layout.key)).map((layout) => (
           <Tooltip key={layout.key} label={t(layout.i18n_title)} disabled={isMobile}>
             <Tab
               value={layout.key}

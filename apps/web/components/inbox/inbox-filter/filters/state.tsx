@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { EIconSize } from "@plane/constants";
 import { StateGroupIcon } from "@plane/blocks/icons";
@@ -31,7 +31,9 @@ export const FilterState = observer(function FilterState(props: Props) {
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
   const { getStatePercentageInGroup } = useProjectState();
 
-  const filterValue = inboxFilters?.state || [];
+  const rawFilterValue = inboxFilters?.state;
+  const filterValue = rawFilterValue || [];
+  const filterValueSet = useMemo(() => new Set<string | undefined>(rawFilterValue ?? []), [rawFilterValue]);
 
   const appliedFiltersCount = filterValue?.length ?? 0;
 
@@ -63,7 +65,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                 {filteredOptions.slice(0, itemsToRender).map((state) => (
                   <FilterOption
                     key={state?.id}
-                    isChecked={Boolean(filterValue?.includes(state?.id))}
+                    isChecked={filterValueSet.has(state?.id)}
                     onClick={() => handleInboxIssueFilters("state", handleFilterValue(state.id))}
                     icon={
                       <StateGroupIcon

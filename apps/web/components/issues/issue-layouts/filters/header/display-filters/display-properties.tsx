@@ -38,10 +38,15 @@ export const FilterDisplayProperties = observer(function FilterDisplayProperties
   // states
   const [previewEnabled, setPreviewEnabled] = React.useState(true);
 
+  const displayPropertiesToRenderSet = React.useMemo(
+    () => new Set(displayPropertiesToRender),
+    [displayPropertiesToRender]
+  );
+
   // Filter out "cycle" and "module" keys if cycleViewDisabled or moduleViewDisabled is true
   // Also filter out display properties that should not be rendered
   const filteredDisplayProperties = ISSUE_DISPLAY_PROPERTIES.filter((property) => {
-    if (!displayPropertiesToRender.includes(property.key)) return false;
+    if (!displayPropertiesToRenderSet.has(property.key)) return false;
     switch (property.key) {
       case "cycle":
         return !cycleViewDisabled;

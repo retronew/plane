@@ -51,6 +51,8 @@ function UserInvitationsPage() {
 
   const { data: invitations } = useSWR("USER_WORKSPACE_INVITATIONS", () => workspaceService.userWorkspaceInvitations());
 
+  const invitationsRespondSet = new Set(invitationsRespond);
+
   const redirectWorkspaceSlug =
     // currentUserSettings?.workspace?.last_workspace_slug ||
     // currentUserSettings?.workspace?.fallback_workspace_slug ||
@@ -131,7 +133,7 @@ function UserInvitationsPage() {
                 <h4 className="text-20 font-semibold">{t("join_a_workspace")}</h4>
                 <div className="max-h-[37vh] space-y-4 overflow-y-auto md:w-3/5">
                   {invitations.map((invitation) => {
-                    const isSelected = invitationsRespond.includes(invitation.id);
+                    const isSelected = invitationsRespondSet.has(invitation.id);
 
                     return (
                       <button

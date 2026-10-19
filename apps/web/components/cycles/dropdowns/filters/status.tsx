@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { observer } from "mobx-react";
 import {
   MenuCheckboxItem,
@@ -18,6 +19,7 @@ type Props = {
 
 export const FilterStatus = observer(function FilterStatus({ appliedFilters, handleUpdate, searchQuery = "" }: Props) {
   const { t } = useTranslation();
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
   const options = CYCLE_STATUS.filter((status) =>
     t(status.i18n_title).toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase())
   );
@@ -34,7 +36,7 @@ export const FilterStatus = observer(function FilterStatus({ appliedFilters, han
             key={status.value}
             label={t(status.i18n_title)}
             icon={<span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: status.color }} />}
-            checked={appliedFilters?.includes(status.value) ?? false}
+            checked={appliedFiltersSet.has(status.value)}
             onCheckedChange={() => handleUpdate(status.value)}
             closeOnClick={false}
           />

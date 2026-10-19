@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { concat, uniq } from "lodash-es";
 import { observer } from "mobx-react";
 import { PAST_DURATION_FILTER_OPTIONS } from "@plane/constants";
@@ -36,7 +36,9 @@ export const FilterDate = observer(function FilterDate(props: Props) {
   const [previewEnabled, setPreviewEnabled] = useState(true);
   const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
   // derived values
-  const filterValue: string[] = inboxFilters?.[filterKey] || [];
+  const rawFilterValue = inboxFilters?.[filterKey];
+  const filterValue: string[] = rawFilterValue || [];
+  const filterValueSet = useMemo(() => new Set(rawFilterValue ?? []), [rawFilterValue]);
   const appliedFiltersCount = filterValue?.length ?? 0;
   const filteredOptions = PAST_DURATION_FILTER_OPTIONS.filter((d) =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -81,7 +83,7 @@ export const FilterDate = observer(function FilterDate(props: Props) {
               {filteredOptions.map((option) => (
                 <FilterOption
                   key={option.value}
-                  isChecked={Boolean(filterValue?.includes(option.value))}
+                  isChecked={filterValueSet.has(option.value)}
                   onClick={() => handleInboxIssueFilters(filterKey, handleFilterValue(option.value))}
                   title={option.name}
                   multiple={false}

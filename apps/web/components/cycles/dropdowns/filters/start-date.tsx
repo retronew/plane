@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { Button } from "@makeplane/propel/components/button";
 import { Calendar } from "@makeplane/propel/components/calendar";
@@ -136,6 +136,7 @@ const CycleDateFilterContent = observer(function CycleDateFilterContent({
   searchQuery = "",
 }: CycleDateFilterProps & { field: "start_date" | "end_date" }) {
   const { t } = useTranslation();
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
   const customSelected = (appliedFilters ?? []).filter((value) => isInDateFormat(value.split(";")[0]));
   const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((option) =>
     option.name.toLocaleLowerCase().includes(searchQuery.trim().toLocaleLowerCase())
@@ -153,7 +154,7 @@ const CycleDateFilterContent = observer(function CycleDateFilterContent({
           <MenuCheckboxItem
             key={option.value}
             label={option.name}
-            checked={appliedFilters?.includes(option.value) ?? false}
+            checked={appliedFiltersSet.has(option.value)}
             onCheckedChange={() => handleUpdate(option.value)}
             closeOnClick={false}
           />

@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 // types
 import { INBOX_STATUS } from "@plane/constants";
@@ -29,7 +29,9 @@ export const FilterStatus = observer(function FilterStatus(props: Props) {
   // states
   const [previewEnabled, setPreviewEnabled] = useState(true);
   // derived values
-  const filterValue = inboxFilters?.status || [];
+  const rawFilterValue = inboxFilters?.status;
+  const filterValue = rawFilterValue || [];
+  const filterValueSet = useMemo(() => new Set(rawFilterValue ?? []), [rawFilterValue]);
   const appliedFiltersCount = filterValue?.length ?? 0;
   const filteredOptions = INBOX_STATUS.filter(
     (s) =>
@@ -60,7 +62,7 @@ export const FilterStatus = observer(function FilterStatus(props: Props) {
             filteredOptions.map((status) => (
               <FilterOption
                 key={status.key}
-                isChecked={Boolean(filterValue?.includes(status.status))}
+                isChecked={filterValueSet.has(status.status)}
                 onClick={() => handleStatusFilterSelect(status.status)}
                 icon={<InboxStatusIcon type={status.status} className={`h-3.5 w-3.5`} />}
                 title={t(status.i18n_title)}

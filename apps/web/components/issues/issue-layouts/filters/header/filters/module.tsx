@@ -34,6 +34,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
   const moduleIds = projectId ? getProjectModuleIds(projectId.toString()) : undefined;
   const modules = moduleIds?.map((moduleId) => getModuleById(moduleId)!) ?? null;
   const appliedFiltersCount = appliedFilters?.length ?? 0;
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
 
   const sortedOptions = useMemo(() => {
     const filteredOptions = (modules || []).filter((module) =>
@@ -70,7 +71,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
                 {sortedOptions.slice(0, itemsToRender).map((cycle) => (
                   <FilterOption
                     key={cycle.id}
-                    isChecked={Boolean(appliedFilters?.includes(cycle.id))}
+                    isChecked={appliedFiltersSet.has(cycle.id)}
                     onClick={() => handleUpdate(cycle.id)}
                     icon={<ModuleOutline className="h-3 w-3 flex-shrink-0" />}
                     title={cycle.name}

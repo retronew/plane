@@ -26,6 +26,7 @@ export const PowerKMembersMenu = observer(function PowerKMembersMenu(props: Prop
   const { handleSelect, heading, userIds, value } = props;
   // store hooks
   const { getUserDetails } = useMember();
+  const valueSet = new Set(value);
 
   return (
     <Command.Group heading={heading}>
@@ -44,7 +45,7 @@ export const PowerKMembersMenu = observer(function PowerKMembersMenu(props: Prop
                 size="xs"
               />
             }
-            isSelected={value.includes(memberId)}
+            isSelected={valueSet.has(memberId)}
             label={memberDetails?.display_name}
             onSelect={() => handleSelect(memberId)}
           />

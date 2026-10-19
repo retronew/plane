@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 // constants
 import { DATE_AFTER_FILTER_OPTIONS } from "@plane/constants";
@@ -26,6 +26,7 @@ export const FilterDueDate = observer(function FilterDueDate(props: Props) {
   const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
 
   const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((d) =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -65,7 +66,7 @@ export const FilterDueDate = observer(function FilterDueDate(props: Props) {
               {filteredOptions.map((option) => (
                 <FilterOption
                   key={option.value}
-                  isChecked={Boolean(appliedFilters?.includes(option.value))}
+                  isChecked={appliedFiltersSet.has(option.value)}
                   onClick={() => handleUpdate(option.value)}
                   title={option.name}
                   multiple

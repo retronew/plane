@@ -36,6 +36,7 @@ export const FilterMentions = observer(function FilterMentions(props: Props) {
   const { data: currentUser } = useUser();
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
 
   const sortedOptions = useMemo(() => {
     const filteredOptions = (memberIds || []).filter((memberId) =>
@@ -77,7 +78,7 @@ export const FilterMentions = observer(function FilterMentions(props: Props) {
                   return (
                     <FilterOption
                       key={`mentions-${member.id}`}
-                      isChecked={Boolean(appliedFilters?.includes(member.id))}
+                      isChecked={appliedFiltersSet.has(member.id)}
                       onClick={() => handleUpdate(member.id)}
                       icon={
                         <Avatar

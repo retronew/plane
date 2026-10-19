@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { STATE_GROUPS } from "@plane/constants";
@@ -26,6 +26,7 @@ export const FilterStateGroup = observer(function FilterStateGroup(props: Props)
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
+  const appliedFiltersSet = useMemo(() => new Set(appliedFilters ?? []), [appliedFilters]);
 
   const filteredOptions = Object.values(STATE_GROUPS).filter((s) => s.key.includes(searchQuery.toLowerCase()));
 
@@ -51,7 +52,7 @@ export const FilterStateGroup = observer(function FilterStateGroup(props: Props)
               {filteredOptions.slice(0, itemsToRender).map((stateGroup) => (
                 <FilterOption
                   key={stateGroup.key}
-                  isChecked={Boolean(appliedFilters?.includes(stateGroup.key))}
+                  isChecked={appliedFiltersSet.has(stateGroup.key)}
                   onClick={() => handleUpdate(stateGroup.key)}
                   icon={<StateGroupIcon stateGroup={stateGroup.key} />}
                   title={stateGroup.label}

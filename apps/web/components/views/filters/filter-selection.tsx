@@ -38,9 +38,15 @@ export const ViewFiltersSelection = observer(function ViewFiltersSelection(props
 
     if (Array.isArray(currValues)) {
       if (Array.isArray(value)) {
+        const currValuesSet = new Set(currValues);
         value.forEach((val) => {
-          if (!currValues.includes(val)) currValues.push(val);
-          else currValues.splice(currValues.indexOf(val), 1);
+          if (!currValuesSet.has(val)) {
+            currValues.push(val);
+            currValuesSet.add(val);
+          } else {
+            currValues.splice(currValues.indexOf(val), 1);
+            currValuesSet.delete(val);
+          }
         });
       } else if (typeof value !== "boolean") {
         if (currValues?.includes(value)) currValues.splice(currValues.indexOf(value), 1);

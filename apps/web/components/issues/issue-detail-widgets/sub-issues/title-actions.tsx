@@ -70,12 +70,18 @@ export const SubWorkItemTitleActions = observer(function SubWorkItemTitleActions
   const handleFiltersUpdate = useCallback(
     (key: keyof IIssueFilterOptions, value: string | string[]) => {
       const newValues = cloneDeep(subIssueFilters?.filters?.[key]) ?? [];
+      const newValuesSet = new Set(newValues);
 
       if (Array.isArray(value)) {
         // this validation is majorly for the filter start_date, target_date custom
         value.forEach((val) => {
-          if (!newValues.includes(val)) newValues.push(val);
-          else newValues.splice(newValues.indexOf(val), 1);
+          if (!newValuesSet.has(val)) {
+            newValues.push(val);
+            newValuesSet.add(val);
+          } else {
+            newValues.splice(newValues.indexOf(val), 1);
+            newValuesSet.delete(val);
+          }
         });
       } else {
         if (subIssueFilters?.filters?.[key]?.includes(value)) newValues.splice(newValues.indexOf(value), 1);

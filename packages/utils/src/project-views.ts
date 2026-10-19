@@ -50,10 +50,12 @@ export const orderViews = (
  */
 export const shouldFilterView = (view: IProjectView, filters: TViewFilterProps | undefined): boolean => {
   let fallsInFilters = true;
+  const ownedBySet = new Set(filters?.owned_by);
+  const viewTypeSet = new Set(filters?.view_type);
   Object.keys(filters ?? {}).forEach((key) => {
     const filterKey = key as keyof TViewFilterProps;
     if (filterKey === "owned_by" && filters?.owned_by && filters.owned_by.length > 0) {
-      fallsInFilters = fallsInFilters && filters.owned_by.includes(`${view.created_by}`);
+      fallsInFilters = fallsInFilters && ownedBySet.has(`${view.created_by}`);
     }
 
     if (filterKey === "created_at" && filters?.created_at && filters.created_at.length > 0) {
@@ -64,7 +66,7 @@ export const shouldFilterView = (view: IProjectView, filters: TViewFilterProps |
     }
 
     if (filterKey === "view_type" && filters?.view_type && filters?.view_type?.length > 0) {
-      fallsInFilters = filters.view_type.includes(view.access);
+      fallsInFilters = viewTypeSet.has(view.access);
     }
   });
 
