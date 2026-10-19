@@ -34,54 +34,13 @@ This helps us triage and manage issues more efficiently.
 
 ## Projects setup and Architecture
 
-### Requirements
+The Development guide maintains the local setup instructions:
 
-- Docker Engine installed and running
-- Node.js version 20+ [LTS version](https://nodejs.org/en/about/previous-releases)
-- Python version 3.12 and [uv](https://docs.astral.sh/uv/) (only needed to run the API outside Docker)
-- Postgres version v14
-- Redis version v6.2.7
-- **Memory**: Minimum **12 GB RAM** recommended
-  > ⚠️ Running the project on a system with only 8 GB RAM may lead to setup failures or memory crashes (especially during Docker container build/start or dependency install). Use cloud environments like GitHub Codespaces or upgrade local RAM if possible.
-
-### Setup the project
-
-The project is a monorepo, with backend api and frontend in a single repo.
-
-The backend is a django project which is kept inside apps/api
-
-1. Clone the repo
-
-```bash
-git clone https://github.com/makeplane/plane.git [folder-name]
-cd [folder-name]
-chmod +x setup.sh
-```
-
-2. Run setup.sh
-
-```bash
-./setup.sh
-```
-
-3. Start the containers
-
-```bash
-docker compose -f docker-compose-local.yml up
-```
-
-4. Start web apps:
-
-```bash
-pnpm dev
-```
-
-The root `dev` command starts the web apps and shared package watchers. The workflow runner is provided by the Docker stack and is excluded from this command. To develop the runner separately, see [its local development instructions](apps/workflow-runner/README.md).
-
-5. Open your browser to http://localhost:3001/god-mode/ and register yourself as instance admin
-6. Open up your browser to http://localhost:3000 then log in using the same credentials from the previous step
-
-That’s it! You’re all set to begin coding. Remember to refresh your browser if changes don’t auto-reload. Happy contributing! 🎉
+- [Versions and dependencies](docs/development.md#版本与依赖)
+- [First-time setup and existing environments](docs/development.md#首次配置与已有环境), including [Runner token configuration](docs/development.md#runner-token)
+- [Docker build, migration and startup order](docs/development.md#docker-本地后端)
+- [Frontend development and builds](docs/development.md#pnpm-开发与构建)
+- [Isolated API tests](docs/development.md#隔离-api-测试) and [troubleshooting](docs/development.md#常见排错)
 
 ## Missing a Feature?
 

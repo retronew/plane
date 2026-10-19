@@ -1,8 +1,10 @@
 # Agent Development Guide
 
+See the Development guide for [versions](docs/development.md#版本与依赖), [env safety](docs/development.md#首次配置与已有环境), [Docker build/migration order](docs/development.md#docker-本地后端) and [troubleshooting](docs/development.md#常见排错). Do not rerun `setup.sh` over existing env files.
+
 ## Commands
 
-- `pnpm dev` - Start all dev servers (web:3000, admin:3001)
+- `pnpm dev` - Start frontend dev servers and shared watchers (web:3000, admin:3001; excludes Docker-provided workflow runner)
 - `pnpm build` - Build all packages and apps
 - `pnpm check` - Run all checks (format, lint, types)
 - `pnpm check:lint` - OxLint across all packages
@@ -36,10 +38,10 @@
 
 The Django/pytest suite for `apps/api` runs in an isolated stack defined by `docker-compose-test.yml` at the repo root.
 
-Prereq (once): `./setup.sh` — generates `apps/api/.env` from `.env.example`.
+Always use `-p plane-test` for the whole test stack, including its Runner; daily updates and migrations use the local stack. See [test prerequisites](apps/api/tests/RUNNING_TESTS.md#prerequisites) before running.
 
-- Full suite: `docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests`
-- Subset: `docker compose -f docker-compose-test.yml run --rm --build api-tests pytest -m unit`
-- Teardown: `docker compose -f docker-compose-test.yml down -v`
+- Full suite: `docker compose -p plane-test -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests`
+- Subset: `docker compose -p plane-test -f docker-compose-test.yml run --rm --build api-tests pytest -m unit`
+- Teardown: `docker compose -p plane-test -f docker-compose-test.yml down -v`
 
-See `apps/api/tests/RUNNING_TESTS.md` for the full walkthrough and troubleshooting; see `apps/api/tests/TESTING_GUIDE.md` for test conventions and fixtures.
+See [Running the suite](apps/api/tests/RUNNING_TESTS.md#running-the-suite) and [test troubleshooting](apps/api/tests/RUNNING_TESTS.md#troubleshooting) for the full workflow; see [TESTING_GUIDE](apps/api/plane/tests/TESTING_GUIDE.md) for test conventions and fixtures.

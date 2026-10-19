@@ -96,37 +96,30 @@ Docker uses an unprivileged UID, read-only root, ALL capabilities dropped, no-ne
 
 ## Run and deploy
 
+Follow the Development guide for [environment setup](../../docs/development.md#首次配置与已有环境), [persistent service token configuration](../../docs/development.md#runner-token), [local Docker startup](../../docs/development.md#docker-本地后端) and [troubleshooting](../../docs/development.md#常见排错). API test stack commands and Runner integration settings are maintained in [Running the suite](../api/tests/RUNNING_TESTS.md#running-the-suite) and [How it works](../api/tests/RUNNING_TESTS.md#how-it-works).
+
+### Standalone Node development
+
+After [installing workspace dependencies](../../docs/development.md#pnpm-开发与构建), run these commands from the repository root:
+
 ```sh
-pnpm install
 pnpm --filter @plane/workflow-runner build
-# Export values from .env.example; the service token must be >=32 characters.
+# Export the Runner settings described in this app's .env.example before start.
 pnpm --filter @plane/workflow-runner start
 pnpm --filter @plane/workflow-runner test
 pnpm --filter @plane/workflow-runner check
 ```
 
-Generate a distinct service token with `openssl rand -hex 32`; set the same value in the root deployment env and API env. API/worker use `WORKFLOW_RUNNER_URL=http://workflow-runner:8080`, `WORKFLOW_RUNNER_SERVICE_TOKEN`, and `WORKFLOW_RUNNER_BROKER_URL=http://api:8000/api/internal/workflow-runner/rpc/`. Local standalone Node can set `WORKFLOW_RUNNER_BROKER_ORIGIN=http://localhost:8000`. Never put these values in frontend env. Missing/short tokens fail startup.
+Standalone Node does not receive Compose's environment injection. Supply the service token configured above in the process environment; missing/short tokens fail startup. When Django runs on the host, set `WORKFLOW_RUNNER_BROKER_ORIGIN=http://localhost:8000` and configure Django's Runner/Broker URLs to match the standalone topology; see the [deployment configuration table](../../docs/project-workflows.md#10-部署与运维).
+
+To build only the Runner image:
 
 ```sh
 docker build -f apps/workflow-runner/Dockerfile -t plane-workflow-runner:local .
-docker compose -f docker-compose-local.yml up -d --build workflow-runner
-docker compose -f docker-compose-test.yml up -d --build --wait workflow-runner
 ```
 
-For a local session, generate one token without printing or inspecting existing secrets, then recreate the API/worker processes so they receive the same value:
+### Deployment configuration
 
-```sh
-export WORKFLOW_RUNNER_SERVICE_TOKEN="$(openssl rand -hex 32)"
-docker compose -f docker-compose-local.yml up -d --build --wait workflow-runner
-docker compose -f docker-compose-local.yml up -d --no-deps --force-recreate api worker beat-worker
-```
-
-The exported value is session-only. For persistence, save a newly generated value in the root private `.env` (and keep it out of git); avoid rotating it on every restart. The compose service environment supplies it to API/worker as well as the runner.
-
-Django HTTP credentials use `WORKFLOW_CREDENTIAL_KEY_ID` and `WORKFLOW_CREDENTIAL_KEY`. Rotation sets a new current ID/key and retains old ID/key pairs in the JSON dictionary `WORKFLOW_CREDENTIAL_PREVIOUS_KEYS` until all old credentials have been replaced. These settings go only to API/worker. Broker capabilities use Django signing with a dedicated salt, not an extra runner signing key.
-
-Root local/production and community compose files include the service. Community deployment needs a runner image built/published for the same `APP_RELEASE`; override `WORKFLOW_RUNNER_IMAGE` for a private registry. The runner receives only service token, broker origin and concurrency config; API-only signing/encryption keys remain in API/worker.
-
-The test compose service is a real runner with a public test-only service token on its isolated test network; API tests use broker origin `http://api-tests:8000`. Django integration tests must bind their temporary broker server to `0.0.0.0:8000`. This token is not a production default.
+The [project workflow operations guide](../../docs/project-workflows.md#10-部署与运维) maintains the service configuration and Community image requirements. Credential encryption and key rotation are documented in [HTTP policy, transport and credentials](../../docs/project-workflows.md#7-http-策略传输期限与凭据). Broker capabilities use Django signing with a dedicated salt, not an extra runner signing key.
 
 The Node test suite uses the actual compiled child, real QuickJS-WASM and a local HTTP broker. It covers async success/false/throw/invalid result, CPU/wall/memory/stack limits, log/RPC/result caps, pre writes, module/Node/network absence, forged IPC, prototype/serialization tampering, broker redirects/token reflection, ordered parallel RPC, unexpected child exit, HTTP authorization and capacity. Django tests separately verify scope, lease, dry-run and real broker behavior.

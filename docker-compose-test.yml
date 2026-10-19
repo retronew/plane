@@ -1,26 +1,18 @@
 # Docker Compose for running the API pytest suite in a contained environment.
 #
-# Prerequisite:
-#   ./setup.sh    # creates apps/api/.env (and the other env files) from .env.example
+# Prerequisites and full workflow: apps/api/tests/RUNNING_TESTS.md#prerequisites
+# and #running-the-suite; local setup: docs/development.md#首次配置与已有环境.
 #
-# Usage:
-#   # Run the full suite (defaults to `pytest`):
-#   docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests
+# Quick usage (from the repository root):
+#   docker compose -p plane-test -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests
+#   docker compose -p plane-test -f docker-compose-test.yml run --rm --build api-tests pytest -m unit
+#   docker compose -p plane-test -f docker-compose-test.yml down -v
 #
-#   # Run a subset by overriding the command:
-#   docker compose -f docker-compose-test.yml run --rm --build api-tests pytest -m unit
-#   docker compose -f docker-compose-test.yml run --rm api-tests pytest plane/tests/unit -k "test_workspace"
-#
-#   # Tear down (removes ephemeral volumes and the test network):
-#   docker compose -f docker-compose-test.yml down -v
-#
-# Notes:
-# - Postgres / Valkey / RabbitMQ / MinIO start with health checks; the test
-#   runner only starts once each dependency is healthy.
-# - Data dirs are tmpfs so every run begins from a clean state.
-# - Env vars come from apps/api/.env (the same file the local stack uses); tests
-#   use plane.settings.test, which inherits from common and reads DATABASE_URL,
-#   REDIS_URL, RABBITMQ_* etc. from the environment.
+# Always use -p plane-test for the whole stack, including workflow-runner.
+# Data dirs use tmpfs; stopped/removed containers lose data, but running ones retain it.
+# Use down -v only for this test project; local updates/migrations use the local stack.
+# Service/env details and troubleshooting: apps/api/tests/RUNNING_TESTS.md#how-it-works
+# and #troubleshooting.
 
 services:
   test-db:
@@ -158,7 +150,7 @@ services:
         condition: service_healthy
     # The image already carries the test group; re-sync against the mounted
     # uv.lock (a no-op unless it changed since the image was built), then exec pytest.
-    # Any args passed via `docker compose run api-tests <args>` replace the default command.
+    # Args passed via `docker compose -p plane-test -f docker-compose-test.yml run api-tests <args>` replace the default command.
     entrypoint:
       - /bin/sh
       - -c

@@ -197,16 +197,9 @@ Content-Type: application/json
 
 root local/prod compose 和 community compose 均接入 runner，无公开端口、Docker socket 或 API env_file 挂载。运行用户 UID1000，readonly 根、cap_drop ALL、no-new-privileges、PID64、CPU1、512 MiB 内存以及 16 MiB noexec tmpfs；镜像 `/healthz` healthcheck。服务 token 应安全持久保存，不能放入前端环境或复用 SECRET_KEY。
 
-```sh
-# 一次本地会话示例：生成但不打印 token。
-export WORKFLOW_RUNNER_SERVICE_TOKEN="$(openssl rand -hex 32)"
-docker compose -f docker-compose-local.yml up -d --build --wait workflow-runner
-docker compose -f docker-compose-local.yml up -d --no-deps --force-recreate api worker beat-worker
-```
+本地操作统一见开发指南的[首次配置与已有环境](./development.md#首次配置与已有环境)、[Runner token](./development.md#runner-token) 及 [Docker 本地后端](./development.md#docker-本地后端)。community 需构建/发布匹配 `APP_RELEASE` 的 runner 镜像，或使用 `WORKFLOW_RUNNER_IMAGE` 指定私有仓库。
 
-跨 shell 使用应将 token 写入不入库的私有 root `.env`，保持各服务一致。API env 示例列出 URL/token/凭据变量；不要给 Runner 加载 API 全量环境。community 需构建/发布匹配 `APP_RELEASE` 的 runner 镜像，或使用 `WORKFLOW_RUNNER_IMAGE` 指定私有仓库。
-
-测试 compose 含真实 Runner，Broker origin 为 `http://api-tests:8000`；Django 集成测试的临时 Broker 绑定 `0.0.0.0:8000`。测试 token 为隔离网络公开测试值，不是生产默认。开发和测试若共用默认 Compose project，会争用同一个 workflow-runner service 容器；需要并存时应给**整套测试栈**统一独立 project（例如 `-p plane-workflow-test`），不要只移动 Runner 造成网络/DNS 不匹配。
+测试栈运行及清理见 [API 测试指南：Running the suite](../apps/api/tests/RUNNING_TESTS.md#running-the-suite)，真实 Runner 的测试 token、Broker origin 和临时服务绑定要求见 [How it works](../apps/api/tests/RUNNING_TESTS.md#how-it-works)。
 
 ## 11. 验证证据与交付边界
 

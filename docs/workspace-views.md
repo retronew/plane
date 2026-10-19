@@ -33,10 +33,10 @@ pnpm --filter @plane/blocks test
 pnpm check:types
 ```
 
-后端回归在独立 Docker 测试环境运行：
+后端回归使用 [API 测试指南的环境前提](../apps/api/tests/RUNNING_TESTS.md#prerequisites)和[定向运行流程](../apps/api/tests/RUNNING_TESTS.md#filtered-runs)，针对本功能的用例为：
 
 ```sh
-docker compose -f docker-compose-test.yml run --rm api-tests pytest \
+docker compose -p plane-test -f docker-compose-test.yml run --rm --build api-tests pytest \
   plane/tests/contract/app/test_workspace_view_layouts.py \
   plane/tests/unit/utils/test_issue_text_filters.py
 ```
