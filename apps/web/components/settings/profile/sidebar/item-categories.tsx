@@ -5,7 +5,7 @@
  */
 
 import type React from "react";
-import type { LucideIcon } from "lucide-react";
+import { Plug, type LucideIcon } from "lucide-react";
 import { KeyOutline, LockOutline, PreferencesOutline, SubscribeOutline, UserOutline } from "@makeplane/propel/icons";
 import { observer } from "mobx-react";
 import { useParams } from "react-router";
@@ -29,6 +29,7 @@ const ICONS: Record<TProfileSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
   preferences: PreferencesOutline,
   notifications: SubscribeOutline,
   "api-tokens": KeyOutline,
+  mcp: Plug,
 };
 
 type Props = {

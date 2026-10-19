@@ -72,7 +72,8 @@
     "swr": "catalog:",
     "use-font-face-observer": "catalog:",
     "uuid": "catalog:",
-    "write-excel-file": "catalog:"
+    "write-excel-file": "catalog:",
+    "yace": "catalog:"
   },
   "devDependencies": {
     "@plane/tailwind-config": "workspace:*",

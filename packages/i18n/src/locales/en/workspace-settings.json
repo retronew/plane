@@ -3,7 +3,9 @@
     "label": "Workspace settings",
     "page_label": "{workspace} - General settings",
     "key_created": "Key created",
-    "copy_key": "Copy and save this secret key in Plane Pages. You can't see this key after you hit Close. A CSV file containing the key has been downloaded.",
+    "copy_key": "Copy this secret key and store it securely in a password manager.",
+    "key_unavailable_after_close": "You cannot view this key again after closing.",
+    "key_csv_downloaded": "A CSV file containing the key has been downloaded. Store it securely.",
     "token_copied": "Token copied to clipboard.",
     "settings": {
       "general": {

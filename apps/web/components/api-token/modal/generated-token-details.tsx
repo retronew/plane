@@ -7,7 +7,6 @@
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 
-import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IApiToken } from "@plane/types";
 import {
@@ -20,12 +19,12 @@ import {
   DialogMain,
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
-import { renderFormattedDate, renderFormattedTime, copyTextToClipboard } from "@plane/utils";
+import { renderFormattedDate, renderFormattedTime } from "@plane/utils";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
 import { ApiTokenMcpSetup } from "../mcp-setup";
-import { Copy } from "lucide-react";
+import { CopyFeedback, useCopyFeedback } from "../copy-feedback";
 
 type Props = {
   showMcpSetup?: boolean;
@@ -37,15 +36,7 @@ export function GeneratedTokenDetails(props: Props) {
   const { handleClose, tokenDetails, showMcpSetup = true } = props;
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
-  const copyApiToken = (token: string) => {
-    copyTextToClipboard(token).then(() =>
-      setToast({
-        type: "success",
-        title: t("success"),
-        message: t("workspace_settings.token_copied"),
-      })
-    );
-  };
+  const { copied, copy } = useCopyFeedback();
 
   return (
     <>
@@ -53,18 +44,28 @@ export function GeneratedTokenDetails(props: Props) {
         <DialogHeader>
           <DialogHeading>
             <DialogTitle>{t("workspace_settings.key_created")}</DialogTitle>
-            <DialogDescription>{t("workspace_settings.copy_key")}</DialogDescription>
+            <DialogDescription>
+              {t("workspace_settings.copy_key")}{" "}
+              <span className="font-medium text-danger-primary">
+                {t("workspace_settings.key_unavailable_after_close")}
+              </span>
+              {showMcpSetup && <span className="mt-1 block">{t("workspace_settings.key_csv_downloaded")}</span>}
+            </DialogDescription>
           </DialogHeading>
         </DialogHeader>
         <DialogBody>
           <button
             type="button"
-            onClick={() => copyApiToken(tokenDetails.token ?? "")}
-            className="flex w-full items-center justify-between truncate rounded-md border-[0.5px] border-subtle px-3 py-2 text-13 font-medium outline-none"
+            onClick={() => void copy(tokenDetails.token ?? "")}
+            disabled={!tokenDetails.token}
+            aria-label={t("web.copy_secret_key")}
+            className="flex w-full items-center justify-between truncate rounded-lg border border-strong bg-surface-2 px-3 py-2 text-13 font-medium outline-none"
           >
             <span className="truncate pr-2">{tokenDetails.token}</span>
             <Tooltip label={t("web.copy_secret_key")} disabled={isMobile}>
-              <Copy className="h-4 w-4 flex-shrink-0 text-placeholder" />
+              <span className="shrink-0 text-secondary">
+                <CopyFeedback copied={copied} />
+              </span>
             </Tooltip>
           </button>
           {showMcpSetup && tokenDetails.token && <ApiTokenMcpSetup token={tokenDetails.token} />}

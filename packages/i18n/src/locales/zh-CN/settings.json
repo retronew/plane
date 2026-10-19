@@ -57,6 +57,27 @@
       "title": "个人访问令牌",
       "description": "生成安全的 API 令牌，将您的数据与外部系统和应用程序集成。"
     },
+    "mcp": {
+      "title": "MCP",
+      "description": "通过模型上下文协议（MCP）将 AI 工具连接到 Plane。",
+      "token_hint": "粘贴令牌后即可一键添加，令牌仅在当前页面使用。",
+      "manage_tokens": "管理个人令牌",
+      "server_url": "服务地址",
+      "token_label": "个人访问令牌",
+      "token_placeholder": "粘贴您的个人访问令牌",
+      "add": "一键添加",
+      "guide": "接入指南",
+      "more_tools": "更多工具",
+      "fewer_tools": "收起更多工具",
+      "chatgpt_hint": "ChatGPT 自定义连接器的认证连接需要 OAuth。Plane 当前使用个人令牌，暂不支持直接连接，请查看官方指南了解接入要求。",
+      "copy_command": "复制安装命令",
+      "download": "下载 JSON",
+      "view_code": "查看 {name} 配置",
+      "copy_config": "复制配置",
+      "copy_failed": "复制失败，请手动选择并复制配置。",
+      "code_description": "将此配置复制到您的客户端。",
+      "template_hint": "连接前，请将 {token} 替换为您的个人访问令牌。"
+    },
     "activity": {
       "heading": "活动",
       "description": "跟踪您在所有项目和工作项中的最近操作和更改。"

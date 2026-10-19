@@ -57,6 +57,27 @@
       "title": "Personal Access Tokens",
       "description": "Generate secure API tokens to integrate your data with external systems and applications."
     },
+    "mcp": {
+      "title": "MCP",
+      "description": "Connect AI tools to Plane with Model Context Protocol (MCP).",
+      "token_hint": "Paste a token to enable one-click setup. It is only used on this page.",
+      "manage_tokens": "Manage personal tokens",
+      "server_url": "Server URL",
+      "token_label": "Personal access token",
+      "token_placeholder": "Paste your personal access token",
+      "add": "Add to app",
+      "guide": "Setup guide",
+      "more_tools": "More tools",
+      "fewer_tools": "Show fewer tools",
+      "chatgpt_hint": "ChatGPT custom connectors require OAuth for authenticated connections. Plane currently uses personal tokens, so direct connection is not available yet. See the official guide for requirements.",
+      "copy_command": "Copy install command",
+      "download": "Download JSON",
+      "view_code": "View {name} configuration",
+      "copy_config": "Copy configuration",
+      "copy_failed": "Could not copy. Select and copy the configuration manually.",
+      "code_description": "Copy this configuration into your client.",
+      "template_hint": "Replace {token} with your personal access token before connecting."
+    },
     "activity": {
       "heading": "Activity",
       "description": "Track your recent actions and changes across all projects and work items."

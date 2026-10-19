@@ -3,7 +3,9 @@
     "label": "工作区设置",
     "page_label": "{workspace} - 常规设置",
     "key_created": "密钥已创建",
-    "copy_key": "请复制并妥善保存此密钥（例如保存在 Plane 页面中）。点击“关闭”后将无法再次查看。包含密钥的 CSV 文件已自动下载。",
+    "copy_key": "请复制此密钥，并使用密码管理器妥善保存。",
+    "key_unavailable_after_close": "关闭后将无法再次查看此密钥。",
+    "key_csv_downloaded": "包含密钥的 CSV 文件已自动下载，请妥善保管。",
     "token_copied": "令牌已复制到剪贴板。",
     "settings": {
       "general": {

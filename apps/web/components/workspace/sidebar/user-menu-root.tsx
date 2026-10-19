@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
+import { Plug, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   KeyOutline,
@@ -34,16 +35,17 @@ import { useUser } from "@/hooks/store/user";
 import { usePasswordManagement } from "@/hooks/use-password-management";
 
 // Mirrors the icons used by the profile settings sidebar.
-const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutline> = {
+const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutline | LucideIcon> = {
   general: UserOutline,
   preferences: SettingsOutline,
   notifications: SubscribeOutline,
   security: LockOutline,
   "api-tokens": KeyOutline,
+  mcp: Plug,
 };
 
 // Same order as the settings sidebar.
-const MENU_TABS: TProfileSettingsTabs[] = ["general", "preferences", "notifications", "security", "api-tokens"];
+const MENU_TABS: TProfileSettingsTabs[] = ["general", "preferences", "notifications", "security", "api-tokens", "mcp"];
 
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states

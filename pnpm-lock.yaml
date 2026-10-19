@@ -468,6 +468,9 @@ catalogs:
     y-protocols:
       specifier: ^1.0.7
       version: 1.0.7
+    yace:
+      specifier: 1.1.1
+      version: 1.1.1
     yjs:
       specifier: ^13.6.33
       version: 13.6.33
@@ -1136,6 +1139,9 @@ importers:
       write-excel-file:
         specifier: 'catalog:'
         version: 4.1.1
+      yace:
+        specifier: 'catalog:'
+        version: 1.1.1
     devDependencies:
       '@plane/tailwind-config':
         specifier: workspace:*
@@ -8352,6 +8358,9 @@ packages:
     peerDependencies:
       yjs: ^13.0.0
 
+  yace@1.1.1:
+    resolution: {integrity: sha512-BaWs+mh0zWfXj3or3SWxHBzCE9vV5oYNtmEK85mRtU8RIh15khJetkYrnWKAdjCt25mMSsEf9q7bziNFVuYdeQ==}
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -14984,6 +14993,8 @@ snapshots:
     dependencies:
       lib0: 0.2.114
       yjs: 13.6.33
+
+  yace@1.1.1: {}
 
   yallist@3.1.1: {}
 
