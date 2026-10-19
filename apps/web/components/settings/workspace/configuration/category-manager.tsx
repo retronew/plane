@@ -9,7 +9,7 @@ import { StateForm } from "@/components/project-states/create-update/form";
 import { StateGroupPanel } from "@/components/project-states/group-panel";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 import { CategoryColorPicker } from "./category-color-picker";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import { GripVertical, MoreHorizontal, Pencil, Trash2, Tag, Circle, Check } from "lucide-react";
@@ -63,7 +63,6 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     if (editingId !== null) editorRef.current?.querySelector<HTMLInputElement>("input:not([type=color])")?.focus();
   }, [editingId]);
   const label = kind === "label";
-  const Glyph = label ? Tag : Circle;
   const begin = (entry?: ProjectCategory, openColor = false) => {
     setColorPickerInitiallyOpen(openColor);
     setMessage("");
@@ -86,6 +85,14 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
       setMessage(t("web.configuration_save_error"));
     } finally {
       setBusy(false);
+    }
+  };
+  const makeDefault = async (entry: ProjectCategory) => {
+    try {
+      await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
+      await mutate();
+    } catch {
+      setMessage(t("web.configuration_save_error"));
     }
   };
   const reorder = async (from: string, target: string) => {
@@ -148,57 +155,16 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
         }}
       />
     ) : (
-      <form
+      <CategoryLabelForm
+        draft={draft}
+        kind={kind}
+        label={label}
+        busy={busy}
+        editorRef={editorRef}
+        onChange={(patch) => setDraft({ ...draft, ...patch })}
+        onCancel={() => setDraft(null)}
         onSubmit={save}
-        className="flex flex-wrap items-center gap-3 rounded-lg border border-subtle bg-surface-1 p-3"
-      >
-        <CategoryColorPicker
-          value={draft.color}
-          onChange={(color) => setDraft({ ...draft, color })}
-          disabled={busy}
-          kind={kind}
-        />
-        <div ref={editorRef} className="min-w-32 flex-1">
-          <InputField
-            size="lg"
-            orientation="vertical"
-            aria-label={t(label ? "web.project_label_name" : "web.project_status_name")}
-            placeholder={t(label ? "web.project_label_name" : "web.project_status_name")}
-            value={draft.name}
-            maxLength={100}
-            required
-            disabled={busy}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-          />
-        </div>
-        {!label && (
-          <textarea
-            aria-label={t("web.project_status_description")}
-            placeholder={t("web.project_status_description")}
-            className="order-last w-full rounded-md border border-subtle p-2 text-13"
-            value={draft.description ?? ""}
-            maxLength={1000}
-            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-          />
-        )}
-        <Button
-          stretch="auto"
-          size="md"
-          variant="secondary"
-          label={t("cancel")}
-          disabled={busy}
-          onClick={() => setDraft(null)}
-        />
-        <Button
-          stretch="auto"
-          size="md"
-          variant="primary"
-          type="submit"
-          label={t(draft.id ? "update" : "add")}
-          disabled={!draft.name.trim() || busy}
-          loading={busy}
-        />
-      </form>
+      />
     ));
   const content = (
     <div className="flex flex-col gap-5">
@@ -250,139 +216,19 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
                   {editor}
                 </div>
               ) : (
-                <SortableItem
+                <CategoryRow
                   key={entry.id}
-                  id={entry.id}
+                  entry={entry}
                   index={sortableIndex}
-                  group={group ?? kind}
+                  group={group}
+                  kind={kind}
+                  label={label}
                   disabled={busy || !!draft}
-                  className={cn(
-                    label
-                      ? "group relative flex min-h-12 items-center gap-3 rounded-lg border border-subtle bg-surface-1 px-3 py-2"
-                      : cn(STATE_ROW_CLASS_NAME, STATE_ROW_DIVIDER_CLASS_NAME, "gap-2")
-                  )}
-                >
-                  {({ handleRef }) => (
-                    <>
-                      <button
-                        type="button"
-                        ref={handleRef}
-                        disabled={busy || !!draft}
-                        aria-label={`${t("web.reorder_category")} ${entry.name}`}
-                        title={t("web.reorder_category_hint")}
-                        className={cn(
-                          "cursor-grab touch-none rounded focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing",
-                          label
-                            ? "text-tertiary"
-                            : "absolute -left-2.5 text-placeholder opacity-0 transition-opacity group-focus-within:opacity-80 group-hover:opacity-60 hover:text-tertiary hover:opacity-100"
-                        )}
-                      >
-                        <GripVertical className={label ? "size-4" : "size-3"} />
-                      </button>
-                      {label && <Glyph className="size-4 shrink-0" style={{ color: entry.color }} />}
-                      <button
-                        type="button"
-                        data-category-name={entry.name}
-                        className="min-w-0 flex-1 truncate text-left text-13 font-medium"
-                        disabled={busy || !!draft}
-                        onClick={(event) =>
-                          begin(
-                            entry,
-                            !label &&
-                              event.target instanceof Element &&
-                              !!event.target.closest("[data-state-color-target]")
-                          )
-                        }
-                      >
-                        {label ? (
-                          entry.name
-                        ) : (
-                          <StateSummary
-                            icon={
-                              <StateGroupIcon
-                                stateGroup={phaseIcons[entry.group]}
-                                color={entry.color}
-                                size={EIconSize.XL}
-                              />
-                            }
-                            name={entry.name}
-                            color={entry.color}
-                            description={entry.description}
-                            badge={
-                              entry.is_default ? (
-                                <span className="font-normal shrink-0 text-12 text-tertiary">
-                                  ·{t("web.project_status_default")}
-                                </span>
-                              ) : undefined
-                            }
-                          />
-                        )}
-                      </button>
-                      <div
-                        className={cn(
-                          "flex shrink-0 items-center self-center",
-                          !label &&
-                            "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-popup-open]]:opacity-100 [@media(hover:none)]:opacity-100"
-                        )}
-                      >
-                        <Menu>
-                          <MenuTrigger
-                            render={
-                              <IconButton
-                                icon={<MoreHorizontal className="size-4 group-hover:text-primary" />}
-                                aria-label={`${t("web.category_actions")} ${entry.name}`}
-                                variant="ghost"
-                                size="xs"
-                                showTooltip={false}
-                                disabled={busy || !!draft}
-                              />
-                            }
-                          />
-                          <MenuContent align="end" sizing="anchor">
-                            <div className="min-w-30">
-                              {!label && !entry.is_default && (
-                                <MenuItem
-                                  label={t("web.project_status_make_default")}
-                                  icon={<Check className="size-4" />}
-                                  onClick={async () => {
-                                    try {
-                                      await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
-                                      await mutate();
-                                    } catch {
-                                      setMessage(t("web.configuration_save_error"));
-                                    }
-                                  }}
-                                />
-                              )}
-                              <MenuItem
-                                label={t("edit")}
-                                icon={<Pencil className="size-4" />}
-                                onClick={(event) =>
-                                  begin(
-                                    entry,
-                                    !label &&
-                                      event.target instanceof Element &&
-                                      !!event.target.closest("[data-state-color-target]")
-                                  )
-                                }
-                              />
-                              <MenuItem
-                                label={t("delete")}
-                                variant="danger"
-                                icon={<Trash2 className="size-4" />}
-                                disabled={
-                                  !label &&
-                                  (entry.is_default || data.filter((item) => item.group === entry.group).length <= 1)
-                                }
-                                onClick={() => setDeleting(entry)}
-                              />
-                            </div>
-                          </MenuContent>
-                        </Menu>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
+                  data={data}
+                  onBegin={begin}
+                  onDelete={setDeleting}
+                  onMakeDefault={makeDefault}
+                />
               )
             )}
           {!label && draft && !draft.id && editor}
@@ -399,56 +245,28 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
           )}
         </div>
       )}
-      <Dialog
-        open={!!deleting}
+      <CategoryDeleteDialog
+        deleting={deleting}
+        busy={busy}
         onOpenChange={(open) => {
           if (!open && !busy) setDeleting(null);
         }}
-      >
-        <DialogContent size="sm">
-          <DialogMain>
-            <DialogHeader>
-              <DialogHeading>
-                <DialogTitle>
-                  {t("delete")} {deleting?.name}
-                </DialogTitle>
-              </DialogHeading>
-            </DialogHeader>
-            <DialogBody>{t("web.category_delete_hint")}</DialogBody>
-          </DialogMain>
-          <DialogActions>
-            <Button
-              stretch="auto"
-              size="md"
-              variant="secondary"
-              label={t("cancel")}
-              disabled={busy}
-              onClick={() => setDeleting(null)}
-            />
-            <Button
-              stretch="auto"
-              size="md"
-              variant="primary"
-              label={t("delete")}
-              loading={busy}
-              onClick={async () => {
-                if (!deleting || busy) return;
-                setBusy(true);
-                try {
-                  await service.remove(workspaceSlug, resource, deleting.id);
-                  await mutate();
-                  setDeleting(null);
-                } catch {
-                  setMessage(t(label ? "web.configuration_delete_error" : "web.project_status_delete_error"));
-                  setDeleting(null);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            />
-          </DialogActions>
-        </DialogContent>
-      </Dialog>
+        onCancel={() => setDeleting(null)}
+        onConfirm={async () => {
+          if (!deleting || busy) return;
+          setBusy(true);
+          try {
+            await service.remove(workspaceSlug, resource, deleting.id);
+            await mutate();
+            setDeleting(null);
+          } catch {
+            setMessage(t(label ? "web.configuration_delete_error" : "web.project_status_delete_error"));
+            setDeleting(null);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
     </div>
   );
   return group ? (
@@ -479,5 +297,244 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     >
       {content}
     </SortableProvider>
+  );
+}
+
+type CategoryRowProps = {
+  entry: ProjectCategory;
+  index: number;
+  group?: string;
+  kind: "status" | "label";
+  label: boolean;
+  disabled: boolean;
+  data: ProjectCategory[];
+  onBegin: (entry: ProjectCategory, openColor?: boolean) => void;
+  onDelete: (entry: ProjectCategory) => void;
+  onMakeDefault: (entry: ProjectCategory) => void;
+};
+function CategoryRow({
+  entry,
+  index,
+  group,
+  kind,
+  label,
+  disabled,
+  data,
+  onBegin,
+  onDelete,
+  onMakeDefault,
+}: CategoryRowProps) {
+  const { t } = useTranslation();
+  const Glyph = label ? Tag : Circle;
+  return (
+    <SortableItem
+      id={entry.id}
+      index={index}
+      group={group ?? kind}
+      disabled={disabled}
+      className={cn(
+        label
+          ? "group relative flex min-h-12 items-center gap-3 rounded-lg border border-subtle bg-surface-1 px-3 py-2"
+          : cn(STATE_ROW_CLASS_NAME, STATE_ROW_DIVIDER_CLASS_NAME, "gap-2")
+      )}
+    >
+      {({ handleRef }) => (
+        <>
+          <button
+            type="button"
+            ref={handleRef}
+            disabled={disabled}
+            aria-label={`${t("web.reorder_category")} ${entry.name}`}
+            title={t("web.reorder_category_hint")}
+            className={cn(
+              "cursor-grab touch-none rounded focus-visible:ring-2 focus-visible:ring-accent-strong active:cursor-grabbing",
+              label
+                ? "text-tertiary"
+                : "absolute -left-2.5 text-placeholder opacity-0 transition-opacity group-focus-within:opacity-80 group-hover:opacity-60 hover:text-tertiary hover:opacity-100"
+            )}
+          >
+            <GripVertical className={label ? "size-4" : "size-3"} />
+          </button>
+          {label && <Glyph className="size-4 shrink-0" style={{ color: entry.color }} />}
+          <button
+            type="button"
+            data-category-name={entry.name}
+            className="min-w-0 flex-1 truncate text-left text-13 font-medium"
+            disabled={disabled}
+            onClick={(event) =>
+              onBegin(
+                entry,
+                !label && event.target instanceof Element && !!event.target.closest("[data-state-color-target]")
+              )
+            }
+          >
+            {label ? (
+              entry.name
+            ) : (
+              <StateSummary
+                icon={<StateGroupIcon stateGroup={phaseIcons[entry.group]} color={entry.color} size={EIconSize.XL} />}
+                name={entry.name}
+                color={entry.color}
+                description={entry.description}
+                badge={
+                  entry.is_default ? (
+                    <span className="font-normal shrink-0 text-12 text-tertiary">
+                      ·{t("web.project_status_default")}
+                    </span>
+                  ) : undefined
+                }
+              />
+            )}
+          </button>
+          <div
+            className={cn(
+              "flex shrink-0 items-center self-center",
+              !label &&
+                "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-popup-open]]:opacity-100 [@media(hover:none)]:opacity-100"
+            )}
+          >
+            <Menu>
+              <MenuTrigger
+                render={
+                  <IconButton
+                    icon={<MoreHorizontal className="size-4 group-hover:text-primary" />}
+                    aria-label={`${t("web.category_actions")} ${entry.name}`}
+                    variant="ghost"
+                    size="xs"
+                    showTooltip={false}
+                    disabled={disabled}
+                  />
+                }
+              />
+              <MenuContent align="end" sizing="anchor">
+                <div className="min-w-30">
+                  {!label && !entry.is_default && (
+                    <MenuItem
+                      label={t("web.project_status_make_default")}
+                      icon={<Check className="size-4" />}
+                      onClick={() => onMakeDefault(entry)}
+                    />
+                  )}
+                  <MenuItem
+                    label={t("edit")}
+                    icon={<Pencil className="size-4" />}
+                    onClick={(event) =>
+                      onBegin(
+                        entry,
+                        !label && event.target instanceof Element && !!event.target.closest("[data-state-color-target]")
+                      )
+                    }
+                  />
+                  <MenuItem
+                    label={t("delete")}
+                    variant="danger"
+                    icon={<Trash2 className="size-4" />}
+                    disabled={
+                      !label && (entry.is_default || data.filter((item) => item.group === entry.group).length <= 1)
+                    }
+                    onClick={() => onDelete(entry)}
+                  />
+                </div>
+              </MenuContent>
+            </Menu>
+          </div>
+        </>
+      )}
+    </SortableItem>
+  );
+}
+
+type CategoryDeleteDialogProps = {
+  deleting: ProjectCategory | null;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
+function CategoryDeleteDialog({ deleting, busy, onOpenChange, onCancel, onConfirm }: CategoryDeleteDialogProps) {
+  const { t } = useTranslation();
+  return (
+    <Dialog open={!!deleting} onOpenChange={onOpenChange}>
+      <DialogContent size="sm">
+        <DialogMain>
+          <DialogHeader>
+            <DialogHeading>
+              <DialogTitle>
+                {t("delete")} {deleting?.name}
+              </DialogTitle>
+            </DialogHeading>
+          </DialogHeader>
+          <DialogBody>{t("web.category_delete_hint")}</DialogBody>
+        </DialogMain>
+        <DialogActions>
+          <Button stretch="auto" size="md" variant="secondary" label={t("cancel")} disabled={busy} onClick={onCancel} />
+          <Button stretch="auto" size="md" variant="primary" label={t("delete")} loading={busy} onClick={onConfirm} />
+        </DialogActions>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type CategoryLabelFormProps = {
+  draft: Draft;
+  kind: "status" | "label";
+  label: boolean;
+  busy: boolean;
+  editorRef: RefObject<HTMLDivElement | null>;
+  onChange: (patch: Partial<Draft>) => void;
+  onCancel: () => void;
+  onSubmit: (event: React.FormEvent) => void;
+};
+function CategoryLabelForm({
+  draft,
+  kind,
+  label,
+  busy,
+  editorRef,
+  onChange,
+  onCancel,
+  onSubmit,
+}: CategoryLabelFormProps) {
+  const { t } = useTranslation();
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="flex flex-wrap items-center gap-3 rounded-lg border border-subtle bg-surface-1 p-3"
+    >
+      <CategoryColorPicker value={draft.color} onChange={(color) => onChange({ color })} disabled={busy} kind={kind} />
+      <div ref={editorRef} className="min-w-32 flex-1">
+        <InputField
+          size="lg"
+          orientation="vertical"
+          aria-label={t(label ? "web.project_label_name" : "web.project_status_name")}
+          placeholder={t(label ? "web.project_label_name" : "web.project_status_name")}
+          value={draft.name}
+          maxLength={100}
+          required
+          disabled={busy}
+          onChange={(e) => onChange({ name: e.target.value })}
+        />
+      </div>
+      {!label && (
+        <textarea
+          aria-label={t("web.project_status_description")}
+          placeholder={t("web.project_status_description")}
+          className="order-last w-full rounded-md border border-subtle p-2 text-13"
+          value={draft.description ?? ""}
+          maxLength={1000}
+          onChange={(e) => onChange({ description: e.target.value })}
+        />
+      )}
+      <Button stretch="auto" size="md" variant="secondary" label={t("cancel")} disabled={busy} onClick={onCancel} />
+      <Button
+        stretch="auto"
+        size="md"
+        variant="primary"
+        type="submit"
+        label={t(draft.id ? "update" : "add")}
+        disabled={!draft.name.trim() || busy}
+        loading={busy}
+      />
+    </form>
   );
 }

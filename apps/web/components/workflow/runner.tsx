@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { type Dispatch, type SetStateAction, useId, useState } from "react";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { History, Plus, Trash2 } from "lucide-react";
@@ -9,7 +9,7 @@ import { setToast } from "@plane/blocks/toast";
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { useTranslation } from "@plane/i18n";
 import { getDateTimeFormatter } from "@plane/utils";
-import type { TWorkflowExecution, TWorkflowScript, TWorkflowScriptVersion } from "@plane/types";
+import type { TWorkflowCredential, TWorkflowExecution, TWorkflowScript, TWorkflowScriptVersion } from "@plane/types";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
 import { ScriptEditor } from "./script-editor";
@@ -262,6 +262,290 @@ export function WorkflowExecutions({
   );
 }
 
+function WorkflowVersionSelector({
+  script,
+  onSelect,
+}: {
+  script: TWorkflowScript;
+  onSelect: (script: TWorkflowScript, version?: TWorkflowScriptVersion) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <label className="block space-y-2 text-body-xs-medium">
+      {t("web.workflow_runner.versions")}
+      <select
+        className="block w-full rounded border border-subtle bg-layer-1 p-2"
+        aria-label={t("web.workflow_runner.versions")}
+        onChange={(event) =>
+          onSelect(
+            script,
+            script.versions.find((version) => version.id === event.target.value)
+          )
+        }
+        defaultValue={latestVersion(script)?.id}
+        key={script.id + script.versions.length}
+      >
+        {script.versions.map((version) => (
+          <option key={version.id} value={version.id}>
+            v{version.version} ·{" "}
+            {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(new Date(version.created_at))}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function WorkflowHttpPolicyFields({
+  origins,
+  setOrigins,
+  methods,
+  setMethods,
+  credentialId,
+  setCredentialId,
+  credentials,
+  busy,
+}: {
+  origins: string;
+  setOrigins: Dispatch<SetStateAction<string>>;
+  methods: string;
+  setMethods: Dispatch<SetStateAction<string>>;
+  credentialId: string;
+  setCredentialId: Dispatch<SetStateAction<string>>;
+  credentials: TWorkflowCredential[];
+  busy: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-3 rounded-md border border-subtle p-3">
+      <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.http_hint")}</p>
+      <InputField
+        orientation="vertical"
+        size="md"
+        label={t("web.workflow_runner.origins")}
+        value={origins}
+        disabled={busy}
+        onChange={(event) => setOrigins(event.target.value)}
+      />
+      <InputField
+        orientation="vertical"
+        size="md"
+        label={t("web.workflow_runner.methods")}
+        value={methods}
+        disabled={busy}
+        onChange={(event) => setMethods(event.target.value)}
+      />
+      <label className="block text-body-xs-regular">
+        {t("web.workflow_runner.credential")}
+        <select
+          className="ml-2 rounded border border-subtle bg-layer-1 p-2"
+          value={credentialId}
+          disabled={busy}
+          onChange={(event) => setCredentialId(event.target.value)}
+        >
+          <option value="">{t("common.none")}</option>
+          {credentials.map((item) => (
+            <option value={item.id} key={item.id}>
+              {item.name} · {item.origin}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+
+function WorkflowTestPanel({
+  phase,
+  setPhase,
+  issueId,
+  setIssueId,
+  testContext,
+  setTestContext,
+  testContextId,
+  source,
+  busy,
+  testResult,
+  testedSource,
+  fingerprint,
+  onRun,
+}: {
+  phase: "pre" | "post";
+  setPhase: Dispatch<SetStateAction<"pre" | "post">>;
+  issueId: string;
+  setIssueId: Dispatch<SetStateAction<string>>;
+  testContext: string;
+  setTestContext: Dispatch<SetStateAction<string>>;
+  testContextId: string;
+  source: string;
+  busy: boolean;
+  testResult: TWorkflowExecution | null;
+  testedSource: string;
+  fingerprint: string;
+  onRun: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-3 rounded-md bg-layer-1 p-3">
+      <h5 className="text-body-xs-medium">{t("web.workflow_runner.test")}</h5>
+      <label className="block text-body-xs-regular">
+        {t("web.workflow_runner.phase")}
+        <select
+          className="ml-2 rounded border border-subtle bg-layer-2 p-2"
+          value={phase}
+          disabled={busy}
+          onChange={(event) => setPhase(event.target.value as "pre" | "post")}
+        >
+          <option value="pre">{t("web.workflow_runner.pre")}</option>
+          <option value="post">{t("web.workflow_runner.post")}</option>
+        </select>
+      </label>
+      <InputField
+        orientation="vertical"
+        size="md"
+        label={t("web.workflow_runner.test_issue")}
+        value={issueId}
+        disabled={busy}
+        onChange={(event) => setIssueId(event.target.value)}
+      />
+      <label htmlFor={testContextId} className="block text-body-xs-regular">
+        {t("web.workflow_runner.test_context")}
+        <div className="mt-2">
+          <ScriptEditor
+            id={testContextId}
+            aria-label={t("web.workflow_runner.test_context")}
+            language="json"
+            compact
+            value={testContext}
+            disabled={busy}
+            onChange={setTestContext}
+          />
+        </div>
+      </label>
+      <p className="text-caption-md-regular text-tertiary">{t("web.workflow_runner.test_hint")}</p>
+      <Button
+        stretch="auto"
+        size="sm"
+        variant="secondary"
+        disabled={busy || !source.trim()}
+        label={t("web.workflow_runner.run_test")}
+        onClick={onRun}
+      />
+      {testResult && (
+        <>
+          {testedSource !== fingerprint && (
+            <p className="text-body-xs-regular text-secondary">{t("web.workflow_runner.test_stale")}</p>
+          )}
+          <WorkflowRunResult run={testResult} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function WorkflowPublishActions({
+  busy,
+  source,
+  name,
+  hasSelected,
+  onPublish,
+  onDelete,
+}: {
+  busy: boolean;
+  source: string;
+  name: string;
+  hasSelected: boolean;
+  onPublish: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.immutable_hint")}</p>
+      <Button
+        stretch="auto"
+        size="md"
+        variant="primary"
+        disabled={busy || !source.trim() || !name.trim()}
+        label={t("web.workflow_runner.publish")}
+        onClick={onPublish}
+      />
+      {hasSelected && (
+        <IconButton
+          size="sm"
+          variant="ghost"
+          disabled={busy}
+          aria-label={t("delete")}
+          icon={<Trash2 className="size-4" />}
+          onClick={onDelete}
+        />
+      )}
+    </div>
+  );
+}
+
+function WorkflowCredentialsSection({
+  credentials,
+  credential,
+  setCredential,
+  busy,
+  onRevoke,
+  onAdd,
+}: {
+  credentials: TWorkflowCredential[];
+  credential: { name: string; secret: string; header_name: string; origin: string };
+  setCredential: Dispatch<SetStateAction<{ name: string; secret: string; header_name: string; origin: string }>>;
+  busy: boolean;
+  onRevoke: (item: TWorkflowCredential) => void;
+  onAdd: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <details className="rounded-lg border border-subtle p-4">
+      <summary className="cursor-pointer text-body-sm-medium">{t("web.workflow_runner.credentials")}</summary>
+      <div className="mt-4 space-y-3">
+        <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.credentials_hint")}</p>
+        {credentials.map((item) => (
+          <div key={item.id} className="flex items-center justify-between gap-2 text-body-xs-regular">
+            <p>
+              {item.name} · {item.origin} · {item.header_name}
+            </p>
+            <IconButton
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              aria-label={t("web.workflow_runner.revoke_credential")}
+              icon={<Trash2 className="size-3.5" />}
+              onClick={() => onRevoke(item)}
+            />
+          </div>
+        ))}
+        {(["name", "origin", "header_name", "secret"] as const).map((key) => (
+          <InputField
+            orientation="vertical"
+            key={key}
+            size="md"
+            label={t(`web.workflow_runner.credential_${key}`)}
+            type={key === "secret" ? "password" : "text"}
+            autoComplete="off"
+            value={credential[key]}
+            disabled={busy}
+            onChange={(event) => setCredential({ ...credential, [key]: event.target.value })}
+          />
+        ))}
+        <Button
+          stretch="auto"
+          size="sm"
+          variant="secondary"
+          label={t("web.workflow_runner.add_credential")}
+          disabled={busy || Object.values(credential).some((value) => !value.trim())}
+          onClick={onAdd}
+        />
+      </div>
+    </details>
+  );
+}
+
 export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: string; projectId: string }) {
   const sourceId = useId();
   const testContextId = useId();
@@ -356,6 +640,26 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
       setTestResult(result);
       setTestedSource(fingerprint);
     });
+  const deleteScript = () => {
+    if (!selected) return;
+    void perform(async () => {
+      await store.service.deleteScript(workspaceSlug, projectId, selected.id);
+      setScriptId("");
+      await mutate();
+    });
+  };
+  const revokeCredential = (item: TWorkflowCredential) =>
+    void perform(async () => {
+      await store.service.deleteCredential(workspaceSlug, projectId, item.id);
+      if (credentialId === item.id) setCredentialId("");
+      await refreshCredentials();
+    });
+  const addCredential = () =>
+    void perform(async () => {
+      await store.service.createCredential(workspaceSlug, projectId, credential);
+      setCredential({ name: "", secret: "", header_name: "Authorization", origin: "" });
+      await refreshCredentials();
+    });
   return (
     <div className="mt-8 space-y-8 text-primary">
       <section className="space-y-4 rounded-lg border border-subtle p-4">
@@ -410,32 +714,7 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
             onChange={(event) => setDescription(event.target.value)}
           />
         </div>
-        {selected && (
-          <label className="block space-y-2 text-body-xs-medium">
-            {t("web.workflow_runner.versions")}
-            <select
-              className="block w-full rounded border border-subtle bg-layer-1 p-2"
-              aria-label={t("web.workflow_runner.versions")}
-              onChange={(event) =>
-                loadVersion(
-                  selected,
-                  selected.versions.find((version) => version.id === event.target.value)
-                )
-              }
-              defaultValue={latestVersion(selected)?.id}
-              key={selected.id + selected.versions.length}
-            >
-              {selected.versions.map((version) => (
-                <option key={version.id} value={version.id}>
-                  v{version.version} ·{" "}
-                  {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(
-                    new Date(version.created_at)
-                  )}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        {selected && <WorkflowVersionSelector script={selected} onSelect={loadVersion} />}
         <div className="flex flex-wrap gap-2">
           <Button
             stretch="auto"
@@ -492,178 +771,49 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
           </div>
         </fieldset>
         {capabilities.includes("http") && (
-          <div className="space-y-3 rounded-md border border-subtle p-3">
-            <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.http_hint")}</p>
-            <InputField
-              orientation="vertical"
-              size="md"
-              label={t("web.workflow_runner.origins")}
-              value={origins}
-              disabled={busy}
-              onChange={(event) => setOrigins(event.target.value)}
-            />
-            <InputField
-              orientation="vertical"
-              size="md"
-              label={t("web.workflow_runner.methods")}
-              value={methods}
-              disabled={busy}
-              onChange={(event) => setMethods(event.target.value)}
-            />
-            <label className="block text-body-xs-regular">
-              {t("web.workflow_runner.credential")}
-              <select
-                className="ml-2 rounded border border-subtle bg-layer-1 p-2"
-                value={credentialId}
-                disabled={busy}
-                onChange={(event) => setCredentialId(event.target.value)}
-              >
-                <option value="">{t("common.none")}</option>
-                {credentials.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.name} · {item.origin}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <WorkflowHttpPolicyFields
+            origins={origins}
+            setOrigins={setOrigins}
+            methods={methods}
+            setMethods={setMethods}
+            credentialId={credentialId}
+            setCredentialId={setCredentialId}
+            credentials={credentials}
+            busy={busy}
+          />
         )}
-        <div className="space-y-3 rounded-md bg-layer-1 p-3">
-          <h5 className="text-body-xs-medium">{t("web.workflow_runner.test")}</h5>
-          <label className="block text-body-xs-regular">
-            {t("web.workflow_runner.phase")}
-            <select
-              className="ml-2 rounded border border-subtle bg-layer-2 p-2"
-              value={phase}
-              disabled={busy}
-              onChange={(event) => setPhase(event.target.value as "pre" | "post")}
-            >
-              <option value="pre">{t("web.workflow_runner.pre")}</option>
-              <option value="post">{t("web.workflow_runner.post")}</option>
-            </select>
-          </label>
-          <InputField
-            orientation="vertical"
-            size="md"
-            label={t("web.workflow_runner.test_issue")}
-            value={issueId}
-            disabled={busy}
-            onChange={(event) => setIssueId(event.target.value)}
-          />
-          <label htmlFor={testContextId} className="block text-body-xs-regular">
-            {t("web.workflow_runner.test_context")}
-            <div className="mt-2">
-              <ScriptEditor
-                id={testContextId}
-                aria-label={t("web.workflow_runner.test_context")}
-                language="json"
-                compact
-                value={testContext}
-                disabled={busy}
-                onChange={setTestContext}
-              />
-            </div>
-          </label>
-          <p className="text-caption-md-regular text-tertiary">{t("web.workflow_runner.test_hint")}</p>
-          <Button
-            stretch="auto"
-            size="sm"
-            variant="secondary"
-            disabled={busy || !source.trim()}
-            label={t("web.workflow_runner.run_test")}
-            onClick={() => void test()}
-          />
-          {testResult && (
-            <>
-              {testedSource !== fingerprint && (
-                <p className="text-body-xs-regular text-secondary">{t("web.workflow_runner.test_stale")}</p>
-              )}
-              <WorkflowRunResult run={testResult} />
-            </>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.immutable_hint")}</p>
-          <Button
-            stretch="auto"
-            size="md"
-            variant="primary"
-            disabled={busy || !source.trim() || !name.trim()}
-            label={t("web.workflow_runner.publish")}
-            onClick={() => void publish()}
-          />
-          {selected && (
-            <IconButton
-              size="sm"
-              variant="ghost"
-              disabled={busy}
-              aria-label={t("delete")}
-              icon={<Trash2 className="size-4" />}
-              onClick={() =>
-                void perform(async () => {
-                  await store.service.deleteScript(workspaceSlug, projectId, selected.id);
-                  setScriptId("");
-                  await mutate();
-                })
-              }
-            />
-          )}
-        </div>
+        <WorkflowTestPanel
+          phase={phase}
+          setPhase={setPhase}
+          issueId={issueId}
+          setIssueId={setIssueId}
+          testContext={testContext}
+          setTestContext={setTestContext}
+          testContextId={testContextId}
+          source={source}
+          busy={busy}
+          testResult={testResult}
+          testedSource={testedSource}
+          fingerprint={fingerprint}
+          onRun={test}
+        />
+        <WorkflowPublishActions
+          busy={busy}
+          source={source}
+          name={name}
+          hasSelected={!!selected}
+          onPublish={publish}
+          onDelete={deleteScript}
+        />
       </section>
-      <details className="rounded-lg border border-subtle p-4">
-        <summary className="cursor-pointer text-body-sm-medium">{t("web.workflow_runner.credentials")}</summary>
-        <div className="mt-4 space-y-3">
-          <p className="text-caption-md-regular text-secondary">{t("web.workflow_runner.credentials_hint")}</p>
-          {credentials.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-2 text-body-xs-regular">
-              <p>
-                {item.name} · {item.origin} · {item.header_name}
-              </p>
-              <IconButton
-                size="sm"
-                variant="ghost"
-                disabled={busy}
-                aria-label={t("web.workflow_runner.revoke_credential")}
-                icon={<Trash2 className="size-3.5" />}
-                onClick={() =>
-                  void perform(async () => {
-                    await store.service.deleteCredential(workspaceSlug, projectId, item.id);
-                    if (credentialId === item.id) setCredentialId("");
-                    await refreshCredentials();
-                  })
-                }
-              />
-            </div>
-          ))}
-          {(["name", "origin", "header_name", "secret"] as const).map((key) => (
-            <InputField
-              orientation="vertical"
-              key={key}
-              size="md"
-              label={t(`web.workflow_runner.credential_${key}`)}
-              type={key === "secret" ? "password" : "text"}
-              autoComplete="off"
-              value={credential[key]}
-              disabled={busy}
-              onChange={(event) => setCredential({ ...credential, [key]: event.target.value })}
-            />
-          ))}
-          <Button
-            stretch="auto"
-            size="sm"
-            variant="secondary"
-            label={t("web.workflow_runner.add_credential")}
-            disabled={busy || Object.values(credential).some((value) => !value.trim())}
-            onClick={() =>
-              void perform(async () => {
-                await store.service.createCredential(workspaceSlug, projectId, credential);
-                setCredential({ name: "", secret: "", header_name: "Authorization", origin: "" });
-                await refreshCredentials();
-              })
-            }
-          />
-        </div>
-      </details>
+      <WorkflowCredentialsSection
+        credentials={credentials}
+        credential={credential}
+        setCredential={setCredential}
+        busy={busy}
+        onRevoke={revokeCredential}
+        onAdd={addCredential}
+      />
     </div>
   );
 }

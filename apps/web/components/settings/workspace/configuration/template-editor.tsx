@@ -23,6 +23,8 @@ import {
   workspaceConfigurationService as service,
   type WorkspaceTemplate,
   type TemplateConfiguration,
+  type TemplateOptions,
+  type TemplateWorkItemChild,
 } from "@/services/workspace-configuration.service";
 import { ConfigurationSelect } from "./select";
 
@@ -95,93 +97,6 @@ export function TemplateEditor() {
       setBusy(false);
     }
   };
-  const multi = (
-    label: string,
-    entries: { id: string; name: string }[],
-    key: "assignee_ids" | "label_ids" | "module_ids"
-  ) => {
-    const selectedIds = new Set(config[key]);
-    return (
-      <details className="rounded-md border border-subtle p-2">
-        <summary className="cursor-pointer text-13">
-          {label}
-          {config[key]?.length ? ` (${config[key]!.length})` : ""}
-        </summary>
-        <div className="flex flex-col gap-2 pt-3">
-          {entries.map((entry) => (
-            <Checkbox
-              key={entry.id}
-              label={entry.name}
-              checked={selectedIds.has(entry.id)}
-              onCheckedChange={(checked) =>
-                configure({
-                  [key]: checked
-                    ? [...new Set([...(config[key] ?? []), entry.id])]
-                    : (config[key] ?? []).filter((id) => id !== entry.id),
-                })
-              }
-            />
-          ))}
-          {!entries.length && <p className="text-12 text-tertiary">{t("web.configuration_empty")}</p>}
-        </div>
-      </details>
-    );
-  };
-  const children = (key: "children" | "work_items") => (
-    <details className="rounded-lg border border-subtle p-4">
-      <summary className="cursor-pointer text-13 font-medium">
-        {t(key === "children" ? "web.template_sub_work_items" : "web.template_work_items")}
-      </summary>
-      <div className="mt-4 flex flex-col gap-3">
-        {(config[key] ?? []).map((item, index) => (
-          <div key={item.client_id} className="flex items-start gap-2">
-            <div className="flex-1">
-              <InputField
-                orientation="vertical"
-                size="md"
-                aria-label={t("web.title")}
-                placeholder={t("web.title")}
-                required
-                value={item.name}
-                maxLength={255}
-                onChange={(e) =>
-                  configure({
-                    [key]: (config[key] ?? []).map((entry, i) =>
-                      i === index ? Object.assign({}, entry, { name: e.target.value }) : entry
-                    ),
-                  })
-                }
-              />
-            </div>
-            <Button
-              stretch="auto"
-              size="sm"
-              variant="ghost"
-              icon={<Trash2 className="size-3" />}
-              label={t("delete")}
-              onClick={() => configure({ [key]: (config[key] ?? []).filter((_, i) => i !== index) })}
-            />
-          </div>
-        ))}
-        <Button
-          stretch="auto"
-          size="md"
-          variant="secondary"
-          icon={<Plus className="size-3.5" />}
-          label={t("add")}
-          disabled={(config[key]?.length ?? 0) >= 50}
-          onClick={() =>
-            configure({
-              [key]: [
-                ...(config[key] ?? []),
-                { client_id: crypto.randomUUID(), name: "", description_html: "<p></p>" },
-              ],
-            })
-          }
-        />
-      </div>
-    </details>
-  );
   if (!allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE))
     return <NotAuthorizedView section="settings" className="h-auto" />;
   if (!validKind) return <p>{t("web.configuration_load_error")}</p>;
@@ -319,154 +234,25 @@ export function TemplateEditor() {
                   </div>
                 )}
                 {kind === "work_item" && (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <ConfigurationSelect
-                        value={config.state_id ?? "none"}
-                        placeholder={t("state")}
-                        options={[
-                          { value: "none", label: t("web.template_default_state") },
-                          ...(options?.states ?? []).map((s) => ({ value: s.id, label: s.name })),
-                        ]}
-                        onChange={(state) => configure({ state_id: state === "none" ? null : state })}
-                      />
-                      <ConfigurationSelect
-                        value={draft.priority}
-                        placeholder={t("priority")}
-                        options={["none", "low", "medium", "high", "urgent"].map((value) => ({
-                          value,
-                          label: t(value),
-                        }))}
-                        onChange={(priority) => update({ priority: priority as WorkspaceTemplate["priority"] })}
-                      />
-                    </div>
-                    {draft.project && (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {multi(
-                          t("assignees"),
-                          (options?.assignees ?? []).map((m) => ({ id: m.member_id, name: m.member__display_name })),
-                          "assignee_ids"
-                        )}
-                        {multi(t("labels"), options?.labels ?? [], "label_ids")}
-                        {multi(t("modules"), options?.modules ?? [], "module_ids")}
-                      </div>
-                    )}
-                    {children("children")}
-                  </>
+                  <TemplateWorkItemFields
+                    draft={draft}
+                    config={config}
+                    options={options}
+                    configure={configure}
+                    update={update}
+                  />
                 )}
                 {kind === "project" && (
                   <>
-                    <details className="rounded-lg border border-subtle p-4">
-                      <summary className="cursor-pointer text-13 font-medium">{t("web.template_features")}</summary>
-                      <div className="mt-4 flex flex-col gap-4">
-                        {(["cycle_view", "module_view", "page_view", "issue_views_view", "intake_view"] as const).map(
-                          (field) => (
-                            <div key={field} className="flex items-center justify-between">
-                              <label htmlFor={field} className="text-13">
-                                {t(`web.template_feature_${field}`)}
-                              </label>
-                              <Switch
-                                id={field}
-                                size="md"
-                                checked={config[field] ?? field === "page_view"}
-                                onCheckedChange={(value) => configure({ [field]: value })}
-                              />
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </details>
+                    <TemplateProjectFeatures config={config} configure={configure} />
                     {(["states", "labels"] as const).map((key) => (
-                      <details key={key} className="rounded-lg border border-subtle p-4">
-                        <summary className="cursor-pointer text-13 font-medium">
-                          {t(key === "states" ? "web.template_states" : "labels")}
-                        </summary>
-                        <div className="mt-4 flex flex-col gap-3">
-                          {(config[key] ?? []).map((entry, index) => (
-                            <div key={entry.client_id} className="flex flex-wrap items-center gap-2">
-                              <CategoryColorPicker
-                                kind={key === "states" ? "status" : "label"}
-                                value={entry.color}
-                                onChange={(color) =>
-                                  configure({
-                                    [key]: (config[key] ?? []).map((item, i) =>
-                                      i === index ? Object.assign({}, item, { color }) : item
-                                    ),
-                                  })
-                                }
-                              />
-                              <div className="min-w-32 flex-1">
-                                <InputField
-                                  size="md"
-                                  orientation="vertical"
-                                  aria-label={t("name")}
-                                  required
-                                  maxLength={100}
-                                  value={entry.name}
-                                  onChange={(e) =>
-                                    configure({
-                                      [key]: (config[key] ?? []).map((item, i) =>
-                                        i === index ? Object.assign({}, item, { name: e.target.value }) : item
-                                      ),
-                                    })
-                                  }
-                                />
-                              </div>
-                              {key === "states" && (
-                                <div className="w-36">
-                                  <ConfigurationSelect
-                                    value={config.states?.[index].group ?? "unstarted"}
-                                    placeholder={t("state")}
-                                    options={["backlog", "unstarted", "started", "completed", "cancelled"].map(
-                                      (value) => ({ value, label: t(`web.template_state_${value}`) })
-                                    )}
-                                    onChange={(group) =>
-                                      configure({
-                                        states: config.states?.map((item, i) =>
-                                          i === index ? Object.assign({}, item, { group }) : item
-                                        ),
-                                      })
-                                    }
-                                  />
-                                </div>
-                              )}
-                              <Button
-                                stretch="auto"
-                                size="sm"
-                                variant="ghost"
-                                label={t("delete")}
-                                onClick={() => configure({ [key]: (config[key] ?? []).filter((_, i) => i !== index) })}
-                              />
-                            </div>
-                          ))}
-                          <Button
-                            stretch="auto"
-                            size="md"
-                            variant="secondary"
-                            label={t(key === "states" ? "web.add_project_status" : "web.add_project_label")}
-                            onClick={() =>
-                              configure({
-                                [key]: [
-                                  ...(config[key] ?? []),
-                                  ...(key === "states"
-                                    ? [
-                                        {
-                                          client_id: crypto.randomUUID(),
-                                          name: "",
-                                          color: "#60646C",
-                                          group: "unstarted",
-                                          default: !config.states?.length,
-                                        },
-                                      ]
-                                    : [{ client_id: crypto.randomUUID(), name: "", color: "#60646C" }]),
-                                ],
-                              })
-                            }
-                          />
-                        </div>
-                      </details>
+                      <TemplateCategoryDetails key={key} fieldKey={key} config={config} configure={configure} />
                     ))}
-                    {children("work_items")}
+                    <TemplateChildrenField
+                      fieldKey="work_items"
+                      items={config.work_items ?? []}
+                      onChange={(work_items) => configure({ work_items })}
+                    />
                   </>
                 )}
               </div>
@@ -492,5 +278,288 @@ export function TemplateEditor() {
         )}
       </div>
     </SettingsContentWrapper>
+  );
+}
+
+type TemplateMultiSelectProps = {
+  label: string;
+  entries: { id: string; name: string }[];
+  selected?: string[];
+  onChange: (ids: string[]) => void;
+};
+function TemplateMultiSelect({ label, entries, selected, onChange }: TemplateMultiSelectProps) {
+  const { t } = useTranslation();
+  const selectedIds = new Set(selected);
+  return (
+    <details className="rounded-md border border-subtle p-2">
+      <summary className="cursor-pointer text-13">
+        {label}
+        {selected?.length ? ` (${selected.length})` : ""}
+      </summary>
+      <div className="flex flex-col gap-2 pt-3">
+        {entries.map((entry) => (
+          <Checkbox
+            key={entry.id}
+            label={entry.name}
+            checked={selectedIds.has(entry.id)}
+            onCheckedChange={(checked) =>
+              onChange(
+                checked
+                  ? [...new Set([...(selected ?? []), entry.id])]
+                  : (selected ?? []).filter((id) => id !== entry.id)
+              )
+            }
+          />
+        ))}
+        {!entries.length && <p className="text-12 text-tertiary">{t("web.configuration_empty")}</p>}
+      </div>
+    </details>
+  );
+}
+
+type TemplateChildrenFieldProps = {
+  fieldKey: "children" | "work_items";
+  items: TemplateWorkItemChild[];
+  onChange: (items: TemplateWorkItemChild[]) => void;
+};
+function TemplateChildrenField({ fieldKey, items, onChange }: TemplateChildrenFieldProps) {
+  const { t } = useTranslation();
+  return (
+    <details className="rounded-lg border border-subtle p-4">
+      <summary className="cursor-pointer text-13 font-medium">
+        {t(fieldKey === "children" ? "web.template_sub_work_items" : "web.template_work_items")}
+      </summary>
+      <div className="mt-4 flex flex-col gap-3">
+        {items.map((item, index) => (
+          <div key={item.client_id} className="flex items-start gap-2">
+            <div className="flex-1">
+              <InputField
+                orientation="vertical"
+                size="md"
+                aria-label={t("web.title")}
+                placeholder={t("web.title")}
+                required
+                value={item.name}
+                maxLength={255}
+                onChange={(e) =>
+                  onChange(
+                    items.map((entry, i) => (i === index ? Object.assign({}, entry, { name: e.target.value }) : entry))
+                  )
+                }
+              />
+            </div>
+            <Button
+              stretch="auto"
+              size="sm"
+              variant="ghost"
+              icon={<Trash2 className="size-3" />}
+              label={t("delete")}
+              onClick={() => onChange(items.filter((_, i) => i !== index))}
+            />
+          </div>
+        ))}
+        <Button
+          stretch="auto"
+          size="md"
+          variant="secondary"
+          icon={<Plus className="size-3.5" />}
+          label={t("add")}
+          disabled={items.length >= 50}
+          onClick={() =>
+            onChange([...items, { client_id: crypto.randomUUID(), name: "", description_html: "<p></p>" }])
+          }
+        />
+      </div>
+    </details>
+  );
+}
+
+type TemplateWorkItemFieldsProps = {
+  draft: Draft;
+  config: TemplateConfiguration;
+  options?: TemplateOptions;
+  configure: (patch: Partial<TemplateConfiguration>) => void;
+  update: (patch: Partial<Draft>) => void;
+};
+function TemplateWorkItemFields({ draft, config, options, configure, update }: TemplateWorkItemFieldsProps) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ConfigurationSelect
+          value={config.state_id ?? "none"}
+          placeholder={t("state")}
+          options={[
+            { value: "none", label: t("web.template_default_state") },
+            ...(options?.states ?? []).map((s) => ({ value: s.id, label: s.name })),
+          ]}
+          onChange={(state) => configure({ state_id: state === "none" ? null : state })}
+        />
+        <ConfigurationSelect
+          value={draft.priority}
+          placeholder={t("priority")}
+          options={["none", "low", "medium", "high", "urgent"].map((value) => ({
+            value,
+            label: t(value),
+          }))}
+          onChange={(priority) => update({ priority: priority as WorkspaceTemplate["priority"] })}
+        />
+      </div>
+      {draft.project && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <TemplateMultiSelect
+            label={t("assignees")}
+            entries={(options?.assignees ?? []).map((m) => ({ id: m.member_id, name: m.member__display_name }))}
+            selected={config.assignee_ids}
+            onChange={(assignee_ids) => configure({ assignee_ids })}
+          />
+          <TemplateMultiSelect
+            label={t("labels")}
+            entries={options?.labels ?? []}
+            selected={config.label_ids}
+            onChange={(label_ids) => configure({ label_ids })}
+          />
+          <TemplateMultiSelect
+            label={t("modules")}
+            entries={options?.modules ?? []}
+            selected={config.module_ids}
+            onChange={(module_ids) => configure({ module_ids })}
+          />
+        </div>
+      )}
+      <TemplateChildrenField
+        fieldKey="children"
+        items={config.children ?? []}
+        onChange={(children) => configure({ children })}
+      />
+    </>
+  );
+}
+
+type TemplateProjectFeaturesProps = {
+  config: TemplateConfiguration;
+  configure: (patch: Partial<TemplateConfiguration>) => void;
+};
+function TemplateProjectFeatures({ config, configure }: TemplateProjectFeaturesProps) {
+  const { t } = useTranslation();
+  return (
+    <details className="rounded-lg border border-subtle p-4">
+      <summary className="cursor-pointer text-13 font-medium">{t("web.template_features")}</summary>
+      <div className="mt-4 flex flex-col gap-4">
+        {(["cycle_view", "module_view", "page_view", "issue_views_view", "intake_view"] as const).map((field) => (
+          <div key={field} className="flex items-center justify-between">
+            <label htmlFor={field} className="text-13">
+              {t(`web.template_feature_${field}`)}
+            </label>
+            <Switch
+              id={field}
+              size="md"
+              checked={config[field] ?? field === "page_view"}
+              onCheckedChange={(value) => configure({ [field]: value })}
+            />
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+type TemplateCategoryDetailsProps = {
+  fieldKey: "states" | "labels";
+  config: TemplateConfiguration;
+  configure: (patch: Partial<TemplateConfiguration>) => void;
+};
+function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCategoryDetailsProps) {
+  const { t } = useTranslation();
+  return (
+    <details className="rounded-lg border border-subtle p-4">
+      <summary className="cursor-pointer text-13 font-medium">
+        {t(fieldKey === "states" ? "web.template_states" : "labels")}
+      </summary>
+      <div className="mt-4 flex flex-col gap-3">
+        {(config[fieldKey] ?? []).map((entry, index) => (
+          <div key={entry.client_id} className="flex flex-wrap items-center gap-2">
+            <CategoryColorPicker
+              kind={fieldKey === "states" ? "status" : "label"}
+              value={entry.color}
+              onChange={(color) =>
+                configure({
+                  [fieldKey]: (config[fieldKey] ?? []).map((item, i) =>
+                    i === index ? Object.assign({}, item, { color }) : item
+                  ),
+                })
+              }
+            />
+            <div className="min-w-32 flex-1">
+              <InputField
+                size="md"
+                orientation="vertical"
+                aria-label={t("name")}
+                required
+                maxLength={100}
+                value={entry.name}
+                onChange={(e) =>
+                  configure({
+                    [fieldKey]: (config[fieldKey] ?? []).map((item, i) =>
+                      i === index ? Object.assign({}, item, { name: e.target.value }) : item
+                    ),
+                  })
+                }
+              />
+            </div>
+            {fieldKey === "states" && (
+              <div className="w-36">
+                <ConfigurationSelect
+                  value={config.states?.[index].group ?? "unstarted"}
+                  placeholder={t("state")}
+                  options={["backlog", "unstarted", "started", "completed", "cancelled"].map((value) => ({
+                    value,
+                    label: t(`web.template_state_${value}`),
+                  }))}
+                  onChange={(group) =>
+                    configure({
+                      states: config.states?.map((item, i) =>
+                        i === index ? Object.assign({}, item, { group }) : item
+                      ),
+                    })
+                  }
+                />
+              </div>
+            )}
+            <Button
+              stretch="auto"
+              size="sm"
+              variant="ghost"
+              label={t("delete")}
+              onClick={() => configure({ [fieldKey]: (config[fieldKey] ?? []).filter((_, i) => i !== index) })}
+            />
+          </div>
+        ))}
+        <Button
+          stretch="auto"
+          size="md"
+          variant="secondary"
+          label={t(fieldKey === "states" ? "web.add_project_status" : "web.add_project_label")}
+          onClick={() =>
+            configure({
+              [fieldKey]: [
+                ...(config[fieldKey] ?? []),
+                ...(fieldKey === "states"
+                  ? [
+                      {
+                        client_id: crypto.randomUUID(),
+                        name: "",
+                        color: "#60646C",
+                        group: "unstarted",
+                        default: !config.states?.length,
+                      },
+                    ]
+                  : [{ client_id: crypto.randomUUID(), name: "", color: "#60646C" }]),
+              ],
+            })
+          }
+        />
+      </div>
+    </details>
   );
 }

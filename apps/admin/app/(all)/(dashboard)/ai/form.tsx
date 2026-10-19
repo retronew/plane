@@ -7,6 +7,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { Button } from "@makeplane/propel/components/button";
 import {
   Combobox,
@@ -27,6 +28,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useInstance } from "@/hooks/store";
 import { useTranslation } from "@plane/i18n";
+import type { TTranslationStore } from "@plane/i18n";
 // local
 import { ModelPicker } from "./model-picker";
 import { AI_PROTOCOLS, TRANSLATED_AI_PROVIDERS, getAIProtocol, resolveAIBaseUrl } from "./helper";
@@ -43,6 +45,136 @@ const CUSTOM_PROVIDER = "custom";
 
 const getErrorMessage = (error: unknown): string | undefined =>
   error && typeof error === "object" && "error" in error ? String(error.error) : undefined;
+
+type TTranslate = TTranslationStore["t"];
+
+interface IAIProviderFieldProps {
+  t: TTranslate;
+  providerKeys: string[];
+  selectedProvider: string;
+  onProviderChange: (key: string) => void;
+  filterProvider: (key: string, query: string) => boolean;
+  providerLabel: (key: string) => string;
+}
+
+function AIProviderField(props: IAIProviderFieldProps) {
+  const { t, providerKeys, selectedProvider, onProviderChange, filterProvider, providerLabel } = props;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor="ai-provider" className="text-13 text-tertiary">
+        {t("admin.ai.provider")}
+      </label>
+      <Combobox<string>
+        items={providerKeys}
+        value={selectedProvider}
+        onValueChange={(next) => {
+          if (next) onProviderChange(next);
+        }}
+        filter={(key, query) => filterProvider(key, query)}
+      >
+        <ComboboxTrigger id="ai-provider" size="lg">
+          {providerLabel(selectedProvider)}
+        </ComboboxTrigger>
+        <ComboboxContent
+          aria-label={t("admin.ai.provider")}
+          search={<ComboboxSearch placeholder={t("admin.ai.search_provider")} />}
+        >
+          <ComboboxEmpty>{t("admin.ai.no_matching_providers")}</ComboboxEmpty>
+          <ComboboxList aria-label={t("admin.ai.provider")}>
+            {(key: string) => <ComboboxItem key={key} value={key} label={providerLabel(key)} />}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      <p className="pt-0.5 text-11 text-tertiary">{t("admin.ai.provider_description")}</p>
+    </div>
+  );
+}
+
+interface IAIModelFieldProps {
+  t: TTranslate;
+  control: Control<AIFormValues>;
+  models: string[];
+  onFetchModels: () => void;
+  isFetchingModels: boolean;
+  modelPlaceholder: string;
+}
+
+function AIModelField(props: IAIModelFieldProps) {
+  const { t, control, models, onFetchModels, isFetchingModels, modelPlaceholder } = props;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor="LLM_MODEL" className="text-13 text-tertiary">
+        {t("admin.ai.llm_model")}
+      </label>
+      <div className="flex items-center gap-2">
+        {/* Column flex stretches the picker trigger across the row (it is content-sized otherwise) */}
+        <div className="flex min-w-0 grow flex-col">
+          <Controller
+            control={control}
+            name="LLM_MODEL"
+            render={({ field: { value, onChange } }) => (
+              <ModelPicker
+                id="LLM_MODEL"
+                value={value ?? ""}
+                onChange={onChange}
+                models={models}
+                placeholder={modelPlaceholder}
+              />
+            )}
+          />
+        </div>
+        <Button
+          variant="secondary"
+          size="lg"
+          stretch="auto"
+          onClick={onFetchModels}
+          loading={isFetchingModels}
+          label={t("admin.ai.fetch_models")}
+        />
+      </div>
+      <p className="pt-0.5 text-11 text-tertiary">
+        {models.length > 0
+          ? t("admin.ai.models_available", { count: models.length })
+          : t("admin.ai.llm_model_description")}
+      </p>
+    </div>
+  );
+}
+
+interface IAIFormActionsProps {
+  t: TTranslate;
+  onSave: () => void;
+  onTest: () => void;
+  isSubmitting: boolean;
+  isTesting: boolean;
+}
+
+function AIFormActions(props: IAIFormActionsProps) {
+  const { t, onSave, onTest, isSubmitting, isTesting } = props;
+
+  return (
+    <div className="flex items-center gap-3">
+      <Button
+        variant="primary"
+        size="md"
+        stretch="auto"
+        onClick={onSave}
+        loading={isSubmitting}
+        label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
+      />
+      <Button
+        variant="secondary"
+        size="md"
+        stretch="auto"
+        onClick={onTest}
+        loading={isTesting}
+        label={t("admin.ai.test_connection")}
+      />
+    </div>
+  );
+}
 
 export function InstanceAIForm(props: IInstanceAIForm) {
   const { config } = props;
@@ -220,33 +352,14 @@ export function InstanceAIForm(props: IInstanceAIForm) {
   return (
     <div className="space-y-8">
       <div className="grid w-full max-w-4xl grid-cols-1 items-start gap-x-10 gap-y-8 lg:grid-cols-2">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="ai-provider" className="text-13 text-tertiary">
-            {t("admin.ai.provider")}
-          </label>
-          <Combobox<string>
-            items={providerKeys}
-            value={selectedProvider}
-            onValueChange={(next) => {
-              if (next) handleProviderChange(next);
-            }}
-            filter={(key, query) => matchesProvider(key, query)}
-          >
-            <ComboboxTrigger id="ai-provider" size="lg">
-              {providerLabel(selectedProvider)}
-            </ComboboxTrigger>
-            <ComboboxContent
-              aria-label={t("admin.ai.provider")}
-              search={<ComboboxSearch placeholder={t("admin.ai.search_provider")} />}
-            >
-              <ComboboxEmpty>{t("admin.ai.no_matching_providers")}</ComboboxEmpty>
-              <ComboboxList aria-label={t("admin.ai.provider")}>
-                {(key: string) => <ComboboxItem key={key} value={key} label={providerLabel(key)} />}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-          <p className="pt-0.5 text-11 text-tertiary">{t("admin.ai.provider_description")}</p>
-        </div>
+        <AIProviderField
+          t={t}
+          providerKeys={providerKeys}
+          selectedProvider={selectedProvider}
+          onProviderChange={handleProviderChange}
+          filterProvider={matchesProvider}
+          providerLabel={providerLabel}
+        />
 
         <div className="flex flex-col gap-1">
           <label htmlFor="ai-protocol" className="text-13 text-tertiary">
@@ -292,62 +405,23 @@ export function InstanceAIForm(props: IInstanceAIForm) {
           />
         ))}
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="LLM_MODEL" className="text-13 text-tertiary">
-            {t("admin.ai.llm_model")}
-          </label>
-          <div className="flex items-center gap-2">
-            {/* Column flex stretches the picker trigger across the row (it is content-sized otherwise) */}
-            <div className="flex min-w-0 grow flex-col">
-              <Controller
-                control={control}
-                name="LLM_MODEL"
-                render={({ field: { value, onChange } }) => (
-                  <ModelPicker
-                    id="LLM_MODEL"
-                    value={value ?? ""}
-                    onChange={onChange}
-                    models={models}
-                    placeholder={protocolOption.modelPlaceholder}
-                  />
-                )}
-              />
-            </div>
-            <Button
-              variant="secondary"
-              size="lg"
-              stretch="auto"
-              onClick={fetchModels}
-              loading={isFetchingModels}
-              label={t("admin.ai.fetch_models")}
-            />
-          </div>
-          <p className="pt-0.5 text-11 text-tertiary">
-            {models.length > 0
-              ? t("admin.ai.models_available", { count: models.length })
-              : t("admin.ai.llm_model_description")}
-          </p>
-        </div>
+        <AIModelField
+          t={t}
+          control={control}
+          models={models}
+          onFetchModels={fetchModels}
+          isFetchingModels={isFetchingModels}
+          modelPlaceholder={protocolOption.modelPlaceholder}
+        />
       </div>
 
-      <div className="flex items-center gap-3">
-        <Button
-          variant="primary"
-          size="md"
-          stretch="auto"
-          onClick={handleSubmit(onSubmit)}
-          loading={isSubmitting}
-          label={isSubmitting ? t("admin.common.saving") : t("admin.common.save_changes")}
-        />
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          onClick={testConnection}
-          loading={isTesting}
-          label={t("admin.ai.test_connection")}
-        />
-      </div>
+      <AIFormActions
+        t={t}
+        onSave={handleSubmit(onSubmit)}
+        onTest={testConnection}
+        isSubmitting={isSubmitting}
+        isTesting={isTesting}
+      />
     </div>
   );
 }

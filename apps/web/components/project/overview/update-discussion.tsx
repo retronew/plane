@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useId, useRef, useState } from "react";
+import { type Dispatch, type RefObject, type SetStateAction, useEffect, useId, useRef, useState } from "react";
 import { ArrowUp, MoreHorizontal } from "lucide-react";
 import useSWR from "swr";
 import { Avatar } from "@makeplane/propel/components/avatar";
@@ -37,6 +37,211 @@ type Props = {
 };
 
 const MAX_COMMENT_LENGTH = 100_000;
+
+type UpdateCommentRowProps = {
+  comment: TProjectOverviewUpdateComment;
+  canEdit: boolean;
+  canDelete: boolean;
+  editor: { id: string; body: string } | null;
+  editorRef: RefObject<HTMLDivElement | null>;
+  pending: boolean;
+  validEdit: boolean;
+  hasError: boolean;
+  pendingRef: RefObject<boolean>;
+  setEditor: Dispatch<SetStateAction<{ id: string; body: string } | null>>;
+  setDeleteTarget: Dispatch<SetStateAction<TProjectOverviewUpdateComment | null>>;
+  onSave: () => void;
+};
+
+function UpdateCommentRow({
+  comment,
+  canEdit,
+  canDelete,
+  editor,
+  editorRef,
+  pending,
+  validEdit,
+  hasError,
+  pendingRef,
+  setEditor,
+  setDeleteTarget,
+  onSave,
+}: UpdateCommentRowProps) {
+  const { t } = useTranslation();
+  const name = overviewActorName(comment.created_by_detail, t("unknown_user"));
+  const editing = editor?.id === comment.id && canEdit;
+  return (
+    <li className="group/update-comment flex gap-3 not-last:pb-6">
+      <div className="relative w-5 shrink-0 self-stretch">
+        <div className="mt-1 size-5">
+          <Avatar size="xs" src={getFileURL(comment.created_by_detail?.avatar_url ?? "")} alt={name} />
+        </div>
+        <span
+          aria-hidden
+          className="absolute top-6 -bottom-7 left-1/2 border-s border-subtle group-last/update-comment:hidden"
+        />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex min-h-6 items-start gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <p className="min-h-6 py-0.5 text-body-xs-regular text-tertiary">
+              <span className="font-medium text-primary">{name}</span> {t(`${key}.commented`)}
+            </p>
+            <span aria-hidden className="bg-placeholder size-1 shrink-0 rounded-full" />
+            <Tooltip label={`${renderFormattedDate(comment.created_at)} ${renderFormattedTime(comment.created_at)}`}>
+              <time
+                dateTime={comment.created_at}
+                title={`${renderFormattedDate(comment.created_at)} ${renderFormattedTime(comment.created_at)}`}
+                className="text-caption-sm-regular text-placeholder"
+              >
+                {calculateTimeAgo(comment.created_at)}
+              </time>
+            </Tooltip>
+          </div>
+          {canDelete && !editing && (
+            <Menu>
+              <MenuTrigger
+                render={
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t("aria_labels.common.more_actions")}
+                    icon={<MoreHorizontal className="size-4" />}
+                    disabled={pending}
+                  />
+                }
+              />
+              <ActionMenuContent side="bottom" align="end">
+                {canEdit && (
+                  <MenuItem
+                    icon={<EditOutline />}
+                    label={t("edit")}
+                    disabled={pending}
+                    onClick={() => {
+                      if (!pendingRef.current) setEditor({ id: comment.id, body: comment.body });
+                    }}
+                  />
+                )}
+                <MenuItem
+                  variant="danger"
+                  icon={<DeleteOutline />}
+                  label={t(`${key}.delete_comment`)}
+                  disabled={pending}
+                  onClick={() => {
+                    if (!pendingRef.current) setDeleteTarget(comment);
+                  }}
+                />
+              </ActionMenuContent>
+            </Menu>
+          )}
+        </div>
+        {editing ? (
+          <form
+            className="flex flex-col rounded-lg border border-subtle-1 bg-layer-2 focus-within:border-accent-strong"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void onSave();
+            }}
+          >
+            <div ref={editorRef} className="w-full px-3 pt-0.5 [&>textarea]:leading-5">
+              <TextArea
+                size="lg"
+                surface="inline"
+                autoResize
+                rows={1}
+                maxLength={MAX_COMMENT_LENGTH}
+                aria-label={t("edit")}
+                value={editor.body}
+                disabled={pending}
+                onChange={(event) => setEditor({ id: comment.id, body: event.target.value })}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 py-0.5 pr-1.5 pl-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                stretch="auto"
+                label={t("cancel")}
+                disabled={pending}
+                onClick={() => {
+                  if (!pendingRef.current) setEditor(null);
+                }}
+              />
+              <IconButton
+                type="submit"
+                variant="secondary"
+                size="sm"
+                aria-label={t("save")}
+                icon={<ArrowUp className="size-3.5" />}
+                loading={pending}
+                disabled={pending || !validEdit || hasError}
+              />
+            </div>
+          </form>
+        ) : (
+          <p className="text-body-xs-regular break-words whitespace-pre-wrap text-primary">{comment.body}</p>
+        )}
+      </div>
+    </li>
+  );
+}
+
+type UpdateDiscussionComposerProps = {
+  composerRef: RefObject<HTMLFormElement | null>;
+  draft: string;
+  setDraft: Dispatch<SetStateAction<string>>;
+  pending: boolean;
+  submitDisabled: boolean;
+  onSubmit: () => void;
+};
+
+function UpdateDiscussionComposer({
+  composerRef,
+  draft,
+  setDraft,
+  pending,
+  submitDisabled,
+  onSubmit,
+}: UpdateDiscussionComposerProps) {
+  const { t } = useTranslation();
+  return (
+    <form
+      ref={composerRef}
+      className="flex min-h-9 items-center gap-2 rounded-lg border border-subtle-1 bg-layer-2 py-0.5 pr-1.5 pl-3 transition-[background-color,border-color,box-shadow] focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:ring-2 focus-within:ring-accent-strong/20 hover:border-strong hover:bg-layer-2-hover focus-within:hover:border-accent-strong"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void onSubmit();
+      }}
+    >
+      <div className="flex min-h-6 min-w-0 flex-1 flex-col justify-center [&>textarea]:flex-none [&>textarea]:leading-5 [&>textarea]:placeholder:text-disabled">
+        <TextArea
+          size="lg"
+          surface="inline"
+          autoResize
+          rows={1}
+          maxLength={MAX_COMMENT_LENGTH}
+          aria-label={t(`${key}.comment`)}
+          placeholder={t(`${key}.add_comment`)}
+          value={draft}
+          disabled={pending}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <IconButton
+          type="submit"
+          variant="secondary"
+          size="sm"
+          aria-label={t("submit")}
+          icon={<ArrowUp className="size-3.5" />}
+          loading={pending}
+          disabled={submitDisabled}
+        />
+      </div>
+    </form>
+  );
+}
 
 // A reused card must not carry an open discussion or draft into a different update.
 export function ProjectUpdateDiscussion(props: Props) {
@@ -267,166 +472,34 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
             )}
             {!!comments.data?.length && (
               <ol className="flex flex-col">
-                {comments.data.map((comment) => {
-                  const name = overviewActorName(comment.created_by_detail, t("unknown_user"));
-                  const editing = editor?.id === comment.id && canEdit(comment);
-                  return (
-                    <li key={comment.id} className="group/update-comment flex gap-3 not-last:pb-6">
-                      <div className="relative w-5 shrink-0 self-stretch">
-                        <div className="mt-1 size-5">
-                          <Avatar size="xs" src={getFileURL(comment.created_by_detail?.avatar_url ?? "")} alt={name} />
-                        </div>
-                        <span
-                          aria-hidden
-                          className="absolute top-6 -bottom-7 left-1/2 border-s border-subtle group-last/update-comment:hidden"
-                        />
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <div className="flex min-h-6 items-start gap-2">
-                          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                            <p className="min-h-6 py-0.5 text-body-xs-regular text-tertiary">
-                              <span className="font-medium text-primary">{name}</span> {t(`${key}.commented`)}
-                            </p>
-                            <span aria-hidden className="bg-placeholder size-1 shrink-0 rounded-full" />
-                            <Tooltip
-                              label={`${renderFormattedDate(comment.created_at)} ${renderFormattedTime(comment.created_at)}`}
-                            >
-                              <time
-                                dateTime={comment.created_at}
-                                title={`${renderFormattedDate(comment.created_at)} ${renderFormattedTime(comment.created_at)}`}
-                                className="text-caption-sm-regular text-placeholder"
-                              >
-                                {calculateTimeAgo(comment.created_at)}
-                              </time>
-                            </Tooltip>
-                          </div>
-                          {canDelete(comment) && !editing && (
-                            <Menu>
-                              <MenuTrigger
-                                render={
-                                  <IconButton
-                                    variant="ghost"
-                                    size="sm"
-                                    aria-label={t("aria_labels.common.more_actions")}
-                                    icon={<MoreHorizontal className="size-4" />}
-                                    disabled={pending}
-                                  />
-                                }
-                              />
-                              <ActionMenuContent side="bottom" align="end">
-                                {canEdit(comment) && (
-                                  <MenuItem
-                                    icon={<EditOutline />}
-                                    label={t("edit")}
-                                    disabled={pending}
-                                    onClick={() => {
-                                      if (!pendingRef.current) setEditor({ id: comment.id, body: comment.body });
-                                    }}
-                                  />
-                                )}
-                                <MenuItem
-                                  variant="danger"
-                                  icon={<DeleteOutline />}
-                                  label={t(`${key}.delete_comment`)}
-                                  disabled={pending}
-                                  onClick={() => {
-                                    if (!pendingRef.current) setDeleteTarget(comment);
-                                  }}
-                                />
-                              </ActionMenuContent>
-                            </Menu>
-                          )}
-                        </div>
-                        {editing ? (
-                          <form
-                            className="flex flex-col rounded-lg border border-subtle-1 bg-layer-2 focus-within:border-accent-strong"
-                            onSubmit={(event) => {
-                              event.preventDefault();
-                              void saveComment();
-                            }}
-                          >
-                            <div ref={editorRef} className="w-full px-3 pt-0.5 [&>textarea]:leading-5">
-                              <TextArea
-                                size="lg"
-                                surface="inline"
-                                autoResize
-                                rows={1}
-                                maxLength={MAX_COMMENT_LENGTH}
-                                aria-label={t("edit")}
-                                value={editor.body}
-                                disabled={pending}
-                                onChange={(event) => setEditor({ id: comment.id, body: event.target.value })}
-                              />
-                            </div>
-                            <div className="flex items-center justify-end gap-2 py-0.5 pr-1.5 pl-3">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                stretch="auto"
-                                label={t("cancel")}
-                                disabled={pending}
-                                onClick={() => {
-                                  if (!pendingRef.current) setEditor(null);
-                                }}
-                              />
-                              <IconButton
-                                type="submit"
-                                variant="secondary"
-                                size="sm"
-                                aria-label={t("save")}
-                                icon={<ArrowUp className="size-3.5" />}
-                                loading={pending}
-                                disabled={pending || !validEdit || Boolean(comments.error)}
-                              />
-                            </div>
-                          </form>
-                        ) : (
-                          <p className="text-body-xs-regular break-words whitespace-pre-wrap text-primary">
-                            {comment.body}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {comments.data.map((comment) => (
+                  <UpdateCommentRow
+                    key={comment.id}
+                    comment={comment}
+                    canEdit={canEdit(comment)}
+                    canDelete={canDelete(comment)}
+                    editor={editor}
+                    editorRef={editorRef}
+                    pending={pending}
+                    validEdit={validEdit}
+                    hasError={Boolean(comments.error)}
+                    pendingRef={pendingRef}
+                    setEditor={setEditor}
+                    setDeleteTarget={setDeleteTarget}
+                    onSave={saveComment}
+                  />
+                ))}
               </ol>
             )}
             {canWrite && (
-              <form
-                ref={composerRef}
-                className="flex min-h-9 items-center gap-2 rounded-lg border border-subtle-1 bg-layer-2 py-0.5 pr-1.5 pl-3 transition-[background-color,border-color,box-shadow] focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:ring-2 focus-within:ring-accent-strong/20 hover:border-strong hover:bg-layer-2-hover focus-within:hover:border-accent-strong"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void submitComment();
-                }}
-              >
-                <div className="flex min-h-6 min-w-0 flex-1 flex-col justify-center [&>textarea]:flex-none [&>textarea]:leading-5 [&>textarea]:placeholder:text-disabled">
-                  <TextArea
-                    size="lg"
-                    surface="inline"
-                    autoResize
-                    rows={1}
-                    maxLength={MAX_COMMENT_LENGTH}
-                    aria-label={t(`${key}.comment`)}
-                    placeholder={t(`${key}.add_comment`)}
-                    value={draft}
-                    disabled={pending}
-                    onChange={(event) => setDraft(event.target.value)}
-                  />
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <IconButton
-                    type="submit"
-                    variant="secondary"
-                    size="sm"
-                    aria-label={t("submit")}
-                    icon={<ArrowUp className="size-3.5" />}
-                    loading={pending}
-                    disabled={pending || !validDraft || !comments.data || Boolean(comments.error)}
-                  />
-                </div>
-              </form>
+              <UpdateDiscussionComposer
+                composerRef={composerRef}
+                draft={draft}
+                setDraft={setDraft}
+                pending={pending}
+                submitDisabled={pending || !validDraft || !comments.data || Boolean(comments.error)}
+                onSubmit={submitComment}
+              />
             )}
           </div>
         )}

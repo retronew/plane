@@ -7,6 +7,7 @@
 import { ProjectCategoryFields } from "@/components/settings/workspace/configuration/project-fields";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import type { Control, FieldErrors, UseFormWatch } from "react-hook-form";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InfoOutline, LockOutline } from "@makeplane/propel/icons";
 import { Field } from "@makeplane/propel/components/field";
@@ -15,6 +16,7 @@ import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area"
 import type { TNetworkChoice } from "@plane/constants";
 import { NETWORK_CHOICES } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import type { TTranslationStore } from "@plane/i18n";
 // plane imports
 import { Button } from "@makeplane/propel/components/button";
 import { EmojiPicker, ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/emoji-icon-picker";
@@ -50,6 +52,313 @@ const renderNetworkOptionIcon = (network: TNetworkChoice) => (
 
 const renderNetworkTriggerIcon = (networks: TNetworkChoice[]) =>
   networks[0] ? <ProjectNetworkIcon iconKey={networks[0].iconKey} className="h-3.5 w-3.5" /> : undefined;
+
+type TTranslate = TTranslationStore["t"];
+
+interface IProjectCoverHeaderProps {
+  control: Control<IProject>;
+  coverImage: IProject["cover_image_url"];
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+  isAdmin: boolean;
+  project: IProject;
+  currentNetwork: TNetworkChoice | undefined;
+  watch: UseFormWatch<IProject>;
+  setIsCoverUploading: (value: boolean) => void;
+  t: TTranslate;
+}
+
+function ProjectCoverHeader(props: IProjectCoverHeaderProps) {
+  const { control, coverImage, isOpen, setIsOpen, isAdmin, project, currentNetwork, watch, setIsCoverUploading, t } =
+    props;
+
+  return (
+    <div className="relative h-44 w-full overflow-hidden rounded-lg bg-[#262626]">
+      {coverImage && (
+        <>
+          <CoverImage src={coverImage} alt={t("web.project_cover_image")} className="h-full w-full" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        </>
+      )}
+      <div className="absolute bottom-4 z-5 flex w-full items-end justify-between gap-3 px-4">
+        <div className="flex flex-grow gap-3 truncate">
+          <Controller
+            control={control}
+            name="logo_props"
+            render={({ field: { value, onChange } }) => (
+              <EmojiPicker
+                iconType="material"
+                closeOnSelect={false}
+                isOpen={isOpen}
+                handleToggle={(val: boolean) => setIsOpen(val)}
+                className="flex items-center justify-center"
+                buttonClassName="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-lg bg-white/10"
+                label={
+                  <span className="grid size-full place-items-center rounded-lg" style={getIconBackgroundStyle(value)}>
+                    <ProjectLogo background={false} logo={value} size={28} />
+                  </span>
+                }
+                // TODO: fix types
+                onChange={(val: any) => {
+                  let logoValue = {};
+
+                  if (val?.type === "emoji")
+                    logoValue = {
+                      value: val.value,
+                    };
+                  else if (val?.type === "icon") logoValue = val.value;
+
+                  onChange({
+                    in_use: val?.type,
+                    [val?.type]: logoValue,
+                  });
+                  setIsOpen(false);
+                }}
+                defaultIconBackground={value?.icon?.background_color}
+                onIconBackgroundChange={(background) => {
+                  if (value?.in_use === "icon")
+                    onChange({ ...value, icon: { ...value.icon, background_color: background } });
+                }}
+                defaultIconColor={value?.in_use && value.in_use === "icon" ? value?.icon?.color : undefined}
+                defaultOpen={value.in_use && value.in_use === "emoji" ? "emoji" : "icon"}
+                disabled={!isAdmin}
+              />
+            )}
+          />
+          <div className="flex flex-col gap-1 truncate text-on-color">
+            <span className="truncate text-16 font-semibold">{watch("name")}</span>
+            <span className="flex items-center gap-2 text-13">
+              <span>{watch("identifier")} .</span>
+              <span className="flex items-center gap-1.5">
+                {project.network === 0 && <LockOutline className="h-2.5 w-2.5 text-on-color" />}
+                {currentNetwork && t(currentNetwork?.i18n_label)}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-shrink-0 justify-center">
+          <div>
+            <Controller
+              control={control}
+              name="cover_image_url"
+              render={({ field: { onChange } }) => (
+                <CoverImageUploadButton
+                  onUploadingChange={setIsCoverUploading}
+                  label={t("change_cover")}
+                  onChange={onChange}
+                  disabled={!isAdmin}
+                  projectId={project.id}
+                />
+              )}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface IProjectBasicFieldsProps {
+  control: Control<IProject>;
+  errors: FieldErrors<IProject>;
+  isAdmin: boolean;
+  t: TTranslate;
+}
+
+function ProjectBasicFields(props: IProjectBasicFieldsProps) {
+  const { control, errors, isAdmin, t } = props;
+
+  return (
+    <>
+      <div className="flex flex-col gap-1">
+        <h4 className="text-13">{t("common.project_name")}</h4>
+        <Controller
+          control={control}
+          name="name"
+          rules={{
+            required: t("name_is_required"),
+            maxLength: {
+              value: 255,
+              message: t("web.project_name_should_be_less_than_255_characters"),
+            },
+          }}
+          render={({ field: { value, onChange, ref } }) => (
+            <Field name="name" invalid={Boolean(errors.name)}>
+              <InputGroup size="lg">
+                <Input
+                  value={value}
+                  size="lg"
+                  id="name"
+                  name="name"
+                  type="text"
+                  ref={ref}
+                  onChange={onChange}
+                  placeholder={t("common.project_name")}
+                  disabled={!isAdmin}
+                />
+              </InputGroup>
+            </Field>
+          )}
+        />
+        <span className="text-11 text-danger-primary">{errors?.name?.message}</span>
+      </div>
+      <div className="flex flex-col gap-1 [&_textarea]:text-14">
+        <h4 className="text-13">{t("description")}</h4>
+        <Controller
+          name="description"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <Field name="description" invalid={Boolean(errors?.description)} disabled={!isAdmin}>
+              <TextAreaGroup resize="none">
+                <TextArea
+                  value={value}
+                  size="lg"
+                  surface="field"
+                  autoResize
+                  maxRows={8}
+                  id="description"
+                  name="description"
+                  placeholder={t("project_description_placeholder")}
+                  onChange={onChange}
+                />
+              </TextAreaGroup>
+            </Field>
+          )}
+        />
+      </div>
+    </>
+  );
+}
+
+interface IProjectDetailsGridFieldsProps {
+  control: Control<IProject>;
+  errors: FieldErrors<IProject>;
+  handleIdentifierChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isAdmin: boolean;
+  isMobile: boolean;
+  t: TTranslate;
+}
+
+function ProjectDetailsGridFields(props: IProjectDetailsGridFieldsProps) {
+  const { control, errors, handleIdentifierChange, isAdmin, isMobile, t } = props;
+
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="flex flex-col gap-1">
+        <h4 className="text-13">{t("web.project_id")}</h4>
+        <div className="relative">
+          <Controller
+            control={control}
+            name="identifier"
+            rules={{
+              required: t("project_id_is_required"),
+              validate: (value) => /^[ÇŞĞIİÖÜA-Z0-9]+$/.test(value.toUpperCase()) || t("project_id_allowed_char"),
+              minLength: {
+                value: 1,
+                message: t("project_id_min_char"),
+              },
+              maxLength: {
+                value: 12,
+                message: t("project_id_max_char", { max: 12 }),
+              },
+            }}
+            render={({ field: { value, ref } }) => (
+              <Field name="identifier" invalid={Boolean(errors.identifier)}>
+                <InputGroup size="lg">
+                  <Input
+                    value={value}
+                    size="lg"
+                    id="identifier"
+                    name="identifier"
+                    type="text"
+                    onChange={handleIdentifierChange}
+                    ref={ref}
+                    placeholder={t("project_settings.general.enter_project_id")}
+                    disabled={!isAdmin}
+                  />
+                  <Tooltip label={t("project_id_tooltip_content")} side="top" align="center" disabled={isMobile}>
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={t("project_id_tooltip_content")}
+                      icon={<InfoOutline />}
+                    />
+                  </Tooltip>
+                </InputGroup>
+              </Field>
+            )}
+          />
+        </div>
+        <span className="text-11 text-danger-primary">
+          <>{errors?.identifier?.message}</>
+        </span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <h4 className="text-13">{t("workspace_projects.network.label")}</h4>
+        <Controller
+          name="network"
+          control={control}
+          render={({ field: { value, onChange } }) => {
+            const selectedNetwork = NETWORK_CHOICES.find((n) => n.key === value);
+            return (
+              <Select<TNetworkChoice>
+                getValues={() => NETWORK_CHOICES}
+                value={selectedNetwork ?? null}
+                onChange={(key) => onChange(Number(key))}
+                getOptionValue={(network) => String(network.key)}
+                getOptionLabel={(network) => t(network.i18n_label)}
+                getOptionIcon={renderNetworkOptionIcon}
+                getOptionDescription={(network) => t(network.description)}
+                placeholder={t("select_network")}
+                showSearch={false}
+                pinSelected={false}
+                contentSizing="anchor"
+                disabled={!isAdmin}
+                estimateItemSize={64}
+              >
+                <Select.Trigger<TNetworkChoice>
+                  variant="select-lg"
+                  className="font-medium"
+                  disabled={!isAdmin}
+                  prependIcon={renderNetworkTriggerIcon}
+                >
+                  {(networks) => (
+                    <span className="min-w-0 grow truncate text-left">
+                      {networks[0] ? t(networks[0].i18n_label) : t("select_network")}
+                    </span>
+                  )}
+                </Select.Trigger>
+              </Select>
+            );
+          }}
+        />
+      </div>
+      <div className="col-span-1 flex flex-col gap-1 sm:col-span-2 xl:col-span-1">
+        <h4 className="text-13">{t("common.project_timezone")}</h4>
+        <Controller
+          name="timezone"
+          control={control}
+          rules={{ required: t("project_settings.general.please_select_a_timezone") }}
+          render={({ field: { value, onChange } }) => (
+            <>
+              <TimezoneSelect
+                value={value}
+                onChange={(timezone: string) => {
+                  onChange(timezone);
+                }}
+                error={Boolean(errors.timezone)}
+                buttonClassName="!border-subtle !shadow-none font-medium rounded-md"
+                disabled={!isAdmin}
+              />
+            </>
+          )}
+        />
+        {errors.timezone && <span className="text-11 text-danger-primary">{errors.timezone.message}</span>}
+      </div>
+    </div>
+  );
+}
 
 export function ProjectDetailsForm(props: IProjectDetailsForm) {
   const { project, workspaceSlug, projectId, isAdmin } = props;
@@ -197,262 +506,28 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="relative h-44 w-full overflow-hidden rounded-lg bg-[#262626]">
-        {coverImage && (
-          <>
-            <CoverImage src={coverImage} alt={t("web.project_cover_image")} className="h-full w-full" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-          </>
-        )}
-        <div className="absolute bottom-4 z-5 flex w-full items-end justify-between gap-3 px-4">
-          <div className="flex flex-grow gap-3 truncate">
-            <Controller
-              control={control}
-              name="logo_props"
-              render={({ field: { value, onChange } }) => (
-                <EmojiPicker
-                  iconType="material"
-                  closeOnSelect={false}
-                  isOpen={isOpen}
-                  handleToggle={(val: boolean) => setIsOpen(val)}
-                  className="flex items-center justify-center"
-                  buttonClassName="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-lg bg-white/10"
-                  label={
-                    <span
-                      className="grid size-full place-items-center rounded-lg"
-                      style={getIconBackgroundStyle(value)}
-                    >
-                      <ProjectLogo background={false} logo={value} size={28} />
-                    </span>
-                  }
-                  // TODO: fix types
-                  onChange={(val: any) => {
-                    let logoValue = {};
-
-                    if (val?.type === "emoji")
-                      logoValue = {
-                        value: val.value,
-                      };
-                    else if (val?.type === "icon") logoValue = val.value;
-
-                    onChange({
-                      in_use: val?.type,
-                      [val?.type]: logoValue,
-                    });
-                    setIsOpen(false);
-                  }}
-                  defaultIconBackground={value?.icon?.background_color}
-                  onIconBackgroundChange={(background) => {
-                    if (value?.in_use === "icon")
-                      onChange({ ...value, icon: { ...value.icon, background_color: background } });
-                  }}
-                  defaultIconColor={value?.in_use && value.in_use === "icon" ? value?.icon?.color : undefined}
-                  defaultOpen={value.in_use && value.in_use === "emoji" ? "emoji" : "icon"}
-                  disabled={!isAdmin}
-                />
-              )}
-            />
-            <div className="flex flex-col gap-1 truncate text-on-color">
-              <span className="truncate text-16 font-semibold">{watch("name")}</span>
-              <span className="flex items-center gap-2 text-13">
-                <span>{watch("identifier")} .</span>
-                <span className="flex items-center gap-1.5">
-                  {project.network === 0 && <LockOutline className="h-2.5 w-2.5 text-on-color" />}
-                  {currentNetwork && t(currentNetwork?.i18n_label)}
-                </span>
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-shrink-0 justify-center">
-            <div>
-              <Controller
-                control={control}
-                name="cover_image_url"
-                render={({ field: { onChange } }) => (
-                  <CoverImageUploadButton
-                    onUploadingChange={setIsCoverUploading}
-                    label={t("change_cover")}
-                    onChange={onChange}
-                    disabled={!isAdmin}
-                    projectId={project.id}
-                  />
-                )}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProjectCoverHeader
+        control={control}
+        coverImage={coverImage}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        isAdmin={isAdmin}
+        project={project}
+        currentNetwork={currentNetwork}
+        watch={watch}
+        setIsCoverUploading={setIsCoverUploading}
+        t={t}
+      />
       <div className="mt-8 flex flex-col gap-8">
-        <div className="flex flex-col gap-1">
-          <h4 className="text-13">{t("common.project_name")}</h4>
-          <Controller
-            control={control}
-            name="name"
-            rules={{
-              required: t("name_is_required"),
-              maxLength: {
-                value: 255,
-                message: t("web.project_name_should_be_less_than_255_characters"),
-              },
-            }}
-            render={({ field: { value, onChange, ref } }) => (
-              <Field name="name" invalid={Boolean(errors.name)}>
-                <InputGroup size="lg">
-                  <Input
-                    value={value}
-                    size="lg"
-                    id="name"
-                    name="name"
-                    type="text"
-                    ref={ref}
-                    onChange={onChange}
-                    placeholder={t("common.project_name")}
-                    disabled={!isAdmin}
-                  />
-                </InputGroup>
-              </Field>
-            )}
-          />
-          <span className="text-11 text-danger-primary">{errors?.name?.message}</span>
-        </div>
-        <div className="flex flex-col gap-1 [&_textarea]:text-14">
-          <h4 className="text-13">{t("description")}</h4>
-          <Controller
-            name="description"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <Field name="description" invalid={Boolean(errors?.description)} disabled={!isAdmin}>
-                <TextAreaGroup resize="none">
-                  <TextArea
-                    value={value}
-                    size="lg"
-                    surface="field"
-                    autoResize
-                    maxRows={8}
-                    id="description"
-                    name="description"
-                    placeholder={t("project_description_placeholder")}
-                    onChange={onChange}
-                  />
-                </TextAreaGroup>
-              </Field>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <h4 className="text-13">{t("web.project_id")}</h4>
-            <div className="relative">
-              <Controller
-                control={control}
-                name="identifier"
-                rules={{
-                  required: t("project_id_is_required"),
-                  validate: (value) => /^[ÇŞĞIİÖÜA-Z0-9]+$/.test(value.toUpperCase()) || t("project_id_allowed_char"),
-                  minLength: {
-                    value: 1,
-                    message: t("project_id_min_char"),
-                  },
-                  maxLength: {
-                    value: 12,
-                    message: t("project_id_max_char", { max: 12 }),
-                  },
-                }}
-                render={({ field: { value, ref } }) => (
-                  <Field name="identifier" invalid={Boolean(errors.identifier)}>
-                    <InputGroup size="lg">
-                      <Input
-                        value={value}
-                        size="lg"
-                        id="identifier"
-                        name="identifier"
-                        type="text"
-                        onChange={handleIdentifierChange}
-                        ref={ref}
-                        placeholder={t("project_settings.general.enter_project_id")}
-                        disabled={!isAdmin}
-                      />
-                      <Tooltip label={t("project_id_tooltip_content")} side="top" align="center" disabled={isMobile}>
-                        <IconButton
-                          type="button"
-                          size="xs"
-                          variant="ghost"
-                          aria-label={t("project_id_tooltip_content")}
-                          icon={<InfoOutline />}
-                        />
-                      </Tooltip>
-                    </InputGroup>
-                  </Field>
-                )}
-              />
-            </div>
-            <span className="text-11 text-danger-primary">
-              <>{errors?.identifier?.message}</>
-            </span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <h4 className="text-13">{t("workspace_projects.network.label")}</h4>
-            <Controller
-              name="network"
-              control={control}
-              render={({ field: { value, onChange } }) => {
-                const selectedNetwork = NETWORK_CHOICES.find((n) => n.key === value);
-                return (
-                  <Select<TNetworkChoice>
-                    getValues={() => NETWORK_CHOICES}
-                    value={selectedNetwork ?? null}
-                    onChange={(key) => onChange(Number(key))}
-                    getOptionValue={(network) => String(network.key)}
-                    getOptionLabel={(network) => t(network.i18n_label)}
-                    getOptionIcon={renderNetworkOptionIcon}
-                    getOptionDescription={(network) => t(network.description)}
-                    placeholder={t("select_network")}
-                    showSearch={false}
-                    pinSelected={false}
-                    contentSizing="anchor"
-                    disabled={!isAdmin}
-                    estimateItemSize={64}
-                  >
-                    <Select.Trigger<TNetworkChoice>
-                      variant="select-lg"
-                      className="font-medium"
-                      disabled={!isAdmin}
-                      prependIcon={renderNetworkTriggerIcon}
-                    >
-                      {(networks) => (
-                        <span className="min-w-0 grow truncate text-left">
-                          {networks[0] ? t(networks[0].i18n_label) : t("select_network")}
-                        </span>
-                      )}
-                    </Select.Trigger>
-                  </Select>
-                );
-              }}
-            />
-          </div>
-          <div className="col-span-1 flex flex-col gap-1 sm:col-span-2 xl:col-span-1">
-            <h4 className="text-13">{t("common.project_timezone")}</h4>
-            <Controller
-              name="timezone"
-              control={control}
-              rules={{ required: t("project_settings.general.please_select_a_timezone") }}
-              render={({ field: { value, onChange } }) => (
-                <>
-                  <TimezoneSelect
-                    value={value}
-                    onChange={(timezone: string) => {
-                      onChange(timezone);
-                    }}
-                    error={Boolean(errors.timezone)}
-                    buttonClassName="!border-subtle !shadow-none font-medium rounded-md"
-                    disabled={!isAdmin}
-                  />
-                </>
-              )}
-            />
-            {errors.timezone && <span className="text-11 text-danger-primary">{errors.timezone.message}</span>}
-          </div>
-        </div>
+        <ProjectBasicFields control={control} errors={errors} isAdmin={isAdmin} t={t} />
+        <ProjectDetailsGridFields
+          control={control}
+          errors={errors}
+          handleIdentifierChange={handleIdentifierChange}
+          isAdmin={isAdmin}
+          isMobile={isMobile}
+          t={t}
+        />
         <ProjectCategoryFields
           workspaceSlug={workspaceSlug}
           status={watch("status")}
