@@ -43,6 +43,21 @@ type Props = {
 // services
 const fileService = new FileService();
 
+const dropzoneClassName = (hasImage: boolean, isDragActive: boolean, value: string | null) =>
+  `relative grid h-80 w-80 cursor-pointer place-items-center rounded-lg p-12 text-center focus:ring-2 focus:ring-accent-strong focus:ring-offset-2 focus:outline-none ${
+    (hasImage && isDragActive) || !value ? "border-2 border-dashed border-subtle hover:bg-surface-2" : ""
+  }`;
+
+const previewSrc = (image: File | null, preview: { file: File; url: string } | undefined, value: string | null) => {
+  if (image) return preview?.file === image ? preview.url : undefined;
+  return value ? getFileURL(value) : undefined;
+};
+
+const rejectionMessage = (rejections: readonly { errors: readonly { code: string }[] }[]) =>
+  rejections[0]?.errors[0]?.code === "file-too-large"
+    ? translate("web.the_image_size_cannot_exceed_5_mb")
+    : translate("web.please_upload_a_file_in_a_valid_format");
+
 export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadModal(props: Props) {
   const { handleRemove, isOpen, onClose, onSuccess, value } = props;
   // states
@@ -166,14 +181,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
             <div className="space-y-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-3">
-                  <div
-                    {...getRootProps()}
-                    className={`relative grid h-80 w-80 cursor-pointer place-items-center rounded-lg p-12 text-center focus:ring-2 focus:ring-accent-strong focus:ring-offset-2 focus:outline-none ${
-                      (image === null && isDragActive) || !value
-                        ? "border-2 border-dashed border-subtle hover:bg-surface-2"
-                        : ""
-                    }`}
-                  >
+                  <div {...getRootProps()} className={dropzoneClassName(image !== null, isDragActive, value)}>
                     {image !== null || (value && value !== "") ? (
                       <>
                         <button
@@ -183,15 +191,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                           {translate("web.edit")}
                         </button>
                         <img
-                          src={
-                            image
-                              ? preview?.file === image
-                                ? preview.url
-                                : undefined
-                              : value
-                                ? getFileURL(value)
-                                : undefined
-                          }
+                          src={previewSrc(image, preview, value)}
                           alt={translate("web.workspace_logo_preview")}
                           className="absolute top-0 left-0 h-full w-full rounded-md object-cover"
                         />
@@ -211,11 +211,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                   </div>
                 </div>
                 {fileRejections.length > 0 && (
-                  <p className="text-13 text-danger-primary">
-                    {fileRejections[0].errors[0].code === "file-too-large"
-                      ? translate("web.the_image_size_cannot_exceed_5_mb")
-                      : translate("web.please_upload_a_file_in_a_valid_format")}
-                  </p>
+                  <p className="text-13 text-danger-primary">{rejectionMessage(fileRejections)}</p>
                 )}
               </div>
               <p className="text-13 text-secondary">{translate("web.file_formats_supported_jpeg_jpg_png_webp")}</p>
