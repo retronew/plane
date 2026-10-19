@@ -11,7 +11,7 @@ const mock = vi.hoisted(() => ({
 }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: mock.toast }));
-vi.mock("@/components/editor/sticky-editor/color-palette", () => ({ STICKY_COLORS_LIST: [{ key: "gray" }] }));
+vi.mock("@/components/editor/sticky-editor/sticky-colors", () => ({ STICKY_COLORS_LIST: [{ key: "gray" }] }));
 vi.mock("@/hooks/use-stickies", () => ({
   useSticky: () => ({
     stickies: mock.stickies,

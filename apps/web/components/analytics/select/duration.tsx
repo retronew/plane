@@ -7,22 +7,16 @@
 import "./duration.css";
 import { useState } from "react";
 import { CalendarDays, Check } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ANALYTICS_DURATION_FILTER_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { SelectTriggerChrome } from "@plane/blocks/select";
 import { DateRangeSelect } from "@plane/blocks/property-select";
 import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { formatLocalizedDateRange } from "@plane/utils";
+import { parseCustomAnalyticsRange } from "./duration-range";
 
 type Props = { value: string | null; onChange: (value: string) => void; placeholder?: string };
-export function parseCustomAnalyticsRange(value: string | null) {
-  const match = value?.match(/^custom:(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/);
-  if (!match) return null;
-  const from = parseISO(match[1]),
-    to = parseISO(match[2]);
-  return Number.isNaN(+from) || Number.isNaN(+to) || from > to ? null : { from, to };
-}
 export default function DurationDropdown({ value, onChange, placeholder: placeholderProp }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);

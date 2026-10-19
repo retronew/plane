@@ -4,7 +4,8 @@ import { MemoryRouter } from "react-router";
 import { SWRConfig } from "swr";
 import { setLanguage } from "@plane/i18n";
 import type { TAnalyticsDetailTab, IAnalyticsDetailsResponse } from "@plane/types";
-import { AnalyticsDetails, DETAIL_COLUMNS } from "./details";
+import { AnalyticsDetails } from "./details";
+import { DETAIL_COLUMNS } from "./details-columns";
 import { exportAnalytics } from "./export";
 const mocks = vi.hoisted(() => ({ get: vi.fn(), projects: ["project-1"], slug: "test-workspace" }));
 vi.mock("@/services/analytics.service", () => ({

@@ -27,20 +27,13 @@ import {
 } from "@makeplane/propel/components/drawer";
 import { E_SORT_ORDER } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import type { TWorkflowActivity, TWorkflowHistoryPage, TWorkflowRuleSnapshot } from "@plane/types";
+import type { TWorkflowActivity, TWorkflowHistoryPage } from "@plane/types";
 import { calculateTimeAgo, renderFormattedDate, renderFormattedTime } from "@plane/utils";
 import styles from "./history.module.css";
 import { WorkflowCreationHistoryIcon, WorkflowHistoryIcon } from "./history-icons";
 import { ActivitySortRoot } from "@/components/issues/issue-detail/issue-activity/sort-root";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
-
-export function memberSnapshotChanges(before?: TWorkflowRuleSnapshot | null, after?: TWorkflowRuleSnapshot | null) {
-  if (!before?.members || !after?.members) return undefined;
-  return {
-    added: after.members.filter((member) => !before.members!.some((old) => old.id === member.id)),
-    removed: before.members.filter((member) => !after.members!.some((next) => next.id === member.id)),
-  };
-}
+import { memberSnapshotChanges } from "./history-changes";
 
 const snapshotLabels: Record<string, string> = {
   name: "web.workflow_ui.history_fields.name",

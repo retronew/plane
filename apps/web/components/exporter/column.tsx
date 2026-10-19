@@ -5,7 +5,8 @@
  */
 
 import { Translation } from "@plane/i18n";
-import { ExportDownload, exportStatusLabel } from "./presentation";
+import { ExportDownload } from "./presentation";
+import { exportStatusLabel } from "./export-status";
 import type { IExportData } from "@plane/types";
 import { getDate, getFileURL, renderFormattedDate } from "@plane/utils";
 import { translate } from "@plane/i18n";

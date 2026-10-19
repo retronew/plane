@@ -5,7 +5,8 @@
  */
 
 // ui
-import { ExportDownload, exportStatusLabel } from "./presentation";
+import { ExportDownload } from "./presentation";
+import { exportStatusLabel } from "./export-status";
 import type { IExportData } from "@plane/types";
 // helpers
 import { getDate, renderFormattedDate } from "@plane/utils";

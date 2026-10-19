@@ -6,7 +6,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { setLanguage } from "@plane/i18n";
 import type { TWorkflowActivity, TWorkflowHistoryPage } from "@plane/types";
 import { calculateTimeAgo, renderFormattedDate, renderFormattedTime } from "@plane/utils";
-import { HistorySnapshot, memberSnapshotChanges, WorkflowHistory } from "./history";
+import { HistorySnapshot, WorkflowHistory } from "./history";
+import { memberSnapshotChanges } from "./history-changes";
 const historyCss = readFileSync(`${import.meta.dirname}/history.module.css`, "utf8");
 
 const state = vi.hoisted(() => ({ history: vi.fn(), historyRevision: {} as Record<string, number> }));

@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ExportDownload, exportStatusLabel } from "./presentation";
+import { ExportDownload } from "./presentation";
+import { exportStatusLabel } from "./export-status";
 
 vi.mock("@plane/i18n", () => ({
   translate: (key: string, params?: { format: string }) => (params ? `Download ${params.format}` : key),

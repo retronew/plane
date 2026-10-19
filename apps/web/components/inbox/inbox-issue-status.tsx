@@ -13,7 +13,8 @@ import { useTranslation } from "@plane/i18n";
 import { cn, findHowManyDaysLeft } from "@plane/utils";
 // store
 import type { IInboxIssueStore } from "@/store/inbox/inbox-issue.store";
-import { ICON_PROPERTIES, InboxStatusIcon } from "./inbox-status-icon";
+import { InboxStatusIcon } from "./inbox-status-icon";
+import { ICON_PROPERTIES } from "./inbox-status-icon-properties";
 
 type Props = {
   inboxIssue: IInboxIssueStore;

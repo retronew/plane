@@ -18,6 +18,7 @@ import type { TAnalyticsDetailRow, TAnalyticsDetailTab, TBarItem } from "@plane/
 import { formatCompactDate, getFileURL, renderFormattedDate } from "@plane/utils";
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { AnalyticsService } from "@/services/analytics.service";
+import { DETAIL_COLUMNS } from "./details-columns";
 import AnalyticsWrapper from "./analytics-wrapper";
 import AnalyticsSectionWrapper from "./analytics-section-wrapper";
 import AnalyticsEmptyState from "./empty-state";
@@ -37,38 +38,6 @@ import AnalyticsRequestError from "./request-error";
 import { StatisticsNote, StatisticsNotePanel } from "./statistics-note";
 
 const service = new AnalyticsService();
-export const DETAIL_COLUMNS: Record<TAnalyticsDetailTab, string[]> = {
-  projects: [
-    "name",
-    "members",
-    "epics",
-    "work_items",
-    "completed",
-    "cancelled",
-    "cycles",
-    "modules",
-    "pages",
-    "views",
-    "intake",
-    "completion",
-  ],
-  users: ["name", "started", "unstarted", "completed", "cancelled"],
-  cycles: ["name", "project", "lead", "start_date", "end_date", "work_items", "completed", "cancelled", "completion"],
-  modules: [
-    "name",
-    "lead",
-    "project",
-    "start_date",
-    "end_date",
-    "status",
-    "work_items",
-    "completed",
-    "cancelled",
-    "completion",
-  ],
-  intake: ["name", "pending", "snoozed", "accepted", "rejected", "duplicate", "total"],
-};
-
 export const AnalyticsDetails = observer(function AnalyticsDetails({
   tab,
   embedded = false,

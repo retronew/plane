@@ -21,7 +21,8 @@ import ogImage from "@/app/assets/og-image.png?url";
 import globalStyles from "@/styles/globals.css?url";
 import type { Route } from "./+types/root";
 // components
-import { BootLoader, finishBoot } from "@/components/common/app-loader";
+import { BootLoader } from "@/components/common/app-loader";
+import { finishBoot } from "@/components/common/boot-loader-state";
 // lib
 import { isStaleAssetError, recoverFromStaleAsset } from "@/lib/stale-asset-error";
 // local

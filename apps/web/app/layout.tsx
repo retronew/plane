@@ -9,7 +9,7 @@ import { Outlet, redirect } from "react-router";
 // plane imports
 import { cn } from "@plane/utils";
 // components
-import { scheduleBootFinish } from "@/components/common/app-loader";
+import { scheduleBootFinish } from "@/components/common/boot-loader-state";
 // local
 import { ensureTrailingSlash } from "./compat/next/helper";
 import { AppProvider } from "./provider";
