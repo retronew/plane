@@ -159,15 +159,17 @@ class TestSubIssuesCrossProjectScope:
         assert orphan_b.parent_id is None, "Orphan issue was re-parented across projects"
 
     @pytest.mark.django_db
-    def test_write_cross_project_sub_issue_ids_ignored(
+    def test_write_cross_project_sub_issue_ids_rejected(
         self, session_client, workspace, project_a, parent_a, orphan_b, mocker
     ):
-        """Even with an in-project parent, sub_issue_ids from another project are ignored.
+        """Even with an in-project parent, sub_issue_ids from another project are rejected.
 
-        Parent A is valid for the URL project, but ``orphan_b`` lives in project B,
-        so the project-scoped ``sub_issue_ids`` filter must exclude it and leave its
-        parent untouched — and no activity event may be enqueued for it (the activity
-        task does an unscoped lookup + updated_at bump on whatever id it receives).
+        Parent A is valid for the URL project, but ``orphan_b`` lives in project B, so the
+        project-scoped lookup cannot resolve it and the whole write is refused — the same
+        generic error a missing id gets, so the response cannot disclose that the foreign
+        issue exists. Nothing may be re-parented and no activity event may be enqueued for
+        it (the activity task does an unscoped lookup + updated_at bump on whatever id it
+        receives).
         """
         mock_activity = mocker.patch(
             "plane.app.views.issue.sub_issue.issue_activity.delay"
@@ -177,12 +179,10 @@ class TestSubIssuesCrossProjectScope:
         )
         response = session_client.post(url, {"sub_issue_ids": [str(orphan_b.id)]}, format="json")
 
-        assert response.status_code == status.HTTP_200_OK, (
+        assert response.status_code == status.HTTP_400_BAD_REQUEST, (
             f"Got {response.status_code}: {getattr(response, 'data', None)!r}"
         )
-        # The foreign issue must not appear in the response body either.
-        assert response.data["sub_issues"] == [], f"Leaked cross-project issue: {response.data!r}"
-        assert response.data["state_distribution"] == {}, f"Leaked state_distribution: {response.data!r}"
+        assert "HIERARCHY_INVALID_ISSUE" in str(response.data), f"Unexpected error: {response.data!r}"
         orphan_b.refresh_from_db()
         assert orphan_b.parent_id is None, "Cross-project issue was re-parented"
         # No activity may be dispatched for the excluded cross-project issue.

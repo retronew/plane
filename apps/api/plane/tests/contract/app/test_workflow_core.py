@@ -339,7 +339,8 @@ def test_type_creation_persists_hierarchy_level(session_client, core, level):
     )
     assert response.status_code == 201, response.data
     assert response.data["level"] == level
-    assert response.data["is_epic"] is (level > 0)
+    # Level now lives on its own field; `is_epic` is no longer derived from it.
+    assert response.data["is_epic"] is False
     binding = ProjectIssueType.objects.get(project=core.project, issue_type_id=response.data["id"])
     assert binding.level == level
     assert binding.issue_type.level == level
