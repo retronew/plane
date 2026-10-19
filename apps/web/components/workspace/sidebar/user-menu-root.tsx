@@ -102,6 +102,7 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                   />
                 }
                 highlight={isUserMenuOpen}
+                className="size-7"
               />
             </button>
           }

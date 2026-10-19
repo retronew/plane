@@ -22,6 +22,7 @@ from corsheaders.defaults import default_headers
 
 # Module imports
 from plane.utils.url import is_valid_url
+from plane.utils.server_timezone import detect_server_timezone
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -285,7 +286,10 @@ MEDIA_URL = "/media/"
 LANGUAGE_CODE = "en-us"
 USE_I18N = True
 
-# Timezones
+# Capture the server timezone before Django sets the process TZ to TIME_ZONE.
+DEFAULT_TIMEZONE = detect_server_timezone()
+
+# Keep storage and background scheduling in UTC.
 USE_TZ = True
 TIME_ZONE = "UTC"
 

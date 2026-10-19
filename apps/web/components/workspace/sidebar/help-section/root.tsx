@@ -36,7 +36,11 @@ export const HelpMenuRoot = observer(function HelpMenuRoot() {
             className="group flex flex-col items-center justify-center gap-0.5 text-tertiary"
             aria-label={t("power_k.group_titles.help")}
           >
-            <AppSidebarItem.Icon icon={<HelpOutline className="size-5" />} highlight={isNeedHelpOpen} />
+            <AppSidebarItem.Icon
+              icon={<HelpOutline className="size-4.5" />}
+              highlight={isNeedHelpOpen}
+              className="size-7"
+            />
           </button>
         }
       />
