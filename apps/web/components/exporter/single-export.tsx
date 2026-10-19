@@ -26,6 +26,16 @@ const checkExpiry = (inputDateString: string) => {
   return expiryDate > currentDate;
 };
 
+// Lookups keep the row free of nested ternaries; unknown values fall back to empty.
+const PROVIDER_LABELS: Record<string, string> = { csv: "CSV", xlsx: "Excel", json: "JSON" };
+
+const STATUS_STYLES: Record<string, string> = {
+  completed: "bg-success-subtle text-success-primary",
+  processing: "bg-yellow-500/20 text-yellow-500",
+  failed: "bg-danger-subtle text-danger-primary",
+  expired: "bg-orange-500/20 text-orange-500",
+};
+
 export function SingleExport({ service, refreshing }: Props) {
   const provider = service.provider;
 
@@ -34,24 +44,9 @@ export function SingleExport({ service, refreshing }: Props) {
       <div>
         <h4 className="flex items-center gap-2 text-13">
           <span>
-            {translate("web.export_to")}{" "}
-            <span className="font-medium">
-              {provider === "csv" ? "CSV" : provider === "xlsx" ? "Excel" : provider === "json" ? "JSON" : ""}
-            </span>{" "}
+            {translate("web.export_to")} <span className="font-medium">{PROVIDER_LABELS[provider] ?? ""}</span>{" "}
           </span>
-          <span
-            className={`rounded-sm px-2 py-0.5 text-11 capitalize ${
-              service.status === "completed"
-                ? "bg-success-subtle text-success-primary"
-                : service.status === "processing"
-                  ? "bg-yellow-500/20 text-yellow-500"
-                  : service.status === "failed"
-                    ? "bg-danger-subtle text-danger-primary"
-                    : service.status === "expired"
-                      ? "bg-orange-500/20 text-orange-500"
-                      : ""
-            }`}
-          >
+          <span className={`rounded-sm px-2 py-0.5 text-11 capitalize ${STATUS_STYLES[service.status] ?? ""}`}>
             {refreshing ? translate("web.refreshing") : exportStatusLabel(service.status)}
           </span>
         </h4>

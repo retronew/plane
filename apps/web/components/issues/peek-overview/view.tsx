@@ -72,6 +72,137 @@ function getPeekOverviewClassName(embedIssue: boolean, peekMode: TPeekModes) {
   );
 }
 
+type TPeekContentProps = {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+  issueOperations: IIssueView["issueOperations"];
+  disabled?: boolean;
+  is_archived: boolean;
+  editorRef: React.RefObject<EditorRefApi | null>;
+  isSubmitting: TNameDescriptionLoader;
+  setIsSubmitting: (value: TNameDescriptionLoader) => void;
+};
+
+function PeekEmbeddedContent({
+  workspaceSlug,
+  projectId,
+  issueId,
+  issueOperations,
+  disabled = false,
+  is_archived,
+  editorRef,
+  isSubmitting,
+  setIsSubmitting,
+  embedIssue,
+  readOnly,
+}: TPeekContentProps & { embedIssue: boolean; readOnly: boolean }) {
+  return (
+    <div className={cn("relative flex min-w-0 flex-col", embedIssue ? "gap-0" : "gap-3 space-y-3 px-8 py-5")}>
+      <PeekOverviewIssueDetails
+        embedIssue={embedIssue}
+        editorRef={editorRef}
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        issueId={issueId}
+        issueOperations={issueOperations}
+        disabled={disabled}
+        isArchived={is_archived}
+        isSubmitting={isSubmitting}
+        setIsSubmitting={(value) => setIsSubmitting(value)}
+      />
+
+      <div className={embedIssue ? "py-4" : "py-2"}>
+        <IssueDetailWidgets
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          disabled={readOnly}
+          issueServiceType={EIssueServiceType.ISSUES}
+        />
+      </div>
+
+      <div className={embedIssue ? "py-4" : undefined}>
+        <PeekOverviewProperties
+          embedIssue={embedIssue}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          issueOperations={issueOperations}
+          disabled={readOnly}
+        />
+      </div>
+      <div className={embedIssue ? "pt-4" : undefined}>
+        <IssueActivity
+          variant={embedIssue ? "tabs" : "default"}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          disabled={is_archived}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PeekFullScreenContent({
+  workspaceSlug,
+  projectId,
+  issueId,
+  issueOperations,
+  disabled = false,
+  is_archived,
+  editorRef,
+  isSubmitting,
+  setIsSubmitting,
+  readOnly,
+}: TPeekContentProps & { readOnly: boolean }) {
+  return (
+    <div className="vertical-scrollbar flex h-full w-full overflow-auto">
+      <div className="relative h-full w-full space-y-6 overflow-auto p-4 py-5">
+        <div className="space-y-3">
+          <PeekOverviewIssueDetails
+            editorRef={editorRef}
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            issueId={issueId}
+            issueOperations={issueOperations}
+            disabled={disabled}
+            isArchived={is_archived}
+            isSubmitting={isSubmitting}
+            setIsSubmitting={(value) => setIsSubmitting(value)}
+          />
+
+          <div className="py-2">
+            <IssueDetailWidgets
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              issueId={issueId}
+              disabled={disabled}
+              issueServiceType={EIssueServiceType.ISSUES}
+            />
+          </div>
+
+          <IssueActivity workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={is_archived} />
+        </div>
+      </div>
+      <div
+        className={`vertical-scrollbar scrollbar-sm h-full !w-[400px] flex-shrink-0 overflow-hidden border-l border-subtle p-4 py-5 ${
+          is_archived ? "pointer-events-none" : ""
+        }`}
+      >
+        <PeekOverviewProperties
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          issueOperations={issueOperations}
+          disabled={readOnly}
+        />
+      </div>
+    </div>
+  );
+}
+
 function PeekOverviewContent({
   workspaceSlug,
   projectId,
@@ -92,6 +223,18 @@ function PeekOverviewContent({
 }) {
   const readOnly = disabled || is_archived;
   const ContentContainer = embedIssue ? ContentWrapper : "div";
+  const sharedProps: TPeekContentProps = {
+    workspaceSlug,
+    projectId,
+    issueId,
+    issueOperations,
+    disabled,
+    is_archived: Boolean(is_archived),
+    editorRef,
+    isSubmitting,
+    setIsSubmitting,
+  };
+
   return (
     <ContentContainer
       className={cn(
@@ -100,98 +243,9 @@ function PeekOverviewContent({
       )}
     >
       {embedIssue || ["side-peek", "modal"].includes(peekMode) ? (
-        <div className={cn("relative flex min-w-0 flex-col", embedIssue ? "gap-0" : "gap-3 space-y-3 px-8 py-5")}>
-          <PeekOverviewIssueDetails
-            embedIssue={embedIssue}
-            editorRef={editorRef}
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            issueId={issueId}
-            issueOperations={issueOperations}
-            disabled={disabled}
-            isArchived={is_archived}
-            isSubmitting={isSubmitting}
-            setIsSubmitting={(value) => setIsSubmitting(value)}
-          />
-
-          <div className={embedIssue ? "py-4" : "py-2"}>
-            <IssueDetailWidgets
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
-              disabled={readOnly}
-              issueServiceType={EIssueServiceType.ISSUES}
-            />
-          </div>
-
-          <div className={embedIssue ? "py-4" : undefined}>
-            <PeekOverviewProperties
-              embedIssue={embedIssue}
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
-              issueOperations={issueOperations}
-              disabled={readOnly}
-            />
-          </div>
-          <div className={embedIssue ? "pt-4" : undefined}>
-            <IssueActivity
-              variant={embedIssue ? "tabs" : "default"}
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
-              disabled={is_archived}
-            />
-          </div>
-        </div>
+        <PeekEmbeddedContent {...sharedProps} embedIssue={embedIssue} readOnly={readOnly} />
       ) : (
-        <div className="vertical-scrollbar flex h-full w-full overflow-auto">
-          <div className="relative h-full w-full space-y-6 overflow-auto p-4 py-5">
-            <div className="space-y-3">
-              <PeekOverviewIssueDetails
-                editorRef={editorRef}
-                workspaceSlug={workspaceSlug}
-                projectId={projectId}
-                issueId={issueId}
-                issueOperations={issueOperations}
-                disabled={disabled}
-                isArchived={is_archived}
-                isSubmitting={isSubmitting}
-                setIsSubmitting={(value) => setIsSubmitting(value)}
-              />
-
-              <div className="py-2">
-                <IssueDetailWidgets
-                  workspaceSlug={workspaceSlug}
-                  projectId={projectId}
-                  issueId={issueId}
-                  disabled={disabled}
-                  issueServiceType={EIssueServiceType.ISSUES}
-                />
-              </div>
-
-              <IssueActivity
-                workspaceSlug={workspaceSlug}
-                projectId={projectId}
-                issueId={issueId}
-                disabled={is_archived}
-              />
-            </div>
-          </div>
-          <div
-            className={`vertical-scrollbar scrollbar-sm h-full !w-[400px] flex-shrink-0 overflow-hidden border-l border-subtle p-4 py-5 ${
-              is_archived ? "pointer-events-none" : ""
-            }`}
-          >
-            <PeekOverviewProperties
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
-              issueOperations={issueOperations}
-              disabled={readOnly}
-            />
-          </div>
-        </div>
+        <PeekFullScreenContent {...sharedProps} readOnly={readOnly} />
       )}
     </ContentContainer>
   );
