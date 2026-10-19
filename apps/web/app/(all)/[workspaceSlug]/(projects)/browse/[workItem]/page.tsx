@@ -10,7 +10,7 @@ import { useTheme } from "next-themes";
 import useSWR from "swr";
 // plane imports
 import { useTranslation } from "@plane/i18n";
-import type { TIssue } from "@plane/types";
+import type { TIssue, TProject } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
 // assets
 import emptyIssueDark from "@/app/assets/empty-state/search/issues-dark.webp?url";
@@ -32,6 +32,104 @@ import { WorkItemDetailRoot } from "@/components/browse/workItem-detail";
 
 import type { Route } from "./+types/page";
 
+type IssueDetailState = {
+  issueId: string | undefined;
+  projectId: string;
+  issue: TIssue | undefined;
+  issueLoader: boolean;
+  pageTitle: string | undefined;
+};
+
+type WorkItemDetailRoute = {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+};
+
+// helpers
+const getIssueDetailState = (
+  data: TIssue | undefined,
+  isLoading: boolean,
+  projectIdentifier: string,
+  getIssueById: (issueId: string) => TIssue | undefined,
+  getProjectById: (projectId: string | null | undefined) => TProject | undefined,
+  getProjectByIdentifier: (projectIdentifier: string) => TProject | undefined
+): IssueDetailState => {
+  const projectDetails = getProjectByIdentifier(projectIdentifier);
+  const issueId = data?.id;
+  const projectId = data?.project_id ?? projectDetails?.id ?? "";
+  const issue = getIssueById(issueId?.toString() || "") || undefined;
+  const project = (issue?.project_id && getProjectById(issue?.project_id)) || undefined;
+  const issueLoader = !issue || isLoading;
+  const pageTitle = project && issue ? `${project?.identifier}-${issue?.sequence_id} ${issue?.name}` : undefined;
+
+  return { issueId, projectId, issue, issueLoader, pageTitle };
+};
+
+const getIssueServiceType = (issue: TIssue | undefined) =>
+  issue?.is_epic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES;
+
+const syncIssueDetailSidebar = (
+  win: Window,
+  issueDetailSidebarCollapsed: boolean | undefined,
+  toggleIssueDetailSidebar: (collapsed: boolean) => void
+) => {
+  if (win.innerWidth < 768) {
+    toggleIssueDetailSidebar(true);
+    return;
+  }
+  if (issueDetailSidebarCollapsed) {
+    toggleIssueDetailSidebar(false);
+  }
+};
+
+const getIntakeRedirectPath = (data: TIssue | undefined, workspaceSlug: string) =>
+  data?.is_intake
+    ? `/${workspaceSlug}/projects/${data.project_id}/intake/?currentTab=open&inboxIssueId=${data.id}`
+    : undefined;
+
+const getWorkItemDetailRoute = (
+  workspaceSlug: string,
+  projectId: string,
+  issueId: string | undefined
+): WorkItemDetailRoute | null => {
+  if (workspaceSlug && projectId && issueId) return { workspaceSlug, projectId, issueId };
+  return null;
+};
+
+const hasIssueDetailError = (error: Error | undefined, isLoading: boolean) => !!error && !isLoading;
+
+type IssueDetailErrorStateProps = {
+  resolvedTheme: string | undefined;
+  onGoToAllIssues: () => void;
+};
+
+const IssueDetailErrorState = ({ resolvedTheme, onGoToAllIssues }: IssueDetailErrorStateProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <EmptyState
+      image={resolvedTheme === "dark" ? emptyIssueDark : emptyIssueLight}
+      title={t("issue.empty_state.issue_detail.title")}
+      description={t("issue.empty_state.issue_detail.description")}
+      primaryButton={{
+        text: t("issue.empty_state.issue_detail.primary_button.text"),
+        onClick: onGoToAllIssues,
+      }}
+    />
+  );
+};
+
+type WorkItemDetailContainerProps = WorkItemDetailRoute & {
+  issue: TIssue | undefined;
+};
+
+const WorkItemDetailContainer = ({ workspaceSlug, projectId, issueId, issue }: WorkItemDetailContainerProps) => (
+  <ProjectAuthWrapper workspaceSlug={workspaceSlug} projectId={projectId}>
+    <WorkItemDetailRoot workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} issue={issue} />
+  </ProjectAuthWrapper>
+);
+
 export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: Route.ComponentProps) {
   // router
   const router = useAppRouter();
@@ -39,7 +137,6 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   // hooks
   const { resolvedTheme } = useTheme();
   // store hooks
-  const { t } = useTranslation();
   const {
     fetchIssueWithIdentifier,
     issue: { getIssueById },
@@ -56,51 +153,37 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   );
 
   // derived values
-  const projectDetails = getProjectByIdentifier(projectIdentifier);
-  const issueId = data?.id;
-  const projectId = data?.project_id ?? projectDetails?.id ?? "";
-  const issue = getIssueById(issueId?.toString() || "") || undefined;
-  const project = (issue?.project_id && getProjectById(issue?.project_id)) || undefined;
-  const issueLoader = !issue || isLoading;
-  const pageTitle = project && issue ? `${project?.identifier}-${issue?.sequence_id} ${issue?.name}` : undefined;
-
-  useWorkItemProperties(
-    projectId,
-    workspaceSlug.toString(),
-    issueId,
-    issue?.is_epic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES
+  const { issueId, projectId, issue, issueLoader, pageTitle } = getIssueDetailState(
+    data,
+    isLoading,
+    projectIdentifier,
+    getIssueById,
+    getProjectById,
+    getProjectByIdentifier
   );
 
+  useWorkItemProperties(projectId, workspaceSlug.toString(), issueId, getIssueServiceType(issue));
+
   useEffect(() => {
-    const handleToggleIssueDetailSidebar = () => {
-      if (window && window.innerWidth < 768) {
-        toggleIssueDetailSidebar(true);
-      }
-      if (window && issueDetailSidebarCollapsed && window.innerWidth >= 768) {
-        toggleIssueDetailSidebar(false);
-      }
-    };
+    const handleToggleIssueDetailSidebar = () =>
+      syncIssueDetailSidebar(window, issueDetailSidebarCollapsed, toggleIssueDetailSidebar);
     window.addEventListener("resize", handleToggleIssueDetailSidebar);
     handleToggleIssueDetailSidebar();
     return () => window.removeEventListener("resize", handleToggleIssueDetailSidebar);
   }, [issueDetailSidebarCollapsed, toggleIssueDetailSidebar]);
 
   useEffect(() => {
-    if (data?.is_intake) {
-      router.push(`/${workspaceSlug}/projects/${data.project_id}/intake/?currentTab=open&inboxIssueId=${data?.id}`);
+    const intakeRedirectPath = getIntakeRedirectPath(data, workspaceSlug.toString());
+    if (intakeRedirectPath) {
+      router.push(intakeRedirectPath);
     }
   }, [workspaceSlug, data, router]);
 
-  if (error && !isLoading) {
+  if (hasIssueDetailError(error, isLoading)) {
     return (
-      <EmptyState
-        image={resolvedTheme === "dark" ? emptyIssueDark : emptyIssueLight}
-        title={t("issue.empty_state.issue_detail.title")}
-        description={t("issue.empty_state.issue_detail.description")}
-        primaryButton={{
-          text: t("issue.empty_state.issue_detail.primary_button.text"),
-          onClick: () => router.push(`/${workspaceSlug}/workspace-views/all-issues/`),
-        }}
+      <IssueDetailErrorState
+        resolvedTheme={resolvedTheme}
+        onGoToAllIssues={() => router.push(`/${workspaceSlug}/workspace-views/all-issues/`)}
       />
     );
   }
@@ -109,19 +192,12 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     return <IssueDetailSkeleton />;
   }
 
+  const detailRoute = getWorkItemDetailRoute(workspaceSlug, projectId, issueId);
+
   return (
     <>
       <PageHead title={pageTitle} />
-      {workspaceSlug && projectId && issueId && (
-        <ProjectAuthWrapper workspaceSlug={workspaceSlug} projectId={projectId}>
-          <WorkItemDetailRoot
-            workspaceSlug={workspaceSlug.toString()}
-            projectId={projectId.toString()}
-            issueId={issueId.toString()}
-            issue={issue}
-          />
-        </ProjectAuthWrapper>
-      )}
+      {detailRoute && <WorkItemDetailContainer {...detailRoute} issue={issue} />}
     </>
   );
 });

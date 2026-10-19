@@ -131,6 +131,115 @@ function NavigationRow({ item, isSelected }: { item: BreadcrumbNavigationItem; i
   );
 }
 
+function runNavigationSelect(args: {
+  key: string;
+  items: BreadcrumbNavigationItem[];
+  selectedItemKey: string;
+  canNavigate: boolean;
+  handleOnClick: (() => void) | undefined;
+  onChange: ((key: string) => void) | undefined;
+}) {
+  const { key, items, selectedItemKey, canNavigate, handleOnClick, onChange } = args;
+  const item = items.find((candidate) => candidate.key === key);
+  // Base UI already blocks a disabled row; this keeps a programmatic caller honest too.
+  if (!item || item.disabled) return;
+  if (key === selectedItemKey) {
+    if (canNavigate) handleOnClick?.();
+    return;
+  }
+  item.onClick?.();
+  onChange?.(key);
+}
+
+/** The crumb's label control: a link when it only has a URL, a button otherwise. */
+function NavigationControl({
+  href,
+  isLast,
+  canNavigate,
+  isNavigable,
+  onNavigate,
+  children,
+}: {
+  href: string | undefined;
+  isLast: boolean;
+  canNavigate: boolean;
+  isNavigable: boolean;
+  onNavigate: (() => void) | undefined;
+  children: React.ReactNode;
+}) {
+  if (href)
+    return (
+      <a href={href} className={cn(NAVIGATION_CLASSNAME, "text-tertiary hover:bg-layer-transparent-hover")}>
+        {children}
+      </a>
+    );
+
+  // Enabled and focusable even when it has nowhere to go — the legacy crumb stayed a real button
+  // on the current page and simply did nothing, rather than dropping out of the tab order.
+  return (
+    <button
+      type="button"
+      aria-current={isLast ? "page" : undefined}
+      onClick={() => {
+        if (canNavigate) onNavigate?.();
+      }}
+      className={cn(
+        NAVIGATION_CLASSNAME,
+        isLast ? "text-primary" : "text-tertiary",
+        isNavigable ? "cursor-pointer hover:bg-layer-transparent-hover" : "cursor-default"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** The controls inside the crumb: one combined trigger on the last crumb, siblings otherwise. */
+function CrumbControl({
+  isLast,
+  triggerLabel,
+  triggerIcon,
+  triggerClassName,
+  navigation,
+}: {
+  isLast: boolean;
+  triggerLabel: string;
+  triggerIcon: IconElement | undefined;
+  triggerClassName: string | undefined;
+  navigation: React.ReactNode;
+}) {
+  if (isLast)
+    return (
+      <BreadcrumbItemContext.Provider value>
+        <Tooltip label={triggerLabel} side="bottom">
+          <span className="flex h-full min-w-0 items-center">
+            <Select.Trigger<BreadcrumbNavigationItem>
+              variant="breadcrumb"
+              prependIcon={triggerIcon}
+              label={triggerLabel}
+              className={triggerClassName}
+            />
+          </span>
+        </Tooltip>
+      </BreadcrumbItemContext.Provider>
+    );
+
+  return (
+    <span className={PAIR_CLASSNAME}>
+      <Tooltip label={triggerLabel} side="bottom">
+        <span className="flex h-full min-w-0 items-center">{navigation}</span>
+      </Tooltip>
+      <Select.Trigger<BreadcrumbNavigationItem>
+        variant="icon-sm"
+        className="group/breadcrumb-switcher size-6 rounded-md bg-transparent p-1 text-icon-secondary outline-none hover:bg-layer-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-strong focus-visible:outline-solid data-popup-open:bg-layer-transparent-hover data-popup-open:text-icon-primary"
+        prependIcon={
+          <ChevronDownOutline className="size-3.5 -rotate-90 transition-transform group-hover/breadcrumb-switcher:rotate-0 group-aria-expanded/breadcrumb-switcher:rotate-0 rtl:rotate-90 rtl:group-hover/breadcrumb-switcher:rotate-0 rtl:group-aria-expanded/breadcrumb-switcher:rotate-0" />
+        }
+      />
+    </span>
+  );
+}
+
 /**
  * A breadcrumb crumb you can switch: the current destination plus a dropdown of its siblings, built
  * on `@plane/blocks/select`. Replaces the retired UI package's `BreadcrumbNavigationDropdown` and
@@ -180,17 +289,8 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
   // With no callback to run, a selected item that carries a URL still gives the label somewhere to go.
   const navigationHref = canNavigate && !handleOnClick ? selectedItem?.href : undefined;
 
-  const handleSelect = (key: string) => {
-    const item = items.find((candidate) => candidate.key === key);
-    // Base UI already blocks a disabled row; this keeps a programmatic caller honest too.
-    if (!item || item.disabled) return;
-    if (key === selectedItemKey) {
-      if (canNavigate) handleOnClick?.();
-      return;
-    }
-    item.onClick?.();
-    onChange?.(key);
-  };
+  const handleSelect = (key: string) =>
+    runNavigationSelect({ key, items, selectedItemKey, canNavigate, handleOnClick, onChange });
 
   const navigationContent = (
     <>
@@ -202,27 +302,16 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
   const isNavigable = canNavigate && (!!handleOnClick || !!navigationHref);
   // The label's own control: a link when the crumb only has a URL, a button otherwise. `isLast`
   // leaves it inert — you are already on this page.
-  const navigation = navigationHref ? (
-    <a href={navigationHref} className={cn(NAVIGATION_CLASSNAME, "text-tertiary hover:bg-layer-transparent-hover")}>
-      {navigationContent}
-    </a>
-  ) : (
-    // Enabled and focusable even when it has nowhere to go — the legacy crumb stayed a real button
-    // on the current page and simply did nothing, rather than dropping out of the tab order.
-    <button
-      type="button"
-      aria-current={isLast ? "page" : undefined}
-      onClick={() => {
-        if (canNavigate) handleOnClick?.();
-      }}
-      className={cn(
-        NAVIGATION_CLASSNAME,
-        isLast ? "text-primary" : "text-tertiary",
-        isNavigable ? "cursor-pointer hover:bg-layer-transparent-hover" : "cursor-default"
-      )}
+  const navigation = (
+    <NavigationControl
+      href={navigationHref}
+      isLast={isLast}
+      canNavigate={canNavigate}
+      isNavigable={isNavigable}
+      onNavigate={handleOnClick}
     >
       {navigationContent}
-    </button>
+    </NavigationControl>
   );
 
   // The label clamps at 150px, so the full name lives in a tooltip on both forms.
@@ -257,33 +346,13 @@ export function BreadcrumbNavigationSelect(props: BreadcrumbNavigationSelectProp
     >
       {/* Siblings, not nested: the label navigates, the chevron opens the list. Each control owns
           its hover surface; the wrapper only aligns them. */}
-      {isLast ? (
-        <BreadcrumbItemContext.Provider value>
-          <Tooltip label={triggerLabel} side="bottom">
-            <span className="flex h-full min-w-0 items-center">
-              <Select.Trigger<BreadcrumbNavigationItem>
-                variant="breadcrumb"
-                prependIcon={triggerIcon}
-                label={triggerLabel}
-                className={triggerClassName}
-              />
-            </span>
-          </Tooltip>
-        </BreadcrumbItemContext.Provider>
-      ) : (
-        <span className={PAIR_CLASSNAME}>
-          <Tooltip label={triggerLabel} side="bottom">
-            <span className="flex h-full min-w-0 items-center">{navigation}</span>
-          </Tooltip>
-          <Select.Trigger<BreadcrumbNavigationItem>
-            variant="icon-sm"
-            className="group/breadcrumb-switcher size-6 rounded-md bg-transparent p-1 text-icon-secondary outline-none hover:bg-layer-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-strong focus-visible:outline-solid data-popup-open:bg-layer-transparent-hover data-popup-open:text-icon-primary"
-            prependIcon={
-              <ChevronDownOutline className="size-3.5 -rotate-90 transition-transform group-hover/breadcrumb-switcher:rotate-0 group-aria-expanded/breadcrumb-switcher:rotate-0 rtl:rotate-90 rtl:group-hover/breadcrumb-switcher:rotate-0 rtl:group-aria-expanded/breadcrumb-switcher:rotate-0" />
-            }
-          />
-        </span>
-      )}
+      <CrumbControl
+        isLast={isLast}
+        triggerLabel={triggerLabel}
+        triggerIcon={triggerIcon}
+        triggerClassName={triggerClassName}
+        navigation={navigation}
+      />
     </Select>
   );
 

@@ -14,7 +14,7 @@ import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
-import type { IUser, TUserProfile } from "@plane/types";
+import type { IInstanceConfig, IUser, TUserProfile } from "@plane/types";
 
 import { getFileURL } from "@plane/utils";
 // components
@@ -51,6 +51,22 @@ type Props = {
   profile: TUserProfile;
 };
 
+// helpers
+const getProfileFormDefaultValues = (user: IUser, profile: TUserProfile): Partial<TUserProfileForm> => ({
+  avatar_url: user.avatar_url || "",
+  cover_image_asset: null,
+  cover_image_url: user.cover_image_url || "",
+  first_name: user.first_name || "",
+  last_name: user.last_name || "",
+  display_name: user.display_name || "",
+  email: user.email || "",
+  role: profile.role || "Product / Project Manager",
+  language: profile.language || "en",
+  user_timezone: user.user_timezone || "Asia/Kolkata",
+});
+
+const getIsSMTPConfigured = (config: IInstanceConfig | undefined) => config?.is_smtp_configured || false;
+
 export const GeneralProfileSettingsForm = observer(function GeneralProfileSettingsForm(props: Props) {
   const { user, profile } = props;
   // states
@@ -69,18 +85,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
     setValue,
     formState: { errors },
   } = useForm<TUserProfileForm>({
-    defaultValues: {
-      avatar_url: user.avatar_url || "",
-      cover_image_asset: null,
-      cover_image_url: user.cover_image_url || "",
-      first_name: user.first_name || "",
-      last_name: user.last_name || "",
-      display_name: user.display_name || "",
-      email: user.email || "",
-      role: profile.role || "Product / Project Manager",
-      language: profile.language || "en",
-      user_timezone: user.user_timezone || "Asia/Kolkata",
-    },
+    defaultValues: getProfileFormDefaultValues(user, profile),
   });
   // derived values
   const userAvatar = watch("avatar_url");
@@ -90,7 +95,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
   const { updateUserProfile } = useUserProfile();
   const { config } = useInstance();
 
-  const isSMTPConfigured = config?.is_smtp_configured || false;
+  const isSMTPConfigured = getIsSMTPConfigured(config);
 
   const handleProfilePictureDelete = async (url: string | null | undefined) => {
     if (!url) return;

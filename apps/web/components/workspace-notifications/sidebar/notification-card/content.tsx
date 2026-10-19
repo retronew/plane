@@ -138,6 +138,59 @@ export function NotificationTitle({ notification }: { notification: TNotificatio
   return <>{notification.title}</>;
 }
 
+const NOTIFICATION_FIELD_KEYS: Record<string, string> = {
+  name: "common.title",
+  priority: "priority",
+  state: "state",
+  cycles: "common.cycle",
+  modules: "common.module",
+  estimate_point: "common.estimate",
+};
+
+function getNotificationTranslationKey(details: TNotificationContentDetails | null, verb: string | undefined): string {
+  if (details?.translationKey) return details.translationKey;
+  if (details?.action !== undefined) return "extension";
+  return verb === "deleted" ? "property_removed" : "property_set";
+}
+
+function getNotificationValue(
+  details: TNotificationContentDetails | null,
+  field: string,
+  newValue: string | undefined,
+  oldValue: string | undefined
+) {
+  if (details && "value" in details) return details.value;
+  return renderAdditionalValue(field, newValue, oldValue);
+}
+
+function NotificationCommentBox({
+  newValue,
+  workspaceId,
+  workspaceSlug,
+  projectId,
+}: {
+  newValue: string | undefined;
+  workspaceId: string;
+  workspaceSlug: string;
+  projectId: string;
+}) {
+  return (
+    <div className="origin-left scale-75">
+      <LiteTextEditor
+        editable={false}
+        id=""
+        initialValue={newValue ?? ""}
+        workspaceId={workspaceId}
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        displayConfig={{
+          fontSize: "small-font",
+        }}
+      />
+    </div>
+  );
+}
+
 export function NotificationContent({
   notification,
   workspaceId,
@@ -176,21 +229,9 @@ export function NotificationContent({
   // Get content details from map
   const contentDetails = getNotificationContentDetails(fieldData, renderCommentBox);
 
-  const fieldKeys: Record<string, string> = {
-    name: "common.title",
-    priority: "priority",
-    state: "state",
-    cycles: "common.cycle",
-    modules: "common.module",
-    estimate_point: "common.estimate",
-  };
-  const key =
-    contentDetails?.translationKey ??
-    (contentDetails?.action !== undefined ? "extension" : verb === "deleted" ? "property_removed" : "property_set");
-  const value =
-    contentDetails && "value" in contentDetails
-      ? contentDetails.value
-      : renderAdditionalValue(notificationField, newValue, oldValue);
+  const key = getNotificationTranslationKey(contentDetails, verb);
+  const value = getNotificationValue(contentDetails, notificationField, newValue, oldValue);
+  const showCommentBox = verb !== "deleted" && notificationField === "comment" && renderCommentBox;
 
   return (
     <>
@@ -203,28 +244,21 @@ export function NotificationContent({
               {notificationField === "priority" ? <Translation translationKey={newValue || "none"} /> : value}
             </span>
           ),
-          field: <Translation translationKey={fieldKeys[notificationField ?? ""] ?? "web.ui.work_item_property"} />,
+          field: (
+            <Translation
+              translationKey={NOTIFICATION_FIELD_KEYS[notificationField ?? ""] ?? "web.ui.work_item_property"}
+            />
+          ),
           action: contentDetails?.action,
         }}
       />
-      {verb !== "deleted" && (
-        <>
-          {notificationField === "comment" && renderCommentBox && (
-            <div className="origin-left scale-75">
-              <LiteTextEditor
-                editable={false}
-                id=""
-                initialValue={newValue ?? ""}
-                workspaceId={workspaceId}
-                workspaceSlug={workspaceSlug}
-                projectId={projectId}
-                displayConfig={{
-                  fontSize: "small-font",
-                }}
-              />
-            </div>
-          )}
-        </>
+      {showCommentBox && (
+        <NotificationCommentBox
+          newValue={newValue}
+          workspaceId={workspaceId}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+        />
       )}
     </>
   );

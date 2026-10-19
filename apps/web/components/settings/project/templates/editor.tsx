@@ -17,16 +17,84 @@ import {
   projectConfigurationKey,
   workspaceConfigurationService as service,
 } from "@/services/workspace-configuration.service";
-import type { TemplateConfiguration, TemplateWorkItemChild } from "@/services/workspace-configuration.service";
+import type {
+  TemplateConfiguration,
+  TemplateWorkItemChild,
+  WorkspaceTemplate,
+} from "@/services/workspace-configuration.service";
 import { TemplateChildren } from "./children";
 import { TemplatePageFields } from "./page-fields";
 import { TemplateWorkItemFields } from "./work-item-fields";
 import { newProjectTemplate, type Draft, type ProjectTemplateKind } from "./project-template-draft";
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+type TemplateLoadState = "error" | "loading" | "ready";
+
+function resolveTemplateKind(templateKind: string): { kind: ProjectTemplateKind; valid: boolean } {
+  if (templateKind === "work-item" || templateKind === "work_item") return { kind: "work_item", valid: true };
+  if (templateKind === "page") return { kind: "page", valid: true };
+  return { kind: "page", valid: false };
+}
+
+function getTemplateHeading(kind: ProjectTemplateKind, templateId: string | undefined, t: Translate) {
+  const action = templateId ? "edit" : "new";
+  const kindKey = kind === "work_item" ? "work_item" : "page";
+  return t(`web.${action}_template_${kindKey}`);
+}
+
+function getTemplateLoadState(args: {
+  validKind: boolean;
+  error: unknown;
+  existing: WorkspaceTemplate | undefined;
+  kind: ProjectTemplateKind;
+  templateId: string | undefined;
+}): TemplateLoadState {
+  if (!args.validKind || args.error) return "error";
+  if (args.existing && args.existing.kind !== args.kind) return "error";
+  if (args.templateId && !args.existing) return "loading";
+  return "ready";
+}
+
+function TemplateEditorContent(props: {
+  state: TemplateLoadState;
+  canRetry: boolean;
+  onRetry: () => void;
+  templateId: string | undefined;
+  kind: ProjectTemplateKind;
+  existing: WorkspaceTemplate | undefined;
+  workspaceSlug: string;
+  projectId: string;
+  detailKey: string;
+}) {
+  const { t } = useTranslation();
+  const { state, canRetry, onRetry, templateId, kind, existing, workspaceSlug, projectId, detailKey } = props;
+
+  if (state === "error")
+    return (
+      <div role="alert" className="flex items-center gap-3 text-13">
+        {t("web.configuration_load_error")}
+        {canRetry && (
+          <Button size="md" variant="secondary" stretch="auto" label={t("common.retry")} onClick={onRetry} />
+        )}
+      </div>
+    );
+  if (state === "loading") return <p aria-busy="true">{t("loading")}</p>;
+
+  return (
+    <ProjectTemplateForm
+      key={templateId ?? kind}
+      initial={existing ?? newProjectTemplate(kind, projectId)}
+      kind={kind}
+      workspaceSlug={workspaceSlug}
+      projectId={projectId}
+      detailKey={detailKey}
+    />
+  );
+}
+
 export function ProjectTemplateEditor() {
   const { workspaceSlug = "", projectId = "", templateKind = "", templateId } = useParams();
-  const kind = templateKind === "work-item" ? "work_item" : templateKind;
-  const validKind = kind === "work_item" || kind === "page";
+  const { kind, valid: validKind } = resolveTemplateKind(templateKind);
   const { t } = useTranslation();
   const { allowPermissions } = useUserPermissions();
   const allowed = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId);
@@ -35,7 +103,8 @@ export function ProjectTemplateEditor() {
   const { data: existing, error } = useSWR(allowed && validKind && templateId ? detailKey : null, () =>
     service.projectTemplate(workspaceSlug, projectId, templateId!)
   );
-  const heading = t(`web.${templateId ? "edit" : "new"}_template_${kind === "work_item" ? "work_item" : "page"}`);
+  const heading = getTemplateHeading(kind, templateId, t);
+  const state = getTemplateLoadState({ validKind, error, existing, kind, templateId });
   if (!allowed) return <NotAuthorizedView section="settings" className="h-auto" />;
   return (
     <SettingsContentWrapper
@@ -57,31 +126,17 @@ export function ProjectTemplateEditor() {
         <div className="border-b border-subtle pb-6">
           <SettingsHeading title={heading} />
         </div>
-        {!validKind || error || (existing && existing.kind !== kind) ? (
-          <div role="alert" className="flex items-center gap-3 text-13">
-            {t("web.configuration_load_error")}
-            {validKind && (
-              <Button
-                size="md"
-                variant="secondary"
-                stretch="auto"
-                label={t("common.retry")}
-                onClick={() => void mutate(detailKey)}
-              />
-            )}
-          </div>
-        ) : templateId && !existing ? (
-          <p aria-busy="true">{t("loading")}</p>
-        ) : (
-          <ProjectTemplateForm
-            key={templateId ?? kind}
-            initial={existing ?? newProjectTemplate(kind, projectId)}
-            kind={kind}
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            detailKey={detailKey}
-          />
-        )}
+        <TemplateEditorContent
+          state={state}
+          canRetry={validKind}
+          onRetry={() => void mutate(detailKey)}
+          templateId={templateId}
+          kind={kind}
+          existing={existing}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          detailKey={detailKey}
+        />
       </div>
     </SettingsContentWrapper>
   );

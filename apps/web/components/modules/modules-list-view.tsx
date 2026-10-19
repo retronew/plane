@@ -11,6 +11,7 @@ import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { EUserProjectRoles } from "@plane/types";
+import type { TModuleLayoutOptions } from "@plane/types";
 import { ContentWrapper, Row, ERowVariant } from "@plane/blocks/layout";
 // components
 import { ListLayout } from "@/components/core/list";
@@ -23,6 +24,62 @@ import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useModule } from "@/hooks/store/use-module";
 import { useModuleFilter } from "@/hooks/store/use-module-filter";
 import { useUserPermissions } from "@/hooks/store/user";
+
+const getModuleIds = (projectId: string | string[] | undefined, getIds: (projectId: string) => string[] | null) =>
+  projectId ? getIds(projectId.toString()) : undefined;
+
+const toSlug = (value: string | string[] | undefined) => value?.toString() ?? "";
+
+function ModulesLoader({ layout }: { layout: TModuleLayoutOptions | undefined }) {
+  if (layout === "list") return <CycleModuleListLayoutLoader />;
+  if (layout === "board") return <CycleModuleBoardLayoutLoader />;
+  if (layout === "gantt") return <GanttLayoutLoader />;
+  return null;
+}
+
+function ModulesLayoutView({
+  layout,
+  moduleIds,
+  peekModule,
+}: {
+  layout: TModuleLayoutOptions | undefined;
+  moduleIds: string[];
+  peekModule: string | null;
+}) {
+  if (layout === "list") {
+    return (
+      <ListLayout>
+        {moduleIds.map((moduleId) => (
+          <ModuleListItem key={moduleId} moduleId={moduleId} />
+        ))}
+      </ListLayout>
+    );
+  }
+
+  if (layout === "board") {
+    return (
+      <Row
+        className={`grid size-full grid-cols-1 gap-6 overflow-y-auto py-page-y ${
+          peekModule ? "3xl:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2" : "3xl:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3"
+        } vertical-scrollbar scrollbar-lg auto-rows-max transition-all`}
+      >
+        {moduleIds.map((moduleId) => (
+          <ModuleCardItem key={moduleId} moduleId={moduleId} />
+        ))}
+      </Row>
+    );
+  }
+
+  if (layout === "gantt") {
+    return (
+      <div className="size-full overflow-hidden">
+        <ModulesListGanttChartView />
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export const ModulesListView = observer(function ModulesListView() {
   // router
@@ -37,21 +94,15 @@ export const ModulesListView = observer(function ModulesListView() {
   const { currentProjectDisplayFilters: displayFilters } = useModuleFilter();
   const { allowPermissions } = useUserPermissions();
   // derived values
-  const projectModuleIds = projectId ? getProjectModuleIds(projectId.toString()) : undefined;
-  const filteredModuleIds = projectId ? getFilteredModuleIds(projectId.toString()) : undefined;
+  const layout = displayFilters?.layout;
+  const projectModuleIds = getModuleIds(projectId, getProjectModuleIds);
+  const filteredModuleIds = getModuleIds(projectId, getFilteredModuleIds);
   const canPerformEmptyStateActions = allowPermissions(
     [EUserProjectRoles.ADMIN, EUserProjectRoles.MEMBER],
     EUserPermissionsLevel.PROJECT
   );
 
-  if (loader || !projectModuleIds || !filteredModuleIds)
-    return (
-      <>
-        {displayFilters?.layout === "list" && <CycleModuleListLayoutLoader />}
-        {displayFilters?.layout === "board" && <CycleModuleBoardLayoutLoader />}
-        {displayFilters?.layout === "gantt" && <GanttLayoutLoader />}
-      </>
-    );
+  if (loader || !projectModuleIds || !filteredModuleIds) return <ModulesLoader layout={layout} />;
 
   if (projectModuleIds.length === 0)
     return (
@@ -82,33 +133,9 @@ export const ModulesListView = observer(function ModulesListView() {
   return (
     <ContentWrapper variant={ERowVariant.HUGGING}>
       <div className="flex size-full justify-between">
-        {displayFilters?.layout === "list" && (
-          <ListLayout>
-            {filteredModuleIds.map((moduleId) => (
-              <ModuleListItem key={moduleId} moduleId={moduleId} />
-            ))}
-          </ListLayout>
-        )}
-        {displayFilters?.layout === "board" && (
-          <Row
-            className={`grid size-full grid-cols-1 gap-6 overflow-y-auto py-page-y ${
-              peekModule
-                ? "3xl:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2"
-                : "3xl:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3"
-            } vertical-scrollbar scrollbar-lg auto-rows-max transition-all`}
-          >
-            {filteredModuleIds.map((moduleId) => (
-              <ModuleCardItem key={moduleId} moduleId={moduleId} />
-            ))}
-          </Row>
-        )}
-        {displayFilters?.layout === "gantt" && (
-          <div className="size-full overflow-hidden">
-            <ModulesListGanttChartView />
-          </div>
-        )}
+        <ModulesLayoutView layout={layout} moduleIds={filteredModuleIds} peekModule={peekModule} />
         <div className="flex-shrink-0">
-          <ModulePeekOverview projectId={projectId?.toString() ?? ""} workspaceSlug={workspaceSlug?.toString() ?? ""} />
+          <ModulePeekOverview projectId={toSlug(projectId)} workspaceSlug={toSlug(workspaceSlug)} />
         </div>
       </div>
     </ContentWrapper>

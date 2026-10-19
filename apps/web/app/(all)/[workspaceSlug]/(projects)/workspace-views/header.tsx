@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
+import type { ComponentProps } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -34,6 +35,113 @@ import { WorkspaceViewQuickActions } from "@/components/workspace/views/quick-ac
 import { useGlobalView } from "@/hooks/store/use-global-view";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useAppRouter } from "@/hooks/use-app-router";
+
+type Translate = ReturnType<typeof useTranslation>["t"];
+
+function getSwitcherOptions(
+  defaultOptions: BreadcrumbNavigationItem[],
+  viewIds: string[] | null | undefined,
+  getViewDetailsById: (viewId: string) => { id: string; name: string } | null | undefined
+) {
+  const workspaceOptions = (viewIds || []).map<BreadcrumbNavigationItem | undefined>((viewId) => {
+    const view = getViewDetailsById(viewId);
+    if (!view) return undefined;
+    return {
+      key: view.id,
+      label: view.name,
+      icon: <ViewsOutline className="size-4 shrink-0" />,
+    };
+  });
+  return [...defaultOptions, ...workspaceOptions].filter(
+    (option): option is BreadcrumbNavigationItem => option !== undefined
+  );
+}
+
+function GlobalIssuesHeaderActions({
+  activeLayout,
+  requestLayout,
+  globalViewId,
+  isLocked,
+  displayFilters,
+  displayProperties,
+  handleDisplayFilters,
+  handleDisplayProperties,
+  layoutDisplayFiltersOptions,
+  viewDetails,
+  defaultViewDetails,
+  workspaceSlug,
+  onCreateView,
+  t,
+}: {
+  activeLayout: EIssueLayoutTypes | undefined;
+  requestLayout: (viewId: string, layout: EIssueLayoutTypes) => void;
+  globalViewId: string | undefined;
+  isLocked: boolean | undefined;
+  displayFilters: Partial<IIssueDisplayFilterOptions> | undefined;
+  displayProperties: Partial<IIssueDisplayProperties> | undefined;
+  handleDisplayFilters: (updated: Partial<IIssueDisplayFilterOptions>) => void;
+  handleDisplayProperties: (property: Partial<IIssueDisplayProperties>) => void;
+  layoutDisplayFiltersOptions: ComponentProps<typeof DisplayFiltersSelection>["layoutDisplayFiltersOptions"];
+  viewDetails: ComponentProps<typeof WorkspaceViewQuickActions>["view"] | null | undefined;
+  defaultViewDetails: (typeof DEFAULT_GLOBAL_VIEWS_LIST)[number] | undefined;
+  workspaceSlug: string | undefined;
+  onCreateView: () => void;
+  t: Translate;
+}) {
+  return (
+    <Header.RightItem className="shrink-0 items-center">
+      <div className="hidden md:block">
+        <LayoutSelection
+          layouts={[
+            EIssueLayoutTypes.LIST,
+            EIssueLayoutTypes.KANBAN,
+            EIssueLayoutTypes.CALENDAR,
+            EIssueLayoutTypes.SPREADSHEET,
+            EIssueLayoutTypes.GANTT,
+          ]}
+          selectedLayout={activeLayout}
+          onChange={(layout) => {
+            if (globalViewId) requestLayout(globalViewId, layout);
+          }}
+        />
+      </div>
+      <div className="flex md:hidden">
+        <MobileLayoutSelection
+          layouts={[
+            EIssueLayoutTypes.LIST,
+            EIssueLayoutTypes.KANBAN,
+            EIssueLayoutTypes.CALENDAR,
+            EIssueLayoutTypes.SPREADSHEET,
+            EIssueLayoutTypes.GANTT,
+          ]}
+          activeLayout={activeLayout}
+          onChange={(layout) => {
+            if (globalViewId) requestLayout(globalViewId, layout);
+          }}
+        />
+      </div>
+      {globalViewId && <WorkItemFiltersToggle entityType={EIssuesStoreType.GLOBAL} entityId={globalViewId} />}
+      {!isLocked && (
+        <FiltersDropdown displayMenu title={t("common.display")} placement="bottom-end">
+          <DisplayFiltersSelection
+            layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
+            displayFilters={displayFilters ?? {}}
+            handleDisplayFiltersUpdate={handleDisplayFilters}
+            displayProperties={displayProperties ?? {}}
+            handleDisplayPropertiesUpdate={handleDisplayProperties}
+          />
+        </FiltersDropdown>
+      )}
+      <Button variant="primary" size="md" stretch="auto" label={t("workspace_views.add_view")} onClick={onCreateView} />
+      <div className="hidden md:block">
+        {viewDetails && <WorkspaceViewQuickActions workspaceSlug={workspaceSlug ?? ""} view={viewDetails} />}
+        {defaultViewDetails && (
+          <DefaultWorkspaceViewQuickActions workspaceSlug={workspaceSlug ?? ""} view={defaultViewDetails} />
+        )}
+      </div>
+    </Header.RightItem>
+  );
+}
 
 export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
   // states
@@ -83,8 +191,6 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
 
   const isLocked = viewDetails?.is_locked;
 
-  const isDefaultView = DEFAULT_GLOBAL_VIEWS_LIST.find((view) => view.key === globalViewId);
-
   const defaultViewDetails = DEFAULT_GLOBAL_VIEWS_LIST.find((view) => view.key === globalViewId);
 
   const defaultOptions = DEFAULT_GLOBAL_VIEWS_LIST.map<BreadcrumbNavigationItem>((view) => ({
@@ -93,19 +199,7 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
     icon: <ViewsOutline className="size-4 shrink-0" />,
   }));
 
-  const workspaceOptions = (currentWorkspaceViews || []).map<BreadcrumbNavigationItem | undefined>((view) => {
-    const _view = getViewDetailsById(view);
-    if (!_view) return;
-    return {
-      key: _view.id,
-      label: _view.name,
-      icon: <ViewsOutline className="size-4 shrink-0" />,
-    };
-  });
-
-  const switcherOptions = [...defaultOptions, ...workspaceOptions].filter(
-    (option): option is BreadcrumbNavigationItem => option !== undefined
-  );
+  const switcherOptions = getSwitcherOptions(defaultOptions, currentWorkspaceViews, getViewDetailsById);
   const currentLayoutFilters = useMemo(() => {
     const layout = activeLayout ?? EIssueLayoutTypes.SPREADSHEET;
     return ISSUE_DISPLAY_FILTERS_BY_PAGE.workspace_issues.layoutOptions[layout];
@@ -153,63 +247,22 @@ export const GlobalIssuesHeader = observer(function GlobalIssuesHeader() {
           </Breadcrumbs>
         </Header.LeftItem>
 
-        <Header.RightItem className="shrink-0 items-center">
-          <div className="hidden md:block">
-            <LayoutSelection
-              layouts={[
-                EIssueLayoutTypes.LIST,
-                EIssueLayoutTypes.KANBAN,
-                EIssueLayoutTypes.CALENDAR,
-                EIssueLayoutTypes.SPREADSHEET,
-                EIssueLayoutTypes.GANTT,
-              ]}
-              selectedLayout={activeLayout}
-              onChange={(layout) => {
-                if (globalViewId) requestLayout(globalViewId, layout);
-              }}
-            />
-          </div>
-          <div className="flex md:hidden">
-            <MobileLayoutSelection
-              layouts={[
-                EIssueLayoutTypes.LIST,
-                EIssueLayoutTypes.KANBAN,
-                EIssueLayoutTypes.CALENDAR,
-                EIssueLayoutTypes.SPREADSHEET,
-                EIssueLayoutTypes.GANTT,
-              ]}
-              activeLayout={activeLayout}
-              onChange={(layout) => {
-                if (globalViewId) requestLayout(globalViewId, layout);
-              }}
-            />
-          </div>
-          {globalViewId && <WorkItemFiltersToggle entityType={EIssuesStoreType.GLOBAL} entityId={globalViewId} />}
-          {!isLocked && (
-            <FiltersDropdown displayMenu title={t("common.display")} placement="bottom-end">
-              <DisplayFiltersSelection
-                layoutDisplayFiltersOptions={currentLayoutFilters}
-                displayFilters={issueFilters?.displayFilters ?? {}}
-                handleDisplayFiltersUpdate={handleDisplayFilters}
-                displayProperties={issueFilters?.displayProperties ?? {}}
-                handleDisplayPropertiesUpdate={handleDisplayProperties}
-              />
-            </FiltersDropdown>
-          )}
-          <Button
-            variant="primary"
-            size="md"
-            stretch="auto"
-            label={t("workspace_views.add_view")}
-            onClick={() => setCreateViewModal(true)}
-          />
-          <div className="hidden md:block">
-            {viewDetails && <WorkspaceViewQuickActions workspaceSlug={workspaceSlug?.toString()} view={viewDetails} />}
-            {isDefaultView && defaultViewDetails && (
-              <DefaultWorkspaceViewQuickActions workspaceSlug={workspaceSlug?.toString()} view={defaultViewDetails} />
-            )}
-          </div>
-        </Header.RightItem>
+        <GlobalIssuesHeaderActions
+          activeLayout={activeLayout}
+          requestLayout={requestLayout}
+          globalViewId={globalViewId}
+          isLocked={isLocked}
+          displayFilters={issueFilters?.displayFilters}
+          displayProperties={issueFilters?.displayProperties}
+          handleDisplayFilters={handleDisplayFilters}
+          handleDisplayProperties={handleDisplayProperties}
+          layoutDisplayFiltersOptions={currentLayoutFilters}
+          viewDetails={viewDetails}
+          defaultViewDetails={defaultViewDetails}
+          workspaceSlug={workspaceSlug?.toString()}
+          onCreateView={() => setCreateViewModal(true)}
+          t={t}
+        />
       </Header>
     </>
   );

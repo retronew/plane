@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { ReactNode } from "react";
 // plane imports
 import type { IFavorite } from "@plane/types";
 // components
@@ -22,13 +23,90 @@ import { useProjectView } from "@/hooks/store/use-project-view";
 import { EPageStoreType, usePage } from "@/hooks/store";
 import { useAdditionalFavoriteItemDetails } from "@/hooks/use-additional-favorite-item-details";
 
+type PageDetails = ReturnType<typeof usePage>;
+type ViewDetails = ReturnType<ReturnType<typeof useProjectView>["getViewById"]>;
+type CycleDetails = ReturnType<ReturnType<typeof useCycle>["getCycleById"]>;
+type ModuleDetails = ReturnType<ReturnType<typeof useModule>["getModuleById"]>;
+type ProjectDetails = ReturnType<ReturnType<typeof useProject>["getProjectById"]>;
+type FavoriteLogoProps = IFavorite["entity_data"]["logo_props"];
+type FavoriteDetails = { itemTitle: string | undefined; itemIcon: ReactNode };
+
+function getProjectFavoriteDetails(
+  project: ProjectDetails,
+  name: string | undefined,
+  logo: FavoriteLogoProps
+): FavoriteDetails {
+  return {
+    itemTitle: project?.name ?? name,
+    itemIcon: <FavoriteItemIcon type="project" logo={project?.logo_props || logo} />,
+  };
+}
+
+function getPageFavoriteDetails(page: PageDetails, name: string | undefined, logo: FavoriteLogoProps): FavoriteDetails {
+  return {
+    itemTitle: getPageName(page?.name ?? name),
+    itemIcon: <FavoriteItemIcon type="page" logo={page?.logo_props ?? logo} />,
+  };
+}
+
+function getViewFavoriteDetails(view: ViewDetails, name: string | undefined, logo: FavoriteLogoProps): FavoriteDetails {
+  return {
+    itemTitle: view?.name ?? name,
+    itemIcon: <FavoriteItemIcon type="view" logo={view?.logo_props || logo} />,
+  };
+}
+
+function getCycleFavoriteDetails(cycle: CycleDetails, name: string | undefined): FavoriteDetails {
+  return {
+    itemTitle: cycle?.name ?? name,
+    itemIcon: <FavoriteItemIcon type="cycle" />,
+  };
+}
+
+function getModuleFavoriteDetails(module: ModuleDetails, name: string | undefined): FavoriteDetails {
+  return {
+    itemTitle: module?.name ?? name,
+    itemIcon: <FavoriteItemIcon type="module" />,
+  };
+}
+
+function getFavoriteDetails(args: {
+  entityType: string;
+  favoriteItemName: string | undefined;
+  favoriteItemLogoProps: FavoriteLogoProps;
+  project: ProjectDetails;
+  page: PageDetails;
+  view: ViewDetails;
+  cycle: CycleDetails;
+  module: ModuleDetails;
+  getAdditional: (workspaceSlug: string, favorite: IFavorite) => FavoriteDetails;
+  workspaceSlug: string;
+  favorite: IFavorite;
+}): FavoriteDetails {
+  switch (args.entityType) {
+    case "project":
+      return getProjectFavoriteDetails(args.project, args.favoriteItemName, args.favoriteItemLogoProps);
+    case "page":
+      return getPageFavoriteDetails(args.page, args.favoriteItemName, args.favoriteItemLogoProps);
+    case "view":
+      return getViewFavoriteDetails(args.view, args.favoriteItemName, args.favoriteItemLogoProps);
+    case "cycle":
+      return getCycleFavoriteDetails(args.cycle, args.favoriteItemName);
+    case "module":
+      return getModuleFavoriteDetails(args.module, args.favoriteItemName);
+    default:
+      return args.getAdditional(args.workspaceSlug, args.favorite);
+  }
+}
+
 export const useFavoriteItemDetails = (workspaceSlug: string, favorite: IFavorite) => {
   const {
     entity_identifier: favoriteItemId,
     entity_data: { logo_props: favoriteItemLogoProps },
     entity_type: favoriteItemEntityType,
   } = favorite;
-  const favoriteItemName = favorite?.entity_data?.name || favorite?.name;
+  const favoriteItemName = favorite.entity_data?.name || favorite.name;
+  const itemId = favoriteItemId ?? "";
   // store hooks
   const { getViewById } = useProjectView();
   const { getProjectById } = useProject();
@@ -38,46 +116,26 @@ export const useFavoriteItemDetails = (workspaceSlug: string, favorite: IFavorit
   const { getAdditionalFavoriteItemDetails } = useAdditionalFavoriteItemDetails();
   // derived values
   const pageDetail = usePage({
-    pageId: favoriteItemId ?? "",
+    pageId: itemId,
     storeType: EPageStoreType.PROJECT,
   });
-  const viewDetails = getViewById(favoriteItemId ?? "");
-  const cycleDetail = getCycleById(favoriteItemId ?? "");
-  const moduleDetail = getModuleById(favoriteItemId ?? "");
-  const currentProjectDetails = getProjectById(favorite.project_id ?? "");
+  const details = getFavoriteDetails({
+    entityType: favoriteItemEntityType,
+    favoriteItemName,
+    favoriteItemLogoProps,
+    project: getProjectById(favorite.project_id ?? ""),
+    page: pageDetail,
+    view: getViewById(itemId),
+    cycle: getCycleById(itemId),
+    module: getModuleById(itemId),
+    getAdditional: getAdditionalFavoriteItemDetails,
+    workspaceSlug,
+    favorite,
+  });
 
-  let itemIcon;
-  let itemTitle;
-  const itemLink = generateFavoriteItemLink(workspaceSlug.toString(), favorite);
-
-  switch (favoriteItemEntityType) {
-    case "project":
-      itemTitle = currentProjectDetails?.name ?? favoriteItemName;
-      itemIcon = <FavoriteItemIcon type="project" logo={currentProjectDetails?.logo_props || favoriteItemLogoProps} />;
-      break;
-    case "page":
-      itemTitle = getPageName(pageDetail?.name ?? favoriteItemName);
-      itemIcon = <FavoriteItemIcon type="page" logo={pageDetail?.logo_props ?? favoriteItemLogoProps} />;
-      break;
-    case "view":
-      itemTitle = viewDetails?.name ?? favoriteItemName;
-      itemIcon = <FavoriteItemIcon type="view" logo={viewDetails?.logo_props || favoriteItemLogoProps} />;
-      break;
-    case "cycle":
-      itemTitle = cycleDetail?.name ?? favoriteItemName;
-      itemIcon = <FavoriteItemIcon type="cycle" />;
-      break;
-    case "module":
-      itemTitle = moduleDetail?.name ?? favoriteItemName;
-      itemIcon = <FavoriteItemIcon type="module" />;
-      break;
-    default: {
-      const additionalDetails = getAdditionalFavoriteItemDetails(workspaceSlug, favorite);
-      itemTitle = additionalDetails.itemTitle;
-      itemIcon = additionalDetails.itemIcon;
-      break;
-    }
-  }
-
-  return { itemIcon, itemTitle, itemLink };
+  return {
+    itemIcon: details.itemIcon,
+    itemTitle: details.itemTitle,
+    itemLink: generateFavoriteItemLink(workspaceSlug.toString(), favorite),
+  };
 };

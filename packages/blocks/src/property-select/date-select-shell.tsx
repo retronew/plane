@@ -94,6 +94,77 @@ type DateSelectShellProps = DateSelectCommonProps & {
   children: ReactNode;
 };
 
+type TriggerAriaLabelParams = {
+  /** Whether the trigger is the icon-only variant, which carries no visible text of its own. */
+  isIcon: boolean;
+  tooltipHeading?: string;
+  label: string;
+  placeholder?: string;
+  /** Translated generic name used once heading, label and placeholder are all empty. */
+  fallback: string;
+};
+
+/**
+ * The trigger's accessible name. Only the icon-only trigger needs one invented: it falls back
+ * through the property heading, the label, the placeholder and finally the generic "Date".
+ */
+function getTriggerAriaLabel(props: TriggerAriaLabelParams): string | undefined {
+  if (!props.isIcon) return undefined;
+  return props.tooltipHeading || props.label || props.placeholder || props.fallback;
+}
+
+/** The tooltip's one `label` string: the property heading folded onto the value, or the value alone. */
+function getTooltipLabel(
+  tooltipHeading: string | undefined,
+  tooltipContent: string,
+  tooltipEmptyContent: string | undefined,
+  placeholder: string | undefined
+): string {
+  const value = tooltipContent || (tooltipEmptyContent ?? placeholder ?? "");
+  return tooltipHeading ? `${tooltipHeading}: ${value}` : value;
+}
+
+type TriggerWithTooltipProps = {
+  showTooltip: boolean;
+  tooltipHeading?: string;
+  tooltipContent: string;
+  tooltipEmptyContent?: string;
+  placeholder?: string;
+  isSelectKind: boolean;
+  children: ReactNode;
+};
+
+/** Wraps the trigger in the opt-in tooltip; without it the trigger is rendered as-is. */
+function TriggerWithTooltip(props: TriggerWithTooltipProps) {
+  const { showTooltip, tooltipHeading, tooltipContent, tooltipEmptyContent, placeholder, isSelectKind, children } =
+    props;
+
+  if (!showTooltip) return children;
+
+  return (
+    <Tooltip label={getTooltipLabel(tooltipHeading, tooltipContent, tooltipEmptyContent, placeholder)} layout="stacked">
+      <span className={cn("flex h-full max-w-full min-w-0 items-center", isSelectKind && "w-full")}>{children}</span>
+    </Tooltip>
+  );
+}
+
+type ClearFooterProps = {
+  clearLabel?: string;
+  onClear: () => void;
+};
+
+/** The optional ghost "Clear" action under the calendar. */
+function ClearFooter(props: ClearFooterProps) {
+  const { clearLabel, onClear } = props;
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex justify-end border-t border-subtle pt-2">
+      <Button variant="ghost" size="xs" stretch="auto" label={clearLabel ?? t("common.clear")} onClick={onClear} />
+    </div>
+  );
+}
+
 /**
  * The trigger + popover shell both date pickers share: a `SelectVariant` trigger (the same chrome
  * `Select.Trigger` wears), a popover holding the calendar, and an optional ghost "Clear" footer.
@@ -128,6 +199,13 @@ export function DateSelectShell(props: DateSelectShellProps) {
   // derived values
   const split = splitSelectVariant(variant);
   const active = isActive ?? isOpen;
+  const ariaLabel = getTriggerAriaLabel({
+    isIcon: split.variant === "icon",
+    tooltipHeading,
+    label,
+    placeholder,
+    fallback: t("date"),
+  });
 
   const trigger = (
     <PopoverTrigger
@@ -140,7 +218,7 @@ export function DateSelectShell(props: DateSelectShellProps) {
           className={className}
           prependIcon={icon}
           label={label}
-          aria-label={split.variant === "icon" ? tooltipHeading || label || placeholder || t("date") : undefined}
+          aria-label={ariaLabel}
           isEmpty={isEmpty}
           tabIndex={tabIndex}
         >
@@ -152,36 +230,19 @@ export function DateSelectShell(props: DateSelectShellProps) {
 
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
-      {showTooltip ? (
-        // Propel's Tooltip takes one `label` string, so the property-name heading is folded into it.
-        <Tooltip
-          label={
-            tooltipHeading
-              ? `${tooltipHeading}: ${tooltipContent || (tooltipEmptyContent ?? placeholder ?? "")}`
-              : tooltipContent || (tooltipEmptyContent ?? placeholder ?? "")
-          }
-          layout="stacked"
-        >
-          <span className={cn("flex h-full max-w-full min-w-0 items-center", split.isSelectKind && "w-full")}>
-            {trigger}
-          </span>
-        </Tooltip>
-      ) : (
-        trigger
-      )}
+      <TriggerWithTooltip
+        showTooltip={showTooltip}
+        tooltipHeading={tooltipHeading}
+        tooltipContent={tooltipContent}
+        tooltipEmptyContent={tooltipEmptyContent}
+        placeholder={placeholder}
+        isSelectKind={split.isSelectKind}
+      >
+        {trigger}
+      </TriggerWithTooltip>
       <PopoverContent variant="rich" side={side} align={align} data-date-picker="">
         <PopoverBody tabIndex={0}>{children}</PopoverBody>
-        {canClear ? (
-          <div className="flex justify-end border-t border-subtle pt-2">
-            <Button
-              variant="ghost"
-              size="xs"
-              stretch="auto"
-              label={clearLabel ?? t("common.clear")}
-              onClick={onClear}
-            />
-          </div>
-        ) : null}
+        {canClear ? <ClearFooter clearLabel={clearLabel} onClear={onClear} /> : null}
       </PopoverContent>
     </Popover>
   );

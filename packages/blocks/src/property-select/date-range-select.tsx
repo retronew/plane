@@ -75,13 +75,29 @@ const MERGE_TOKENS: Record<string, { sameYear: MergeTokenPair; sameMonth: MergeT
   "yyyy/MM/dd": { sameYear: { from: "yyyy/MM/dd", to: "MM/dd" }, sameMonth: { from: "yyyy/MM/dd", to: "dd" } },
 };
 
+/** Both ends of a range, formatted for the trigger. An unset end is an empty string. */
+type FormattedRangeEnds = { from: string; to: string };
+
+/** Formats `from` and `to` with the trigger's token; an unset end is an empty string. */
+function formatRangeEnds(value: DateRangeValue, formatToken: string): FormattedRangeEnds {
+  return {
+    from: value.from ? formatLocalizedDate(value.from, formatToken) : "",
+    to: value.to ? formatLocalizedDate(value.to, formatToken) : "",
+  };
+}
+
+/** Both formatted ends as one label, tolerating a missing (or empty) end. */
+function joinRangeEnds(from: string, to: string): string {
+  return from && to ? `${from} - ${to}` : from || to;
+}
+
 /**
  * The merged label: drop from one end whatever the other repeats. Two days in one month give
  * "Jun 10 - 24, 2025"; two months in one year give "Jan 24 - Feb 02, 2025"; anything wider — or any
  * `formatToken` outside {@link MERGE_TOKENS} — stays whole.
  */
 function mergeRangeLabel(range: DateRangeValue, from: string, to: string, formatToken: string): string {
-  const joined = from && to ? `${from} - ${to}` : from || to;
+  const joined = joinRangeEnds(from, to);
   if (!range.from || !range.to || !from || !to) return joined;
   if (range.from.getFullYear() !== range.to.getFullYear()) return joined;
   // Non-English languages: `Intl` merges the shared parts in the locale's own order
@@ -93,6 +109,76 @@ function mergeRangeLabel(range: DateRangeValue, from: string, to: string, format
   if (!tokens) return joined;
   const pair = range.from.getMonth() === range.to.getMonth() ? tokens.sameMonth : tokens.sameYear;
   return `${formatLocalizedDate(range.from, pair.from)} - ${formatLocalizedDate(range.to, pair.to)}`;
+}
+
+type TriggerLabelParams = {
+  value: DateRangeValue;
+  formatToken: string;
+  ends: FormattedRangeEnds;
+  joined: string;
+  formatLabel?: DateRangeSelectProps["formatLabel"];
+  mergeDates?: boolean;
+};
+
+/**
+ * The trigger label: the caller's formatter wins, then the merged label, then both ends joined.
+ * An empty formatter result is kept — the caller may fall back to the placeholder itself.
+ */
+function getTriggerLabel(params: TriggerLabelParams): string {
+  if (params.formatLabel) return params.formatLabel(params.value, params.ends);
+  if (params.mergeDates) return mergeRangeLabel(params.value, params.ends.from, params.ends.to, params.formatToken);
+  return params.joined;
+}
+
+/** Nothing picked at either end. */
+function isRangeEmpty(range: DateRangeValue): boolean {
+  return !range.from && !range.to;
+}
+
+/** react-day-picker's `selected` for the calendar: no start means no selection at all. */
+function getCalendarSelection(range: DateRangeValue): { from: Date; to?: Date } | undefined {
+  if (!range.from) return undefined;
+  return { from: range.from, to: range.to ?? undefined };
+}
+
+/** A range as react-day-picker hands it back; either end may be unset. */
+type PickedRange = { from?: Date; to?: Date } | undefined;
+
+type RangeClickHandlers = {
+  setDraft: (range: DateRangeValue | null) => void;
+  onChange: (range: DateRangeValue) => void;
+  close: () => void;
+};
+
+/**
+ * A calendar click either restarts the range (the open end was deselected), commits the second
+ * end, or — on the first click — holds it as the draft shown in the calendar but not emitted.
+ */
+function handleRangeClick(range: PickedRange, hasDraft: boolean, handlers: RangeClickHandlers): void {
+  const next = { from: range?.from ?? null, to: range?.to ?? null };
+  if (!next.from) {
+    handlers.setDraft(null);
+    return;
+  }
+  if (!hasDraft) {
+    handlers.setDraft({ from: next.from, to: null });
+    return;
+  }
+  handlers.onChange(next);
+  handlers.close();
+}
+
+type OpenChangeHandlers = {
+  setIsOpen: (open: boolean) => void;
+  setDraft: (range: DateRangeValue | null) => void;
+  onClose?: () => void;
+};
+
+/** Opening resets the draft; closing also notifies the caller. */
+function applyOpenChange(open: boolean, handlers: OpenChangeHandlers): void {
+  handlers.setIsOpen(open);
+  handlers.setDraft(null);
+  if (!open) handlers.onClose?.();
 }
 
 /**
@@ -123,24 +209,23 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
   // sees a range it did not ask for.
   const [draft, setDraft] = useState<DateRangeValue | null>(null);
   // derived values
-  const from = value.from ? formatLocalizedDate(value.from, formatToken) : "";
-  const to = value.to ? formatLocalizedDate(value.to, formatToken) : "";
-  const joined = from && to ? `${from} - ${to}` : from || to;
-  const formatted = props.formatLabel
-    ? props.formatLabel(value, { from, to })
-    : props.mergeDates
-      ? mergeRangeLabel(value, from, to, formatToken)
-      : joined;
-  const isEmpty = !value.from && !value.to;
+  const ends = formatRangeEnds(value, formatToken);
+  const joined = joinRangeEnds(ends.from, ends.to);
+  const formatted = getTriggerLabel({
+    value,
+    formatToken,
+    ends,
+    joined,
+    formatLabel: props.formatLabel,
+    mergeDates: props.mergeDates,
+  });
+  const isEmpty = isRangeEmpty(value);
   const disabledMatchers = buildDisabledMatchers(minDate, maxDate);
   // The calendar shows the in-progress pick; the trigger keeps showing the committed value.
   const shown = draft ?? value;
+  const selected = getCalendarSelection(shown);
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    setDraft(null);
-    if (!open) onClose?.();
-  };
+  const handleOpenChange = (open: boolean) => applyOpenChange(open, { setIsOpen, setDraft, onClose });
 
   return (
     <DateSelectShell
@@ -160,27 +245,17 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
         {...getCalendarLocale(currentLocale)}
         formatters={getCalendarFormatters()}
         mode="range"
-        selected={shown.from ? { from: shown.from, to: shown.to ?? undefined } : undefined}
+        selected={selected}
         defaultMonth={value.from ?? defaultMonth}
         disabled={disabledMatchers}
         weekStartsOn={weekStartsOn}
-        onSelect={(range) => {
-          const next = { from: range?.from ?? null, to: range?.to ?? null };
-          // Deselecting the open end restarts the range without emitting.
-          if (!next.from) {
-            setDraft(null);
-            return;
-          }
-          if (draft) {
-            // Second click: the range is complete, so commit it and close (which clears the draft).
-            onChange(next);
-            handleOpenChange(false);
-            return;
-          }
-          // First click: react-day-picker's `to === from` is not a finished range, it is the open
-          // end waiting for the next click.
-          setDraft({ from: next.from, to: null });
-        }}
+        onSelect={(range) =>
+          handleRangeClick(range, draft !== null, {
+            setDraft,
+            onChange,
+            close: () => handleOpenChange(false),
+          })
+        }
       />
     </DateSelectShell>
   );

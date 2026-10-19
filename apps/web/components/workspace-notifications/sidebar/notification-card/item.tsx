@@ -11,6 +11,7 @@ import { ClockOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Row } from "@plane/blocks/layout";
+import type { IUserLite, TNotification } from "@plane/types";
 import { cn, calculateTimeAgo, renderFormattedDate, renderFormattedTime, getFileURL } from "@plane/utils";
 // hooks
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
@@ -27,6 +28,109 @@ type TNotificationItem = {
   notificationId: string;
 };
 
+type TNotificationPeekTarget = {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+};
+
+const getNotificationProjectId = (notification: TNotification | undefined): string | undefined =>
+  notification?.project || undefined;
+
+const getNotificationIssueId = (notification: TNotification | undefined): string | undefined =>
+  notification?.data?.issue?.id ?? notification?.data?.issue_id;
+
+const getNotificationTriggeredBy = (notification: TNotification | undefined): IUserLite | undefined =>
+  notification?.triggered_by_details || undefined;
+
+const getNotificationPeekTarget = ({
+  workspaceSlug,
+  projectId,
+  issueId,
+  isSnoozeStateModalOpen,
+  customSnoozeModal,
+}: {
+  workspaceSlug: string;
+  projectId: string | undefined;
+  issueId: string | undefined;
+  isSnoozeStateModalOpen: boolean;
+  customSnoozeModal: boolean;
+}): TNotificationPeekTarget | undefined => {
+  if (!workspaceSlug || !projectId || !issueId || isSnoozeStateModalOpen || customSnoozeModal) return undefined;
+  return { workspaceSlug, projectId, issueId };
+};
+
+const shouldOpenNotificationIssuePeek = (
+  notification: TNotification,
+  issueId: string,
+  getIsIssuePeeked: (issueId: string) => boolean
+) => notification.is_inbox_issue === false && !getIsIssuePeeked(issueId);
+
+const markNotificationAsReadIfUnread = async (
+  notification: TNotification,
+  workspaceSlug: string,
+  markNotificationAsRead: (workspaceSlug: string) => Promise<unknown>
+) => {
+  if (notification.read_at !== null) return;
+
+  try {
+    await markNotificationAsRead(workspaceSlug);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const NotificationItemAvatar = ({
+  sender,
+  triggeredBy,
+}: {
+  sender: string | undefined;
+  triggeredBy: IUserLite | undefined;
+}) => (
+  <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-layer-1">
+    {sender === "in_app:issue_reminder:due" && <BellRing className="size-5 text-secondary" />}
+    {triggeredBy && (
+      <Avatar
+        alt={triggeredBy.display_name || triggeredBy.first_name}
+        fallback={(triggeredBy.display_name || triggeredBy.first_name)?.[0]?.toUpperCase()}
+        src={getFileURL(triggeredBy.avatar_url)}
+        size="xl"
+      />
+    )}
+  </div>
+);
+
+const NotificationItemSummary = ({ notification }: { notification: TNotification }) => {
+  if (!notification.data?.issue) return <NotificationTitle notification={notification} />;
+
+  return (
+    <>
+      {notification.data.issue.identifier}-{notification.data.issue.sequence_id}&nbsp;
+      {notification.data.issue.name}
+    </>
+  );
+};
+
+const NotificationItemTimestamp = ({ notification }: { notification: TNotification }) => {
+  if (notification.snoozed_till) {
+    return (
+      <p className="flex flex-shrink-0 items-center justify-end gap-x-1 text-tertiary">
+        <ClockOutline className="h-4 w-4" />
+        <span>
+          {translate("web.till")} {renderFormattedDate(notification.snoozed_till)},&nbsp;
+          {renderFormattedTime(notification.snoozed_till, "12-hour")}
+        </span>
+      </p>
+    );
+  }
+
+  return (
+    <p className="mt-auto flex-shrink-0 text-tertiary">
+      {notification.created_at && calculateTimeAgo(notification.created_at)}
+    </p>
+  );
+};
+
 export const NotificationItem = observer(function NotificationItem(props: TNotificationItem) {
   const { workspaceSlug, notificationId } = props;
   // hooks
@@ -39,32 +143,29 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
   const [customSnoozeModal, setCustomSnoozeModal] = useState(false);
 
   // derived values
-  const projectId = notification?.project || undefined;
-  const issueId = notification?.data?.issue?.id ?? notification?.data?.issue_id;
+  const projectId = getNotificationProjectId(notification);
+  const issueId = getNotificationIssueId(notification);
   const workspace = getWorkspaceBySlug(workspaceSlug);
-
-  const notificationTriggeredBy = notification?.triggered_by_details || undefined;
+  const notificationTriggeredBy = getNotificationTriggeredBy(notification);
 
   const handleNotificationIssuePeekOverview = async () => {
-    if (workspaceSlug && projectId && issueId && !isSnoozeStateModalOpen && !customSnoozeModal) {
-      setPeekIssue(undefined);
-      setCurrentSelectedNotificationId(notificationId);
+    const peekTarget = getNotificationPeekTarget({
+      workspaceSlug,
+      projectId,
+      issueId,
+      isSnoozeStateModalOpen,
+      customSnoozeModal,
+    });
+    if (!peekTarget) return;
 
-      // make the notification as read
-      if (notification.read_at === null) {
-        try {
-          await markNotificationAsRead(workspaceSlug);
-        } catch (error) {
-          console.error(error);
-        }
-      }
+    setPeekIssue(undefined);
+    setCurrentSelectedNotificationId(notificationId);
 
-      if (notification?.is_inbox_issue === false) {
-        if (!getIsIssuePeeked(issueId)) {
-          setPeekIssue({ workspaceSlug, projectId, issueId });
-        }
-      }
-    }
+    // make the notification as read
+    await markNotificationAsReadIfUnread(notification, workspaceSlug, markNotificationAsRead);
+
+    if (!shouldOpenNotificationIssuePeek(notification, peekTarget.issueId, getIsIssuePeeked)) return;
+    setPeekIssue(peekTarget);
   };
 
   if (!workspaceSlug || !notificationId || !notification?.id || !workspace?.id || !projectId) return <></>;
@@ -85,18 +186,7 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
       )}
 
       <div className="relative flex w-full gap-2">
-        <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-layer-1">
-          {notification.sender === "in_app:issue_reminder:due" && <BellRing className="size-5 text-secondary" />}
-          {notificationTriggeredBy && (
-            <Avatar
-              alt={notificationTriggeredBy.display_name || notificationTriggeredBy?.first_name}
-              fallback={(notificationTriggeredBy.display_name ||
-                notificationTriggeredBy?.first_name)?.[0]?.toUpperCase()}
-              src={getFileURL(notificationTriggeredBy.avatar_url)}
-              size="xl"
-            />
-          )}
-        </div>
+        <NotificationItemAvatar sender={notification.sender} triggeredBy={notificationTriggeredBy} />
 
         <div className="-mt-2 w-full space-y-1">
           <div className="relative flex h-8 items-center gap-3">
@@ -120,29 +210,10 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
 
           <div className="relative flex items-center gap-3 text-caption-sm-regular text-secondary">
             <div className="line-clamp-1 w-full truncate overflow-hidden break-words whitespace-normal">
-              {notification.data?.issue ? (
-                <>
-                  {notification.data.issue.identifier}-{notification.data.issue.sequence_id}&nbsp;
-                  {notification.data.issue.name}
-                </>
-              ) : (
-                <NotificationTitle notification={notification} />
-              )}
+              <NotificationItemSummary notification={notification} />
             </div>
             <div className="flex-shrink-0">
-              {notification?.snoozed_till ? (
-                <p className="flex flex-shrink-0 items-center justify-end gap-x-1 text-tertiary">
-                  <ClockOutline className="h-4 w-4" />
-                  <span>
-                    {translate("web.till")} {renderFormattedDate(notification.snoozed_till)},&nbsp;
-                    {renderFormattedTime(notification.snoozed_till, "12-hour")}
-                  </span>
-                </p>
-              ) : (
-                <p className="mt-auto flex-shrink-0 text-tertiary">
-                  {notification.created_at && calculateTimeAgo(notification.created_at)}
-                </p>
-              )}
+              <NotificationItemTimestamp notification={notification} />
             </div>
           </div>
         </div>

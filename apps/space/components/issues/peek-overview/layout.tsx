@@ -21,26 +21,36 @@ type TIssuePeekOverview = {
   handlePeekClose?: () => void;
 };
 
+const getOptionalSearchParam = (searchParams: URLSearchParams, key: string) => searchParams.get(key) || undefined;
+
+const getPeekIssue = <TIssue,>(peekId: string, getIssueById: (issueId: string) => TIssue | undefined) =>
+  peekId ? getIssueById(peekId.toString()) : undefined;
+
+const getPeekViewState = (peekId: string, peekMode: string) => {
+  const isSidePeekOpen = !!peekId && peekMode === "side";
+  const isModalPeekOpen = !!peekId && (peekMode === "modal" || peekMode === "full");
+  return { isSidePeekOpen, isModalPeekOpen, isPeekOpen: isSidePeekOpen || isModalPeekOpen };
+};
+
+const getPanelLabel = (issue: { name?: string } | undefined, fallback: string) => issue?.name || fallback;
+
 export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIssuePeekOverview) {
   const { anchor, peekId, handlePeekClose } = props;
   const router = useRouter();
   const searchParams = useSearchParams();
   // query params
-  const board = searchParams.get("board") || undefined;
-  const state = searchParams.get("state") || undefined;
-  const priority = searchParams.get("priority") || undefined;
-  const labels = searchParams.get("labels") || undefined;
+  const board = getOptionalSearchParam(searchParams, "board");
+  const state = getOptionalSearchParam(searchParams, "state");
+  const priority = getOptionalSearchParam(searchParams, "priority");
+  const labels = getOptionalSearchParam(searchParams, "labels");
   // store
   const { peekMode, setPeekId, getIssueById, fetchIssueDetails } = useIssueDetails();
   // translation
   const { t } = useTranslation();
   // derived values
-  const issueDetails = peekId ? getIssueById(peekId.toString()) : undefined;
-  // state
-  const isSidePeekOpen = !!peekId && peekMode === "side";
-  const isModalPeekOpen = !!peekId && (peekMode === "modal" || peekMode === "full");
-  // exactly one of the two panels is ever mounted, so both share the panel ref
-  const isPeekOpen = isSidePeekOpen || isModalPeekOpen;
+  const issueDetails = getPeekIssue(peekId, getIssueById);
+  // state — exactly one of the two panels is ever mounted, so both share the panel ref
+  const { isSidePeekOpen, isModalPeekOpen, isPeekOpen } = getPeekViewState(peekId, peekMode);
   const panelRef = useRef<HTMLDialogElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
 
@@ -159,7 +169,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: TIss
     panelRef.current?.focus();
   }, [isPeekOpen, isSidePeekOpen, peekMode]);
 
-  const panelLabel = issueDetails?.name || t("common.work_item");
+  const panelLabel = getPanelLabel(issueDetails, t("common.work_item"));
 
   return (
     <>
