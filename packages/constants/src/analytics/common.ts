@@ -236,12 +236,6 @@ export const ANALYTICS_Y_AXIS_VALUES: { value: ChartYAxisMetric; label: string }
       return translate("web.estimate");
     },
   },
-  {
-    value: ChartYAxisMetric.EPIC_WORK_ITEM_COUNT,
-    get label() {
-      return translate("web.epic");
-    },
-  },
 ];
 
 export const ANALYTICS_V2_DATE_KEYS = ["completed_at", "target_date", "start_date", "created_at"];

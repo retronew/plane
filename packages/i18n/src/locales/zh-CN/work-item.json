@@ -413,21 +413,5 @@
         "suffix": " 吗？与该重复工作项相关的所有数据都将被永久删除，此操作无法撤销。"
       }
     }
-  },
-  "epic": {
-    "new": "新建史诗",
-    "label": "{count, plural, one {史诗} other {史诗}}",
-    "adding": "正在添加史诗",
-    "create": {
-      "success": "史诗已创建"
-    },
-    "add": {
-      "label": "添加史诗",
-      "press_enter": "按 Enter 继续添加史诗"
-    },
-    "title": {
-      "label": "史诗标题",
-      "required": "请输入史诗标题。"
-    }
   }
 }

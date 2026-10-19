@@ -15,7 +15,6 @@ import { ChevronRightOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TIssue, IIssueDisplayProperties, TIssueMap } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
 // ui
 import { ControlLink, Row } from "@plane/blocks/layout";
 import { Spinner } from "@plane/blocks/spinner";
@@ -50,7 +49,6 @@ interface IssueBlockProps {
   isCurrentBlockDragging: boolean;
   setIsCurrentBlockDragging: React.Dispatch<React.SetStateAction<boolean>>;
   canDrag: boolean;
-  isEpic?: boolean;
 }
 
 function showMoveWarning(canEditIssueProperties: boolean) {
@@ -186,7 +184,6 @@ type TIssueBlockSelectionProps = {
   issue: TIssue;
   projectId: string | undefined;
   canSelectIssues: boolean;
-  isEpic: boolean;
   groupId: string;
   selectionHelpers: TSelectionHelper;
   isIssueSelected: boolean;
@@ -196,12 +193,11 @@ const IssueBlockSelection = observer(function IssueBlockSelection({
   issue,
   projectId,
   canSelectIssues,
-  isEpic,
   groupId,
   selectionHelpers,
   isIssueSelected,
 }: TIssueBlockSelectionProps) {
-  if (!projectId || !canSelectIssues || isEpic) return null;
+  if (!projectId || !canSelectIssues) return null;
 
   return (
     <Tooltip
@@ -229,20 +225,14 @@ const IssueBlockSelection = observer(function IssueBlockSelection({
 
 type TIssueBlockSubIssuesToggleProps = {
   subIssuesCount: number;
-  isEpic: boolean;
   isExpanded: boolean;
   onToggleExpand: (event: MouseEvent<HTMLButtonElement>) => void;
 };
 
-function IssueBlockSubIssuesToggle({
-  subIssuesCount,
-  isEpic,
-  isExpanded,
-  onToggleExpand,
-}: TIssueBlockSubIssuesToggleProps) {
+function IssueBlockSubIssuesToggle({ subIssuesCount, isExpanded, onToggleExpand }: TIssueBlockSubIssuesToggleProps) {
   return (
     <div className="grid size-4 flex-shrink-0 place-items-center">
-      {subIssuesCount > 0 && !isEpic && (
+      {subIssuesCount > 0 && (
         <button
           type="button"
           className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
@@ -263,7 +253,6 @@ type TIssueBlockLeftProps = {
   issue: TIssue;
   projectId: string | undefined;
   canSelectIssues: boolean;
-  isEpic: boolean;
   groupId: string;
   selectionHelpers: TSelectionHelper;
   isIssueSelected: boolean;
@@ -282,7 +271,6 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
   issue,
   projectId,
   canSelectIssues,
-  isEpic,
   groupId,
   selectionHelpers,
   isIssueSelected,
@@ -304,7 +292,6 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
           issue={issue}
           projectId={projectId}
           canSelectIssues={canSelectIssues}
-          isEpic={isEpic}
           groupId={groupId}
           selectionHelpers={selectionHelpers}
           isIssueSelected={isIssueSelected}
@@ -316,7 +303,6 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
         {/* sub-issues chevron */}
         <IssueBlockSubIssuesToggle
           subIssuesCount={subIssuesCount}
-          isEpic={isEpic}
           isExpanded={isExpanded}
           onToggleExpand={onToggleExpand}
         />
@@ -366,7 +352,6 @@ type TIssueBlockPropertiesSectionProps = {
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
   displayProperties: IIssueDisplayProperties | undefined;
   canEditIssueProperties: boolean;
-  isEpic: boolean;
   isSidebarCollapsed: boolean | undefined;
   quickActions: TRenderQuickActions;
   issueRef: RefObject<HTMLDivElement | null>;
@@ -377,7 +362,6 @@ const IssueBlockPropertiesSection = observer(function IssueBlockPropertiesSectio
   updateIssue,
   displayProperties,
   canEditIssueProperties,
-  isEpic,
   isSidebarCollapsed,
   quickActions,
   issueRef,
@@ -393,7 +377,6 @@ const IssueBlockPropertiesSection = observer(function IssueBlockPropertiesSectio
             updateIssue={updateIssue}
             displayProperties={displayProperties}
             activeLayout="List"
-            isEpic={isEpic}
           />
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
           <div
@@ -438,7 +421,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     isCurrentBlockDragging,
     setIsCurrentBlockDragging,
     canDrag,
-    isEpic = false,
   } = props;
   // ref
   const issueRef = useRef<HTMLDivElement | null>(null);
@@ -449,12 +431,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   // hooks
   const { sidebarCollapsed: isSidebarCollapsed } = useAppTheme();
   const { getProjectIdentifierById } = useProject();
-  const {
-    getIsIssuePeeked,
-    peekIssue,
-    setPeekIssue,
-    subIssues: subIssuesStore,
-  } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+  const { getIsIssuePeeked, peekIssue, setPeekIssue, subIssues: subIssuesStore } = useIssueDetail();
 
   // derived values
   const issue = issuesMap[issueId];
@@ -503,7 +480,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     issueId,
     projectIdentifier,
     sequenceId: issue?.sequence_id,
-    isEpic,
     isArchived: !!issue?.archived_at,
   });
   return (
@@ -536,7 +512,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
             issue={issue}
             projectId={projectId}
             canSelectIssues={canSelectIssues}
-            isEpic={isEpic}
             groupId={groupId}
             selectionHelpers={selectionHelpers}
             isIssueSelected={isIssueSelected}
@@ -564,7 +539,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
           updateIssue={updateIssue}
           displayProperties={displayProperties}
           canEditIssueProperties={canEditIssueProperties}
-          isEpic={isEpic}
           isSidebarCollapsed={isSidebarCollapsed}
           quickActions={quickActions}
           issueRef={issueRef}

@@ -10,7 +10,10 @@
       "url": {
         "label": "工作区 URL",
         "placeholder": "my-team",
-        "edit_slug": "只能修改 URL 的路径部分"
+        "edit_slug": "只能修改 URL 的路径部分",
+        "ai_suggest": "使用 AI 建议 URL",
+        "ai_error": "暂时无法建议 URL，请重试或手动输入。",
+        "ai_taken": "建议的 URL 已被使用，请重试或手动输入。"
       }
     },
     "errors": {
@@ -22,7 +25,8 @@
       "validation": {
         "name_alphanumeric": "工作区名称只能包含空格、“-”、“_”和字母数字字符。",
         "name_length": "名称不能超过 80 个字符。",
-        "url_alphanumeric": "URL 只能包含“-”和字母数字字符。",
+        "url_alphanumeric": "URL 只能包含英文字母、数字、连字符（-）和下划线（_）。",
+        "url_required": "请填写工作区 URL，只能使用英文字母、数字、连字符（-）或下划线（_）。",
         "url_length": "URL 不能超过 48 个字符。",
         "url_already_taken": "这个 URL 已被使用，换一个试试。"
       }
@@ -219,7 +223,6 @@
         "in-progress": "进行中",
         "planned": "已计划",
         "paused": "已暂停",
-        "epics": "史诗",
         "cancelled": "已取消",
         "snoozed": "已延后",
         "unique_work_items": "去重工作项"

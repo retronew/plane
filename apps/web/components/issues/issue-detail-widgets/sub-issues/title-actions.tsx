@@ -95,7 +95,6 @@ export const SubWorkItemTitleActions = observer(function SubWorkItemTitleActions
   return (
     <div className="flex items-center gap-2">
       <SubIssueDisplayFilters
-        isEpic={issueServiceType === EIssueServiceType.EPICS}
         layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
         displayProperties={subIssueFilters?.displayProperties ?? {}}
         displayFilters={subIssueFilters?.displayFilters ?? {}}

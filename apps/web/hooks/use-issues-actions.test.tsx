@@ -32,7 +32,6 @@ beforeEach(() => {
 });
 it.each([
   EIssuesStoreType.PROJECT,
-  EIssuesStoreType.EPIC,
   EIssuesStoreType.CYCLE,
   EIssuesStoreType.MODULE,
   EIssuesStoreType.PROFILE,

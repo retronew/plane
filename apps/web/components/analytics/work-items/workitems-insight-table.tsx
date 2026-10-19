@@ -40,14 +40,14 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
   const { t } = useTranslation();
   // store hooks
   const { getProjectById } = useProject();
-  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
+  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView } = useAnalytics();
   const {
     error,
     mutate,
     data: workItemsData,
     isLoading,
   } = useSWR(
-    `insights-table-work-items-${workspaceSlug}-${selectedDuration}-${selectedProjects}-${selectedCycle}-${selectedModule}-${isPeekView}-${isEpic}`,
+    `insights-table-work-items-${workspaceSlug}-${selectedDuration}-${selectedProjects}-${selectedCycle}-${selectedModule}-${isPeekView}`,
     () =>
       analyticsService.getAdvanceAnalyticsStats<WorkItemInsightColumns[]>(
         workspaceSlug,
@@ -57,7 +57,6 @@ const WorkItemsInsightTable = observer(function WorkItemsInsightTable() {
           ...(selectedProjects?.length > 0 ? { project_ids: selectedProjects.join(",") } : {}),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
-          ...(isEpic ? { epic: true } : {}),
         },
         isPeekView
       )

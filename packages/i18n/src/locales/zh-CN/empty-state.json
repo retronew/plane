@@ -93,24 +93,9 @@
     },
     "intake_main": {
       "title": "选择一个需求收集工作项以查看详情"
-    },
-    "epics": {
-      "title": "用史诗把复杂项目变得井然有序。",
-      "description": "史诗帮助您把大目标拆分为更小、可跟踪的任务。",
-      "cta_primary": "创建史诗",
-      "cta_secondary": "文档"
-    },
-    "epic_work_items": {
-      "title": "您尚未向此史诗添加工作项。",
-      "description": "向此史诗添加工作项，即可在这里跟踪它们。",
-      "cta_secondary": "添加工作项"
     }
   },
   "workspace_empty_state": {
-    "archive_epics": {
-      "title": "暂无已归档史诗",
-      "description": "您可以归档已完成或已取消的史诗，归档后可在这里找到。"
-    },
     "archive_work_items": {
       "title": "暂无已归档工作项",
       "description": "您可以手动或通过自动化归档已完成或已取消的工作项，归档后可在这里找到。",

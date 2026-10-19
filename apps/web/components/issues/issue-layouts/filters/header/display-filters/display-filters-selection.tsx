@@ -44,7 +44,6 @@ type Props = {
   ignoreGroupedFilters?: Partial<TIssueGroupByOptions>[];
   cycleViewDisabled?: boolean;
   moduleViewDisabled?: boolean;
-  isEpic?: boolean;
 };
 
 type Translate = ReturnType<typeof useTranslation>["t"];
@@ -198,13 +197,11 @@ function getOrderByForDirection(direction: "desc" | "asc", orderField: string) {
 function DisplayPropertiesGroup({
   properties,
   displayProperties,
-  isEpic,
   onUpdate,
   t,
 }: {
   properties: DisplayProperty[];
   displayProperties: IIssueDisplayProperties;
-  isEpic: boolean;
   onUpdate: (updated: Partial<IIssueDisplayProperties>) => void;
   t: Translate;
 }) {
@@ -213,11 +210,7 @@ function DisplayPropertiesGroup({
       <MenuLabel>{t("issue.display.properties.label")}</MenuLabel>
       <div className="flex flex-wrap gap-2 px-2 pt-0.5 pb-1.5">
         {properties.map((property) => {
-          const label = t(
-            isEpic && property.key === "sub_issue_count"
-              ? "issue.display.properties.work_item_count"
-              : property.titleTranslationKey
-          );
+          const label = t(property.titleTranslationKey);
           const checked = Boolean(displayProperties[property.key]);
           return (
             <BaseMenu.CheckboxItem
@@ -283,7 +276,6 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
     ignoreGroupedFilters = [],
     cycleViewDisabled = false,
     moduleViewDisabled = false,
-    isEpic = false,
   } = props;
   const { t } = useTranslation();
   const ignored = getIgnoredGroupBy(ignoreGroupedFilters, cycleViewDisabled, moduleViewDisabled);
@@ -300,7 +292,6 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
           <DisplayPropertiesGroup
             properties={properties}
             displayProperties={displayProperties}
-            isEpic={isEpic}
             onUpdate={handleDisplayPropertiesUpdate}
             t={t}
           />

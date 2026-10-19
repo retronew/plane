@@ -29,7 +29,6 @@ interface Props {
   isDragAllowed: boolean;
   canDropOverIssue: boolean;
   selectionHelpers: TSelectionHelper;
-  isEpic?: boolean;
 }
 
 export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
@@ -45,7 +44,6 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
     selectionHelpers,
     isDragAllowed,
     canDropOverIssue,
-    isEpic = false,
   } = props;
 
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -82,7 +80,6 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
       isLastChild={index === issueIds.length - 1}
       isDragAllowed={isDragAllowed}
       canDropOverIssue={canDropOverIssue}
-      isEpic={isEpic}
       virtualized={virtualized}
     />
   );

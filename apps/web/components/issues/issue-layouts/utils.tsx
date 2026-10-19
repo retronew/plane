@@ -95,7 +95,6 @@ type TGetGroupByColumns = {
   groupBy: GroupByColumnTypes | null;
   includeNone: boolean;
   isWorkspaceLevel: boolean;
-  isEpic?: boolean;
   projectId?: string;
 };
 
@@ -106,7 +105,6 @@ export const getGroupByColumns = ({
   groupBy,
   includeNone,
   isWorkspaceLevel,
-  isEpic = false,
   projectId,
 }: TGetGroupByColumns): IGroupByColumn[] | undefined => {
   // If no groupBy is specified and includeNone is true, return "All Issues" group
@@ -114,7 +112,7 @@ export const getGroupByColumns = ({
     return [
       {
         id: "All Issues",
-        name: translate("web.runtime.all_entities", { type: isEpic ? "epic" : "issue" }),
+        name: translate("web.runtime.all_entities", { type: "issue" }),
         payload: {},
         icon: undefined,
       },

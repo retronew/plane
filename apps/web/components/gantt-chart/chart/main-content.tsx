@@ -56,7 +56,6 @@ type Props = {
     targetDate?: Date
   ) => ChartDataType | undefined;
   quickAdd?: React.ReactNode | undefined;
-  isEpic?: boolean;
 };
 
 export const GanttChartMainContent = observer(function GanttChartMainContent(props: Props) {
@@ -81,7 +80,6 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
     updateCurrentViewRenderPayload,
     quickAdd,
     updateBlockDates,
-    isEpic = false,
   } = props;
   // refs
   const ganttContainerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +161,7 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
         entities={{
           [GANTT_SELECT_GROUP]: blockIds ?? [],
         }}
-        disabled={!isBulkOperationsEnabled || isEpic}
+        disabled={!isBulkOperationsEnabled}
       >
         {(helpers) => (
           <>
@@ -191,7 +189,6 @@ export const GanttChartMainContent = observer(function GanttChartMainContent(pro
                 title={title}
                 selectionHelpers={helpers}
                 showAllBlocks={showAllBlocks}
-                isEpic={isEpic}
               />
               <div className="relative h-max min-h-full flex-shrink-0 flex-grow">
                 <ActiveChartView />

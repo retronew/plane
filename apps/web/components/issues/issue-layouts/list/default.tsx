@@ -57,7 +57,6 @@ export interface IList {
   loadMoreIssues: (groupId?: string) => void;
   handleCollapsedGroups: (value: string) => void;
   collapsedGroups: TIssueKanbanFilters;
-  isEpic?: boolean;
 }
 
 export const List = observer(function List(props: IList) {
@@ -80,7 +79,6 @@ export const List = observer(function List(props: IList) {
     loadMoreIssues,
     handleCollapsedGroups,
     collapsedGroups,
-    isEpic = false,
   } = props;
 
   const storeType = useIssueStoreType();
@@ -93,7 +91,6 @@ export const List = observer(function List(props: IList) {
     groupBy: group_by as GroupByColumnTypes,
     includeNone: true,
     isWorkspaceLevel: isWorkspaceLevel(storeType),
-    isEpic: isEpic,
   });
 
   // Enable Auto Scroll for Main Kanban
@@ -135,11 +132,7 @@ export const List = observer(function List(props: IList) {
       <VisibilityObserverBoundary>
         <div className="relative flex size-full flex-col">
           {groups && (
-            <MultipleSelectGroup
-              containerRef={containerRef}
-              entities={entities}
-              disabled={!isBulkOperationsEnabled || isEpic}
-            >
+            <MultipleSelectGroup containerRef={containerRef} entities={entities} disabled={!isBulkOperationsEnabled}>
               {(helpers) => (
                 <>
                   <div
@@ -171,7 +164,6 @@ export const List = observer(function List(props: IList) {
                         selectionHelpers={helpers}
                         handleCollapsedGroups={handleCollapsedGroups}
                         collapsedGroups={collapsedGroups}
-                        isEpic={isEpic}
                       />
                     ))}
                   </div>

@@ -45,7 +45,6 @@ export interface IssueActions {
 
 export const useIssuesActions = (storeType: EIssuesStoreType): IssueActions => {
   const projectIssueActions = useProjectIssueActions();
-  const projectEpicsActions = useProjectEpicsActions();
   const cycleIssueActions = useCycleIssueActions();
   const moduleIssueActions = useModuleIssueActions();
   const projectViewIssueActions = useProjectViewIssueActions();
@@ -70,8 +69,6 @@ export const useIssuesActions = (storeType: EIssuesStoreType): IssueActions => {
     case EIssuesStoreType.WORKSPACE_DRAFT:
       //@ts-expect-error type mismatch
       return workspaceDraftIssueActions;
-    case EIssuesStoreType.EPIC:
-      return projectEpicsActions;
     case EIssuesStoreType.PROJECT:
     default:
       return projectIssueActions;
@@ -85,98 +82,6 @@ const useProjectIssueActions = () => {
   const routeProjectId = routerProjectId?.toString();
   // store hooks
   const { issues, issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
-  const { updateFilters: filterUpdateFilters } = issuesFilter;
-  const {
-    fetchIssues: storeFetchIssues,
-    fetchNextIssues: storeFetchNextIssues,
-    createIssue: storeCreateIssue,
-    quickAddIssue: storeQuickAddIssue,
-    updateIssue: storeUpdateIssue,
-    removeIssue: storeRemoveIssue,
-    archiveIssue: storeArchiveIssue,
-  } = issues;
-
-  const fetchIssues = useCallback(
-    async (loadType: TLoader, options: IssuePaginationOptions) => {
-      if (!workspaceSlug || !routeProjectId) return;
-      return storeFetchIssues(workspaceSlug.toString(), routeProjectId.toString(), loadType, options);
-    },
-    [storeFetchIssues, workspaceSlug, routeProjectId]
-  );
-  const fetchNextIssues = useCallback(
-    async (groupId?: string, subGroupId?: string) => {
-      if (!workspaceSlug || !routeProjectId) return;
-      return storeFetchNextIssues(workspaceSlug.toString(), routeProjectId.toString(), groupId, subGroupId);
-    },
-    [storeFetchNextIssues, workspaceSlug, routeProjectId]
-  );
-
-  const createIssue = useCallback(
-    async (projectId: string | undefined | null, data: Partial<TIssue>) => {
-      if (!workspaceSlug || !projectId) return;
-      return await storeCreateIssue(workspaceSlug, projectId, data);
-    },
-    [storeCreateIssue, workspaceSlug]
-  );
-  const quickAddIssue = useCallback(
-    async (projectId: string | undefined | null, data: TIssue) => {
-      if (!workspaceSlug || !projectId) return;
-      return await storeQuickAddIssue(workspaceSlug, projectId, data);
-    },
-    [storeQuickAddIssue, workspaceSlug]
-  );
-  const updateIssue = useCallback(
-    async (projectId: string | undefined | null, issueId: string, data: Partial<TIssue>) => {
-      if (!workspaceSlug || !projectId) return;
-      return await storeUpdateIssue(workspaceSlug, projectId, issueId, data);
-    },
-    [storeUpdateIssue, workspaceSlug]
-  );
-  const removeIssue = useCallback(
-    async (projectId: string | undefined | null, issueId: string) => {
-      if (!workspaceSlug || !projectId) return;
-      return await storeRemoveIssue(workspaceSlug, projectId, issueId);
-    },
-    [storeRemoveIssue, workspaceSlug]
-  );
-  const archiveIssue = useCallback(
-    async (projectId: string | undefined | null, issueId: string) => {
-      if (!workspaceSlug || !projectId) return;
-      return await storeArchiveIssue(workspaceSlug, projectId, issueId);
-    },
-    [storeArchiveIssue, workspaceSlug]
-  );
-
-  const updateFilters = useCallback(
-    async (projectId: string, filterType: TSupportedFilterTypeForUpdate, filters: TSupportedFilterForUpdate) => {
-      if (!workspaceSlug) return;
-      return await filterUpdateFilters(workspaceSlug, projectId, filterType, filters);
-    },
-    [filterUpdateFilters, workspaceSlug]
-  );
-
-  return useMemo(
-    () => ({
-      fetchIssues,
-      fetchNextIssues,
-      createIssue,
-      quickAddIssue,
-      updateIssue,
-      removeIssue,
-      archiveIssue,
-      updateFilters,
-    }),
-    [fetchIssues, fetchNextIssues, createIssue, quickAddIssue, updateIssue, removeIssue, archiveIssue, updateFilters]
-  );
-};
-
-const useProjectEpicsActions = () => {
-  // router
-  const { workspaceSlug: routerWorkspaceSlug, projectId: routerProjectId } = useParams();
-  const workspaceSlug = routerWorkspaceSlug?.toString();
-  const routeProjectId = routerProjectId?.toString();
-  // store hooks
-  const { issues, issuesFilter } = useIssues(EIssuesStoreType.EPIC);
   const { updateFilters: filterUpdateFilters } = issuesFilter;
   const {
     fetchIssues: storeFetchIssues,

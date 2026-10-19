@@ -36,7 +36,6 @@ interface IBaseGanttRoot {
   canEditPropertiesBasedOnProject?: (projectId: string) => boolean;
   viewId?: string | undefined;
   isCompletedCycle?: boolean;
-  isEpic?: boolean;
 }
 
 export type GanttStoreType =
@@ -44,11 +43,10 @@ export type GanttStoreType =
   | EIssuesStoreType.PROJECT
   | EIssuesStoreType.MODULE
   | EIssuesStoreType.CYCLE
-  | EIssuesStoreType.PROJECT_VIEW
-  | EIssuesStoreType.EPIC;
+  | EIssuesStoreType.PROJECT_VIEW;
 
 export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRoot) {
-  const { viewId, isCompletedCycle = false, isEpic = false, canEditPropertiesBasedOnProject } = props;
+  const { viewId, isCompletedCycle = false, canEditPropertiesBasedOnProject } = props;
   const { t } = useTranslation();
   // router
   const { workspaceSlug, projectId } = useParams();
@@ -143,19 +141,13 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
           target_date: renderFormattedPayloadDate(targetDate),
         }}
         quickAddCallback={quickAddIssue}
-        isEpic={isEpic}
       />
     ) : undefined;
 
-  const renderIssueBlock = useCallback(
-    (data: TIssue) => <IssueGanttBlock issueId={data.id} isEpic={isEpic} />,
-    [isEpic]
-  );
+  const renderIssueBlock = useCallback((data: TIssue) => <IssueGanttBlock issueId={data.id} />, []);
   const renderSidebar = useCallback(
-    (sidebarProps: ComponentProps<typeof IssueGanttSidebar>) => (
-      <IssueGanttSidebar {...sidebarProps} showAllBlocks isEpic={isEpic} />
-    ),
-    [isEpic]
+    (sidebarProps: ComponentProps<typeof IssueGanttSidebar>) => <IssueGanttSidebar {...sidebarProps} showAllBlocks />,
+    []
   );
 
   return (
@@ -164,8 +156,8 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
         <div className="h-full w-full">
           <GanttChartRoot
             border={false}
-            title={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
-            loaderTitle={isEpic ? t("epic.label", { count: 2 }) : t("issue.label", { count: 2 })}
+            title={t("issue.label", { count: 2 })}
+            loaderTitle={t("issue.label", { count: 2 })}
             blockIds={issuesIds}
             blockUpdateHandler={updateIssueBlockStructure}
             blockToRender={renderIssueBlock}
@@ -182,7 +174,6 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
             updateBlockDates={updateBlockDates}
             showAllBlocks
             enableDependency={!!projectId}
-            isEpic={isEpic}
           />
         </div>
       </TimeLineTypeContext.Provider>

@@ -9,7 +9,7 @@ import type { TQuickAddIssueForm } from "../root";
 import { translate } from "@plane/i18n";
 
 export const CalendarQuickAddIssueForm = observer(function CalendarQuickAddIssueForm(props: TQuickAddIssueForm) {
-  const { ref, isOpen, projectDetail, register, onSubmit, isEpic } = props;
+  const { ref, isOpen, projectDetail, register, onSubmit } = props;
 
   return (
     <div
@@ -26,9 +26,9 @@ export const CalendarQuickAddIssueForm = observer(function CalendarQuickAddIssue
         <input
           type="text"
           autoComplete="off"
-          placeholder={isEpic ? translate("web.epic_title") : translate("web.work_item_title")}
+          placeholder={translate("web.work_item_title")}
           {...register("name", {
-            required: translate("web.runtime.entity_title_required", { type: isEpic ? "epic" : "issue" }),
+            required: translate("web.runtime.entity_title_required", { type: "issue" }),
           })}
           className="w-full rounded-md bg-transparent py-1.5 pr-2 text-13 leading-5 font-medium text-secondary outline-none md:text-11"
         />

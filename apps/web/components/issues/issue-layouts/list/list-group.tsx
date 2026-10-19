@@ -72,7 +72,6 @@ interface Props {
   selectionHelpers: TSelectionHelper;
   handleCollapsedGroups: (value: string) => void;
   collapsedGroups: TIssueKanbanFilters;
-  isEpic?: boolean;
 }
 
 // A shared empty list keeps the default stable for the shallow prop comparison in `observer`.
@@ -321,7 +320,6 @@ type TGroupIssueBlocksProps = Pick<
   | "canEditProperties"
   | "containerRef"
   | "selectionHelpers"
-  | "isEpic"
 > & {
   issueIds: string[] | undefined;
   groupId: string;
@@ -341,14 +339,12 @@ const QuickAddSection = observer(function QuickAddSection({
   groupId,
   projectState,
   quickAddCallback,
-  isEpic,
 }: {
   enabled: boolean;
   groupBy: TIssueGroupByOptions | null;
   groupId: string;
   projectState: TProjectState;
   quickAddCallback: Props["quickAddCallback"];
-  isEpic: boolean;
 }) {
   if (!enabled) return null;
 
@@ -362,7 +358,6 @@ const QuickAddSection = observer(function QuickAddSection({
         prePopulatedData={getPrePopulatedQuickAddData(groupBy, groupId, defaultStateId)}
         containerClassName="border-b border-t border-subtle bg-surface-1 "
         quickAddCallback={quickAddCallback}
-        isEpic={isEpic}
       />
     </div>
   );
@@ -392,7 +387,6 @@ export const ListGroup = observer(function ListGroup(props: Props) {
     selectionHelpers,
     handleCollapsedGroups,
     collapsedGroups,
-    isEpic = false,
   } = props;
 
   const [isDraggingOverColumn, setIsDraggingOverColumn] = useState(false);
@@ -499,7 +493,6 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           addIssuesToView={addIssuesToView}
           selectionHelpers={selectionHelpers}
           handleCollapsedGroups={handleCollapsedGroups}
-          isEpic={isEpic}
         />
       </Row>
       <Collapsible.Panel
@@ -518,7 +511,6 @@ export const ListGroup = observer(function ListGroup(props: Props) {
             dropErrorMessage={group.dropErrorMessage}
             orderBy={orderBy}
             isDraggingOverColumn={isDraggingOverColumn}
-            isEpic={isEpic}
           />
           <GroupIssueBlocks
             issueIds={groupIssueIds}
@@ -532,7 +524,6 @@ export const ListGroup = observer(function ListGroup(props: Props) {
             isDragAllowed={isDragAllowed}
             canDropOverIssue={!canOverlayBeVisible}
             selectionHelpers={selectionHelpers}
-            isEpic={isEpic}
           />
 
           <GroupLoadMoreSection
@@ -550,7 +541,6 @@ export const ListGroup = observer(function ListGroup(props: Props) {
             groupId={group.id}
             projectState={projectState}
             quickAddCallback={quickAddCallback}
-            isEpic={isEpic}
           />
         </div>
       </Collapsible.Panel>

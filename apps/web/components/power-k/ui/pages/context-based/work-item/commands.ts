@@ -53,19 +53,9 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
     subscription: { getSubscriptionByIssueId, createSubscription, removeSubscription },
     updateIssue,
   } = useIssueDetail(EIssueServiceType.ISSUES);
-  const {
-    issue: {
-      addCycleToIssue: addCycleToEpic,
-      removeIssueFromCycle: removeEpicFromCycle,
-      changeModulesInIssue: changeModulesInEpic,
-    },
-    subscription: { createSubscription: createEpicSubscription, removeSubscription: removeEpicSubscription },
-    updateIssue: updateEpic,
-  } = useIssueDetail(EIssueServiceType.EPICS);
   // derived values
   const entityId = entityIdentifier ? getIssueIdByIdentifier(entityIdentifier.toString()) : null;
   const entityDetails = entityId ? getIssueById(entityId) : null;
-  const isEpic = !!entityDetails?.is_epic;
   const projectDetails = entityDetails?.project_id ? getProjectById(entityDetails?.project_id) : undefined;
   const isCurrentUserAssigned = !!entityDetails?.assignee_ids?.includes(currentUser?.id ?? "");
   const isEstimateEnabled = entityDetails?.project_id
@@ -75,21 +65,10 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
   // translation
   const { t } = useTranslation();
   // handlers
-  // One memoised choice instead of three ternaries; the references stay stable for the callbacks.
+  // One memoised object keeps the references stable for the callbacks.
   const entityApi = useMemo(
-    () =>
-      isEpic
-        ? { update: updateEpic, subscribe: createEpicSubscription, unsubscribe: removeEpicSubscription }
-        : { update: updateIssue, subscribe: createSubscription, unsubscribe: removeSubscription },
-    [
-      isEpic,
-      updateEpic,
-      createEpicSubscription,
-      removeEpicSubscription,
-      updateIssue,
-      createSubscription,
-      removeSubscription,
-    ]
+    () => ({ update: updateIssue, subscribe: createSubscription, unsubscribe: removeSubscription }),
+    [updateIssue, createSubscription, removeSubscription]
   );
   // permission
   const isEditingAllowed =
@@ -109,11 +88,11 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: translate("web.runtime.update_entity_failed", { type: isEpic ? "epic" : "issue" }),
+            message: translate("web.runtime.update_entity_failed", { type: "issue" }),
           });
         });
     },
-    [entityDetails, entityApi, isEpic, workspaceSlug, t]
+    [entityDetails, entityApi, workspaceSlug, t]
   );
 
   const handleUpdateAssignee = useCallback(
@@ -324,8 +303,8 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         if (!workspaceSlug || !entityDetails || !entityDetails.project_id) return;
         if (entityDetails.cycle_id === cycleId) return;
         // handlers
-        const addCycleToEntity = entityDetails.is_epic ? addCycleToEpic : addCycleToIssue;
-        const removeCycleFromEntity = entityDetails.is_epic ? removeEpicFromCycle : removeIssueFromCycle;
+        const addCycleToEntity = addCycleToIssue;
+        const removeCycleFromEntity = removeIssueFromCycle;
 
         try {
           if (cycleId) {
@@ -342,7 +321,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: translate("web.runtime.update_entity_failed", { type: entityDetails.is_epic ? "epic" : "issue" }),
+            message: translate("web.runtime.update_entity_failed", { type: "issue" }),
           });
         }
       },
@@ -363,7 +342,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         const moduleId = (data as IModule)?.id;
         if (!workspaceSlug || !entityDetails || !entityDetails.project_id) return;
         // handlers
-        const changeModulesInEntity = entityDetails.is_epic ? changeModulesInEpic : changeModulesInIssue;
+        const changeModulesInEntity = changeModulesInIssue;
         try {
           if (entityDetails.module_ids?.includes(moduleId)) {
             changeModulesInEntity(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id, [], [moduleId]);
@@ -374,7 +353,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
           setToast({
             type: "error",
             title: t("toast.error"),
-            message: translate("web.runtime.update_entity_failed", { type: entityDetails.is_epic ? "epic" : "issue" }),
+            message: translate("web.runtime.update_entity_failed", { type: "issue" }),
           });
         }
       },

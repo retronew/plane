@@ -10,7 +10,10 @@
       "url": {
         "label": "Set your workspace's URL",
         "placeholder": "Type or paste a URL",
-        "edit_slug": "You can only edit the slug of the URL"
+        "edit_slug": "You can only edit the slug of the URL",
+        "ai_suggest": "Suggest a URL with AI",
+        "ai_error": "Could not suggest a URL. Please try again or enter one manually.",
+        "ai_taken": "The suggested URL is already taken. Please try again or enter one manually."
       }
     },
     "errors": {
@@ -22,7 +25,8 @@
       "validation": {
         "name_alphanumeric": "Workspaces names can contain only (' '), ('-'), ('_') and alphanumeric characters.",
         "name_length": "Limit your name to 80 characters.",
-        "url_alphanumeric": "URLs can contain only ('-') and alphanumeric characters.",
+        "url_alphanumeric": "Use only English letters, numbers, hyphens (-), and underscores (_) in the URL.",
+        "url_required": "Enter a workspace URL using English letters, numbers, hyphens (-), or underscores (_).",
         "url_length": "Limit your URL to 48 characters.",
         "url_already_taken": "Workspace URL is already taken!"
       }
@@ -219,7 +223,6 @@
         "in-progress": "In progress",
         "planned": "Planned",
         "paused": "Paused",
-        "epics": "Epics",
         "cancelled": "Cancelled",
         "snoozed": "Snoozed",
         "unique_work_items": "Distinct work items"

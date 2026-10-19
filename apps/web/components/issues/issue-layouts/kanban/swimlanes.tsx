@@ -38,7 +38,6 @@ interface ISubGroupSwimlaneHeader {
     subGroupId: string | undefined,
     isSubGroupCumulative: boolean
   ) => number | undefined;
-  isEpic?: boolean;
   list: IGroupByColumn[];
   showEmptyGroup: boolean;
   sub_group_by: TIssueGroupByOptions | undefined;
@@ -59,7 +58,6 @@ const visibilitySubGroupByGroupCount = (subGroupIssueCount: number, showEmptyGro
 const SubGroupSwimlaneHeader = observer(function SubGroupSwimlaneHeader({
   getGroupIssueCount,
   group_by,
-  isEpic = false,
   list,
   showEmptyGroup,
   sub_group_by,
@@ -88,7 +86,6 @@ const SubGroupSwimlaneHeader = observer(function SubGroupSwimlaneHeader({
                 count={groupCount}
                 issuePayload={_list.payload}
                 disableIssueCreation={getIsWorkflowWorkItemCreationDisabled(_list.id)}
-                isEpic={isEpic}
               />
             </div>
           );
@@ -110,7 +107,6 @@ interface ISubGroupSwimlane extends ISubGroupSwimlaneHeader {
   ) => number | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
-  isEpic?: boolean;
   issuesMap: IIssueMap;
   loadMoreIssues: (groupId?: string, subGroupId?: string) => void;
   orderBy: TIssueOrderByOptions | undefined;
@@ -132,7 +128,6 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
     group_by,
     groupedIssueIds,
     handleOnDrop,
-    isEpic = false,
     issuesMap,
     list,
     loadMoreIssues,
@@ -190,7 +185,6 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
                   orderBy={orderBy}
                   isDropDisabled={_list.isDropDisabled}
                   dropErrorMessage={_list.dropErrorMessage}
-                  isEpic={isEpic}
                 />
               </div>
             </div>
@@ -214,7 +208,6 @@ export interface IKanBanSwimLanes {
   group_by: TIssueGroupByOptions | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
-  isEpic?: boolean;
   issuesMap: IIssueMap;
   loadMoreIssues: (groupId?: string, subGroupId?: string) => void;
   orderBy: TIssueOrderByOptions | undefined;
@@ -246,7 +239,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
     addIssuesToView,
     quickAddCallback,
     scrollableContainerRef,
-    isEpic = false,
   } = props;
   // store hooks
   const storeType = useIssueStoreType();
@@ -255,13 +247,11 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
     groupBy: group_by as GroupByColumnTypes,
     includeNone: true,
     isWorkspaceLevel: isWorkspaceLevel(storeType),
-    isEpic: isEpic,
   });
   const subGroupByList = getGroupByColumns({
     groupBy: sub_group_by as GroupByColumnTypes,
     includeNone: true,
     isWorkspaceLevel: isWorkspaceLevel(storeType),
-    isEpic: isEpic,
   });
 
   if (!groupByList || !subGroupByList) return null;
@@ -275,7 +265,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
           sub_group_by={sub_group_by}
           list={groupByList}
           showEmptyGroup={showEmptyGroup}
-          isEpic={isEpic}
         />
       </Row>
 
@@ -300,7 +289,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
           canEditProperties={canEditProperties}
           quickAddCallback={quickAddCallback}
           scrollableContainerRef={scrollableContainerRef}
-          isEpic={isEpic}
         />
       )}
     </div>

@@ -15,7 +15,6 @@ import { useOutsideClickDetector } from "@plane/hooks";
 // types
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IIssueDisplayProperties, TIssue } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
 // ui
 import { ControlLink, Row } from "@plane/blocks/layout";
 import { cn, generateWorkItemLink } from "@plane/utils";
@@ -37,8 +36,6 @@ import { isIssueNew } from "../utils";
 import { IssueColumn } from "./issue-column";
 import { translate } from "@plane/i18n";
 
-const getIssueServiceType = (isEpic: boolean) => (isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
-
 interface Props {
   displayProperties: IIssueDisplayProperties;
   isEstimateEnabled: boolean;
@@ -55,7 +52,6 @@ interface Props {
   selectionHelpers: TSelectionHelper;
   shouldRenderByDefault?: boolean;
   virtualized?: boolean;
-  isEpic?: boolean;
 }
 
 export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: Props) {
@@ -75,12 +71,11 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
     selectionHelpers,
     shouldRenderByDefault,
     virtualized = false,
-    isEpic = false,
   } = props;
   // states
   const [isExpanded, setExpanded] = useIssueRowExpansion(issueId);
   // store hooks
-  const { subIssues: subIssuesStore } = useIssueDetail(getIssueServiceType(isEpic));
+  const { subIssues: subIssuesStore } = useIssueDetail();
   const { issueMap } = useIssues();
 
   // derived values
@@ -131,12 +126,10 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
           setExpanded={setExpanded}
           spreadsheetColumnsList={spreadsheetColumnsList}
           selectionHelpers={selectionHelpers}
-          isEpic={isEpic}
         />
       </RenderIfVisible>
 
       {isExpanded &&
-        !isEpic &&
         subIssues?.map((subIssueId: string) => (
           <SpreadsheetIssueRow
             key={subIssueId}
@@ -176,7 +169,6 @@ interface IssueRowDetailsProps {
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   spacingLeft?: number;
   selectionHelpers: TSelectionHelper;
-  isEpic?: boolean;
 }
 
 function IssueIdentifierCell({
@@ -249,16 +241,14 @@ function IssueSelectionCell({
 
 function SubIssuesChevron({
   count,
-  isEpic,
   isExpanded,
   onToggle,
 }: {
   count: number;
-  isEpic: boolean;
   isExpanded: boolean;
   onToggle: (e: MouseEvent<HTMLButtonElement>) => void;
 }) {
-  if (count <= 0 || isEpic) return null;
+  if (count <= 0) return null;
   return (
     <button
       type="button"
@@ -290,7 +280,6 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
     spreadsheetColumnsList,
     spacingLeft = 6,
     selectionHelpers,
-    isEpic = false,
   } = props;
   // states
   const [isMenuActive, setIsMenuActive] = useState(false);
@@ -301,8 +290,8 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   const { workspaceSlug, projectId } = useParams();
   // hooks
   const { getProjectIdentifierById } = useProject();
-  const { getIsIssuePeeked, peekIssue } = useIssueDetail(getIssueServiceType(isEpic));
-  const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
+  const { getIsIssuePeeked, peekIssue } = useIssueDetail();
+  const { handleRedirection } = useIssuePeekOverviewRedirection();
   const { isMobile } = usePlatformOS();
 
   // handlers
@@ -360,7 +349,6 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
     issueId,
     projectIdentifier,
     sequenceId: issueDetail?.sequence_id,
-    isEpic,
   });
 
   return (
@@ -419,15 +407,10 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
 
               {/* sub-issues chevron */}
               <div className="grid size-4 place-items-center">
-                <SubIssuesChevron
-                  count={subIssuesCount}
-                  isEpic={isEpic}
-                  isExpanded={isExpanded}
-                  onToggle={handleToggleExpand}
-                />
+                <SubIssuesChevron count={subIssuesCount} isExpanded={isExpanded} onToggle={handleToggleExpand} />
               </div>
 
-              <WorkItemTypeIcon projectId={issueDetail.project_id} typeId={issueDetail.type_id} isEpic={isEpic} />
+              <WorkItemTypeIcon projectId={issueDetail.project_id} typeId={issueDetail.type_id} />
 
               <div className="my-auto flex h-full w-full items-center justify-between gap-2 truncate">
                 <div className="line-clamp-1 w-full text-14 text-primary">

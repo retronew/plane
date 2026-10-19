@@ -412,21 +412,5 @@
         "suffix": "? Alle gegevens die bij het terugkerende werkitem horen worden permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt."
       }
     }
-  },
-  "epic": {
-    "new": "Nieuwe Epic",
-    "label": "{count, plural, one {Epic} other {Epics}}",
-    "adding": "Epic toevoegen",
-    "create": {
-      "success": "Epic succesvol aangemaakt"
-    },
-    "add": {
-      "label": "Epic toevoegen",
-      "press_enter": "Druk op 'Enter' om nog een epic toe te voegen"
-    },
-    "title": {
-      "label": "Epic-titel",
-      "required": "Epic-titel is verplicht."
-    }
   }
 }

@@ -11,7 +11,6 @@ vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key
 vi.mock("@/hooks/use-issue-layout-store", () => ({ useIssueStoreType: () => "PROFILE" }));
 vi.mock("@/components/core/modals/existing-issues-list-modal", () => ({ ExistingIssuesListModal: () => null }));
 vi.mock("@/components/core/multiple-select", () => ({ MultipleSelectGroupAction: () => null }));
-vi.mock("@/components/epic-modal", () => ({ CreateUpdateEpicModal: () => null }));
 vi.mock("@/components/issues/issue-modal/modal", () => ({
   CreateUpdateIssueModal: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <p>Create work item</p> : null),
 }));

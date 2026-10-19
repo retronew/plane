@@ -29,11 +29,10 @@ import type { GanttStoreType } from "./base-gantt-root";
 
 type Props = {
   issueId: string;
-  isEpic?: boolean;
 };
 
 export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
-  const { issueId, isEpic } = props;
+  const { issueId } = props;
   // router
   const { workspaceSlug: routerWorkspaceSlug } = useParams();
   const workspaceSlug = routerWorkspaceSlug?.toString();
@@ -44,7 +43,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
   } = useIssueDetail();
   // hooks
   const { isMobile } = usePlatformOS();
-  const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
+  const { handleRedirection } = useIssuePeekOverviewRedirection();
 
   // derived values
   const issueDetails = getIssueById(issueId);
@@ -95,7 +94,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
 
 // rendering issues on gantt sidebar
 export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(props: Props) {
-  const { issueId, isEpic = false } = props;
+  const { issueId } = props;
   // router
   const { workspaceSlug: routerWorkspaceSlug } = useParams();
   const workspaceSlug = routerWorkspaceSlug?.toString();
@@ -109,7 +108,7 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
   const { getProjectIdentifierById } = useProject();
 
   // handlers
-  const { handleRedirection } = useIssuePeekOverviewRedirection(isEpic);
+  const { handleRedirection } = useIssuePeekOverviewRedirection();
 
   // derived values
   const issueDetails = getIssueById(issueId);
@@ -127,7 +126,6 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
     issueId,
     projectIdentifier,
     sequenceId: issueDetails?.sequence_id,
-    isEpic,
   });
 
   return (

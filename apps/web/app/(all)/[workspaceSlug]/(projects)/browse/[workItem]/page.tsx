@@ -66,9 +66,6 @@ const getIssueDetailState = (
   return { issueId, projectId, issue, issueLoader, pageTitle };
 };
 
-const getIssueServiceType = (issue: TIssue | undefined) =>
-  issue?.is_epic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES;
-
 const syncIssueDetailSidebar = (
   win: Window,
   issueDetailSidebarCollapsed: boolean | undefined,
@@ -162,7 +159,7 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     getProjectByIdentifier
   );
 
-  useWorkItemProperties(projectId, workspaceSlug.toString(), issueId, getIssueServiceType(issue));
+  useWorkItemProperties(projectId, workspaceSlug.toString(), issueId, EIssueServiceType.ISSUES);
 
   useEffect(() => {
     const handleToggleIssueDetailSidebar = () =>

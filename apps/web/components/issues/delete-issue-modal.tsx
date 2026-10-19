@@ -26,11 +26,10 @@ type Props = {
   data?: TIssue | TDeDupeIssue;
   isSubIssue?: boolean;
   onSubmit?: () => Promise<void>;
-  isEpic?: boolean;
 };
 
 export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props) {
-  const { dataId, data, isOpen, handleClose, isSubIssue = false, onSubmit, isEpic = false } = props;
+  const { dataId, data, isOpen, handleClose, isSubIssue = false, onSubmit } = props;
   // store hooks
   const { workspaceSlug } = useParams();
   const { issueMap } = useIssues();
@@ -46,8 +45,8 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
   const entityId = issue?.id ?? dataId;
   const projectId = issue?.project_id;
   const session = useMemo(
-    () => ({ active: false, pending: false, isOpen, entityId, projectId, workspaceSlug, isSubIssue, isEpic }),
-    [isOpen, entityId, projectId, workspaceSlug, isSubIssue, isEpic]
+    () => ({ active: false, pending: false, isOpen, entityId, projectId, workspaceSlug, isSubIssue }),
+    [isOpen, entityId, projectId, workspaceSlug, isSubIssue]
   );
   const [submittingSession, setSubmittingSession] = useState<typeof session | null>(null);
   const isDeleting = submittingSession === session;
@@ -101,14 +100,14 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
         type: "success",
         title: t("common.success"),
         message: t("entity.delete.success", {
-          entity: isSubIssue ? t("common.sub_work_item") : isEpic ? t("common.epic") : t("common.work_item"),
+          entity: isSubIssue ? t("common.sub_work_item") : t("common.work_item"),
         }),
       });
     } catch (errors) {
       if (!session.active) return;
       const isPermissionError =
         (errors as { error?: string } | undefined)?.error ===
-        `Only admin or creator can delete the ${isSubIssue ? "sub-work item" : isEpic ? "epic" : "work item"}`;
+        `Only admin or creator can delete the ${isSubIssue ? "sub-work item" : "work item"}`;
       const currentError = isPermissionError
         ? PROJECT_ERROR_MESSAGES.permissionError
         : PROJECT_ERROR_MESSAGES.issueDeleteError;
@@ -128,11 +127,11 @@ export const DeleteIssueModal = observer(function DeleteIssueModal(props: Props)
       handleSubmit={handleIssueDelete}
       isSubmitting={isDeleting}
       isOpen={isOpen}
-      title={t("entity.delete.label", { entity: isEpic ? t("common.epic") : t("common.work_item") })}
+      title={t("entity.delete.label", { entity: t("common.work_item") })}
       content={
         <Translation
           translationKey="web.runtime.delete_issue_confirmation"
-          values={{ type: isEpic ? "epic" : "issue" }}
+          values={{ type: "issue" }}
           components={{
             identifier: (
               <span className="font-medium break-words text-primary">
