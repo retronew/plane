@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { ProjectStateSettings, PROJECT_PHASES } from "./project-state-settings";
+import { ProjectStateSettings } from "./project-state-settings";
+import { PROJECT_PHASES } from "./project-state-keys";
 
 const settings = vi.hoisted(() => ({ enabled: false }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));

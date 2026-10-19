@@ -17,30 +17,11 @@ import {
   projectConfigurationKey,
   workspaceConfigurationService as service,
 } from "@/services/workspace-configuration.service";
-import type {
-  WorkspaceTemplate,
-  TemplateConfiguration,
-  TemplateWorkItemChild,
-} from "@/services/workspace-configuration.service";
+import type { TemplateConfiguration, TemplateWorkItemChild } from "@/services/workspace-configuration.service";
 import { TemplateChildren } from "./children";
 import { TemplatePageFields } from "./page-fields";
 import { TemplateWorkItemFields } from "./work-item-fields";
-
-type ProjectTemplateKind = "work_item" | "page";
-type Draft = Omit<WorkspaceTemplate, "id"> & { id?: string };
-
-export function newProjectTemplate(kind: ProjectTemplateKind, projectId: string): Draft {
-  return {
-    kind,
-    project: projectId,
-    name: "",
-    short_description: "",
-    title: "",
-    description_html: "<p></p>",
-    priority: "none",
-    configuration: {},
-  };
-}
+import { newProjectTemplate, type Draft, type ProjectTemplateKind } from "./project-template-draft";
 
 export function ProjectTemplateEditor() {
   const { workspaceSlug = "", projectId = "", templateKind = "", templateId } = useParams();

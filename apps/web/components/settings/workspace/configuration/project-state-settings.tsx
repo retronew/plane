@@ -10,8 +10,7 @@ import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import { useTranslation } from "@plane/i18n";
 import { configurationKey, workspaceConfigurationService as service } from "@/services/workspace-configuration.service";
 import { CategoryManager } from "./category-manager";
-export const PROJECT_PHASES = ["draft", "planning", "execution", "monitoring", "completed", "cancelled"] as const;
-export const stateSettingsKey = (slug: string) => `project-state-settings:${slug}`;
+import { PROJECT_PHASES, stateSettingsKey } from "./project-state-keys";
 export function ProjectStateSettings() {
   const { workspaceSlug = "" } = useParams();
   const { t } = useTranslation();

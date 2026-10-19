@@ -1,4 +1,4 @@
-import { ProjectComparison, projectCompletion } from "./project-comparison";
+import { ProjectComparison } from "./project-comparison";
 import CreatedVsResolved from "./work-items/created-vs-resolved";
 import { AnalyticsMetricCard } from "./metric-card";
 import { Suspense, lazy, useMemo, useState } from "react";
@@ -19,6 +19,7 @@ import { formatCompactDate, getFileURL, renderFormattedDate } from "@plane/utils
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { AnalyticsService } from "@/services/analytics.service";
 import { DETAIL_COLUMNS } from "./details-columns";
+import { projectCompletion } from "./project-completion";
 import AnalyticsWrapper from "./analytics-wrapper";
 import AnalyticsSectionWrapper from "./analytics-section-wrapper";
 import AnalyticsEmptyState from "./empty-state";

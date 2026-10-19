@@ -7,10 +7,8 @@ import AnalyticsWrapper from "./analytics-wrapper";
 import { AnalyticsChoice } from "./choice";
 import PriorityChart from "./work-items/priority-chart";
 import { EntityInsights } from "./entity-insights";
-import { ENTITY_AXES, type EntityMetric } from "./entity-insights-data";
-
-export type InsightMetric = "work-items" | EntityMetric;
-export const INSIGHT_METRICS: InsightMetric[] = ["work-items", "projects", "users", "cycles", "modules", "intake"];
+import { ENTITY_AXES } from "./entity-insights-data";
+import { INSIGHT_METRICS, type InsightMetric } from "./insight-metrics";
 
 export function Insights() {
   const { t } = useTranslation();

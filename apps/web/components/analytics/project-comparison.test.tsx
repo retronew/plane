@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { projectCompletion } from "./project-comparison";
+import { projectCompletion } from "./project-completion";
 it("weights completion by non-cancelled work items, not project percentages", () => {
   expect(
     projectCompletion([
