@@ -1,0 +1,55 @@
+name: API tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "preview"
+    types:
+      - "opened"
+      - "synchronize"
+      - "ready_for_review"
+      - "reopened"
+    paths:
+      - "apps/api/**"
+      - "apps/workflow-runner/**"
+      - "docker-compose-test.yml"
+      - ".github/workflows/pull-request-api-tests.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: pytest (plane-test stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v6
+
+      # The compose stack mounts apps/api/.env, which is gitignored (it holds the
+      # developer's own credentials). The example file carries workable defaults
+      # for every service the tests contact; the api-tests service overrides the
+      # database, redis, rabbitmq and object-storage hosts explicitly.
+      - name: Seed the API env file
+        run: cp apps/api/.env.example apps/api/.env
+
+      # Same command as docs: the isolated test project (never the local dev
+      # stack), abort once pytest exits, and fail the job with pytest's status.
+      - name: Run the suite
+        run: |
+          docker compose -p plane-test -f docker-compose-test.yml up \
+            --build \
+            --abort-on-container-exit \
+            --exit-code-from api-tests
+
+      # tmpfs data and the project network go away with the stack; this also
+      # stops the dependency services that --abort-on-container-exit leaves.
+      - name: Tear down
+        if: always()
+        run: docker compose -p plane-test -f docker-compose-test.yml down -v
