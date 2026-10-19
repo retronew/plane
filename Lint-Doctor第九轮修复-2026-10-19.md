@@ -9,13 +9,13 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 | 检查               | 第八轮结束 | 现在 |
 | ------------------ | ---------- | ---- |
 | Doctor errors      | 5          | 5    |
-| Doctor warnings    | 305        | 232  |
-| Doctor 总诊断      | 310        | 237  |
+| Doctor warnings    | 305        | 219  |
+| Doctor 总诊断      | 310        | 224  |
 | 常规 lint warnings | 1          | 1    |
 
-项目分数：**space 87 → 91**、**@plane/utils 89 → 100**、admin 91、web 73、blocks 84、editor 61、live 75。`--scope changed` 扫描：0 诊断。
+项目分数：**space 87 → 91**、**@plane/utils 89 → 100**、**admin 91 → 92**、web 73、blocks 84、editor 61、live 75。`--scope changed` 扫描：0 诊断。
 
-规则分布变化：`js-set-map-lookups` **68 → 0**，`prefer-dynamic-import` 17 → 16（实现文件仍静态导入，但消费侧已拆分 chunk），其余不变。
+规则分布变化：`js-set-map-lookups` **68 → 0**、`no-giant-component` **14 → 1**，`prefer-dynamic-import` 17 → 16（实现文件仍静态导入，但消费侧已拆分 chunk）。
 
 ## 一、数组查找索引（68 处 / 61 个文件）
 
@@ -63,3 +63,11 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 ## 数据库
 
 本轮同样没有任何模型、迁移或 `apps/api` 改动，无需执行迁移或同步线上环境。
+
+## 六、大组件拆分（`no-giant-component` 14 → 1）
+
+- **7 个 empty-state SVG 插画**：按视觉层拆成 `BackgroundLayers` / `ShadowLayers` / `ForegroundLayers` / `DetailLayers` 四个同文件组件。新增 `vertical-stack.test.tsx`，逐张断言 path 数量（51/46/48/58/59/47/49）与两个 opacity 分组不变；首版脚本漏掉了 `view` 中位于第一个分组之前的 2 条 path，测试当场发现并修正。
+- **6 个业务组件**（顶层组件行数）：`TemplateEditor` 497→241、`CategoryManager` 484→254、`UpdateDiscussion` 402→270、`WorkflowRunner` 405→271、`ProjectDetailsForm` 430→196、`InstanceAIForm` 307→249。拆出的都是同文件具名组件（`TemplateMultiSelect`、`CategoryRow`、`UpdateCommentRow`、`WorkflowTestPanel`、`ProjectCoverHeader`、`AIProviderField` 等），state 与 handlers 留在原组件，JSX 区块通过 props 接入；key、i18n 文案、class 与事件处理保持不变。
+- 验证：Web 全量 **345 文件 / 1638 项**、settings 77 项、project 221 项、workflow+project 387 项全部通过；admin 类型检查通过。
+
+**保留 1 个**：`packages/blocks/src/select/root.tsx`（`SelectRoot`，643 行）。其中约 580 行是逻辑而非 JSX，open/selection/search/infinite 四组状态相互耦合，源码注释记录了这些不变量（例如关闭时不能重跑搜索、infinite 列表关闭后仍需解析已选 id）。拆成 hooks 需要 10+ 参数来回传递并打散这些不变量，可读性反而下降，因此保留。
