@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { observer } from "mobx-react";
 import { AiStar1Outline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
@@ -13,7 +14,7 @@ import { GptAssistantPopover } from "@/components/core/modals/gpt-assistant-popo
 import { useInstance } from "@/hooks/store/use-instance";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
-import type { TNameDescriptionLoader } from "@plane/types";
+import type { TIssue, TNameDescriptionLoader } from "@plane/types";
 import { EFileAssetType, EIssueServiceType } from "@plane/types";
 // components
 import { DescriptionVersionsRoot } from "@/components/core/description-versions";
@@ -50,20 +51,192 @@ type Props = {
   isArchived: boolean;
 };
 
+type TIssueContentHeaderProps = {
+  issueId: string;
+  isDisabled: boolean;
+  isSubmitting: TNameDescriptionLoader;
+};
+
+function IssueContentHeader({ issueId, isDisabled, isSubmitting }: TIssueContentHeaderProps) {
+  return (
+    <div className="mb-2.5 flex items-center justify-between gap-4">
+      <IssueTypeSwitcher issueId={issueId} disabled={isDisabled} />
+      <div className="flex items-center gap-3">
+        <NameDescriptionUpdateStatus isSubmitting={isSubmitting} />
+      </div>
+    </div>
+  );
+}
+
+type TIssueDescriptionSectionProps = {
+  workspaceSlug: string;
+  projectId: string;
+  issue: TIssue;
+  issueOperations: TIssueOperations;
+  isDisabled: boolean;
+  editorRef: RefObject<EditorRefApi | null>;
+  setIsSubmitting: (value: TNameDescriptionLoader) => void;
+};
+
+function IssueDescriptionSection({
+  workspaceSlug,
+  projectId,
+  issue,
+  issueOperations,
+  isDisabled,
+  editorRef,
+  setIsSubmitting,
+}: TIssueDescriptionSectionProps) {
+  return (
+    <DescriptionInput
+      issueSequenceId={issue.sequence_id}
+      containerClassName="-ml-6 border-none p-0! pl-6!"
+      disabled={isDisabled}
+      editorRef={editorRef}
+      entityId={issue.id}
+      fileAssetType={EFileAssetType.ISSUE_DESCRIPTION}
+      initialValue={issue.description_html}
+      key={issue.id}
+      onSubmit={async (value, isMigrationUpdate) => {
+        if (!issue.id || !projectId) return;
+        await issueOperations.update(workspaceSlug, projectId, issue.id, {
+          description_html: value.description_html,
+          ...(isMigrationUpdate ? { skip_activity: "true" } : {}),
+        });
+      }}
+      projectId={projectId}
+      setIsSubmitting={setIsSubmitting}
+      workspaceSlug={workspaceSlug}
+    />
+  );
+}
+
+type TIssueAIAssistantProps = {
+  workspaceSlug: string;
+  issue: TIssue;
+  isDisabled: boolean;
+  editorRef: RefObject<EditorRefApi | null>;
+};
+
+const IssueAIAssistant = observer(function IssueAIAssistant({
+  workspaceSlug,
+  issue,
+  isDisabled,
+  editorRef,
+}: TIssueAIAssistantProps) {
+  // states
+  const [aiOpen, setAiOpen] = useState(false);
+  // store hooks
+  const { config: instanceConfig } = useInstance();
+  const { t } = useTranslation();
+  const { getWorkspaceBySlug } = useWorkspace();
+
+  if (isDisabled) return null;
+  if (!instanceConfig?.has_llm_configured) return null;
+  if (getWorkspaceBySlug(workspaceSlug)?.ai_enabled === false) return null;
+
+  return (
+    <div className="flex justify-end">
+      <GptAssistantPopover
+        key={issue.id}
+        isOpen={aiOpen}
+        handleClose={() => setAiOpen(false)}
+        workspaceSlug={workspaceSlug}
+        getContext={() => ({
+          kind: "issue",
+          title: issue.name,
+          document: editorRef.current?.getDocument().html ?? "",
+        })}
+        onApply={(html, mode, context) => {
+          const editor = editorRef.current;
+          if (!editor || context.title !== issue.name || context.document !== editor.getDocument().html) return false;
+          editor.setEditorValue(mode === "replace" ? html : context.document + html, true);
+          return true;
+        }}
+        onUndo={(context) => editorRef.current?.setEditorValue(context.document, true)}
+        button={
+          <button
+            type="button"
+            className="flex items-center gap-1 rounded-sm px-2 py-1 text-13 hover:bg-layer-1"
+            onClick={() => setAiOpen(true)}
+          >
+            <AiStar1Outline className="size-4" />
+            {t("web.ai_writing_title")}
+          </button>
+        }
+      />
+    </div>
+  );
+});
+
+type TIssueMainContentFooterProps = {
+  workspaceSlug: string;
+  projectId: string;
+  issueId: string;
+  issue: TIssue;
+  isEditable: boolean;
+  isArchived: boolean;
+  isDisabled: boolean;
+  editorRef: RefObject<EditorRefApi | null>;
+};
+
+const IssueMainContentFooter = observer(function IssueMainContentFooter({
+  workspaceSlug,
+  projectId,
+  issueId,
+  issue,
+  isEditable,
+  isArchived,
+  isDisabled,
+  editorRef,
+}: TIssueMainContentFooterProps) {
+  const { data: currentUser } = useUser();
+  const { getUserDetails } = useMember();
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      {currentUser && (
+        <IssueReaction
+          className="flex-shrink-0"
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          currentUser={currentUser}
+          disabled={isArchived}
+        />
+      )}
+      {isEditable && (
+        <DescriptionVersionsRoot
+          className="flex-shrink-0"
+          entityInformation={{
+            createdAt: issue.created_at ? new Date(issue.created_at) : new Date(),
+            createdByDisplayName: getUserDetails(issue.created_by ?? "")?.display_name ?? "",
+            id: issueId,
+            isRestoreDisabled: isDisabled,
+          }}
+          fetchHandlers={{
+            listDescriptionVersions: (issueId) =>
+              workItemVersionService.listDescriptionVersions(workspaceSlug, projectId, issueId),
+            retrieveDescriptionVersion: (issueId, versionId) =>
+              workItemVersionService.retrieveDescriptionVersion(workspaceSlug, projectId, issueId, versionId),
+          }}
+          handleRestore={(descriptionHTML) => editorRef.current?.setEditorValue(descriptionHTML, true)}
+          projectId={projectId}
+          workspaceSlug={workspaceSlug}
+        />
+      )}
+    </div>
+  );
+});
+
 export const IssueMainContent = observer(function IssueMainContent(props: Props) {
   const { workspaceSlug, projectId, issueId, issueOperations, isEditable, isArchived } = props;
   // refs
   const editorRef = useRef<EditorRefApi>(null);
   // states
   const [isSubmitting, setIsSubmitting] = useState<TNameDescriptionLoader>("saved");
-  const [aiOpen, setAiOpen] = useState(false);
-  const { config: instanceConfig } = useInstance();
-  const { t } = useTranslation();
-  const { getWorkspaceBySlug } = useWorkspace();
   // hooks
   const windowSize = useSize();
-  const { data: currentUser } = useUser();
-  const { getUserDetails } = useMember();
   const {
     issue: { getIssueById },
     peekIssue,
@@ -71,6 +244,8 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
   const { setShowAlert } = useReloadConfirmations(isSubmitting === "submitting");
   // derived values
   const issue = issueId ? getIssueById(issueId) : undefined;
+  const isDisabled = isArchived || !isEditable;
+  const isPeekModeActive = Boolean(peekIssue);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -81,9 +256,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
     return () => clearTimeout(timer);
   }, [isSubmitting, setShowAlert, setIsSubmitting]);
 
-  if (!issue || !issue.project_id) return <></>;
-
-  const isPeekModeActive = Boolean(peekIssue);
+  if (!issue?.project_id) return <></>;
 
   return (
     <>
@@ -98,12 +271,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           />
         )}
 
-        <div className="mb-2.5 flex items-center justify-between gap-4">
-          <IssueTypeSwitcher issueId={issueId} disabled={isArchived || !isEditable} />
-          <div className="flex items-center gap-3">
-            <NameDescriptionUpdateStatus isSubmitting={isSubmitting} />
-          </div>
-        </div>
+        <IssueContentHeader issueId={issueId} isDisabled={isDisabled} isSubmitting={isSubmitting} />
 
         <IssueTitleInput
           workspaceSlug={workspaceSlug}
@@ -112,7 +280,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           isSubmitting={isSubmitting}
           setIsSubmitting={(value) => setIsSubmitting(value)}
           issueOperations={issueOperations}
-          disabled={isArchived || !isEditable}
+          disabled={isDisabled}
           value={issue.name}
         />
 
@@ -120,106 +288,38 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           workspaceSlug={workspaceSlug}
           projectId={issue.project_id}
           issueId={issueId}
-          disabled={isArchived || !isEditable}
+          disabled={isDisabled}
         />
 
-        <DescriptionInput
-          issueSequenceId={issue.sequence_id}
-          containerClassName="-ml-6 border-none p-0! pl-6!"
-          disabled={isArchived || !isEditable}
-          editorRef={editorRef}
-          entityId={issue.id}
-          fileAssetType={EFileAssetType.ISSUE_DESCRIPTION}
-          initialValue={issue.description_html}
-          key={issue.id}
-          onSubmit={async (value, isMigrationUpdate) => {
-            if (!issue.id || !issue.project_id) return;
-            await issueOperations.update(workspaceSlug, issue.project_id, issue.id, {
-              description_html: value.description_html,
-              ...(isMigrationUpdate ? { skip_activity: "true" } : {}),
-            });
-          }}
-          projectId={issue.project_id}
-          setIsSubmitting={(value) => setIsSubmitting(value)}
+        <IssueDescriptionSection
           workspaceSlug={workspaceSlug}
+          projectId={issue.project_id}
+          issue={issue}
+          issueOperations={issueOperations}
+          isDisabled={isDisabled}
+          editorRef={editorRef}
+          setIsSubmitting={setIsSubmitting}
         />
 
-        {isEditable &&
-          !isArchived &&
-          instanceConfig?.has_llm_configured &&
-          getWorkspaceBySlug(workspaceSlug)?.ai_enabled !== false && (
-            <div className="flex justify-end">
-              <GptAssistantPopover
-                key={issue.id}
-                isOpen={aiOpen}
-                handleClose={() => setAiOpen(false)}
-                workspaceSlug={workspaceSlug}
-                getContext={() => ({
-                  kind: "issue",
-                  title: issue.name,
-                  document: editorRef.current?.getDocument().html ?? "",
-                })}
-                onApply={(html, mode, context) => {
-                  const editor = editorRef.current;
-                  if (!editor || context.title !== issue.name || context.document !== editor.getDocument().html)
-                    return false;
-                  editor.setEditorValue(mode === "replace" ? html : context.document + html, true);
-                  return true;
-                }}
-                onUndo={(context) => editorRef.current?.setEditorValue(context.document, true)}
-                button={
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 rounded-sm px-2 py-1 text-13 hover:bg-layer-1"
-                    onClick={() => setAiOpen(true)}
-                  >
-                    <AiStar1Outline className="size-4" />
-                    {t("web.ai_writing_title")}
-                  </button>
-                }
-              />
-            </div>
-          )}
+        <IssueAIAssistant workspaceSlug={workspaceSlug} issue={issue} isDisabled={isDisabled} editorRef={editorRef} />
 
-        <div className="flex items-center justify-between gap-2">
-          {currentUser && (
-            <IssueReaction
-              className="flex-shrink-0"
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
-              currentUser={currentUser}
-              disabled={isArchived}
-            />
-          )}
-          {isEditable && (
-            <DescriptionVersionsRoot
-              className="flex-shrink-0"
-              entityInformation={{
-                createdAt: issue.created_at ? new Date(issue.created_at) : new Date(),
-                createdByDisplayName: getUserDetails(issue.created_by ?? "")?.display_name ?? "",
-                id: issueId,
-                isRestoreDisabled: !isEditable || isArchived,
-              }}
-              fetchHandlers={{
-                listDescriptionVersions: (issueId) =>
-                  workItemVersionService.listDescriptionVersions(workspaceSlug, projectId, issueId),
-                retrieveDescriptionVersion: (issueId, versionId) =>
-                  workItemVersionService.retrieveDescriptionVersion(workspaceSlug, projectId, issueId, versionId),
-              }}
-              handleRestore={(descriptionHTML) => editorRef.current?.setEditorValue(descriptionHTML, true)}
-              projectId={projectId}
-              workspaceSlug={workspaceSlug}
-            />
-          )}
-        </div>
+        <IssueMainContentFooter
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={issueId}
+          issue={issue}
+          isEditable={isEditable}
+          isArchived={isArchived}
+          isDisabled={isDisabled}
+          editorRef={editorRef}
+        />
       </div>
 
       <IssueDetailWidgets
         workspaceSlug={workspaceSlug}
         projectId={projectId}
         issueId={issueId}
-        disabled={!isEditable || isArchived}
+        disabled={isDisabled}
         renderWidgetModals={!isPeekModeActive}
         issueServiceType={EIssueServiceType.ISSUES}
       />
@@ -230,7 +330,7 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           projectId={projectId}
           issueId={issueId}
           issueOperations={issueOperations}
-          disabled={!isEditable || isArchived}
+          disabled={isDisabled}
         />
       )}
 

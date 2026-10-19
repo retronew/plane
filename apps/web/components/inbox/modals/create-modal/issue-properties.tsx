@@ -36,6 +36,107 @@ type TInboxIssueProperties = {
   isVisible?: boolean;
 };
 
+type TDateInput = Parameters<typeof getDate>[0];
+
+const getDateBounds = (startDate: TDateInput, targetDate: TDateInput) => {
+  const minDate = getDate(startDate);
+  minDate?.setDate(minDate.getDate());
+
+  const maxDate = getDate(targetDate);
+  maxDate?.setDate(maxDate.getDate());
+
+  return { minDate, maxDate };
+};
+
+const getDateValue = (date: TDateInput) => getDate(date) ?? null;
+
+const getDatePayload = (date: Date | null) => (date ? renderFormattedPayloadDate(date) : "");
+
+const getIdsOrEmpty = <T,>(ids: T[] | null | undefined): T[] => ids || [];
+
+const getAssigneeVariant = (assigneeIds: string[]) => (assigneeIds.length ? "avatar-group-md" : "pill-md");
+
+const getCycleId = (cycleId: string | null | undefined) => cycleId || null;
+
+const getEstimatePoint = (estimatePoint: string | null | undefined) => estimatePoint || undefined;
+
+const shouldShowEstimate = (
+  isVisible: boolean,
+  projectId: string,
+  areEstimateEnabledByProjectId: (projectId: string) => boolean
+) => isVisible && !!projectId && areEstimateEnabledByProjectId(projectId);
+
+type TParentIssueFieldProps = {
+  projectId: string;
+  typeId?: string | null;
+  tabIndex: number | undefined;
+  selectedIssue: ISearchIssueResponse | undefined;
+  isModalOpen: boolean;
+  onModalOpenChange: (isOpen: boolean) => void;
+  onChange: (issue: ISearchIssueResponse) => void;
+  onRemove: () => void;
+};
+
+function ParentIssueField({
+  projectId,
+  typeId,
+  tabIndex,
+  selectedIssue,
+  isModalOpen,
+  onModalOpenChange,
+  onChange,
+  onRemove,
+}: TParentIssueFieldProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="h-7">
+      {selectedIssue ? (
+        <div className="h-full w-full">
+          <Menu>
+            <MenuTrigger
+              render={
+                <button
+                  type="button"
+                  tabIndex={tabIndex}
+                  className="flex h-full cursor-pointer items-center justify-between gap-1 rounded-sm border-[0.5px] border-strong px-2 py-0.5 text-11 hover:bg-layer-1"
+                >
+                  <ParentOutline className="h-3 w-3 flex-shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {`${selectedIssue.project__identifier}-${selectedIssue.sequence_id}`}
+                  </span>
+                </button>
+              }
+            />
+            <MenuContent side="bottom" align="start">
+              <MenuItem label={t("web.change_parent_work_item")} onClick={() => onModalOpenChange(true)} />
+              <MenuItem label={t("web.remove_parent_work_item")} onClick={onRemove} />
+            </MenuContent>
+          </Menu>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="flex h-full cursor-pointer items-center justify-between gap-1 rounded-sm border-[0.5px] border-strong px-2 py-0.5 text-11 hover:bg-layer-1"
+          onClick={() => onModalOpenChange(true)}
+        >
+          <ParentOutline className="h-3 w-3 flex-shrink-0" />
+          <span className="whitespace-nowrap">{t("web.add_parent")}</span>
+        </button>
+      )}
+
+      <ParentIssuesListModal
+        isOpen={isModalOpen}
+        handleClose={() => onModalOpenChange(false)}
+        onChange={onChange}
+        projectId={projectId}
+        issueId={undefined}
+        typeId={typeId}
+      />
+    </div>
+  );
+}
+
 export const InboxIssueProperties = observer(function InboxIssueProperties(props: TInboxIssueProperties) {
   const { workspaceSlug, projectId, data, handleData, isVisible = false } = props;
   // translation
@@ -50,14 +151,21 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
 
   const { getIndex } = getTabIndex(ETabIndices.INTAKE_ISSUE_FORM, isMobile);
 
-  const startDate = data?.start_date;
-  const targetDate = data?.target_date;
+  // derived values
+  const { minDate } = getDateBounds(data?.start_date, data?.target_date);
+  const assigneeIds = getIdsOrEmpty(data?.assignee_ids);
+  const weekStartsOn = userProfile?.start_of_the_week;
+  const showEstimate = shouldShowEstimate(isVisible, projectId, areEstimateEnabledByProjectId);
 
-  const minDate = getDate(startDate);
-  minDate?.setDate(minDate.getDate());
+  const handleParentIssueChange = (issue: ISearchIssueResponse) => {
+    handleData("parent_id", issue?.id);
+    setSelectedParentIssue(issue);
+  };
 
-  const maxDate = getDate(targetDate);
-  maxDate?.setDate(maxDate.getDate());
+  const handleParentIssueRemove = () => {
+    handleData("parent_id", "");
+    setSelectedParentIssue(undefined);
+  };
 
   return (
     <div className="relative flex flex-wrap items-center gap-2">
@@ -82,18 +190,18 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
       {/* Assignees */}
       <MemberSelect
         projectId={projectId}
-        value={data?.assignee_ids || []}
-        onChange={(assigneeIds) => handleData("assignee_ids", assigneeIds)}
+        value={assigneeIds}
+        onChange={(ids) => handleData("assignee_ids", ids)}
         placeholder={t("web.assignees")}
         multiple
-        variant={(data?.assignee_ids || []).length ? "avatar-group-md" : "pill-md"}
+        variant={getAssigneeVariant(assigneeIds)}
         tabIndex={getIndex("assignee_ids")}
       />
 
       {/* labels */}
       <LabelSelect
         projectId={projectId}
-        value={data?.label_ids || []}
+        value={getIdsOrEmpty(data?.label_ids)}
         onChange={(labelIds) => handleData("label_ids", labelIds)}
         variant="pill-md"
         placeholder={t("labels")}
@@ -103,12 +211,12 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
       {/* start date */}
       {isVisible && (
         <DateSelect
-          value={getDate(data?.start_date) ?? null}
-          onChange={(date) => handleData("start_date", date ? renderFormattedPayloadDate(date) : "")}
-          minDate={minDate ?? undefined}
+          value={getDateValue(data?.start_date)}
+          onChange={(date) => handleData("start_date", getDatePayload(date))}
+          minDate={minDate}
           placeholder={t("web.start_date")}
           icon={<CalendarOutline />}
-          weekStartsOn={userProfile?.start_of_the_week}
+          weekStartsOn={weekStartsOn}
           clearable
           clearLabel={t("common.clear")}
           variant="pill-md"
@@ -118,12 +226,12 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
 
       {/* due date */}
       <DateSelect
-        value={getDate(data?.target_date) ?? null}
-        onChange={(date) => handleData("target_date", date ? renderFormattedPayloadDate(date) : "")}
-        minDate={minDate ?? undefined}
+        value={getDateValue(data?.target_date)}
+        onChange={(date) => handleData("target_date", getDatePayload(date))}
+        minDate={minDate}
         placeholder={t("web.due_date")}
         icon={<CalendarOutline />}
-        weekStartsOn={userProfile?.start_of_the_week}
+        weekStartsOn={weekStartsOn}
         clearable
         clearLabel={t("common.clear")}
         variant="pill-md"
@@ -133,7 +241,7 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
       {/* cycle */}
       {isVisible && (
         <CycleSelect
-          value={data?.cycle_id || null}
+          value={getCycleId(data?.cycle_id)}
           onChange={(cycleId) => handleData("cycle_id", cycleId)}
           projectId={projectId}
           placeholder={t("web.cycle")}
@@ -147,7 +255,7 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
         <ModuleSelect
           multiple
           projectId={projectId}
-          value={data?.module_ids || []}
+          value={getIdsOrEmpty(data?.module_ids)}
           onChange={(moduleIds) => handleData("module_ids", moduleIds)}
           placeholder={t("web.modules")}
           variant="pill-md"
@@ -156,9 +264,9 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
       )}
 
       {/* estimate */}
-      {isVisible && projectId && areEstimateEnabledByProjectId(projectId) && (
+      {showEstimate && (
         <EstimateSelect
-          value={data?.estimate_point || undefined}
+          value={getEstimatePoint(data?.estimate_point)}
           onChange={(estimatePoint) => handleData("estimate_point", estimatePoint)}
           projectId={projectId}
           variant="pill-md"
@@ -169,59 +277,16 @@ export const InboxIssueProperties = observer(function InboxIssueProperties(props
 
       {/* add parent */}
       {isVisible && (
-        <div className="h-7">
-          {selectedParentIssue ? (
-            <div className="h-full w-full">
-              <Menu>
-                <MenuTrigger
-                  render={
-                    <button
-                      type="button"
-                      tabIndex={getIndex("parent_id")}
-                      className="flex h-full cursor-pointer items-center justify-between gap-1 rounded-sm border-[0.5px] border-strong px-2 py-0.5 text-11 hover:bg-layer-1"
-                    >
-                      <ParentOutline className="h-3 w-3 flex-shrink-0" />
-                      <span className="whitespace-nowrap">
-                        {`${selectedParentIssue.project__identifier}-${selectedParentIssue.sequence_id}`}
-                      </span>
-                    </button>
-                  }
-                />
-                <MenuContent side="bottom" align="start">
-                  <MenuItem label={t("web.change_parent_work_item")} onClick={() => setParentIssueModalOpen(true)} />
-                  <MenuItem
-                    label={t("web.remove_parent_work_item")}
-                    onClick={() => {
-                      handleData("parent_id", "");
-                      setSelectedParentIssue(undefined);
-                    }}
-                  />
-                </MenuContent>
-              </Menu>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="flex h-full cursor-pointer items-center justify-between gap-1 rounded-sm border-[0.5px] border-strong px-2 py-0.5 text-11 hover:bg-layer-1"
-              onClick={() => setParentIssueModalOpen(true)}
-            >
-              <ParentOutline className="h-3 w-3 flex-shrink-0" />
-              <span className="whitespace-nowrap">{t("web.add_parent")}</span>
-            </button>
-          )}
-
-          <ParentIssuesListModal
-            isOpen={parentIssueModalOpen}
-            handleClose={() => setParentIssueModalOpen(false)}
-            onChange={(issue) => {
-              handleData("parent_id", issue?.id);
-              setSelectedParentIssue(issue);
-            }}
-            projectId={projectId}
-            issueId={undefined}
-            typeId={data.type_id}
-          />
-        </div>
+        <ParentIssueField
+          projectId={projectId}
+          typeId={data.type_id}
+          tabIndex={getIndex("parent_id")}
+          selectedIssue={selectedParentIssue}
+          isModalOpen={parentIssueModalOpen}
+          onModalOpenChange={setParentIssueModalOpen}
+          onChange={handleParentIssueChange}
+          onRemove={handleParentIssueRemove}
+        />
       )}
     </div>
   );

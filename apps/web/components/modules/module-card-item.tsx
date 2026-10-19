@@ -16,10 +16,11 @@ import { useLocalStorage } from "@plane/hooks";
 import { LinearProgress } from "@makeplane/propel/components/linear-progress";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import type { IModule } from "@plane/types";
+import type { IModule, IUserLite } from "@plane/types";
 import { Card } from "@plane/blocks/card";
 import { FavoriteStar } from "@plane/blocks/common";
 import { DateRangeSelect } from "@plane/blocks/property-select";
+import type { DateRangeValue, WeekStart } from "@plane/blocks/property-select";
 import { getDate, renderFormattedPayloadDate, generateQueryParams } from "@plane/utils";
 // components
 import { handleTriggerKeyDown } from "@/components/common/trigger-guard";
@@ -38,10 +39,262 @@ type Props = {
   moduleId: string;
 };
 
+type TModuleCardActionContext = {
+  workspaceSlug: string | string[] | undefined;
+  projectId: string | string[] | undefined;
+  moduleId: string;
+  addModuleToFavorites: (workspaceSlug: string, projectId: string, moduleId: string) => Promise<void>;
+  removeModuleFromFavorites: (workspaceSlug: string, projectId: string, moduleId: string) => Promise<void>;
+  updateModuleDetails: (
+    workspaceSlug: string,
+    projectId: string,
+    moduleId: string,
+    data: Partial<IModule>
+  ) => Promise<IModule>;
+  setFavoriteMenuOpen: (value: boolean) => void;
+  storedValue: boolean | null;
+};
+
+type TModuleOverviewContext = {
+  router: ReturnType<typeof useAppRouter>;
+  pathname: string;
+  searchParams: ReturnType<typeof useSearchParams>;
+  moduleId: string;
+};
+
 const handleEventPropagation = (e: SyntheticEvent<HTMLDivElement>) => {
   e.stopPropagation();
   e.preventDefault();
 };
+
+const getModuleActionParams = (
+  workspaceSlug: string | string[] | undefined,
+  projectId: string | string[] | undefined,
+  moduleId: string
+) => {
+  if (!workspaceSlug || !projectId) return null;
+  return { workspaceSlug: workspaceSlug.toString(), projectId: projectId.toString(), moduleId };
+};
+
+const handleAddToFavorites = (e: React.MouseEvent<HTMLButtonElement>, context: TModuleCardActionContext) => {
+  e.stopPropagation();
+  e.preventDefault();
+  const params = getModuleActionParams(context.workspaceSlug, context.projectId, context.moduleId);
+  if (!params) return;
+
+  const addToFavoritePromise = context
+    .addModuleToFavorites(params.workspaceSlug, params.projectId, params.moduleId)
+    .then(() => {
+      if (!context.storedValue) context.setFavoriteMenuOpen(true);
+      return undefined;
+    });
+
+  setPromiseToast(addToFavoritePromise, {
+    loading: translate("web.adding_module_to_favorites"),
+    success: {
+      title: translate("toast.success"),
+      message: () => "Module added to favorites.",
+    },
+    error: {
+      title: translate("toast.error"),
+      message: () => "Couldn't add the module to favorites. Please try again.",
+    },
+  });
+};
+
+const handleRemoveFromFavorites = (e: React.MouseEvent<HTMLButtonElement>, context: TModuleCardActionContext) => {
+  e.stopPropagation();
+  e.preventDefault();
+  const params = getModuleActionParams(context.workspaceSlug, context.projectId, context.moduleId);
+  if (!params) return;
+
+  const removeFromFavoritePromise = context.removeModuleFromFavorites(
+    params.workspaceSlug,
+    params.projectId,
+    params.moduleId
+  );
+
+  setPromiseToast(removeFromFavoritePromise, {
+    loading: translate("web.removing_module_from_favorites"),
+    success: {
+      title: translate("toast.success"),
+      message: () => "Module removed from favorites.",
+    },
+    error: {
+      title: translate("toast.error"),
+      message: () => "Couldn't remove the module from favorites. Please try again.",
+    },
+  });
+};
+
+const handleFavoriteClick = (
+  e: React.MouseEvent<HTMLButtonElement>,
+  isFavorite: boolean,
+  context: TModuleCardActionContext
+) => {
+  if (isFavorite) handleRemoveFromFavorites(e, context);
+  else handleAddToFavorites(e, context);
+};
+
+const handleModuleDetailsChange = async (payload: Partial<IModule>, context: TModuleCardActionContext) => {
+  const params = getModuleActionParams(context.workspaceSlug, context.projectId, context.moduleId);
+  if (!params) return;
+
+  await context
+    .updateModuleDetails(params.workspaceSlug, params.projectId, params.moduleId, payload)
+    .then(() => {
+      setToast({
+        type: "success",
+        title: translate("toast.success"),
+        message: translate("web.module_updated_successfully"),
+      });
+      return undefined;
+    })
+    .catch((err: { detail?: string }) => {
+      setToast({
+        type: "error",
+        title: translate("toast.error"),
+        message: err?.detail ?? translate("web.module_could_not_be_updated_please_try_again"),
+      });
+    });
+};
+
+const handleOpenModuleOverview = (e: React.MouseEvent<HTMLButtonElement>, context: TModuleOverviewContext) => {
+  e.stopPropagation();
+  e.preventDefault();
+
+  const { router, pathname, searchParams, moduleId } = context;
+  const query = generateQueryParams(searchParams, ["peekModule"]);
+  if (searchParams.has("peekModule") && searchParams.get("peekModule") === moduleId) {
+    router.push(`${pathname}?${query}`);
+  } else {
+    router.push(`${pathname}?${query && `${query}&`}peekModule=${moduleId}`);
+  }
+};
+
+const getModuleCardStats = (moduleDetails: IModule) => {
+  const moduleTotalIssues =
+    moduleDetails.backlog_issues +
+    moduleDetails.unstarted_issues +
+    moduleDetails.started_issues +
+    moduleDetails.completed_issues +
+    moduleDetails.cancelled_issues;
+
+  const moduleCompletedIssues = moduleDetails.completed_issues;
+  const progressValue = moduleTotalIssues > 0 ? (moduleCompletedIssues / moduleTotalIssues) * 100 : 0;
+
+  let issueCount: string;
+  if (!moduleTotalIssues) issueCount = `0 work items`;
+  else if (moduleTotalIssues === moduleCompletedIssues)
+    issueCount = translate("web.runtime.items_count", { count: moduleTotalIssues });
+  else issueCount = `${moduleCompletedIssues}/${moduleTotalIssues} Work items`;
+
+  return { issueCount, progressValue };
+};
+
+const getModuleDateRange = (moduleDetails: IModule): DateRangeValue => ({
+  from: getDate(moduleDetails.start_date) ?? null,
+  to: getDate(moduleDetails.target_date) ?? null,
+});
+
+const getDateRangePayload = (range: DateRangeValue): Partial<IModule> => ({
+  start_date: range.from ? renderFormattedPayloadDate(range.from) : null,
+  target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
+});
+
+const getIsDisabled = (isEditingAllowed: boolean, archivedAt: string | null) => !isEditingAllowed || !!archivedAt;
+
+const hasDateRange = (moduleDetails: IModule) =>
+  Boolean(moduleDetails.start_date) || Boolean(moduleDetails.target_date);
+
+type TModuleCardHeaderActionsProps = {
+  moduleDetails: IModule;
+  isDisabled: boolean;
+  onModuleDetailsChange: (payload: Partial<IModule>) => Promise<void>;
+  onOpenOverview: (e: React.MouseEvent<HTMLButtonElement>) => void;
+};
+
+const ModuleCardHeaderActions = observer(function ModuleCardHeaderActions({
+  moduleDetails,
+  isDisabled,
+  onModuleDetailsChange,
+  onOpenOverview,
+}: TModuleCardHeaderActionsProps) {
+  const moduleStatus = MODULE_STATUS.find((status) => status.value === moduleDetails.status);
+
+  // Ruling 38: guard both halves — the card root is a `Link`.
+  return (
+    <div
+      className="flex items-center gap-2"
+      role="presentation"
+      onClick={handleEventPropagation}
+      onKeyDown={handleTriggerKeyDown}
+    >
+      {moduleStatus && (
+        <ModuleStatusDropdown
+          isDisabled={isDisabled}
+          moduleDetails={moduleDetails}
+          handleModuleDetailsChange={onModuleDetailsChange}
+        />
+      )}
+      <button onClick={onOpenOverview}>
+        <InfoOutline className="h-4 w-4 text-placeholder" />
+      </button>
+    </div>
+  );
+});
+
+type TModuleCardDateRangeProps = {
+  moduleDetails: IModule;
+  isDisabled: boolean;
+  hasDates: boolean;
+  weekStartsOn: WeekStart | undefined;
+  onDateRangeChange: (range: DateRangeValue) => void;
+};
+
+const ModuleCardDateRange = observer(function ModuleCardDateRange({
+  moduleDetails,
+  isDisabled,
+  hasDates,
+  weekStartsOn,
+  onDateRangeChange,
+}: TModuleCardDateRangeProps) {
+  // Ruling 38: the whole card is a `Link`, so the trigger's click and keyboard
+  // activation must not reach it.
+  return (
+    <div
+      className="flex items-center justify-between py-0.5"
+      role="presentation"
+      onClick={handleEventPropagation}
+      onKeyDown={handleTriggerKeyDown}
+    >
+      <DateRangeSelect
+        variant="select-ghost-md"
+        className={`h-6 w-full gap-1.5 rounded-sm border-[0.5px] border-strong text-11 text-tertiary ${
+          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+        }`}
+        value={getModuleDateRange(moduleDetails)}
+        onChange={onDateRangeChange}
+        placeholder={translate("web.start_date_end_date")}
+        weekStartsOn={weekStartsOn}
+        disabled={isDisabled}
+        icon={hasDates ? undefined : <CalendarOutline aria-hidden="true" />}
+      />
+    </div>
+  );
+});
+
+type TModuleCardLeadProps = {
+  leadDetails: IUserLite;
+};
+
+const ModuleCardLead = observer(function ModuleCardLead({ leadDetails }: TModuleCardLeadProps) {
+  return (
+    <span className="cursor-default">
+      <ButtonAvatars showTooltip={false} userIds={leadDetails?.id} />
+    </span>
+  );
+});
 
 export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
   const { moduleId } = props;
@@ -65,117 +318,26 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.PROJECT
   );
-  const isDisabled = !isEditingAllowed || !!moduleDetails?.archived_at;
-  const renderIcon = Boolean(moduleDetails?.start_date) || Boolean(moduleDetails?.target_date);
 
   const { isMobile } = usePlatformOS();
-  const handleAddToFavorites = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (!workspaceSlug || !projectId) return;
-
-    const addToFavoritePromise = addModuleToFavorites(workspaceSlug.toString(), projectId.toString(), moduleId).then(
-      () => {
-        if (!storedValue) toggleFavoriteMenu(true);
-        return undefined;
-      }
-    );
-
-    setPromiseToast(addToFavoritePromise, {
-      loading: translate("web.adding_module_to_favorites"),
-      success: {
-        title: translate("toast.success"),
-        message: () => "Module added to favorites.",
-      },
-      error: {
-        title: translate("toast.error"),
-        message: () => "Couldn't add the module to favorites. Please try again.",
-      },
-    });
-  };
-
-  const handleRemoveFromFavorites = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (!workspaceSlug || !projectId) return;
-
-    const removeFromFavoritePromise = removeModuleFromFavorites(
-      workspaceSlug.toString(),
-      projectId.toString(),
-      moduleId
-    );
-
-    setPromiseToast(removeFromFavoritePromise, {
-      loading: translate("web.removing_module_from_favorites"),
-      success: {
-        title: translate("toast.success"),
-        message: () => "Module removed from favorites.",
-      },
-      error: {
-        title: translate("toast.error"),
-        message: () => "Couldn't remove the module from favorites. Please try again.",
-      },
-    });
-  };
-
-  const handleModuleDetailsChange = async (payload: Partial<IModule>) => {
-    if (!workspaceSlug || !projectId) return;
-
-    await updateModuleDetails(workspaceSlug.toString(), projectId.toString(), moduleId, payload)
-      .then(() => {
-        setToast({
-          type: "success",
-          title: translate("toast.success"),
-          message: translate("web.module_updated_successfully"),
-        });
-        return undefined;
-      })
-      .catch((err) => {
-        setToast({
-          type: "error",
-          title: translate("toast.error"),
-          message: err?.detail ?? translate("web.module_could_not_be_updated_please_try_again"),
-        });
-      });
-  };
-
-  const openModuleOverview = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const query = generateQueryParams(searchParams, ["peekModule"]);
-    if (searchParams.has("peekModule") && searchParams.get("peekModule") === moduleId) {
-      router.push(`${pathname}?${query}`);
-    } else {
-      router.push(`${pathname}?${query && `${query}&`}peekModule=${moduleId}`);
-    }
-  };
 
   if (!moduleDetails) return null;
 
-  const moduleTotalIssues =
-    moduleDetails.backlog_issues +
-    moduleDetails.unstarted_issues +
-    moduleDetails.started_issues +
-    moduleDetails.completed_issues +
-    moduleDetails.cancelled_issues;
-
-  const moduleCompletedIssues = moduleDetails.completed_issues;
-
-  // const areYearsEqual = startDate.getFullYear() === endDate.getFullYear();
-
-  const moduleStatus = MODULE_STATUS.find((status) => status.value === moduleDetails.status);
-
-  const issueCount = moduleDetails
-    ? !moduleTotalIssues || moduleTotalIssues === 0
-      ? `0 work items`
-      : moduleTotalIssues === moduleCompletedIssues
-        ? translate("web.runtime.items_count", { count: moduleTotalIssues })
-        : `${moduleCompletedIssues}/${moduleTotalIssues} Work items`
-    : `0 work items`;
-
+  const isDisabled = getIsDisabled(isEditingAllowed, moduleDetails.archived_at);
+  const { issueCount, progressValue } = getModuleCardStats(moduleDetails);
   const moduleLeadDetails = moduleDetails.lead_id ? getUserDetails(moduleDetails.lead_id) : undefined;
-  const progressValue = moduleTotalIssues > 0 ? (moduleCompletedIssues / moduleTotalIssues) * 100 : 0;
+
+  const actionContext: TModuleCardActionContext = {
+    workspaceSlug,
+    projectId,
+    moduleId,
+    addModuleToFavorites,
+    removeModuleFromFavorites,
+    updateModuleDetails,
+    setFavoriteMenuOpen: toggleFavoriteMenu,
+    storedValue,
+  };
+  const overviewContext: TModuleOverviewContext = { router, pathname, searchParams, moduleId };
 
   return (
     <div className="relative" data-prevent-progress>
@@ -186,24 +348,12 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
               <Tooltip label={moduleDetails.name} layout="stacked" disabled={isMobile}>
                 <span className="truncate text-14 font-medium">{moduleDetails.name}</span>
               </Tooltip>
-              {/* Ruling 38: guard both halves — the card root is a `Link`. */}
-              <div
-                className="flex items-center gap-2"
-                role="presentation"
-                onClick={handleEventPropagation}
-                onKeyDown={handleTriggerKeyDown}
-              >
-                {moduleStatus && (
-                  <ModuleStatusDropdown
-                    isDisabled={isDisabled}
-                    moduleDetails={moduleDetails}
-                    handleModuleDetailsChange={handleModuleDetailsChange}
-                  />
-                )}
-                <button onClick={openModuleOverview}>
-                  <InfoOutline className="h-4 w-4 text-placeholder" />
-                </button>
-              </div>
+              <ModuleCardHeaderActions
+                moduleDetails={moduleDetails}
+                isDisabled={isDisabled}
+                onModuleDetailsChange={(payload) => handleModuleDetailsChange(payload, actionContext)}
+                onOpenOverview={(e) => handleOpenModuleOverview(e, overviewContext)}
+              />
             </div>
           </div>
           <div className="flex flex-col gap-3">
@@ -213,9 +363,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
                 <span className="text-11 text-tertiary">{issueCount ?? "0 Work item"}</span>
               </div>
               {moduleLeadDetails ? (
-                <span className="cursor-default">
-                  <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
-                </span>
+                <ModuleCardLead leadDetails={moduleLeadDetails} />
               ) : (
                 <Tooltip label={translate("web.no_lead")}>
                   <UserAltOutline className="mx-1 h-4 w-4 text-tertiary" />
@@ -229,45 +377,22 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
               showValue={false}
               aria-label={translate("web.module_progress")}
             />
-            {/* Ruling 38: the whole card is a `Link`, so the trigger's click and keyboard
-                activation must not reach it. */}
-            <div
-              className="flex items-center justify-between py-0.5"
-              role="presentation"
-              onClick={handleEventPropagation}
-              onKeyDown={handleTriggerKeyDown}
-            >
-              <DateRangeSelect
-                variant="select-ghost-md"
-                className={`h-6 w-full gap-1.5 rounded-sm border-[0.5px] border-strong text-11 text-tertiary ${
-                  isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-                }`}
-                value={{
-                  from: getDate(moduleDetails.start_date) ?? null,
-                  to: getDate(moduleDetails.target_date) ?? null,
-                }}
-                onChange={(range) => {
-                  void handleModuleDetailsChange({
-                    start_date: range.from ? renderFormattedPayloadDate(range.from) : null,
-                    target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
-                  });
-                }}
-                placeholder={translate("web.start_date_end_date")}
-                weekStartsOn={userProfile?.start_of_the_week}
-                disabled={isDisabled}
-                icon={renderIcon ? undefined : <CalendarOutline aria-hidden="true" />}
-              />
-            </div>
+            <ModuleCardDateRange
+              moduleDetails={moduleDetails}
+              isDisabled={isDisabled}
+              hasDates={hasDateRange(moduleDetails)}
+              weekStartsOn={userProfile?.start_of_the_week}
+              onDateRangeChange={(range) => {
+                void handleModuleDetailsChange(getDateRangePayload(range), actionContext);
+              }}
+            />
           </div>
         </Card>
       </Link>
       <div className="absolute right-4 bottom-[18px] flex items-center gap-1.5">
         {isEditingAllowed && (
           <FavoriteStar
-            onClick={(e) => {
-              if (moduleDetails.is_favorite) handleRemoveFromFavorites(e);
-              else handleAddToFavorites(e);
-            }}
+            onClick={(e) => handleFavoriteClick(e, !!moduleDetails.is_favorite, actionContext)}
             selected={!!moduleDetails.is_favorite}
           />
         )}

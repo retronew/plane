@@ -7,6 +7,7 @@
 import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
+import type { Control, FieldErrors, UseFormGetValues, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
@@ -82,6 +83,418 @@ const handleSetPassword = async (password: string) => {
   await authService.setPassword(token, { password });
 };
 
+const buildUserDetailsPayload = (formData: TProfileSetupFormValues): Partial<IUser> => ({
+  first_name: formData.first_name,
+  last_name: formData.last_name,
+  avatar_url: formData.avatar_url ?? undefined,
+});
+
+const buildProfileUpdatePayload = (formData: TProfileSetupFormValues): Partial<TUserProfile> => ({
+  use_case: formData.use_case?.length ? formData.use_case.join(". ") : undefined,
+  role: formData.role,
+});
+
+const getIsValidPassword = (password?: string, confirmPassword?: string): boolean => {
+  if (!password) return true;
+  return password === confirmPassword && getPasswordStrength(password) === E_PASSWORD_STRENGTH.STRENGTH_VALID;
+};
+
+const getIsSubmitDisabled = (
+  isSubmitting: boolean,
+  isValid: boolean,
+  isPasswordAlreadySetup: boolean,
+  isValidPassword: boolean
+): boolean => isSubmitting || !isValid || (!isPasswordAlreadySetup && !isValidPassword);
+
+type TProfileFormFieldsProps = {
+  control: Control<TProfileSetupFormValues>;
+  errors: FieldErrors<TProfileSetupFormValues>;
+};
+
+type TProfileAvatarFieldProps = {
+  control: Control<TProfileSetupFormValues>;
+  user?: IUser;
+  userAvatar?: string | null;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  getValues: UseFormGetValues<TProfileSetupFormValues>;
+  setValue: UseFormSetValue<TProfileSetupFormValues>;
+  watch: UseFormWatch<TProfileSetupFormValues>;
+};
+
+type TShowPasswordState = {
+  password: boolean;
+  retypePassword: boolean;
+};
+
+type TShowPasswordKey = keyof TShowPasswordState;
+
+type TProfilePasswordFieldsProps = TProfileFormFieldsProps & {
+  watch: UseFormWatch<TProfileSetupFormValues>;
+  showPassword: TShowPasswordState;
+  onToggleShowPassword: (key: TShowPasswordKey) => void;
+  isPasswordAlreadySetup: boolean;
+  isPasswordInputFocused: boolean;
+  setIsPasswordInputFocused: (isFocused: boolean) => void;
+};
+
+function ProfileAvatarField({
+  control,
+  user,
+  userAvatar,
+  isOpen,
+  setIsOpen,
+  getValues,
+  setValue,
+  watch,
+}: TProfileAvatarFieldProps) {
+  const handleDelete = (url: string | null | undefined) => {
+    if (!url) return;
+    setValue("avatar_url", "");
+  };
+
+  return (
+    <>
+      <Controller
+        control={control}
+        name="avatar_url"
+        render={({ field: { onChange, value } }) => (
+          <UserImageUploadModal
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            handleRemove={async () => handleDelete(getValues("avatar_url"))}
+            onSuccess={(url) => {
+              onChange(url);
+              setIsOpen(false);
+            }}
+            value={value && value.trim() !== "" ? value : null}
+          />
+        )}
+      />
+      <div className="flex items-center justify-center space-y-1">
+        <button type="button" onClick={() => setIsOpen(true)}>
+          {!userAvatar || userAvatar === "" ? (
+            <div className="flex flex-col items-center justify-between">
+              <div className="relative h-14 w-14 overflow-hidden">
+                <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center rounded-full bg-accent-primary text-24 font-medium text-on-color uppercase">
+                  {watch("first_name")?.[0] ?? "R"}
+                </div>
+              </div>
+              <div className="pt-1 text-13 font-medium text-accent-secondary hover:text-tertiary">
+                {translate("web.choose_image")}
+              </div>
+            </div>
+          ) : (
+            <div className="relative mr-3 h-16 w-16 overflow-hidden">
+              <img
+                src={getFileURL(userAvatar ?? "")}
+                className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
+                alt={user?.display_name}
+              />
+            </div>
+          )}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function ProfileNameFields({ control, errors }: TProfileFormFieldsProps) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label
+            className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
+            htmlFor="first_name"
+          >
+            {translate("web.first_name")}
+          </label>
+          <Controller
+            control={control}
+            name="first_name"
+            rules={{
+              required: t("web.first_name_is_required"),
+              validate: validatePersonName,
+              maxLength: {
+                value: 50,
+                message: t("web.first_name_must_be_within_50_characters"),
+              },
+            }}
+            render={({ field: { value, onChange, ref } }) => (
+              <Field name="first_name" invalid={Boolean(errors.first_name)}>
+                <InputGroup size="2xl">
+                  <Input
+                    size="2xl"
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    value={value}
+                    // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
+                    autoFocus
+                    onChange={onChange}
+                    ref={ref}
+                    placeholder={t("web.wilbur")}
+                    autoComplete="on"
+                  />
+                </InputGroup>
+              </Field>
+            )}
+          />
+          {errors.first_name && <span className="text-13 text-danger-primary">{errors.first_name.message}</span>}
+        </div>
+        <div className="space-y-1">
+          <label
+            className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
+            htmlFor="last_name"
+          >
+            {translate("web.last_name")}
+          </label>
+          <Controller
+            control={control}
+            name="last_name"
+            rules={{
+              required: t("web.last_name_is_required"),
+              validate: validatePersonName,
+              maxLength: {
+                value: 50,
+                message: t("web.last_name_must_be_within_50_characters"),
+              },
+            }}
+            render={({ field: { value, onChange, ref } }) => (
+              <Field name="last_name" invalid={Boolean(errors.last_name)}>
+                <InputGroup size="2xl">
+                  <Input
+                    size="2xl"
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    value={value}
+                    onChange={onChange}
+                    ref={ref}
+                    placeholder={t("web.wright")}
+                    autoComplete="on"
+                  />
+                </InputGroup>
+              </Field>
+            )}
+          />
+          {errors.last_name && <span className="text-13 text-danger-primary">{errors.last_name.message}</span>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ProfilePasswordFields({
+  control,
+  errors,
+  watch,
+  showPassword,
+  onToggleShowPassword,
+  isPasswordAlreadySetup,
+  isPasswordInputFocused,
+  setIsPasswordInputFocused,
+}: TProfilePasswordFieldsProps) {
+  const { t } = useTranslation();
+
+  if (isPasswordAlreadySetup) return null;
+
+  return (
+    <>
+      <div className="space-y-1">
+        <label className="text-13 font-medium text-tertiary" htmlFor="password">
+          {translate("web.set_a_password")} ({t("common.optional")})
+        </label>
+        <Controller
+          control={control}
+          name="password"
+          rules={{
+            required: false,
+          }}
+          render={({ field: { value, onChange, ref } }) => (
+            <Field name="password" invalid={Boolean(errors.password)}>
+              <InputGroup size="2xl">
+                <Input
+                  size="2xl"
+                  type={showPassword.password ? "text" : "password"}
+                  name="password"
+                  value={value}
+                  onChange={onChange}
+                  ref={ref}
+                  placeholder={t("web.new_password")}
+                  onFocus={() => setIsPasswordInputFocused(true)}
+                  onBlur={() => setIsPasswordInputFocused(false)}
+                  autoComplete="new-password"
+                  aria-label={t("web.new_password")}
+                />
+                <button
+                  type="button"
+                  className="grid size-5 place-items-center"
+                  onClick={() => onToggleShowPassword("password")}
+                >
+                  {showPassword.password ? (
+                    <HideOutline className="size-4 text-placeholder" />
+                  ) : (
+                    <ShowOutline className="size-4 text-placeholder" />
+                  )}
+                </button>
+              </InputGroup>
+            </Field>
+          )}
+        />
+        <PasswordStrengthIndicator password={watch("password") ?? ""} isFocused={isPasswordInputFocused} />
+      </div>
+      <div className="space-y-1">
+        <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
+          {t("auth.common.password.confirm_password.label")} ({t("common.optional")})
+        </label>
+        <Controller
+          control={control}
+          name="confirm_password"
+          rules={{
+            required: Boolean(watch("password")),
+            validate: (value) =>
+              watch("password") ? (value === watch("password") ? true : "Passwords don't match") : true,
+          }}
+          render={({ field: { value, onChange, ref } }) => (
+            <Field name="confirm_password" invalid={Boolean(errors.confirm_password)}>
+              <InputGroup size="2xl">
+                <Input
+                  size="2xl"
+                  type={showPassword.retypePassword ? "text" : "password"}
+                  name="confirm_password"
+                  value={value}
+                  onChange={onChange}
+                  ref={ref}
+                  placeholder={t("auth.common.password.confirm_password.placeholder")}
+                  autoComplete="new-password"
+                  aria-label={t("auth.common.password.confirm_password.placeholder")}
+                />
+                <button
+                  type="button"
+                  className="grid size-5 place-items-center"
+                  onClick={() => onToggleShowPassword("retypePassword")}
+                >
+                  {showPassword.retypePassword ? (
+                    <HideOutline className="size-4 text-placeholder" />
+                  ) : (
+                    <ShowOutline className="size-4 text-placeholder" />
+                  )}
+                </button>
+              </InputGroup>
+            </Field>
+          )}
+        />
+        {errors.confirm_password && (
+          <span className="text-13 text-danger-primary">{errors.confirm_password.message}</span>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ProfileRoleField({ control, errors }: TProfileFormFieldsProps) {
+  const { t } = useTranslation();
+
+  return (
+    <fieldset className="space-y-1">
+      <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
+        {translate("web.what_role_choose_one")}
+      </legend>
+      <Controller
+        control={control}
+        name="role"
+        rules={{
+          required: t("web.this_field_is_required"),
+        }}
+        render={({ field: { value, onChange } }) => (
+          <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
+            {USER_ROLE.map((userRole) => (
+              <button
+                type="button"
+                aria-pressed={value === userRole}
+                key={userRole}
+                className={cn(
+                  "shrink-0 rounded border-[0.5px] px-3 py-1.5 text-13 font-medium hover:cursor-pointer hover:bg-surface-2",
+                  {
+                    "border-accent-strong": value === userRole,
+                    "border-strong": value !== userRole,
+                  }
+                )}
+                onClick={() => onChange(userRole)}
+              >
+                {userRole}
+              </button>
+            ))}
+          </div>
+        )}
+      />
+      {errors.role && <span className="text-13 text-danger-primary">{errors.role.message}</span>}
+    </fieldset>
+  );
+}
+
+function ProfileUseCaseField({ control, errors }: TProfileFormFieldsProps) {
+  const { t } = useTranslation();
+
+  return (
+    <fieldset className="space-y-1">
+      <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
+        {translate("web.domain_expertise_choose")}
+      </legend>
+      <Controller
+        control={control}
+        name="use_case"
+        rules={{
+          required: t("web.please_select_at_least_one_option"),
+          validate: (value) => (value && value.length > 0) || t("web.ui.select_one_option"),
+        }}
+        render={({ field: { value, onChange } }) => (
+          <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
+            {USER_DOMAIN.map((userDomain) => {
+              const isSelected = value?.includes(userDomain) || false;
+              return (
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  key={userDomain}
+                  className={`flex-shrink-0 border-[0.5px] hover:cursor-pointer hover:bg-surface-2 ${
+                    isSelected ? "border-accent-strong" : "border-strong"
+                  } rounded px-3 py-1.5 text-13 font-medium`}
+                  onClick={() => {
+                    const currentValue = value || [];
+                    if (isSelected) {
+                      onChange(currentValue.filter((item) => item !== userDomain));
+                    } else {
+                      onChange([...currentValue, userDomain]);
+                    }
+                  }}
+                >
+                  {userDomain}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      />
+      {errors.use_case && <span className="text-13 text-danger-primary">{errors.use_case.message}</span>}
+    </fieldset>
+  );
+}
+
+function ProfileSubmitButton({ isSubmitting, disabled }: { isSubmitting: boolean; disabled: boolean }) {
+  const { t } = useTranslation();
+
+  return (
+    <Button variant="primary" type="submit" size="lg" stretch="full" disabled={disabled}>
+      {isSubmitting ? <Spinner height="20px" width="20px" /> : t("web.continue")}
+    </Button>
+  );
+}
+
 export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   const { user, totalSteps, stepChange, finishOnboarding } = props;
   // states
@@ -90,7 +503,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   );
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
   const [isPasswordInputFocused, setIsPasswordInputFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState({
+  const [showPassword, setShowPassword] = useState<TShowPasswordState>({
     password: false,
     retypePassword: false,
   });
@@ -119,19 +532,11 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   // derived values
   const userAvatar = watch("avatar_url");
 
-  const handleShowPassword = (key: keyof typeof showPassword) =>
-    setShowPassword((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleShowPassword = (key: TShowPasswordKey) => setShowPassword((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const handleSubmitProfileSetup = async (formData: TProfileSetupFormValues) => {
-    const userDetailsPayload: Partial<IUser> = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      avatar_url: formData.avatar_url ?? undefined,
-    };
-    const profileUpdatePayload: Partial<TUserProfile> = {
-      use_case: formData.use_case && formData.use_case.length > 0 ? formData.use_case.join(". ") : undefined,
-      role: formData.role,
-    };
+    const userDetailsPayload = buildUserDetailsPayload(formData);
+    const profileUpdatePayload = buildProfileUpdatePayload(formData);
     try {
       await Promise.all([
         updateCurrentUser(userDetailsPayload),
@@ -157,18 +562,13 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   };
 
   const handleSubmitUserDetail = async (formData: TProfileSetupFormValues) => {
-    const userDetailsPayload: Partial<IUser> = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      avatar_url: formData.avatar_url ?? undefined,
-    };
+    const userDetailsPayload = buildUserDetailsPayload(formData);
     try {
       await Promise.all([
         updateCurrentUser(userDetailsPayload),
         formData.password && handleSetPassword(formData.password),
       ]).then(() => {
-        if (formData.password) {
-        } else {
+        if (!formData.password) {
           setProfileSetupStep(EProfileSetupSteps.USER_PERSONALIZATION);
         }
         return undefined;
@@ -183,10 +583,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
   };
 
   const handleSubmitUserPersonalization = async (formData: TProfileSetupFormValues) => {
-    const profileUpdatePayload: Partial<TUserProfile> = {
-      use_case: formData.use_case && formData.use_case.length > 0 ? formData.use_case.join(". ") : undefined,
-      role: formData.role,
-    };
+    const profileUpdatePayload = buildProfileUpdatePayload(formData);
     try {
       await Promise.all([
         updateUserProfile(profileUpdatePayload),
@@ -217,34 +614,19 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     if (profileSetupStep === EProfileSetupSteps.USER_PERSONALIZATION) await handleSubmitUserPersonalization(formData);
   };
 
-  const handleDelete = (url: string | null | undefined) => {
-    if (!url) return;
-    setValue("avatar_url", "");
-  };
-
   // derived values
   const isPasswordAlreadySetup = !user?.is_password_autoset;
   const currentPassword = watch("password") || undefined;
   const currentConfirmPassword = watch("confirm_password") || undefined;
 
-  const isValidPassword = useMemo(() => {
-    if (currentPassword) {
-      if (
-        currentPassword === currentConfirmPassword &&
-        getPasswordStrength(currentPassword) === E_PASSWORD_STRENGTH.STRENGTH_VALID
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }, [currentPassword, currentConfirmPassword]);
+  const isValidPassword = useMemo(
+    () => getIsValidPassword(currentPassword, currentConfirmPassword),
+    [currentPassword, currentConfirmPassword]
+  );
 
   // Check for all available fields validation and if password field is available, then checks for password validation (strength + confirmation).
   // Also handles the condition for optional password i.e if password field is optional it only checks for above validation if it's not empty.
-  const isButtonDisabled = !(!isSubmitting && isValid && (isPasswordAlreadySetup || isValidPassword));
+  const isButtonDisabled = getIsSubmitDisabled(isSubmitting, isValid, isPasswordAlreadySetup, isValidPassword);
 
   return (
     <div className="flex h-full w-full">
@@ -252,308 +634,38 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="mx-auto mt-2 w-full space-y-4 sm:w-96">
           {profileSetupStep !== EProfileSetupSteps.USER_PERSONALIZATION && (
             <>
-              <Controller
+              <ProfileAvatarField
                 control={control}
-                name="avatar_url"
-                render={({ field: { onChange, value } }) => (
-                  <UserImageUploadModal
-                    isOpen={isImageUploadModalOpen}
-                    onClose={() => setIsImageUploadModalOpen(false)}
-                    handleRemove={async () => handleDelete(getValues("avatar_url"))}
-                    onSuccess={(url) => {
-                      onChange(url);
-                      setIsImageUploadModalOpen(false);
-                    }}
-                    value={value && value.trim() !== "" ? value : null}
-                  />
-                )}
+                user={user}
+                userAvatar={userAvatar}
+                isOpen={isImageUploadModalOpen}
+                setIsOpen={setIsImageUploadModalOpen}
+                getValues={getValues}
+                setValue={setValue}
+                watch={watch}
               />
-              <div className="flex items-center justify-center space-y-1">
-                <button type="button" onClick={() => setIsImageUploadModalOpen(true)}>
-                  {!userAvatar || userAvatar === "" ? (
-                    <div className="flex flex-col items-center justify-between">
-                      <div className="relative h-14 w-14 overflow-hidden">
-                        <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center rounded-full bg-accent-primary text-24 font-medium text-on-color uppercase">
-                          {watch("first_name")?.[0] ?? "R"}
-                        </div>
-                      </div>
-                      <div className="pt-1 text-13 font-medium text-accent-secondary hover:text-tertiary">
-                        {translate("web.choose_image")}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative mr-3 h-16 w-16 overflow-hidden">
-                      <img
-                        src={getFileURL(userAvatar ?? "")}
-                        className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
-                        alt={user?.display_name}
-                      />
-                    </div>
-                  )}
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label
-                    className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
-                    htmlFor="first_name"
-                  >
-                    {translate("web.first_name")}
-                  </label>
-                  <Controller
-                    control={control}
-                    name="first_name"
-                    rules={{
-                      required: t("web.first_name_is_required"),
-                      validate: validatePersonName,
-                      maxLength: {
-                        value: 50,
-                        message: t("web.first_name_must_be_within_50_characters"),
-                      },
-                    }}
-                    render={({ field: { value, onChange, ref } }) => (
-                      <Field name="first_name" invalid={Boolean(errors.first_name)}>
-                        <InputGroup size="2xl">
-                          <Input
-                            size="2xl"
-                            id="first_name"
-                            name="first_name"
-                            type="text"
-                            value={value}
-                            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-                            autoFocus
-                            onChange={onChange}
-                            ref={ref}
-                            placeholder={t("web.wilbur")}
-                            autoComplete="on"
-                          />
-                        </InputGroup>
-                      </Field>
-                    )}
-                  />
-                  {errors.first_name && (
-                    <span className="text-13 text-danger-primary">{errors.first_name.message}</span>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <label
-                    className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
-                    htmlFor="last_name"
-                  >
-                    {translate("web.last_name")}
-                  </label>
-                  <Controller
-                    control={control}
-                    name="last_name"
-                    rules={{
-                      required: t("web.last_name_is_required"),
-                      validate: validatePersonName,
-                      maxLength: {
-                        value: 50,
-                        message: t("web.last_name_must_be_within_50_characters"),
-                      },
-                    }}
-                    render={({ field: { value, onChange, ref } }) => (
-                      <Field name="last_name" invalid={Boolean(errors.last_name)}>
-                        <InputGroup size="2xl">
-                          <Input
-                            size="2xl"
-                            id="last_name"
-                            name="last_name"
-                            type="text"
-                            value={value}
-                            onChange={onChange}
-                            ref={ref}
-                            placeholder={t("web.wright")}
-                            autoComplete="on"
-                          />
-                        </InputGroup>
-                      </Field>
-                    )}
-                  />
-                  {errors.last_name && <span className="text-13 text-danger-primary">{errors.last_name.message}</span>}
-                </div>
-              </div>
-
-              {/* setting up password for the first time */}
-              {!isPasswordAlreadySetup && (
-                <>
-                  <div className="space-y-1">
-                    <label className="text-13 font-medium text-tertiary" htmlFor="password">
-                      {translate("web.set_a_password")} ({t("common.optional")})
-                    </label>
-                    <Controller
-                      control={control}
-                      name="password"
-                      rules={{
-                        required: false,
-                      }}
-                      render={({ field: { value, onChange, ref } }) => (
-                        <Field name="password" invalid={Boolean(errors.password)}>
-                          <InputGroup size="2xl">
-                            <Input
-                              size="2xl"
-                              type={showPassword.password ? "text" : "password"}
-                              name="password"
-                              value={value}
-                              onChange={onChange}
-                              ref={ref}
-                              placeholder={t("web.new_password")}
-                              onFocus={() => setIsPasswordInputFocused(true)}
-                              onBlur={() => setIsPasswordInputFocused(false)}
-                              autoComplete="new-password"
-                              aria-label={t("web.new_password")}
-                            />
-                            <button
-                              type="button"
-                              className="grid size-5 place-items-center"
-                              onClick={() => handleShowPassword("password")}
-                            >
-                              {showPassword.password ? (
-                                <HideOutline className="size-4 text-placeholder" />
-                              ) : (
-                                <ShowOutline className="size-4 text-placeholder" />
-                              )}
-                            </button>
-                          </InputGroup>
-                        </Field>
-                      )}
-                    />
-                    <PasswordStrengthIndicator password={watch("password") ?? ""} isFocused={isPasswordInputFocused} />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
-                      {t("auth.common.password.confirm_password.label")} ({t("common.optional")})
-                    </label>
-                    <Controller
-                      control={control}
-                      name="confirm_password"
-                      rules={{
-                        required: Boolean(watch("password")),
-                        validate: (value) =>
-                          watch("password") ? (value === watch("password") ? true : "Passwords don't match") : true,
-                      }}
-                      render={({ field: { value, onChange, ref } }) => (
-                        <Field name="confirm_password" invalid={Boolean(errors.confirm_password)}>
-                          <InputGroup size="2xl">
-                            <Input
-                              size="2xl"
-                              type={showPassword.retypePassword ? "text" : "password"}
-                              name="confirm_password"
-                              value={value}
-                              onChange={onChange}
-                              ref={ref}
-                              placeholder={t("auth.common.password.confirm_password.placeholder")}
-                              autoComplete="new-password"
-                              aria-label={t("auth.common.password.confirm_password.placeholder")}
-                            />
-                            <button
-                              type="button"
-                              className="grid size-5 place-items-center"
-                              onClick={() => handleShowPassword("retypePassword")}
-                            >
-                              {showPassword.retypePassword ? (
-                                <HideOutline className="size-4 text-placeholder" />
-                              ) : (
-                                <ShowOutline className="size-4 text-placeholder" />
-                              )}
-                            </button>
-                          </InputGroup>
-                        </Field>
-                      )}
-                    />
-                    {errors.confirm_password && (
-                      <span className="text-13 text-danger-primary">{errors.confirm_password.message}</span>
-                    )}
-                  </div>
-                </>
-              )}
+              <ProfileNameFields control={control} errors={errors} />
+              <ProfilePasswordFields
+                control={control}
+                errors={errors}
+                watch={watch}
+                showPassword={showPassword}
+                onToggleShowPassword={handleShowPassword}
+                isPasswordAlreadySetup={isPasswordAlreadySetup}
+                isPasswordInputFocused={isPasswordInputFocused}
+                setIsPasswordInputFocused={setIsPasswordInputFocused}
+              />
             </>
           )}
 
           {/* user role once the password is set */}
           {profileSetupStep !== EProfileSetupSteps.USER_DETAILS && (
             <>
-              <fieldset className="space-y-1">
-                <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
-                  {translate("web.what_role_choose_one")}
-                </legend>
-                <Controller
-                  control={control}
-                  name="role"
-                  rules={{
-                    required: t("web.this_field_is_required"),
-                  }}
-                  render={({ field: { value, onChange } }) => (
-                    <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
-                      {USER_ROLE.map((userRole) => (
-                        <button
-                          type="button"
-                          aria-pressed={value === userRole}
-                          key={userRole}
-                          className={cn(
-                            "shrink-0 rounded border-[0.5px] px-3 py-1.5 text-13 font-medium hover:cursor-pointer hover:bg-surface-2",
-                            {
-                              "border-accent-strong": value === userRole,
-                              "border-strong": value !== userRole,
-                            }
-                          )}
-                          onClick={() => onChange(userRole)}
-                        >
-                          {userRole}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                />
-                {errors.role && <span className="text-13 text-danger-primary">{errors.role.message}</span>}
-              </fieldset>
-              <fieldset className="space-y-1">
-                <legend className="text-13 font-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']">
-                  {translate("web.domain_expertise_choose")}
-                </legend>
-                <Controller
-                  control={control}
-                  name="use_case"
-                  rules={{
-                    required: t("web.please_select_at_least_one_option"),
-                    validate: (value) => (value && value.length > 0) || t("web.ui.select_one_option"),
-                  }}
-                  render={({ field: { value, onChange } }) => (
-                    <div className="flex flex-wrap gap-2 overflow-auto py-2 break-all">
-                      {USER_DOMAIN.map((userDomain) => {
-                        const isSelected = value?.includes(userDomain) || false;
-                        return (
-                          <button
-                            type="button"
-                            aria-pressed={isSelected}
-                            key={userDomain}
-                            className={`flex-shrink-0 border-[0.5px] hover:cursor-pointer hover:bg-surface-2 ${
-                              isSelected ? "border-accent-strong" : "border-strong"
-                            } rounded px-3 py-1.5 text-13 font-medium`}
-                            onClick={() => {
-                              const currentValue = value || [];
-                              if (isSelected) {
-                                onChange(currentValue.filter((item) => item !== userDomain));
-                              } else {
-                                onChange([...currentValue, userDomain]);
-                              }
-                            }}
-                          >
-                            {userDomain}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                />
-                {errors.use_case && <span className="text-13 text-danger-primary">{errors.use_case.message}</span>}
-              </fieldset>
+              <ProfileRoleField control={control} errors={errors} />
+              <ProfileUseCaseField control={control} errors={errors} />
             </>
           )}
-          <Button variant="primary" type="submit" size="lg" stretch="full" disabled={isButtonDisabled}>
-            {isSubmitting ? <Spinner height="20px" width="20px" /> : t("web.continue")}
-          </Button>
+          <ProfileSubmitButton isSubmitting={isSubmitting} disabled={isButtonDisabled} />
         </form>
       </div>
     </div>

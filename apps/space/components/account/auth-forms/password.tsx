@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { Dispatch, FormEvent, RefObject, SetStateAction } from "react";
 import { observer } from "mobx-react";
 import { CloseCircleOutline, HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -41,6 +42,267 @@ const defaultValues: TPasswordFormValues = {
 
 const authService = new AuthService();
 
+const isPasswordStrong = (password: string) => getPasswordStrength(password) === E_PASSWORD_STRENGTH.STRENGTH_VALID;
+
+const shouldShowPasswordStrength = (password: string, mode: EAuthModes) =>
+  password.length > 0 && mode === EAuthModes.SIGN_UP && !isPasswordStrong(password);
+
+const getIsButtonDisabled = (
+  isSubmitting: boolean,
+  mode: EAuthModes,
+  password: string,
+  confirmPassword: string | undefined
+) => {
+  if (isSubmitting || !password) return true;
+  if (mode !== EAuthModes.SIGN_UP) return false;
+  return !isPasswordStrong(password) || password !== confirmPassword;
+};
+
+const getAuthActionUrl = (mode: EAuthModes) =>
+  `${API_BASE_URL}/auth/spaces/${mode === EAuthModes.SIGN_IN ? "sign-in" : "sign-up"}/`;
+
+const prepareCSRFToken = async (
+  formRef: RefObject<HTMLFormElement | null>,
+  csrfPromise: Promise<{ csrf_token: string }> | undefined
+) => {
+  if (!formRef.current) return;
+  const token = await csrfPromise;
+  if (!token?.csrf_token) return;
+  const csrfElement = formRef.current.querySelector("input[name=csrfmiddlewaretoken]");
+  csrfElement?.setAttribute("value", token.csrf_token);
+};
+
+const submitAuthForm = async (
+  event: FormEvent<HTMLFormElement>,
+  formRef: RefObject<HTMLFormElement | null>,
+  csrfPromise: Promise<{ csrf_token: string }> | undefined,
+  setIsSubmitting: Dispatch<SetStateAction<boolean>>
+) => {
+  event.preventDefault();
+  await prepareCSRFToken(formRef, csrfPromise);
+  formRef.current?.submit();
+  setIsSubmitting(true);
+};
+
+type TPasswordVisibilityButtonProps = {
+  visible: boolean;
+  onToggle: () => void;
+};
+
+function PasswordVisibilityButton({ visible, onToggle }: TPasswordVisibilityButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={translate(visible ? "aria_labels.auth_forms.hide_password" : "aria_labels.auth_forms.show_password")}
+      className="absolute right-3 hover:cursor-pointer"
+      onClick={onToggle}
+    >
+      {visible ? (
+        <HideOutline className="h-5 w-5 text-placeholder" />
+      ) : (
+        <ShowOutline className="h-5 w-5 text-placeholder" />
+      )}
+    </button>
+  );
+}
+
+type TEmailFieldProps = {
+  email: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+};
+
+function EmailField({ email, onChange, onClear }: TEmailFieldProps) {
+  return (
+    <div className="space-y-1">
+      <label className="text-13 font-medium text-tertiary" htmlFor="email">
+        {translate("web.email")}
+      </label>
+      <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 px-3 [&_input]:disable-autofill-style">
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          size="xl"
+          value={email}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="name@company.com"
+          disabled
+        />
+        {email.length > 0 && (
+          <button
+            type="button"
+            aria-label={translate("web.clear_email")}
+            className="absolute right-3 hover:cursor-pointer"
+            onClick={onClear}
+            tabIndex={-1}
+          >
+            <CloseCircleOutline className="h-5 w-5 text-placeholder" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type TPasswordFieldProps = {
+  mode: EAuthModes;
+  password: string;
+  isVisible: boolean;
+  isFocused: boolean;
+  onChange: (value: string) => void;
+  onToggleVisibility: () => void;
+  onFocus: () => void;
+  onBlur: () => void;
+};
+
+function PasswordField({
+  mode,
+  password,
+  isVisible,
+  isFocused,
+  onChange,
+  onToggleVisibility,
+  onFocus,
+  onBlur,
+}: TPasswordFieldProps) {
+  return (
+    <div className="space-y-1">
+      <label className="text-13 font-medium text-tertiary" htmlFor="password">
+        {mode === EAuthModes.SIGN_IN ? translate("web.password") : translate("web.set_a_password")}
+      </label>
+      <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 pr-12 pl-3 [&_input]:disable-autofill-style">
+        <Input
+          id="password"
+          type={isVisible ? "text" : "password"}
+          name="password"
+          size="xl"
+          value={password}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={translate("web.enter_password")}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          autoComplete="off"
+          // oxlint-disable-next-line jsx-a11y/no-autofocus -- sole primary field of a dedicated auth step; matches standard sign-in flows
+          autoFocus
+        />
+        <PasswordVisibilityButton visible={isVisible} onToggle={onToggleVisibility} />
+      </div>
+      {shouldShowPasswordStrength(password, mode) && (
+        <PasswordStrengthIndicator password={password} isFocused={isFocused} />
+      )}
+    </div>
+  );
+}
+
+type TConfirmPasswordFieldProps = {
+  password: string;
+  confirmPassword: string | undefined;
+  isVisible: boolean;
+  isConfirmFocused: boolean;
+  onChange: (value: string) => void;
+  onToggleVisibility: () => void;
+  onFocus: () => void;
+  onBlur: () => void;
+};
+
+function ConfirmPasswordField({
+  password,
+  confirmPassword,
+  isVisible,
+  isConfirmFocused,
+  onChange,
+  onToggleVisibility,
+  onFocus,
+  onBlur,
+}: TConfirmPasswordFieldProps) {
+  const confirmPasswordValue = confirmPassword ?? "";
+  const renderPasswordMatchError = !isConfirmFocused || confirmPasswordValue.length >= password.length;
+  const showPasswordMismatch = !!confirmPassword && password !== confirmPassword && renderPasswordMatchError;
+
+  return (
+    <div className="space-y-1">
+      <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
+        {translate("web.confirm_password")}
+      </label>
+      <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 pr-12 pl-3 [&_input]:disable-autofill-style">
+        <Input
+          id="confirm_password"
+          type={isVisible ? "text" : "password"}
+          name="confirm_password"
+          size="xl"
+          value={confirmPassword}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={translate("web.confirm_password")}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          autoComplete="off"
+        />
+        <PasswordVisibilityButton visible={isVisible} onToggle={onToggleVisibility} />
+      </div>
+      {showPasswordMismatch && (
+        <span className="text-13 text-danger-primary">{translate("web.runtime.passwords_mismatch")}</span>
+      )}
+    </div>
+  );
+}
+
+type TAuthFormButtonsProps = {
+  mode: EAuthModes;
+  isSMTPConfigured: boolean;
+  isButtonDisabled: boolean;
+  isSubmitting: boolean;
+  onUniqueCodeSignIn: () => void;
+};
+
+function AuthFormButtons({
+  mode,
+  isSMTPConfigured,
+  isButtonDisabled,
+  isSubmitting,
+  onUniqueCodeSignIn,
+}: TAuthFormButtonsProps) {
+  if (mode === EAuthModes.SIGN_UP) {
+    return (
+      <div className="space-y-2.5">
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          stretch="full"
+          disabled={isButtonDisabled}
+          loading={isSubmitting}
+          label={translate("web.create_account")}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2.5">
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        stretch="full"
+        disabled={isButtonDisabled}
+        loading={isSubmitting}
+        label={isSMTPConfigured ? translate("web.continue") : translate("web.go_to_workspace")}
+      />
+      {isSMTPConfigured && (
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          stretch="full"
+          label={translate("web.sign_in_with_unique_code")}
+          onClick={onUniqueCodeSignIn}
+        />
+      )}
+    </div>
+  );
+}
+
 export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props) {
   const { email, nextPath, isSMTPConfigured, handleAuthStep, handleEmailClear, mode } = props;
   // ref
@@ -73,206 +335,59 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
     handleAuthStep(EAuthSteps.UNIQUE_CODE);
   };
 
-  const passwordSupport = passwordFormData.password.length > 0 &&
-    mode === EAuthModes.SIGN_UP &&
-    getPasswordStrength(passwordFormData.password) != E_PASSWORD_STRENGTH.STRENGTH_VALID && (
-      <PasswordStrengthIndicator password={passwordFormData.password} isFocused={isPasswordInputFocused} />
-    );
-
   const isButtonDisabled = useMemo(
-    () =>
-      !(
-        !isSubmitting &&
-        !!passwordFormData.password &&
-        (mode !== EAuthModes.SIGN_UP ||
-          (getPasswordStrength(passwordFormData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
-            passwordFormData.password === passwordFormData.confirm_password))
-      ),
+    () => getIsButtonDisabled(isSubmitting, mode, passwordFormData.password, passwordFormData.confirm_password),
     [isSubmitting, mode, passwordFormData.confirm_password, passwordFormData.password]
   );
-
-  const password = passwordFormData.password ?? "";
-  const confirmPassword = passwordFormData.confirm_password ?? "";
-  const renderPasswordMatchError = !isRetryPasswordInputFocused || confirmPassword.length >= password.length;
-
-  const handleCSRFToken = async () => {
-    if (!formRef || !formRef.current) return;
-    const token = await csrfPromise;
-    if (!token?.csrf_token) return;
-    const csrfElement = formRef.current.querySelector("input[name=csrfmiddlewaretoken]");
-    csrfElement?.setAttribute("value", token?.csrf_token);
-  };
 
   return (
     <form
       ref={formRef}
       className="mt-5 space-y-4"
       method="POST"
-      action={`${API_BASE_URL}/auth/spaces/${mode === EAuthModes.SIGN_IN ? "sign-in" : "sign-up"}/`}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        await handleCSRFToken();
-        if (formRef.current) {
-          formRef.current.submit();
-        }
-        setIsSubmitting(true);
-      }}
+      action={getAuthActionUrl(mode)}
+      onSubmit={(event) => submitAuthForm(event, formRef, csrfPromise, setIsSubmitting)}
     >
       <input type="hidden" name="csrfmiddlewaretoken" />
       <input type="hidden" value={passwordFormData.email} name="email" />
       <input type="hidden" value={nextPath} name="next_path" />
-      <div className="space-y-1">
-        <label className="text-13 font-medium text-tertiary" htmlFor="email">
-          {translate("web.email")}
-        </label>
-        <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 px-3 [&_input]:disable-autofill-style">
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            size="xl"
-            value={passwordFormData.email}
-            onChange={(e) => handleFormChange("email", e.target.value)}
-            placeholder="name@company.com"
-            disabled
-          />
-          {passwordFormData.email.length > 0 && (
-            <button
-              type="button"
-              aria-label={translate("web.clear_email")}
-              className="absolute right-3 hover:cursor-pointer"
-              onClick={handleEmailClear}
-              tabIndex={-1}
-            >
-              <CloseCircleOutline className="h-5 w-5 text-placeholder" />
-            </button>
-          )}
-        </div>
-      </div>
+      <EmailField
+        email={passwordFormData.email}
+        onChange={(value) => handleFormChange("email", value)}
+        onClear={handleEmailClear}
+      />
 
-      <div className="space-y-1">
-        <label className="text-13 font-medium text-tertiary" htmlFor="password">
-          {mode === EAuthModes.SIGN_IN ? translate("web.password") : translate("web.set_a_password")}
-        </label>
-        <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 pr-12 pl-3 [&_input]:disable-autofill-style">
-          <Input
-            id="password"
-            type={showPassword?.password ? "text" : "password"}
-            name="password"
-            size="xl"
-            value={passwordFormData.password}
-            onChange={(e) => handleFormChange("password", e.target.value)}
-            placeholder={translate("web.enter_password")}
-            onFocus={() => setIsPasswordInputFocused(true)}
-            onBlur={() => setIsPasswordInputFocused(false)}
-            autoComplete="off"
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- sole primary field of a dedicated auth step; matches standard sign-in flows
-            autoFocus
-          />
-          {showPassword?.password ? (
-            <button
-              type="button"
-              aria-label={translate("aria_labels.auth_forms.hide_password")}
-              className="absolute right-3 hover:cursor-pointer"
-              onClick={() => handleShowPassword("password")}
-            >
-              <HideOutline className="h-5 w-5 text-placeholder" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              aria-label={translate("aria_labels.auth_forms.show_password")}
-              className="absolute right-3 hover:cursor-pointer"
-              onClick={() => handleShowPassword("password")}
-            >
-              <ShowOutline className="h-5 w-5 text-placeholder" />
-            </button>
-          )}
-        </div>
-        {passwordSupport}
-      </div>
+      <PasswordField
+        mode={mode}
+        password={passwordFormData.password}
+        isVisible={showPassword.password}
+        isFocused={isPasswordInputFocused}
+        onChange={(value) => handleFormChange("password", value)}
+        onToggleVisibility={() => handleShowPassword("password")}
+        onFocus={() => setIsPasswordInputFocused(true)}
+        onBlur={() => setIsPasswordInputFocused(false)}
+      />
 
       {mode === EAuthModes.SIGN_UP && (
-        <div className="space-y-1">
-          <label className="text-13 font-medium text-tertiary" htmlFor="confirm_password">
-            {translate("web.confirm_password")}
-          </label>
-          <div className="relative flex h-10 items-center rounded-md border border-subtle bg-surface-1 pr-12 pl-3 [&_input]:disable-autofill-style">
-            <Input
-              id="confirm_password"
-              type={showPassword?.retypePassword ? "text" : "password"}
-              name="confirm_password"
-              size="xl"
-              value={passwordFormData.confirm_password}
-              onChange={(e) => handleFormChange("confirm_password", e.target.value)}
-              placeholder={translate("web.confirm_password")}
-              onFocus={() => setIsRetryPasswordInputFocused(true)}
-              onBlur={() => setIsRetryPasswordInputFocused(false)}
-              autoComplete="off"
-            />
-            {showPassword?.retypePassword ? (
-              <button
-                type="button"
-                aria-label={translate("aria_labels.auth_forms.hide_password")}
-                className="absolute right-3 hover:cursor-pointer"
-                onClick={() => handleShowPassword("retypePassword")}
-              >
-                <HideOutline className="h-5 w-5 text-placeholder" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                aria-label={translate("aria_labels.auth_forms.show_password")}
-                className="absolute right-3 hover:cursor-pointer"
-                onClick={() => handleShowPassword("retypePassword")}
-              >
-                <ShowOutline className="h-5 w-5 text-placeholder" />
-              </button>
-            )}
-          </div>
-          {!!passwordFormData.confirm_password &&
-            passwordFormData.password !== passwordFormData.confirm_password &&
-            renderPasswordMatchError && (
-              <span className="text-13 text-danger-primary">{translate("web.runtime.passwords_mismatch")}</span>
-            )}
-        </div>
+        <ConfirmPasswordField
+          password={passwordFormData.password}
+          confirmPassword={passwordFormData.confirm_password}
+          isVisible={showPassword.retypePassword}
+          isConfirmFocused={isRetryPasswordInputFocused}
+          onChange={(value) => handleFormChange("confirm_password", value)}
+          onToggleVisibility={() => handleShowPassword("retypePassword")}
+          onFocus={() => setIsRetryPasswordInputFocused(true)}
+          onBlur={() => setIsRetryPasswordInputFocused(false)}
+        />
       )}
 
-      <div className="space-y-2.5">
-        {mode === EAuthModes.SIGN_IN ? (
-          <>
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              stretch="full"
-              disabled={isButtonDisabled}
-              loading={isSubmitting}
-              label={isSMTPConfigured ? translate("web.continue") : translate("web.go_to_workspace")}
-            />
-            {isSMTPConfigured && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="lg"
-                stretch="full"
-                label={translate("web.sign_in_with_unique_code")}
-                onClick={redirectToUniqueCodeSignIn}
-              />
-            )}
-          </>
-        ) : (
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            stretch="full"
-            disabled={isButtonDisabled}
-            loading={isSubmitting}
-            label={translate("web.create_account")}
-          />
-        )}
-      </div>
+      <AuthFormButtons
+        mode={mode}
+        isSMTPConfigured={isSMTPConfigured}
+        isButtonDisabled={isButtonDisabled}
+        isSubmitting={isSubmitting}
+        onUniqueCodeSignIn={redirectToUniqueCodeSignIn}
+      />
     </form>
   );
 });

@@ -22,7 +22,7 @@ import { useProjectFilter } from "@/hooks/store/use-project-filter";
 import { useUserPermissions } from "@/hooks/store/user";
 // local imports
 import { ProjectLayoutTransition } from "./layout-transition";
-import type { IProject } from "@plane/types";
+import type { IProject, TProjectDisplayFilters, TProjectFilters } from "@plane/types";
 const ProjectLayouts = lazy(() => import("./layouts").then((module) => ({ default: module.ProjectLayouts })));
 
 type TProjectCardListProps = {
@@ -30,12 +30,67 @@ type TProjectCardListProps = {
   filteredProjectIds?: string[];
 };
 
+const isArchivedProjectsEmptyState = (
+  displayFilters: TProjectDisplayFilters | undefined,
+  filters: TProjectFilters | undefined
+) => !!displayFilters?.archived_projects && calculateTotalFilters(filters ?? {}) === 0;
+
+const getProjectLayout = (displayFilters: TProjectDisplayFilters | undefined) => displayFilters?.layout ?? "gallery";
+
+const getSearchEmptyStateContent = (isArchivedProjectsView: boolean) =>
+  isArchivedProjectsView
+    ? ({
+        title: "workspace_empty_state.projects_archived.title",
+        description: "workspace_empty_state.projects_archived.description",
+        assetKey: "archived-work-item",
+      } as const)
+    : ({
+        title: "common_empty_state.search.title",
+        description: "common_empty_state.search.description",
+        assetKey: "search",
+      } as const);
+
+function ProjectCardListEmptyState({ canPerformEmptyStateActions }: { canPerformEmptyStateActions: boolean }) {
+  const { t } = useTranslation();
+  const { toggleCreateProjectModal } = useCommandPalette();
+
+  return (
+    <EmptyStateDetailed
+      title={t("workspace_projects.empty_state.general.title")}
+      description={t("workspace_projects.empty_state.general.description")}
+      assetKey="project"
+      assetClassName="size-40"
+      actions={[
+        {
+          label: t("workspace_projects.empty_state.general.primary_button.text"),
+          onClick: () => {
+            toggleCreateProjectModal(true);
+          },
+          disabled: !canPerformEmptyStateActions,
+          variant: "primary",
+        },
+      ]}
+    />
+  );
+}
+
+function ProjectCardListSearchEmptyState({ isArchivedProjectsView }: { isArchivedProjectsView: boolean }) {
+  const { t } = useTranslation();
+  const content = getSearchEmptyStateContent(isArchivedProjectsView);
+
+  return (
+    <EmptyStateDetailed
+      title={t(content.title)}
+      description={t(content.description)}
+      assetKey={content.assetKey}
+      assetClassName="size-40"
+    />
+  );
+}
+
 export const ProjectCardList = observer(function ProjectCardList(props: TProjectCardListProps) {
   const { totalProjectIds: totalProjectIdsProps, filteredProjectIds: filteredProjectIdsProps } = props;
-  // plane hooks
-  const { t } = useTranslation();
   // store hooks
-  const { toggleCreateProjectModal } = useCommandPalette();
   const {
     loader,
     fetchStatus,
@@ -49,6 +104,7 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
   // derived values
   const workspaceProjectIds = totalProjectIdsProps ?? storeWorkspaceProjectIds;
   const filteredProjectIds = filteredProjectIdsProps ?? storeFilteredProjectIds;
+  const isArchivedProjectsView = isArchivedProjectsEmptyState(currentWorkspaceDisplayFilters, currentWorkspaceFilters);
 
   // permissions
   const canPerformEmptyStateActions = allowPermissions(
@@ -57,55 +113,16 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
   );
 
   if (!filteredProjectIds || !workspaceProjectIds || loader === "init-loader" || fetchStatus !== "complete")
-    return <ProjectsLoader layout={currentWorkspaceDisplayFilters?.layout ?? "gallery"} />;
+    return <ProjectsLoader layout={getProjectLayout(currentWorkspaceDisplayFilters)} />;
 
-  if (workspaceProjectIds?.length === 0 && !currentWorkspaceDisplayFilters?.archived_projects)
-    return (
-      <EmptyStateDetailed
-        title={t("workspace_projects.empty_state.general.title")}
-        description={t("workspace_projects.empty_state.general.description")}
-        assetKey="project"
-        assetClassName="size-40"
-        actions={[
-          {
-            label: t("workspace_projects.empty_state.general.primary_button.text"),
-            onClick: () => {
-              toggleCreateProjectModal(true);
-            },
-            disabled: !canPerformEmptyStateActions,
-            variant: "primary",
-          },
-        ]}
-      />
-    );
+  if (workspaceProjectIds.length === 0 && !currentWorkspaceDisplayFilters?.archived_projects)
+    return <ProjectCardListEmptyState canPerformEmptyStateActions={canPerformEmptyStateActions} />;
 
   if (filteredProjectIds.length === 0)
-    return (
-      <EmptyStateDetailed
-        title={
-          currentWorkspaceDisplayFilters?.archived_projects &&
-          calculateTotalFilters(currentWorkspaceFilters ?? {}) === 0
-            ? t("workspace_empty_state.projects_archived.title")
-            : t("common_empty_state.search.title")
-        }
-        description={
-          currentWorkspaceDisplayFilters?.archived_projects &&
-          calculateTotalFilters(currentWorkspaceFilters ?? {}) === 0
-            ? t("workspace_empty_state.projects_archived.description")
-            : t("common_empty_state.search.description")
-        }
-        assetKey={
-          currentWorkspaceDisplayFilters?.archived_projects &&
-          calculateTotalFilters(currentWorkspaceFilters ?? {}) === 0
-            ? "archived-work-item"
-            : "search"
-        }
-        assetClassName="size-40"
-      />
-    );
+    return <ProjectCardListSearchEmptyState isArchivedProjectsView={isArchivedProjectsView} />;
 
   return (
-    <ProjectLayoutTransition layout={currentWorkspaceDisplayFilters?.layout ?? "gallery"} waitForReady>
+    <ProjectLayoutTransition layout={getProjectLayout(currentWorkspaceDisplayFilters)} waitForReady>
       {(layout) => (
         <Suspense fallback={<ProjectsLoader layout={layout} />}>
           <LayoutTransitionContent>

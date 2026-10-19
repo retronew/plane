@@ -50,6 +50,181 @@ const integrationDetails: { [key: string]: any } = {
 // services
 const integrationService = new IntegrationService();
 
+const getWorkspaceIntegrationsKey = (workspaceSlug: string | undefined) =>
+  workspaceSlug ? WORKSPACE_INTEGRATIONS(workspaceSlug) : null;
+
+const fetchWorkspaceIntegrations = (workspaceSlug: string | undefined) =>
+  workspaceSlug ? integrationService.getWorkspaceIntegrationsList(workspaceSlug) : null;
+
+const findInstalledIntegration = (
+  workspaceIntegrations: IWorkspaceIntegration[] | null | undefined,
+  integrationId: string
+) =>
+  Array.isArray(workspaceIntegrations)
+    ? workspaceIntegrations.find((i: IWorkspaceIntegration) => i.integration_detail.id === integrationId)
+    : undefined;
+
+const getIntegrationDescription = (
+  provider: string,
+  workspaceIntegrations: IWorkspaceIntegration[] | null | undefined,
+  isInstalled: boolean
+) => {
+  if (!workspaceIntegrations) return translate("web.loading");
+  return isInstalled ? integrationDetails[provider].installed : integrationDetails[provider].notInstalled;
+};
+
+type RemoveIntegrationArgs = {
+  workspaceSlug: string | undefined;
+  integration: IAppIntegration;
+  workspaceIntegrations: IWorkspaceIntegration[] | null | undefined;
+  setIsDeleting: (value: boolean) => void;
+};
+
+const removeIntegration = async ({
+  workspaceSlug,
+  integration,
+  workspaceIntegrations,
+  setIsDeleting,
+}: RemoveIntegrationArgs) => {
+  if (!workspaceSlug || !integration || !workspaceIntegrations) return;
+
+  const workspaceIntegrationId = Array.isArray(workspaceIntegrations)
+    ? workspaceIntegrations.find((i) => i.integration === integration.id)?.id
+    : undefined;
+
+  setIsDeleting(true);
+
+  await integrationService
+    .deleteWorkspaceIntegration(workspaceSlug, workspaceIntegrationId ?? "")
+    .then(() => {
+      mutate<IWorkspaceIntegration[]>(
+        WORKSPACE_INTEGRATIONS(workspaceSlug),
+        (prevData) => prevData?.filter((i) => i.id !== workspaceIntegrationId),
+        false
+      );
+      setIsDeleting(false);
+
+      setToast({
+        type: "success",
+        title: translate("web.deleted_successfully"),
+        message: translate("web.ui.integration_deleted", { name: integration.title }),
+      });
+      return undefined;
+    })
+    .catch(() => {
+      setIsDeleting(false);
+
+      setToast({
+        type: "error",
+        title: translate("toast.error"),
+        message: translate("web.ui.integration_delete_failed", { name: integration.title }),
+      });
+    });
+};
+
+type IntegrationActionButtonProps = {
+  isUserAdmin: boolean;
+  isMobile: boolean;
+  isPending: boolean;
+  variant: "danger" | "primary";
+  label: string;
+  pendingLabel: string;
+  disabled?: boolean;
+  onAction: () => void;
+};
+
+function IntegrationActionButton({
+  isUserAdmin,
+  isMobile,
+  isPending,
+  variant,
+  label,
+  pendingLabel,
+  disabled,
+  onAction,
+}: IntegrationActionButtonProps) {
+  const buttonLabel = isPending ? pendingLabel : label;
+
+  return (
+    <Tooltip
+      label={!isUserAdmin ? translate("web.you_don_t_have_permission_to_perform_this") : ""}
+      layout="stacked"
+      disabled={isUserAdmin || isMobile}
+    >
+      <Button
+        render={<button className={!isUserAdmin ? "hover:cursor-not-allowed" : ""} aria-label={buttonLabel} />}
+        variant={variant}
+        size="sm"
+        stretch="auto"
+        onClick={() => {
+          if (!isUserAdmin) return;
+          onAction();
+        }}
+        disabled={disabled}
+        loading={isPending}
+        label={buttonLabel}
+      />
+    </Tooltip>
+  );
+}
+
+type IntegrationCardActionProps = {
+  hasLoaded: boolean;
+  isInstalled: boolean;
+  isUserAdmin: boolean;
+  isMobile: boolean;
+  isDeleting: boolean;
+  isInstalling: boolean;
+  onRemove: () => void;
+  onInstall: () => void;
+};
+
+function IntegrationCardAction({
+  hasLoaded,
+  isInstalled,
+  isUserAdmin,
+  isMobile,
+  isDeleting,
+  isInstalling,
+  onRemove,
+  onInstall,
+}: IntegrationCardActionProps) {
+  if (!hasLoaded) {
+    return (
+      <Loader>
+        <Loader.Item height="32px" width="64px" />
+      </Loader>
+    );
+  }
+
+  if (isInstalled) {
+    return (
+      <IntegrationActionButton
+        isUserAdmin={isUserAdmin}
+        isMobile={isMobile}
+        isPending={isDeleting}
+        variant="danger"
+        label={translate("web.uninstall")}
+        pendingLabel={translate("web.uninstalling")}
+        disabled={!isUserAdmin}
+        onAction={onRemove}
+      />
+    );
+  }
+
+  return (
+    <IntegrationActionButton
+      isUserAdmin={isUserAdmin}
+      isMobile={isMobile}
+      isPending={isInstalling}
+      variant="primary"
+      label={translate("web.install")}
+      pendingLabel={translate("web.installing")}
+      onAction={onInstall}
+    />
+  );
+}
+
 export const SingleIntegrationCard = observer(function SingleIntegrationCard({ integration }: Props) {
   // states
   const [deletingIntegration, setDeletingIntegration] = useState(false);
@@ -67,50 +242,19 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
     slack_client_id: config?.slack_client_id || "",
   });
 
-  const { data: workspaceIntegrations } = useSWR(workspaceSlug ? WORKSPACE_INTEGRATIONS(workspaceSlug) : null, () =>
-    workspaceSlug ? integrationService.getWorkspaceIntegrationsList(workspaceSlug) : null
+  const { data: workspaceIntegrations } = useSWR(getWorkspaceIntegrationsKey(workspaceSlug), () =>
+    fetchWorkspaceIntegrations(workspaceSlug)
   );
 
-  const handleRemoveIntegration = async () => {
-    if (!workspaceSlug || !integration || !workspaceIntegrations) return;
+  const isInstalled = Boolean(findInstalledIntegration(workspaceIntegrations, integration.id));
 
-    const workspaceIntegrationId = Array.isArray(workspaceIntegrations)
-      ? workspaceIntegrations.find((i) => i.integration === integration.id)?.id
-      : undefined;
-
-    setDeletingIntegration(true);
-
-    await integrationService
-      .deleteWorkspaceIntegration(workspaceSlug, workspaceIntegrationId ?? "")
-      .then(() => {
-        mutate<IWorkspaceIntegration[]>(
-          WORKSPACE_INTEGRATIONS(workspaceSlug),
-          (prevData) => prevData?.filter((i) => i.id !== workspaceIntegrationId),
-          false
-        );
-        setDeletingIntegration(false);
-
-        setToast({
-          type: "success",
-          title: translate("web.deleted_successfully"),
-          message: translate("web.ui.integration_deleted", { name: integration.title }),
-        });
-        return undefined;
-      })
-      .catch(() => {
-        setDeletingIntegration(false);
-
-        setToast({
-          type: "error",
-          title: translate("toast.error"),
-          message: translate("web.ui.integration_delete_failed", { name: integration.title }),
-        });
-      });
-  };
-
-  const isInstalled = Array.isArray(workspaceIntegrations)
-    ? workspaceIntegrations.find((i: IWorkspaceIntegration) => i.integration_detail.id === integration.id)
-    : undefined;
+  const handleRemoveIntegration = () =>
+    removeIntegration({
+      workspaceSlug,
+      integration,
+      workspaceIntegrations,
+      setIsDeleting: setDeletingIntegration,
+    });
 
   return (
     <div className="flex items-center justify-between gap-2 border-b border-subtle bg-surface-1 px-4 py-6">
@@ -125,76 +269,26 @@ export const SingleIntegrationCard = observer(function SingleIntegrationCard({ i
         <div>
           <h3 className="flex items-center gap-2 text-body-xs-medium">
             {integration.title}
-            {workspaceIntegrations
-              ? isInstalled && <TickCircleOutline className="h-3.5 w-3.5 fill-transparent text-success-primary" />
-              : null}
+            {isInstalled && workspaceIntegrations && (
+              <TickCircleOutline className="h-3.5 w-3.5 fill-transparent text-success-primary" />
+            )}
           </h3>
           <p className="text-body-xs-regular text-secondary">
-            {workspaceIntegrations
-              ? isInstalled
-                ? integrationDetails[integration.provider].installed
-                : integrationDetails[integration.provider].notInstalled
-              : translate("web.loading")}
+            {getIntegrationDescription(integration.provider, workspaceIntegrations, isInstalled)}
           </p>
         </div>
       </div>
 
-      {workspaceIntegrations ? (
-        isInstalled ? (
-          <Tooltip
-            label={!isUserAdmin ? translate("web.you_don_t_have_permission_to_perform_this") : ""}
-            layout="stacked"
-            disabled={isUserAdmin || isMobile}
-          >
-            <Button
-              render={
-                <button
-                  className={!isUserAdmin ? "hover:cursor-not-allowed" : ""}
-                  aria-label={deletingIntegration ? translate("web.uninstalling") : translate("web.uninstall")}
-                />
-              }
-              variant="danger"
-              size="sm"
-              stretch="auto"
-              onClick={() => {
-                if (!isUserAdmin) return;
-                handleRemoveIntegration();
-              }}
-              disabled={!isUserAdmin}
-              loading={deletingIntegration}
-              label={deletingIntegration ? translate("web.uninstalling") : translate("web.uninstall")}
-            />
-          </Tooltip>
-        ) : (
-          <Tooltip
-            label={!isUserAdmin ? translate("web.you_don_t_have_permission_to_perform_this") : ""}
-            layout="stacked"
-            disabled={isUserAdmin || isMobile}
-          >
-            <Button
-              render={
-                <button
-                  className={!isUserAdmin ? "hover:cursor-not-allowed" : ""}
-                  aria-label={isInstalling ? translate("web.installing") : translate("web.install")}
-                />
-              }
-              variant="primary"
-              size="sm"
-              stretch="auto"
-              onClick={() => {
-                if (!isUserAdmin) return;
-                startAuth();
-              }}
-              loading={isInstalling}
-              label={isInstalling ? translate("web.installing") : translate("web.install")}
-            />
-          </Tooltip>
-        )
-      ) : (
-        <Loader>
-          <Loader.Item height="32px" width="64px" />
-        </Loader>
-      )}
+      <IntegrationCardAction
+        hasLoaded={Boolean(workspaceIntegrations)}
+        isInstalled={isInstalled}
+        isUserAdmin={isUserAdmin}
+        isMobile={isMobile}
+        isDeleting={deletingIntegration}
+        isInstalling={isInstalling}
+        onRemove={handleRemoveIntegration}
+        onInstall={startAuth}
+      />
     </div>
   );
 });

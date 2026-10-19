@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Control } from "react-hook-form";
 import { HideOutline, ShowOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Field } from "@makeplane/propel/components/field";
@@ -47,6 +47,120 @@ const defaultShowPassword = {
   confirmPassword: false,
 };
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+
+function isSameAsOldPassword(oldPassword: string, password: string) {
+  return oldPassword !== "" && password !== "" && password === oldPassword;
+}
+
+function getIsButtonDisabled(args: {
+  password: string;
+  confirmPassword: string;
+  oldPassword: string;
+  oldPasswordRequired: boolean;
+}) {
+  const { password, confirmPassword, oldPassword, oldPasswordRequired } = args;
+  if (getPasswordStrength(password) !== E_PASSWORD_STRENGTH.STRENGTH_VALID) return true;
+  if (oldPasswordRequired && oldPassword.trim() === "") return true;
+  if (password.trim() === "") return true;
+  if (confirmPassword.trim() === "") return true;
+  if (password !== confirmPassword) return true;
+  return password === oldPassword;
+}
+
+function isPasswordMatchVisible(isRetryFocused: boolean, confirmPassword: string, password: string) {
+  return !isRetryFocused || confirmPassword.length >= password.length;
+}
+
+function shouldSetPasswordFieldError(code: string | undefined) {
+  return Boolean(code && passwordErrors.includes(code as EAuthenticationErrorCodes));
+}
+
+function getPasswordChangeError(error: unknown, t: Translate) {
+  const err = error as Error & { error_code?: string };
+  const code = err.error_code?.toString();
+  const errorInfo = code ? authErrorHandler(code as EAuthenticationErrorCodes) : undefined;
+  return {
+    code,
+    title: errorInfo?.title ?? t("auth.common.password.toast.change_password.error.title"),
+    message:
+      typeof errorInfo?.message === "string"
+        ? errorInfo.message
+        : t("auth.common.password.toast.change_password.error.message"),
+    fieldMessage: errorInfo?.message?.toString() || t("auth.common.password.toast.change_password.error.message"),
+  };
+}
+
+function PasswordSupport({ password, isFocused }: { password: string; isFocused: boolean }) {
+  if (password.length === 0) return null;
+  if (getPasswordStrength(password) === E_PASSWORD_STRENGTH.STRENGTH_VALID) return null;
+  return <PasswordStrengthIndicator password={password} isFocused={isFocused} />;
+}
+
+function PasswordField({
+  control,
+  name,
+  id,
+  placeholder,
+  autoComplete,
+  visible,
+  onToggle,
+  error,
+  onFocus,
+  onBlur,
+}: {
+  control: Control<FormValues>;
+  name: keyof FormValues;
+  id: string;
+  placeholder: string;
+  autoComplete: string;
+  visible: boolean;
+  onToggle: () => void;
+  error: string | undefined;
+  onFocus?: () => void;
+  onBlur?: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={{
+        required: t("common.errors.required"),
+      }}
+      render={({ field: { value, onChange } }) => (
+        <Field name={id} invalid={Boolean(error)}>
+          <InputGroup size="lg">
+            <Input
+              size="lg"
+              id={id}
+              type={visible ? "text" : "password"}
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              autoComplete={autoComplete}
+            />
+            <button
+              type="button"
+              className="grid size-5 place-items-center"
+              onClick={onToggle}
+              aria-label={visible ? t("web.hide_password") : t("web.show_password")}
+            >
+              {visible ? (
+                <HideOutline className="size-5 text-placeholder" />
+              ) : (
+                <ShowOutline className="size-5 text-placeholder" />
+              )}
+            </button>
+          </InputGroup>
+        </Field>
+      )}
+    />
+  );
+}
+
 export const SecurityProfileSettings = observer(function SecurityProfileSettings() {
   // store
   const { data: currentUser, changePassword } = useUser();
@@ -73,7 +187,7 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
   // i18n
   const { t } = useTranslation();
 
-  const isNewPasswordSameAsOldPassword = oldPassword !== "" && password !== "" && password === oldPassword;
+  const isNewPasswordSameAsOldPassword = isSameAsOldPassword(oldPassword, password);
 
   const handleShowPassword = (key: keyof typeof showPassword) =>
     setShowPassword((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -97,42 +211,31 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
         message: t("auth.common.password.toast.change_password.success.message"),
       });
     } catch (error: unknown) {
-      const err = error as Error & { error_code?: string };
-      const code = err.error_code?.toString();
-      const errorInfo = code ? authErrorHandler(code as EAuthenticationErrorCodes) : undefined;
+      const failure = getPasswordChangeError(error, t);
 
       setToast({
         type: "error",
-        title: errorInfo?.title ?? t("auth.common.password.toast.change_password.error.title"),
-        message:
-          typeof errorInfo?.message === "string"
-            ? errorInfo.message
-            : t("auth.common.password.toast.change_password.error.message"),
+        title: failure.title,
+        message: failure.message,
       });
 
-      if (code && passwordErrors.includes(code as EAuthenticationErrorCodes)) {
+      if (shouldSetPasswordFieldError(failure.code)) {
         setError("new_password", {
           type: "manual",
-          message: errorInfo?.message?.toString() || t("auth.common.password.toast.change_password.error.message"),
+          message: failure.fieldMessage,
         });
       }
     }
   };
 
-  const isButtonDisabled =
-    getPasswordStrength(password) != E_PASSWORD_STRENGTH.STRENGTH_VALID ||
-    (oldPasswordRequired && oldPassword.trim() === "") ||
-    password.trim() === "" ||
-    confirmPassword.trim() === "" ||
-    password !== confirmPassword ||
-    password === oldPassword;
+  const isButtonDisabled = getIsButtonDisabled({
+    password,
+    confirmPassword,
+    oldPassword,
+    oldPasswordRequired,
+  });
 
-  const passwordSupport = password.length > 0 &&
-    getPasswordStrength(password) != E_PASSWORD_STRENGTH.STRENGTH_VALID && (
-      <PasswordStrengthIndicator password={password} isFocused={isPasswordInputFocused} />
-    );
-
-  const renderPasswordMatchError = !isRetryPasswordInputFocused || confirmPassword.length >= password.length;
+  const renderPasswordMatchError = isPasswordMatchVisible(isRetryPasswordInputFocused, confirmPassword, password);
 
   if (isPasswordManagementLoading) return null;
 
@@ -153,39 +256,15 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
           {oldPasswordRequired && (
             <div className="flex flex-col gap-y-2">
               <h4 className="text-13">{t("auth.common.password.current_password.label")}</h4>
-              <Controller
+              <PasswordField
                 control={control}
                 name="old_password"
-                rules={{
-                  required: t("common.errors.required"),
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <Field name="old_password" invalid={Boolean(errors.old_password)}>
-                    <InputGroup size="lg">
-                      <Input
-                        size="lg"
-                        id="old_password"
-                        type={showPassword?.oldPassword ? "text" : "password"}
-                        value={value}
-                        onChange={onChange}
-                        placeholder={t("old_password")}
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        className="grid size-5 place-items-center"
-                        onClick={() => handleShowPassword("oldPassword")}
-                        aria-label={showPassword?.oldPassword ? t("web.hide_password") : t("web.show_password")}
-                      >
-                        {showPassword?.oldPassword ? (
-                          <HideOutline className="size-5 text-placeholder" />
-                        ) : (
-                          <ShowOutline className="size-5 text-placeholder" />
-                        )}
-                      </button>
-                    </InputGroup>
-                  </Field>
-                )}
+                id="old_password"
+                placeholder={t("old_password")}
+                autoComplete="current-password"
+                visible={showPassword.oldPassword}
+                onToggle={() => handleShowPassword("oldPassword")}
+                error={errors.old_password?.message}
               />
               {errors.old_password && (
                 <span className="text-11 text-danger-primary">{errors.old_password.message}</span>
@@ -195,43 +274,19 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
           <div className="grid gap-x-4 gap-y-7 sm:grid-cols-2">
             <div className="flex flex-col gap-y-2">
               <h4 className="text-13">{t("auth.common.password.new_password.label")}</h4>
-              <Controller
+              <PasswordField
                 control={control}
                 name="new_password"
-                rules={{
-                  required: t("common.errors.required"),
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <Field name="new_password" invalid={Boolean(errors.new_password)}>
-                    <InputGroup size="lg">
-                      <Input
-                        size="lg"
-                        id="new_password"
-                        type={showPassword?.password ? "text" : "password"}
-                        value={value}
-                        placeholder={t("auth.common.password.new_password.placeholder")}
-                        onChange={onChange}
-                        onFocus={() => setIsPasswordInputFocused(true)}
-                        onBlur={() => setIsPasswordInputFocused(false)}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        className="grid size-5 place-items-center"
-                        onClick={() => handleShowPassword("password")}
-                        aria-label={showPassword?.password ? t("web.hide_password") : t("web.show_password")}
-                      >
-                        {showPassword?.password ? (
-                          <HideOutline className="size-5 text-placeholder" />
-                        ) : (
-                          <ShowOutline className="size-5 text-placeholder" />
-                        )}
-                      </button>
-                    </InputGroup>
-                  </Field>
-                )}
+                id="new_password"
+                placeholder={t("auth.common.password.new_password.placeholder")}
+                autoComplete="new-password"
+                visible={showPassword.password}
+                onToggle={() => handleShowPassword("password")}
+                error={errors.new_password?.message}
+                onFocus={() => setIsPasswordInputFocused(true)}
+                onBlur={() => setIsPasswordInputFocused(false)}
               />
-              {passwordSupport}
+              <PasswordSupport password={password} isFocused={isPasswordInputFocused} />
               {errors.new_password && (
                 <span className="text-11 text-danger-primary">{errors.new_password.message}</span>
               )}
@@ -243,41 +298,17 @@ export const SecurityProfileSettings = observer(function SecurityProfileSettings
             </div>
             <div className="flex flex-col gap-y-2">
               <h4 className="text-13">{t("auth.common.password.confirm_password.label")}</h4>
-              <Controller
+              <PasswordField
                 control={control}
                 name="confirm_password"
-                rules={{
-                  required: t("common.errors.required"),
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <Field name="confirm_password" invalid={Boolean(errors.confirm_password)}>
-                    <InputGroup size="lg">
-                      <Input
-                        size="lg"
-                        id="confirm_password"
-                        type={showPassword?.confirmPassword ? "text" : "password"}
-                        placeholder={t("auth.common.password.confirm_password.placeholder")}
-                        value={value}
-                        onChange={onChange}
-                        onFocus={() => setIsRetryPasswordInputFocused(true)}
-                        onBlur={() => setIsRetryPasswordInputFocused(false)}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        className="grid size-5 place-items-center"
-                        onClick={() => handleShowPassword("confirmPassword")}
-                        aria-label={showPassword?.confirmPassword ? t("web.hide_password") : t("web.show_password")}
-                      >
-                        {showPassword?.confirmPassword ? (
-                          <HideOutline className="size-5 text-placeholder" />
-                        ) : (
-                          <ShowOutline className="size-5 text-placeholder" />
-                        )}
-                      </button>
-                    </InputGroup>
-                  </Field>
-                )}
+                id="confirm_password"
+                placeholder={t("auth.common.password.confirm_password.placeholder")}
+                autoComplete="new-password"
+                visible={showPassword.confirmPassword}
+                onToggle={() => handleShowPassword("confirmPassword")}
+                error={errors.confirm_password?.message}
+                onFocus={() => setIsRetryPasswordInputFocused(true)}
+                onBlur={() => setIsRetryPasswordInputFocused(false)}
               />
               {!!confirmPassword && password !== confirmPassword && renderPasswordMatchError && (
                 <span className="text-13 text-danger-primary">{t("auth.common.password.errors.match")}</span>

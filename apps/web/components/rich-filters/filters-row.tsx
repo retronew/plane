@@ -30,6 +30,166 @@ export type TFiltersRowProps<K extends TFilterProperty, E extends TExternalFilte
   variant?: "modal" | "header";
 };
 
+type TFiltersRowVariant = "modal" | "header";
+
+const getAddFilterButtonConfig = <K extends TFilterProperty, E extends TExternalFilter>(
+  variant: TFiltersRowVariant,
+  hasAnyConditions: boolean,
+  buttonConfig: TAddFilterButtonProps<K, E>["buttonConfig"],
+  disabledAllOperations: boolean
+): TAddFilterButtonProps<K, E>["buttonConfig"] => ({
+  label: variant === "modal" && !hasAnyConditions ? translate("web.filters") : null,
+  ...(variant === "modal" ? { className: "rounded-lg [--control-radius-md:0.5rem]" } : {}),
+  size: "md",
+  iconConfig: {
+    shouldShowIcon: true,
+    iconComponent: AddFilterOutline,
+  },
+  ...buttonConfig,
+  isDisabled: disabledAllOperations,
+});
+
+type TFiltersRowLeftContentProps<K extends TFilterProperty, E extends TExternalFilter> = {
+  buttonConfig?: TAddFilterButtonProps<K, E>["buttonConfig"];
+  disabledAllOperations: boolean;
+  filter: IFilterInstance<K, E>;
+  hasAnyConditions: boolean;
+  variant: TFiltersRowVariant;
+};
+
+const FiltersRowLeftContent = observer(function FiltersRowLeftContent<
+  K extends TFilterProperty,
+  E extends TExternalFilter,
+>(props: TFiltersRowLeftContentProps<K, E>) {
+  const { buttonConfig, disabledAllOperations, filter, hasAnyConditions, variant } = props;
+
+  return (
+    <>
+      {filter.allConditionsForDisplay.map((condition) => (
+        <FilterItem key={condition.id} filter={filter} condition={condition} isDisabled={disabledAllOperations} />
+      ))}
+      <AddFilterButton
+        filter={filter}
+        buttonConfig={getAddFilterButtonConfig<K, E>(variant, hasAnyConditions, buttonConfig, disabledAllOperations)}
+      />
+    </>
+  );
+});
+
+type TFiltersRowActionsProps<K extends TFilterProperty, E extends TExternalFilter> = {
+  disabledAllOperations: boolean;
+  filter: IFilterInstance<K, E>;
+  isUpdating: boolean;
+  onUpdate: () => void;
+  variant: TFiltersRowVariant;
+};
+
+const FiltersRowActions = observer(function FiltersRowActions<K extends TFilterProperty, E extends TExternalFilter>(
+  props: TFiltersRowActionsProps<K, E>
+) {
+  const { disabledAllOperations, filter, isUpdating, onUpdate, variant } = props;
+  const hasAvailableOperations =
+    !disabledAllOperations && (filter.canClearFilters || filter.canSaveView || filter.canUpdateView);
+
+  return (
+    <div
+      data-filter-actions
+      className={cn("flex shrink-0 items-center gap-2 border-l border-subtle pl-4", {
+        "border-l-transparent pl-0": !hasAvailableOperations,
+      })}
+    >
+      {!disabledAllOperations && (
+        <>
+          <ElementTransition show={filter.canClearFilters}>
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={filter.clearFilterOptions?.label ?? translate("web.clear_all")}
+              onClick={filter.clearFilters}
+            />
+          </ElementTransition>
+          <ElementTransition show={filter.canSaveView}>
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={filter.saveViewOptions?.label ?? translate("web.save_view")}
+              onClick={filter.saveView}
+            />
+          </ElementTransition>
+          <ElementTransition show={filter.canUpdateView}>
+            <Button
+              variant="secondary"
+              size="md"
+              stretch="auto"
+              label={
+                isUpdating
+                  ? translate("web.confirming")
+                  : (filter.updateViewOptions?.label ?? translate("web.update_view"))
+              }
+              onClick={onUpdate}
+              loading={isUpdating}
+              disabled={isUpdating}
+            />
+          </ElementTransition>
+        </>
+      )}
+      {variant === "header" && (
+        <Tooltip label={translate("close")}>
+          <IconButton
+            variant="ghost"
+            size="md"
+            icon={<CloseOutline />}
+            aria-label={translate("close")}
+            onClick={() => filter.toggleVisibility(false)}
+          />
+        </Tooltip>
+      )}
+    </div>
+  );
+});
+
+type TFiltersRowMainContentProps<K extends TFilterProperty, E extends TExternalFilter> = {
+  buttonConfig?: TAddFilterButtonProps<K, E>["buttonConfig"];
+  disabledAllOperations: boolean;
+  filter: IFilterInstance<K, E>;
+  hasAnyConditions: boolean;
+  isUpdating: boolean;
+  onUpdate: () => void;
+  variant: TFiltersRowVariant;
+};
+
+function FiltersRowMainContent<K extends TFilterProperty, E extends TExternalFilter>(
+  props: TFiltersRowMainContentProps<K, E>
+) {
+  const { buttonConfig, disabledAllOperations, filter, hasAnyConditions, isUpdating, onUpdate, variant } = props;
+
+  return (
+    <div
+      data-filter-toolbar
+      className={cn("flex w-full items-center gap-2 rounded-lg bg-layer-1", variant === "modal" ? "p-2" : "px-4 py-2")}
+    >
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <FiltersRowLeftContent
+          buttonConfig={buttonConfig}
+          disabledAllOperations={disabledAllOperations}
+          filter={filter}
+          hasAnyConditions={hasAnyConditions}
+          variant={variant}
+        />
+      </div>
+      <FiltersRowActions
+        disabledAllOperations={disabledAllOperations}
+        filter={filter}
+        isUpdating={isUpdating}
+        onUpdate={onUpdate}
+        variant={variant}
+      />
+    </div>
+  );
+}
+
 export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty, E extends TExternalFilter>(
   props: TFiltersRowProps<K, E>
 ) {
@@ -39,17 +199,6 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
   // derived values
   const disabledAllOperations = disabledAllOperationsProp || !filter.configManager.areConfigsReady;
   const hasAnyConditions = filter.allConditionsForDisplay.length > 0;
-  const hasAvailableOperations =
-    !disabledAllOperations && (filter.canClearFilters || filter.canSaveView || filter.canUpdateView);
-
-  const headerButtonConfig: Partial<TAddFilterButtonProps<K, E>["buttonConfig"]> = {
-    label: null,
-  };
-
-  const modalButtonConfig: Partial<TAddFilterButtonProps<K, E>["buttonConfig"]> = {
-    label: !hasAnyConditions ? translate("web.filters") : null,
-    className: "rounded-lg [--control-radius-md:0.5rem]",
-  };
 
   const handleUpdate = useCallback(async () => {
     setIsUpdating(true);
@@ -59,98 +208,6 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
       setTimeout(() => setIsUpdating(false), 240); // To avoid flickering
     }
   }, [filter]);
-
-  const leftContent = (
-    <>
-      {filter.allConditionsForDisplay.map((condition) => (
-        <FilterItem key={condition.id} filter={filter} condition={condition} isDisabled={disabledAllOperations} />
-      ))}
-      <AddFilterButton
-        filter={filter}
-        buttonConfig={{
-          label: null,
-          ...(variant === "modal" ? modalButtonConfig : headerButtonConfig),
-          size: "md",
-          iconConfig: {
-            shouldShowIcon: true,
-            iconComponent: AddFilterOutline,
-          },
-          ...buttonConfig,
-          isDisabled: disabledAllOperations,
-        }}
-      />
-    </>
-  );
-
-  const rightContent = !disabledAllOperations && (
-    <>
-      <ElementTransition show={filter.canClearFilters}>
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          label={filter.clearFilterOptions?.label ?? translate("web.clear_all")}
-          onClick={filter.clearFilters}
-        />
-      </ElementTransition>
-      <ElementTransition show={filter.canSaveView}>
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          label={filter.saveViewOptions?.label ?? translate("web.save_view")}
-          onClick={filter.saveView}
-        />
-      </ElementTransition>
-      <ElementTransition show={filter.canUpdateView}>
-        <Button
-          variant="secondary"
-          size="md"
-          stretch="auto"
-          label={
-            isUpdating ? translate("web.confirming") : (filter.updateViewOptions?.label ?? translate("web.update_view"))
-          }
-          onClick={handleUpdate}
-          loading={isUpdating}
-          disabled={isUpdating}
-        />
-      </ElementTransition>
-    </>
-  );
-
-  const mainContent = (
-    <div
-      data-filter-toolbar
-      className={cn("flex w-full items-center gap-2 rounded-lg bg-layer-1", variant === "modal" ? "p-2" : "px-4 py-2")}
-    >
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{leftContent}</div>
-      <div
-        data-filter-actions
-        className={cn("flex shrink-0 items-center gap-2 border-l border-subtle pl-4", {
-          "border-l-transparent pl-0": !hasAvailableOperations,
-        })}
-      >
-        {rightContent}
-        {variant === "header" && (
-          <Tooltip label={translate("close")}>
-            <IconButton
-              variant="ghost"
-              size="md"
-              icon={<CloseOutline />}
-              aria-label={translate("close")}
-              onClick={() => filter.toggleVisibility(false)}
-            />
-          </Tooltip>
-        )}
-      </div>
-    </div>
-  );
-
-  const HeaderVariant = (
-    <Header variant={EHeaderVariant.TERNARY} className="min-h-11 bg-surface-1 !px-3">
-      {mainContent}
-    </Header>
-  );
 
   if (!filter.configManager.areConfigsReady && !hasAnyConditions) {
     return (
@@ -162,5 +219,27 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
     );
   }
 
-  return <RowTransition show={filter.isVisible}>{variant === "modal" ? mainContent : HeaderVariant}</RowTransition>;
+  const mainContent = (
+    <FiltersRowMainContent
+      buttonConfig={buttonConfig}
+      disabledAllOperations={disabledAllOperations}
+      filter={filter}
+      hasAnyConditions={hasAnyConditions}
+      isUpdating={isUpdating}
+      onUpdate={handleUpdate}
+      variant={variant}
+    />
+  );
+
+  return (
+    <RowTransition show={filter.isVisible}>
+      {variant === "modal" ? (
+        mainContent
+      ) : (
+        <Header variant={EHeaderVariant.TERNARY} className="min-h-11 bg-surface-1 !px-3">
+          {mainContent}
+        </Header>
+      )}
+    </RowTransition>
+  );
 });

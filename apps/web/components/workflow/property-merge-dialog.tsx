@@ -35,6 +35,10 @@ export type PropertyMergeDialogProps = {
   onMerge: (payload: TCustomPropertyMergeInput) => Promise<boolean>;
 };
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+type Label = (key: string) => string;
+type PropertyGroup = [string, TCustomProperty[]];
+
 function mergeErrorKey(error: unknown): string {
   const data = (error as { response?: { data?: { code?: string } }; code?: string } | null)?.response?.data;
   const code = String(data?.code ?? (error as { code?: string } | null)?.code ?? "").toLowerCase();
@@ -46,6 +50,207 @@ function mergeErrorKey(error: unknown): string {
   if (code.includes("duplicate_name")) return "duplicate_name";
   if (code.includes("invalid_sources")) return "invalid_sources";
   return "failed";
+}
+
+function buildPropertyGroups(properties: TCustomProperty[]) {
+  const grouped = new Map<string, TCustomProperty[]>();
+  for (const property of properties) {
+    const key = `${property.property_type}:${Boolean(property.config.multiple)}`;
+    grouped.set(key, [...(grouped.get(key) ?? []), property]);
+  }
+  const groups = [...grouped.entries()].filter(([, entries]) => entries.length >= 2);
+  return { grouped, groups };
+}
+
+function getGroupLabel(property: TCustomProperty, t: Translate, label: Label) {
+  const type = t(`web.work_item_properties.types.${property.property_type}`);
+  if (property.property_type !== "dropdown" && property.property_type !== "member") return type;
+  return `${type} · ${label(property.config.multiple ? "multiple" : "single")}`;
+}
+
+function getGroupItems(groups: PropertyGroup[], t: Translate, label: Label) {
+  return groups.map(([value, entries]) => ({
+    value,
+    label: getGroupLabel(entries[0], t, label),
+  }));
+}
+
+function getMergeSelection(candidates: TCustomProperty[], ids: string[]) {
+  const selectedIds = new Set(ids);
+  const selected = candidates.filter((property) => selectedIds.has(property.id));
+  const bindings = selected.flatMap((property) => [
+    ...new Set(property.type_settings.map((setting) => setting.project_issue_type_id || setting.type_id)),
+  ]);
+  const overlap = new Set(bindings).size < bindings.length;
+  const validSelection = selected.length >= 2 && selected.length === ids.length && !overlap;
+  return { selectedIds, selected, overlap, validSelection };
+}
+
+function canAdvanceFromSelection(args: {
+  step: number;
+  validSelection: boolean;
+  confirmed: boolean;
+  preview: TCustomPropertyMergePreview | null;
+}) {
+  if (!args.validSelection) return false;
+  if (args.step !== 2) return true;
+  return args.confirmed && Boolean(args.preview);
+}
+
+function isPrimaryDisabled(args: {
+  step: number;
+  locked: boolean;
+  groupValid: boolean;
+  validSelection: boolean;
+  confirmed: boolean;
+  preview: TCustomPropertyMergePreview | null;
+}) {
+  if (args.locked) return true;
+  if (args.step === 0) return !args.groupValid;
+  if (args.step === 1) return !args.validSelection;
+  return !args.validSelection || !args.confirmed || !args.preview;
+}
+
+function ChooseTypeStep({
+  groupCount,
+  groupItems,
+  group,
+  locked,
+  onGroupChange,
+  label,
+  t,
+}: {
+  groupCount: number;
+  groupItems: { value: string; label: string }[];
+  group: string | null;
+  locked: boolean;
+  onGroupChange: (value: string | null) => void;
+  label: Label;
+  t: Translate;
+}) {
+  return (
+    <>
+      <p className="text-body-xs-regular text-tertiary">{label("type_hint")}</p>
+      <Select items={groupItems} value={group} disabled={locked} onValueChange={onGroupChange}>
+        <SelectTrigger
+          size="lg"
+          variant="secondary"
+          aria-label={t("web.work_item_properties.property_type")}
+          placeholder={label("choose_type")}
+        />
+        <SelectContent>
+          <SelectList>
+            {groupItems.map((item) => (
+              <SelectItem key={item.value} value={item.value} label={item.label} />
+            ))}
+          </SelectList>
+        </SelectContent>
+      </Select>
+      {groupCount === 0 && <output className="text-body-xs-regular text-tertiary">{label("none_available")}</output>}
+    </>
+  );
+}
+
+function ChoosePropertiesStep({
+  candidates,
+  selectedIds,
+  locked,
+  onToggle,
+  label,
+}: {
+  candidates: TCustomProperty[];
+  selectedIds: Set<string>;
+  locked: boolean;
+  onToggle: (id: string, checked: boolean) => void;
+  label: Label;
+}) {
+  return (
+    <>
+      <p className="text-body-xs-regular text-tertiary">{label("selection_hint")}</p>
+      <div className="max-h-64 space-y-3 overflow-y-auto">
+        {candidates.map((property) => (
+          <div key={property.id} className="space-y-1">
+            <Checkbox
+              label={property.name}
+              checked={selectedIds.has(property.id)}
+              disabled={locked}
+              onCheckedChange={(checked) => onToggle(property.id, Boolean(checked))}
+            />
+            {property.description && <p className="pl-6 text-body-xs-regular text-tertiary">{property.description}</p>}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ConfirmStep({
+  selectedCount,
+  preview,
+  name,
+  onNameChange,
+  description,
+  onDescriptionChange,
+  confirmation,
+  onConfirmationChange,
+  label,
+  t,
+}: {
+  selectedCount: number;
+  preview: TCustomPropertyMergePreview | null;
+  name: string;
+  onNameChange: (value: string) => void;
+  description: string;
+  onDescriptionChange: (value: string) => void;
+  confirmation: string;
+  onConfirmationChange: (value: string) => void;
+  label: Label;
+  t: Translate;
+}) {
+  return (
+    <>
+      <p className="text-body-xs-regular text-tertiary">{label("summary_hint")}</p>
+      <ul className="space-y-1 text-body-xs-regular">
+        <li>{t("web.work_item_properties.merge.property_count", { count: selectedCount })}</li>
+        <li>
+          {t("web.work_item_properties.merge.work_items_count", {
+            count: preview?.work_items_count ?? 0,
+          })}
+        </li>
+        <li>{t("web.work_item_properties.merge.draft_count", { count: preview?.draft_count ?? 0 })}</li>
+        <li>{t("web.work_item_properties.merge.type_count", { count: preview?.type_count ?? 0 })}</li>
+      </ul>
+      <InputField
+        orientation="vertical"
+        size="lg"
+        label={t("web.work_item_properties.title")}
+        required
+        maxLength={255}
+        value={name}
+        onChange={(event) => onNameChange(event.target.value)}
+      />
+      <label className="flex flex-col gap-2 text-body-xs-medium">
+        {t("description")}
+        <TextAreaGroup resize="none" render={<div className="h-24" />}>
+          <TextArea
+            size="lg"
+            surface="field"
+            value={description}
+            onChange={(event) => onDescriptionChange(event.target.value)}
+          />
+        </TextAreaGroup>
+      </label>
+      <InputField
+        orientation="vertical"
+        size="lg"
+        label={label("confirmation")}
+        description={label("confirmation_hint")}
+        value={confirmation}
+        onChange={(event) => onConfirmationChange(event.target.value)}
+        autoComplete="off"
+      />
+    </>
+  );
 }
 
 export function PropertyMergeDialog({
@@ -76,26 +281,14 @@ export function PropertyMergeDialog({
     setMounted(true);
   }, []);
 
-  const grouped = new Map<string, TCustomProperty[]>();
-  for (const property of properties) {
-    const key = `${property.property_type}:${Boolean(property.config.multiple)}`;
-    grouped.set(key, [...(grouped.get(key) ?? []), property]);
-  }
-  const groups = [...grouped.entries()].filter(([, entries]) => entries.length >= 2);
+  const { grouped, groups } = buildPropertyGroups(properties);
   const candidates = grouped.get(group ?? "") ?? [];
-  const selectedIds = new Set(ids);
-  const selected = candidates.filter((property) => selectedIds.has(property.id));
-  const bindings = selected.flatMap((property) => [
-    ...new Set(property.type_settings.map((setting) => setting.project_issue_type_id || setting.type_id)),
-  ]);
-  const overlap = new Set(bindings).size < bindings.length;
-  const validSelection = selected.length >= 2 && selected.length === ids.length && !overlap;
+  const { selectedIds, selected, overlap, validSelection } = getMergeSelection(candidates, ids);
   const validName = Boolean(name.trim());
   const confirmed = validName && confirmation === label("confirmation_word");
-  const groupItems = groups.map(([value, entries]) => ({
-    value,
-    label: `${t(`web.work_item_properties.types.${entries[0].property_type}`)}${entries[0].property_type === "dropdown" || entries[0].property_type === "member" ? ` · ${label(entries[0].config.multiple ? "multiple" : "single")}` : ""}`,
-  }));
+  const groupItems = getGroupItems(groups, t, label);
+  const groupValid = groups.some(([key]) => key === group);
+  const primaryDisabled = isPrimaryDisabled({ step, locked, groupValid, validSelection, confirmed, preview });
 
   function reset() {
     setStep(0);
@@ -111,10 +304,10 @@ export function PropertyMergeDialog({
   async function advance() {
     if (locked || inFlight.current) return;
     if (step === 0) {
-      if (groups.some(([key]) => key === group)) setStep(1);
+      if (groupValid) setStep(1);
       return;
     }
-    if (!validSelection || (step === 2 && (!confirmed || !preview))) return;
+    if (!canAdvanceFromSelection({ step, validSelection, confirmed, preview })) return;
     inFlight.current = true;
     setPending(true);
     setError(null);
@@ -135,6 +328,16 @@ export function PropertyMergeDialog({
       setPending(false);
     }
   }
+
+  const toggleId = (id: string, checked: boolean) => {
+    setIds(checked ? [...ids, id] : ids.filter((candidate) => candidate !== id));
+    setPreview(null);
+    setError(null);
+  };
+
+  const requestClose = () => {
+    if (!inFlight.current && !busy) onOpenChange(false);
+  };
 
   return (
     <Dialog
@@ -179,105 +382,43 @@ export function PropertyMergeDialog({
               <fieldset disabled={locked} className="space-y-4" aria-busy={locked}>
                 <p className="text-body-sm-medium">{label(["choose_type", "choose_properties", "confirm"][step])}</p>
                 {step === 0 && (
-                  <>
-                    <p className="text-body-xs-regular text-tertiary">{label("type_hint")}</p>
-                    <Select
-                      items={groupItems}
-                      value={group}
-                      disabled={locked}
-                      onValueChange={(value) => {
-                        setGroup(value);
-                        setIds([]);
-                        setPreview(null);
-                        setError(null);
-                      }}
-                    >
-                      <SelectTrigger
-                        size="lg"
-                        variant="secondary"
-                        aria-label={t("web.work_item_properties.property_type")}
-                        placeholder={label("choose_type")}
-                      />
-                      <SelectContent>
-                        <SelectList>
-                          {groupItems.map((item) => (
-                            <SelectItem key={item.value} value={item.value} label={item.label} />
-                          ))}
-                        </SelectList>
-                      </SelectContent>
-                    </Select>
-                    {groups.length === 0 && (
-                      <output className="text-body-xs-regular text-tertiary">{label("none_available")}</output>
-                    )}
-                  </>
+                  <ChooseTypeStep
+                    groupCount={groups.length}
+                    groupItems={groupItems}
+                    group={group}
+                    locked={locked}
+                    onGroupChange={(value) => {
+                      setGroup(value);
+                      setIds([]);
+                      setPreview(null);
+                      setError(null);
+                    }}
+                    label={label}
+                    t={t}
+                  />
                 )}
                 {step === 1 && (
-                  <>
-                    <p className="text-body-xs-regular text-tertiary">{label("selection_hint")}</p>
-                    <div className="max-h-64 space-y-3 overflow-y-auto">
-                      {candidates.map((property) => (
-                        <div key={property.id} className="space-y-1">
-                          <Checkbox
-                            label={property.name}
-                            checked={selectedIds.has(property.id)}
-                            disabled={locked}
-                            onCheckedChange={(checked) => {
-                              setIds(checked ? [...ids, property.id] : ids.filter((id) => id !== property.id));
-                              setPreview(null);
-                              setError(null);
-                            }}
-                          />
-                          {property.description && (
-                            <p className="pl-6 text-body-xs-regular text-tertiary">{property.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                  <ChoosePropertiesStep
+                    candidates={candidates}
+                    selectedIds={selectedIds}
+                    locked={locked}
+                    onToggle={toggleId}
+                    label={label}
+                  />
                 )}
                 {step === 2 && (
-                  <>
-                    <p className="text-body-xs-regular text-tertiary">{label("summary_hint")}</p>
-                    <ul className="space-y-1 text-body-xs-regular">
-                      <li>{t("web.work_item_properties.merge.property_count", { count: selected.length })}</li>
-                      <li>
-                        {t("web.work_item_properties.merge.work_items_count", {
-                          count: preview?.work_items_count ?? 0,
-                        })}
-                      </li>
-                      <li>{t("web.work_item_properties.merge.draft_count", { count: preview?.draft_count ?? 0 })}</li>
-                      <li>{t("web.work_item_properties.merge.type_count", { count: preview?.type_count ?? 0 })}</li>
-                    </ul>
-                    <InputField
-                      orientation="vertical"
-                      size="lg"
-                      label={t("web.work_item_properties.title")}
-                      required
-                      maxLength={255}
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                    />
-                    <label className="flex flex-col gap-2 text-body-xs-medium">
-                      {t("description")}
-                      <TextAreaGroup resize="none" render={<div className="h-24" />}>
-                        <TextArea
-                          size="lg"
-                          surface="field"
-                          value={description}
-                          onChange={(event) => setDescription(event.target.value)}
-                        />
-                      </TextAreaGroup>
-                    </label>
-                    <InputField
-                      orientation="vertical"
-                      size="lg"
-                      label={label("confirmation")}
-                      description={label("confirmation_hint")}
-                      value={confirmation}
-                      onChange={(event) => setConfirmation(event.target.value)}
-                      autoComplete="off"
-                    />
-                  </>
+                  <ConfirmStep
+                    selectedCount={selected.length}
+                    preview={preview}
+                    name={name}
+                    onNameChange={setName}
+                    description={description}
+                    onDescriptionChange={setDescription}
+                    confirmation={confirmation}
+                    onConfirmationChange={setConfirmation}
+                    label={label}
+                    t={t}
+                  />
                 )}
                 {(overlap || error) && (
                   <p role="alert" className="text-body-xs-regular text-danger-primary">
@@ -307,9 +448,7 @@ export function PropertyMergeDialog({
               size="md"
               label={t("cancel")}
               disabled={locked}
-              onClick={() => {
-                if (!inFlight.current && !busy) onOpenChange(false);
-              }}
+              onClick={requestClose}
             />
             <Button
               stretch="auto"
@@ -317,14 +456,7 @@ export function PropertyMergeDialog({
               size="md"
               type="submit"
               label={label(step === 2 ? "action" : "continue")}
-              disabled={
-                locked ||
-                (step === 0
-                  ? !groups.some(([key]) => key === group)
-                  : step === 1
-                    ? !validSelection
-                    : !validSelection || !confirmed || !preview)
-              }
+              disabled={primaryDisabled}
             />
           </DialogActions>
         </form>
