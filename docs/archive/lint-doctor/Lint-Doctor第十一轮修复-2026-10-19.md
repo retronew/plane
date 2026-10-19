@@ -6,11 +6,11 @@
 
 | 指标                                | 修复前                         | 修复后                             |
 | ----------------------------------- | ------------------------------ | ---------------------------------- |
-| Doctor 诊断总数                     | 185（5 errors / 180 warnings） | **146（5 errors / 141 warnings）** |
-| `no-high-complexity-react-function` | 67                             | **28**                             |
-| 受影响文件                          | 144                            | 108                                |
+| Doctor 诊断总数                     | 185（5 errors / 180 warnings） | **115（4 errors / 111 warnings）** |
+| `no-high-complexity-react-function` | 67                             | **0**                              |
+| 受影响文件                          | 144                            | 85                                 |
 
-本轮未新增任何其他规则诊断；规则计数变化只有复杂度一项。全量快照见 `Doctor剩余诊断-第十一轮-2026-10-19.json`。
+`no-high-complexity-react-function` 已全部清零；其余规则计数只减不增。全量快照见 `Doctor剩余诊断-第十一轮-2026-10-19.json`。
 
 ## 已修复（19 个函数）
 
@@ -68,13 +68,45 @@ web（项目概览与模块）：
 - `project/card.tsx` — `ProjectCard`（36/32）：菜单项、类名、点击拦截提函数；封面/标题/操作/收藏/属性/弹窗拆组件。
 - `project/card-properties.tsx` — `ProjectCardProperties`（25/25）：负责人/标签/日期派生与保存守卫提函数，四个属性行拆组件。
 
+## 第三批（28 个函数）
+
+- `sidebar/resizable-sidebar.tsx` — `ResizableSidebar`（22/20）：拖拽/peek 拆自定义 hook 与 `MainSidebar`/`PeekSidebar`/`ResizeHandle`。
+- `blocks/src/property-select/member-select.tsx` — `MemberSelect`（22/22）：触发器 chrome、清除与搜索派生提函数，trigger/内容拆组件。
+- `analytics/insight-entity.tsx` — `InsightEntity`（22/40）：实体链接与图标渲染提函数，类型守卫收窄。
+- `issue-detail/.../activity/activity-list.tsx` — `IssueActivityItem`（23/1）：23 分支 switch 改 `ACTIVITY_RENDERERS` 查找表。
+- `issue-layouts/list/block.tsx` — `IssueBlock`（23/19）：拖拽 effect 提 hook，选择/展开/快捷操作/属性拆组件。
+- `issue-modal/base.tsx` — `CreateUpdateIssueModalBase`（23/19）：store 类型、草稿、创建与同步流程提函数，恢复动画提 hook。
+- `cycles/analytics-sidebar/sidebar-details.tsx` — `CycleSidebarDetails`（23/20）：计数/估算派生提函数，描述/负责人/成员/工作项等拆组件。
+- `editor/src/extensions/custom-image/components/block.tsx` — `CustomImageBlock`（25/16）：可见性/工具条/缩放派生提函数，图片与缩放手柄拆组件。
+- `inbox/content/inbox-issue-header.tsx` — `InboxIssueActionsHeader`（26/24）：权限/跳转/下一个工作项提函数，操作菜单拆组件。
+- `admin/instance/setup-form.tsx` — `InstanceSetupForm`（27/18）：表单初始值/错误/禁用态提函数，字段与错误横幅拆组件。
+- `issue-layouts/list/list-group.tsx` — `ListGroup`（27/19）：展开/加载/拖拽派生与事件提函数，加载/列表/快速添加拆组件。
+- `cycles/list/cycle-list-item-action.tsx` — `CycleListItemAction`（27/23）：状态/计数/收藏/路径提函数，计数/转移/成员/收藏拆组件。
+- `account/auth-forms/password.tsx` — `AuthPasswordForm`（27/24）：动作 URL/禁用态提函数，字段与按钮拆组件。
+- `issues/issue-layouts/kanban/kanban-group.tsx` — `KanbanGroup`（28/23）：预填数据/加载/拖拽判定提函数，加载更多与快速添加拆组件。
+- `project/overview/update-discussion.tsx` — `UpdateDiscussion`（28/21）：评论权限/提交/错误解析/反应分组提函数，底部操作与评论面板拆组件。
+- `blocks/src/select/trigger.tsx` — `SelectTrigger`（28/29）：tooltip/禁用/图标/标签派生提函数，chips/按钮/tooltip 拆组件。
+- `issues/.../display-filters-selection.tsx` — `DisplayFiltersSelection`（31/28）：忽略项/属性/分组/排序/扩展项提函数，属性组与扩展项拆组件。
+- `cycles/active-cycle/use-cycles-details.ts` — `useCyclesDetails`（31/18）：SWR key/fetcher 与筛选目标提函数，条件请求收敛。
+- `issues/issue-modal/form.tsx` — `IssueFormRoot`（32/31）：标题/按钮/模板应用提函数，头部/描述/属性/操作拆组件。
+- `project/overview/updates.tsx` — `Updates`（36/30）：权限/排序/保存删除守卫/异步动作提函数，表单/工具栏/卡片/反馈/列表拆组件。
+- `project/overview/resources.tsx` — `ProjectResources`（34/27）：权限/反应分组/上传/删除流程提函数，头部/链接/附件/弹窗拆组件。
+- `lib/wrappers/authentication-wrapper.tsx` — `AuthenticationWrapper`（34/52）：重定向决策改为 `loader | children | redirect` 纯函数组合。
+- `settings/.../category-manager.tsx` — `CategoryManager`（37/44）：保存/排序/删除/默认项提函数，视图/头部/列表/编辑器拆组件。
+- `settings/.../template-editor.tsx` — `TemplateEditor`（37/44）：草稿同步与保存提函数，视图/表单/字段组拆组件。
+- `project/card.tsx` — `ProjectCard`（36/32）：菜单项/类名/点击拦截提函数，封面/标题/操作/属性/弹窗拆组件。
+- `analytics/details.tsx` — `AnalyticsDetails`（42/54）：摘要/图表/表格派生提函数，摘要/趋势/图表/表格与单元格拆组件。
+- `modules/analytics-sidebar/issue-progress.tsx` — `ModuleAnalyticsProgress`（43/45）：分组计数/分布/进度/日期提函数，进度体与面板拆组件。
+- `layouts/auth-layout/workspace-wrapper.tsx` — `WorkspaceAuthWrapper`（44/38）：8 个 SWR 收敛到 hook，工作区派生提函数，未找到/无权限拆组件。
+- `blocks/src/select/root.tsx` — `SelectRoot`（49/53）：拆为 `useResolvedSelection` / `useSelectItems` / `useSelectOpenState` / `useSelectSearch` / `useSearchKeyDown` / `usePopupSizing` 与 `SelectPopupContent` / `SelectSearchSlot` / `SelectStatusContent` / `SelectOptionsList` / `SelectEngine`。
+
 ## 验证
 
 - `pnpm check`：60 个任务全部通过（format / lint / types）。
 - Web 全量：**350 个测试文件 / 1656 项通过**。
-- 第二批定向测试：85 个文件 / 485 项通过；`@plane/blocks` 图表 7 个文件 / 15 项通过。
-- `space`、`web`、`blocks` 类型检查均通过；全部 40 个改动文件 oxfmt 通过。
-- Doctor 全量复扫：`no-high-complexity-react-function` 由 67 降至 **28**，其余规则计数不变。
+- 第三批定向测试：blocks `select` + `property-select` 13 个文件 / 172 项、editor 12 个文件 / 54 项、web 各区域定向用例均通过。
+- `space`、`web`、`blocks`、`editor`、`admin` 类型检查均通过；三个批次共 68 个改动文件 oxfmt 通过。
+- Doctor 全量复扫：`no-high-complexity-react-function` 由 67 降至 **0**；其余规则计数只减不增。
 
 ## 数据库
 
@@ -82,13 +114,9 @@ web（项目概览与模块）：
 
 ## 下一步
 
-剩余 28 条复杂函数，最低档从 22 起：
+复杂度规则已清零。剩余 115 条诊断集中在：
 
-- `sidebar/resizable-sidebar.tsx` — `ResizableSidebar`（22/20）
-- `blocks/src/property-select/member-select.tsx` — `MemberSelect`（22/22）
-- `analytics/insight-entity.tsx` — `InsightEntity`（22/40）
-- `issue-detail/issue-activity/activity/activity-list.tsx` — `IssueActivityItem`（23/1）
-- `issue-layouts/list/block.tsx` — `IssueBlock`（23/19）
-- `issue-modal/base.tsx` — `CreateUpdateIssueModalBase`（23/19）
-- `cycles/analytics-sidebar/sidebar-details.tsx` — `CycleSidebarDetails`（23/20）
-- `editor/src/extensions/custom-image/components/block.tsx` — `CustomImageBlock`（25/16）
+- `only-export-components`（33）：组件文件同时导出类型/常量/hook 的约定问题。
+- `prefer-dynamic-import`（16）：大型依赖（图表、编辑器）的懒加载。
+- `no-unused-vars`（7）、`no-pass-data-to-parent`（7）、`no-unused-vars`、`rendering-hydration-mismatch-time`（7，`ssr: false` 既有误报）。
+- `no-loading-flag-reset-outside-finally`（5）、`effect-needs-cleanup`（4）、`async-await-in-loop`（4）等。
