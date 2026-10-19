@@ -9,13 +9,13 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 | 检查               | 第八轮结束 | 现在 |
 | ------------------ | ---------- | ---- |
 | Doctor errors      | 5          | 5    |
-| Doctor warnings    | 305        | 219  |
-| Doctor 总诊断      | 310        | 224  |
+| Doctor warnings    | 305        | 203  |
+| Doctor 总诊断      | 310        | 208  |
 | 常规 lint warnings | 1          | 1    |
 
 项目分数：**space 87 → 91**、**@plane/utils 89 → 100**、**admin 91 → 92**、web 73、blocks 84、editor 61、live 75。`--scope changed` 扫描：0 诊断。
 
-规则分布变化：`js-set-map-lookups` **68 → 0**、`no-giant-component` **14 → 1**，`prefer-dynamic-import` 17 → 16（实现文件仍静态导入，但消费侧已拆分 chunk）。
+规则分布变化：`js-set-map-lookups` **68 → 0**、`no-giant-component` **14 → 1**、`only-export-components` **49 → 33**，`prefer-dynamic-import` 17 → 16（实现文件仍静态导入，但消费侧已拆分 chunk）。
 
 ## 一、数组查找索引（68 处 / 61 个文件）
 
@@ -71,3 +71,27 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 - 验证：Web 全量 **345 文件 / 1638 项**、settings 77 项、project 221 项、workflow+project 387 项全部通过；admin 类型检查通过。
 
 **保留 1 个**：`packages/blocks/src/select/root.tsx`（`SelectRoot`，643 行）。其中约 580 行是逻辑而非 JSX，open/selection/search/infinite 四组状态相互耦合，源码注释记录了这些不变量（例如关闭时不能重跑搜索、infinite 列表关闭后仍需解析已选 id）。拆成 hooks 需要 10+ 参数来回传递并打散这些不变量，可读性反而下降，因此保留。
+
+## 七、组件文件的非组件导出（`only-export-components` 49 → 33）
+
+把 13 个值/工具导出从组件文件移到独立模块，组件文件只导出组件（Fast Refresh 才能保留状态）：
+
+| 模块                                                     | 移出的内容                                                                                                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `common/boot-loader-state.ts`                            | 启动引导的模块状态、`finishBoot` / `scheduleBootFinish`，以及新拆出的 `holdBootGate` / `releaseBootGate`（导入的绑定只读，计数改成成对函数） |
+| `analytics/details-columns.ts`                           | `DETAIL_COLUMNS`                                                                                                                             |
+| `analytics/insight-metrics.ts`                           | `InsightMetric` 类型与 `INSIGHT_METRICS`                                                                                                     |
+| `analytics/project-completion.ts`                        | `projectCompletion`                                                                                                                          |
+| `analytics/select/duration-range.ts`                     | `parseCustomAnalyticsRange`                                                                                                                  |
+| `exporter/export-status.ts`                              | `exportStatusLabel`                                                                                                                          |
+| `inbox/inbox-status-icon-properties.ts`                  | `ICON_PROPERTIES`                                                                                                                            |
+| `editor/sticky-editor/sticky-colors.ts`                  | `STICKY_COLORS_LIST`                                                                                                                         |
+| `settings/project/templates/project-template-draft.ts`   | `newProjectTemplate` 与 `Draft`/`ProjectTemplateKind` 类型                                                                                   |
+| `settings/workspace/configuration/template-kinds.ts`     | `TEMPLATE_KINDS`、`templateRouteKind`                                                                                                        |
+| `settings/workspace/configuration/project-state-keys.ts` | `PROJECT_PHASES`、`stateSettingsKey`                                                                                                         |
+| `web-hooks/form/individual-event-options-data.ts`        | `INDIVIDUAL_WEBHOOK_OPTIONS`                                                                                                                 |
+| `workflow/history-changes.ts`                            | `memberSnapshotChanges`                                                                                                                      |
+
+验证：相关 56 个测试文件 / 282 项通过，`pnpm check` 全绿，`doctor --scope changed` 0 诊断。
+
+剩余的 33 条中，14 条是 React Router 的路由文件（`meta`/`loader` 必须与组件同文件），其余多是「组件 + 类型导出」或「组件 + 同域 hook」——TypeScript 类型导出在编译期被擦除，不影响 Fast Refresh；hook 与组件同文件是社区常见写法，继续拆只会增加跳转成本。
