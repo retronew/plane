@@ -6,9 +6,9 @@
 
 | 指标                                | 修复前                         | 修复后                             |
 | ----------------------------------- | ------------------------------ | ---------------------------------- |
-| Doctor 诊断总数                     | 185（5 errors / 180 warnings） | **115（4 errors / 111 warnings）** |
+| Doctor 诊断总数                     | 185（5 errors / 180 warnings） | **114（3 errors / 111 warnings）** |
 | `no-high-complexity-react-function` | 67                             | **0**                              |
-| 受影响文件                          | 144                            | 85                                 |
+| 受影响文件                          | 144                            | 84                                 |
 
 `no-high-complexity-react-function` 已全部清零；其余规则计数只减不增。全量快照见 `Doctor剩余诊断-第十一轮-2026-10-19.json`。
 
@@ -99,6 +99,11 @@ web（项目概览与模块）：
 - `modules/analytics-sidebar/issue-progress.tsx` — `ModuleAnalyticsProgress`（43/45）：分组计数/分布/进度/日期提函数，进度体与面板拆组件。
 - `layouts/auth-layout/workspace-wrapper.tsx` — `WorkspaceAuthWrapper`（44/38）：8 个 SWR 收敛到 hook，工作区派生提函数，未找到/无权限拆组件。
 - `blocks/src/select/root.tsx` — `SelectRoot`（49/53）：拆为 `useResolvedSelection` / `useSelectItems` / `useSelectOpenState` / `useSelectSearch` / `useSearchKeyDown` / `usePopupSizing` 与 `SelectPopupContent` / `SelectSearchSlot` / `SelectStatusContent` / `SelectOptionsList` / `SelectEngine`。
+
+## 收尾
+
+- `navigation/use-responsive-tab-layout.ts`：把 `ResizeObserver` 的释放改为 callback ref 返回的 cleanup（React 19 在 ref 迁移与卸载时调用），移除单独的卸载 effect，清掉 1 条 `effect-needs-cleanup` error。
+- 剩余 3 条 error 均为 `effect-needs-cleanup` 误报：`smooth-cursor.tsx` 在 effect 的 `return` 中完整移除监听与节点；`ai-handle.ts` / `drag-handle.ts` 的监听在 ProseMirror 插件的 `destroy` 中移除。
 
 ## 验证
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "sourceRevision": "5405d6c53eb2a4370ee86f4a39d9c58543942f85",
+  "sourceRevision": "c65439fe8f9cdbe4d8366086f5d6523b4d85e6a5",
   "mode": "full",
   "reactDetected": true,
   "version": "0.9.18",
@@ -188,7 +188,7 @@
       "analyzedFileCount": 102,
       "complete": true,
       "scannedFileCount": 102,
-      "elapsedMilliseconds": 4573.57025
+      "elapsedMilliseconds": 4490.398833
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/apps/live",
@@ -405,7 +405,7 @@
       "analyzedFileCount": 55,
       "complete": true,
       "scannedFileCount": 55,
-      "elapsedMilliseconds": 3033.564167
+      "elapsedMilliseconds": 2849.469375
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/apps/space",
@@ -681,7 +681,7 @@
       "analyzedFileCount": 169,
       "complete": true,
       "scannedFileCount": 169,
-      "elapsedMilliseconds": 5056.042417000001
+      "elapsedMilliseconds": 6698.915083999999
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/apps/web",
@@ -1569,25 +1569,6 @@
           "tags": []
         },
         {
-          "filePath": "components/navigation/use-responsive-tab-layout.ts",
-          "plugin": "react-doctor",
-          "rule": "effect-needs-cleanup",
-          "severity": "error",
-          "title": "Effect subscription or timer never cleaned up",
-          "message": "`observe` creates a subscription in a function that outlives the render, with no cleanup path. Store the handle and release it, or move this into a useEffect that returns cleanup, so it does not leak after unmount.",
-          "help": "Return a cleanup function that stops the subscription or timer: `return () => target.removeEventListener(name, handler)` for listeners, `return () => clearInterval(id)` or `clearTimeout(id)` for timers, `return () => observer.disconnect()` for observers, `return () => socket.close()` for connections, or `return unsubscribe` if the subscribe call already gave you one.",
-          "line": 76,
-          "column": 5,
-          "offset": 2524,
-          "length": 28,
-          "endLine": 76,
-          "category": "Bugs",
-          "fingerprint": "3cf8101d02ade178344ca72214494f388fb386c59c742cefc2124b3d977efa41",
-          "id": "apps/web/components/navigation/use-responsive-tab-layout.ts::76:5::react-doctor/effect-needs-cleanup::a1c23b9e6f9831652659b4bed43e840b0cf81cea101eb89c039e91e1bad0978f",
-          "normalizedFilePath": "components/navigation/use-responsive-tab-layout.ts",
-          "tags": ["test-noise"]
-        },
-        {
           "filePath": "components/onboarding/steps/profile/root.tsx",
           "plugin": "react-doctor",
           "rule": "no-autofocus",
@@ -1810,14 +1791,14 @@
           "title": "State adjusted after a prop changes",
           "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
           "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-          "line": 233,
+          "line": 234,
           "column": 7,
-          "offset": 6768,
+          "offset": 6911,
           "length": 27,
-          "endLine": 233,
+          "endLine": 234,
           "category": "Bugs",
           "fingerprint": "66dd7564af113cae17b6273a21871cf0023f48222106cd10c63af99e09ade685",
-          "id": "apps/web/components/sidebar/resizable-sidebar.tsx::233:7::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+          "id": "apps/web/components/sidebar/resizable-sidebar.tsx::234:7::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
           "normalizedFilePath": "components/sidebar/resizable-sidebar.tsx",
           "tags": ["test-noise"]
         },
@@ -2355,7 +2336,7 @@
         }
       ],
       "score": {
-        "score": 76,
+        "score": 79,
         "label": "Needs work",
         "rules": {
           "react-doctor/only-export-components": {
@@ -2393,10 +2374,6 @@
           "react-doctor/no-pass-data-to-parent": {
             "priority": 36,
             "tier": "P3"
-          },
-          "react-doctor/effect-needs-cleanup": {
-            "priority": 78,
-            "tier": "P1"
           },
           "react-doctor/no-autofocus": {
             "priority": 33,
@@ -4864,7 +4841,7 @@
       "analyzedFileCount": 2418,
       "complete": true,
       "scannedFileCount": 2418,
-      "elapsedMilliseconds": 9392.144333
+      "elapsedMilliseconds": 9371.447292
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/blocks",
@@ -5093,15 +5070,15 @@
           "title": "State adjusted after a prop changes",
           "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
           "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-          "line": 338,
+          "line": 340,
           "column": 9,
-          "offset": 15058,
+          "offset": 15305,
           "length": 24,
-          "endLine": 338,
+          "endLine": 340,
           "category": "Bugs",
           "fixGroupId": "056b5e4cf76b15bb",
           "fingerprint": "aab110d874ab93efddabcda5069a0581d4b4fd2c00ab9897e0a08ee8ff055f7f",
-          "id": "packages/blocks/src/select/root.tsx::338:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+          "id": "packages/blocks/src/select/root.tsx::340:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
           "normalizedFilePath": "src/select/root.tsx",
           "tags": ["test-noise"]
         },
@@ -5113,14 +5090,14 @@
           "title": "Derived value copied into state",
           "message": "Storing \"pinnedSelected\" in state when you can derive it from other values costs an extra render.",
           "help": "Work out the value while rendering (or with useMemo if it's expensive) instead of copying it into state and synchronizing it during render or through an effect. See https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state",
-          "line": 339,
+          "line": 341,
           "column": 9,
-          "offset": 15092,
+          "offset": 15339,
           "length": 27,
-          "endLine": 339,
+          "endLine": 341,
           "category": "Bugs",
           "fingerprint": "20c0fce1522101197b79513bfb6af90344e6458c54e90bd70df24cd39fafbd41",
-          "id": "packages/blocks/src/select/root.tsx::339:9::react-doctor/no-derived-state::f0539a17b00c617d5dd4894ee432eccbe240e09f4c759932ad4c38f00150ff68",
+          "id": "packages/blocks/src/select/root.tsx::341:9::react-doctor/no-derived-state::f0539a17b00c617d5dd4894ee432eccbe240e09f4c759932ad4c38f00150ff68",
           "normalizedFilePath": "src/select/root.tsx",
           "tags": ["test-noise"]
         },
@@ -5132,15 +5109,15 @@
           "title": "State adjusted after a prop changes",
           "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
           "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-          "line": 361,
+          "line": 363,
           "column": 9,
-          "offset": 16088,
+          "offset": 16335,
           "length": 25,
-          "endLine": 361,
+          "endLine": 363,
           "category": "Bugs",
           "fixGroupId": "056b5e4cf76b15bb",
           "fingerprint": "5e3cb0b7ec29a7bc226264a7833c7827625e375286da6b5a8b802621f90d7024",
-          "id": "packages/blocks/src/select/root.tsx::361:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+          "id": "packages/blocks/src/select/root.tsx::363:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
           "normalizedFilePath": "src/select/root.tsx",
           "tags": ["test-noise"]
         },
@@ -5152,14 +5129,14 @@
           "title": "Derived state stored in an effect",
           "message": "You pay an extra render for state you can derive from other values.",
           "help": "Work out derived values while rendering: `const x = fn(dep)`. To reset a component's state when a prop changes, give it a key prop: `<Component key={prop} />`. See https://react.dev/learn/you-might-not-need-an-effect",
-          "line": 377,
+          "line": 379,
           "column": 3,
-          "offset": 16738,
+          "offset": 16985,
           "length": 127,
-          "endLine": 379,
+          "endLine": 381,
           "category": "Bugs",
           "fingerprint": "6ec66f05d8a3455c7ea7e9fec3b51338a8e57e3fb2b876047fd5b0c56481d237",
-          "id": "packages/blocks/src/select/root.tsx::377:3::react-doctor/no-derived-state-effect::147d1d256fac04849e39cbe021c2b2aa06020e2e30418536a24ea0c45cc1c800",
+          "id": "packages/blocks/src/select/root.tsx::379:3::react-doctor/no-derived-state-effect::147d1d256fac04849e39cbe021c2b2aa06020e2e30418536a24ea0c45cc1c800",
           "normalizedFilePath": "src/select/root.tsx",
           "tags": ["test-noise"]
         },
@@ -5171,14 +5148,14 @@
           "title": "Large component is hard to read and change",
           "message": "Component \"SelectRoot\" is over 300 lines long, which is hard to read & change. Split it into a few smaller components.",
           "help": "Pull each section into its own component so the parent is easier to read, test, and change.",
-          "line": 884,
+          "line": 886,
           "column": 17,
-          "offset": 34834,
+          "offset": 35081,
           "length": 10,
-          "endLine": 884,
+          "endLine": 886,
           "category": "Maintainability",
           "fingerprint": "4b997a03c23439cc47f08239e1cd45e00c9b9416e096f7b23846d2bd1bd9c1a8",
-          "id": "packages/blocks/src/select/root.tsx::884:17::react-doctor/no-giant-component::f191c7a561bf27ea13a84d724190a9e0ff0a8f17bf23df2650a3c1534bb9ebd8",
+          "id": "packages/blocks/src/select/root.tsx::886:17::react-doctor/no-giant-component::f191c7a561bf27ea13a84d724190a9e0ff0a8f17bf23df2650a3c1534bb9ebd8",
           "normalizedFilePath": "src/select/root.tsx",
           "tags": ["react-jsx-only", "test-noise"]
         },
@@ -5565,7 +5542,7 @@
       "analyzedFileCount": 327,
       "complete": true,
       "scannedFileCount": 327,
-      "elapsedMilliseconds": 7372.363708
+      "elapsedMilliseconds": 8320.443500000001
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/editor",
@@ -6160,7 +6137,7 @@
       "analyzedFileCount": 238,
       "complete": true,
       "scannedFileCount": 238,
-      "elapsedMilliseconds": 8104.0551669999995
+      "elapsedMilliseconds": 7626.154334000001
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/hooks",
@@ -6248,7 +6225,7 @@
       "analyzedFileCount": 8,
       "complete": true,
       "scannedFileCount": 8,
-      "elapsedMilliseconds": 3049.670375
+      "elapsedMilliseconds": 2854.7875
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/i18n",
@@ -6349,7 +6326,7 @@
       "analyzedFileCount": 21,
       "complete": true,
       "scannedFileCount": 21,
-      "elapsedMilliseconds": 3106.2140419999996
+      "elapsedMilliseconds": 3041.719875
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/types",
@@ -6549,7 +6526,7 @@
       "analyzedFileCount": 120,
       "complete": true,
       "scannedFileCount": 120,
-      "elapsedMilliseconds": 6489.9546660000005
+      "elapsedMilliseconds": 5921.654292
     },
     {
       "directory": "/Users/newretro/Projects/Moondrop/plane/packages/utils",
@@ -6723,7 +6700,7 @@
       "analyzedFileCount": 94,
       "complete": true,
       "scannedFileCount": 94,
-      "elapsedMilliseconds": 6834.887958
+      "elapsedMilliseconds": 6302.985667
     }
   ],
   "diagnostics": [
@@ -7643,25 +7620,6 @@
       "tags": []
     },
     {
-      "filePath": "components/navigation/use-responsive-tab-layout.ts",
-      "plugin": "react-doctor",
-      "rule": "effect-needs-cleanup",
-      "severity": "error",
-      "title": "Effect subscription or timer never cleaned up",
-      "message": "`observe` creates a subscription in a function that outlives the render, with no cleanup path. Store the handle and release it, or move this into a useEffect that returns cleanup, so it does not leak after unmount.",
-      "help": "Return a cleanup function that stops the subscription or timer: `return () => target.removeEventListener(name, handler)` for listeners, `return () => clearInterval(id)` or `clearTimeout(id)` for timers, `return () => observer.disconnect()` for observers, `return () => socket.close()` for connections, or `return unsubscribe` if the subscribe call already gave you one.",
-      "line": 76,
-      "column": 5,
-      "offset": 2524,
-      "length": 28,
-      "endLine": 76,
-      "category": "Bugs",
-      "fingerprint": "3cf8101d02ade178344ca72214494f388fb386c59c742cefc2124b3d977efa41",
-      "id": "apps/web/components/navigation/use-responsive-tab-layout.ts::76:5::react-doctor/effect-needs-cleanup::a1c23b9e6f9831652659b4bed43e840b0cf81cea101eb89c039e91e1bad0978f",
-      "normalizedFilePath": "components/navigation/use-responsive-tab-layout.ts",
-      "tags": ["test-noise"]
-    },
-    {
       "filePath": "components/onboarding/steps/profile/root.tsx",
       "plugin": "react-doctor",
       "rule": "no-autofocus",
@@ -7884,14 +7842,14 @@
       "title": "State adjusted after a prop changes",
       "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
       "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-      "line": 233,
+      "line": 234,
       "column": 7,
-      "offset": 6768,
+      "offset": 6911,
       "length": 27,
-      "endLine": 233,
+      "endLine": 234,
       "category": "Bugs",
       "fingerprint": "66dd7564af113cae17b6273a21871cf0023f48222106cd10c63af99e09ade685",
-      "id": "apps/web/components/sidebar/resizable-sidebar.tsx::233:7::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+      "id": "apps/web/components/sidebar/resizable-sidebar.tsx::234:7::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
       "normalizedFilePath": "components/sidebar/resizable-sidebar.tsx",
       "tags": ["test-noise"]
     },
@@ -8587,15 +8545,15 @@
       "title": "State adjusted after a prop changes",
       "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
       "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-      "line": 338,
+      "line": 340,
       "column": 9,
-      "offset": 15058,
+      "offset": 15305,
       "length": 24,
-      "endLine": 338,
+      "endLine": 340,
       "category": "Bugs",
       "fixGroupId": "056b5e4cf76b15bb",
       "fingerprint": "aab110d874ab93efddabcda5069a0581d4b4fd2c00ab9897e0a08ee8ff055f7f",
-      "id": "packages/blocks/src/select/root.tsx::338:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+      "id": "packages/blocks/src/select/root.tsx::340:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
       "normalizedFilePath": "src/select/root.tsx",
       "tags": ["test-noise"]
     },
@@ -8607,14 +8565,14 @@
       "title": "Derived value copied into state",
       "message": "Storing \"pinnedSelected\" in state when you can derive it from other values costs an extra render.",
       "help": "Work out the value while rendering (or with useMemo if it's expensive) instead of copying it into state and synchronizing it during render or through an effect. See https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state",
-      "line": 339,
+      "line": 341,
       "column": 9,
-      "offset": 15092,
+      "offset": 15339,
       "length": 27,
-      "endLine": 339,
+      "endLine": 341,
       "category": "Bugs",
       "fingerprint": "20c0fce1522101197b79513bfb6af90344e6458c54e90bd70df24cd39fafbd41",
-      "id": "packages/blocks/src/select/root.tsx::339:9::react-doctor/no-derived-state::f0539a17b00c617d5dd4894ee432eccbe240e09f4c759932ad4c38f00150ff68",
+      "id": "packages/blocks/src/select/root.tsx::341:9::react-doctor/no-derived-state::f0539a17b00c617d5dd4894ee432eccbe240e09f4c759932ad4c38f00150ff68",
       "normalizedFilePath": "src/select/root.tsx",
       "tags": ["test-noise"]
     },
@@ -8626,15 +8584,15 @@
       "title": "State adjusted after a prop changes",
       "message": "This effect adjusts state after a prop changes, so users briefly see the stale value.",
       "help": "Remove the adjustment effect by deriving values during render, resetting the component with a key, or updating related state in the event that changes the prop. Avoid tracking the previous prop in more state, which preserves the duplication. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes",
-      "line": 361,
+      "line": 363,
       "column": 9,
-      "offset": 16088,
+      "offset": 16335,
       "length": 25,
-      "endLine": 361,
+      "endLine": 363,
       "category": "Bugs",
       "fixGroupId": "056b5e4cf76b15bb",
       "fingerprint": "5e3cb0b7ec29a7bc226264a7833c7827625e375286da6b5a8b802621f90d7024",
-      "id": "packages/blocks/src/select/root.tsx::361:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
+      "id": "packages/blocks/src/select/root.tsx::363:9::react-doctor/no-adjust-state-on-prop-change::b8010c4751223dfc1470083cfca98dd8d2ae8ac73b6b1a537e68945671d23938",
       "normalizedFilePath": "src/select/root.tsx",
       "tags": ["test-noise"]
     },
@@ -8646,14 +8604,14 @@
       "title": "Derived state stored in an effect",
       "message": "You pay an extra render for state you can derive from other values.",
       "help": "Work out derived values while rendering: `const x = fn(dep)`. To reset a component's state when a prop changes, give it a key prop: `<Component key={prop} />`. See https://react.dev/learn/you-might-not-need-an-effect",
-      "line": 377,
+      "line": 379,
       "column": 3,
-      "offset": 16738,
+      "offset": 16985,
       "length": 127,
-      "endLine": 379,
+      "endLine": 381,
       "category": "Bugs",
       "fingerprint": "6ec66f05d8a3455c7ea7e9fec3b51338a8e57e3fb2b876047fd5b0c56481d237",
-      "id": "packages/blocks/src/select/root.tsx::377:3::react-doctor/no-derived-state-effect::147d1d256fac04849e39cbe021c2b2aa06020e2e30418536a24ea0c45cc1c800",
+      "id": "packages/blocks/src/select/root.tsx::379:3::react-doctor/no-derived-state-effect::147d1d256fac04849e39cbe021c2b2aa06020e2e30418536a24ea0c45cc1c800",
       "normalizedFilePath": "src/select/root.tsx",
       "tags": ["test-noise"]
     },
@@ -8665,14 +8623,14 @@
       "title": "Large component is hard to read and change",
       "message": "Component \"SelectRoot\" is over 300 lines long, which is hard to read & change. Split it into a few smaller components.",
       "help": "Pull each section into its own component so the parent is easier to read, test, and change.",
-      "line": 884,
+      "line": 886,
       "column": 17,
-      "offset": 34834,
+      "offset": 35081,
       "length": 10,
-      "endLine": 884,
+      "endLine": 886,
       "category": "Maintainability",
       "fingerprint": "4b997a03c23439cc47f08239e1cd45e00c9b9416e096f7b23846d2bd1bd9c1a8",
-      "id": "packages/blocks/src/select/root.tsx::884:17::react-doctor/no-giant-component::f191c7a561bf27ea13a84d724190a9e0ff0a8f17bf23df2650a3c1534bb9ebd8",
+      "id": "packages/blocks/src/select/root.tsx::886:17::react-doctor/no-giant-component::f191c7a561bf27ea13a84d724190a9e0ff0a8f17bf23df2650a3c1534bb9ebd8",
       "normalizedFilePath": "src/select/root.tsx",
       "tags": ["react-jsx-only", "test-noise"]
     },
@@ -8936,13 +8894,13 @@
     }
   ],
   "summary": {
-    "errorCount": 4,
+    "errorCount": 3,
     "warningCount": 111,
-    "affectedFileCount": 85,
-    "totalDiagnosticCount": 115,
+    "affectedFileCount": 84,
+    "totalDiagnosticCount": 114,
     "score": 61,
     "scoreLabel": "Needs work"
   },
-  "elapsedMilliseconds": 9527.299833000001,
+  "elapsedMilliseconds": 9492.685125,
   "error": null
 }
