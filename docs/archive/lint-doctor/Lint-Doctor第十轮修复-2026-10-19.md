@@ -33,3 +33,20 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 ## 数据库
 
 本轮无任何模型、迁移或 `apps/api` 改动，无需执行迁移或同步线上环境。
+
+## 后续批次：十个复杂函数
+
+在首批 5 个之后又处理了 10 个（`no-high-complexity-react-function` 85 → 75）：
+
+- `issues/issue-layouts/roots/cycle-layout-root.tsx`：状态与进度派生收进 `getCycleDerivedState`。
+- `power-k/.../work-item/commands.ts`：三个 `isEpic ? … : …` 合并为一个 `useMemo` 的 `entityApi`，回调依赖保持稳定。
+- `packages/blocks/src/emoji-icon-picker/logo.tsx`：icon 分支抽成 `renderIconLogo`。
+- `active-cycles/root.tsx`：SWR key、denied、hasMore、loadingMore 四个派生提为模块级函数。
+- `inbox/content/issue-properties.tsx`：`getOpacityClass` 辅助函数 + `IntakeStateProperty`、`DuplicateOfWorkItem` 两个组件。
+- `space/.../peek-overview/issue-properties.tsx`：优先级 className 的嵌套三元改为 `PRIORITY_CLASSES` 查找表。
+- `workflow/runner-settings.tsx`：`resolveActiveTab`、`resolveWorkflowName` 辅助函数 + `RunnerLoadState`、`RunnerTabs` 组件。
+- `workflow/approval-card.tsx`：六个渲染分支拆成同文件组件，两个守卫表达式抽成 `hasApprovalSource` / `shouldRenderApproval`。
+- `labels/project-setting-label-list.tsx`：草稿表单与列表内容拆成 `LabelDraftForm` / `LabelListContent`。
+- `workspace/settings/members-list.tsx`：成员目录与待处理邀请拆成 `MembersDirectory` / `PendingInvitations`。
+
+验证：Web 全量 **345 文件 / 1638 项**通过，全仓 `pnpm check` 通过，每批 changed 扫描 0 诊断。最终全量 **193 条**（5 errors / 188 warnings），space 91、blocks 84。
