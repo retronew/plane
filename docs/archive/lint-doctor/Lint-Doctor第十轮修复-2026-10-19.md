@@ -49,4 +49,16 @@ React Doctor 0.9.18，schema 3，`--scope full --json --blocking none --yes`，�
 - `labels/project-setting-label-list.tsx`：草稿表单与列表内容拆成 `LabelDraftForm` / `LabelListContent`。
 - `workspace/settings/members-list.tsx`：成员目录与待处理邀请拆成 `MembersDirectory` / `PendingInvitations`。
 
-验证：Web 全量 **345 文件 / 1638 项**通过，全仓 `pnpm check` 通过，每批 changed 扫描 0 诊断。最终全量 **193 条**（5 errors / 188 warnings），space 91、blocks 84。
+验证：Web 全量 **345 文件 / 1640 项**通过，全仓 `pnpm check` 通过，每批 changed 扫描 0 诊断。
+
+## 第三批：再八个复杂函数（75 → 67）
+
+- web 与 space 的 `oidc-email-bind.tsx`：两个表单步骤拆成 `EmailStepForm` / `CodeStepForm`，重发按钮文案用共享 `resendLabel` 提前返回。
+- `analytics/comparison-chart.tsx`：把朝向相关的高度、布局、margin、坐标轴类型、柱半径与 tick 格式化全部提为模块级函数/常量，组件体内不再有三元。
+- `sub-issues/filters.tsx`：新增 `SubIssueFilterItem`，七个 `isFilterEnabled(...) && <div>` 变成带 `enabled` 的组件。
+- `issue-detail/sidebar.tsx`：`toDateValue` / `deriveBoundaryDate` / `toPayloadDate` 三个纯日期辅助 + `cn` 条件类。
+- `all-issue-layout-root.tsx`：路由参数收敛、两个 SWR key、空视图守卫提为模块函数。
+- `spreadsheet/issue-row.tsx`：`getIssueServiceType` + `IssueIdentifierCell` / `IssueSelectionCell` / `SubIssuesChevron` 三个展示组件。
+- `draft-issue-properties.tsx`：`toDateValue` / `getAssigneeVariant` / `getDueDateHighlight` / `getDefaultLabelOptions` 提为模块函数。
+
+最终全量 **185 条**（5 errors / 180 warnings）。
