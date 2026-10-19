@@ -27,6 +27,22 @@ import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
 import { translate } from "@plane/i18n";
 
+const toOptionalString = (value: string | string[] | undefined) => (value ? value.toString() : undefined);
+
+const getGlobalViewsKey = (workspaceSlug?: string) =>
+  workspaceSlug ? `WORKSPACE_GLOBAL_VIEWS_${workspaceSlug}` : null;
+
+const getGlobalViewIssuesKey = (workspaceSlug?: string, globalViewId?: string) =>
+  workspaceSlug && globalViewId ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}` : null;
+
+const shouldShowMissingView = (
+  isLoading: boolean,
+  globalViewsLoading: boolean,
+  issuesLoading: boolean,
+  viewDetails: unknown,
+  isDefaultView: boolean
+) => !isLoading && !globalViewsLoading && !issuesLoading && !viewDetails && !isDefaultView;
+
 type Props = {
   isDefaultView: boolean;
   isLoading?: boolean;
@@ -38,8 +54,8 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   // router
   const router = useAppRouter();
   const { workspaceSlug: routerWorkspaceSlug, globalViewId: routerGlobalViewId } = useParams();
-  const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug.toString() : undefined;
-  const globalViewId = routerGlobalViewId ? routerGlobalViewId.toString() : undefined;
+  const workspaceSlug = toOptionalString(routerWorkspaceSlug);
+  const globalViewId = toOptionalString(routerGlobalViewId);
   // search params
   const searchParams = useSearchParams();
   // store hooks
@@ -94,7 +110,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
 
   // Fetch global views
   const { isLoading: globalViewsLoading } = useSWR(
-    workspaceSlug ? `WORKSPACE_GLOBAL_VIEWS_${workspaceSlug}` : null,
+    getGlobalViewsKey(workspaceSlug),
     async () => {
       if (workspaceSlug) {
         await fetchAllGlobalViews(workspaceSlug);
@@ -105,7 +121,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
 
   // Fetch issues
   const { isLoading: issuesLoading } = useSWR(
-    workspaceSlug && globalViewId ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}` : null,
+    getGlobalViewIssuesKey(workspaceSlug, globalViewId),
     async () => {
       if (workspaceSlug && globalViewId) {
         toggleLoading(true);
@@ -120,7 +136,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   );
 
   // Empty state
-  if (!isLoading && !globalViewsLoading && !issuesLoading && !viewDetails && !isDefaultView) {
+  if (shouldShowMissingView(isLoading, globalViewsLoading, issuesLoading, viewDetails, isDefaultView)) {
     return (
       <EmptyStateDetailed
         title={translate("web.view_does_not_exist")}

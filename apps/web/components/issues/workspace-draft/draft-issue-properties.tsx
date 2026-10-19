@@ -13,7 +13,7 @@ import { DueDateOutline, StartDateOutline } from "@makeplane/propel/icons";
 import { DateSelect } from "@plane/blocks/property-select";
 import { useTranslation } from "@plane/i18n";
 // types
-import type { TIssuePriorities, TWorkspaceDraftIssue } from "@plane/types";
+import type { IIssueLabel, TIssuePriorities, TWorkspaceDraftIssue } from "@plane/types";
 import { cn, getDate, renderFormattedPayloadDate, shouldHighlightIssueDueDate } from "@plane/utils";
 // components
 import { CycleSelect } from "@/components/dropdowns/cycle/cycle-select";
@@ -45,6 +45,21 @@ const handleEventPropagation = (e: React.MouseEvent) => {
   e.stopPropagation();
   e.preventDefault();
 };
+
+const toDateValue = (value: string | Date | null | undefined) => getDate(value) ?? null;
+
+const getAssigneeVariant = (count: number | undefined) => (count ? "avatar-group-sm" : "pill-sm");
+
+const getDueDateHighlight = (
+  date: string | Date | null | undefined,
+  stateGroup: Parameters<typeof shouldHighlightIssueDueDate>[1]
+) => shouldHighlightIssueDueDate(date || null, stateGroup);
+
+const getDefaultLabelOptions = (labelIds: string[] | undefined, labelMap: Record<string, IIssueLabel>) =>
+  labelIds?.flatMap((id) => {
+    const label = labelMap[id];
+    return label ? [label] : [];
+  }) || [];
 
 export const DraftIssueProperties = observer(function DraftIssueProperties(props: IIssueProperties) {
   const { issue, updateIssue, className } = props;
@@ -131,11 +146,7 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
 
   if (!issue.project_id) return null;
 
-  const defaultLabelOptions =
-    issue?.label_ids?.flatMap((id) => {
-      const label = labelMap[id];
-      return label ? [label] : [];
-    }) || [];
+  const defaultLabelOptions = getDefaultLabelOptions(issue?.label_ids, labelMap);
 
   const minDate = getDate(issue.start_date);
   minDate?.setDate(minDate.getDate());
@@ -178,7 +189,7 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       {/* start date */}
       <div role="presentation" onClick={handleEventPropagation}>
         <DateSelect
-          value={getDate(issue.start_date) ?? null}
+          value={toDateValue(issue.start_date)}
           onChange={handleStartDate}
           maxDate={maxDate}
           placeholder={t("common.order_by.start_date")}
@@ -194,13 +205,13 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
       {/* target/due date */}
       <div role="presentation" onClick={handleEventPropagation}>
         <DateSelect
-          value={getDate(issue?.target_date) ?? null}
+          value={toDateValue(issue?.target_date)}
           onChange={handleTargetDate}
           minDate={minDate}
           placeholder={t("common.order_by.due_date")}
           icon={<DueDateOutline />}
           className={cn({
-            "text-danger-primary": shouldHighlightIssueDueDate(issue?.target_date || null, stateDetails?.group),
+            "text-danger-primary": getDueDateHighlight(issue?.target_date, stateDetails?.group),
           })}
           clearable
           showTooltip
@@ -217,7 +228,7 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
           value={issue?.assignee_ids ?? []}
           onChange={handleAssignee}
           multiple
-          variant={issue.assignee_ids?.length ? "avatar-group-sm" : "pill-sm"}
+          variant={getAssigneeVariant(issue.assignee_ids?.length)}
           placeholder={t("common.assignees")}
           tooltip={{ heading: t("common.assignees") }}
         />

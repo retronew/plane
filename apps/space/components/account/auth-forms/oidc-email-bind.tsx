@@ -108,117 +108,32 @@ export function OIDCEmailBindForm() {
           </span>
         </div>
         {step === "email" ? (
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (isEmailValid) void sendCode();
-            }}
-          >
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-13 font-medium text-tertiary">
-                {t("auth.common.email.label")}
-              </label>
-              <InputGroup size="2xl">
-                <Input
-                  size="2xl"
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("auth.common.email.placeholder")}
-                  autoComplete="off"
-                />
-              </InputGroup>
-              <p className="px-1 pt-1 text-11 text-tertiary">{t("web.oidc_email_bind.email_hint")}</p>
-            </div>
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              stretch="full"
-              disabled={!isEmailValid || isSendingCode}
-              loading={isSendingCode}
-              label={t("web.oidc_email_bind.send_code")}
-            />
-          </form>
+          <EmailStepForm
+            email={email}
+            setEmail={setEmail}
+            isEmailValid={isEmailValid}
+            isSendingCode={isSendingCode}
+            onSend={sendCode}
+            t={t}
+          />
         ) : (
-          <form
-            className="space-y-4"
-            method="POST"
-            action={`${API_BASE_URL}/auth/oidc/bind-email/`}
-            onSubmit={() => setIsSubmitting(true)}
-          >
-            <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
-            <input type="hidden" name="email" value={email} />
-            {nextPath && <input type="hidden" name="next_path" value={nextPath} />}
-            <div className="space-y-1">
-              <label htmlFor="bind-email" className="text-13 font-medium text-tertiary">
-                {t("auth.common.email.label")}
-              </label>
-              <InputGroup size="2xl">
-                <Input size="2xl" id="bind-email" type="email" value={email} disabled />
-              </InputGroup>
-              <div className="flex w-full justify-end px-1 pt-1 text-11">
-                <button
-                  type="button"
-                  className="font-medium text-accent-secondary"
-                  onClick={() => {
-                    setErrorInfo(undefined);
-                    setStep("email");
-                  }}
-                >
-                  {t("web.oidc_email_bind.change_email")}
-                </button>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="unique-code" className="text-13 font-medium text-tertiary">
-                {t("auth.common.unique_code.label")}
-              </label>
-              <InputGroup size="2xl">
-                <Input
-                  size="2xl"
-                  id="unique-code"
-                  name="code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder={t("auth.common.unique_code.placeholder")}
-                  autoComplete="one-time-code"
-                />
-              </InputGroup>
-              <div className="flex w-full items-center justify-between px-1 pt-1 text-11">
-                <p className="flex items-center gap-1 font-medium text-success-primary">
-                  <TickCircleOutline height={12} width={12} />
-                  {t("auth.common.unique_code.paste_code")}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void sendCode()}
-                  className={
-                    isSendingCode || resendTimer > 0 ? "text-placeholder" : "font-medium text-accent-secondary"
-                  }
-                  disabled={isSendingCode || resendTimer > 0}
-                >
-                  {resendTimer > 0
-                    ? t("auth.common.resend_in", { seconds: resendTimer })
-                    : isSendingCode
-                      ? t("auth.common.unique_code.requesting_new_code")
-                      : t("common.resend")}
-                </button>
-              </div>
-            </div>
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              stretch="full"
-              disabled={!code || !csrfToken || isSubmitting}
-              loading={isSubmitting}
-              label={t("common.continue")}
-            />
-          </form>
+          <CodeStepForm
+            email={email}
+            code={code}
+            setCode={setCode}
+            csrfToken={csrfToken}
+            nextPath={nextPath}
+            isSendingCode={isSendingCode}
+            isSubmitting={isSubmitting}
+            setIsSubmitting={setIsSubmitting}
+            resendTimer={resendTimer}
+            onResend={sendCode}
+            onChangeEmail={() => {
+              setErrorInfo(undefined);
+              setStep("email");
+            }}
+            t={t}
+          />
         )}
         <div className="flex h-7 items-center justify-center">
           <button type="button" className="text-13 font-medium text-accent-primary" onClick={() => goToSignIn()}>
@@ -227,5 +142,159 @@ export function OIDCEmailBindForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+type Translate = ReturnType<typeof useTranslation>["t"];
+
+function EmailStepForm({
+  email,
+  setEmail,
+  isEmailValid,
+  isSendingCode,
+  onSend,
+  t,
+}: {
+  email: string;
+  setEmail: (value: string) => void;
+  isEmailValid: boolean;
+  isSendingCode: boolean;
+  onSend: () => Promise<void>;
+  t: Translate;
+}) {
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (isEmailValid) void onSend();
+      }}
+    >
+      <div className="space-y-1">
+        <label htmlFor="email" className="text-13 font-medium text-tertiary">
+          {t("auth.common.email.label")}
+        </label>
+        <InputGroup size="2xl">
+          <Input
+            size="2xl"
+            id="email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("auth.common.email.placeholder")}
+            autoComplete="off"
+          />
+        </InputGroup>
+        <p className="px-1 pt-1 text-11 text-tertiary">{t("web.oidc_email_bind.email_hint")}</p>
+      </div>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        stretch="full"
+        disabled={!isEmailValid || isSendingCode}
+        loading={isSendingCode}
+        label={t("web.oidc_email_bind.send_code")}
+      />
+    </form>
+  );
+}
+
+function resendLabel(resendTimer: number, isSendingCode: boolean, t: Translate) {
+  if (resendTimer > 0) return t("auth.common.resend_in", { seconds: resendTimer });
+  return isSendingCode ? t("auth.common.unique_code.requesting_new_code") : t("common.resend");
+}
+
+function CodeStepForm({
+  email,
+  code,
+  setCode,
+  csrfToken,
+  nextPath,
+  isSendingCode,
+  isSubmitting,
+  setIsSubmitting,
+  resendTimer,
+  onResend,
+  onChangeEmail,
+  t,
+}: {
+  email: string;
+  code: string;
+  setCode: (value: string) => void;
+  csrfToken: string | undefined;
+  nextPath: string | null;
+  isSendingCode: boolean;
+  isSubmitting: boolean;
+  setIsSubmitting: (value: boolean) => void;
+  resendTimer: number;
+  onResend: () => Promise<void>;
+  onChangeEmail: () => void;
+  t: Translate;
+}) {
+  return (
+    <form
+      className="space-y-4"
+      method="POST"
+      action={`${API_BASE_URL}/auth/oidc/bind-email/`}
+      onSubmit={() => setIsSubmitting(true)}
+    >
+      <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
+      <input type="hidden" name="email" value={email} />
+      {nextPath && <input type="hidden" name="next_path" value={nextPath} />}
+      <div className="space-y-1">
+        <label htmlFor="bind-email" className="text-13 font-medium text-tertiary">
+          {t("auth.common.email.label")}
+        </label>
+        <InputGroup size="2xl">
+          <Input size="2xl" id="bind-email" type="email" value={email} disabled />
+        </InputGroup>
+        <div className="flex w-full justify-end px-1 pt-1 text-11">
+          <button type="button" className="font-medium text-accent-secondary" onClick={onChangeEmail}>
+            {t("web.oidc_email_bind.change_email")}
+          </button>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="unique-code" className="text-13 font-medium text-tertiary">
+          {t("auth.common.unique_code.label")}
+        </label>
+        <InputGroup size="2xl">
+          <Input
+            size="2xl"
+            id="unique-code"
+            name="code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={t("auth.common.unique_code.placeholder")}
+            autoComplete="one-time-code"
+          />
+        </InputGroup>
+        <div className="flex w-full items-center justify-between px-1 pt-1 text-11">
+          <p className="flex items-center gap-1 font-medium text-success-primary">
+            <TickCircleOutline height={12} width={12} />
+            {t("auth.common.unique_code.paste_code")}
+          </p>
+          <button
+            type="button"
+            onClick={() => void onResend()}
+            className={isSendingCode || resendTimer > 0 ? "text-placeholder" : "font-medium text-accent-secondary"}
+            disabled={isSendingCode || resendTimer > 0}
+          >
+            {resendLabel(resendTimer, isSendingCode, t)}
+          </button>
+        </div>
+      </div>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        stretch="full"
+        disabled={!code || !csrfToken || isSubmitting}
+        loading={isSubmitting}
+        label={t("common.continue")}
+      />
+    </form>
   );
 }
