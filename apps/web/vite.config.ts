@@ -35,5 +35,12 @@ export default defineConfig(() => ({
   server: {
     host: "127.0.0.1",
   },
-  // No SSR-specific overrides needed; alias resolves to ESM build
+  ssr: {
+    // Bundle directory-based entry points for Node during SPA fallback prerendering.
+    noExternal: [
+      "@atlaskit/pragmatic-drag-and-drop",
+      "@atlaskit/pragmatic-drag-and-drop-hitbox",
+      "@atlaskit/pragmatic-drag-and-drop-auto-scroll",
+    ],
+  },
 }));
