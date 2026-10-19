@@ -23,7 +23,7 @@ export function filterIssueTypes(
 export function groupIssueTypeLevels(types: TProjectIssueType[]) {
   const levels = new Map<number, TProjectIssueType[]>();
   for (const type of types) {
-    const level = type.level ?? (type.is_epic ? 1 : 0);
+    const level = type.level ?? 0;
     levels.set(level, [...(levels.get(level) ?? []), type]);
   }
   // This sorts a newly allocated array; ES target does not include toSorted.

@@ -8,7 +8,7 @@ export function hierarchyTypeSearchParam(typeId: string | null | undefined) {
 export function issueTypeLevel(types: TProjectIssueType[], typeId: string | null | undefined) {
   if (typeId === null) return 0;
   const type = typeId === undefined ? types.find((item) => item.is_default) : types.find((item) => item.id === typeId);
-  return type ? (type.level ?? (type.is_epic ? 1 : 0)) : undefined;
+  return type ? (type.level ?? 0) : undefined;
 }
 
 export function legalChildTypeIds(types: TProjectIssueType[], parentTypeId: string | null | undefined) {

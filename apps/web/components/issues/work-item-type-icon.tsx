@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import { EpicOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { WorkItemsOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
 import type { TLogoProps } from "@plane/types";
@@ -9,18 +9,16 @@ import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 export const WorkItemTypeIcon = observer(function WorkItemTypeIcon({
   projectId,
   typeId,
-  isEpic = false,
 }: {
   projectId?: string | null;
   typeId?: string | null;
-  isEpic?: boolean;
 }) {
   const store = useProjectWorkflow(projectId ?? undefined);
   const type = typeId ? store.issueTypes[projectId ?? ""]?.results.find((item) => item.id === typeId) : undefined;
   const logo = type?.logo_props as TLogoProps | undefined;
   const hasLogo = (logo?.in_use === "emoji" && !!logo.emoji?.value) || (logo?.in_use === "icon" && !!logo.icon?.name);
   const color = logo?.in_use === "icon" && typeof logo.icon?.color === "string" ? logo.icon.color : undefined;
-  const FallbackIcon = isEpic ? EpicOutline : WorkItemsOutline;
+  const FallbackIcon = WorkItemsOutline;
   return (
     <Tooltip label={type?.name ?? ""} disabled={!type?.name}>
       <span

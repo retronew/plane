@@ -28,7 +28,6 @@ interface Props {
   isEstimateEnabled: boolean;
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   selectionHelpers: TSelectionHelper;
-  isEpic?: boolean;
 }
 
 export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Props) {
@@ -41,7 +40,6 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
     isEstimateEnabled,
     spreadsheetColumnsList,
     selectionHelpers,
-    isEpic = false,
   } = props;
   // router
   const { projectId } = useParams();
@@ -76,7 +74,7 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
                   />
                 </div>
               )}
-              <span className="text-13 font-medium">{isEpic ? "Epics" : t("issues")}</span>
+              <span className="text-13 font-medium">{t("issues")}</span>
             </div>
           </div>
         </th>
@@ -89,7 +87,6 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
             displayFilters={displayFilters}
             handleDisplayFilterUpdate={handleDisplayFilterUpdate}
             isEstimateEnabled={isEstimateEnabled}
-            isEpic={isEpic}
           />
         ))}
         <th className="sticky right-0 z-[16] h-11 w-12 min-w-12 border-b border-subtle bg-layer-1">
@@ -101,7 +98,6 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
                 ...spreadsheetColumnsList.filter((property) => property !== "estimate" || isEstimateEnabled),
               ]}
               onChange={handleDisplayPropertiesUpdate}
-              isEpic={isEpic}
             />
           </div>
         </th>

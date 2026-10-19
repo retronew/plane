@@ -27,7 +27,7 @@ const CreatedResolvedChart = lazy(function CreatedResolvedChart() {
   return import("./created-resolved-chart").then((mod) => ({ default: mod.CreatedResolvedChart }));
 });
 const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = false }: { dashboard?: boolean }) {
-  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
+  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView } = useAnalytics();
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
   const slug = String(workspaceSlug);
@@ -42,7 +42,6 @@ const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = fals
       selectedCycle,
       selectedModule,
       isPeekView,
-      isEpic,
     ],
     () =>
       service.getAdvanceAnalyticsCharts<IChartResponse>(
@@ -53,7 +52,6 @@ const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = fals
           ...(selectedProjects.length ? { project_ids: selectedProjects.join(",") } : {}),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
-          ...(isEpic ? { epic: true } : {}),
         },
         isPeekView
       )

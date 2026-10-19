@@ -27,13 +27,13 @@ const fixtures: TProjectIssueType[] = [
     level: 0,
   },
   {
-    id: "epic",
-    project_issue_type_id: "pe",
-    name: "Epic",
+    id: "initiative",
+    project_issue_type_id: "pi",
+    name: "Initiative",
     is_default: false,
     is_active: true,
     workflow_id: null,
-    is_epic: true,
+    level: 1,
   },
 ];
 const state = vi.hoisted(() => ({
@@ -118,7 +118,7 @@ beforeEach(() => {
     policy_version: 2,
     can_manage: false,
     levels: [0, 1],
-    issue_types: fixtures.map((type) => ({ ...type, level: type.level ?? (type.is_epic ? 1 : 0) })),
+    issue_types: fixtures.map((type) => ({ ...type, level: type.level ?? 0 })),
   });
   state.store.fetchTypes.mockReset().mockResolvedValue({});
   state.store.fetchList.mockReset().mockResolvedValue({});
@@ -127,12 +127,12 @@ beforeEach(() => {
 });
 it("filters status, searches description, sorts both directions without mutating store order", () => {
   expect(filterIssueTypes(fixtures, " defect ", "inactive", false).map((type) => type.id)).toEqual(["bug"]);
-  expect(filterIssueTypes(fixtures, "", "active", true).map((type) => type.id)).toEqual(["task", "epic"]);
-  expect(fixtures.map((type) => type.id)).toEqual(["task", "bug", "epic"]);
+  expect(filterIssueTypes(fixtures, "", "active", true).map((type) => type.id)).toEqual(["task", "initiative"]);
+  expect(fixtures.map((type) => type.id)).toEqual(["task", "bug", "initiative"]);
 });
-it("uses explicit levels and epic fallback for descending read-only hierarchy", () => {
+it("uses explicit levels for descending read-only hierarchy", () => {
   expect(groupIssueTypeLevels(fixtures).map(([level, items]) => [level, items.map((type) => type.id)])).toEqual([
-    [1, ["epic"]],
+    [1, ["initiative"]],
     [0, ["task", "bug"]],
   ]);
   expect(groupIssueTypeLevels([{ ...fixtures[2], level: 2 }])[0][0]).toBe(2);
@@ -200,7 +200,7 @@ it("renders numeric hierarchy levels and type links without default badges or ma
   expect(await screen.findByRole("heading", { name: "web.workflow_ui.types_settings.hierarchy" })).toBeTruthy();
   expect(await screen.findByRole("heading", { name: "1" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "0" })).toBeTruthy();
-  expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Epic", "Task", "Bug"]);
+  expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Initiative", "Task", "Bug"]);
   expect(screen.getByRole("link", { name: /Task/ }).getAttribute("href")).toBe(
     "/w/settings/projects/p/work-item-types/types/task/properties/"
   );

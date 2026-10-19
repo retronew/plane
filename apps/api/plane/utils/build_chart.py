@@ -187,9 +187,6 @@ def build_analytics_chart(
 
     if y_axis == "WORK_ITEM_COUNT":
         aggregate_func = Count("id", distinct=True)
-    elif y_axis == "EPIC_WORK_ITEM_COUNT":
-        queryset = queryset.filter(type__is_epic=True)
-        aggregate_func = Count("id", distinct=True)
     elif y_axis == "ESTIMATE_POINT_COUNT":
         # New estimate values are strings and can be shirt sizes; only numeric values are summable.
         estimate_value = Case(

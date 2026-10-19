@@ -38,7 +38,6 @@ type Props = {
   typeId?: string | null;
   projectId: string | undefined;
   issueId?: string;
-  searchEpic?: boolean;
 };
 
 // services
@@ -52,7 +51,6 @@ export function ParentIssuesListModal({
   projectId,
   issueId,
   typeId,
-  searchEpic = false,
 }: Props) {
   // i18n
   const { t } = useTranslation();
@@ -117,11 +115,10 @@ export function ParentIssuesListModal({
     projectService
       .projectIssuesSearch(workspaceSlug, projectId, {
         search: debouncedSearchTerm,
-        parent: searchEpic ? undefined : true,
+        parent: true,
         issue_id: issueId,
         type_id: hierarchyTypeSearchParam(typeId),
         workspace_search: false,
-        epic: searchEpic ? true : undefined,
       })
       .then((res) => {
         if (generation === requestGeneration.current) setIssues(res);
@@ -142,7 +139,7 @@ export function ParentIssuesListModal({
     };
     // retry intentionally restarts the same request after an error.
     // oxlint-disable-next-line react/exhaustive-effect-dependencies
-  }, [debouncedSearchTerm, isOpen, issueId, projectId, searchEpic, typeId, workspaceSlug, retry]);
+  }, [debouncedSearchTerm, isOpen, issueId, projectId, typeId, workspaceSlug, retry]);
 
   return (
     <Dialog

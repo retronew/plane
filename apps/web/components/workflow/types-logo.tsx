@@ -15,13 +15,13 @@ export function TypesLogo({
   size = 20,
   backgroundSize,
 }: {
-  type: Pick<TProjectIssueType, "logo_props" | "is_epic" | "level">;
+  type: Pick<TProjectIssueType, "logo_props" | "level">;
   size?: number;
   backgroundSize?: number;
 }) {
   const logo = type.logo_props as TLogoProps | undefined;
   const renderer = getIconRenderer(logo);
-  const Icon = type.is_epic || (type.level ?? 0) > 0 ? EpicOutline : WorkItemsOutline;
+  const Icon = (type.level ?? 0) > 0 ? EpicOutline : WorkItemsOutline;
   const background = getIconBackgroundStyle(logo);
   const backgroundStyle = background?.backgroundColor === "transparent" ? undefined : background;
   const hasEmoji = logo?.in_use === "emoji" && !!logo.emoji?.value;

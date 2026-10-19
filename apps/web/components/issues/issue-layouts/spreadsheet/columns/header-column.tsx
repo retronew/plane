@@ -27,11 +27,10 @@ interface Props {
   displayFilters: IIssueDisplayFilterOptions;
   handleDisplayFilterUpdate: (data: Partial<IIssueDisplayFilterOptions>) => void;
   onClose: () => void;
-  isEpic?: boolean;
 }
 
 export function HeaderColumn(props: Props) {
-  const { displayFilters, handleDisplayFilterUpdate, property, onClose, isEpic = false } = props;
+  const { displayFilters, handleDisplayFilterUpdate, property, onClose } = props;
   // i18n
   const { t } = useTranslation();
   // Sort bounds come from constants as English words ("Old", "Low", "A", ...)
@@ -62,9 +61,7 @@ export function HeaderColumn(props: Props) {
             <Row className="flex w-full cursor-pointer items-center justify-between gap-1.5 py-2 text-13 text-secondary hover:text-primary">
               <div className="flex items-center gap-1.5">
                 {<SpreadsheetPropertyIcon iconKey={propertyDetails.icon} className="h-4 w-4 text-placeholder" />}
-                {property === "sub_issue_count" && isEpic
-                  ? t("issue.label", { count: 2 })
-                  : t(propertyDetails.i18n_title)}
+                {t(propertyDetails.i18n_title)}
               </div>
               <div className="ml-3 flex">
                 {isSorted && (

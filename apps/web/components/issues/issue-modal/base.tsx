@@ -69,10 +69,7 @@ type TFetchModuleDetails = (workspaceSlug: string, projectId: string, moduleId: 
 const resolveIssueStoreType = (
   issueStoreFromProps: EIssuesStoreType | undefined,
   issueStoreType: EIssuesStoreType
-): EIssuesStoreType => {
-  const storeType = issueStoreFromProps ?? issueStoreType;
-  return storeType === EIssuesStoreType.EPIC ? EIssuesStoreType.PROJECT : storeType;
-};
+): EIssuesStoreType => issueStoreFromProps ?? issueStoreType;
 
 const buildComposerDraftState = (args: {
   currentUserId: string | undefined;

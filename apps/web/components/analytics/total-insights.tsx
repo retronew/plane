@@ -30,11 +30,10 @@ const targets: Record<string, string> = {
 const getInsightLabel = (
   type: TAnalyticsTabsBase,
   item: IInsightField,
-  isEpic: boolean | undefined,
   t: (key: string, params?: Record<string, unknown>) => string
 ) =>
   type === "work-items"
-    ? t(item.i18nKey, { entity: t(isEpic ? "common.epics" : "common.work_items") })
+    ? t(item.i18nKey, { entity: t("common.work_items") })
     : t(item.i18nKey, {
         ...item.i18nProps,
         entity:
@@ -52,7 +51,7 @@ const TotalInsights = observer(function TotalInsights({
   const { workspaceSlug } = useParams();
   const slug = String(workspaceSlug);
   const { t } = useTranslation();
-  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
+  const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView } = useAnalytics();
   const { data, isLoading, error, mutate } = useSWR(
     [
       "total-insights",
@@ -63,7 +62,6 @@ const TotalInsights = observer(function TotalInsights({
       selectedCycle,
       selectedModule,
       isPeekView,
-      isEpic,
     ],
     () =>
       service.getAdvanceAnalytics<IAnalyticsResponse>(
@@ -74,7 +72,6 @@ const TotalInsights = observer(function TotalInsights({
           ...(selectedProjects.length ? { project_ids: selectedProjects.join(",") } : {}),
           ...(selectedCycle ? { cycle_id: selectedCycle } : {}),
           ...(selectedModule ? { module_id: selectedModule } : {}),
-          ...(isEpic ? { epic: true } : {}),
         },
         isPeekView
       )
@@ -117,7 +114,7 @@ const TotalInsights = observer(function TotalInsights({
         )}
       >
         {fields.map((field) => {
-          const label = getInsightLabel(analyticsType, field, isEpic, t);
+          const label = getInsightLabel(analyticsType, field, t);
           if (!dashboard && isPeekView)
             return (
               <div key={field.key} className="px-2 py-1.5">

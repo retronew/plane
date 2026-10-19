@@ -16,7 +16,6 @@ vi.mock("@/hooks/store/use-analytics", () => ({
     selectedDuration: "custom:2026-09-01:2026-10-15",
     selectedCycle: "c1",
     selectedModule: "m1",
-    isEpic: true,
     isPeekView: true,
   }),
 }));
@@ -56,7 +55,6 @@ it("requests the real trend with both filters and allows toggling each legend", 
       date_filter: "custom:2026-09-01:2026-10-15",
       cycle_id: "c1",
       module_id: "m1",
-      epic: true,
     },
     true
   );

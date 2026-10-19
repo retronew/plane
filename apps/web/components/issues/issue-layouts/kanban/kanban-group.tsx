@@ -69,7 +69,6 @@ interface IKanbanGroup {
   scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   orderBy: TIssueOrderByOptions | undefined;
-  isEpic?: boolean;
 }
 
 // quick-add preload mapping: group-by key -> issue field
@@ -175,7 +174,6 @@ const QuickAddSection = observer(function QuickAddSection(props: {
   enableQuickIssueCreate?: boolean;
   disableIssueCreation?: boolean;
   quickAddCallback?: (projectId: string | null | undefined, data: TIssue) => Promise<TIssue | undefined>;
-  isEpic: boolean;
   getIsWorkflowWorkItemCreationDisabled: (groupId: string, subGroupId?: string, issueTypeId?: string | null) => boolean;
 }) {
   const projectState = useProjectState();
@@ -201,7 +199,6 @@ const QuickAddSection = observer(function QuickAddSection(props: {
             )),
         }}
         quickAddCallback={props.quickAddCallback}
-        isEpic={props.isEpic}
       />
     </div>
   );
@@ -228,7 +225,6 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
     quickAddCallback,
     scrollableContainerRef,
     handleOnDrop,
-    isEpic = false,
   } = props;
   // i18n
   const { t } = useTranslation();
@@ -372,7 +368,6 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
         dropErrorMessage={dropErrorMessage}
         orderBy={orderBy}
         isDraggingOverColumn={isDraggingOverColumn}
-        isEpic={isEpic}
       />
       <KanbanIssueBlocksList
         sub_group_id={sub_group_id}
@@ -386,7 +381,6 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
         scrollableContainerRef={scrollableContainerRef}
         canDropOverIssue={!canOverlayBeVisible}
         canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
-        isEpic={isEpic}
       />
 
       {shouldLoadMore && (
@@ -406,7 +400,6 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
         enableQuickIssueCreate={enableQuickIssueCreate}
         disableIssueCreation={disableIssueCreation}
         quickAddCallback={quickAddCallback}
-        isEpic={isEpic}
         getIsWorkflowWorkItemCreationDisabled={getIsWorkflowWorkItemCreationDisabled}
       />
     </div>

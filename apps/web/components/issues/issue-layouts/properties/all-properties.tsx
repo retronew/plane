@@ -56,7 +56,6 @@ export interface IIssueProperties {
   isReadOnly: boolean;
   className: string;
   activeLayout: string;
-  isEpic?: boolean;
 }
 
 type IssueOperations = {
@@ -180,18 +179,14 @@ function createIssueOperations(
 function SubIssuesProperty({
   displayProperties,
   subIssueCount,
-  isEpic,
   isMobile,
   onOpen,
 }: {
   displayProperties: IIssueDisplayProperties;
   subIssueCount: number;
-  isEpic: boolean;
   isMobile: boolean;
   onOpen: () => void;
 }) {
-  if (isEpic) return null;
-
   const label = translate("web.runtime.sub_items_count", { count: subIssueCount ?? 0 });
 
   return (
@@ -286,12 +281,7 @@ function isEstimateVisible(projectId: string | undefined, isEnabled: (id: string
   return Boolean(projectId && isEnabled(projectId.toString()));
 }
 
-function getWorkItemLink(
-  workspaceSlug: string | undefined,
-  issue: TIssue,
-  projectDetails: ProjectDetails,
-  isEpic: boolean
-) {
+function getWorkItemLink(workspaceSlug: string | undefined, issue: TIssue, projectDetails: ProjectDetails) {
   return generateWorkItemLink({
     workspaceSlug: workspaceSlug?.toString(),
     projectId: issue.project_id,
@@ -299,7 +289,6 @@ function getWorkItemLink(
     projectIdentifier: projectDetails?.identifier,
     sequenceId: issue.sequence_id,
     isArchived: !!issue.archived_at,
-    isEpic,
   });
 }
 
@@ -433,7 +422,6 @@ function ProjectRelationProperties({
   propertyHeight,
   pillVariant,
   isReadOnly,
-  isEpic,
   onModuleChange,
   onCycleChange,
   onEvent,
@@ -444,13 +432,10 @@ function ProjectRelationProperties({
   propertyHeight: string;
   pillVariant: "pill-md" | "pill-sm";
   isReadOnly: boolean;
-  isEpic: boolean;
   onModuleChange: (moduleIds: string[] | null) => void;
   onCycleChange: (cycleId: string | null) => void;
   onEvent: (event: SyntheticEvent<HTMLDivElement>) => void;
 }) {
-  if (isEpic) return null;
-
   return (
     <>
       {/* modules */}
@@ -532,7 +517,7 @@ function EstimateProperty({
 }
 
 export const IssueProperties = observer(function IssueProperties(props: IIssueProperties) {
-  const { issue, updateIssue, displayProperties, isReadOnly, className, activeLayout, isEpic = false } = props;
+  const { issue, updateIssue, displayProperties, isReadOnly, className, activeLayout } = props;
   const { pillVariant, avatarVariant, propertyHeight } = getLayoutMetrics(activeLayout);
   // i18n
   const { t } = useTranslation();
@@ -594,7 +579,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     [issue, issueOperations]
   );
 
-  const workItemLink = getWorkItemLink(workspaceSlug, issue, projectDetails, isEpic);
+  const workItemLink = getWorkItemLink(workspaceSlug, issue, projectDetails);
 
   const redirectToIssueDetail = () => router.push(`${workItemLink}#sub-issues`);
 
@@ -685,7 +670,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         propertyHeight={propertyHeight}
         pillVariant={pillVariant}
         isReadOnly={isReadOnly}
-        isEpic={isEpic}
         onModuleChange={handleModule}
         onCycleChange={handleCycle}
         onEvent={handleEventPropagation}
@@ -709,7 +693,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       <SubIssuesProperty
         displayProperties={displayProperties}
         subIssueCount={subIssueCount}
-        isEpic={isEpic}
         isMobile={isMobile}
         onOpen={redirectToIssueDetail}
       />

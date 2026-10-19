@@ -42,7 +42,6 @@ type Props = {
   loadMoreIssues: () => void;
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   selectionHelpers: TSelectionHelper;
-  isEpic?: boolean;
 };
 
 export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props) {
@@ -62,7 +61,6 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
     loadMoreIssues,
     spreadsheetColumnsList,
     selectionHelpers,
-    isEpic = false,
   } = props;
 
   const tableRef = useRef<HTMLTableElement | null>(null);
@@ -167,7 +165,6 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
       isScrolled={isScrolled}
       spreadsheetColumnsList={spreadsheetColumnsList}
       selectionHelpers={selectionHelpers}
-      isEpic={isEpic}
       virtualized={virtualized}
     />
   );
@@ -204,7 +201,6 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
           isEstimateEnabled={isEstimateEnabled}
           spreadsheetColumnsList={spreadsheetColumnsList}
           selectionHelpers={selectionHelpers}
-          isEpic={isEpic}
         />
         {virtualized ? (
           <>

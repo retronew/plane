@@ -70,8 +70,8 @@ export const RelationIssueListItem = observer(function RelationIssueListItem(pro
   const { isMobile } = usePlatformOS();
   // derived values
   const issue = getIssueById(relationIssueId);
-  const { handleRedirection } = useIssuePeekOverviewRedirection(!!issue?.is_epic);
-  const issueOperations = useRelationOperations(issue?.is_epic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+  const { handleRedirection } = useIssuePeekOverviewRedirection();
+  const issueOperations = useRelationOperations(EIssueServiceType.ISSUES);
   const projectDetail = (issue && issue.project_id && project.getProjectById(issue.project_id)) || undefined;
   const projectId = issue?.project_id;
 
@@ -83,16 +83,10 @@ export const RelationIssueListItem = observer(function RelationIssueListItem(pro
     issueId: issue?.id,
     projectIdentifier: projectDetail?.identifier,
     sequenceId: issue?.sequence_id,
-    isEpic: issue?.is_epic,
   });
 
   // handlers
   const handleIssuePeekOverview = (targetIssue: TIssue) => {
-    if (targetIssue.is_epic) {
-      // open epics in new tab
-      window.open(workItemLink, "_blank", "noopener");
-      return;
-    }
     handleRedirection(workspaceSlug, targetIssue, isMobile);
   };
 

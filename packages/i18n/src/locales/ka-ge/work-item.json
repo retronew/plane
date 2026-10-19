@@ -412,21 +412,5 @@
         "suffix": "? All of the data related to the recurring work item will be permanently removed. This action cannot be undone."
       }
     }
-  },
-  "epic": {
-    "new": "ახალი ეპიკი",
-    "label": "{count, plural, one {ეპიკი} other {ეპიკები}}",
-    "adding": "ეპიკის დამატება",
-    "create": {
-      "success": "ეპიკი წარმატებით შეიქმნა"
-    },
-    "add": {
-      "label": "ეპიკის დამატება",
-      "press_enter": "დააჭირეთ 'Enter'-ს სხვა ეპიკის დასამატებლად"
-    },
-    "title": {
-      "label": "ეპიკის სათაური",
-      "required": "ეპიკის სათაური სავალდებულოა."
-    }
   }
 }

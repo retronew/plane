@@ -64,7 +64,6 @@ export interface IKanBan {
   handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   showEmptyGroup?: boolean;
   subGroupIndex?: number;
-  isEpic?: boolean;
 }
 
 export const KanBan = observer(function KanBan(props: IKanBan) {
@@ -91,7 +90,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
     isDropDisabled,
     dropErrorMessage,
     subGroupIndex = 0,
-    isEpic = false,
   } = props;
   // i18n
   // store hooks
@@ -106,7 +104,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
     groupBy: group_by as GroupByColumnTypes,
     includeNone: true,
     isWorkspaceLevel: isWorkspaceLevel(storeType),
-    isEpic: isEpic,
   });
 
   if (!list) return null;
@@ -151,7 +148,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                       getIsWorkflowWorkItemCreationDisabled(subList.id, sub_group_id)
                     }
                     addIssuesToView={addIssuesToView}
-                    isEpic={isEpic}
                   />
                 </div>
               )}
@@ -194,7 +190,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                   scrollableContainerRef={scrollableContainerRef}
                   loadMoreIssues={loadMoreIssues}
                   handleOnDrop={handleOnDrop}
-                  isEpic={isEpic}
                 />
               </RenderIfVisible>
             </div>

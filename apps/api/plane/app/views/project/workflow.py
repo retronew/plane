@@ -194,7 +194,6 @@ class WorkflowBaseView(BaseAPIView):
                 "is_default": b.is_default,
                 "is_active": b.issue_type.is_active,
                 "level": b.level,
-                "is_epic": b.issue_type.is_epic,
                 "properties_count": sum(active for _, active, _ in effective_properties(project.pk, b.issue_type_id)),
                 "workflow_id": b.workflow_id,
             }
@@ -714,7 +713,6 @@ class ProjectIssueTypeEndpoint(WorkflowBaseView):
             workspace_id=project.workspace_id,
             name=name,
             level=level,
-            is_epic=False,
             description=serializers.CharField(allow_blank=True).run_validation(request.data.get("description", "")),
             logo_props=serializers.JSONField().run_validation(request.data.get("logo_props", {})),
         )

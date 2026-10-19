@@ -80,7 +80,7 @@ it("locks duplicate submits synchronously and closes exactly once on success", a
   expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
 });
 
-it.each(["reopen", "entity", "project", "kind", "unmount"])("ignores an old response after %s", async (change) => {
+it.each(["reopen", "entity", "project", "unmount"])("ignores an old response after %s", async (change) => {
   const request = deferred();
   const props = { isOpen: true, data, onSubmit: vi.fn(() => request.promise), handleClose: vi.fn() };
   const view = render(<DeleteIssueModal {...props} />);
@@ -100,7 +100,6 @@ it.each(["reopen", "entity", "project", "kind", "unmount"])("ignores an old resp
             project_id: change === "project" ? "other" : "project",
           } as Props["data"]
         }
-        isEpic={change === "kind"}
       />
     );
   await act(async () => request.resolve());

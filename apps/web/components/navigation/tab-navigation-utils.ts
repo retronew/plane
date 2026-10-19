@@ -73,7 +73,6 @@ export const getTabUrl = (workspaceSlug: string, projectId: string, tabKey: stri
     pages: `${baseUrl}/pages`,
     intake: `${baseUrl}/intake`,
     overview: `${baseUrl}/overview`,
-    epics: `${baseUrl}/epics`,
   };
   return tabUrlMap[tabKey] || `${baseUrl}/issues`; // fallback to issues
 };

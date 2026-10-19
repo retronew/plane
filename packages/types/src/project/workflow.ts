@@ -55,7 +55,6 @@ export type TProjectIssueType = {
   description?: string;
   logo_props?: Record<string, unknown>;
   level?: number;
-  is_epic?: boolean;
   properties_count?: number;
   is_default: boolean;
   is_active: boolean;

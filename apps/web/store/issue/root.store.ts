@@ -66,7 +66,6 @@ export interface IIssueRootStore {
   issues: IIssueStore;
 
   issueDetail: IIssueDetail;
-  epicDetail: IIssueDetail;
 
   workspaceIssuesFilter: IWorkspaceIssuesFilter;
   workspaceIssues: IWorkspaceIssues;
@@ -103,9 +102,6 @@ export interface IIssueRootStore {
 
   issueKanBanView: IIssueKanBanViewStore;
   issueCalendarView: ICalendarStore;
-
-  projectEpicsFilter: IProjectIssuesFilter;
-  projectEpics: IProjectIssues;
 }
 
 export class IssueRootStore implements IIssueRootStore {
@@ -134,7 +130,6 @@ export class IssueRootStore implements IIssueRootStore {
   issues: IIssueStore;
 
   issueDetail: IIssueDetail;
-  epicDetail: IIssueDetail;
 
   workspaceIssuesFilter: IWorkspaceIssuesFilter;
   workspaceIssues: IWorkspaceIssues;
@@ -171,9 +166,6 @@ export class IssueRootStore implements IIssueRootStore {
 
   issueKanBanView: IIssueKanBanViewStore;
   issueCalendarView: ICalendarStore;
-
-  projectEpicsFilter: IProjectIssuesFilter;
-  projectEpics: IProjectIssues;
 
   constructor(rootStore: RootStore, serviceType: TIssueServiceType = EIssueServiceType.ISSUES) {
     makeObservable(this, {
@@ -225,7 +217,6 @@ export class IssueRootStore implements IIssueRootStore {
     this.issues = new IssueStore();
 
     this.issueDetail = new IssueDetail(this, EIssueServiceType.ISSUES);
-    this.epicDetail = new IssueDetail(this, EIssueServiceType.EPICS);
 
     this.workspaceIssuesFilter = new WorkspaceIssuesFilter(this);
     this.workspaceIssues = new WorkspaceIssues(this, this.workspaceIssuesFilter);
@@ -262,8 +253,5 @@ export class IssueRootStore implements IIssueRootStore {
 
     this.issueKanBanView = new IssueKanBanViewStore(this);
     this.issueCalendarView = new CalendarStore(this);
-
-    this.projectEpicsFilter = new ProjectIssuesFilter(this);
-    this.projectEpics = new ProjectIssues(this, this.projectEpicsFilter);
   }
 }

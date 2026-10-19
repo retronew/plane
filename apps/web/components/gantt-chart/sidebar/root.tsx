@@ -30,7 +30,6 @@ type Props = {
   title: string;
   selectionHelpers: TSelectionHelper;
   showAllBlocks?: boolean;
-  isEpic?: boolean;
 };
 
 export const GanttChartSidebar = observer(function GanttChartSidebar(props: Props) {
@@ -47,7 +46,6 @@ export const GanttChartSidebar = observer(function GanttChartSidebar(props: Prop
     title,
     selectionHelpers,
     showAllBlocks = false,
-    isEpic = false,
   } = props;
 
   const isGroupSelectionEmpty = selectionHelpers.isGroupSelected(GANTT_SELECT_GROUP) === "empty";
@@ -101,7 +99,6 @@ export const GanttChartSidebar = observer(function GanttChartSidebar(props: Prop
             loadMoreBlocks,
             selectionHelpers,
             showAllBlocks,
-            isEpic,
           })}
       </Row>
     </Row>

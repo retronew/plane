@@ -44,7 +44,6 @@ type ChartViewRootProps = {
   canLoadMoreBlocks?: boolean;
   quickAdd?: React.ReactNode | undefined;
   showToday: boolean;
-  isEpic?: boolean;
 };
 
 const timelineViewHelpers = {
@@ -100,7 +99,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
     quickAdd,
     showToday,
     updateBlockDates,
-    isEpic = false,
   } = props;
   // states
   const [itemsContainerWidth, setItemsContainerWidth] = useState(0);
@@ -232,7 +230,6 @@ export const ChartViewRoot = observer(function ChartViewRoot(props: ChartViewRoo
         updateCurrentViewRenderPayload={updateCurrentViewRenderPayload}
         quickAdd={quickAdd}
         updateBlockDates={updateBlockDates}
-        isEpic={isEpic}
       />
     </div>
   );

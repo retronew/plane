@@ -9,10 +9,9 @@ type Props = {
   displayProperties: IIssueDisplayProperties;
   properties: (keyof IIssueDisplayProperties)[];
   onChange: (data: Partial<IIssueDisplayProperties>) => void;
-  isEpic?: boolean;
 };
 
-export function SpreadsheetPropertiesMenu({ displayProperties, properties, onChange, isEpic }: Props) {
+export function SpreadsheetPropertiesMenu({ displayProperties, properties, onChange }: Props) {
   const { t } = useTranslation();
   const label = t("issue.display.properties.label");
   return (
@@ -41,7 +40,6 @@ export function SpreadsheetPropertiesMenu({ displayProperties, properties, onCha
             display_filters: {},
             extra_options: { access: false, values: [] },
           }}
-          isEpic={isEpic}
         />
       </MenuContent>
     </Menu>
