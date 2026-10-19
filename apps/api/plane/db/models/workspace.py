@@ -15,6 +15,7 @@ from django.db import models
 from .base import BaseModel
 from plane.utils.constants import RESTRICTED_WORKSPACE_SLUGS
 from plane.utils.color import get_random_color
+from plane.utils.server_timezone import get_default_timezone
 
 ROLE_CHOICES = ((20, "Admin"), (15, "Member"), (5, "Guest"))
 
@@ -134,7 +135,7 @@ class Workspace(BaseModel):
         related_name="owner_workspace",
     )
     slug = models.SlugField(max_length=48, db_index=True, unique=True, validators=[slug_validator])
-    timezone = models.CharField(max_length=255, default="UTC", choices=TIMEZONE_CHOICES)
+    timezone = models.CharField(max_length=255, default=get_default_timezone, choices=TIMEZONE_CHOICES)
     project_states_enabled = models.BooleanField(default=False)
     allow_member_project_creation = models.BooleanField(default=True)
     ai_enabled = models.BooleanField(default=True)

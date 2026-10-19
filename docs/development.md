@@ -111,6 +111,12 @@ pnpm turbo run check:types --filter=web
 
 若需在宿主机运行后端工具，安装 Python 3.12 与精确版本 uv 后，在 `apps/api` 运行 `uv sync`，使用 `uv run python manage.py ...` 或 `uv run ruff check .`。容器内依赖安装必须使用 `uv sync --locked --inexact`，避免移除系统 Python 的 pip。
 
+### 新建工作区的默认时区
+
+新建工作区省略 `timezone` 时，后端在启动时依次读取 `TZ` 环境变量、`/etc/timezone`、`/etc/localtime` 指向的 zoneinfo 路径，使用有效的 IANA 时区（例如 `Asia/Shanghai`）；无法识别时回退 `UTC`。新项目继续继承所属工作区的时区，显式指定的时区优先。已有工作区和项目不会被自动修改；用户个人时区仍由浏览器首次检测和个人偏好控制。
+
+Docker 容器不会自动继承宿主机时区。本地开发可在 `apps/api/.env` 设置 `TZ=Asia/Shanghai`，然后重建 API 容器；生产部署应在 API、worker、Beat 和 migrator 的环境中传入相同的 `TZ`，或挂载系统时区文件。此默认值与 Django/Celery 的 UTC 存储及调度配置分开，修改 `TZ` 不会更改 `TIME_ZONE` 或 `CELERY_TIMEZONE`。
+
 ## 隔离 API 测试
 
 API 测试使用 `docker-compose-test.yml` 的独立临时栈，日常更新和迁移仍使用 local 栈。测试整栈统一使用 **`-p plane-test`**，避免干扰开发 Runner。
