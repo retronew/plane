@@ -27,6 +27,16 @@ type Props = {
   mode?: IPeekMode;
 };
 
+const PRIORITY_CLASSES: Record<string, string> = {
+  urgent: "border-priority-urgent text-priority-urgent",
+  high: "border-priority-high text-priority-high",
+  medium: "border-priority-medium text-priority-medium",
+  low: "border-priority-low text-priority-low",
+};
+
+const getPriorityClass = (key: string | undefined): string =>
+  (key && PRIORITY_CLASSES[key]) || "border-priority-none text-priority-none";
+
 export const PeekOverviewIssueProperties = observer(function PeekOverviewIssueProperties({
   issueDetails,
   mode,
@@ -88,17 +98,9 @@ export const PeekOverviewIssueProperties = observer(function PeekOverviewIssuePr
           </div>
           <div className="w-3/4">
             <div
-              className={`inline-flex items-center gap-1.5 rounded-sm bg-layer-2 px-2.5 py-0.5 text-left text-13 capitalize ${
-                priority?.key === "urgent"
-                  ? "border-priority-urgent text-priority-urgent"
-                  : priority?.key === "high"
-                    ? "border-priority-high text-priority-high"
-                    : priority?.key === "medium"
-                      ? "border-priority-medium text-priority-medium"
-                      : priority?.key === "low"
-                        ? "border-priority-low text-priority-low"
-                        : "border-priority-none text-priority-none"
-              }`}
+              className={`inline-flex items-center gap-1.5 rounded-sm bg-layer-2 px-2.5 py-0.5 text-left text-13 capitalize ${getPriorityClass(
+                priority?.key
+              )}`}
             >
               {priority && <PriorityIcon priority={priority?.key} className="size-3" />}
               <span>{t(priority?.titleTranslationKey || "common.none")}</span>

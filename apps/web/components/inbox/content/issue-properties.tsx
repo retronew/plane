@@ -41,6 +41,83 @@ type Props = {
   isIntakeAccepted: boolean;
 };
 
+const getOpacityClass = (isEditable: boolean) => (!isEditable ? "opacity-60" : "");
+
+type IntakeStatePropertyProps = {
+  workspaceSlug: string;
+  projectId: string;
+  issue: Partial<TIssue>;
+  isIntakeAccepted: boolean;
+};
+
+function IntakeStateProperty({ workspaceSlug, projectId, issue, isIntakeAccepted }: IntakeStatePropertyProps) {
+  if (!issue?.state_id) return null;
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center">
+      {isIntakeAccepted ? (
+        <StateSelect
+          issueTypeId={issue.type_id}
+          value={issue.state_id}
+          onChange={() => {}}
+          projectId={projectId}
+          disabled
+          variant="select-ghost-md"
+        />
+      ) : (
+        <IntakeStateSelect
+          workspaceSlug={workspaceSlug}
+          value={issue.state_id}
+          onChange={() => {}}
+          projectId={projectId}
+          disabled
+          variant="select-ghost-md"
+        />
+      )}
+    </div>
+  );
+}
+
+type DuplicateOfWorkItemProps = {
+  duplicateIssueDetails: TInboxDuplicateIssueDetails | undefined;
+  duplicateWorkItemLink: string;
+  projectIdentifier: string | undefined;
+  label: string;
+  onNavigate: () => void;
+};
+
+function DuplicateOfWorkItem({
+  duplicateIssueDetails,
+  duplicateWorkItemLink,
+  projectIdentifier,
+  label,
+  onNavigate,
+}: DuplicateOfWorkItemProps) {
+  if (!duplicateIssueDetails) return null;
+
+  return (
+    <div className="flex min-h-8 items-center gap-2">
+      <div className="flex w-2/5 flex-shrink-0 items-center gap-1 text-13 text-tertiary">
+        <DuplicateOfOutline className="h-4 w-4 flex-shrink-0" />
+        <span>{label}</span>
+      </div>
+
+      <ControlLink
+        href={duplicateWorkItemLink}
+        onClick={onNavigate}
+        target="_self"
+        className="flex min-w-0 flex-1 items-center"
+      >
+        <Tooltip label={duplicateIssueDetails?.name ?? ""} layout="stacked">
+          <span className="inline-flex max-w-full cursor-pointer items-center gap-1 truncate rounded-sm bg-layer-1 px-1.5 py-1 text-11 text-secondary">
+            {`${projectIdentifier}-${duplicateIssueDetails?.sequence_id}`}
+          </span>
+        </Tooltip>
+      </ControlLink>
+    </div>
+  );
+}
+
 export const InboxIssueContentProperties = observer(function InboxIssueContentProperties(props: Props) {
   const { workspaceSlug, projectId, issue, issueOperations, isEditable, duplicateIssueDetails, isIntakeAccepted } =
     props;
@@ -67,7 +144,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
     <div className="flex w-full flex-col">
       <div className="w-full overflow-y-auto">
         <h5 className="mb-2 text-body-sm-medium">{t("web.properties")}</h5>
-        <div className={!isEditable ? "opacity-60" : ""}>
+        <div className={getOpacityClass(isEditable)}>
           <div className="flex flex-col gap-3">
             {/* Intake State */}
             <div className="flex min-h-8 items-center gap-2">
@@ -75,29 +152,12 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
                 <StateOutline className="h-4 w-4 flex-shrink-0" />
                 <span>{t("web.state")}</span>
               </div>
-              {issue?.state_id && (
-                <div className="flex min-w-0 flex-1 items-center">
-                  {isIntakeAccepted ? (
-                    <StateSelect
-                      issueTypeId={issue.type_id}
-                      value={issue.state_id}
-                      onChange={() => {}}
-                      projectId={projectId}
-                      disabled
-                      variant="select-ghost-md"
-                    />
-                  ) : (
-                    <IntakeStateSelect
-                      workspaceSlug={workspaceSlug}
-                      value={issue.state_id}
-                      onChange={() => {}}
-                      projectId={projectId}
-                      disabled
-                      variant="select-ghost-md"
-                    />
-                  )}
-                </div>
-              )}
+              <IntakeStateProperty
+                workspaceSlug={workspaceSlug}
+                projectId={projectId}
+                issue={issue}
+                isIntakeAccepted={isIntakeAccepted}
+              />
             </div>
             {/* Assignee */}
             <div className="flex min-h-8 items-center gap-2">
@@ -141,7 +201,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
             </div>
           </div>
         </div>
-        <div className={`mt-3 ${!isEditable ? "opacity-60" : ""}`}>
+        <div className={`mt-3 ${getOpacityClass(isEditable)}`}>
           <div className="flex flex-col gap-3">
             {/* Due Date */}
             <div className="flex min-h-8 items-center gap-2">
@@ -191,29 +251,15 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
             </div>
 
             {/* duplicate to*/}
-            {duplicateIssueDetails && (
-              <div className="flex min-h-8 items-center gap-2">
-                <div className="flex w-2/5 flex-shrink-0 items-center gap-1 text-13 text-tertiary">
-                  <DuplicateOfOutline className="h-4 w-4 flex-shrink-0" />
-                  <span>{t("web.duplicate_of")}</span>
-                </div>
-
-                <ControlLink
-                  href={duplicateWorkItemLink}
-                  onClick={() => {
-                    router.push(duplicateWorkItemLink);
-                  }}
-                  target="_self"
-                  className="flex min-w-0 flex-1 items-center"
-                >
-                  <Tooltip label={duplicateIssueDetails?.name ?? ""} layout="stacked">
-                    <span className="inline-flex max-w-full cursor-pointer items-center gap-1 truncate rounded-sm bg-layer-1 px-1.5 py-1 text-11 text-secondary">
-                      {`${currentProjectDetails?.identifier}-${duplicateIssueDetails?.sequence_id}`}
-                    </span>
-                  </Tooltip>
-                </ControlLink>
-              </div>
-            )}
+            <DuplicateOfWorkItem
+              duplicateIssueDetails={duplicateIssueDetails}
+              duplicateWorkItemLink={duplicateWorkItemLink}
+              projectIdentifier={currentProjectDetails?.identifier}
+              label={t("web.duplicate_of")}
+              onNavigate={() => {
+                router.push(duplicateWorkItemLink);
+              }}
+            />
           </div>
         </div>
       </div>

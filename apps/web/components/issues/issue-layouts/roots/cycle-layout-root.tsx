@@ -50,6 +50,21 @@ function CycleIssueLayout(props: {
   }
 }
 
+// The status/progress derivations are pure, so they live outside the component.
+function getCycleDerivedState(cycleDetails: ReturnType<ReturnType<typeof useCycle>["getCycleById"]> | undefined) {
+  const cycleStatus = cycleDetails?.status?.toLocaleLowerCase() ?? "draft";
+  const isProgressSnapshotEmpty = isEmpty(cycleDetails?.progress_snapshot);
+  const transferableIssuesCount = cycleDetails
+    ? cycleDetails.backlog_issues + cycleDetails.unstarted_issues + cycleDetails.started_issues
+    : 0;
+  return {
+    cycleStatus,
+    isCompletedCycle: cycleStatus === "completed",
+    canTransferIssues: isProgressSnapshotEmpty && transferableIssuesCount > 0,
+    hasProgressSnapshot: !isProgressSnapshotEmpty,
+  };
+}
+
 export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
   const { workspaceSlug: routerWorkspaceSlug, projectId: routerProjectId, cycleId: routerCycleId } = useParams();
   const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug.toString() : undefined;
@@ -75,13 +90,7 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
   );
 
   const cycleDetails = cycleId ? getCycleById(cycleId) : undefined;
-  const cycleStatus = cycleDetails?.status?.toLocaleLowerCase() ?? "draft";
-  const isCompletedCycle = cycleStatus === "completed";
-  const isProgressSnapshotEmpty = isEmpty(cycleDetails?.progress_snapshot);
-  const transferableIssuesCount = cycleDetails
-    ? cycleDetails.backlog_issues + cycleDetails.unstarted_issues + cycleDetails.started_issues
-    : 0;
-  const canTransferIssues = isProgressSnapshotEmpty && transferableIssuesCount > 0;
+  const { cycleStatus, isCompletedCycle, canTransferIssues, hasProgressSnapshot } = getCycleDerivedState(cycleDetails);
 
   if (!workspaceSlug || !projectId || !cycleId || !workItemFilters) return <></>;
   return (
@@ -108,7 +117,7 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
                 <TransferIssues
                   handleClick={() => setTransferIssuesModal(true)}
                   canTransferIssues={canTransferIssues}
-                  disabled={!isEmpty(cycleDetails?.progress_snapshot)}
+                  disabled={hasProgressSnapshot}
                 />
               )}
               {cycleWorkItemsFilter && <WorkItemFiltersRow filter={cycleWorkItemsFilter} />}

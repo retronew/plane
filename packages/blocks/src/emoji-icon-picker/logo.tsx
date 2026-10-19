@@ -23,6 +23,72 @@ export type LogoProps = {
   type?: "lucide" | "material";
 };
 
+type RenderIconLogoProps = {
+  logo: LogoType;
+  size: number;
+  background: boolean;
+  type: "lucide" | "material";
+  value: string;
+  isMaterialSymbolsFontLoaded: boolean;
+  loadingSkeleton: ReactNode;
+};
+
+function renderIconLogo({
+  logo,
+  size,
+  background,
+  type,
+  value,
+  isMaterialSymbolsFontLoaded,
+  loadingSkeleton,
+}: RenderIconLogoProps) {
+  const color = logo.icon?.color;
+  const backgroundStyle = background ? getIconBackgroundStyle(logo) : undefined;
+  const hasBackground = backgroundStyle && backgroundStyle.backgroundColor !== "transparent";
+  const glyphSize = hasBackground ? size * 0.82 : size;
+  const frame = (glyph: ReactNode) => (
+    <span
+      data-logo-icon=""
+      className="inline-flex shrink-0 items-center justify-center"
+      style={{ ...backgroundStyle, width: size, height: size, borderRadius: Math.max(3, size * 0.2) }}
+    >
+      {glyph}
+    </span>
+  );
+
+  // Lucide icon
+  if (type === "lucide") {
+    const lucideIcon = LUCIDE_ICONS_LIST.find((item) => item.name === value);
+    if (!lucideIcon) return null;
+
+    const LucideIconElement = lucideIcon.element;
+    return frame(<LucideIconElement style={{ color, height: glyphSize, width: glyphSize }} />);
+  }
+
+  if (!isMaterialSymbolsFontLoaded) return loadingSkeleton;
+
+  // Material icon
+  return frame(
+    <span
+      className="material-symbols-rounded"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        flexShrink: 0,
+        lineHeight: 1,
+        fontSize: glyphSize,
+        color,
+        scale: hasBackground ? undefined : "115%",
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
 export function Logo({ logo, size = 16, background = true, type = "material" }: LogoProps) {
   const isMaterialSymbolsFontLoaded = useFontFaceObserver([
     {
@@ -63,51 +129,15 @@ export function Logo({ logo, size = 16, background = true, type = "material" }: 
 
   // Icon rendering
   if (in_use === "icon") {
-    const color = icon?.color;
-    const backgroundStyle = background ? getIconBackgroundStyle(logo) : undefined;
-    const hasBackground = backgroundStyle && backgroundStyle.backgroundColor !== "transparent";
-    const glyphSize = hasBackground ? size * 0.82 : size;
-    const frame = (glyph: ReactNode) => (
-      <span
-        data-logo-icon=""
-        className="inline-flex shrink-0 items-center justify-center"
-        style={{ ...backgroundStyle, width: size, height: size, borderRadius: Math.max(3, size * 0.2) }}
-      >
-        {glyph}
-      </span>
-    );
-
-    // Lucide icon
-    if (type === "lucide") {
-      const lucideIcon = LUCIDE_ICONS_LIST.find((item) => item.name === value);
-      if (!lucideIcon) return null;
-
-      const LucideIconElement = lucideIcon.element;
-      return frame(<LucideIconElement style={{ color, height: glyphSize, width: glyphSize }} />);
-    }
-
-    if (!isMaterialSymbolsFontLoaded) return loadingSkeleton;
-
-    // Material icon
-    return frame(
-      <span
-        className="material-symbols-rounded"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: size,
-          height: size,
-          flexShrink: 0,
-          lineHeight: 1,
-          fontSize: glyphSize,
-          color,
-          scale: hasBackground ? undefined : "115%",
-        }}
-      >
-        {value}
-      </span>
-    );
+    return renderIconLogo({
+      logo,
+      size,
+      background,
+      type,
+      value,
+      isMaterialSymbolsFontLoaded,
+      loadingSkeleton,
+    });
   }
 
   return null;

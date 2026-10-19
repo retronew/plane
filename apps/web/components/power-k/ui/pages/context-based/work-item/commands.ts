@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Signal, TicketCheck, Triangle } from "lucide-react";
 import {
@@ -75,9 +75,22 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
   // translation
   const { t } = useTranslation();
   // handlers
-  const updateEntity = isEpic ? updateEpic : updateIssue;
-  const createEntitySubscription = isEpic ? createEpicSubscription : createSubscription;
-  const removeEntitySubscription = isEpic ? removeEpicSubscription : removeSubscription;
+  // One memoised choice instead of three ternaries; the references stay stable for the callbacks.
+  const entityApi = useMemo(
+    () =>
+      isEpic
+        ? { update: updateEpic, subscribe: createEpicSubscription, unsubscribe: removeEpicSubscription }
+        : { update: updateIssue, subscribe: createSubscription, unsubscribe: removeSubscription },
+    [
+      isEpic,
+      updateEpic,
+      createEpicSubscription,
+      removeEpicSubscription,
+      updateIssue,
+      createSubscription,
+      removeSubscription,
+    ]
+  );
   // permission
   const isEditingAllowed =
     allowPermissions(
@@ -90,15 +103,17 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
   const handleUpdateEntity = useCallback(
     async (formData: Partial<TIssue>) => {
       if (!workspaceSlug || !entityDetails || !entityDetails.project_id) return;
-      await updateEntity(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id, formData).catch(() => {
-        setToast({
-          type: "error",
-          title: t("toast.error"),
-          message: translate("web.runtime.update_entity_failed", { type: isEpic ? "epic" : "issue" }),
+      await entityApi
+        .update(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id, formData)
+        .catch(() => {
+          setToast({
+            type: "error",
+            title: t("toast.error"),
+            message: translate("web.runtime.update_entity_failed", { type: isEpic ? "epic" : "issue" }),
+          });
         });
-      });
     },
-    [entityDetails, isEpic, updateEntity, workspaceSlug, t]
+    [entityDetails, entityApi, isEpic, workspaceSlug, t]
   );
 
   const handleUpdateAssignee = useCallback(
@@ -119,9 +134,9 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
 
     try {
       if (isSubscribed) {
-        await removeEntitySubscription(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id);
+        await entityApi.unsubscribe(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id);
       } else {
-        await createEntitySubscription(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id);
+        await entityApi.subscribe(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id);
       }
       setToast({
         type: "success",
@@ -138,7 +153,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createEntitySubscription, entityDetails, isSubscribed, removeEntitySubscription, workspaceSlug]);
+  }, [entityApi, entityDetails, isSubscribed, workspaceSlug]);
 
   const handleDeleteWorkItem = useCallback(() => {
     toggleDeleteIssueModal(true);

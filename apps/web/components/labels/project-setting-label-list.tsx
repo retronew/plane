@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import {
@@ -40,6 +40,82 @@ import { DeleteLabelModal } from "./delete-label-modal";
 import { getSortedLabelPayload, ROOT_LABEL_GROUP } from "./sort-label";
 
 type Draft = { label: IIssueLabel | null; colorOpen: boolean };
+
+function LabelDraftForm({
+  draft,
+  onSubmit,
+  onCancel,
+}: {
+  draft: Draft;
+  onSubmit: (data: Partial<IState>) => Promise<{ status: string }>;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <StateForm
+      key={draft.label?.id ?? "new"}
+      kind="label"
+      focusNameOnOpen={!draft.label}
+      colorPickerInitiallyOpen={draft.colorOpen}
+      data={{ name: draft.label?.name ?? "", color: draft.label?.color ?? "#60646c" }}
+      onSubmit={onSubmit}
+      onCancel={onCancel}
+      buttonDisabled={false}
+      buttonTitle={t(draft.label ? "update" : "add")}
+    />
+  );
+}
+
+function LabelListContent({
+  projectLabels,
+  entries,
+  draft,
+  editor,
+  isEditable,
+  busy,
+  saveOrder,
+  children,
+}: {
+  projectLabels: IIssueLabel[] | undefined;
+  entries: IIssueLabel[];
+  draft: Draft | null;
+  editor: ReactNode;
+  isEditable: boolean;
+  busy: boolean;
+  saveOrder: (change: SortableChange) => Promise<void>;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+
+  if (!projectLabels)
+    return (
+      <Loader className="space-y-3">
+        <Loader.Item height="56px" />
+        <Loader.Item height="56px" />
+      </Loader>
+    );
+  if (!entries.length && !draft)
+    return (
+      <EmptyStateCompact
+        assetKey="label"
+        assetClassName="size-20"
+        title={t("settings_empty_state.labels.title")}
+        description={t("settings_empty_state.labels.description")}
+        align="center"
+        rootClassName="min-h-72 rounded-lg border border-subtle px-6 py-12"
+      />
+    );
+  return (
+    <div className="rounded-xl border border-subtle bg-layer-2 px-1.5 py-0.5">
+      {draft && !draft.label && <div className="pl-4">{editor}</div>}
+      <SortableProvider disabled={!isEditable || busy} onSortEnd={saveOrder}>
+        {children}
+      </SortableProvider>
+    </div>
+  );
+}
+
 export const ProjectSettingsLabelList = observer(function ProjectSettingsLabelList() {
   const { workspaceSlug, projectId } = useParams();
   const { t } = useTranslation();
@@ -86,19 +162,7 @@ export const ProjectSettingsLabelList = observer(function ProjectSettingsLabelLi
       return { status: "error" };
     }
   };
-  const editor = draft && (
-    <StateForm
-      key={draft.label?.id ?? "new"}
-      kind="label"
-      focusNameOnOpen={!draft.label}
-      colorPickerInitiallyOpen={draft.colorOpen}
-      data={{ name: draft.label?.name ?? "", color: draft.label?.color ?? "#60646c" }}
-      onSubmit={save}
-      onCancel={() => setDraft(null)}
-      buttonDisabled={false}
-      buttonTitle={t(draft.label ? "update" : "add")}
-    />
-  );
+  const editor = draft && <LabelDraftForm draft={draft} onSubmit={save} onCancel={() => setDraft(null)} />;
   const renderRows = (siblings: IIssueLabel[], parent: string | null) =>
     siblings.map((label, index) => {
       const children = entries.filter((entry) => entry.parent === label.id);
@@ -258,31 +322,20 @@ export const ProjectSettingsLabelList = observer(function ProjectSettingsLabelLi
         }
       />
       <div className="mt-6 w-full">
-        {!projectLabels ? (
-          <Loader className="space-y-3">
-            <Loader.Item height="56px" />
-            <Loader.Item height="56px" />
-          </Loader>
-        ) : !entries.length && !draft ? (
-          <EmptyStateCompact
-            assetKey="label"
-            assetClassName="size-20"
-            title={t("settings_empty_state.labels.title")}
-            description={t("settings_empty_state.labels.description")}
-            align="center"
-            rootClassName="min-h-72 rounded-lg border border-subtle px-6 py-12"
-          />
-        ) : (
-          <div className="rounded-xl border border-subtle bg-layer-2 px-1.5 py-0.5">
-            {draft && !draft.label && <div className="pl-4">{editor}</div>}
-            <SortableProvider disabled={!isEditable || busy} onSortEnd={saveOrder}>
-              {renderRows(
-                entries.filter((entry) => !entry.parent || !entries.some((candidate) => candidate.id === entry.parent)),
-                null
-              )}
-            </SortableProvider>
-          </div>
-        )}
+        <LabelListContent
+          projectLabels={projectLabels}
+          entries={entries}
+          draft={draft}
+          editor={editor}
+          isEditable={isEditable}
+          busy={busy}
+          saveOrder={saveOrder}
+        >
+          {renderRows(
+            entries.filter((entry) => !entry.parent || !entries.some((candidate) => candidate.id === entry.parent)),
+            null
+          )}
+        </LabelListContent>
       </div>
     </>
   );

@@ -5,11 +5,206 @@ import { Check, ShieldCheck, X } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
+import type { TProjectWorkflow, TWorkflowApproval, TWorkflowTransition } from "@plane/types";
 import { getDateTimeFormatter } from "@plane/utils";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
 import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
+
+function hasApprovalSource(workflow: TProjectWorkflow | undefined, issueStateId?: string | null) {
+  return !!(
+    workflow?.enabled &&
+    workflow.is_active &&
+    workflow.transitions.some((rule) => rule.kind === "approval" && rule.source_id === issueStateId)
+  );
+}
+
+function shouldRenderApproval(pending: TWorkflowApproval | null | undefined, resultCount: number, hasSource: boolean) {
+  return !!pending || resultCount > 0 || hasSource;
+}
+
+function ApprovalLoadError({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="rounded-lg border border-subtle p-3">
+      <p className="text-body-xs-regular text-secondary">{t("web.workflow_ui.approval_load_failed")}</p>
+      <Button stretch="auto" variant="ghost" size="sm" label={t("common.retry")} onClick={onRetry} />
+    </div>
+  );
+}
+
+function ApprovalHeading({ pending }: { pending: boolean }) {
+  const { t } = useTranslation();
+
+  return (
+    <h4 className="flex items-center gap-2 text-body-sm-medium text-primary">
+      <ShieldCheck className="size-4" />
+      {t(pending ? "web.workflow_ui.pending_approval" : "web.workflow_ui.approval_history")}
+    </h4>
+  );
+}
+
+function ApprovalBranch({
+  branch,
+  workflow,
+  canDecide,
+  busy,
+  disabled,
+  currentUserId,
+  onDecide,
+}: {
+  branch: TWorkflowTransition;
+  workflow: TProjectWorkflow | undefined;
+  canDecide: boolean;
+  busy: boolean;
+  disabled: boolean;
+  currentUserId?: string;
+  onDecide: (transitionId: string, outcome: "approve" | "reject") => void;
+}) {
+  const { t } = useTranslation();
+  const blocked = busy || disabled || !canDecide || !branch.approvers?.some((member) => member.id === currentUserId);
+  const approverNames = branch.approvers?.map((member) => member.name).join(", ");
+
+  return (
+    <div className="space-y-2 rounded-md border border-subtle bg-layer-2 p-3">
+      <p className="text-body-xs-medium text-primary">
+        {t("web.workflow_ui.approve_to")}
+        {": "}
+        {workflow?.states.find((state) => state.id === branch.destination_id)?.name ?? branch.destination_id}
+      </p>
+      <p className="text-body-xs-regular text-secondary">
+        {t("web.workflow_ui.reject_to")}
+        {": "}
+        {workflow?.states.find((state) => state.id === branch.reject_state_id)?.name ?? branch.reject_state_id}
+      </p>
+      <p className="text-caption-md-regular text-secondary">
+        {t("web.workflow_ui.approvers")}
+        {": "}
+        {approverNames || t("web.workflow_ui.snapshot_missing")}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          stretch="auto"
+          variant="primary"
+          size="sm"
+          icon={<Check className="size-3.5" />}
+          disabled={blocked}
+          label={t("web.workflow_ui.approve")}
+          onClick={() => onDecide(branch.id, "approve")}
+        />
+        <Button
+          stretch="auto"
+          variant="secondary"
+          size="sm"
+          icon={<X className="size-3.5" />}
+          disabled={blocked}
+          label={t("web.workflow_ui.reject")}
+          onClick={() => onDecide(branch.id, "reject")}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ApprovalBranches({
+  pending,
+  workflow,
+  busy,
+  disabled,
+  currentUserId,
+  onDecide,
+}: {
+  pending: TWorkflowApproval;
+  workflow: TProjectWorkflow | undefined;
+  busy: boolean;
+  disabled: boolean;
+  currentUserId?: string;
+  onDecide: (transitionId: string, outcome: "approve" | "reject") => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <p className="text-body-xs-regular text-secondary">{t("web.workflow_ui.approval_hint")}</p>
+      {pending.branches.map((branch) => (
+        <ApprovalBranch
+          key={branch.id}
+          branch={branch}
+          workflow={workflow}
+          canDecide={pending.can_decide}
+          busy={busy}
+          disabled={disabled}
+          currentUserId={currentUserId}
+          onDecide={onDecide}
+        />
+      ))}
+    </>
+  );
+}
+
+function ApprovalReapply({
+  pending,
+  hasSource,
+  disabled,
+  busy,
+  onReapply,
+}: {
+  pending: TWorkflowApproval | null | undefined;
+  hasSource: boolean;
+  disabled: boolean;
+  busy: boolean;
+  onReapply: () => void;
+}) {
+  const { t } = useTranslation();
+  if (pending || !hasSource || disabled) return null;
+
+  return (
+    <Button
+      stretch="auto"
+      variant="secondary"
+      size="sm"
+      disabled={busy}
+      label={t("web.workflow_ui.reapply")}
+      onClick={onReapply}
+    />
+  );
+}
+
+function ApprovalHistory({ results, pendingId }: { results: TWorkflowApproval[]; pendingId?: string }) {
+  const { t } = useTranslation();
+
+  return (
+    <details>
+      <summary className="cursor-pointer text-body-xs-medium text-secondary">
+        {t("web.workflow_ui.approval_history")}
+      </summary>
+      <div className="mt-3 space-y-2">
+        {results
+          .filter((approval) => approval.id !== pendingId)
+          .map((approval) => (
+            <div key={approval.id} className="text-caption-md-regular text-secondary">
+              <p>
+                {t(`web.workflow_ui.approval_status.${approval.status}`)}
+                {approval.decision && (
+                  <span>
+                    {" · "}
+                    {t(approval.decision.outcome === "approve" ? "web.workflow_ui.approve" : "web.workflow_ui.reject")}
+                  </span>
+                )}
+              </p>
+              <time dateTime={approval.decision?.at ?? approval.created_at}>
+                {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(
+                  new Date(approval.decision?.at ?? approval.created_at)
+                )}
+              </time>
+            </div>
+          ))}
+      </div>
+    </details>
+  );
+}
 
 export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
   workspaceSlug,
@@ -78,123 +273,34 @@ export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
     );
   };
   if (!relevant) return null;
-  if (loadError)
-    return (
-      <div className="rounded-lg border border-subtle p-3">
-        <p className="text-body-xs-regular text-secondary">{t("web.workflow_ui.approval_load_failed")}</p>
-        <Button stretch="auto" variant="ghost" size="sm" label={t("common.retry")} onClick={() => void mutate()} />
-      </div>
-    );
+  if (loadError) return <ApprovalLoadError onRetry={() => void mutate()} />;
   if (!data) return <output className="text-caption-md-regular text-tertiary">{t("loading")}</output>;
-  const currentSource =
-    workflow?.enabled &&
-    workflow.is_active &&
-    workflow.transitions.some((rule) => rule.kind === "approval" && rule.source_id === issue?.state_id);
-  if (!pending && !data.results.length && !currentSource) return null;
+  const currentSource = hasApprovalSource(workflow, issue?.state_id);
+  if (!shouldRenderApproval(pending, data.results.length, currentSource)) return null;
   return (
     <section
       className="space-y-3 rounded-lg border border-subtle bg-layer-1 p-4"
       aria-label={t("web.workflow_ui.approval")}
     >
-      <h4 className="flex items-center gap-2 text-body-sm-medium text-primary">
-        <ShieldCheck className="size-4" />
-        {t(pending ? "web.workflow_ui.pending_approval" : "web.workflow_ui.approval_history")}
-      </h4>
+      <ApprovalHeading pending={!!pending} />
       {pending && (
-        <>
-          <p className="text-body-xs-regular text-secondary">{t("web.workflow_ui.approval_hint")}</p>
-          {pending.branches.map((branch) => (
-            <div key={branch.id} className="space-y-2 rounded-md border border-subtle bg-layer-2 p-3">
-              <p className="text-body-xs-medium text-primary">
-                {t("web.workflow_ui.approve_to")}
-                {": "}
-                {workflow?.states.find((state) => state.id === branch.destination_id)?.name ?? branch.destination_id}
-              </p>
-              <p className="text-body-xs-regular text-secondary">
-                {t("web.workflow_ui.reject_to")}
-                {": "}
-                {workflow?.states.find((state) => state.id === branch.reject_state_id)?.name ?? branch.reject_state_id}
-              </p>
-              <p className="text-caption-md-regular text-secondary">
-                {t("web.workflow_ui.approvers")}
-                {": "}
-                {branch.approvers?.map((member) => member.name).join(", ") || t("web.workflow_ui.snapshot_missing")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  stretch="auto"
-                  variant="primary"
-                  size="sm"
-                  icon={<Check className="size-3.5" />}
-                  disabled={
-                    busy ||
-                    disabled ||
-                    !pending.can_decide ||
-                    !branch.approvers?.some((member) => member.id === currentUser?.id)
-                  }
-                  label={t("web.workflow_ui.approve")}
-                  onClick={() => decide(branch.id, "approve")}
-                />
-                <Button
-                  stretch="auto"
-                  variant="secondary"
-                  size="sm"
-                  icon={<X className="size-3.5" />}
-                  disabled={
-                    busy ||
-                    disabled ||
-                    !pending.can_decide ||
-                    !branch.approvers?.some((member) => member.id === currentUser?.id)
-                  }
-                  label={t("web.workflow_ui.reject")}
-                  onClick={() => decide(branch.id, "reject")}
-                />
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-      {!pending && currentSource && !disabled && (
-        <Button
-          stretch="auto"
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          label={t("web.workflow_ui.reapply")}
-          onClick={() => void act(() => store.service.reapply(workspaceSlug, projectId, issueId))}
+        <ApprovalBranches
+          pending={pending}
+          workflow={workflow}
+          busy={busy}
+          disabled={disabled}
+          currentUserId={currentUser?.id}
+          onDecide={decide}
         />
       )}
-      {!!data.results.length && (
-        <details>
-          <summary className="cursor-pointer text-body-xs-medium text-secondary">
-            {t("web.workflow_ui.approval_history")}
-          </summary>
-          <div className="mt-3 space-y-2">
-            {data.results
-              .filter((approval) => approval.id !== pending?.id)
-              .map((approval) => (
-                <div key={approval.id} className="text-caption-md-regular text-secondary">
-                  <p>
-                    {t(`web.workflow_ui.approval_status.${approval.status}`)}
-                    {approval.decision && (
-                      <span>
-                        {" · "}
-                        {t(
-                          approval.decision.outcome === "approve" ? "web.workflow_ui.approve" : "web.workflow_ui.reject"
-                        )}
-                      </span>
-                    )}
-                  </p>
-                  <time dateTime={approval.decision?.at ?? approval.created_at}>
-                    {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(
-                      new Date(approval.decision?.at ?? approval.created_at)
-                    )}
-                  </time>
-                </div>
-              ))}
-          </div>
-        </details>
-      )}
+      <ApprovalReapply
+        pending={pending}
+        hasSource={currentSource}
+        disabled={disabled}
+        busy={busy}
+        onReapply={() => void act(() => store.service.reapply(workspaceSlug, projectId, issueId))}
+      />
+      {!!data.results.length && <ApprovalHistory results={data.results} pendingId={pending?.id} />}
     </section>
   );
 });

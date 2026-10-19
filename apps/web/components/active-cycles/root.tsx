@@ -15,6 +15,21 @@ import { WorkspaceCycleCard } from "./cycle-card";
 const cycleService = new CycleService();
 const PAGE_SIZE = 10;
 
+const getActiveCyclesKey =
+  (workspaceSlug: string, allowed: boolean) => (_index: number, previous: IWorkspaceActiveCyclesResponse | null) => {
+    if (!workspaceSlug || !allowed || (previous && !previous.next_page_results)) return null;
+    return ["workspace-active-cycles", workspaceSlug, previous?.next_cursor ?? "10:0:0"] as const;
+  };
+
+const isDenied = (allowed: boolean, error: unknown) =>
+  !allowed || (isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0));
+
+const getHasMore = (data: IWorkspaceActiveCyclesResponse[] | undefined) =>
+  data?.[data.length - 1]?.next_page_results ?? false;
+
+const getLoadingMore = (isValidating: boolean, data: IWorkspaceActiveCyclesResponse[] | undefined, size: number) =>
+  isValidating || (!!data && size > data.length);
+
 export const WorkspaceActiveCycles = observer(function WorkspaceActiveCycles() {
   const { workspaceSlug: slug } = useParams();
   const workspaceSlug = slug?.toString() ?? "";
@@ -27,18 +42,15 @@ export const WorkspaceActiveCycles = observer(function WorkspaceActiveCycles() {
   );
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite<IWorkspaceActiveCyclesResponse>(
-      (_index, previous: IWorkspaceActiveCyclesResponse | null) => {
-        if (!workspaceSlug || !allowed || (previous && !previous.next_page_results)) return null;
-        return ["workspace-active-cycles", workspaceSlug, previous?.next_cursor ?? "10:0:0"] as const;
-      },
+      getActiveCyclesKey(workspaceSlug, allowed),
       ([, workspace, cursor]: readonly [string, string, string]) =>
         cycleService.workspaceActiveCycles(workspace, cursor, PAGE_SIZE),
       { shouldRetryOnError: false, revalidateOnFocus: true }
     );
-  const denied = !allowed || (isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0));
+  const denied = isDenied(allowed, error);
   const cycles = [...new Map((data ?? []).flatMap((page) => page.results).map((cycle) => [cycle.id, cycle])).values()];
-  const hasMore = data?.[data.length - 1]?.next_page_results ?? false;
-  const loadingMore = isValidating || (!!data && size > data.length);
+  const hasMore = getHasMore(data);
+  const loadingMore = getLoadingMore(isValidating, data, size);
 
   if (denied)
     return (
