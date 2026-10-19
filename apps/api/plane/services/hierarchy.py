@@ -1,7 +1,7 @@
 """Project-scoped hierarchy policy and final-state graph validation.
 
 Callers serialize writes with a Project row lock before locking Issue/DraftIssue.
-ProjectIssueType.level is authoritative; IssueType.is_epic retains its legacy meaning.
+ProjectIssueType.level is authoritative.
 """
 
 import hashlib
@@ -110,7 +110,6 @@ def ensure_project_type_owned(binding):
         logo_props=original.logo_props,
         is_active=original.is_active,
         level=binding.level,
-        is_epic=original.is_epic,
         external_source=original.external_source,
         external_id=original.external_id,
     )

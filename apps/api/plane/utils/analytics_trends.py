@@ -48,6 +48,4 @@ def filter_trend_scope(queryset, params):
         queryset = queryset.filter(issue_cycle__cycle_id=params["cycle_id"], issue_cycle__deleted_at__isnull=True)
     if params.get("module_id"):
         queryset = queryset.filter(issue_module__module_id=params["module_id"], issue_module__deleted_at__isnull=True)
-    if str(params.get("epic", "")).lower() in {"true", "1"}:
-        queryset = queryset.filter(type__is_epic=True)
     return queryset

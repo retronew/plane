@@ -139,17 +139,11 @@ def test_anonymous_cannot_read_details(api_client, workspace):
     assert response.status_code in [401, 403]
 
 
-@pytest.mark.parametrize(
-    "metric,expected", [("WORK_ITEM_COUNT", 7), ("ESTIMATE_POINT_COUNT", 7), ("EPIC_WORK_ITEM_COUNT", 1)]
-)
+@pytest.mark.parametrize("metric,expected", [("WORK_ITEM_COUNT", 7), ("ESTIMATE_POINT_COUNT", 7)])
 def test_custom_insight_uses_selected_metric(session_client, workspace, analytics_records, metric, expected):
-    from plane.db.models import IssueType
-
     first, second = analytics_records[2:4]
     Issue.objects.filter(id=first.id).update(point=2)
     Issue.objects.filter(id=second.id).update(point=5)
-    epic_type = IssueType.objects.create(workspace=workspace, name="Epic", is_epic=True)
-    Issue.objects.filter(id=first.id).update(type=epic_type)
     response = session_client.get(
         f"/api/workspaces/{workspace.slug}/advance-analytics-charts/",
         {"type": "custom-work-items", "x_axis": "PRIORITY", "y_axis": metric},
@@ -467,18 +461,15 @@ def test_peek_trend_uses_completion_date_and_correct_granularity(session_client,
         assert sum(row["created_issues"] for row in data.values()) == 2
 
 
-def test_trend_applies_cycle_and_epic_scope(session_client, workspace, analytics_records):
-    from plane.db.models import IssueType
-
+def test_trend_applies_cycle_scope(session_client, workspace, analytics_records):
     project, _, first, second, cycle, _ = analytics_records
-    epic = IssueType.objects.create(workspace=workspace, name="Epic", is_epic=True)
-    Issue.objects.filter(pk=first.pk).update(type=epic)
     response = session_client.get(
         f"/api/workspaces/{workspace.slug}/advance-analytics-charts/",
-        {"type": "work-items", "cycle_id": str(cycle.pk), "epic": "true"},
+        {"type": "work-items", "cycle_id": str(cycle.pk)},
     )
     assert response.status_code == 200
-    assert sum(row["created_issues"] for row in response.data["data"]) == 1
+    # Both fixture issues sit in the cycle; the scoped trend counts only those.
+    assert sum(row["created_issues"] for row in response.data["data"]) == 2
 
 
 @pytest.mark.parametrize("axis,index", [("PROJECTS", 0), ("CYCLES", 4), ("MODULES", 5)])

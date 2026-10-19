@@ -69,7 +69,6 @@ class AnalyticsDetailsEndpoint(BaseAPIView):
     def project_details(self):
         counts = {
             "work_items": self.counts_by_project(self.issues),
-            "epics": self.counts_by_project(self.issues.filter(type__is_epic=True)),
             "completed": self.counts_by_project(self.issues.filter(state__group="completed")),
             "cancelled": self.counts_by_project(self.issues.filter(state__group="cancelled")),
             "members": self.counts_by_project(

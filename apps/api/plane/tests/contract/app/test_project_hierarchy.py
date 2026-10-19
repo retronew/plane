@@ -229,7 +229,6 @@ def test_shared_type_clone_preserves_draft_template_and_other_project(hierarchy_
     assert str(issue.type_id) == str(draft.type_id) == cloned
     assert template.configuration["type_id"] == template.configuration["children"][0]["type_id"] == cloned
     assert ProjectIssueType.objects.get(project=foreign).level == 7
-    assert not IssueType.objects.get(pk=cloned).is_epic
 
 
 def test_generic_project_serializer_cannot_enable_hierarchy(hierarchy_ctx):
@@ -324,7 +323,6 @@ def test_type_level_patch_and_default_level_have_distinct_behavior(hierarchy_ctx
     response = session_client.patch(types_base + str(ctx.types[1].pk) + "/", {"version": 0, "level": 4}, format="json")
     assert response.status_code == 200, response.data
     assert response.data["level"] == 4
-    assert not response.data["is_epic"]
     ctx.project.refresh_from_db()
     request = payload(
         ctx, default_level=4, type_levels=[{"type_id": str(t.pk), "level": n} for t, n in zip(ctx.types, [0, 4, 8])]
