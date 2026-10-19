@@ -139,10 +139,10 @@ export const StickiesList = observer(function StickiesList(props: TStickiesLayou
   );
 });
 
-export function StickiesLayout(props: TStickiesLayout) {
+export const StickiesLayout = observer(function StickiesLayout(props: TStickiesLayout) {
   return (
     <div className="size-full">
       <StickiesList {...props} />
     </div>
   );
-}
+});

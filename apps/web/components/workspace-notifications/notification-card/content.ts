@@ -5,7 +5,7 @@
  */
 
 import { replaceUnderscoreIfSnakeCase } from "@plane/utils";
-import type { TNotificationContentMap } from "@/components/workspace-notifications/sidebar/notification-card/content";
+import type { TNotificationContentMap } from "@/components/workspace-notifications/sidebar/notification-card/content-map";
 
 // Additional notification content map for CE (empty - EE extends this)
 export const ADDITIONAL_NOTIFICATION_CONTENT_MAP: TNotificationContentMap = {};

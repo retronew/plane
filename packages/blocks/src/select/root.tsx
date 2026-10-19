@@ -337,7 +337,9 @@ function useSelectOpenState<T>(args: {
       appliedOpenRef.current = open;
       isOpenRef.current = open;
       if (open) {
+        // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change -- lazy mount is open-time work, not a mirrored prop
         setIsEngineMounted(true);
+        // react-doctor-disable-next-line react-doctor/no-derived-state -- pinned snapshot is captured only on open so the list order stays stable
         setPinnedSelected(selected);
         if (isInfinite) onInfiniteOpen();
       } else {
@@ -360,6 +362,7 @@ function useSelectOpenState<T>(args: {
       // if and when `open` actually moves, and a vetoed close is a no-op.
       if (!isOpenControlled) {
         applyOpenSideEffects(open);
+        // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change -- mirrors the base-ui open event; the controlled path is reconciled by the effect below
         setUncontrolledOpen(open);
       }
       onOpenChange?.(open);
@@ -376,6 +379,7 @@ function useSelectOpenState<T>(args: {
   // `handleOpenChange` above, runs none of the side effects when base-ui asks — so for a controlled
   // root this effect is where all of the open/close work happens. `appliedOpenRef` keeps it a no-op
   // for every change that already went through `handleOpenChange` (the uncontrolled path).
+  // react-doctor-disable-next-line react-doctor/no-derived-state-effect -- reconciles a controlled open change with the open/close side effects; guarded by appliedOpenRef
   useEffect(() => {
     if (appliedOpenRef.current !== isOpen) applyOpenSideEffects(isOpen);
   }, [isOpen, applyOpenSideEffects]);
@@ -883,6 +887,7 @@ function SelectEngine<T>(props: {
   );
 }
 
+// react-doctor-disable-next-line react-doctor/no-giant-component -- orchestrates the extracted hooks and one large context value; splitting further would only yield a hook returning 30+ values
 export function SelectRoot<T>(props: SelectProps<T>) {
   const {
     getOptionValue,

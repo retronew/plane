@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { debounce } from "lodash-es";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
@@ -31,6 +31,9 @@ type TFormData = {
   description_json?: object;
   isMigrationUpdate: boolean;
 };
+
+// The editor's initial content is a pure function of the incoming description.
+const normalizeDescription = (value: string | undefined) => (value?.trim() === "" ? "<p></p>" : (value ?? "<p></p>"));
 
 type Props = {
   /**
@@ -122,16 +125,18 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
     swrDescription,
     workspaceSlug,
   } = props;
-  // states
-  const [localDescription, setLocalDescription] = useState<TFormData>({
+  // The editor's initial content is derived from the props, so it is computed during render
+  // instead of being mirrored into state by an effect.
+  const normalizedDescription = normalizeDescription(initialValue);
+  const localDescription: TFormData = {
     id: entityId,
-    description_html: initialValue?.trim() ?? "",
+    description_html: normalizedDescription,
     isMigrationUpdate: false,
-  });
+  };
   // ref to track if there are unsaved changes
   const hasUnsavedChanges = useRef(false);
   // ref to track last saved content (to skip onChange when content hasn't actually changed)
-  const lastSavedContent = useRef(initialValue?.trim() === "" ? "<p></p>" : (initialValue ?? "<p></p>"));
+  const lastSavedContent = useRef(normalizedDescription);
   // store hooks
   const { getWorkspaceBySlug } = useWorkspace();
   const { uploadEditorAsset, duplicateEditorAsset } = useEditorAsset();
@@ -167,23 +172,17 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
   // reset form values
   useEffect(() => {
     if (!entityId) return;
-    const normalizedValue = initialValue?.trim() === "" ? "<p></p>" : (initialValue ?? "<p></p>");
     // Update last saved content when entity/initialValue changes
-    lastSavedContent.current = normalizedValue;
+    lastSavedContent.current = normalizedDescription;
     reset({
       id: entityId,
-      description_html: normalizedValue,
-      isMigrationUpdate: false,
-    });
-    setLocalDescription({
-      id: entityId,
-      description_html: normalizedValue,
+      description_html: normalizedDescription,
       isMigrationUpdate: false,
     });
     // Reset unsaved changes flag when form is reset
     hasUnsavedChanges.current = false;
     saveContext.revision += 1;
-  }, [entityId, initialValue, reset, saveContext]);
+  }, [entityId, normalizedDescription, reset, saveContext]);
   const latestSave = useRef({ handleDescriptionFormSubmit, setIsSubmitting });
 
   const saveDescription = useCallback(() => {

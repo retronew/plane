@@ -138,6 +138,7 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
         QuickAddButton={GanttQuickAddIssueButton}
         containerClassName="sticky bottom-0 z-[1]"
         prePopulatedData={{
+          // react-doctor-disable-next-line react-doctor/rendering-hydration-mismatch-time -- web is a ssr:false SPA, so there is no server render to hydrate and the client-side time can never mismatch.
           start_date: renderFormattedPayloadDate(new Date()),
           target_date: renderFormattedPayloadDate(targetDate),
         }}

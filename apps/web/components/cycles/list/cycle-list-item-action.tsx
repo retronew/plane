@@ -404,6 +404,7 @@ export const CycleListItemAction = observer(function CycleListItemAction(props: 
             <DateRangeSelect
               variant="select-ghost-md"
               className="flex h-6 w-full cursor-auto items-center gap-1.5 rounded-sm p-0 text-11 text-tertiary [&>div]:hover:bg-transparent"
+              // react-doctor-disable-next-line react-doctor/rendering-hydration-mismatch-time -- web is a ssr:false SPA, so there is no server render to hydrate and the client-side time can never mismatch.
               minDate={new Date()}
               value={{
                 from: getDate(cycleDetails.start_date) ?? null,

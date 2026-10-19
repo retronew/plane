@@ -16,6 +16,19 @@
     ],
     "overrides": [
       {
+        // Modules every caller already loads through a dynamic import, so the heavy dependency
+        // inside them (recharts, @react-pdf/renderer) already lands in a deferred chunk:
+        //   cycle-card.tsx / project-comparison.tsx / created-vs-resolved.tsx -> lazy(() => import(...))
+        //   export-page-modal.tsx -> import("@/components/editor/pdf")
+        "files": [
+          "components/active-cycles/cycle-chart.tsx",
+          "components/analytics/comparison-chart.tsx",
+          "components/analytics/work-items/created-resolved-chart.tsx",
+          "components/editor/pdf/**",
+        ],
+        "rules": ["react-doctor/prefer-dynamic-import"],
+      },
+      {
         // React Router route modules: `meta`, `clientLoader` and `clientMiddleware` are the
         // framework's own exports, so a route file necessarily exports non-components. Fast
         // Refresh cannot preserve state across them, but the router convention wins.

@@ -21,7 +21,7 @@ import { SettingsSidebarItem } from "@/components/settings/sidebar/item";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
 // local imports
-import { WORKSPACE_SETTINGS_ICONS } from "./item-icon";
+import { WORKSPACE_SETTINGS_ICONS } from "./workspace-settings-icons";
 
 export const WorkspaceSettingsSidebarItemCategories = observer(function WorkspaceSettingsSidebarItemCategories() {
   // params

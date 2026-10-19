@@ -10,7 +10,7 @@ import { EUserPermissions, EUserPermissionsLevel, LOGIN_MEDIUM_LABELS } from "@p
 import { useTranslation } from "@plane/i18n";
 import { renderFormattedDate } from "@plane/utils";
 import { MemberHeaderColumn } from "@/components/project/member-header-column";
-import type { RowData } from "@/components/workspace/settings/member-columns";
+import type { RowData } from "@/components/workspace/settings/types";
 import { AccountTypeColumn, NameColumn } from "@/components/workspace/settings/member-columns";
 import { useMember } from "@/hooks/store/use-member";
 import { useUser, useUserPermissions } from "@/hooks/store/user";

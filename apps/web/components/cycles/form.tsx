@@ -167,6 +167,7 @@ export function CycleForm(props: Props) {
                     <DateRangeSelect
                       variant="pill-sm"
                       className="h-auto min-h-6 max-w-full [&>span]:whitespace-normal"
+                      // react-doctor-disable-next-line react-doctor/rendering-hydration-mismatch-time -- web is a ssr:false SPA, so there is no server render to hydrate and the client-side time can never mismatch.
                       minDate={new Date()}
                       value={{
                         from: getDate(startDateValue) ?? null,

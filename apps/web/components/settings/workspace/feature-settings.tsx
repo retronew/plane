@@ -12,7 +12,7 @@ import { SettingsHeading } from "@/components/settings/heading";
 import { SettingsPageHeader } from "@/components/settings/page-header";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUserPermissions } from "@/hooks/store/user";
-import { WORKSPACE_SETTINGS_ICONS } from "./sidebar/item-icon";
+import { WORKSPACE_SETTINGS_ICONS } from "./sidebar/workspace-settings-icons";
 
 type Props = {
   children?: React.ReactNode;

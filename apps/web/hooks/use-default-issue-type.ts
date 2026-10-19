@@ -21,6 +21,7 @@ export function useDefaultIssueType({
   useEffect(() => {
     if (!projectId || getValues("type_id") || data?.id || data?.type_id === null) return;
     const id = getDefault(projectId) ?? types?.find((type) => type.is_default && type.is_active)?.id;
+    // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- react-hook-form setValue seeds the default once; it is not a callback handed to a parent
     if (id) setValue("type_id", id, { shouldValidate: true });
   }, [projectId, types, data, getValues, setValue, getDefault]);
 }

@@ -229,6 +229,7 @@ function usePeekSidebar({
   // Reset peek when sidebar is expanded
   useEffect(() => {
     if (!isCollapsed) {
+      // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- closing the hover peek on expand is a transition notification, not a per-render sync
       setShowPeek(false);
       // oxlint-disable-next-line react/set-state-in-effect react-doctor/no-adjust-state-on-prop-change -- expanding the sidebar ends the hover peek; the state belongs to that transition
       setIsHoveringTrigger(false);

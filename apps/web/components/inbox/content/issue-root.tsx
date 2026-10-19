@@ -178,6 +178,7 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
             <DescriptionVersionsRoot
               className="flex-shrink-0"
               entityInformation={{
+                // react-doctor-disable-next-line react-doctor/rendering-hydration-mismatch-time -- web is a ssr:false SPA, so there is no server render to hydrate and the client-side time can never mismatch.
                 createdAt: issue.created_at ? new Date(issue.created_at) : new Date(),
                 createdByDisplayName:
                   inboxIssue.source === EInboxIssueSource.FORMS

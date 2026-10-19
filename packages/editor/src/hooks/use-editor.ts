@@ -141,6 +141,7 @@ export const useEditor = (props: TEditorHookProps) => {
   useEffect(() => {
     const assets = assetsList?.assets;
     if (!assets || !onAssetChange) return;
+    // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- reports the editor's derived asset list to a subscriber; not a per-render sync of controlled state
     onAssetChange(assets);
   }, [assetsList?.assets, onAssetChange]);
 

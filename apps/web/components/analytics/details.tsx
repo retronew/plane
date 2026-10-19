@@ -610,18 +610,18 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
   );
 });
 
-export function ProjectsAnalytics() {
+export const ProjectsAnalytics = observer(function ProjectsAnalytics() {
   return <AnalyticsDetails tab="projects" />;
-}
-export function UsersAnalytics() {
+});
+export const UsersAnalytics = observer(function UsersAnalytics() {
   return <AnalyticsDetails tab="users" />;
-}
-export function CyclesAnalytics() {
+});
+export const CyclesAnalytics = observer(function CyclesAnalytics() {
   return <AnalyticsDetails tab="cycles" />;
-}
-export function ModulesAnalytics() {
+});
+export const ModulesAnalytics = observer(function ModulesAnalytics() {
   return <AnalyticsDetails tab="modules" />;
-}
-export function IntakeAnalytics() {
+});
+export const IntakeAnalytics = observer(function IntakeAnalytics() {
   return <AnalyticsDetails tab="intake" />;
-}
+});

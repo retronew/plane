@@ -10,7 +10,7 @@ import { RichTextEditor } from "@/components/editor/rich-text";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import type { TemplateWorkItemChild } from "@/services/workspace-configuration.service";
 
-export function TemplateDescription({
+export const TemplateDescription = observer(function TemplateDescription({
   id,
   value,
   onChange,
@@ -50,7 +50,7 @@ export function TemplateDescription({
       }}
     />
   );
-}
+});
 
 export const TemplateWorkItemFields = observer(function TemplateWorkItemFields({
   value,

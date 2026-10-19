@@ -25,7 +25,7 @@ import { getFileURL } from "@plane/utils";
 import { useMember } from "@/hooks/store/use-member";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 
-export interface RowData extends Pick<TProjectMembership, "original_role"> {
+interface RowData extends Pick<TProjectMembership, "original_role"> {
   member: IWorkspaceMember;
 }
 
@@ -49,7 +49,7 @@ type AccountTypeProps = {
   projectId: string;
 };
 
-export function NameColumn(props: NameProps) {
+export const NameColumn = observer(function NameColumn(props: NameProps) {
   const { rowData, workspaceSlug, isAdmin, currentUser, setRemoveMemberModal } = props;
   // plane hooks
   const { t } = useTranslation();
@@ -109,7 +109,7 @@ export function NameColumn(props: NameProps) {
       </div>
     </div>
   );
-}
+});
 
 export const AccountTypeColumn = observer(function AccountTypeColumn(props: AccountTypeProps) {
   const { rowData, projectId, workspaceSlug } = props;

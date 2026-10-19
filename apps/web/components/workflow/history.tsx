@@ -48,7 +48,7 @@ const snapshotLabels: Record<string, string> = {
   allow_creation: "web.workflow_ui.history_fields.allow_creation",
 };
 
-export function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
+export const HistorySnapshot = observer(function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
   const { t } = useTranslation();
   const { before, after, schema_version } = entry.data;
   if (schema_version !== 2 || (!before && !after)) return null;
@@ -117,7 +117,7 @@ export function HistorySnapshot({ entry }: { entry: TWorkflowActivity }) {
       )}
     </div>
   );
-}
+});
 
 function getHistoryIcon(entry: TWorkflowActivity) {
   if (entry.action.startsWith("transition_")) return WorkflowHistoryIcon;

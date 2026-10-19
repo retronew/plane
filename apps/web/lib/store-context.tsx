@@ -9,8 +9,10 @@ import { createContext } from "react";
 // plane web store
 import { RootStore } from "@/store/root.store";
 
+// react-doctor-disable-next-line react-doctor/only-export-components -- store/context module: the store, its context and the provider live together by design
 export let rootStore = new RootStore();
 
+// react-doctor-disable-next-line react-doctor/only-export-components -- store/context module: the store, its context and the provider live together by design
 export const StoreContext = createContext<RootStore>(rootStore);
 
 const initializeStore = () => {
@@ -20,6 +22,7 @@ const initializeStore = () => {
   return newRootStore;
 };
 
+// react-doctor-disable-next-line react-doctor/only-export-components -- store/context module: the store, its context and the provider live together by design
 export const store = initializeStore();
 
 export function StoreProvider({ children }: { children: ReactElement }) {

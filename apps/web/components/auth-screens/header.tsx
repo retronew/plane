@@ -64,7 +64,7 @@ type TAuthHeaderBase = {
   additionalAction?: React.ReactNode;
 };
 
-export function AuthHeaderBase(props: TAuthHeaderBase) {
+export const AuthHeaderBase = observer(function AuthHeaderBase(props: TAuthHeaderBase) {
   const { pageTitle, additionalAction } = props;
   return (
     <>
@@ -77,4 +77,4 @@ export function AuthHeaderBase(props: TAuthHeaderBase) {
       </div>
     </>
   );
-}
+});

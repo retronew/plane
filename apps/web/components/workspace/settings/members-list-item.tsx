@@ -14,7 +14,7 @@ import type { IWorkspaceMember } from "@plane/types";
 import { DataTable } from "@/components/common/data-table";
 import { MembersLayoutLoader } from "@/components/ui/loader/layouts/members-layout-loader";
 import { ConfirmWorkspaceMemberRemove } from "@/components/workspace/confirm-workspace-member-remove";
-import type { RowData } from "@/components/workspace/settings/member-columns";
+import type { RowData } from "@/components/workspace/settings/types";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useWorkspace } from "@/hooks/store/use-workspace";

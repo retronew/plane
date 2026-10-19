@@ -172,7 +172,7 @@ export const WorkspaceCreateStep = observer(function WorkspaceCreateStep({
                       "border-danger-strong": errors.name,
                     }
                   )}
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  // oxlint-disable-next-line jsx-a11y/no-autofocus react-doctor/no-autofocus -- the workspace creation form intentionally focuses the workspace name field when it opens.
                   autoFocus
                 />
               </div>

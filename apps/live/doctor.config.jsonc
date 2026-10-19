@@ -1,0 +1,13 @@
+{
+  // Globs are relative to `apps/live`.
+  "ignore": {
+    "overrides": [
+      {
+        // A Node service (`tsdown` build, started with `node`): these modules render PDFs on the
+        // server, so there is no client bundle for a dynamic import to keep them out of.
+        "files": ["src/lib/pdf/**"],
+        "rules": ["react-doctor/prefer-dynamic-import"],
+      },
+    ],
+  },
+}

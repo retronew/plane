@@ -11,7 +11,7 @@ import { EUserPermissionsLevel, WORKSPACE_SETTINGS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { TPowerKContext } from "@/components/power-k/core/types";
 import { PowerKSettingsMenu } from "@/components/power-k/menus/settings";
-import { WORKSPACE_SETTINGS_ICONS } from "@/components/settings/workspace/sidebar/item-icon";
+import { WORKSPACE_SETTINGS_ICONS } from "@/components/settings/workspace/sidebar/workspace-settings-icons";
 // hooks
 import { useUserPermissions } from "@/hooks/store/user";
 

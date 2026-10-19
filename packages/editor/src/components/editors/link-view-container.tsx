@@ -192,6 +192,7 @@ export function LinkViewContainer({ editor, containerRef }: Props) {
   // Close link view when bubble menu opens
   useEffect(() => {
     if (editorState.isBubbleMenuOpen && isOpen) {
+      // react-doctor-disable-next-line react-doctor/no-adjust-state-on-prop-change -- reacting to external editor state, not mirroring a prop
       setIsOpen(false);
     }
   }, [editorState.isBubbleMenuOpen, isOpen]);

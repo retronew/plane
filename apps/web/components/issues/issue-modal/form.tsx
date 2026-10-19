@@ -664,9 +664,11 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       if (workItemTemplateId) {
         // reset work item template id
         setWorkItemTemplateId(null);
+        // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- react-hook-form reset resyncs the form with the new project, not a callback handed to a parent
         reset({ ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: projectId });
         editorRef.current?.clearEditor();
       } else {
+        // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- react-hook-form reset resyncs the form with the new project, not a callback handed to a parent
         reset(getUpdateFormDataForReset(projectId, getValues()));
       }
     }
@@ -678,6 +680,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   // Reset form when data prop changes
   useEffect(() => {
     if (data) {
+      // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- react-hook-form reset resyncs the form with the incoming work item, not a callback handed to a parent
       reset({ ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: projectId, ...data });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -825,6 +828,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   useEffect(() => {
     if (!onChange) return;
 
+    // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- notifies the parent when the dirty flag flips; gated on isDirty, not a per-render sync
     if (isDirty && condition) onChange(watch());
     else onChange(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps

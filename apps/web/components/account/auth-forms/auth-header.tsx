@@ -114,11 +114,11 @@ type TAuthHeaderBase = {
   subHeader: string;
 };
 
-export function AuthHeaderBase(props: TAuthHeaderBase) {
+export const AuthHeaderBase = observer(function AuthHeaderBase(props: TAuthHeaderBase) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-h4-semibold text-primary">{props.header}</span>
       <span className="text-h4-semibold text-placeholder">{props.subHeader}</span>
     </div>
   );
-}
+});

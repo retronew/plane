@@ -4,29 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { KeyRound, type LucideIcon } from "lucide-react";
-import {
-  BuildingOutline,
-  ExportOutline,
-  MembersOutline,
-  WebhooksOutline,
-  PlaneAi,
-  TemplatesOutline,
-} from "@makeplane/propel/icons";
 // plane imports
 import type { ISvgIcons } from "@plane/blocks/icons";
-import type { TWorkspaceSettingsTabs } from "@plane/types";
-
-export const WORKSPACE_SETTINGS_ICONS: Record<TWorkspaceSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
-  templates: TemplatesOutline,
-  projects: WorkspaceProjectIcon,
-  ai: PlaneAi,
-  tokens: KeyRound,
-  general: BuildingOutline,
-  members: MembersOutline,
-  export: ExportOutline,
-  webhooks: WebhooksOutline,
-};
 
 export function WorkspaceProjectIcon({ className }: ISvgIcons) {
   return (

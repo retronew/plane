@@ -29,7 +29,7 @@ type LabelDragPreviewProps = {
   isGroup: boolean;
 };
 
-export function LabelDragPreview(props: LabelDragPreviewProps) {
+export const LabelDragPreview = observer(function LabelDragPreview(props: LabelDragPreviewProps) {
   const { label, isGroup } = props;
 
   return (
@@ -37,7 +37,7 @@ export function LabelDragPreview(props: LabelDragPreviewProps) {
       <LabelName name={label.name} color={label.color} isGroup={isGroup} />
     </div>
   );
-}
+});
 
 type Props = {
   label: IIssueLabel;

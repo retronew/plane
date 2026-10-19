@@ -1,0 +1,31 @@
+/**
+ * Copyright (c) 2023-present Plane Software, Inc. and contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * See the LICENSE file for details.
+ */
+
+import { KeyRound, type LucideIcon } from "lucide-react";
+import {
+  BuildingOutline,
+  ExportOutline,
+  MembersOutline,
+  WebhooksOutline,
+  PlaneAi,
+  TemplatesOutline,
+} from "@makeplane/propel/icons";
+// plane imports
+import type { ISvgIcons } from "@plane/blocks/icons";
+import type { TWorkspaceSettingsTabs } from "@plane/types";
+// local imports
+import { WorkspaceProjectIcon } from "./item-icon";
+
+export const WORKSPACE_SETTINGS_ICONS: Record<TWorkspaceSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
+  templates: TemplatesOutline,
+  projects: WorkspaceProjectIcon,
+  ai: PlaneAi,
+  tokens: KeyRound,
+  general: BuildingOutline,
+  members: MembersOutline,
+  export: ExportOutline,
+  webhooks: WebhooksOutline,
+};

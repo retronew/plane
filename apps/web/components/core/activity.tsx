@@ -38,7 +38,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { translate, Translation } from "@plane/i18n";
 // types
 
-export function IssueLink({ activity }: { activity: IIssueActivity | TIssueActivity }) {
+export const IssueLink = observer(function IssueLink({ activity }: { activity: IIssueActivity | TIssueActivity }) {
   // router params
   const { workspaceSlug } = useParams();
   const { isMobile } = usePlatformOS();
@@ -91,7 +91,7 @@ export function IssueLink({ activity }: { activity: IIssueActivity | TIssueActiv
       )}
     </Tooltip>
   );
-}
+});
 
 function UserLink({ activity }: { activity: IIssueActivity | TIssueActivity }) {
   // router params
@@ -393,19 +393,28 @@ const activityDetails: Record<
   },
 };
 
-export function ActivityIcon({ activity, size = 12 }: { activity: IIssueActivity | TIssueActivity; size?: number }) {
+export const ActivityIcon = observer(function ActivityIcon({
+  activity,
+  size = 12,
+}: {
+  activity: IIssueActivity | TIssueActivity;
+  size?: number;
+}) {
   const icon = activityDetails[activity.field as keyof typeof activityDetails]?.icon;
   return isValidElement<{ width?: number; height?: number; size?: number }>(icon)
     ? cloneElement(icon, { width: size, height: size, size })
     : null;
-}
+});
 
 type ActivityMessageProps = {
   activity: IIssueActivity | TIssueActivity;
   showIssue?: boolean;
 };
 
-export function ActivityMessage({ activity, showIssue = false }: ActivityMessageProps) {
+export const ActivityMessage = observer(function ActivityMessage({
+  activity,
+  showIssue = false,
+}: ActivityMessageProps) {
   // router params
   const { workspaceSlug } = useParams();
   const activityField = activity.field ?? "issue";
@@ -419,4 +428,4 @@ export function ActivityMessage({ activity, showIssue = false }: ActivityMessage
       )}
     </ActivitySentence>
   );
-}
+});

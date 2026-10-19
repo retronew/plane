@@ -10,7 +10,7 @@ import { WORKSPACE_SETTINGS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 // components
 import { SettingsBreadcrumbHeader } from "@/components/settings/settings-breadcrumb-header";
-import { WORKSPACE_SETTINGS_ICONS } from "@/components/settings/workspace/sidebar/item-icon";
+import { WORKSPACE_SETTINGS_ICONS } from "@/components/settings/workspace/sidebar/workspace-settings-icons";
 
 export const GeneralWorkspaceSettingsHeader = observer(function GeneralWorkspaceSettingsHeader() {
   // translation

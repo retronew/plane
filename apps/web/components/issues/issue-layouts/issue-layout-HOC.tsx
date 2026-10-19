@@ -30,7 +30,7 @@ type IssueLayoutLoaderProps = {
   calendarLayout?: "month" | "week";
 };
 
-export function IssueLayoutLoader(props: IssueLayoutLoaderProps) {
+export const IssueLayoutLoader = observer(function IssueLayoutLoader(props: IssueLayoutLoaderProps) {
   const { layout } = props;
   const showSkeleton = useDelayedLoading(true);
   if (!showSkeleton) return <div className="size-full" aria-busy="true" />;
@@ -39,7 +39,7 @@ export function IssueLayoutLoader(props: IssueLayoutLoaderProps) {
       <IssueLayoutSkeleton {...props} />
     </div>
   );
-}
+});
 
 function IssueLayoutSkeleton({ layout, grouped, propertyCount, showWeekends, calendarLayout }: IssueLayoutLoaderProps) {
   switch (layout) {

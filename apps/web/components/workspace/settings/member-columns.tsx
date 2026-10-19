@@ -19,7 +19,9 @@ import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { setToast } from "@plane/blocks/toast";
-import type { IUser, IWorkspaceMember } from "@plane/types";
+import type { IUser } from "@plane/types";
+// local imports
+import type { RowData } from "./types";
 // plane ui
 import { Select } from "@plane/blocks/select";
 // helpers
@@ -27,12 +29,6 @@ import { getFileURL } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
-
-export interface RowData {
-  member: IWorkspaceMember;
-  role: EUserPermissions;
-  is_active: boolean;
-}
 
 type NameProps = {
   rowData: RowData;
@@ -54,7 +50,7 @@ type AccountTypeProps = {
   workspaceSlug: string;
 };
 
-export function NameColumn(props: NameProps) {
+export const NameColumn = observer(function NameColumn(props: NameProps) {
   const { rowData, workspaceSlug, isAdmin, currentUser, setRemoveMemberModal } = props;
   // plane hooks
   const { t } = useTranslation();
@@ -127,7 +123,7 @@ export function NameColumn(props: NameProps) {
       </div>
     </div>
   );
-}
+});
 
 export const AccountTypeColumn = observer(function AccountTypeColumn(props: AccountTypeProps) {
   const { rowData, workspaceSlug } = props;
