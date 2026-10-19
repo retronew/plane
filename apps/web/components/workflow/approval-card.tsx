@@ -5,6 +5,7 @@ import { Check, ShieldCheck, X } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
+import { getDateTimeFormatter } from "@plane/utils";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
@@ -185,7 +186,9 @@ export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
                     )}
                   </p>
                   <time dateTime={approval.decision?.at ?? approval.created_at}>
-                    {new Date(approval.decision?.at ?? approval.created_at).toLocaleString()}
+                    {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(
+                      new Date(approval.decision?.at ?? approval.created_at)
+                    )}
                   </time>
                 </div>
               ))}

@@ -8,6 +8,7 @@ import { InputField } from "@makeplane/propel/components/input-field";
 import { setToast } from "@plane/blocks/toast";
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { useTranslation } from "@plane/i18n";
+import { getDateTimeFormatter } from "@plane/utils";
 import type { TWorkflowExecution, TWorkflowScript, TWorkflowScriptVersion } from "@plane/types";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { getWorkflowErrorCode } from "@/helpers/workflow";
@@ -177,7 +178,7 @@ export function WorkflowExecutions({
               {run.dry_run && <span className="text-tertiary">{t("web.workflow_runner.dry_run")}</span>}
               {run.created_at && (
                 <time className="ml-auto text-tertiary" dateTime={run.created_at}>
-                  {new Date(run.created_at).toLocaleString()}
+                  {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(new Date(run.created_at))}
                 </time>
               )}
             </button>
@@ -426,7 +427,10 @@ export function WorkflowRunner({ workspaceSlug, projectId }: { workspaceSlug: st
             >
               {selected.versions.map((version) => (
                 <option key={version.id} value={version.id}>
-                  v{version.version} · {new Date(version.created_at).toLocaleString()}
+                  v{version.version} ·{" "}
+                  {getDateTimeFormatter({ dateStyle: "medium", timeStyle: "short" }).format(
+                    new Date(version.created_at)
+                  )}
                 </option>
               ))}
             </select>

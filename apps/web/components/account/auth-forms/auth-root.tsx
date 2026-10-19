@@ -43,7 +43,10 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   // props
   const { authMode: currentAuthMode } = props;
   // states
-  const [authMode, setAuthMode] = useState<EAuthModes | undefined>(undefined);
+  // The prop seeds the mode; a failed sign-in can still override it afterwards, so the two are
+  // combined into one value instead of copying the prop into state on mount.
+  const [authModeOverride, setAuthMode] = useState<EAuthModes | undefined>(undefined);
+  const authMode = authModeOverride ?? currentAuthMode;
   const [authStep, setAuthStep] = useState<EAuthSteps>(EAuthSteps.EMAIL);
   const [email, setEmail] = useState(emailParam ? emailParam.toString() : "");
   const [errorInfo, setErrorInfo] = useState<TAuthErrorInfo | undefined>(undefined);
@@ -56,10 +59,6 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   const { isOAuthEnabled, oAuthOptions } = useOAuthConfig(oAuthActionText);
   const isEmailBasedAuthEnabled = config?.is_email_password_enabled || config?.is_magic_login_enabled;
   const noAuthMethodsAvailable = !isOAuthEnabled && !isEmailBasedAuthEnabled;
-
-  useEffect(() => {
-    if (!authMode && currentAuthMode) setAuthMode(currentAuthMode);
-  }, [currentAuthMode, authMode]);
 
   useEffect(() => {
     if (error_code && authMode) {
@@ -102,8 +101,6 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
       }
     }
   }, [error_code, authMode]);
-
-  if (!authMode) return <></>;
 
   if (noAuthMethodsAvailable) {
     return (
