@@ -68,6 +68,7 @@ export function WritingAssistant({ workspaceSlug, getContext, onApply, onClose, 
     } finally {
       if (controller.current === current) {
         controller.current = null;
+        // oxlint-disable-next-line react-doctor/no-loading-flag-reset-outside-finally -- the reset already runs in `finally`; the guard skips it only when a newer request owns `busy`, so the flag can never stay stuck.
         setBusy(false);
       }
     }

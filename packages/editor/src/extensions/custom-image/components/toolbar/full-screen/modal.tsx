@@ -204,12 +204,12 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         "cursor-default": !isDragging,
         "cursor-grabbing": isDragging,
       })}
-      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Keep the viewer in the editor portal's z-index stack; a modal native dialog would enter the browser top layer and change nested overlay/focus behavior.
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role react-doctor/prefer-html-dialog -- Keep the viewer in the editor portal's z-index stack; a modal native dialog would enter the browser top layer and change nested overlay/focus behavior.
       role="dialog"
       aria-modal="true"
       aria-label={translate("web.fullscreen_image_viewer")}
     >
-      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc */}
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions react-doctor/no-static-element-interactions -- mouse-only backdrop/list interaction; keyboard handled by the editor or Esc */}
       <div
         ref={modalRef}
         onMouseDown={(e) => e.target === modalRef.current && handleClose()}
@@ -223,7 +223,7 @@ function ImageFullScreenModalWithoutPortal(props: Props) {
         >
           <CloseOutline className="size-8 text-white/60 transition-colors hover:text-white" />
         </button>
-        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Mousedown starts coordinate-based panning only for oversized images; the image retains its semantics, while zoom and close have buttons and keyboard shortcuts. */}
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions react-doctor/no-noninteractive-element-interactions -- Mousedown starts coordinate-based panning only for oversized images; the image retains its semantics, while zoom and close have buttons and keyboard shortcuts. */}
         <img
           onMouseDown={handleMouseDown}
           ref={setImageRef}

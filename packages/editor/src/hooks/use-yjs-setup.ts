@@ -398,6 +398,7 @@ export const useYjsSetup = ({
       isServerDisconnected,
     };
 
+    // oxlint-disable-next-line react-doctor/no-pass-live-state-to-parent -- collaboration-sync contract: the hook reports its derived stage snapshot to the parent's `onStateChange` on every transition; `state` is a plain value, not live state.
     stateChangeCallbackRef.current(state);
   }, [stage]);
 

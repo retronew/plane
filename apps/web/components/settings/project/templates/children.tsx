@@ -81,7 +81,7 @@ export function TemplateChildren({
           {items.length > 0 && (
             <ul className="divide-y divide-subtle rounded-md border border-subtle">
               {items.map((item, index) => (
-                <li key={item.client_id ?? index} className="flex items-center gap-3 px-3 py-2">
+                <li key={item.client_id} className="flex items-center gap-3 px-3 py-2">
                   <button
                     type="button"
                     disabled={disabled}

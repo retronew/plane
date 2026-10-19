@@ -52,9 +52,10 @@ export function WorkflowImpactDialog({
       active.current = false;
     };
   }, [open]);
+  // oxlint-disable-next-line react-doctor/rendering-hydration-no-flicker -- commits the closed dialog before opening so Base UI's entry transition plays on first mount.
   useEffect(() => {
     // Synchronize Base UI's external transition lifecycle: the root must commit closed before opening.
-    // eslint-disable-next-line react/set-state-in-effect
+    // eslint-disable-next-line react/set-state-in-effect react-doctor/no-initialize-state -- commits the closed dialog before opening so its entry transition plays; not form-state initialization.
     setMounted(true);
   }, []);
   const workflow = store.lists[projectId]?.results.find(
@@ -92,6 +93,7 @@ export function WorkflowImpactDialog({
       });
     } finally {
       submitting.current = false;
+      // oxlint-disable-next-line react-doctor/no-loading-flag-reset-outside-finally -- the reset already runs in `finally`; the guard skips it only after the dialog closed/unmounted, where `busy` is no longer rendered.
       if (active.current) setBusy(false);
     }
   };

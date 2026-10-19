@@ -230,7 +230,7 @@ function usePeekSidebar({
   useEffect(() => {
     if (!isCollapsed) {
       setShowPeek(false);
-      // oxlint-disable-next-line react/set-state-in-effect -- expanding the sidebar ends the hover peek; the state belongs to that transition
+      // oxlint-disable-next-line react/set-state-in-effect react-doctor/no-adjust-state-on-prop-change -- expanding the sidebar ends the hover peek; the state belongs to that transition
       setIsHoveringTrigger(false);
       clearPeekTimeout();
     }

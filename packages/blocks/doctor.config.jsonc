@@ -1,0 +1,14 @@
+{
+  // Globs are relative to `packages/blocks`.
+  "ignore": {
+    "overrides": [
+      {
+        // The chart modules are themselves the lazy boundary: every caller already loads them
+        // through `React.lazy(() => import(...))`, so recharts lands in that deferred chunk.
+        // A dynamic import inside them would add a second hop and break the Suspense boundary.
+        "files": ["src/charts/**"],
+        "rules": ["react-doctor/prefer-dynamic-import"],
+      },
+    ],
+  },
+}

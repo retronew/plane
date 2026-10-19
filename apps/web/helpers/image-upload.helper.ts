@@ -83,6 +83,7 @@ export async function optimizeImageForUpload(file: File, entityType: EFileAssetT
   const profile = IMAGE_UPLOAD_PROFILES[entityType];
   if (!profile || !SUPPORTED_IMAGE_TYPES.has(file.type) || (await isAnimatedImage(file))) return file;
 
+  // oxlint-disable-next-line react-doctor/no-create-object-url-without-revoke -- revoked in the `finally` block below, which runs on every path (success, early return, or throw).
   const url = URL.createObjectURL(file);
   const canvases: HTMLCanvasElement[] = [];
   try {

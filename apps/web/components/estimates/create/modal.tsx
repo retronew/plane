@@ -84,6 +84,7 @@ export const CreateEstimateModal = observer(function CreateEstimateModal({
     } finally {
       if (currentSession.current === requestSession) {
         inFlight.current = false;
+        // oxlint-disable-next-line react-doctor/no-loading-flag-reset-outside-finally -- the reset already runs in `finally`; the guard skips it only for a superseded or closed session, which owns its own `saving` flag.
         setSaving(false);
       }
     }

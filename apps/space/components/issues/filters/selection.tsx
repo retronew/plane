@@ -38,7 +38,7 @@ export const FilterSelection = observer(function FilterSelection(props: Props) {
             placeholder={translate("web.search")}
             value={filtersSearchQuery}
             onChange={(e) => setFiltersSearchQuery(e.target.value)}
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
+            // oxlint-disable-next-line jsx-a11y/no-autofocus react-doctor/no-autofocus -- intentional focus on open
             autoFocus
           />
           {filtersSearchQuery !== "" && (

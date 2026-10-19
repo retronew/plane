@@ -25,6 +25,7 @@ export function UserGreetingsView(props: IUserGreetingsView) {
   // store hooks
   const { t } = useTranslation();
 
+  // react-doctor-disable-next-line react-doctor/no-locale-format-in-render -- currentTime comes from a client-only hook and web runs with ssr: false, so there is no hydration mismatch.
   const hour = greetingHourFormatter.format(currentTime);
 
   // e.g. "Wednesday, Oct 14" (en) / "10月14日星期三" (zh-CN)

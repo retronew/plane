@@ -249,6 +249,7 @@ export const DragHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOp
   const createView = (view: EditorView, sideMenu: HTMLDivElement | null) => {
     dragHandleElement = createDragHandleElement();
     const dragstartHandler = (e: DragEvent) => handleDragStart(e, view);
+    // oxlint-disable-next-line react-doctor/effect-needs-cleanup -- the listener is removed in the ProseMirror plugin's `destroy` below; this is not a React effect.
     dragHandleElement.addEventListener("dragstart", dragstartHandler);
     const dragendHandler = (e: DragEvent) => handleDragEnd(e, view);
     dragHandleElement.addEventListener("dragend", dragendHandler);

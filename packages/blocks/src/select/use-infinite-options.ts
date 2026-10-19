@@ -92,6 +92,7 @@ export function useInfiniteOptions<T>(
       }
     } finally {
       if (inFlightRef.current === generation) inFlightRef.current = null;
+      // oxlint-disable-next-line react-doctor/no-loading-flag-reset-outside-finally -- the reset already runs in `finally`; the guard skips it only when a newer generation superseded this request, which owns `isLoading`.
       if (generation === generationRef.current) setIsLoading(false);
     }
   }, []);

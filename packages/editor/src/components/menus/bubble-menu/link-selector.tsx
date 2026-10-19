@@ -91,7 +91,7 @@ export function BubbleMenuLinkSelector(props: Props) {
               }
             }}
             onFocus={() => setError(false)}
-            // oxlint-disable-next-line jsx-a11y/no-autofocus -- focus the input as soon as the link editor opens
+            // oxlint-disable-next-line jsx-a11y/no-autofocus react-doctor/no-autofocus -- focus the input as soon as the link editor opens
             autoFocus
           />
           {editor.getAttributes("link").href ? (

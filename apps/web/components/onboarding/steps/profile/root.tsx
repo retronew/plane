@@ -233,7 +233,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
+                // oxlint-disable-next-line jsx-a11y/no-autofocus react-doctor/no-autofocus -- intentional focus on open
                 autoFocus
                 className={cn(
                   "w-full rounded-md border border-strong bg-surface-1 px-3 py-2 text-secondary transition-all duration-200 placeholder:text-placeholder focus:border-transparent focus:ring-2 focus:ring-accent-strong focus:outline-none",

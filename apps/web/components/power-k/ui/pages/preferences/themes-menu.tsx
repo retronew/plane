@@ -25,6 +25,7 @@ export const PowerKPreferencesThemesMenu = observer(function PowerKPreferencesTh
   const [mounted, setMounted] = useState(false);
 
   // useEffect only runs on the client, so now we can safely show the UI
+  // oxlint-disable-next-line react-doctor/rendering-hydration-no-flicker -- client-only theme menu; the mount gate avoids a server/client hydration mismatch, so the initial null paint is intentional.
   useEffect(() => {
     setMounted(true);
   }, []);

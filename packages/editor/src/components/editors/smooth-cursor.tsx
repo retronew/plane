@@ -5,6 +5,7 @@ import { useEditorPreferences } from "@/components/editor-preferences";
 /** A local caret overlay; native selection and IME remain owned by ProseMirror. */
 export function SmoothCursor({ editor }: { editor: Editor | null }) {
   const { smoothCursor } = useEditorPreferences();
+  // oxlint-disable-next-line react-doctor/effect-needs-cleanup -- the effect returns a cleanup that cancels the rAF, detaches every listener, restores the native caret color, and removes the overlay node.
   useEffect(() => {
     if (!editor || !smoothCursor) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");

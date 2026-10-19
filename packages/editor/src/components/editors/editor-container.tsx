@@ -165,7 +165,7 @@ export function EditorContainer(props: Props) {
 
   return (
     <>
-      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- Clicking editor padding places the caret; keyboard editing and node-boundary navigation belong to the nested ProseMirror contenteditable. */}
+      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions, react-doctor/click-events-have-key-events, react-doctor/no-static-element-interactions -- Clicking editor padding places the caret; keyboard editing and node-boundary navigation belong to the nested ProseMirror contenteditable. */}
       <div
         ref={containerRef}
         id={`editor-container-${id}`}

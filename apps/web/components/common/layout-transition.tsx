@@ -31,6 +31,7 @@ export function useLayoutTransitionReady(ready: boolean) {
 }
 
 /** Suspense commits this boundary only after its content is available. */
+// react-doctor-disable-next-line react-doctor/only-export-components -- LayoutTransitionContent is a component; it returns `children` directly, which the JSX-return heuristic misreads as a non-component export.
 export function LayoutTransitionContent({ children }: { children: ReactNode }) {
   useLayoutTransitionReady(true);
   return children;
@@ -51,6 +52,7 @@ export function LayoutTransition<T extends string>({
   const [visibleLayout, setVisibleLayout] = useState(layout);
   const [isEntering, setEntering] = useState(true);
   useLayoutEffect(() => {
+    // react-doctor-disable-next-line react-doctor/no-prop-callback-in-effect -- notify the parent after the visible layout settles; this is a commit notification, not a prop mirrored into local state
     onLayoutCommit?.(visibleLayout);
   }, [visibleLayout, onLayoutCommit]);
   const [readyLayout, setReadyLayout] = useState<T>();

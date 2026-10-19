@@ -64,7 +64,7 @@ export const ProfileSettingsSidebarItemCategories = observer(function ProfileSet
             </div>
             <div className="flex flex-col gap-px">
               {categoryItems.map((item) => (
-                // oxlint-disable-next-line jsx-a11y/control-has-associated-label -- the item renders `label` as its text
+                // oxlint-disable-next-line jsx-a11y/control-has-associated-label react-doctor/control-has-associated-label -- the item renders `label` as its text
                 <SettingsSidebarItem
                   key={item.key}
                   as="button"

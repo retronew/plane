@@ -110,6 +110,7 @@ export const AIHandlePlugin = (options: SideMenuPluginProps): SideMenuHandleOpti
     aiHandleElement.appendChild(iconElement);
     // bind events
     const clickHandler = (e: MouseEvent) => handleClick(e, view);
+    // oxlint-disable-next-line react-doctor/effect-needs-cleanup -- the listener is removed in the ProseMirror plugin's `destroy` below; this is not a React effect.
     aiHandleElement.addEventListener("click", clickHandler);
 
     sideMenu?.appendChild(aiHandleElement);
