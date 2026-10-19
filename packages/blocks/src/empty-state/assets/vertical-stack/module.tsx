@@ -10,52 +10,55 @@ export type ModuleVerticalStackIllustrationProps = {
   className?: string;
 };
 
-export function ModuleVerticalStackIllustration({ className }: ModuleVerticalStackIllustrationProps) {
+function BackgroundLayers() {
   return (
-    <svg
-      width="162"
-      height="168"
-      viewBox="0 0 162 168"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <g opacity="0.2">
-        <path
-          d="M12.7461 135.993C12.7461 137.824 14.1171 139.651 16.8542 141.051L52.0981 159.009C57.5773 161.8 66.4573 161.8 71.9364 159.009L145.995 121.275C148.732 119.88 150.103 118.054 150.103 116.223V122.07C150.103 123.901 148.732 125.728 145.995 127.123L71.9364 164.857C66.4573 167.647 57.5773 167.647 52.0981 164.857L16.8542 146.898C14.1122 145.503 12.7461 143.672 12.7461 141.84V135.993Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.35"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.7461 135.993C12.7461 134.162 14.1171 132.335 16.8542 130.94L90.9124 93.2063C96.3916 90.4159 105.272 90.4159 110.751 93.2063L145.995 111.165C148.737 112.56 150.103 114.391 150.103 116.223C150.103 118.054 148.732 119.88 145.995 121.275L71.9364 159.009C66.4573 161.8 57.5773 161.8 52.0981 159.009L16.8542 141.051C14.1122 139.656 12.7461 137.824 12.7461 135.993Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.35"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      <g opacity="0.6">
-        <path
-          d="M12.7461 117.521C12.7461 119.352 14.1171 121.179 16.8542 122.579L52.0981 140.537C57.5773 143.328 66.4573 143.328 71.9364 140.537L145.995 102.803C148.732 101.408 150.103 99.5817 150.103 97.7505V103.598C150.103 105.429 148.732 107.255 145.995 108.651L71.9364 146.385C66.4573 149.175 57.5773 149.175 52.0981 146.385L16.8542 128.426C14.1122 127.031 12.7461 125.2 12.7461 123.368V117.521Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.35"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.7461 117.521C12.7461 115.69 14.1171 113.863 16.8542 112.468L90.9124 74.7341C96.3916 71.9437 105.272 71.9437 110.751 74.7341L145.995 92.6928C148.737 94.088 150.103 95.9192 150.103 97.7504C150.103 99.5817 148.732 101.408 145.995 102.803L71.9364 140.537C66.4573 143.328 57.5773 143.328 52.0981 140.537L16.8542 122.579C14.1122 121.183 12.7461 119.352 12.7461 117.521Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.35"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
+    <g opacity="0.2">
+      <path
+        d="M12.7461 135.993C12.7461 137.824 14.1171 139.651 16.8542 141.051L52.0981 159.009C57.5773 161.8 66.4573 161.8 71.9364 159.009L145.995 121.275C148.732 119.88 150.103 118.054 150.103 116.223V122.07C150.103 123.901 148.732 125.728 145.995 127.123L71.9364 164.857C66.4573 167.647 57.5773 167.647 52.0981 164.857L16.8542 146.898C14.1122 145.503 12.7461 143.672 12.7461 141.84V135.993Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.7461 135.993C12.7461 134.162 14.1171 132.335 16.8542 130.94L90.9124 93.2063C96.3916 90.4159 105.272 90.4159 110.751 93.2063L145.995 111.165C148.737 112.56 150.103 114.391 150.103 116.223C150.103 118.054 148.732 119.88 145.995 121.275L71.9364 159.009C66.4573 161.8 57.5773 161.8 52.0981 159.009L16.8542 141.051C14.1122 139.656 12.7461 137.824 12.7461 135.993Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ShadowLayers() {
+  return (
+    <g opacity="0.6">
+      <path
+        d="M12.7461 117.521C12.7461 119.352 14.1171 121.179 16.8542 122.579L52.0981 140.537C57.5773 143.328 66.4573 143.328 71.9364 140.537L145.995 102.803C148.732 101.408 150.103 99.5817 150.103 97.7505V103.598C150.103 105.429 148.732 107.255 145.995 108.651L71.9364 146.385C66.4573 149.175 57.5773 149.175 52.0981 146.385L16.8542 128.426C14.1122 127.031 12.7461 125.2 12.7461 123.368V117.521Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.7461 117.521C12.7461 115.69 14.1171 113.863 16.8542 112.468L90.9124 74.7341C96.3916 71.9437 105.272 71.9437 110.751 74.7341L145.995 92.6928C148.737 94.088 150.103 95.9192 150.103 97.7504C150.103 99.5817 148.732 101.408 145.995 102.803L71.9364 140.537C66.4573 143.328 57.5773 143.328 52.0981 140.537L16.8542 122.579C14.1122 121.183 12.7461 119.352 12.7461 117.521Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ForegroundLayers() {
+  return (
+    <>
       <path
         d="M12.7461 99.0489C12.7461 100.88 14.1171 102.706 16.8542 104.107L52.0981 122.065C57.5773 124.856 66.4573 124.856 71.9364 122.065L145.995 84.3312C148.732 82.936 150.103 81.1096 150.103 79.2784V85.1256C150.103 86.9569 148.732 88.7833 145.995 90.1785L71.9364 127.912C66.4573 130.703 57.5773 130.703 52.0981 127.912L16.8542 109.954C14.1122 108.559 12.7461 106.727 12.7461 104.896V99.0489Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
@@ -216,6 +219,13 @@ export function ModuleVerticalStackIllustration({ className }: ModuleVerticalSta
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </>
+  );
+}
+
+function DetailLayers() {
+  return (
+    <>
       <path
         d="M51.4299 8.83904C50.2914 8.25769 48.8187 8.30612 47.2151 9.12485L10.8425 27.66C7.21878 29.5057 4.27815 34.5779 4.27815 38.9913C4.27815 41.4523 5.19376 43.1867 6.62774 43.9182L4.46709 42.8185C3.02827 42.087 2.11749 40.3526 2.11749 37.8915C2.11749 33.483 5.05812 28.406 8.68182 26.5603L45.0545 8.02513C46.658 7.20641 48.1259 7.15798 49.2692 7.73932L51.4299 8.83904Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
@@ -380,6 +390,24 @@ export function ModuleVerticalStackIllustration({ className }: ModuleVerticalSta
         d="M131.307 12.143C131.219 12.0219 131.113 11.9492 131.016 11.9492L128.957 11.8911C128.836 11.8911 128.753 11.9977 128.753 12.1527V14.9286C128.753 15.0594 128.802 15.2048 128.889 15.321C128.981 15.4421 129.088 15.5148 129.185 15.5148L131.239 15.573C131.365 15.5826 131.447 15.476 131.447 15.3113V12.5354C131.447 12.4046 131.399 12.2593 131.307 12.143ZM130.812 14.7203L129.388 14.6767V12.7534L130.812 12.797V14.7203Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.quaternary}
       />
+    </>
+  );
+}
+
+export function ModuleVerticalStackIllustration({ className }: ModuleVerticalStackIllustrationProps) {
+  return (
+    <svg
+      width="162"
+      height="168"
+      viewBox="0 0 162 168"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <BackgroundLayers />
+      <ShadowLayers />
+      <ForegroundLayers />
+      <DetailLayers />
     </svg>
   );
 }

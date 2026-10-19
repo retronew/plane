@@ -10,52 +10,55 @@ export type CustomerVerticalStackIllustrationProps = {
   className?: string;
 };
 
-export function CustomerVerticalStackIllustration({ className }: CustomerVerticalStackIllustrationProps) {
+function BackgroundLayers() {
   return (
-    <svg
-      width="162"
-      height="171"
-      viewBox="0 0 162 171"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <g opacity="0.2">
-        <path
-          d="M15.6846 137.248C15.6846 139.175 17.1271 141.096 20.0069 142.569L57.0876 161.464C62.8523 164.4 72.1951 164.4 77.9598 161.464L155.878 121.763C158.758 120.295 160.2 118.374 160.2 116.447V122.599C160.2 124.526 158.758 126.448 155.878 127.916L77.9598 167.616C72.1951 170.552 62.8523 170.552 57.0876 167.616L20.0069 148.722C17.122 147.254 15.6846 145.327 15.6846 143.4V137.248Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M15.6846 137.248C15.6846 135.321 17.1271 133.4 20.0069 131.932L97.9248 92.2312C103.69 89.2953 113.032 89.2953 118.797 92.2312L155.878 111.126C158.763 112.594 160.2 114.52 160.2 116.447C160.2 118.374 158.758 120.295 155.878 121.763L77.9598 161.464C72.1951 164.4 62.8523 164.4 57.0876 161.464L20.0069 142.569C17.122 141.101 15.6846 139.175 15.6846 137.248Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      <g opacity="0.6">
-        <path
-          d="M15.6846 117.814C15.6846 119.741 17.1271 121.663 20.0069 123.136L57.0876 142.03C62.8523 144.966 72.1951 144.966 77.9598 142.03L155.878 102.33C158.758 100.862 160.2 98.9403 160.2 97.0137V103.166C160.2 105.092 158.758 107.014 155.878 108.482L77.9598 148.182C72.1951 151.118 62.8523 151.118 57.0876 148.182L20.0069 129.288C17.122 127.82 15.6846 125.893 15.6846 123.967V117.814Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M15.6846 117.814C15.6846 115.888 17.1271 113.966 20.0069 112.498L97.9248 72.7976C103.69 69.8617 113.032 69.8617 118.797 72.7976L155.878 91.6921C158.763 93.16 160.2 95.0868 160.2 97.0135C160.2 98.9401 158.758 100.862 155.878 102.33L77.9598 142.03C72.1951 144.966 62.8523 144.966 57.0876 142.03L20.0069 123.136C17.122 121.668 15.6846 119.741 15.6846 117.814Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
+    <g opacity="0.2">
+      <path
+        d="M15.6846 137.248C15.6846 139.175 17.1271 141.096 20.0069 142.569L57.0876 161.464C62.8523 164.4 72.1951 164.4 77.9598 161.464L155.878 121.763C158.758 120.295 160.2 118.374 160.2 116.447V122.599C160.2 124.526 158.758 126.448 155.878 127.916L77.9598 167.616C72.1951 170.552 62.8523 170.552 57.0876 167.616L20.0069 148.722C17.122 147.254 15.6846 145.327 15.6846 143.4V137.248Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.6846 137.248C15.6846 135.321 17.1271 133.4 20.0069 131.932L97.9248 92.2312C103.69 89.2953 113.032 89.2953 118.797 92.2312L155.878 111.126C158.763 112.594 160.2 114.52 160.2 116.447C160.2 118.374 158.758 120.295 155.878 121.763L77.9598 161.464C72.1951 164.4 62.8523 164.4 57.0876 161.464L20.0069 142.569C17.122 141.101 15.6846 139.175 15.6846 137.248Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ShadowLayers() {
+  return (
+    <g opacity="0.6">
+      <path
+        d="M15.6846 117.814C15.6846 119.741 17.1271 121.663 20.0069 123.136L57.0876 142.03C62.8523 144.966 72.1951 144.966 77.9598 142.03L155.878 102.33C158.758 100.862 160.2 98.9403 160.2 97.0137V103.166C160.2 105.092 158.758 107.014 155.878 108.482L77.9598 148.182C72.1951 151.118 62.8523 151.118 57.0876 148.182L20.0069 129.288C17.122 127.82 15.6846 125.893 15.6846 123.967V117.814Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.6846 117.814C15.6846 115.888 17.1271 113.966 20.0069 112.498L97.9248 72.7976C103.69 69.8617 113.032 69.8617 118.797 72.7976L155.878 91.6921C158.763 93.16 160.2 95.0868 160.2 97.0135C160.2 98.9401 158.758 100.862 155.878 102.33L77.9598 142.03C72.1951 144.966 62.8523 144.966 57.0876 142.03L20.0069 123.136C17.122 121.668 15.6846 119.741 15.6846 117.814Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ForegroundLayers() {
+  return (
+    <>
       <path
         d="M15.6846 98.379C15.6846 100.306 17.1271 102.227 20.0069 103.7L57.0876 122.595C62.8523 125.531 72.1951 125.531 77.9598 122.595L155.878 82.8943C158.758 81.4263 160.2 79.5048 160.2 77.5781V83.7302C160.2 85.6569 158.758 87.5784 155.878 89.0464L77.9598 128.747C72.1951 131.683 62.8523 131.683 57.0876 128.747L20.0069 109.852C17.122 108.384 15.6846 106.458 15.6846 104.531V98.379Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
@@ -212,6 +215,13 @@ export function CustomerVerticalStackIllustration({ className }: CustomerVertica
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </>
+  );
+}
+
+function DetailLayers() {
+  return (
+    <>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -380,6 +390,24 @@ export function CustomerVerticalStackIllustration({ className }: CustomerVertica
         d="M39.248 14.2627C39.1562 14.3086 39.0645 14.3137 38.9931 14.2627C38.8504 14.1608 38.8504 13.8855 38.9931 13.6409L41.3378 9.599C41.4805 9.35434 41.7047 9.2422 41.8475 9.33905L43.3969 10.4349L46.2054 5.5876C46.3481 5.34294 46.5724 5.2308 46.7151 5.32764C46.8578 5.42958 46.8578 5.70481 46.7151 5.94946L43.6518 11.2402C43.5091 11.4849 43.2848 11.597 43.1421 11.5002L41.5926 10.4042L39.5028 14.0079C39.4315 14.1302 39.3397 14.2168 39.248 14.2678V14.2627Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.quaternary}
       />
+    </>
+  );
+}
+
+export function CustomerVerticalStackIllustration({ className }: CustomerVerticalStackIllustrationProps) {
+  return (
+    <svg
+      width="162"
+      height="171"
+      viewBox="0 0 162 171"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <BackgroundLayers />
+      <ShadowLayers />
+      <ForegroundLayers />
+      <DetailLayers />
     </svg>
   );
 }

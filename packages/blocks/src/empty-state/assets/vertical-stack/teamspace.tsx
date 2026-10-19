@@ -10,52 +10,55 @@ export type TeamspaceVerticalStackIllustrationProps = {
   className?: string;
 };
 
-export function TeamspaceVerticalStackIllustration({ className }: TeamspaceVerticalStackIllustrationProps) {
+function BackgroundLayers() {
   return (
-    <svg
-      width="162"
-      height="188"
-      viewBox="0 0 162 188"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <g opacity="0.2">
-        <path
-          d="M12.5344 152.778C12.5344 154.741 14.0035 156.698 16.9366 158.198L54.703 177.442C60.5744 180.432 70.09 180.432 75.9613 177.442L155.32 137.007C158.253 135.512 159.722 133.555 159.722 131.593V137.859C159.722 139.821 158.253 141.778 155.32 143.273L75.9613 183.708C70.09 186.698 60.5744 186.698 54.703 183.708L16.9366 164.464C13.9983 162.969 12.5344 161.006 12.5344 159.044V152.778Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.5344 152.778C12.5344 150.816 14.0036 148.859 16.9366 147.364L96.2955 106.929C102.167 103.939 111.682 103.939 117.554 106.929L155.32 126.173C158.258 127.668 159.722 129.631 159.722 131.593C159.722 133.555 158.253 135.512 155.32 137.007L75.9613 177.442C70.09 180.432 60.5744 180.432 54.7031 177.442L16.9366 158.198C13.9984 156.703 12.5344 154.741 12.5344 152.778Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      <g opacity="0.6">
-        <path
-          d="M12.5344 132.984C12.5344 134.947 14.0035 136.904 16.9366 138.404L54.703 157.648C60.5744 160.638 70.09 160.638 75.9613 157.648L155.32 117.213C158.253 115.718 159.722 113.761 159.722 111.799V118.065C159.722 120.027 158.253 121.984 155.32 123.479L75.9613 163.914C70.09 166.904 60.5744 166.904 54.703 163.914L16.9366 144.67C13.9983 143.175 12.5344 141.213 12.5344 139.25V132.984Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.5344 132.984C12.5344 131.022 14.0035 129.065 16.9366 127.57L96.2955 87.1352C102.167 84.145 111.682 84.145 117.554 87.1352L155.32 106.379C158.258 107.874 159.722 109.837 159.722 111.799C159.722 113.761 158.253 115.718 155.32 117.213L75.9613 157.648C70.09 160.638 60.5744 160.638 54.703 157.648L16.9366 138.404C13.9983 136.909 12.5344 134.947 12.5344 132.984Z"
-          fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
-          stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
-          strokeWidth="0.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
+    <g opacity="0.2">
+      <path
+        d="M12.5344 152.778C12.5344 154.741 14.0035 156.698 16.9366 158.198L54.703 177.442C60.5744 180.432 70.09 180.432 75.9613 177.442L155.32 137.007C158.253 135.512 159.722 133.555 159.722 131.593V137.859C159.722 139.821 158.253 141.778 155.32 143.273L75.9613 183.708C70.09 186.698 60.5744 186.698 54.703 183.708L16.9366 164.464C13.9983 162.969 12.5344 161.006 12.5344 159.044V152.778Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5344 152.778C12.5344 150.816 14.0036 148.859 16.9366 147.364L96.2955 106.929C102.167 103.939 111.682 103.939 117.554 106.929L155.32 126.173C158.258 127.668 159.722 129.631 159.722 131.593C159.722 133.555 158.253 135.512 155.32 137.007L75.9613 177.442C70.09 180.432 60.5744 180.432 54.7031 177.442L16.9366 158.198C13.9984 156.703 12.5344 154.741 12.5344 152.778Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ShadowLayers() {
+  return (
+    <g opacity="0.6">
+      <path
+        d="M12.5344 132.984C12.5344 134.947 14.0035 136.904 16.9366 138.404L54.703 157.648C60.5744 160.638 70.09 160.638 75.9613 157.648L155.32 117.213C158.253 115.718 159.722 113.761 159.722 111.799V118.065C159.722 120.027 158.253 121.984 155.32 123.479L75.9613 163.914C70.09 166.904 60.5744 166.904 54.703 163.914L16.9366 144.67C13.9983 143.175 12.5344 141.213 12.5344 139.25V132.984Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5344 132.984C12.5344 131.022 14.0035 129.065 16.9366 127.57L96.2955 87.1352C102.167 84.145 111.682 84.145 117.554 87.1352L155.32 106.379C158.258 107.874 159.722 109.837 159.722 111.799C159.722 113.761 158.253 115.718 155.32 117.213L75.9613 157.648C70.09 160.638 60.5744 160.638 54.703 157.648L16.9366 138.404C13.9983 136.909 12.5344 134.947 12.5344 132.984Z"
+        fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.primary}
+        stroke={ILLUSTRATION_COLOR_TOKEN_MAP.stroke.primary}
+        strokeWidth="0.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function ForegroundLayers() {
+  return (
+    <>
       <path
         d="M12.5344 113.185C12.5344 115.147 14.0036 117.104 16.9366 118.604L54.7031 137.848C60.5744 140.838 70.09 140.838 75.9613 137.848L155.32 97.4135C158.253 95.9184 159.722 93.9613 159.722 91.999V98.2649C159.722 100.227 158.253 102.184 155.32 103.679L75.9613 144.114C70.09 147.104 60.5744 147.104 54.7031 144.114L16.9366 124.87C13.9984 123.375 12.5344 121.413 12.5344 119.45V113.185Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.secondary}
@@ -202,6 +205,13 @@ export function TeamspaceVerticalStackIllustration({ className }: TeamspaceVerti
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </>
+  );
+}
+
+function DetailLayers() {
+  return (
+    <>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -358,6 +368,24 @@ export function TeamspaceVerticalStackIllustration({ className }: TeamspaceVerti
         d="M139.871 31.4999C140.489 31.8166 141.081 31.8166 141.522 31.5103C141.963 31.204 142.207 30.607 142.207 29.8543C142.207 29.1016 141.963 28.2554 141.522 27.5026C141.086 26.7499 140.494 26.1477 139.871 25.8311V31.5051V31.4999Z"
         fill={ILLUSTRATION_COLOR_TOKEN_MAP.fill.quaternary}
       />
+    </>
+  );
+}
+
+export function TeamspaceVerticalStackIllustration({ className }: TeamspaceVerticalStackIllustrationProps) {
+  return (
+    <svg
+      width="162"
+      height="188"
+      viewBox="0 0 162 188"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <BackgroundLayers />
+      <ShadowLayers />
+      <ForegroundLayers />
+      <DetailLayers />
     </svg>
   );
 }
