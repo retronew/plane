@@ -1,7 +1,7 @@
 import { ProjectComparison, projectCompletion } from "./project-comparison";
 import CreatedVsResolved from "./work-items/created-vs-resolved";
 import { AnalyticsMetricCard } from "./metric-card";
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -13,7 +13,6 @@ import type { TModuleStatus } from "@plane/blocks/icons";
 import { AnalyticsEntityCell } from "./entity-cell";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import { BarChart } from "@plane/blocks/charts/bar-chart";
 import { useTranslation } from "@plane/i18n";
 import type { TAnalyticsDetailRow, TAnalyticsDetailTab, TBarItem } from "@plane/types";
 import { formatCompactDate, getFileURL, renderFormattedDate } from "@plane/utils";
@@ -26,6 +25,9 @@ import { DataTable } from "./insight-table/data-table";
 import type { TInsightTableFeatures } from "./insight-table/table-features";
 import { TableLoader } from "./insight-table/loader";
 import { AnalyticsDetailsLoader } from "./loaders";
+
+// recharts is a large dependency; the chart loads when this tab renders.
+const BarChart = lazy(() => import("@plane/blocks/charts/bar-chart").then((mod) => ({ default: mod.BarChart })));
 import { AsyncContent } from "@/components/common/async-content";
 import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { exportAnalytics } from "./export";
@@ -349,18 +351,22 @@ export const AnalyticsDetails = observer(function AnalyticsDetails({
                           : 260,
                     }}
                   >
-                    <BarChart
-                      className="h-full w-full"
-                      barSize={24}
-                      layout={tab === "users" || tab === "cycles" || tab === "modules" ? "vertical" : "horizontal"}
-                      legend={
-                        bars.length > 1 ? { align: "center", verticalAlign: "bottom", layout: "horizontal" } : undefined
-                      }
-                      data={chart.slice(page * 20, (page + 1) * 20)}
-                      bars={bars}
-                      xAxis={{ key: "name", label: "" }}
-                      yAxis={{ key: "count", label: label("count") }}
-                    />
+                    <Suspense fallback={<AnalyticsDetailsLoader />}>
+                      <BarChart
+                        className="h-full w-full"
+                        barSize={24}
+                        layout={tab === "users" || tab === "cycles" || tab === "modules" ? "vertical" : "horizontal"}
+                        legend={
+                          bars.length > 1
+                            ? { align: "center", verticalAlign: "bottom", layout: "horizontal" }
+                            : undefined
+                        }
+                        data={chart.slice(page * 20, (page + 1) * 20)}
+                        bars={bars}
+                        xAxis={{ key: "name", label: "" }}
+                        yAxis={{ key: "count", label: label("count") }}
+                      />
+                    </Suspense>
                   </div>
                 ) : (
                   <AnalyticsEmptyState

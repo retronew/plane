@@ -4,11 +4,11 @@
  * See the LICENSE file for details.
  */
 
+import { lazy, Suspense } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 import { useTranslation } from "@plane/i18n";
-import { CreatedResolvedChart } from "./created-resolved-chart";
 import type { IChartResponse } from "@plane/types";
 import { useAnalytics } from "@/hooks/store/use-analytics";
 import { AsyncContent } from "@/components/common/async-content";
@@ -21,11 +21,18 @@ import { ChartLoader } from "../loaders";
 import { StatisticsNote, StatisticsNotePanel } from "../statistics-note";
 
 const service = new AnalyticsService();
+
+// recharts is a large dependency; the chart module loads when this section renders.
+const CreatedResolvedChart = lazy(function CreatedResolvedChart() {
+  return import("./created-resolved-chart").then((mod) => ({ default: mod.CreatedResolvedChart }));
+});
 const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = false }: { dashboard?: boolean }) {
   const { selectedDuration, selectedProjects, selectedCycle, selectedModule, isPeekView, isEpic } = useAnalytics();
   const { workspaceSlug } = useParams();
   const { t } = useTranslation();
   const slug = String(workspaceSlug);
+  // Same height for the loading skeleton, the Suspense fallback and the chart itself.
+  const chartHeight = dashboard ? 220 : 260;
   const { data, isLoading, error, mutate } = useSWR(
     [
       "created-vs-resolved",
@@ -69,13 +76,11 @@ const CreatedVsResolved = observer(function CreatedVsResolved({ dashboard = fals
       {error ? (
         <AnalyticsRequestError onRetry={() => void mutate()} />
       ) : (
-        <AsyncContent
-          loading={isLoading}
-          minHeight={dashboard ? 220 : 260}
-          skeleton={<ChartLoader height={dashboard ? 220 : 260} />}
-        >
+        <AsyncContent loading={isLoading} minHeight={chartHeight} skeleton={<ChartLoader height={chartHeight} />}>
           {data?.data.length ? (
-            <CreatedResolvedChart rows={data.data} granularity={data.granularity} height={dashboard ? 220 : 260} />
+            <Suspense fallback={<ChartLoader height={chartHeight} />}>
+              <CreatedResolvedChart rows={data.data} granularity={data.granularity} height={chartHeight} />
+            </Suspense>
           ) : (
             <AnalyticsEmptyState
               title={t("common.no_data_available")}

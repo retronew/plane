@@ -1,13 +1,16 @@
 import { orderBy } from "lodash-es";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Button } from "@makeplane/propel/components/button";
 import { useTranslation } from "@plane/i18n";
 import type { TAnalyticsDetailRow } from "@plane/types";
-import { BarChart } from "@plane/blocks/charts/bar-chart";
 import { CHART_SEMANTIC_COLORS } from "@plane/constants";
 import { AnalyticsChoice } from "./choice";
-import { ComparisonChart } from "./comparison-chart";
 import { StatisticsNotePanel } from "./statistics-note";
+import { ChartLoader } from "./loaders";
+
+// recharts is a large dependency; both charts load when this section renders.
+const ComparisonChart = lazy(() => import("./comparison-chart").then((mod) => ({ default: mod.ComparisonChart })));
+const BarChart = lazy(() => import("@plane/blocks/charts/bar-chart").then((mod) => ({ default: mod.BarChart })));
 
 export function projectCompletion(rows: TAnalyticsDetailRow[]) {
   const completed = rows.reduce((sum, row) => sum + Number(row.completed ?? 0), 0);
@@ -92,37 +95,39 @@ export function ProjectComparison({
           )}
         </div>
       </div>
-      {mode === "projects" ? (
-        <ComparisonChart
-          horizontal
-          label={t(`workspace_analytics.details.fields.${metric}`)}
-          unit={metric === "completion" ? "%" : ""}
-          data={ordered
-            .slice(activePage * 12, (activePage + 1) * 12)
-            .map((row) => ({ key: String(row.id), name: String(row.name), value: Number(row[metric] ?? 0) }))}
-          selected={selected}
-          onSelect={(key) => onSelect(selected === key ? undefined : key)}
-        />
-      ) : statuses.length ? (
-        <BarChart
-          className="h-64 w-full"
-          data={statuses}
-          barSize={24}
-          bars={[
-            {
-              key: "count",
-              label: t("workspace_analytics.details.fields.count"),
-              fill: CHART_SEMANTIC_COLORS.primary,
-              textClassName: "fill-primary",
-              stackId: "project-status",
-            },
-          ]}
-          xAxis={{ key: "name", label: "" }}
-          yAxis={{ key: "count", label: t("workspace_analytics.details.fields.count") }}
-        />
-      ) : (
-        <p className="py-12 text-center text-13 text-tertiary">{t("common.no_data_available")}</p>
-      )}
+      <Suspense fallback={<ChartLoader />}>
+        {mode === "projects" ? (
+          <ComparisonChart
+            horizontal
+            label={t(`workspace_analytics.details.fields.${metric}`)}
+            unit={metric === "completion" ? "%" : ""}
+            data={ordered
+              .slice(activePage * 12, (activePage + 1) * 12)
+              .map((row) => ({ key: String(row.id), name: String(row.name), value: Number(row[metric] ?? 0) }))}
+            selected={selected}
+            onSelect={(key) => onSelect(selected === key ? undefined : key)}
+          />
+        ) : statuses.length ? (
+          <BarChart
+            className="h-64 w-full"
+            data={statuses}
+            barSize={24}
+            bars={[
+              {
+                key: "count",
+                label: t("workspace_analytics.details.fields.count"),
+                fill: CHART_SEMANTIC_COLORS.primary,
+                textClassName: "fill-primary",
+                stackId: "project-status",
+              },
+            ]}
+            xAxis={{ key: "name", label: "" }}
+            yAxis={{ key: "count", label: t("workspace_analytics.details.fields.count") }}
+          />
+        ) : (
+          <p className="py-12 text-center text-13 text-tertiary">{t("common.no_data_available")}</p>
+        )}
+      </Suspense>
       <StatisticsNotePanel>
         <p className="text-12 leading-relaxed text-tertiary">
           {t(

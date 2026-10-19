@@ -68,7 +68,7 @@ it("uses the correct distinct empty state for each distribution", () => {
   expect(screen.getByText("workspace_empty_state.your_work_by_state.title")).toBeTruthy();
   expect(screen.getByText("workspace_empty_state.your_work_by_priority.title")).toBeTruthy();
 });
-it("passes real counts and localized labels to the charts", () => {
+it("passes real counts and localized labels to the charts", async () => {
   const populated: IUserProfileData = {
     ...profile,
     priority_distribution: [{ priority: "urgent", priority_count: 2 }],
@@ -80,8 +80,12 @@ it("passes real counts and localized labels to the charts", () => {
       <ProfileStateDistribution userProfile={populated} stateDistribution={populated.state_distribution} />
     </>
   );
-  expect(JSON.parse(screen.getByTestId("priority-data").textContent!)[0]).toMatchObject({ name: "urgent", count: 2 });
-  expect(JSON.parse(screen.getByTestId("state-data").textContent!)[0]).toMatchObject({
+  // Both charts are lazy-loaded, so wait for their modules before reading the props they got.
+  expect(JSON.parse((await screen.findByTestId("priority-data")).textContent!)[0]).toMatchObject({
+    name: "urgent",
+    count: 2,
+  });
+  expect(JSON.parse((await screen.findByTestId("state-data")).textContent!)[0]).toMatchObject({
     name: "web.unstarted",
     value: 3,
   });

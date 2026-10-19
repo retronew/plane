@@ -6,7 +6,6 @@
 
 import { useState } from "react";
 import type { PageProps } from "@react-pdf/renderer";
-import { pdf } from "@react-pdf/renderer";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useParams } from "react-router";
 // plane editor
@@ -26,7 +25,6 @@ import {
 import { Select, SelectDropdownPlacementContext } from "@plane/blocks/select";
 import { setToast } from "@plane/blocks/toast";
 // components
-import { PDFDocument } from "@/components/editor/pdf";
 // hooks
 import { useParseEditorContent } from "@/hooks/use-parse-editor-content";
 import { translate } from "@plane/i18n";
@@ -179,6 +177,11 @@ export function ExportPageModal(props: Props) {
         noAssets: selectedContentVariety === "no-assets",
       });
 
+      // The PDF renderer is a large dependency, so it loads only when the user exports a page.
+      const [{ pdf }, { PDFDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/editor/pdf"),
+      ]);
       const blob = await pdf(<PDFDocument content={parsedPageContent} pageFormat={selectedPageFormat} />).toBlob();
       initiateDownload(blob, `${fileName}-${selectedPageFormat.toString().toLowerCase()}.pdf`);
     } catch (error) {

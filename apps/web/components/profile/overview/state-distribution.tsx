@@ -4,12 +4,15 @@
  * See the LICENSE file for details.
  */
 
+import { lazy, Suspense } from "react";
 // plane imports
 import { AsyncContent } from "@/components/common/async-content";
 import { ChartLoader } from "@/components/analytics/loaders";
+
+// recharts is a large dependency; the chart loads when this card renders.
+const PieChart = lazy(() => import("@plane/blocks/charts/pie-chart").then((mod) => ({ default: mod.PieChart })));
 import { CHART_STATE_COLORS, STATE_GROUPS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { PieChart } from "@plane/blocks/charts/pie-chart";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
 import type { IUserProfileData, IUserStateDistribution } from "@plane/types";
 import { Card } from "@plane/blocks/card";
@@ -39,36 +42,38 @@ export function ProfileStateDistribution({ userProfile }: Props) {
         <Card className="h-full rounded-xl border border-subtle-1 bg-layer-2 p-3">
           {distribution.length > 0 ? (
             <div className="grid h-[200px] w-full grid-cols-1 gap-x-3 md:grid-cols-2">
-              <PieChart
-                className="size-full"
-                dataKey="value"
-                margin={{
-                  top: 8,
-                  right: 0,
-                  bottom: 8,
-                  left: 0,
-                }}
-                data={
-                  distribution.map((group) => ({
-                    id: group.state_group,
+              <Suspense fallback={<ChartLoader height={225} />}>
+                <PieChart
+                  className="size-full"
+                  dataKey="value"
+                  margin={{
+                    top: 8,
+                    right: 0,
+                    bottom: 8,
+                    left: 0,
+                  }}
+                  data={
+                    distribution.map((group) => ({
+                      id: group.state_group,
+                      key: group.state_group,
+                      value: group.state_count,
+                      name: STATE_GROUPS[group.state_group].label,
+                      color: CHART_STATE_COLORS[group.state_group],
+                    })) ?? []
+                  }
+                  cells={distribution.map((group) => ({
                     key: group.state_group,
-                    value: group.state_count,
-                    name: STATE_GROUPS[group.state_group].label,
-                    color: CHART_STATE_COLORS[group.state_group],
-                  })) ?? []
-                }
-                cells={distribution.map((group) => ({
-                  key: group.state_group,
-                  fill: CHART_STATE_COLORS[group.state_group],
-                }))}
-                showTooltip
-                tooltipLabel={t("web.count")}
-                customTooltipContent={renderStateTooltip}
-                paddingAngle={5}
-                cornerRadius={4}
-                innerRadius="50%"
-                showLabel={false}
-              />
+                    fill: CHART_STATE_COLORS[group.state_group],
+                  }))}
+                  showTooltip
+                  tooltipLabel={t("web.count")}
+                  customTooltipContent={renderStateTooltip}
+                  paddingAngle={5}
+                  cornerRadius={4}
+                  innerRadius="50%"
+                  showLabel={false}
+                />
+              </Suspense>
               <div className="flex items-center">
                 <div className="w-full space-y-1.5">
                   {distribution.map((group) => (

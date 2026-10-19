@@ -33,7 +33,7 @@ vi.mock("./cycle-chart", () => ({
   WorkspaceCycleChart: ({ hidden }: { hidden: Set<string> }) => <div data-testid="chart">{[...hidden].join(",")}</div>,
 }));
 
-it("links to the correct cycle and toggles the matching chart series with native buttons", () => {
+it("links to the correct cycle and toggles the matching chart series with native buttons", async () => {
   render(
     <MemoryRouter>
       <WorkspaceCycleCard cycle={cycleFixture} workspaceSlug="demo" />
@@ -47,7 +47,8 @@ it("links to the correct cycle and toggles the matching chart series with native
   expect(pending.getAttribute("aria-pressed")).toBe("true");
   fireEvent.click(pending);
   expect(pending.getAttribute("aria-pressed")).toBe("false");
-  expect(screen.getByTestId("chart").textContent).toBe("actual");
+  // The chart is lazy-loaded, so wait for its module before asserting.
+  expect((await screen.findByTestId("chart")).textContent).toBe("actual");
   expect(screen.getByText("workspace_cycles.cancelled_excluded:1")).toBeTruthy();
   expect(screen.getByText("workspace_cycles.on_track")).toBeTruthy();
   expect(screen.queryByText("workspace_cycles.leading:0")).toBeNull();

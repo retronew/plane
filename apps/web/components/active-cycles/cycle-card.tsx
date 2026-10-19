@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { TrendingDown, TrendingUp, CircleMinus, Minus } from "lucide-react";
@@ -9,9 +9,11 @@ import { useTranslation } from "@plane/i18n";
 import type { TCyclePlotType, TWorkspaceActiveCycle } from "@plane/types";
 import { getProgress } from "@plane/utils";
 import { CYCLE_CHART_COLORS, workspaceCycleChartData } from "./chart-data";
-import { WorkspaceCycleChart } from "./cycle-chart";
 import type { CycleChartSeries } from "./cycle-chart";
 import { CycleProgressIcon } from "./cycle-progress-icon";
+
+// recharts is a large dependency; the chart loads when a card renders.
+const WorkspaceCycleChart = lazy(() => import("./cycle-chart").then((mod) => ({ default: mod.WorkspaceCycleChart })));
 
 export type CycleCardData = Omit<TWorkspaceActiveCycle, "owned_by_detail" | "completion_chart">;
 
@@ -136,7 +138,9 @@ export function WorkspaceCycleCard({
               {t("workspace_cycles.for")} <span className="text-secondary">{t("sidebar.work_items")}</span>
             </span>
           </div>
-          <WorkspaceCycleChart cycle={cycle} burnup={burnup} hidden={hidden} />
+          <Suspense fallback={<div className="h-full w-full" />}>
+            <WorkspaceCycleChart cycle={cycle} burnup={burnup} hidden={hidden} />
+          </Suspense>
         </div>
         <div className="min-w-0 border-t border-subtle-1 pt-4 text-13 leading-5 lg:col-start-1 lg:row-start-1 lg:border-t-0 lg:border-r lg:pt-0 lg:pr-6">
           <p className="flex min-h-9 items-center text-12 font-medium text-tertiary">
