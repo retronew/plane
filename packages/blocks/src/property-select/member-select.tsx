@@ -176,6 +176,182 @@ function triggerLabel(
   return remaining > 0 ? `${names} +${remaining}` : names;
 }
 
+/** Resolves the member-specific display flags and the trigger's chrome variant from the caller's
+ *  `variant`. `kind` (variant minus its size suffix) drives the member-specific logic; the
+ *  `avatar-group` kind is member-only, hence the `pill` swap for size parsing. */
+function resolveMemberSelectChrome(variant: MemberSelectVariant): {
+  isAvatarGroup: boolean;
+  isSearchInput: boolean;
+  showCountOnMultiple: boolean;
+  avatarSize: AvatarGroupSize;
+  triggerVariant: SelectVariant;
+} {
+  if (isAvatarGroupVariant(variant)) {
+    const triggerSize = avatarGroupTriggerSize(variant);
+    return {
+      isAvatarGroup: true,
+      isSearchInput: false,
+      showCountOnMultiple: false,
+      avatarSize: TRIGGER_AVATAR_SIZE[triggerSize],
+      triggerVariant: TRIGGER_SIZE_VARIANT[triggerSize],
+    };
+  }
+
+  const { size } = splitSelectVariant(variant);
+  const kind = variant.replace(`-${size}`, "");
+  return {
+    isAvatarGroup: false,
+    isSearchInput: kind === "search-input",
+    showCountOnMultiple: kind === "table-cell" || kind === "pill",
+    avatarSize: "xs",
+    triggerVariant: variant,
+  };
+}
+
+function isMemberSelectClearable(props: MemberSelectProps): boolean {
+  return !props.multiple && !!props.clearable;
+}
+
+function getSelectedMembers(props: MemberSelectProps): MemberOption[] {
+  if (props.multiple) return props.value;
+  return props.value ? [props.value] : [];
+}
+
+function resolveClearLabel(props: MemberSelectProps, noAssigneeLabel: string): string {
+  if (props.multiple) return noAssigneeLabel;
+  return props.clearLabel ?? (props.placeholder || noAssigneeLabel);
+}
+
+/** `search-input`'s box IS the trigger (no separate label), so `placeholder` doubles as its empty
+ *  text unless the caller sets a distinct `searchPlaceholder`. */
+function resolveSearchPlaceholder(
+  searchPlaceholderProp: string | undefined,
+  isSearchInput: boolean,
+  placeholder: string,
+  fallback: string
+): string {
+  return searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? fallback;
+}
+
+/** Chips are the only way to deselect for `search-input` (no click-to-toggle row), so an already-picked
+ *  member shouldn't also appear in the list. */
+function createMemberFilterOption(selectedIds: Set<string>, filterOption?: (member: MemberOption) => boolean) {
+  return (member: MemberOption) => !selectedIds.has(member.id) && (filterOption?.(member) ?? true);
+}
+
+/** Suspended members cannot be newly picked; an already-selected one stays toggleable so it can be removed. */
+function isMemberOptionDisabled(member: MemberOption, selectedIds: Set<string>): boolean {
+  return !!member.suspended && !selectedIds.has(member.id);
+}
+
+type MemberTriggerContentsProps = {
+  members: MemberOption[];
+  avatarSize: AvatarGroupSize;
+  showLabel: boolean;
+  showCountOnMultiple: boolean;
+  placeholder: string;
+  countLabel: string;
+};
+
+function MemberTriggerContents(props: MemberTriggerContentsProps) {
+  const { members, avatarSize, showLabel, showCountOnMultiple, placeholder, countLabel } = props;
+  const showLabelText = showLabel && (members.length > 0 || !!placeholder);
+
+  return (
+    <>
+      {members.length > 0 && (
+        <span
+          className={cn(
+            "flex items-center gap-1 group-hover/list-item:[&>div]:space-x-1 [&>div]:hover:space-x-1 [&>div>*]:transition-[margin] [&>div>*]:duration-200 motion-reduce:[&>div>*]:transition-none",
+            !showLabelText && "grow"
+          )}
+        >
+          {/* Resolve one more than `MAX_TRIGGER_AVATARS` so `AvatarGroup` can render the real extra face
+              instead of a "+1" chip when `total` is exactly `max + 1`; `total` covers the rest. */}
+          <AvatarGroup size={avatarSize} max={MAX_TRIGGER_AVATARS} total={members.length}>
+            {members.slice(0, MAX_TRIGGER_AVATARS + 1).map((member) => (
+              <Avatar key={member.id} alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} />
+            ))}
+          </AvatarGroup>
+        </span>
+      )}
+      {showLabelText && (
+        <span className="min-w-0 grow truncate text-left">
+          {triggerLabel(members, showCountOnMultiple, placeholder, countLabel)}
+        </span>
+      )}
+    </>
+  );
+}
+
+type MemberSelectTriggerProps = {
+  multiple: boolean;
+  disabled: boolean;
+  variant: SelectVariant;
+  avatarSize: AvatarGroupSize;
+  isAvatarGroup: boolean;
+  showCountOnMultiple: boolean;
+  showLabel: boolean;
+  placeholder: string;
+  hideChevron?: boolean;
+  className?: string;
+  tooltip?: SelectTooltip;
+  testId?: string;
+  tabIndex?: number;
+};
+
+function MemberSelectTrigger(props: MemberSelectTriggerProps) {
+  const { t } = useTranslation();
+  const {
+    multiple,
+    disabled,
+    variant,
+    avatarSize,
+    isAvatarGroup,
+    showCountOnMultiple,
+    showLabel,
+    placeholder,
+    hideChevron,
+    className,
+    tooltip,
+    testId,
+    tabIndex,
+  } = props;
+
+  const prependMemberIcon = useCallback(
+    (members: MemberOption[]) =>
+      members.length === 0 ? multiple ? <AssigneeOutline /> : <UserAltOutline /> : undefined,
+    [multiple]
+  );
+
+  return (
+    <Select.Trigger<MemberOption>
+      disabled={disabled}
+      variant={variant}
+      tabIndex={tabIndex}
+      data-testid={testId}
+      className={cn(isAvatarGroup && AVATAR_GROUP_TRIGGER_CLASSNAME, className)}
+      appendIcon={hideChevron ? null : undefined}
+      prependIcon={prependMemberIcon}
+      label={(members) =>
+        triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))
+      }
+      tooltip={tooltip}
+    >
+      {(members) => (
+        <MemberTriggerContents
+          members={members}
+          avatarSize={avatarSize}
+          showLabel={showLabel}
+          showCountOnMultiple={showCountOnMultiple}
+          placeholder={placeholder}
+          countLabel={t("member", { count: members.length })}
+        />
+      )}
+    </Select.Trigger>
+  );
+}
+
 /**
  * Presentational, data-source-agnostic member picker built on the generic infinite `Select` (single or
  * multi). The client supplies `getValues` (bound to the paginated members-lite service), the selected
@@ -200,61 +376,31 @@ export function MemberSelect(props: MemberSelectProps) {
     tabIndex,
     suspendedLabel = t("web.suspended"),
   } = props;
-  const clearable = !props.multiple && !!props.clearable;
+  const clearable = isMemberSelectClearable(props);
 
-  // `size` drives avatar sizing; `kind` (variant minus its size suffix) drives the member-specific
-  // display logic. `splitSelectVariant` doesn't recognise `avatar-group` (a member-only kind) and would
-  const isAvatarGroup = isAvatarGroupVariant(props.variant);
-  // fall back to a hardcoded `sm` — swap in the same-shaped `pill` kind just for size parsing.
-  const { size } = splitSelectVariant(isAvatarGroup ? props.variant.replace("avatar-group", "pill") : props.variant);
-  const kind = isAvatarGroup ? "avatar-group" : props.variant.replace(`-${size}`, "");
-  const isPill = kind === "pill";
-  const isSearchInput = kind === "search-input";
+  const chrome = resolveMemberSelectChrome(props.variant);
   // `search-input`'s box IS the trigger (no separate label), so `placeholder` doubles as its empty
   // text unless the caller sets a distinct `searchPlaceholder`.
-  const searchPlaceholder =
-    searchPlaceholderProp ?? (isSearchInput ? placeholder : undefined) ?? t("web.search_members");
+  const searchPlaceholder = resolveSearchPlaceholder(
+    searchPlaceholderProp,
+    chrome.isSearchInput,
+    placeholder,
+    t("web.search_members")
+  );
 
-  // Only `avatar-group-*` maps its size onto the face — every other variant keeps the `xs` trigger face it
-  // always had, so this fix doesn't reflow `pill-lg`/`select-lg`'s existing chrome. It's also not a Select
-  // trigger kind on its own, so forward the same-size `pill-*` so height stays put when a form flips empty
-  // pill → faces; chrome is cancelled via `AVATAR_GROUP_TRIGGER_CLASSNAME`. Testing the type guard directly
-  // (rather than the `isAvatarGroup` alias, or a ternary) is what narrows `props.variant` per-branch below —
-  // TS only carries a saved alias's narrowing onto a `readonly` property, and `variant` isn't one.
-  let avatarSize: AvatarGroupSize = "xs";
-  let triggerVariant: SelectVariant;
-  if (isAvatarGroupVariant(props.variant)) {
-    const triggerSize = avatarGroupTriggerSize(props.variant);
-    avatarSize = TRIGGER_AVATAR_SIZE[triggerSize];
-    triggerVariant = TRIGGER_SIZE_VARIANT[triggerSize];
-  } else {
-    triggerVariant = props.variant;
-  }
-
-  const showCountOnMultiple = kind === "table-cell" || isPill;
-  const defaultShowLabel = !isAvatarGroup;
   // A call-site can override the variant's default label visibility (e.g. avatars-only subscriber rows).
-  const showLabel = showLabelProp ?? defaultShowLabel;
+  const showLabel = showLabelProp ?? !chrome.isAvatarGroup;
 
-  const selectedList = props.multiple ? props.value : props.value ? [props.value] : [];
+  const selectedList = getSelectedMembers(props);
   const selectedIds = new Set(selectedList.map((member) => member.id));
 
-  const clearLabel = !props.multiple
-    ? (props.clearLabel ?? (placeholder || t("web.no_assignee")))
-    : t("web.no_assignee");
+  const clearLabel = resolveClearLabel(props, t("web.no_assignee"));
   const clearOption = useMemo<MemberOption>(
     () => ({ id: CLEAR_OPTION_ID, display_name: clearLabel, avatar_url: null }),
     [clearLabel]
   );
 
-  // Chips are the only way to deselect for `search-input` (no click-to-toggle row), so an already-picked member shouldn't also appear in the list.
-  const excludeSelected = (member: MemberOption) => !selectedIds.has(member.id);
-  const combinedFilterOption = (member: MemberOption) => excludeSelected(member) && (filterOption?.(member) ?? true);
-  const prependMemberIcon = useCallback(
-    (members: MemberOption[]) =>
-      members.length === 0 ? props.multiple ? <AssigneeOutline /> : <UserAltOutline /> : undefined,
-    [props.multiple]
-  );
+  const combinedFilterOption = createMemberFilterOption(selectedIds, filterOption);
   const renderMemberTrailing = useCallback(
     (member: MemberOption) =>
       member.suspended ? <Badge variant="neutral" size="xs" label={suspendedLabel} /> : undefined,
@@ -269,59 +415,34 @@ export function MemberSelect(props: MemberSelectProps) {
     searchPlaceholder,
     onClose,
     // `Combobox.Chips` can't survive the lazy-mount resting state.
-    lazyMount: isSearchInput ? false : undefined,
-    showSearch: isSearchInput ? false : undefined,
-    filterOption: isSearchInput ? combinedFilterOption : filterOption,
+    lazyMount: chrome.isSearchInput ? false : undefined,
+    showSearch: chrome.isSearchInput ? false : undefined,
+    filterOption: chrome.isSearchInput ? combinedFilterOption : filterOption,
     getOptionValue: (member: MemberOption) => member.id,
     getOptionLabel: (member: MemberOption) => member.display_name,
     getOptionIcon: renderMemberOptionIcon,
-    // Suspended members cannot be newly picked; an already-selected one stays toggleable so it can be removed.
-    getOptionDisabled: (member: MemberOption) => !!member.suspended && !selectedIds.has(member.id),
+    getOptionDisabled: (member: MemberOption) => isMemberOptionDisabled(member, selectedIds),
     getOptionTrailing: renderMemberTrailing,
     renderChip: renderMemberChip,
     headerItems: clearable ? [clearOption] : undefined,
   };
 
   const trigger = (
-    <Select.Trigger<MemberOption>
+    <MemberSelectTrigger
+      multiple={!!props.multiple}
       disabled={disabled}
-      variant={triggerVariant}
-      tabIndex={tabIndex}
-      data-testid={testId}
-      className={cn(isAvatarGroup && AVATAR_GROUP_TRIGGER_CLASSNAME, className)}
-      appendIcon={props.hideChevron ? null : undefined}
-      prependIcon={prependMemberIcon}
-      label={(members) =>
-        triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))
-      }
+      variant={chrome.triggerVariant}
+      avatarSize={chrome.avatarSize}
+      isAvatarGroup={chrome.isAvatarGroup}
+      showCountOnMultiple={chrome.showCountOnMultiple}
+      showLabel={showLabel}
+      placeholder={placeholder}
+      hideChevron={props.hideChevron}
+      className={className}
       tooltip={tooltip}
-    >
-      {(members) => (
-        <>
-          {members.length > 0 && (
-            <span
-              className={cn(
-                "flex items-center gap-1 group-hover/list-item:[&>div]:space-x-1 [&>div]:hover:space-x-1 [&>div>*]:transition-[margin] [&>div>*]:duration-200 motion-reduce:[&>div>*]:transition-none",
-                !(showLabel && (members.length > 0 || !!placeholder)) && "grow"
-              )}
-            >
-              {/* Resolve one more than `MAX_TRIGGER_AVATARS` so `AvatarGroup` can render the real extra face
-                  instead of a "+1" chip when `total` is exactly `max + 1`; `total` covers the rest. */}
-              <AvatarGroup size={avatarSize} max={MAX_TRIGGER_AVATARS} total={members.length}>
-                {members.slice(0, MAX_TRIGGER_AVATARS + 1).map((member) => (
-                  <Avatar key={member.id} alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} />
-                ))}
-              </AvatarGroup>
-            </span>
-          )}
-          {showLabel && (members.length > 0 || !!placeholder) && (
-            <span className="min-w-0 grow truncate text-left">
-              {triggerLabel(members, showCountOnMultiple, placeholder, t("member", { count: members.length }))}
-            </span>
-          )}
-        </>
-      )}
-    </Select.Trigger>
+      testId={testId}
+      tabIndex={tabIndex}
+    />
   );
 
   // Branch on multiplicity so the generic `Select`'s discriminated value/onChange union narrows.

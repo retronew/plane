@@ -39,6 +39,112 @@ type TAuthenticationWrapper = {
 // to use.
 const isValidURL = isValidNextPath;
 
+type TAuthenticationState = {
+  pathname: string;
+  nextPath: string | null;
+  pageType: TPageType;
+  isUserLoading: boolean;
+  isUserSWRLoading: boolean;
+  workspacesLoader: boolean;
+  isUserOnboard: boolean;
+  currentUser: ReturnType<typeof useUser>["data"];
+  currentUserProfile: ReturnType<typeof useUserProfile>["data"];
+  currentUserSettings: ReturnType<typeof useUserSettings>["data"];
+  workspaces: ReturnType<typeof useWorkspace>["workspaces"];
+};
+
+type TAuthenticationOutcome =
+  | { type: "loader" }
+  | { type: "children" }
+  | { type: "redirect"; method: "push" | "replace"; url: string };
+
+const getRedirectOutcome = (method: "push" | "replace", url: string): TAuthenticationOutcome => ({
+  type: "redirect",
+  method,
+  url,
+});
+
+const isUserOnboarded = (profile: TAuthenticationState["currentUserProfile"] | undefined): boolean => {
+  if (profile?.is_onboarded) return true;
+  return Boolean(
+    profile?.onboarding_step?.profile_complete &&
+    profile?.onboarding_step?.workspace_create &&
+    profile?.onboarding_step?.workspace_invite &&
+    profile?.onboarding_step?.workspace_join
+  );
+};
+
+const getUnauthenticatedRedirectUrl = (pathname: string): string => `/${pathname ? `?next_path=${pathname}` : ``}`;
+
+const getWorkspaceRedirectionUrl = (state: TAuthenticationState): string => {
+  const { nextPath, currentUserSettings, workspaces } = state;
+
+  // validating the nextPath from the router query
+  if (nextPath && isValidURL(nextPath)) return nextPath;
+
+  // validate the last and fallback workspace_slug
+  const currentWorkspaceSlug =
+    currentUserSettings?.workspace?.last_workspace_slug || currentUserSettings?.workspace?.fallback_workspace_slug;
+
+  // validate the current workspace_slug is available in the user's workspace list
+  const isCurrentWorkspaceValid = Object.values(workspaces || {}).findIndex(
+    (workspace) => workspace.slug === currentWorkspaceSlug
+  );
+
+  if (isCurrentWorkspaceValid >= 0) return `/${currentWorkspaceSlug}`;
+
+  return "/create-workspace";
+};
+
+const resolveNonAuthenticatedOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  if (!state.currentUser?.id) return { type: "children" };
+  if (state.currentUserProfile?.id && state.isUserOnboard)
+    return getRedirectOutcome("push", getWorkspaceRedirectionUrl(state));
+  return getRedirectOutcome("push", "/onboarding");
+};
+
+const resolveOnboardingOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (state.currentUserProfile?.id && state.isUserOnboard)
+    return getRedirectOutcome("replace", getWorkspaceRedirectionUrl(state));
+  return { type: "children" };
+};
+
+const resolveSetPasswordOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (!state.currentUser?.is_password_autoset && state.currentUserProfile?.id && state.isUserOnboard)
+    return getRedirectOutcome("push", getWorkspaceRedirectionUrl(state));
+  return { type: "children" };
+};
+
+const resolveAuthenticatedOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (state.currentUserProfile?.id && state.isUserOnboard) return { type: "children" };
+  return getRedirectOutcome("push", "/onboarding");
+};
+
+const resolvePageTypeOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  switch (state.pageType) {
+    case EPageTypes.NON_AUTHENTICATED:
+      return resolveNonAuthenticatedOutcome(state);
+    case EPageTypes.ONBOARDING:
+      return resolveOnboardingOutcome(state);
+    case EPageTypes.SET_PASSWORD:
+      return resolveSetPasswordOutcome(state);
+    case EPageTypes.AUTHENTICATED:
+      return resolveAuthenticatedOutcome(state);
+    default:
+      return { type: "children" };
+  }
+};
+
+const resolveAuthenticationOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
+  if ((state.isUserSWRLoading || state.isUserLoading || state.workspacesLoader) && !state.currentUser?.id)
+    return { type: "loader" };
+  if (state.pageType === EPageTypes.PUBLIC) return { type: "children" };
+  return resolvePageTypeOutcome(state);
+};
+
 export const AuthenticationWrapper = observer(function AuthenticationWrapper(props: TAuthenticationWrapper) {
   const pathname = usePathname();
   const router = useAppRouter();
@@ -57,93 +163,28 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
     shouldRetryOnError: false,
   });
 
-  const isUserOnboard =
-    currentUserProfile?.is_onboarded ||
-    (currentUserProfile?.onboarding_step?.profile_complete &&
-      currentUserProfile?.onboarding_step?.workspace_create &&
-      currentUserProfile?.onboarding_step?.workspace_invite &&
-      currentUserProfile?.onboarding_step?.workspace_join) ||
-    false;
+  const isUserOnboard = isUserOnboarded(currentUserProfile);
 
-  const getWorkspaceRedirectionUrl = (): string => {
-    let redirectionRoute = "/create-workspace";
+  const outcome = resolveAuthenticationOutcome({
+    pathname,
+    nextPath,
+    pageType,
+    isUserLoading,
+    isUserSWRLoading,
+    workspacesLoader,
+    isUserOnboard,
+    currentUser,
+    currentUserProfile,
+    currentUserSettings,
+    workspaces,
+  });
 
-    // validating the nextPath from the router query
-    if (nextPath && isValidURL(nextPath.toString())) {
-      redirectionRoute = nextPath.toString();
-      return redirectionRoute;
-    }
-
-    // validate the last and fallback workspace_slug
-    const currentWorkspaceSlug =
-      currentUserSettings?.workspace?.last_workspace_slug || currentUserSettings?.workspace?.fallback_workspace_slug;
-
-    // validate the current workspace_slug is available in the user's workspace list
-    const isCurrentWorkspaceValid = Object.values(workspaces || {}).findIndex(
-      (workspace) => workspace.slug === currentWorkspaceSlug
-    );
-
-    if (isCurrentWorkspaceValid >= 0) redirectionRoute = `/${currentWorkspaceSlug}`;
-
-    return redirectionRoute;
-  };
-
-  if ((isUserSWRLoading || isUserLoading || workspacesLoader) && !currentUser?.id)
+  if (outcome.type === "loader")
     return <AppLoader className="relative flex h-screen w-full items-center justify-center" />;
 
-  if (pageType === EPageTypes.PUBLIC) return <>{children}</>;
-
-  if (pageType === EPageTypes.NON_AUTHENTICATED) {
-    if (!currentUser?.id) return <>{children}</>;
-    else {
-      if (currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.push(currentRedirectRoute);
-        return <></>;
-      } else {
-        router.push("/onboarding");
-        return <></>;
-      }
-    }
-  }
-
-  if (pageType === EPageTypes.ONBOARDING) {
-    if (!currentUser?.id) {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    } else {
-      if (currentUser && currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.replace(currentRedirectRoute);
-        return <></>;
-      } else return <>{children}</>;
-    }
-  }
-
-  if (pageType === EPageTypes.SET_PASSWORD) {
-    if (!currentUser?.id) {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    } else {
-      if (currentUser && !currentUser?.is_password_autoset && currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.push(currentRedirectRoute);
-        return <></>;
-      } else return <>{children}</>;
-    }
-  }
-
-  if (pageType === EPageTypes.AUTHENTICATED) {
-    if (currentUser?.id) {
-      if (currentUserProfile && currentUserProfile?.id && isUserOnboard) return <>{children}</>;
-      else {
-        router.push(`/onboarding`);
-        return <></>;
-      }
-    } else {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    }
+  if (outcome.type === "redirect") {
+    router[outcome.method](outcome.url);
+    return <></>;
   }
 
   return <>{children}</>;

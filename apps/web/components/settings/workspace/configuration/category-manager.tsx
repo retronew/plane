@@ -4,12 +4,12 @@ import { SortableItem, SortableProvider } from "@plane/blocks/sortable";
 import { StateSummary } from "@/components/project-states/state-summary";
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
-import type { TStateGroups } from "@plane/types";
+import type { IState, TStateGroups } from "@plane/types";
 import { StateForm } from "@/components/project-states/create-update/form";
 import { StateGroupPanel } from "@/components/project-states/group-panel";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 import { CategoryColorPicker } from "./category-color-picker";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { useParams } from "react-router";
 import useSWR from "swr";
 import { GripVertical, MoreHorizontal, Pencil, Trash2, Tag, Circle, Check } from "lucide-react";
@@ -33,6 +33,7 @@ import { SettingsHeading } from "@/components/settings/heading";
 import {
   configurationKey,
   workspaceConfigurationService as service,
+  type ConfigurationResource,
   type ProjectCategory,
 } from "@/services/workspace-configuration.service";
 
@@ -44,8 +45,168 @@ const phaseIcons: Record<string, TStateGroups> = {
   completed: "completed",
   cancelled: "cancelled",
 };
+type CategoryKind = "status" | "label";
 type Draft = { id?: string; name: string; color: string; group?: string; description?: string };
-export function CategoryManager({ kind, group }: { kind: "status" | "label"; group?: string }) {
+
+type CategoryMutationContext = {
+  workspaceSlug: string;
+  resource: ConfigurationResource;
+  kind: CategoryKind;
+  t: (key: string) => string;
+  reload: () => Promise<unknown>;
+  applyOrder: (entries: ProjectCategory[]) => Promise<unknown>;
+  setBusy: (value: boolean) => void;
+  setMessage: (value: string) => void;
+};
+
+async function saveCategory({
+  event,
+  draft,
+  busy,
+  context,
+  setDraft,
+}: {
+  event: FormEvent;
+  draft: Draft | null;
+  busy: boolean;
+  context: CategoryMutationContext;
+  setDraft: (value: Draft | null) => void;
+}) {
+  event.preventDefault();
+  if (!draft || busy) return;
+  const { workspaceSlug, resource, reload, setBusy, setMessage, t } = context;
+  setBusy(true);
+  setMessage("");
+  try {
+    await service.save(workspaceSlug, resource, draft);
+    await reload();
+    const savedName = draft.name.trim();
+    setDraft(null);
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLButtonElement>(`button[data-category-name="${CSS.escape(savedName)}"]`)?.focus();
+    });
+  } catch {
+    setMessage(t("web.configuration_save_error"));
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function submitStateCategory({
+  draft,
+  group,
+  formData,
+  context,
+  setDraft,
+}: {
+  draft: Draft;
+  group?: string;
+  formData: Partial<IState>;
+  context: CategoryMutationContext;
+  setDraft: (value: Draft | null) => void;
+}): Promise<{ status: "success" | "error" }> {
+  const { workspaceSlug, resource, reload, setBusy, setMessage, t } = context;
+  setBusy(true);
+  setMessage("");
+  try {
+    await service.save(workspaceSlug, resource, {
+      id: draft.id,
+      group,
+      name: formData.name,
+      color: formData.color,
+      description: formData.description,
+    });
+    await reload();
+    setDraft(null);
+    return { status: "success" };
+  } catch {
+    setMessage(t("web.configuration_save_error"));
+    return { status: "error" };
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function makeCategoryDefault({ entry, context }: { entry: ProjectCategory; context: CategoryMutationContext }) {
+  const { workspaceSlug, resource, reload, setMessage, t } = context;
+  try {
+    await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
+    await reload();
+  } catch {
+    setMessage(t("web.configuration_save_error"));
+  }
+}
+
+async function reorderCategories({
+  from,
+  target,
+  data,
+  busy,
+  draft,
+  context,
+}: {
+  from: string;
+  target: string;
+  data: ProjectCategory[] | undefined;
+  busy: boolean;
+  draft: Draft | null;
+  context: CategoryMutationContext;
+}) {
+  if (!data || busy || from === target || draft) return;
+  const entries = [...data];
+  const index = entries.findIndex((e) => e.id === from);
+  const to = entries.findIndex((e) => e.id === target);
+  if (index < 0 || to < 0) return;
+  const [entry] = entries.splice(index, 1);
+  entries.splice(to, 0, entry);
+  const { workspaceSlug, kind, reload, applyOrder, setBusy, setMessage, t } = context;
+  setBusy(true);
+  setMessage("");
+  try {
+    await service.reorder(
+      workspaceSlug,
+      kind,
+      entries.map((e) => e.id)
+    );
+    await applyOrder(entries);
+  } catch (reorderError) {
+    setMessage(t("web.category_order_error"));
+    await reload();
+    throw reorderError;
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function deleteCategory({
+  deleting,
+  busy,
+  label,
+  context,
+  setDeleting,
+}: {
+  deleting: ProjectCategory | null;
+  busy: boolean;
+  label: boolean;
+  context: CategoryMutationContext;
+  setDeleting: (value: ProjectCategory | null) => void;
+}) {
+  if (!deleting || busy) return;
+  const { workspaceSlug, resource, reload, setBusy, setMessage, t } = context;
+  setBusy(true);
+  try {
+    await service.remove(workspaceSlug, resource, deleting.id);
+    await reload();
+    setDeleting(null);
+  } catch {
+    setMessage(t(label ? "web.configuration_delete_error" : "web.project_status_delete_error"));
+    setDeleting(null);
+  } finally {
+    setBusy(false);
+  }
+}
+
+export function CategoryManager({ kind, group }: { kind: CategoryKind; group?: string }) {
   const { workspaceSlug = "" } = useParams();
   const { t } = useTranslation();
   const resource = `project-categories/${kind}` as const;
@@ -63,130 +224,111 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     if (editingId !== null) editorRef.current?.querySelector<HTMLInputElement>("input:not([type=color])")?.focus();
   }, [editingId]);
   const label = kind === "label";
+  const context: CategoryMutationContext = {
+    workspaceSlug,
+    resource,
+    kind,
+    t,
+    reload: () => mutate(),
+    applyOrder: (entries: ProjectCategory[]) => mutate(entries, false),
+    setBusy,
+    setMessage,
+  };
   const begin = (entry?: ProjectCategory, openColor = false) => {
     setColorPickerInitiallyOpen(openColor);
     setMessage("");
     setDraft(entry ?? { name: "", color: "#60646C", group, description: "" });
   };
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!draft || busy) return;
-    setBusy(true);
-    setMessage("");
-    try {
-      await service.save(workspaceSlug, resource, draft);
-      await mutate();
-      const savedName = draft.name.trim();
-      setDraft(null);
-      requestAnimationFrame(() => {
-        document.querySelector<HTMLButtonElement>(`button[data-category-name="${CSS.escape(savedName)}"]`)?.focus();
-      });
-    } catch {
-      setMessage(t("web.configuration_save_error"));
-    } finally {
-      setBusy(false);
-    }
-  };
-  const makeDefault = async (entry: ProjectCategory) => {
-    try {
-      await service.save(workspaceSlug, resource, { id: entry.id, is_default: true });
-      await mutate();
-    } catch {
-      setMessage(t("web.configuration_save_error"));
-    }
-  };
-  const reorder = async (from: string, target: string) => {
-    if (!data || busy || from === target || draft) return;
-    const entries = [...data];
-    const index = entries.findIndex((e) => e.id === from);
-    const to = entries.findIndex((e) => e.id === target);
-    if (index < 0 || to < 0) return;
-    const [entry] = entries.splice(index, 1);
-    entries.splice(to, 0, entry);
-    setBusy(true);
-    setMessage("");
-    try {
-      await service.reorder(
-        workspaceSlug,
-        kind,
-        entries.map((e) => e.id)
-      );
-      await mutate(entries, false);
-    } catch (reorderError) {
-      setMessage(t("web.category_order_error"));
-      await mutate();
-      throw reorderError;
-    } finally {
-      setBusy(false);
-    }
-  };
-  const editor =
-    draft &&
-    (kind === "status" ? (
-      <StateForm
-        focusNameOnOpen={!draft.id}
-        colorPickerInitiallyOpen={colorPickerInitiallyOpen}
-        key={draft.id ?? "new"}
-        data={{ name: draft.name, color: draft.color, description: draft.description }}
-        stateGroup={phaseIcons[group ?? draft.group ?? "draft"]}
-        buttonTitle={t(draft.id ? "web.update" : "web.create")}
-        buttonDisabled={busy}
-        onCancel={() => setDraft(null)}
-        onSubmit={async (formData) => {
-          setBusy(true);
-          setMessage("");
-          try {
-            await service.save(workspaceSlug, resource, {
-              id: draft.id,
-              group,
-              name: formData.name,
-              color: formData.color,
-              description: formData.description,
-            });
-            await mutate();
-            setDraft(null);
-            return { status: "success" };
-          } catch {
-            setMessage(t("web.configuration_save_error"));
-            return { status: "error" };
-          } finally {
-            setBusy(false);
-          }
-        }}
-      />
-    ) : (
-      <CategoryLabelForm
-        draft={draft}
-        kind={kind}
-        label={label}
-        busy={busy}
-        editorRef={editorRef}
-        onChange={(patch) => setDraft({ ...draft, ...patch })}
-        onCancel={() => setDraft(null)}
-        onSubmit={save}
-      />
-    ));
+  const editor = draft ? (
+    <CategoryEditorPanel
+      draft={draft}
+      kind={kind}
+      group={group}
+      label={label}
+      busy={busy}
+      colorPickerInitiallyOpen={colorPickerInitiallyOpen}
+      editorRef={editorRef}
+      onChange={(patch) => setDraft({ ...draft, ...patch })}
+      onCancel={() => setDraft(null)}
+      onLabelSubmit={(event) => saveCategory({ event, draft, busy, context, setDraft })}
+      onStateSubmit={(formData) => submitStateCategory({ draft, group, formData, context, setDraft })}
+    />
+  ) : null;
+  return (
+    <CategoryManagerView
+      group={group}
+      kind={kind}
+      label={label}
+      data={data}
+      error={error}
+      message={message}
+      draft={draft}
+      busy={busy}
+      deleting={deleting}
+      editor={editor}
+      onRetry={() => void mutate()}
+      onAdd={() => begin()}
+      onBegin={begin}
+      onDelete={setDeleting}
+      onMakeDefault={(entry) => makeCategoryDefault({ entry, context })}
+      onReorder={(from, target) => reorderCategories({ from, target, data, busy, draft, context })}
+      onDeleteOpenChange={(open) => {
+        if (!open && !busy) setDeleting(null);
+      }}
+      onDeleteCancel={() => setDeleting(null)}
+      onDeleteConfirm={() => deleteCategory({ deleting, busy, label, context, setDeleting })}
+    />
+  );
+}
+
+type CategoryManagerViewProps = {
+  group?: string;
+  kind: CategoryKind;
+  label: boolean;
+  data: ProjectCategory[] | undefined;
+  error: unknown;
+  message: string;
+  draft: Draft | null;
+  busy: boolean;
+  deleting: ProjectCategory | null;
+  editor: ReactNode;
+  onRetry: () => void;
+  onAdd: () => void;
+  onBegin: (entry?: ProjectCategory, openColor?: boolean) => void;
+  onDelete: (entry: ProjectCategory) => void;
+  onMakeDefault: (entry: ProjectCategory) => void;
+  onReorder: (from: string, target: string) => Promise<void>;
+  onDeleteOpenChange: (open: boolean) => void;
+  onDeleteCancel: () => void;
+  onDeleteConfirm: () => void;
+};
+
+function CategoryManagerView({
+  group,
+  kind,
+  label,
+  data,
+  error,
+  message,
+  draft,
+  busy,
+  deleting,
+  editor,
+  onRetry,
+  onAdd,
+  onBegin,
+  onDelete,
+  onMakeDefault,
+  onReorder,
+  onDeleteOpenChange,
+  onDeleteCancel,
+  onDeleteConfirm,
+}: CategoryManagerViewProps) {
+  const { t } = useTranslation();
+  const disabled = busy || !!draft;
   const content = (
     <div className="flex flex-col gap-5">
-      {!group && (
-        <SettingsHeading
-          variant="h4"
-          title={group ? t(`web.project_phase_${group}`) : t(label ? "web.project_labels" : "web.project_statuses")}
-          description={
-            group ? undefined : t(label ? "web.project_labels_description" : "web.project_statuses_description")
-          }
-          control={
-            <Button
-              stretch="auto"
-              size="md"
-              variant="secondary"
-              label={t(label ? "web.add_project_label" : "web.add_project_status")}
-              disabled={busy || !!draft}
-              onClick={() => begin()}
-            />
-          }
-        />
-      )}
+      {!group && <CategoryManagerHeader label={label} addDisabled={disabled} onAdd={onAdd} />}
       {message && (
         <p role="alert" className="text-13 text-danger-primary">
           {message}
@@ -195,93 +337,40 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
       {error ? (
         <div className="flex items-center gap-3 text-13">
           <span>{t("web.configuration_load_error")}</span>
-          <Button
-            stretch="auto"
-            size="md"
-            variant="secondary"
-            label={t("common.retry")}
-            onClick={() => void mutate()}
-          />
+          <Button stretch="auto" size="md" variant="secondary" label={t("common.retry")} onClick={onRetry} />
         </div>
       ) : !data ? (
         <p aria-busy="true">{t("loading")}</p>
       ) : (
-        <div className={cn("flex flex-col", label ? "gap-2" : "gap-0")}>
-          {label && draft && !draft.id && editor}
-          {data
-            .filter((entry) => !group || entry.group === group)
-            .map((entry, sortableIndex) =>
-              draft?.id === entry.id ? (
-                <div key={entry.id} className={label ? undefined : STATE_ROW_DIVIDER_CLASS_NAME}>
-                  {editor}
-                </div>
-              ) : (
-                <CategoryRow
-                  key={entry.id}
-                  entry={entry}
-                  index={sortableIndex}
-                  group={group}
-                  kind={kind}
-                  label={label}
-                  disabled={busy || !!draft}
-                  data={data}
-                  onBegin={begin}
-                  onDelete={setDeleting}
-                  onMakeDefault={makeDefault}
-                />
-              )
-            )}
-          {!label && draft && !draft.id && editor}
-          {!data.length && !draft && !group && (
-            <EmptyStateCompact
-              rootClassName="rounded-lg border border-subtle bg-surface-1 px-4 py-10"
-              assetKey={label ? "label" : "state"}
-              assetClassName="size-20"
-              title={t(label ? "web.project_labels_empty" : "web.project_statuses_empty")}
-              description={
-                group ? undefined : t(label ? "web.project_labels_description" : "web.project_statuses_description")
-              }
-            />
-          )}
-        </div>
+        <CategoryList
+          data={data}
+          group={group}
+          kind={kind}
+          label={label}
+          draft={draft}
+          disabled={disabled}
+          editor={editor}
+          onBegin={onBegin}
+          onDelete={onDelete}
+          onMakeDefault={onMakeDefault}
+        />
       )}
       <CategoryDeleteDialog
         deleting={deleting}
         busy={busy}
-        onOpenChange={(open) => {
-          if (!open && !busy) setDeleting(null);
-        }}
-        onCancel={() => setDeleting(null)}
-        onConfirm={async () => {
-          if (!deleting || busy) return;
-          setBusy(true);
-          try {
-            await service.remove(workspaceSlug, resource, deleting.id);
-            await mutate();
-            setDeleting(null);
-          } catch {
-            setMessage(t(label ? "web.configuration_delete_error" : "web.project_status_delete_error"));
-            setDeleting(null);
-          } finally {
-            setBusy(false);
-          }
-        }}
+        onOpenChange={onDeleteOpenChange}
+        onCancel={onDeleteCancel}
+        onConfirm={onDeleteConfirm}
       />
     </div>
   );
   return group ? (
-    <StateGroupPanel
-      title={t(`web.project_phase_${group}`)}
-      addDisabled={busy || !!draft}
-      onAdd={() => {
-        begin();
-      }}
-    >
+    <StateGroupPanel title={t(`web.project_phase_${group}`)} addDisabled={disabled} onAdd={onAdd}>
       <SortableProvider
-        disabled={busy || !!draft}
+        disabled={disabled}
         onSortEnd={async ({ id, index }) => {
           const target = data?.filter((item) => !group || item.group === group)[index];
-          if (target) await reorder(id, target.id);
+          if (target) await onReorder(id, target.id);
         }}
       >
         {content}
@@ -289,14 +378,165 @@ export function CategoryManager({ kind, group }: { kind: "status" | "label"; gro
     </StateGroupPanel>
   ) : (
     <SortableProvider
-      disabled={busy || !!draft}
+      disabled={disabled}
       onSortEnd={async ({ id, index }) => {
         const target = data?.[index];
-        if (target) await reorder(id, target.id);
+        if (target) await onReorder(id, target.id);
       }}
     >
       {content}
     </SortableProvider>
+  );
+}
+
+function CategoryManagerHeader({
+  label,
+  addDisabled,
+  onAdd,
+}: {
+  label: boolean;
+  addDisabled: boolean;
+  onAdd: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <SettingsHeading
+      variant="h4"
+      title={t(label ? "web.project_labels" : "web.project_statuses")}
+      description={t(label ? "web.project_labels_description" : "web.project_statuses_description")}
+      control={
+        <Button
+          stretch="auto"
+          size="md"
+          variant="secondary"
+          label={t(label ? "web.add_project_label" : "web.add_project_status")}
+          disabled={addDisabled}
+          onClick={onAdd}
+        />
+      }
+    />
+  );
+}
+
+type CategoryListProps = {
+  data: ProjectCategory[];
+  group?: string;
+  kind: CategoryKind;
+  label: boolean;
+  draft: Draft | null;
+  disabled: boolean;
+  editor: ReactNode;
+  onBegin: (entry?: ProjectCategory, openColor?: boolean) => void;
+  onDelete: (entry: ProjectCategory) => void;
+  onMakeDefault: (entry: ProjectCategory) => void;
+};
+
+function CategoryList({
+  data,
+  group,
+  kind,
+  label,
+  draft,
+  disabled,
+  editor,
+  onBegin,
+  onDelete,
+  onMakeDefault,
+}: CategoryListProps) {
+  const { t } = useTranslation();
+  return (
+    <div className={cn("flex flex-col", label ? "gap-2" : "gap-0")}>
+      {label && draft && !draft.id && editor}
+      {data
+        .filter((entry) => !group || entry.group === group)
+        .map((entry, sortableIndex) =>
+          draft?.id === entry.id ? (
+            <div key={entry.id} className={label ? undefined : STATE_ROW_DIVIDER_CLASS_NAME}>
+              {editor}
+            </div>
+          ) : (
+            <CategoryRow
+              key={entry.id}
+              entry={entry}
+              index={sortableIndex}
+              group={group}
+              kind={kind}
+              label={label}
+              disabled={disabled}
+              data={data}
+              onBegin={onBegin}
+              onDelete={onDelete}
+              onMakeDefault={onMakeDefault}
+            />
+          )
+        )}
+      {!label && draft && !draft.id && editor}
+      {!data.length && !draft && !group && (
+        <EmptyStateCompact
+          rootClassName="rounded-lg border border-subtle bg-surface-1 px-4 py-10"
+          assetKey={label ? "label" : "state"}
+          assetClassName="size-20"
+          title={t(label ? "web.project_labels_empty" : "web.project_statuses_empty")}
+          description={
+            group ? undefined : t(label ? "web.project_labels_description" : "web.project_statuses_description")
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+type CategoryEditorPanelProps = {
+  draft: Draft;
+  kind: CategoryKind;
+  group?: string;
+  label: boolean;
+  busy: boolean;
+  colorPickerInitiallyOpen: boolean;
+  editorRef: RefObject<HTMLDivElement | null>;
+  onChange: (patch: Partial<Draft>) => void;
+  onCancel: () => void;
+  onLabelSubmit: (event: FormEvent) => void;
+  onStateSubmit: (formData: Partial<IState>) => Promise<{ status: string }>;
+};
+
+function CategoryEditorPanel({
+  draft,
+  kind,
+  group,
+  label,
+  busy,
+  colorPickerInitiallyOpen,
+  editorRef,
+  onChange,
+  onCancel,
+  onLabelSubmit,
+  onStateSubmit,
+}: CategoryEditorPanelProps) {
+  const { t } = useTranslation();
+  return kind === "status" ? (
+    <StateForm
+      focusNameOnOpen={!draft.id}
+      colorPickerInitiallyOpen={colorPickerInitiallyOpen}
+      key={draft.id ?? "new"}
+      data={{ name: draft.name, color: draft.color, description: draft.description }}
+      stateGroup={phaseIcons[group ?? draft.group ?? "draft"]}
+      buttonTitle={t(draft.id ? "web.update" : "web.create")}
+      buttonDisabled={busy}
+      onCancel={onCancel}
+      onSubmit={onStateSubmit}
+    />
+  ) : (
+    <CategoryLabelForm
+      draft={draft}
+      kind={kind}
+      label={label}
+      busy={busy}
+      editorRef={editorRef}
+      onChange={onChange}
+      onCancel={onCancel}
+      onSubmit={onLabelSubmit}
+    />
   );
 }
 
@@ -483,7 +723,7 @@ type CategoryLabelFormProps = {
   editorRef: RefObject<HTMLDivElement | null>;
   onChange: (patch: Partial<Draft>) => void;
   onCancel: () => void;
-  onSubmit: (event: React.FormEvent) => void;
+  onSubmit: (event: FormEvent) => void;
 };
 function CategoryLabelForm({
   draft,

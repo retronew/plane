@@ -23,6 +23,16 @@ interface IActiveCycleDetails {
   cycleId: string | null | undefined;
 }
 
+function getCycleFilterTarget(workspaceSlug: string, projectId: string, cycleId: string | null | undefined) {
+  if (!workspaceSlug || !projectId || !cycleId) return null;
+  return { workspaceSlug, projectId, cycleId };
+}
+
+function createCycleRequest(enabled: boolean, key: string, fetcher: () => unknown) {
+  if (!enabled) return { key: null, fetcher: null };
+  return { key, fetcher };
+}
+
 const useCyclesDetails = (props: IActiveCycleDetails) => {
   // props
   const { workspaceSlug, projectId, cycleId } = props;
@@ -38,51 +48,59 @@ const useCyclesDetails = (props: IActiveCycleDetails) => {
   const { fetchActiveCycleProgress, getCycleById, fetchActiveCycleAnalytics } = useCycle();
   // derived values
   const cycle = cycleId ? getCycleById(cycleId) : null;
+  const activeCycleId = cycle?.id ?? "";
+  const canFetch = Boolean(workspaceSlug && projectId && activeCycleId);
 
   // fetch cycle details
-  useSWR(
-    workspaceSlug && projectId && cycle?.id ? `PROJECT_ACTIVE_CYCLE_${projectId}_PROGRESS_${cycle.id}` : null,
-    workspaceSlug && projectId && cycle?.id ? () => fetchActiveCycleProgress(workspaceSlug, projectId, cycle.id) : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
+  const progressRequest = createCycleRequest(
+    canFetch,
+    `PROJECT_ACTIVE_CYCLE_${projectId}_PROGRESS_${activeCycleId}`,
+    () => fetchActiveCycleProgress(workspaceSlug, projectId, activeCycleId)
   );
-  useSWR(
-    workspaceSlug && projectId && cycle?.id && !cycle?.distribution
-      ? `PROJECT_ACTIVE_CYCLE_${projectId}_DURATION_${cycle.id}`
-      : null,
-    workspaceSlug && projectId && cycle?.id && !cycle?.distribution
-      ? () => fetchActiveCycleAnalytics(workspaceSlug, projectId, cycle.id, "issues")
-      : null
-  );
-  useSWR(
-    workspaceSlug && projectId && cycle?.id && !cycle?.estimate_distribution
-      ? `PROJECT_ACTIVE_CYCLE_${projectId}_ESTIMATE_DURATION_${cycle.id}`
-      : null,
-    workspaceSlug && projectId && cycle?.id && !cycle?.estimate_distribution
-      ? () => fetchActiveCycleAnalytics(workspaceSlug, projectId, cycle.id, "points")
-      : null
-  );
-  useSWR(
-    workspaceSlug && projectId && cycle?.id ? CYCLE_ISSUES_WITH_PARAMS(cycle?.id, { priority: "urgent,high" }) : null,
-    workspaceSlug && projectId && cycle?.id
-      ? () => fetchActiveCycleIssues(workspaceSlug, projectId, 30, cycle?.id)
-      : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
-  );
+  useSWR(progressRequest.key, progressRequest.fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+  });
 
-  const cycleIssueDetails = cycle?.id ? getActiveCycleByIdFromIssue(cycle?.id) : { nextPageResults: false };
+  const distributionRequest = createCycleRequest(
+    canFetch && !cycle?.distribution,
+    `PROJECT_ACTIVE_CYCLE_${projectId}_DURATION_${activeCycleId}`,
+    () => fetchActiveCycleAnalytics(workspaceSlug, projectId, activeCycleId, "issues")
+  );
+  useSWR(distributionRequest.key, distributionRequest.fetcher);
+
+  const estimateDistributionRequest = createCycleRequest(
+    canFetch && !cycle?.estimate_distribution,
+    `PROJECT_ACTIVE_CYCLE_${projectId}_ESTIMATE_DURATION_${activeCycleId}`,
+    () => fetchActiveCycleAnalytics(workspaceSlug, projectId, activeCycleId, "points")
+  );
+  useSWR(estimateDistributionRequest.key, estimateDistributionRequest.fetcher);
+
+  const issuesRequest = createCycleRequest(
+    canFetch,
+    CYCLE_ISSUES_WITH_PARAMS(activeCycleId, { priority: "urgent,high" }),
+    () => fetchActiveCycleIssues(workspaceSlug, projectId, 30, activeCycleId)
+  );
+  useSWR(issuesRequest.key, issuesRequest.fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+  });
+
+  const cycleIssueDetails = cycle?.id ? getActiveCycleByIdFromIssue(cycle.id) : { nextPageResults: false };
 
   const handleFiltersUpdate = useCallback(
     async (conditions: TWorkItemFilterCondition[]) => {
-      if (!workspaceSlug || !projectId || !cycleId) return;
+      const target = getCycleFilterTarget(workspaceSlug, projectId, cycleId);
+      if (!target) return;
 
       await updateFilterExpressionFromConditions(
         EIssuesStoreType.CYCLE,
-        cycleId,
+        target.cycleId,
         conditions,
-        updateFilterExpression.bind(updateFilterExpression, workspaceSlug, projectId, cycleId)
+        updateFilterExpression.bind(updateFilterExpression, target.workspaceSlug, target.projectId, target.cycleId)
       );
 
-      router.push(`/${workspaceSlug}/projects/${projectId}/cycles/${cycleId}`);
+      router.push(`/${target.workspaceSlug}/projects/${target.projectId}/cycles/${target.cycleId}`);
     },
     [workspaceSlug, projectId, cycleId, updateFilterExpressionFromConditions, updateFilterExpression, router]
   );

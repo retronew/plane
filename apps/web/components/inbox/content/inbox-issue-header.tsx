@@ -63,6 +63,147 @@ type TInboxIssueActionsHeader = {
   embedRemoveCurrentNotification?: () => void;
 };
 
+type TTranslationFn = ReturnType<typeof useTranslation>["t"];
+
+type TAllowPermissions = (
+  permissions: EUserPermissions[],
+  level: EUserPermissionsLevel,
+  workspaceSlug?: string,
+  projectId?: string
+) => boolean;
+
+type TInboxIssuePermissions = {
+  isAllowed: boolean;
+  canMarkAsDuplicate: boolean;
+  canMarkAsAccepted: boolean;
+  canMarkAsDeclined: boolean;
+  canDelete: boolean;
+  isProjectAdmin: boolean;
+  isAcceptedOrDeclined: boolean | undefined;
+  numberOfDaysLeft: number | undefined;
+};
+
+const getInboxIssuePermissions = (
+  allowPermissions: TAllowPermissions,
+  workspaceSlug: string,
+  projectId: string,
+  inboxIssue: IInboxIssueStore | undefined,
+  currentUserId: string | undefined
+): TInboxIssuePermissions => {
+  const isAllowed = allowPermissions(
+    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+    EUserPermissionsLevel.PROJECT,
+    workspaceSlug,
+    projectId
+  );
+  const isPending = inboxIssue?.status === 0 || inboxIssue?.status === -2;
+  return {
+    isAllowed,
+    canMarkAsDuplicate: isAllowed && isPending,
+    canMarkAsAccepted: isAllowed && isPending,
+    canMarkAsDeclined: isAllowed && isPending,
+    canDelete:
+      allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId) ||
+      inboxIssue?.issue?.created_by === currentUserId,
+    isProjectAdmin: allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId),
+    isAcceptedOrDeclined: inboxIssue?.status ? [-1, 1, 2].includes(inboxIssue.status) : undefined,
+    numberOfDaysLeft: findHowManyDaysLeft(inboxIssue?.snoozed_till),
+  };
+};
+
+const canUnsnoozeIssue = (inboxIssue: IInboxIssueStore | undefined, numberOfDaysLeft: number | undefined) =>
+  Boolean(inboxIssue?.snoozed_till && numberOfDaysLeft && numberOfDaysLeft > 0);
+
+const getRedirectIssueId = (issueIds: string[], currentIssueId: string | undefined): string | undefined => {
+  const currentIssueIndex = issueIds.findIndex((id) => id === currentIssueId);
+  const nextIssueId = issueIds[currentIssueIndex + 1];
+  if (nextIssueId) return nextIssueId;
+  return issueIds[currentIssueIndex - 1] || undefined;
+};
+
+const getNextIssueId = (
+  issueIds: string[],
+  currentIssueIndex: number,
+  direction: "next" | "prev"
+): string | undefined => {
+  if (issueIds.length === 0) return undefined;
+  const nextIssueIndex =
+    direction === "next"
+      ? (currentIssueIndex + 1) % issueIds.length
+      : (currentIssueIndex - 1 + issueIds.length) % issueIds.length;
+  return issueIds[nextIssueIndex];
+};
+
+const isComposerFocused = () => {
+  const activeElement = document.activeElement as HTMLElement | null;
+  if (!activeElement) return false;
+  return activeElement.classList.contains("tiptap") || activeElement.id === "title-input";
+};
+
+const getIntakeHref = (workspaceSlug: string, projectId: string, currentTab: string, inboxIssueId?: string): string => {
+  const issueQuery = inboxIssueId ? `&inboxIssueId=${inboxIssueId}` : "";
+  return `/${workspaceSlug}/projects/${projectId}/intake?currentTab=${currentTab}${issueQuery}`;
+};
+
+type TInboxIssueActionsMenuProps = {
+  canMarkAsAccepted: boolean;
+  canMarkAsDuplicate: boolean;
+  canDelete: boolean;
+  canUnsnooze: boolean;
+  t: TTranslationFn;
+  onSnooze: () => void;
+  onMarkAsDuplicate: () => void;
+  onCopyLink: () => void;
+  onDelete: () => void;
+};
+
+function InboxIssueActionsMenu(props: TInboxIssueActionsMenuProps) {
+  const { canMarkAsAccepted, canMarkAsDuplicate, canDelete, canUnsnooze, t, onSnooze, onMarkAsDuplicate } = props;
+  const { onCopyLink, onDelete } = props;
+  return (
+    <Menu>
+      <MenuTrigger
+        render={
+          <IconButton
+            variant="secondary"
+            size="md"
+            icon={<Icon icon={MoreHorizontalOutline} />}
+            aria-label={t("aria_labels.common.more_actions")}
+          />
+        }
+      />
+      <MenuContent side="bottom" align="start">
+        {canMarkAsAccepted && (
+          <MenuItem
+            icon={<Icon icon={ClockOutline} />}
+            label={canUnsnooze ? t("inbox_issue.actions.unsnooze") : t("inbox_issue.actions.snooze")}
+            onClick={onSnooze}
+          />
+        )}
+        {canMarkAsDuplicate && (
+          <MenuItem
+            icon={<Icon icon={DuplicateOfOutline} />}
+            label={t("inbox_issue.actions.mark_as_duplicate")}
+            onClick={onMarkAsDuplicate}
+          />
+        )}
+        <MenuItem icon={<Icon icon={Copy} />} label={t("inbox_issue.actions.copy")} onClick={onCopyLink} />
+        {canDelete && (
+          <>
+            <MenuSeparator />
+            <MenuItem
+              variant="danger"
+              icon={<Icon icon={DeleteOutline} />}
+              label={t("inbox_issue.actions.delete")}
+              onClick={onDelete}
+            />
+          </>
+        )}
+      </MenuContent>
+    </Menu>
+  );
+}
+
 export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader(props: TInboxIssueActionsHeader) {
   const {
     workspaceSlug,
@@ -93,49 +234,25 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
 
   const issue = inboxIssue?.issue;
   // derived values
-  const isAllowed = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
-    EUserPermissionsLevel.PROJECT,
-    workspaceSlug,
-    projectId
-  );
-  const canMarkAsDuplicate = isAllowed && (inboxIssue?.status === 0 || inboxIssue?.status === -2);
-  const canMarkAsAccepted = isAllowed && (inboxIssue?.status === 0 || inboxIssue?.status === -2);
-  const canMarkAsDeclined = isAllowed && (inboxIssue?.status === 0 || inboxIssue?.status === -2);
-  // can delete only if admin or is creator of the issue
-  const canDelete =
-    allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId) ||
-    issue?.created_by === currentUser?.id;
-  const isProjectAdmin = allowPermissions(
-    [EUserPermissions.ADMIN],
-    EUserPermissionsLevel.PROJECT,
-    workspaceSlug,
-    projectId
-  );
-  const isAcceptedOrDeclined = inboxIssue?.status ? [-1, 1, 2].includes(inboxIssue.status) : undefined;
-  // days left for snooze
-  const numberOfDaysLeft = findHowManyDaysLeft(inboxIssue?.snoozed_till);
+  const {
+    isAllowed,
+    canMarkAsDuplicate,
+    canMarkAsAccepted,
+    canMarkAsDeclined,
+    canDelete,
+    isProjectAdmin,
+    isAcceptedOrDeclined,
+    numberOfDaysLeft,
+  } = getInboxIssuePermissions(allowPermissions, workspaceSlug, projectId, inboxIssue, currentUser?.id);
+  const canUnsnooze = canUnsnoozeIssue(inboxIssue, numberOfDaysLeft);
 
   const currentInboxIssueId = inboxIssue?.issue?.id;
 
-  const redirectIssue = (): string | undefined => {
-    let nextOrPreviousIssueId: string | undefined = undefined;
-    const currentIssueIndex = filteredInboxIssueIds.findIndex((id) => id === currentInboxIssueId);
-    if (filteredInboxIssueIds[currentIssueIndex + 1])
-      nextOrPreviousIssueId = filteredInboxIssueIds[currentIssueIndex + 1];
-    else if (filteredInboxIssueIds[currentIssueIndex - 1])
-      nextOrPreviousIssueId = filteredInboxIssueIds[currentIssueIndex - 1];
-    else nextOrPreviousIssueId = undefined;
-    return nextOrPreviousIssueId;
-  };
+  const redirectIssue = (): string | undefined => getRedirectIssueId(filteredInboxIssueIds, currentInboxIssueId);
 
   const handleRedirection = (nextOrPreviousIssueId: string | undefined) => {
     if (!isNotificationEmbed) {
-      if (nextOrPreviousIssueId)
-        router.push(
-          `/${workspaceSlug}/projects/${projectId}/intake?currentTab=${currentTab}&inboxIssueId=${nextOrPreviousIssueId}`
-        );
-      else router.push(`/${workspaceSlug}/projects/${projectId}/intake?currentTab=${currentTab}`);
+      router.push(getIntakeHref(workspaceSlug, projectId, currentTab, nextOrPreviousIssueId));
     }
   };
 
@@ -173,7 +290,7 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
   };
 
   const handleIssueSnoozeAction = async () => {
-    if (inboxIssue?.snoozed_till && numberOfDaysLeft && numberOfDaysLeft > 0) {
+    if (canUnsnooze) {
       const nextOrPreviousIssueId = redirectIssue();
       await inboxIssue?.updateInboxIssueSnoozeTill(undefined);
       handleRedirection(nextOrPreviousIssueId);
@@ -196,13 +313,8 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
   const handleInboxIssueNavigation = useCallback(
     (direction: "next" | "prev") => {
       if (!filteredInboxIssueIds || !currentInboxIssueId) return;
-      const activeElement = document.activeElement as HTMLElement;
-      if (activeElement && (activeElement.classList.contains("tiptap") || activeElement.id === "title-input")) return;
-      const nextIssueIndex =
-        direction === "next"
-          ? (currentIssueIndex + 1) % filteredInboxIssueIds.length
-          : (currentIssueIndex - 1 + filteredInboxIssueIds.length) % filteredInboxIssueIds.length;
-      const nextIssueId = filteredInboxIssueIds[nextIssueIndex];
+      if (isComposerFocused()) return;
+      const nextIssueId = getNextIssueId(filteredInboxIssueIds, currentIssueIndex, direction);
       if (!nextIssueId) return;
       router.push(`/${workspaceSlug}/projects/${projectId}/intake?inboxIssueId=${nextIssueId}`);
     },
@@ -400,66 +512,29 @@ export const InboxIssueActionsHeader = observer(function InboxIssueActionsHeader
             ) : (
               <>
                 {isAllowed && (
-                  <Menu>
-                    <MenuTrigger
-                      render={
-                        <IconButton
-                          variant="secondary"
-                          size="md"
-                          icon={<Icon icon={MoreHorizontalOutline} />}
-                          aria-label={t("aria_labels.common.more_actions")}
-                        />
-                      }
-                    />
-                    <MenuContent side="bottom" align="start">
-                      {canMarkAsAccepted && (
-                        <MenuItem
-                          icon={<Icon icon={ClockOutline} />}
-                          label={
-                            inboxIssue?.snoozed_till && numberOfDaysLeft && numberOfDaysLeft > 0
-                              ? t("inbox_issue.actions.unsnooze")
-                              : t("inbox_issue.actions.snooze")
-                          }
-                          onClick={() =>
-                            handleActionWithPermission(
-                              isProjectAdmin,
-                              handleIssueSnoozeAction,
-                              t("inbox_issue.errors.snooze_permission")
-                            )
-                          }
-                        />
-                      )}
-                      {canMarkAsDuplicate && (
-                        <MenuItem
-                          icon={<Icon icon={DuplicateOfOutline} />}
-                          label={t("inbox_issue.actions.mark_as_duplicate")}
-                          onClick={() =>
-                            handleActionWithPermission(
-                              isProjectAdmin,
-                              () => setSelectDuplicateIssue(true),
-                              "Only project admins can mark work item as duplicate"
-                            )
-                          }
-                        />
-                      )}
-                      <MenuItem
-                        icon={<Icon icon={Copy} />}
-                        label={t("inbox_issue.actions.copy")}
-                        onClick={() => handleCopyIssueLink(workItemLink)}
-                      />
-                      {canDelete && (
-                        <>
-                          <MenuSeparator />
-                          <MenuItem
-                            variant="danger"
-                            icon={<Icon icon={DeleteOutline} />}
-                            label={t("inbox_issue.actions.delete")}
-                            onClick={() => setDeleteIssueModal(true)}
-                          />
-                        </>
-                      )}
-                    </MenuContent>
-                  </Menu>
+                  <InboxIssueActionsMenu
+                    canMarkAsAccepted={canMarkAsAccepted}
+                    canMarkAsDuplicate={canMarkAsDuplicate}
+                    canDelete={canDelete}
+                    canUnsnooze={canUnsnooze}
+                    t={t}
+                    onSnooze={() =>
+                      handleActionWithPermission(
+                        isProjectAdmin,
+                        handleIssueSnoozeAction,
+                        t("inbox_issue.errors.snooze_permission")
+                      )
+                    }
+                    onMarkAsDuplicate={() =>
+                      handleActionWithPermission(
+                        isProjectAdmin,
+                        () => setSelectDuplicateIssue(true),
+                        "Only project admins can mark work item as duplicate"
+                      )
+                    }
+                    onCopyLink={() => handleCopyIssueLink(workItemLink)}
+                    onDelete={() => setDeleteIssueModal(true)}
+                  />
                 )}
               </>
             )}

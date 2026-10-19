@@ -61,90 +61,129 @@ function useStableItems<T>(next: T[]): T[] {
   return useMemo(() => next, [contentKey]);
 }
 
-export function SelectRoot<T>(props: SelectProps<T>) {
-  const {
-    getOptionValue,
-    getOptionLabel,
-    getOptionSearchText,
-    getOptionIcon,
-    getOptionTrailing,
-    getOptionDescription,
-    getOptionTooltip,
-    renderOption,
-    renderChip,
-    filterOption,
-    getOptionDisabled,
-    getOptionHref,
-    getOptionGroup,
-    getOptionPlaceholder,
-    header,
-    footer,
-    onSearchSubmit,
-    value,
-    disabled = false,
-    placeholder,
-    searchPlaceholder,
-    showSearch = true,
-    emptyMessage,
-    onClose,
-    children,
-    // The standard row is a fixed single line; hand-drawn and two-line rows are taller.
-    estimateItemSize = renderOption || getOptionDescription ? MENU_ROW_HEIGHT : SELECT_OPTION_ROW_HEIGHT,
-    multiple = false,
-    headerItems,
-    filterHeaderItems = false,
-    lazyMount = true,
-    modal = false,
-    pinSelected: shouldPinSelected = false,
-    contentSizing = "auto",
-    contentMinWidth,
-    fitOptionLabels = false,
-    defaultOpen = false,
-    open: controlledOpen,
-    onOpenChange,
-    positionerZIndex,
-    errorMessage,
-    searchingMessage,
-  } = props;
+function getOptionLabelText<T>(
+  option: T,
+  getOptionLabel: ((option: T) => string) | undefined,
+  getOptionValue: (option: T) => string
+) {
+  return getOptionLabel?.(option) ?? getOptionValue(option);
+}
 
-  const labelOf = useCallback(
-    (option: T) => getOptionLabel?.(option) ?? getOptionValue(option),
-    [getOptionLabel, getOptionValue]
-  );
-  // What the sync filter matches on. Separate from `labelOf` so a row can read one way and still be
-  // reachable by another string (a project's identifier beside its name).
-  const searchTextOf = useCallback(
-    (option: T) => getOptionSearchText?.(option) ?? labelOf(option),
-    [getOptionSearchText, labelOf]
-  );
+function getOptionSearchTextValue<T>(
+  option: T,
+  getOptionSearchText: ((option: T) => string) | undefined,
+  labelOf: (option: T) => string
+) {
+  return getOptionSearchText?.(option) ?? labelOf(option);
+}
 
-  const isInfinite = props.infinite === true;
+function getInitialEngineMounted(lazyMount: boolean, defaultOpen: boolean, controlledOpen: boolean | undefined) {
+  return !lazyMount || defaultOpen || controlledOpen === true;
+}
 
-  // Infinite hook is always called (Rules of Hooks); only consumed in infinite mode. The no-op
-  // fallback keeps the hook cheap when the consumer is in the sync path.
-  const noopGetValues = useCallback<(params: SelectPaginationParams) => Promise<TPaginatedResponse<T[]>>>(
-    () => Promise.resolve({ results: [] }),
-    []
-  );
-  const paginatedGetValues = isInfinite ? props.getValues : noopGetValues;
-  const infinite = useInfiniteOptions<T>(paginatedGetValues, getOptionValue);
-  const { onSearchChange, onLoadMore, onOpen: onInfiniteOpen, onClose: onInfiniteClose } = infinite;
+function getPopupLabel(
+  searchPlaceholder: string | undefined,
+  placeholder: string | undefined,
+  t: (key: string) => string
+) {
+  return searchPlaceholder ?? placeholder ?? t("common.options");
+}
 
-  // Everything currently loaded, whichever source it came from — what `valueIds` resolves against.
-  const loadedOptions = isInfinite ? infinite.items : props.getValues();
+function getResolvedEmptyMessage<T>(
+  emptyMessage: SelectProps<T>["emptyMessage"],
+  query: string,
+  t: (key: string) => string
+) {
+  return typeof emptyMessage === "function" ? emptyMessage(query) : (emptyMessage ?? t("web.no_results_found"));
+}
 
-  // Normalize the single (`T | null`), multi (`T[]`) and ids-in (`valueIds`) forms into one array.
-  // Ruling 46: in ids mode an id with no loaded option becomes `getOptionPlaceholder(id)` rather
-  // than being dropped, and `selectedIds` below carries it regardless — so the id cannot fall out
-  // of the next `onChange` even when the caller supplies no placeholder to draw.
-  const valueIds = props.valueIds;
+function getIsPlainEmptyMessage(message: ReactNode) {
+  return typeof message === "string" || typeof message === "number";
+}
+
+function getHasLoadError(loadError: unknown) {
+  return loadError !== null && loadError !== undefined;
+}
+
+function getResolvedErrorMessage<T>(
+  hasLoadError: boolean,
+  errorMessage: SelectProps<T>["errorMessage"],
+  loadError: unknown,
+  t: (key: string) => string
+) {
+  if (!hasLoadError) return null;
+  if (typeof errorMessage === "function") return errorMessage(loadError);
+  return errorMessage ?? t("common.errors.default.message");
+}
+
+function getHasListError(hasLoadError: boolean, errorKind: string | null) {
+  return hasLoadError && errorKind !== "append";
+}
+
+function isKeyboardHighlight(reason: string) {
+  return reason === "keyboard" || reason === "none";
+}
+
+function scrollHighlightedIntoView(
+  details: { index: number; reason: string },
+  virtualizerRef: { current: SelectVirtualizer | null }
+) {
+  // Only keyboard and programmatic highlights need the list moved. `align: "auto"` still scrolls
+  // a PARTIALLY visible row, so honouring `reason: "pointer"` would nudge the list under the
+  // cursor as the user hovers the bottom row.
+  if (!isKeyboardHighlight(details.reason)) return;
+  const virtualizer = virtualizerRef.current;
+  if (!virtualizer) return;
+  const { index } = details;
+  if (index < 0 || index >= virtualizer.options.count) return;
+  queueMicrotask(() => virtualizer.scrollToIndex(index, { align: "auto" }));
+}
+
+function createInputValueChangeHandler(handleQueryChange: (next: string) => void, isOpenRef: { current: boolean }) {
+  return (next: string, details: { reason: string }) => {
+    // `input-change` is the only reason base-ui reports for text the USER typed (ComboboxInput's
+    // `onChange` and `onCompositionEnd`), and it has to be honoured whatever `isOpenRef` says.
+    // On `variant="search-input"` the field is live while the popup is shut, and base-ui reports
+    // the keystroke BEFORE it opens the popup for it — `setInputValue(value, input-change)` runs
+    // ahead of `maybeOpenOnInput(...)` — so the open side effects that flip the ref have not run
+    // yet. Reading the ref here dropped the first character of every search typed into a closed
+    // field. A user-driven empty field is `input-change` too, so backspacing to nothing still
+    // resets the list.
+    if (details.reason === "input-change") {
+      handleQueryChange(next);
+      return;
+    }
+    // Every other reason is base-ui writing the field itself, and none of them is a new search:
+    // `item-press` fills or clears it as a selection commits; `input-clear` is that same clear
+    // arriving on its own for a multi-select whose search input lives in the popup (AriaCombobox's
+    // `handleSelection` empties the field after every pick), and is also the close-time clear;
+    // `escape-key` can arrive here directly on a `variant="search-input"` field that is focused
+    // but already closed, where base-ui clears the query without a popup to close first; the rest
+    // (`clear-press`, `none`) only mean something while the popup is open, where the field the
+    // user can see really did change. `escape-key` needs no name in the guard below — it reaches
+    // this line only with the popup shut, so the `!isOpenRef.current` fallback already returns.
+    if (details.reason === "item-press" || details.reason === "input-clear" || !isOpenRef.current) return;
+    handleQueryChange(next);
+  };
+}
+
+function useResolvedSelection<T>(args: {
+  valueIds: string[] | undefined;
+  loadedOptions: T[];
+  value: T | T[] | null | undefined;
+  multiple: boolean;
+  getOptionValue: (option: T) => string;
+  getOptionPlaceholder: ((id: string) => T) | undefined;
+}) {
+  const { valueIds, loadedOptions, value, multiple, getOptionValue, getOptionPlaceholder } = args;
   // Ids-in mode resolves against what is currently loaded — and an infinite list is emptied on
   // every close (`useInfiniteOptions.onClose`), so with nothing but `loadedOptions` to go on the
-  // closed trigger would stop naming the very options it had just shown. Every option seen while
+  // closed trigger would stop naming the options it had just shown. Every option seen while
   // the list was open is remembered here and consulted before `getOptionPlaceholder`; the cache is
   // pruned back to the live `valueIds` on each resolve, so it stays selection-sized and an id the
   // caller has dropped can never be resolved from a stale object.
   const resolutionCacheRef = useRef(new Map<string, T>());
+  /* oxlint-disable react/refs, react/memo-dependencies -- the resolution cache is read and pruned during render on purpose; it only keeps option objects for ids that are still selected */
   const resolvedFromIds = useMemo<T[] | null>(() => {
     if (!valueIds) return null;
     const cache = resolutionCacheRef.current;
@@ -165,60 +204,45 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     for (const id of cache.keys()) if (!live.has(id)) cache.delete(id);
     return resolved;
   }, [valueIds, loadedOptions, getOptionValue, getOptionPlaceholder]);
+  /* oxlint-enable react/refs, react/memo-dependencies */
 
   const selected = useStableItems<T>(
     resolvedFromIds ?? (multiple ? ((value as T[]) ?? []) : value ? [value as T] : [])
   );
 
-  // Stable source ordering is the default across opens. Explicit opt-in pinning snapshots the
-  // selection only on open, so even those pickers do not reorder during an interaction.
-  const [pinnedSelected, setPinnedSelected] = useState<T[]>([]);
+  // In ids mode this is the caller's own list, unresolved ids included — base-ui operates on it
+  // directly, so nothing an option lookup could not find can be lost from `onChange`.
+  const selectedIds = useMemo(() => valueIds ?? selected.map(getOptionValue), [valueIds, selected, getOptionValue]);
 
-  // Open state is uncontrolled by default; a caller that needs to open the picker itself passes
-  // `open` (and `onOpenChange` to hear about the user's own opens and closes).
-  const isOpenControlled = controlledOpen !== undefined;
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
-  const isOpen = isOpenControlled ? controlledOpen : uncontrolledOpen;
-  // `onInputValueChange` fires on close too (base-ui clears the query as the popup unmounts). That
-  // clear must not re-run the search, so the handler reads the live open state off a ref rather
-  // than the state it would see stale within the same commit.
-  const isOpenRef = useRef(false);
+  return { selected, selectedIds };
+}
 
-  // Lazy mount: at rest the base-ui Root, the popup and the option list are not mounted at all —
-  // `Select.Trigger` renders as a cheap button that mounts and opens them in one action. That keeps
-  // the per-cell cost of a never-opened dropdown down to one button in list/board/spreadsheet
-  // layouts. Sticky once activated, so the trigger keeps focus across a close.
-  const [isEngineMounted, setIsEngineMounted] = useState(!lazyMount || defaultOpen || controlledOpen === true);
-
-  // Sync mode filters in memory against the same locale-aware matcher base-ui's own filter uses.
-  const [syncQuery, setSyncQuery] = useState("");
-  const { contains } = useFilter();
-  const query = isInfinite ? infinite.query : syncQuery;
-
-  // translation
-  const { t } = useTranslation();
-
-  // Base UI skips its `CompositeList` in virtualized mode, so a row only registers itself while it
-  // is rendered. Keyboard navigation can walk the highlight past the rendered window, where Enter
-  // would find no element to click — scrolling the highlighted index back into view keeps the row
-  // mounted (and registered) before the next keystroke lands.
-  const virtualizerRef = useRef<SelectVirtualizer | null>(null);
-  // Which row Enter would select, for `onSearchSubmit`. Base UI highlights nothing until the user
-  // arrows (it takes no `autoHighlight`), and reports `-1` when it clears the highlight again.
-  const highlightedIndexRef = useRef(-1);
-  const handleItemHighlighted = useCallback((_item: unknown, details: { index: number; reason: string }) => {
-    highlightedIndexRef.current = details.index;
-    // Only keyboard and programmatic highlights need the list moved. `align: "auto"` still scrolls
-    // a PARTIALLY visible row, so honouring `reason: "pointer"` would nudge the list under the
-    // cursor as the user hovers the bottom row.
-    if (details.reason !== "keyboard" && details.reason !== "none") return;
-    const virtualizer = virtualizerRef.current;
-    if (!virtualizer) return;
-    const { index } = details;
-    if (index < 0 || index >= virtualizer.options.count) return;
-    queueMicrotask(() => virtualizer.scrollToIndex(index, { align: "auto" }));
-  }, []);
-
+function useSelectItems<T>(args: {
+  isInfinite: boolean;
+  loadedOptions: T[];
+  filterOption: ((option: T) => boolean) | undefined;
+  pinnedSelected: T[];
+  headerItems: T[] | undefined;
+  shouldPinSelected: boolean;
+  syncQuery: string;
+  filterHeaderItems: boolean;
+  contains: (text: string, query: string) => boolean;
+  searchTextOf: (option: T) => string;
+  getOptionValue: (option: T) => string;
+}) {
+  const {
+    isInfinite,
+    loadedOptions,
+    filterOption,
+    pinnedSelected,
+    headerItems,
+    shouldPinSelected,
+    syncQuery,
+    filterHeaderItems,
+    contains,
+    searchTextOf,
+    getOptionValue,
+  } = args;
   const baseItems = useMemo(() => {
     const base = loadedOptions;
     const filteredBase = filterOption ? base.filter(filterOption) : base;
@@ -258,19 +282,52 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     );
   }, [isInfinite, baseItems, syncQuery, contains, searchTextOf, headerKeys, filterHeaderItems, getOptionValue]);
 
-  // Keyboard moves walk past disabled rows instead of parking on a row Enter cannot pick.
-  const skipDisabledRow = useSkipDisabledRows({ isOpen, items, getOptionDisabled });
-  const handleHighlight = useCallback(
-    (item: unknown, details: { index: number; reason: string }) => {
-      handleItemHighlighted(item, details);
-      skipDisabledRow(details.index, details.reason);
-    },
-    [handleItemHighlighted, skipDisabledRow]
+  return { baseItems, items, headerKeys };
+}
+
+function useSelectOpenState<T>(args: {
+  controlledOpen: boolean | undefined;
+  lazyMount: boolean;
+  defaultOpen: boolean;
+  isInfinite: boolean;
+  selected: T[];
+  onInfiniteOpen: () => void;
+  onInfiniteClose: () => void;
+  onClose: (() => void) | undefined;
+  onOpenChange: ((open: boolean) => void) | undefined;
+  resetSyncQuery: () => void;
+}) {
+  const {
+    controlledOpen,
+    lazyMount,
+    defaultOpen,
+    isInfinite,
+    selected,
+    onInfiniteOpen,
+    onInfiniteClose,
+    onClose,
+    resetSyncQuery,
+  } = args;
+  const onOpenChange = args.onOpenChange;
+  const isOpenControlled = controlledOpen !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = controlledOpen ?? uncontrolledOpen;
+  // `onInputValueChange` fires on close too (base-ui clears the query as the popup unmounts). That
+  // clear must not re-run the search, so the handler reads the live open state off a ref rather
+  // than the state it would see stale within the same commit.
+  const isOpenRef = useRef(false);
+
+  // Lazy mount: at rest the base-ui Root, the popup and the option list are not mounted at all —
+  // `Select.Trigger` renders as a cheap button that mounts and opens them in one action. That keeps
+  // the per-cell cost of a never-opened dropdown down to one button in list/board/spreadsheet
+  // layouts. Sticky once activated, so the trigger keeps focus across a close.
+  const [isEngineMounted, setIsEngineMounted] = useState(() =>
+    getInitialEngineMounted(lazyMount, defaultOpen, controlledOpen)
   );
 
-  // In ids mode this is the caller's own list, unresolved ids included — base-ui operates on it
-  // directly, so nothing an option lookup could not find can be lost from `onChange`.
-  const selectedIds = useMemo(() => valueIds ?? selected.map(getOptionValue), [valueIds, selected, getOptionValue]);
+  // Stable source ordering is the default across opens. Explicit opt-in pinning snapshots the
+  // selection only on open, so even those pickers do not reorder during an interaction.
+  const [pinnedSelected, setPinnedSelected] = useState<T[]>([]);
 
   // The work an open or a close has to do, whoever triggered it. Runs synchronously on the base-ui
   // event so the pinned snapshot is in place for the same render that opens the list.
@@ -285,11 +342,11 @@ export function SelectRoot<T>(props: SelectProps<T>) {
         if (isInfinite) onInfiniteOpen();
       } else {
         if (isInfinite) onInfiniteClose();
-        else setSyncQuery("");
+        else resetSyncQuery();
         onClose?.();
       }
     },
-    [isInfinite, onInfiniteOpen, onInfiniteClose, onClose, selected]
+    [isInfinite, onInfiniteOpen, onInfiniteClose, onClose, selected, resetSyncQuery]
   );
 
   const handleOpenChange = useCallback(
@@ -337,6 +394,20 @@ export function SelectRoot<T>(props: SelectProps<T>) {
   // user-driven close would (see `handleOpenChange`) instead of one triggered by base-ui.
   const close = useCallback(() => handleOpenChange(false), [handleOpenChange]);
 
+  return { isOpen, isOpenRef, isEngineMounted, setIsEngineMounted, pinnedSelected, activate, close, handleOpenChange };
+}
+
+function useSelectSearch(args: {
+  isInfinite: boolean;
+  infiniteQuery: string;
+  onSearchChange: (query: string) => void;
+  highlightedIndexRef: { current: number };
+}) {
+  const { isInfinite, infiniteQuery, onSearchChange, highlightedIndexRef } = args;
+  // Sync mode filters in memory against the same locale-aware matcher base-ui's own filter uses.
+  const [syncQuery, setSyncQuery] = useState("");
+  const query = isInfinite ? infiniteQuery : syncQuery;
+
   const handleQueryChange = useCallback(
     (next: string) => {
       // A new query is a new list, so whatever was highlighted no longer is. Base UI clears its own
@@ -346,9 +417,18 @@ export function SelectRoot<T>(props: SelectProps<T>) {
       if (isInfinite) onSearchChange(next);
       else setSyncQuery(next);
     },
-    [isInfinite, onSearchChange]
+    [isInfinite, onSearchChange, highlightedIndexRef]
   );
 
+  return { query, syncQuery, handleQueryChange, setSyncQuery };
+}
+
+function useSearchKeyDown(args: {
+  onSearchSubmit: ((query: string) => void) | undefined;
+  itemsLength: number;
+  highlightedIndexRef: { current: number };
+}) {
+  const { onSearchSubmit, itemsLength, highlightedIndexRef } = args;
   // Enter with nothing to select. Only fires when there is a query and base-ui would do nothing
   // with it: no row is highlighted, or the query matched no option at all. `preventDefault` keeps
   // the key off an enclosing form's submit, and the popup stays open so the caller can act on it.
@@ -360,18 +440,605 @@ export function SelectRoot<T>(props: SelectProps<T>) {
   // without the opt-out the popup closes on the same keystroke and `applyOpenSideEffects` wipes the
   // query. The flag is set per event, and we return early in every non-submit case, so this
   // suppresses base-ui for that one keystroke only.
-  const handleSearchKeyDown = useCallback(
+  return useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
       if (!onSearchSubmit || event.key !== "Enter" || event.nativeEvent.isComposing) return;
       const submitted = event.currentTarget.value.trim();
       if (!submitted) return;
-      if (highlightedIndexRef.current >= 0 && items.length > 0) return;
+      if (highlightedIndexRef.current >= 0 && itemsLength > 0) return;
       event.preventDefault();
       event.stopPropagation();
       (event as unknown as { preventBaseUIHandler?: () => void }).preventBaseUIHandler?.();
       onSearchSubmit(submitted);
     },
-    [onSearchSubmit, items.length]
+    [onSearchSubmit, itemsLength, highlightedIndexRef]
+  );
+}
+
+function usePopupSizing<T>(args: {
+  contentMinWidth: number | undefined;
+  positionerZIndex: number | undefined;
+  fitOptionLabels: boolean;
+  baseItems: T[];
+  labelOf: (option: T) => string;
+  getOptionIcon: ((option: T) => ReactNode) | undefined;
+  multiple: boolean;
+}) {
+  const { contentMinWidth, positionerZIndex, fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple } = args;
+
+  // Ruling 28's sibling problem, one level up: propel's positioner is `z-50` and `ComboboxContent`
+  // exposes neither a z axis nor its portal container, so a Select opened from inside a
+  // higher-stacked floating panel would render behind it. The popup's own `z-index` cannot help —
+  // the positioner is the positioned ancestor — so the value goes on that element directly, through
+  // a hidden sentinel whose callback ref fires exactly when the portaled popup mounts (an effect
+  // runs a commit too early: base-ui's portal node is created first and filled after). No restore
+  // is needed: the positioner unmounts with the popup. The same mount hook applies a per-picker
+  // minimum width without changing the shared theme. Delete the overrides when Propel exposes them.
+  const applyPopupOptions = useCallback(
+    (node: HTMLSpanElement | null) => {
+      if (!node) return;
+      const popup = node.closest<HTMLElement>("[data-select-popup]");
+      if (!popup) return;
+      if (contentMinWidth !== undefined) popup.style.setProperty("--popup-width-min", `${contentMinWidth}px`);
+      const positioner = popup.parentElement;
+      if (positionerZIndex !== undefined && positioner instanceof HTMLElement)
+        positioner.style.zIndex = String(positionerZIndex);
+    },
+    [positionerZIndex, contentMinWidth]
+  );
+
+  const fitPopupToLabels = useCallback(
+    (node: HTMLSpanElement | null) => {
+      if (!fitOptionLabels || !node) return;
+      const popup = node.closest<HTMLElement>("[data-select-popup]");
+      const context = document.createElement("canvas").getContext("2d");
+      if (!popup || !context) return;
+      const font = getComputedStyle(node);
+      context.font = `${font.fontWeight} ${font.fontSize} ${font.fontFamily}`;
+      const labelWidth = baseItems.reduce(
+        (width, item) => Math.max(width, context.measureText(labelOf(item)).width),
+        0
+      );
+      // Panel/row insets, trailing selection mark, and the optional 16px icon with 8px gaps.
+      const chromeWidth = 58 + (getOptionIcon ? 24 : 0) + (multiple ? 24 : 0);
+      popup.style.setProperty("--control-gap-md", "8px");
+      popup.style.setProperty(
+        "--popup-width-min",
+        `${Math.max(contentMinWidth ?? 204, Math.ceil(labelWidth + chromeWidth))}px`
+      );
+      popup.style.setProperty("--popup-width-max", "var(--available-width,calc(100vw - 2rem))");
+    },
+    [fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple, contentMinWidth]
+  );
+
+  return { applyPopupOptions, fitPopupToLabels };
+}
+
+function SelectSearchSlot({
+  showSearch,
+  header,
+  searchPlaceholder,
+  searchLabel,
+  popupLabel,
+  onKeyDown,
+}: {
+  showSearch: boolean;
+  header: ReactNode;
+  searchPlaceholder: string | undefined;
+  searchLabel: string;
+  popupLabel: string;
+  onKeyDown: ((event: KeyboardEvent<HTMLInputElement>) => void) | undefined;
+}) {
+  if (!showSearch && !header) return undefined;
+  return (
+    <>
+      {showSearch ? (
+        <ComboboxSearch placeholder={searchPlaceholder ?? searchLabel} aria-label={popupLabel} onKeyDown={onKeyDown} />
+      ) : null}
+      {header}
+    </>
+  );
+}
+
+function SelectStatusContent({
+  hasLoadError,
+  isLoading,
+  searchingMessage,
+  resolvedErrorMessage,
+  isPlainEmptyMessage,
+  resolvedEmptyMessage,
+  onRetry,
+  t,
+}: {
+  hasLoadError: boolean;
+  isLoading: boolean;
+  searchingMessage: ReactNode;
+  resolvedErrorMessage: ReactNode;
+  isPlainEmptyMessage: boolean;
+  resolvedEmptyMessage: ReactNode;
+  onRetry: () => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <>
+      {/* Both regions stay mounted (base-ui announces their content politely); their chrome
+          collapses while childless. */}
+      {/* One line for every fetch that replaces the list — the first open and each new query
+          alike. Propel's status row brings its own chrome, so the message goes in as plain text. */}
+      <ComboboxStatus>{hasLoadError || !isLoading ? null : (searchingMessage ?? t("searching"))}</ComboboxStatus>
+      {hasLoadError ? (
+        <div role="alert" className="flex flex-col items-center gap-1 px-2 py-1.5">
+          <span className="text-body-xs-regular text-tertiary">{resolvedErrorMessage}</span>
+          <Button variant="secondary" size="xs" stretch="auto" label={t("common.retry")} onClick={onRetry} />
+        </div>
+      ) : null}
+      {/* A plain string is the shared "no results" row and wears propel's empty chrome. A caller
+          node (e.g. the inline "create label" affordance) brings its own layout, so it goes
+          through base-ui's unstyled `Empty` instead of inheriting the row's padding and muted
+          type. */}
+      {isPlainEmptyMessage ? (
+        <ComboboxEmpty>{isLoading || hasLoadError ? null : resolvedEmptyMessage}</ComboboxEmpty>
+      ) : (
+        <BaseCombobox.Empty>{isLoading || hasLoadError ? null : resolvedEmptyMessage}</BaseCombobox.Empty>
+      )}
+    </>
+  );
+}
+
+function SelectOptionsList<T>({
+  hasListError,
+  items,
+  estimateItemSize,
+  isInfinite,
+  hasMore,
+  hasLoadError,
+  onLoadMore,
+  popupLabel,
+  virtualizerRef,
+  getOptionValue,
+  getOptionDisabled,
+  getOptionHref,
+  getOptionGroup,
+  multiple,
+  labelOf,
+  getOptionIcon,
+  getOptionTrailing,
+  getOptionDescription,
+  getOptionTooltip,
+  renderOption,
+}: {
+  hasListError: boolean;
+  items: T[];
+  estimateItemSize: number;
+  isInfinite: boolean;
+  hasMore: boolean;
+  hasLoadError: boolean;
+  onLoadMore: () => void;
+  popupLabel: string;
+  virtualizerRef: { current: SelectVirtualizer | null };
+  getOptionValue: (option: T) => string;
+  getOptionDisabled: SelectProps<T>["getOptionDisabled"];
+  getOptionHref: SelectProps<T>["getOptionHref"];
+  getOptionGroup: SelectProps<T>["getOptionGroup"];
+  multiple: boolean;
+  labelOf: (option: T) => string;
+  getOptionIcon: SelectProps<T>["getOptionIcon"];
+  getOptionTrailing: SelectProps<T>["getOptionTrailing"];
+  getOptionDescription: SelectProps<T>["getOptionDescription"];
+  getOptionTooltip: SelectProps<T>["getOptionTooltip"];
+  renderOption: SelectProps<T>["renderOption"];
+}) {
+  // A failed reset takes the list with it: it leaves the PREVIOUS query's rows in `items`,
+  // and offering those under a "something went wrong" line reads as though the list is
+  // still live. A failed append leaves rows that are exactly what they claim to be — the
+  // pages that did load — so those stay, under the error row.
+  // The paging sentinel stands down with them, but `hasMore` is NOT what stands it down:
+  // the hook leaves `hasMore` true (there really are more pages, the fetch just failed), so
+  // the `&& !hasLoadError` below is what unmounts the sentinel, backed by `onLoadMore`'s own
+  // `errorKind === "append"` bail. Retry is the way on.
+  if (hasListError) return null;
+
+  return (
+    <VirtualListBody<T>
+      items={items}
+      estimateItemSize={estimateItemSize}
+      hasMore={isInfinite && hasMore && !hasLoadError}
+      onLoadMore={onLoadMore}
+      loader={<SelectOptionsSkeleton rows={1} />}
+      listLabel={popupLabel}
+      virtualizerRef={virtualizerRef}
+      getOptionValue={getOptionValue}
+      getOptionDisabled={getOptionDisabled}
+      getOptionHref={getOptionHref}
+      getOptionGroup={getOptionGroup}
+      multiple={multiple}
+      getOptionLabel={labelOf}
+      getOptionIcon={getOptionIcon}
+      getOptionTrailing={getOptionTrailing}
+      getOptionDescription={getOptionDescription}
+      getOptionTooltip={getOptionTooltip}
+      renderOption={renderOption}
+    />
+  );
+}
+
+function SelectPopupContent<T>(props: {
+  showSearch: boolean;
+  header: ReactNode;
+  footer: ReactNode;
+  searchPlaceholder: string | undefined;
+  searchLabel: string;
+  popupLabel: string;
+  handleSearchKeyDown: ((event: KeyboardEvent<HTMLInputElement>) => void) | undefined;
+  contentSizing: SelectProps<T>["contentSizing"];
+  dropdownPlacement: ReturnType<typeof useSelectDropdownPlacement>;
+  applyPopupOptions: (node: HTMLSpanElement | null) => void;
+  fitPopupToLabels: (node: HTMLSpanElement | null) => void;
+  fitOptionLabels: boolean;
+  positionerZIndex: number | undefined;
+  contentMinWidth: number | undefined;
+  hasLoadError: boolean;
+  isLoading: boolean;
+  searchingMessage: ReactNode;
+  resolvedErrorMessage: ReactNode;
+  isPlainEmptyMessage: boolean;
+  resolvedEmptyMessage: ReactNode;
+  hasListError: boolean;
+  items: T[];
+  estimateItemSize: number;
+  isInfinite: boolean;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  getOptionValue: (option: T) => string;
+  getOptionDisabled: SelectProps<T>["getOptionDisabled"];
+  getOptionHref: SelectProps<T>["getOptionHref"];
+  getOptionGroup: SelectProps<T>["getOptionGroup"];
+  multiple: boolean;
+  labelOf: (option: T) => string;
+  getOptionIcon: SelectProps<T>["getOptionIcon"];
+  getOptionTrailing: SelectProps<T>["getOptionTrailing"];
+  getOptionDescription: SelectProps<T>["getOptionDescription"];
+  getOptionTooltip: SelectProps<T>["getOptionTooltip"];
+  renderOption: SelectProps<T>["renderOption"];
+  virtualizerRef: { current: SelectVirtualizer | null };
+  onRetry: () => void;
+  t: (key: string) => string;
+  children: ReactNode;
+}) {
+  const {
+    showSearch,
+    header,
+    footer,
+    searchPlaceholder,
+    searchLabel,
+    popupLabel,
+    handleSearchKeyDown,
+    contentSizing,
+    dropdownPlacement,
+    applyPopupOptions,
+    fitPopupToLabels,
+    fitOptionLabels,
+    positionerZIndex,
+    contentMinWidth,
+    hasLoadError,
+    isLoading,
+    searchingMessage,
+    resolvedErrorMessage,
+    isPlainEmptyMessage,
+    resolvedEmptyMessage,
+    hasListError,
+    items,
+    estimateItemSize,
+    isInfinite,
+    hasMore,
+    onLoadMore,
+    getOptionValue,
+    getOptionDisabled,
+    getOptionHref,
+    getOptionGroup,
+    multiple,
+    labelOf,
+    getOptionIcon,
+    getOptionTrailing,
+    getOptionDescription,
+    getOptionTooltip,
+    renderOption,
+    virtualizerRef,
+    onRetry,
+    t,
+    children,
+  } = props;
+
+  // Propel's `search` slot is the panel's whole sticky header region — it renders above the
+  // scroller, not inside it — so the caller's `header` chrome rides along with the search field
+  // there rather than as the list's first row. That is what keeps it outside the scroll area and
+  // out of reach of the query filter, which only ever sees `items`.
+  const searchSlot = (
+    <SelectSearchSlot
+      showSearch={showSearch}
+      header={header}
+      searchPlaceholder={searchPlaceholder}
+      searchLabel={searchLabel}
+      popupLabel={popupLabel}
+      onKeyDown={handleSearchKeyDown}
+    />
+  );
+
+  return (
+    <>
+      {children}
+      <ComboboxContent
+        data-select-popup=""
+        aria-label={popupLabel}
+        sizing={contentSizing}
+        side={dropdownPlacement?.side}
+        align={dropdownPlacement?.align}
+        data-prevent-outside-click
+        search={searchSlot}
+        footer={footer}
+      >
+        {positionerZIndex === undefined && contentMinWidth === undefined ? null : (
+          <span hidden ref={applyPopupOptions} />
+        )}
+        {fitOptionLabels ? <span hidden className="text-body-xs-regular" ref={fitPopupToLabels} /> : null}
+        <SelectStatusContent
+          hasLoadError={hasLoadError}
+          isLoading={isLoading}
+          searchingMessage={searchingMessage}
+          resolvedErrorMessage={resolvedErrorMessage}
+          isPlainEmptyMessage={isPlainEmptyMessage}
+          resolvedEmptyMessage={resolvedEmptyMessage}
+          onRetry={onRetry}
+          t={t}
+        />
+        <SelectOptionsList<T>
+          hasListError={hasListError}
+          items={items}
+          estimateItemSize={estimateItemSize}
+          isInfinite={isInfinite}
+          hasMore={hasMore}
+          hasLoadError={hasLoadError}
+          onLoadMore={onLoadMore}
+          popupLabel={popupLabel}
+          virtualizerRef={virtualizerRef}
+          getOptionValue={getOptionValue}
+          getOptionDisabled={getOptionDisabled}
+          getOptionHref={getOptionHref}
+          getOptionGroup={getOptionGroup}
+          multiple={multiple}
+          labelOf={labelOf}
+          getOptionIcon={getOptionIcon}
+          getOptionTrailing={getOptionTrailing}
+          getOptionDescription={getOptionDescription}
+          getOptionTooltip={getOptionTooltip}
+          renderOption={renderOption}
+        />
+      </ComboboxContent>
+    </>
+  );
+}
+
+function SelectEngine<T>(props: {
+  multiple: boolean;
+  disabled: boolean;
+  modal: boolean;
+  isOpen: boolean;
+  items: T[];
+  selectedIds: string[];
+  query: string;
+  isOpenRef: { current: boolean };
+  handleOpenChange: (open: boolean) => void;
+  handleHighlight: (item: unknown, details: { index: number; reason: string }) => void;
+  handleQueryChange: (next: string) => void;
+  content: ReactNode;
+  onChange: (value: string | string[]) => void;
+}) {
+  const {
+    multiple,
+    disabled,
+    modal,
+    isOpen,
+    items,
+    selectedIds,
+    query,
+    isOpenRef,
+    handleOpenChange,
+    handleHighlight,
+    handleQueryChange,
+    content,
+    onChange,
+  } = props;
+
+  const sharedRootProps = {
+    items,
+    // Item values are ids, so base-ui needs no label/equality adapters; filtering is ours.
+    filter: null,
+    virtualized: true,
+    open: isOpen,
+    onOpenChange: handleOpenChange,
+    onItemHighlighted: handleHighlight,
+    inputValue: query,
+    onInputValueChange: createInputValueChangeHandler(handleQueryChange, isOpenRef),
+    disabled,
+    modal,
+    children: content,
+  };
+
+  if (multiple)
+    return (
+      <Combobox<string, true>
+        {...sharedRootProps}
+        multiple
+        value={selectedIds}
+        onValueChange={(next) => onChange(next)}
+      />
+    );
+
+  return (
+    <Combobox<string, false>
+      {...sharedRootProps}
+      value={selectedIds[0] ?? null}
+      onValueChange={(next) => onChange(next ?? "")}
+    />
+  );
+}
+
+export function SelectRoot<T>(props: SelectProps<T>) {
+  const {
+    getOptionValue,
+    getOptionLabel,
+    getOptionSearchText,
+    getOptionIcon,
+    getOptionTrailing,
+    getOptionDescription,
+    getOptionTooltip,
+    renderOption,
+    renderChip,
+    filterOption,
+    getOptionDisabled,
+    getOptionHref,
+    getOptionGroup,
+    getOptionPlaceholder,
+    header,
+    footer,
+    onSearchSubmit,
+    value,
+    disabled = false,
+    placeholder,
+    searchPlaceholder,
+    showSearch = true,
+    emptyMessage,
+    onClose,
+    children,
+    // The standard row is a fixed single line; hand-drawn and two-line rows are taller.
+    estimateItemSize = renderOption || getOptionDescription ? MENU_ROW_HEIGHT : SELECT_OPTION_ROW_HEIGHT,
+    multiple = false,
+    headerItems,
+    filterHeaderItems = false,
+    lazyMount = true,
+    modal = false,
+    pinSelected: shouldPinSelected = false,
+    contentSizing = "auto",
+    contentMinWidth,
+    fitOptionLabels = false,
+    defaultOpen = false,
+    open: controlledOpen,
+    onOpenChange,
+    positionerZIndex,
+    errorMessage,
+    searchingMessage,
+  } = props;
+
+  const labelOf = useCallback(
+    (option: T) => getOptionLabelText(option, getOptionLabel, getOptionValue),
+    [getOptionLabel, getOptionValue]
+  );
+  // What the sync filter matches on. Separate from `labelOf` so a row can read one way and still be
+  // reachable by another string (a project's identifier beside its name).
+  const searchTextOf = useCallback(
+    (option: T) => getOptionSearchTextValue(option, getOptionSearchText, labelOf),
+    [getOptionSearchText, labelOf]
+  );
+
+  const isInfinite = props.infinite === true;
+
+  // Infinite hook is always called (Rules of Hooks); only consumed in infinite mode. The no-op
+  // fallback keeps the hook cheap when the consumer is in the sync path.
+  const noopGetValues = useCallback<(params: SelectPaginationParams) => Promise<TPaginatedResponse<T[]>>>(
+    () => Promise.resolve({ results: [] }),
+    []
+  );
+  const paginatedGetValues = isInfinite ? props.getValues : noopGetValues;
+  const infinite = useInfiniteOptions<T>(paginatedGetValues, getOptionValue);
+  const { onSearchChange, onLoadMore, onOpen: onInfiniteOpen, onClose: onInfiniteClose } = infinite;
+
+  // Everything currently loaded, whichever source it came from — what `valueIds` resolves against.
+  const loadedOptions = isInfinite ? infinite.items : props.getValues();
+
+  // Normalize the single (`T | null`), multi (`T[]`) and ids-in (`valueIds`) forms into one array.
+  // Ruling 46: in ids mode an id with no loaded option becomes `getOptionPlaceholder(id)` rather
+  // than being dropped, and `selectedIds` below carries it regardless — so the id cannot fall out
+  // of the next `onChange` even when the caller supplies no placeholder to draw.
+  const { selected, selectedIds } = useResolvedSelection<T>({
+    valueIds: props.valueIds,
+    loadedOptions,
+    value: value as T | T[] | null | undefined,
+    multiple,
+    getOptionValue,
+    getOptionPlaceholder,
+  });
+
+  // translation
+  const { t } = useTranslation();
+  const { contains } = useFilter();
+
+  // Base UI skips its `CompositeList` in virtualized mode, so a row only registers itself while it
+  // is rendered. Keyboard navigation can walk the highlight past the rendered window, where Enter
+  // would find no element to click — scrolling the highlighted index back into view keeps the row
+  // mounted (and registered) before the next keystroke lands.
+  const virtualizerRef = useRef<SelectVirtualizer | null>(null);
+  // Which row Enter would select, for `onSearchSubmit`. Base UI highlights nothing until the user
+  // arrows (it takes no `autoHighlight`), and reports `-1` when it clears the highlight again.
+  const highlightedIndexRef = useRef(-1);
+
+  const { query, syncQuery, handleQueryChange, setSyncQuery } = useSelectSearch({
+    isInfinite,
+    infiniteQuery: infinite.query,
+    onSearchChange,
+    highlightedIndexRef,
+  });
+  const resetSyncQuery = useCallback(() => setSyncQuery(""), [setSyncQuery]);
+
+  // Open state is uncontrolled by default; a caller that needs to open the picker itself passes
+  // `open` (and `onOpenChange` to hear about the user's own opens and closes).
+  const openState = useSelectOpenState<T>({
+    controlledOpen,
+    lazyMount,
+    defaultOpen,
+    isInfinite,
+    selected,
+    onInfiniteOpen,
+    onInfiniteClose,
+    onClose,
+    onOpenChange,
+    resetSyncQuery,
+  });
+  const { isOpen, isOpenRef, isEngineMounted, setIsEngineMounted, pinnedSelected, activate, close, handleOpenChange } =
+    openState;
+
+  const handleItemHighlighted = useCallback((_item: unknown, details: { index: number; reason: string }) => {
+    highlightedIndexRef.current = details.index;
+    scrollHighlightedIntoView(details, virtualizerRef);
+  }, []);
+
+  const { baseItems, items } = useSelectItems<T>({
+    isInfinite,
+    loadedOptions,
+    filterOption,
+    pinnedSelected,
+    headerItems,
+    shouldPinSelected,
+    syncQuery,
+    filterHeaderItems,
+    contains,
+    searchTextOf,
+    getOptionValue,
+  });
+
+  const handleSearchKeyDown = useSearchKeyDown({
+    onSearchSubmit,
+    itemsLength: items.length,
+    highlightedIndexRef,
+  });
+
+  // Keyboard moves walk past disabled rows instead of parking on a row Enter cannot pick.
+  const skipDisabledRow = useSkipDisabledRows({ isOpen, items, getOptionDisabled });
+  const handleHighlight = useCallback(
+    (item: unknown, details: { index: number; reason: string }) => {
+      handleItemHighlighted(item, details);
+      skipDisabledRow(details.index, details.reason);
+    },
+    [handleItemHighlighted, skipDisabledRow]
   );
 
   const ctxValue = useMemo<SelectContextValue<unknown>>(
@@ -412,8 +1079,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     ]
   );
 
-  const mount = useCallback(() => setIsEngineMounted(true), []);
-
+  const mount = useCallback(() => setIsEngineMounted(true), [setIsEngineMounted]);
   const engineValue = useMemo<SelectEngineContextValue>(
     () => ({ mounted: isEngineMounted, activate, mount, disabled }),
     [isEngineMounted, activate, mount, disabled]
@@ -422,219 +1088,96 @@ export function SelectRoot<T>(props: SelectProps<T>) {
   // Nested editors (e.g. properties overflow menu) can opt into left/right placement via context
   // so callers don't have to thread side/align through every property-select wrapper.
   const dropdownPlacement = useSelectDropdownPlacement();
-
-  // Ruling 28's sibling problem, one level up: propel's positioner is `z-50` and `ComboboxContent`
-  // exposes neither a z axis nor its portal container, so a Select opened from inside a
-  // higher-stacked floating panel would render behind it. The popup's own `z-index` cannot help —
-  // the positioner is the positioned ancestor — so the value goes on that element directly, through
-  // a hidden sentinel whose callback ref fires exactly when the portaled popup mounts (an effect
-  // runs a commit too early: base-ui's portal node is created first and filled after). No restore
-  // is needed: the positioner unmounts with the popup. The same mount hook applies a per-picker
-  // minimum width without changing the shared theme. Delete the overrides when Propel exposes them.
-  const applyPopupOptions = useCallback(
-    (node: HTMLSpanElement | null) => {
-      if (!node) return;
-      const popup = node.closest<HTMLElement>("[data-select-popup]");
-      if (!popup) return;
-      if (contentMinWidth !== undefined) popup.style.setProperty("--popup-width-min", `${contentMinWidth}px`);
-      const positioner = popup.parentElement;
-      if (positionerZIndex !== undefined && positioner instanceof HTMLElement)
-        positioner.style.zIndex = String(positionerZIndex);
-    },
-    [positionerZIndex, contentMinWidth]
-  );
+  const { applyPopupOptions, fitPopupToLabels } = usePopupSizing<T>({
+    contentMinWidth,
+    positionerZIndex,
+    fitOptionLabels,
+    baseItems,
+    labelOf,
+    getOptionIcon,
+    multiple,
+  });
 
   const searchLabel = t("common.search.label");
-  const fitPopupToLabels = useCallback(
-    (node: HTMLSpanElement | null) => {
-      if (!fitOptionLabels || !node) return;
-      const popup = node.closest<HTMLElement>("[data-select-popup]");
-      const context = document.createElement("canvas").getContext("2d");
-      if (!popup || !context) return;
-      const font = getComputedStyle(node);
-      context.font = `${font.fontWeight} ${font.fontSize} ${font.fontFamily}`;
-      const labelWidth = baseItems.reduce(
-        (width, item) => Math.max(width, context.measureText(labelOf(item)).width),
-        0
-      );
-      // Panel/row insets, trailing selection mark, and the optional 16px icon with 8px gaps.
-      const chromeWidth = 58 + (getOptionIcon ? 24 : 0) + (multiple ? 24 : 0);
-      popup.style.setProperty("--control-gap-md", "8px");
-      popup.style.setProperty(
-        "--popup-width-min",
-        `${Math.max(contentMinWidth ?? 204, Math.ceil(labelWidth + chromeWidth))}px`
-      );
-      popup.style.setProperty("--popup-width-max", "var(--available-width,calc(100vw - 2rem))");
-    },
-    [fitOptionLabels, baseItems, labelOf, getOptionIcon, multiple, contentMinWidth]
-  );
-  const popupLabel = searchPlaceholder ?? placeholder ?? t("common.options");
-  const resolvedEmptyMessage =
-    typeof emptyMessage === "function" ? emptyMessage(query) : (emptyMessage ?? t("web.no_results_found"));
-  const isPlainEmptyMessage = typeof resolvedEmptyMessage === "string" || typeof resolvedEmptyMessage === "number";
+  const popupLabel = getPopupLabel(searchPlaceholder, placeholder, t);
+  const resolvedEmptyMessage = getResolvedEmptyMessage(emptyMessage, query, t);
+  const isPlainEmptyMessage = getIsPlainEmptyMessage(resolvedEmptyMessage);
   const isLoading = isInfinite && infinite.isLoading;
   const loadError = isInfinite ? infinite.error : null;
   // A failed load is not an empty list: the empty row and the skeleton stand down so the error row
   // — and its retry — is what the panel says.
-  const hasLoadError = loadError !== null && loadError !== undefined;
-  // Whether the LIST stands down with them. A failed first load or search has nothing left to show,
-  // so the error row replaces it. A failed *append* does: every page that loaded is still there and
-  // still selectable, and dropping those rows would cost the user more than the failure did — the
-  // rows they were reading vanish, and the only way back is a refetch from page 1. So the error row
-  // joins the list instead of replacing it, and Retry re-requests the page that failed.
-  const hasListError = hasLoadError && (isInfinite ? infinite.errorKind : null) !== "append";
+  const hasLoadError = getHasLoadError(loadError);
+  const hasListError = getHasListError(hasLoadError, isInfinite ? infinite.errorKind : null);
   // Resolved only once there IS an error: a render-prop caller reads off the error object.
-  const resolvedErrorMessage = !hasLoadError
-    ? null
-    : typeof errorMessage === "function"
-      ? errorMessage(loadError)
-      : (errorMessage ?? t("common.errors.default.message"));
-
-  // Propel's `search` slot is the panel's whole sticky header region — it renders above the
-  // scroller, not inside it — so the caller's `header` chrome rides along with the search field
-  // there rather than as the list's first row. That is what keeps it outside the scroll area and
-  // out of reach of the query filter, which only ever sees `items`.
-  const searchSlot =
-    showSearch || header ? (
-      <>
-        {showSearch ? (
-          <ComboboxSearch
-            placeholder={searchPlaceholder ?? searchLabel}
-            aria-label={popupLabel}
-            onKeyDown={onSearchSubmit ? handleSearchKeyDown : undefined}
-          />
-        ) : null}
-        {header}
-      </>
-    ) : undefined;
+  const resolvedErrorMessage = getResolvedErrorMessage(hasLoadError, errorMessage, loadError, t);
 
   const content = (
-    <>
+    <SelectPopupContent<T>
+      showSearch={showSearch}
+      header={header}
+      footer={footer}
+      searchPlaceholder={searchPlaceholder}
+      searchLabel={searchLabel}
+      popupLabel={popupLabel}
+      handleSearchKeyDown={onSearchSubmit ? handleSearchKeyDown : undefined}
+      contentSizing={contentSizing}
+      dropdownPlacement={dropdownPlacement}
+      applyPopupOptions={applyPopupOptions}
+      fitPopupToLabels={fitPopupToLabels}
+      fitOptionLabels={fitOptionLabels}
+      positionerZIndex={positionerZIndex}
+      contentMinWidth={contentMinWidth}
+      hasLoadError={hasLoadError}
+      isLoading={isLoading}
+      searchingMessage={searchingMessage}
+      resolvedErrorMessage={resolvedErrorMessage}
+      isPlainEmptyMessage={isPlainEmptyMessage}
+      resolvedEmptyMessage={resolvedEmptyMessage}
+      hasListError={hasListError}
+      items={items}
+      estimateItemSize={estimateItemSize}
+      isInfinite={isInfinite}
+      hasMore={infinite.hasMore}
+      onLoadMore={onLoadMore}
+      getOptionValue={getOptionValue}
+      getOptionDisabled={getOptionDisabled}
+      getOptionHref={getOptionHref}
+      getOptionGroup={getOptionGroup}
+      multiple={multiple}
+      labelOf={labelOf}
+      getOptionIcon={getOptionIcon}
+      getOptionTrailing={getOptionTrailing}
+      getOptionDescription={getOptionDescription}
+      getOptionTooltip={getOptionTooltip}
+      renderOption={renderOption}
+      virtualizerRef={virtualizerRef}
+      onRetry={infinite.onRetry}
+      t={t}
+    >
       {children}
-      <ComboboxContent
-        data-select-popup=""
-        aria-label={popupLabel}
-        sizing={contentSizing}
-        side={dropdownPlacement?.side}
-        align={dropdownPlacement?.align}
-        data-prevent-outside-click
-        search={searchSlot}
-        footer={footer}
-      >
-        {positionerZIndex === undefined && contentMinWidth === undefined ? null : (
-          <span hidden ref={applyPopupOptions} />
-        )}
-        {fitOptionLabels ? <span hidden className="text-body-xs-regular" ref={fitPopupToLabels} /> : null}
-        {/* Both regions stay mounted (base-ui announces their content politely); their chrome
-            collapses while childless. */}
-        {/* One line for every fetch that replaces the list — the first open and each new query
-            alike. Propel's status row brings its own chrome, so the message goes in as plain text. */}
-        <ComboboxStatus>{hasLoadError || !isLoading ? null : (searchingMessage ?? t("searching"))}</ComboboxStatus>
-        {hasLoadError ? (
-          <div role="alert" className="flex flex-col items-center gap-1 px-2 py-1.5">
-            <span className="text-body-xs-regular text-tertiary">{resolvedErrorMessage}</span>
-            <Button variant="secondary" size="xs" stretch="auto" label={t("common.retry")} onClick={infinite.onRetry} />
-          </div>
-        ) : null}
-        {/* A plain string is the shared "no results" row and wears propel's empty chrome. A caller
-            node (e.g. the inline "create label" affordance) brings its own layout, so it goes
-            through base-ui's unstyled `Empty` instead of inheriting the row's padding and muted
-            type. */}
-        {isPlainEmptyMessage ? (
-          <ComboboxEmpty>{isLoading || hasLoadError ? null : resolvedEmptyMessage}</ComboboxEmpty>
-        ) : (
-          <BaseCombobox.Empty>{isLoading || hasLoadError ? null : resolvedEmptyMessage}</BaseCombobox.Empty>
-        )}
-        {/* A failed reset takes the list with it: it leaves the PREVIOUS query's rows in `items`,
-            and offering those under a "something went wrong" line reads as though the list is
-            still live. A failed append leaves rows that are exactly what they claim to be — the
-            pages that did load — so those stay, under the error row.
-            The paging sentinel stands down with them, but `hasMore` is NOT what stands it down:
-            the hook leaves `hasMore` true (there really are more pages, the fetch just failed), so
-            the `&& !hasLoadError` below is what unmounts the sentinel, backed by `onLoadMore`'s own
-            `errorKind === "append"` bail. Retry is the way on. */}
-        {hasListError ? null : (
-          <VirtualListBody<T>
-            items={items}
-            estimateItemSize={estimateItemSize}
-            hasMore={isInfinite && infinite.hasMore && !hasLoadError}
-            onLoadMore={onLoadMore}
-            loader={<SelectOptionsSkeleton rows={1} />}
-            listLabel={popupLabel}
-            virtualizerRef={virtualizerRef}
-            getOptionValue={getOptionValue}
-            getOptionDisabled={getOptionDisabled}
-            getOptionHref={getOptionHref}
-            getOptionGroup={getOptionGroup}
-            multiple={multiple}
-            getOptionLabel={labelOf}
-            getOptionIcon={getOptionIcon}
-            getOptionTrailing={getOptionTrailing}
-            getOptionDescription={getOptionDescription}
-            getOptionTooltip={getOptionTooltip}
-            renderOption={renderOption}
-          />
-        )}
-      </ComboboxContent>
-    </>
+    </SelectPopupContent>
   );
-
-  const sharedRootProps = {
-    items,
-    // Item values are ids, so base-ui needs no label/equality adapters; filtering is ours.
-    filter: null,
-    virtualized: true,
-    open: isOpen,
-    onOpenChange: handleOpenChange,
-    onItemHighlighted: handleHighlight,
-    inputValue: query,
-    onInputValueChange: (next: string, details: { reason: string }) => {
-      // `input-change` is the only reason base-ui reports for text the USER typed (ComboboxInput's
-      // `onChange` and `onCompositionEnd`), and it has to be honoured whatever `isOpenRef` says.
-      // On `variant="search-input"` the field is live while the popup is shut, and base-ui reports
-      // the keystroke BEFORE it opens the popup for it — `setInputValue(value, input-change)` runs
-      // ahead of `maybeOpenOnInput(...)` — so the open side effects that flip the ref have not run
-      // yet. Reading the ref here dropped the first character of every search typed into a closed
-      // field. A user-driven empty field is `input-change` too, so backspacing to nothing still
-      // resets the list.
-      if (details.reason === "input-change") {
-        handleQueryChange(next);
-        return;
-      }
-      // Every other reason is base-ui writing the field itself, and none of them is a new search:
-      // `item-press` fills or clears it as a selection commits; `input-clear` is that same clear
-      // arriving on its own for a multi-select whose search input lives in the popup (AriaCombobox's
-      // `handleSelection` empties the field after every pick), and is also the close-time clear;
-      // `escape-key` can arrive here directly on a `variant="search-input"` field that is focused
-      // but already closed, where base-ui clears the query without a popup to close first; the rest
-      // (`clear-press`, `none`) only mean something while the popup is open, where the field the
-      // user can see really did change. `escape-key` needs no name in the guard below — it reaches
-      // this line only with the popup shut, so the `!isOpenRef.current` fallback already returns.
-      if (details.reason === "item-press" || details.reason === "input-clear" || !isOpenRef.current) return;
-      handleQueryChange(next);
-    },
-    disabled,
-    modal,
-    children: content,
-  };
 
   return (
     <SelectContext.Provider value={ctxValue}>
       <SelectEngineContext.Provider value={engineValue}>
         {!isEngineMounted ? (
           children
-        ) : props.multiple ? (
-          <Combobox<string, true>
-            {...sharedRootProps}
-            multiple
-            value={selectedIds}
-            onValueChange={(next) => props.onChange(next)}
-          />
         ) : (
-          <Combobox<string, false>
-            {...sharedRootProps}
-            value={selectedIds[0] ?? null}
-            onValueChange={(next) => props.onChange(next ?? "")}
+          <SelectEngine<T>
+            multiple={multiple}
+            disabled={disabled}
+            modal={modal}
+            isOpen={isOpen}
+            items={items}
+            selectedIds={selectedIds}
+            query={query}
+            isOpenRef={isOpenRef}
+            handleOpenChange={handleOpenChange}
+            handleHighlight={handleHighlight}
+            handleQueryChange={handleQueryChange}
+            content={content}
+            onChange={props.onChange as (value: string | string[]) => void}
           />
         )}
       </SelectEngineContext.Provider>

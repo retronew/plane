@@ -38,6 +38,77 @@ type Props = {
 
 const MAX_COMMENT_LENGTH = 100_000;
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+type UpdateReactions = TProjectOverviewUpdate["reactions"];
+
+function canEditComment(comment: TProjectOverviewUpdateComment, canWrite: boolean, userId: string | undefined) {
+  return canWrite && comment.created_by === userId;
+}
+
+function canDeleteComment(
+  comment: TProjectOverviewUpdateComment,
+  canWrite: boolean,
+  canAdmin: boolean,
+  userId: string | undefined
+) {
+  return canWrite && (canAdmin || comment.created_by === userId);
+}
+
+function isOwnReaction(reactions: UpdateReactions, reaction: string, userId: string | undefined) {
+  return reactions.some((item) => item.reaction === reaction && item.actor === userId);
+}
+
+function groupUpdateReactions(reactions: UpdateReactions, userId: string | undefined, fallbackName: string) {
+  const grouped = new Map<string, EmojiReactionType>();
+  for (const reaction of reactions) {
+    const group = grouped.get(reaction.reaction) ?? {
+      emoji: stringToEmoji(reaction.reaction),
+      count: 0,
+      reacted: false,
+      users: [],
+    };
+    group.count++;
+    group.reacted ||= reaction.actor === userId;
+    group.users?.push(overviewActorName(reaction.actor_detail, fallbackName));
+    grouped.set(reaction.reaction, group);
+  }
+  return grouped;
+}
+
+function canRetryComments(retrying: boolean, isValidating: boolean) {
+  return !retrying && !isValidating;
+}
+
+function canSubmitComment(args: {
+  canWrite: boolean;
+  validDraft: boolean;
+  hasComments: boolean;
+  hasError: boolean;
+  pending: boolean;
+}) {
+  return args.canWrite && args.validDraft && args.hasComments && !args.hasError && !args.pending;
+}
+
+function canSaveComment(args: {
+  editor: { id: string } | null;
+  comment: TProjectOverviewUpdateComment | undefined;
+  canEdit: boolean;
+  validEdit: boolean;
+  hasError: boolean;
+  pending: boolean;
+}) {
+  return Boolean(args.editor && args.comment && args.canEdit && args.validEdit && !args.hasError && !args.pending);
+}
+
+function canDeleteCommentNow(args: {
+  target: TProjectOverviewUpdateComment | null;
+  canDelete: boolean;
+  exists: boolean;
+  pending: boolean;
+}) {
+  return Boolean(args.target && args.canDelete && args.exists && !args.pending);
+}
+
 type UpdateCommentRowProps = {
   comment: TProjectOverviewUpdateComment;
   canEdit: boolean;
@@ -243,6 +314,177 @@ function UpdateDiscussionComposer({
   );
 }
 
+function UpdateDiscussionFooter({
+  commentCount,
+  expanded,
+  discussionId,
+  pending,
+  canWrite,
+  reactions,
+  hasReactions,
+  pickerOpen,
+  onToggleExpanded,
+  onToggleReaction,
+  onPickerOpenChange,
+  t,
+}: {
+  commentCount: number;
+  expanded: boolean;
+  discussionId: string;
+  pending: boolean;
+  canWrite: boolean;
+  reactions: EmojiReactionType[];
+  hasReactions: boolean;
+  pickerOpen: boolean;
+  onToggleExpanded: () => void;
+  onToggleReaction: (reaction: string) => void;
+  onPickerOpenChange: (open: boolean) => void;
+  t: Translate;
+}) {
+  return (
+    <footer className="flex flex-wrap items-center gap-1.5 px-4 pt-3.5 pb-3">
+      <div className="-ml-(--control-padding-x-sm) flex items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          stretch="auto"
+          label={`${commentCount > 0 ? `${commentCount} ` : ""}${t(`${key}.comment`)}`}
+          aria-expanded={expanded}
+          aria-controls={discussionId}
+          disabled={pending}
+          onClick={onToggleExpanded}
+        />
+      </div>
+      {(canWrite || hasReactions) && <span aria-hidden className="mx-1.5 h-4 border-s border-strong" />}
+      <fieldset disabled={!canWrite || pending} className="m-0 contents min-w-0 border-0 p-0">
+        <EmojiReactionGroup
+          className="empty:hidden"
+          reactions={reactions}
+          showAddButton={false}
+          onReactionClick={(emoji) =>
+            onToggleReaction(Array.from(emoji, (character) => character.codePointAt(0)).join("-"))
+          }
+        />
+      </fieldset>
+      {canWrite && (
+        <EmojiReactionPicker
+          isOpen={pickerOpen}
+          handleToggle={onPickerOpenChange}
+          disabled={pending}
+          onChange={(reaction) => onToggleReaction(reaction)}
+          tooltip={t("common.actions.add_reaction")}
+          buttonClassName="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-layer-3 text-secondary hover:bg-layer-3-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-60"
+          label={<ReactionOutline className="size-3.5" />}
+        />
+      )}
+    </footer>
+  );
+}
+
+function UpdateCommentsPanel({
+  expanded,
+  discussionId,
+  data,
+  error,
+  isLoading,
+  isValidating,
+  canWrite,
+  pending,
+  validDraft,
+  editor,
+  editorRef,
+  composerRef,
+  pendingRef,
+  draft,
+  setDraft,
+  setEditor,
+  setDeleteTarget,
+  canEdit,
+  canDelete,
+  onSave,
+  onRetry,
+  onSubmit,
+  t,
+}: {
+  expanded: boolean;
+  discussionId: string;
+  data: TProjectOverviewUpdateComment[] | undefined;
+  error: unknown;
+  isLoading: boolean;
+  isValidating: boolean;
+  canWrite: boolean;
+  pending: boolean;
+  validDraft: boolean;
+  editor: { id: string; body: string } | null;
+  editorRef: RefObject<HTMLDivElement | null>;
+  composerRef: RefObject<HTMLFormElement | null>;
+  pendingRef: RefObject<boolean>;
+  draft: string;
+  setDraft: Dispatch<SetStateAction<string>>;
+  setEditor: Dispatch<SetStateAction<{ id: string; body: string } | null>>;
+  setDeleteTarget: Dispatch<SetStateAction<TProjectOverviewUpdateComment | null>>;
+  canEdit: (comment: TProjectOverviewUpdateComment) => boolean;
+  canDelete: (comment: TProjectOverviewUpdateComment) => boolean;
+  onSave: () => void;
+  onRetry: () => void;
+  onSubmit: () => void;
+  t: Translate;
+}) {
+  return (
+    <div id={discussionId} hidden={!expanded}>
+      {expanded && (
+        <div className="flex flex-col gap-4 border-t border-subtle-1 px-4 py-3">
+          {isLoading && !error && <output className="text-caption-sm-regular text-tertiary">{t("loading")}</output>}
+          {Boolean(error) && (
+            <div role="alert" className="flex items-center gap-2 text-caption-sm-regular text-danger-primary">
+              <span>{t(`${key}.comments_load_error`)}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                stretch="auto"
+                label={t("common.retry")}
+                disabled={isValidating}
+                onClick={onRetry}
+              />
+            </div>
+          )}
+          {!!data?.length && (
+            <ol className="flex flex-col">
+              {data.map((comment) => (
+                <UpdateCommentRow
+                  key={comment.id}
+                  comment={comment}
+                  canEdit={canEdit(comment)}
+                  canDelete={canDelete(comment)}
+                  editor={editor}
+                  editorRef={editorRef}
+                  pending={pending}
+                  validEdit={Boolean(editor?.body.trim()) && (editor?.body.length ?? 0) <= MAX_COMMENT_LENGTH}
+                  hasError={Boolean(error)}
+                  pendingRef={pendingRef}
+                  setEditor={setEditor}
+                  setDeleteTarget={setDeleteTarget}
+                  onSave={onSave}
+                />
+              ))}
+            </ol>
+          )}
+          {canWrite && (
+            <UpdateDiscussionComposer
+              composerRef={composerRef}
+              draft={draft}
+              setDraft={setDraft}
+              pending={pending}
+              submitDisabled={pending || !validDraft || !data || Boolean(error)}
+              onSubmit={onSubmit}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // A reused card must not carry an open discussion or draft into a different update.
 export function ProjectUpdateDiscussion(props: Props) {
   return <UpdateDiscussion key={`${props.workspaceSlug}:${props.projectId}:${props.update.id}`} {...props} />;
@@ -277,15 +519,22 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
   );
   const commentCount = comments.data?.length ?? loadedCount ?? update.comment_count;
   const canWrite = canInteract && Boolean(userId);
-  const canEdit = (comment: TProjectOverviewUpdateComment) => canWrite && comment.created_by === userId;
-  const canDelete = (comment: TProjectOverviewUpdateComment) => canWrite && (canAdmin || comment.created_by === userId);
+  const canEdit = (comment: TProjectOverviewUpdateComment) => canEditComment(comment, canWrite, userId);
+  const canDelete = (comment: TProjectOverviewUpdateComment) => canDeleteComment(comment, canWrite, canAdmin, userId);
   const validEdit = Boolean(editor?.body.trim()) && (editor?.body.length ?? 0) <= MAX_COMMENT_LENGTH;
   const validDraft = Boolean(draft.trim()) && draft.length <= MAX_COMMENT_LENGTH;
   const reportError = () => setToast({ type: "error", title: t("something_went_wrong_please_try_again") });
   const refreshList = () => void onRefresh().catch(() => undefined);
 
   const submitComment = async () => {
-    if (!canWrite || !validDraft || !comments.data || comments.error || pendingRef.current) return;
+    const allowed = canSubmitComment({
+      canWrite,
+      validDraft,
+      hasComments: Boolean(comments.data),
+      hasError: Boolean(comments.error),
+      pending: pendingRef.current,
+    });
+    if (!allowed) return;
     pendingRef.current = true;
     setPending(true);
     try {
@@ -309,7 +558,15 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
 
   const saveComment = async () => {
     const comment = comments.data?.find((item) => item.id === editor?.id);
-    if (!editor || !comment || !canEdit(comment) || !validEdit || comments.error || pendingRef.current) return;
+    const allowed = canSaveComment({
+      editor,
+      comment,
+      canEdit: comment ? canEdit(comment) : false,
+      validEdit,
+      hasError: Boolean(comments.error),
+      pending: pendingRef.current,
+    });
+    if (!allowed || !editor) return;
     pendingRef.current = true;
     setPending(true);
     try {
@@ -334,13 +591,13 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
   };
 
   const deleteComment = async () => {
-    if (
-      !deleteTarget ||
-      !canDelete(deleteTarget) ||
-      !comments.data?.some((comment) => comment.id === deleteTarget.id) ||
-      pendingRef.current
-    )
-      return;
+    const allowed = canDeleteCommentNow({
+      target: deleteTarget,
+      canDelete: deleteTarget ? canDelete(deleteTarget) : false,
+      exists: Boolean(comments.data?.some((comment) => comment.id === deleteTarget?.id)),
+      pending: pendingRef.current,
+    });
+    if (!allowed || !deleteTarget) return;
     pendingRef.current = true;
     setPending(true);
     try {
@@ -367,7 +624,7 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
     pendingRef.current = true;
     setPending(true);
     try {
-      const ownReaction = update.reactions.some((item) => item.reaction === reaction && item.actor === userId);
+      const ownReaction = isOwnReaction(update.reactions, reaction, userId);
       if (ownReaction) {
         await projectOverviewService.deleteUpdateReaction(workspaceSlug, projectId, update.id, reaction);
       } else {
@@ -383,7 +640,7 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
   };
 
   const retryComments = async () => {
-    if (retryingRef.current || comments.isValidating) return;
+    if (!canRetryComments(retryingRef.current, comments.isValidating)) return;
     retryingRef.current = true;
     try {
       await comments.mutate();
@@ -394,122 +651,63 @@ function UpdateDiscussion({ update, workspaceSlug, projectId, canInteract, canAd
     }
   };
 
-  const grouped = new Map<string, EmojiReactionType>();
-  for (const reaction of update.reactions) {
-    const group = grouped.get(reaction.reaction) ?? {
-      emoji: stringToEmoji(reaction.reaction),
-      count: 0,
-      reacted: false,
-      users: [],
-    };
-    group.count++;
-    group.reacted ||= reaction.actor === userId;
-    group.users?.push(overviewActorName(reaction.actor_detail, t("unknown_user")));
-    grouped.set(reaction.reaction, group);
-  }
+  const grouped = groupUpdateReactions(update.reactions, userId, t("unknown_user"));
+  const deletable = Boolean(deleteTarget && canDelete(deleteTarget));
+
+  const toggleExpanded = () => {
+    if (pendingRef.current) return;
+    // Keep the actual loaded count when the lazy subscription is closed.
+    if (expanded && comments.data) setLoadedCount(comments.data.length);
+    setExpanded((open) => !open);
+  };
 
   return (
     <>
-      <footer className="flex flex-wrap items-center gap-1.5 px-4 pt-3.5 pb-3">
-        <div className="-ml-(--control-padding-x-sm) flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            stretch="auto"
-            label={`${commentCount > 0 ? `${commentCount} ` : ""}${t(`${key}.comment`)}`}
-            aria-expanded={expanded}
-            aria-controls={discussionId}
-            disabled={pending}
-            onClick={() => {
-              if (pendingRef.current) return;
-              // Keep the actual loaded count when the lazy subscription is closed.
-              if (expanded && comments.data) setLoadedCount(comments.data.length);
-              setExpanded((open) => !open);
-            }}
-          />
-        </div>
-        {(canWrite || grouped.size > 0) && <span aria-hidden className="mx-1.5 h-4 border-s border-strong" />}
-        <fieldset disabled={!canWrite || pending} className="m-0 contents min-w-0 border-0 p-0">
-          <EmojiReactionGroup
-            className="empty:hidden"
-            reactions={Array.from(grouped.values())}
-            showAddButton={false}
-            onReactionClick={(emoji) =>
-              void toggleReaction(Array.from(emoji, (character) => character.codePointAt(0)).join("-"))
-            }
-          />
-        </fieldset>
-        {canWrite && (
-          <EmojiReactionPicker
-            isOpen={pickerOpen}
-            handleToggle={setPickerOpen}
-            disabled={pending}
-            onChange={(reaction) => void toggleReaction(reaction)}
-            tooltip={t("common.actions.add_reaction")}
-            buttonClassName="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-layer-3 text-secondary hover:bg-layer-3-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-60"
-            label={<ReactionOutline className="size-3.5" />}
-          />
-        )}
-      </footer>
-      <div id={discussionId} hidden={!expanded}>
-        {expanded && (
-          <div className="flex flex-col gap-4 border-t border-subtle-1 px-4 py-3">
-            {comments.isLoading && !comments.error && (
-              <output className="text-caption-sm-regular text-tertiary">{t("loading")}</output>
-            )}
-            {comments.error && (
-              <div role="alert" className="flex items-center gap-2 text-caption-sm-regular text-danger-primary">
-                <span>{t(`${key}.comments_load_error`)}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  stretch="auto"
-                  label={t("common.retry")}
-                  disabled={comments.isValidating}
-                  onClick={() => void retryComments()}
-                />
-              </div>
-            )}
-            {!!comments.data?.length && (
-              <ol className="flex flex-col">
-                {comments.data.map((comment) => (
-                  <UpdateCommentRow
-                    key={comment.id}
-                    comment={comment}
-                    canEdit={canEdit(comment)}
-                    canDelete={canDelete(comment)}
-                    editor={editor}
-                    editorRef={editorRef}
-                    pending={pending}
-                    validEdit={validEdit}
-                    hasError={Boolean(comments.error)}
-                    pendingRef={pendingRef}
-                    setEditor={setEditor}
-                    setDeleteTarget={setDeleteTarget}
-                    onSave={saveComment}
-                  />
-                ))}
-              </ol>
-            )}
-            {canWrite && (
-              <UpdateDiscussionComposer
-                composerRef={composerRef}
-                draft={draft}
-                setDraft={setDraft}
-                pending={pending}
-                submitDisabled={pending || !validDraft || !comments.data || Boolean(comments.error)}
-                onSubmit={submitComment}
-              />
-            )}
-          </div>
-        )}
-      </div>
+      <UpdateDiscussionFooter
+        commentCount={commentCount}
+        expanded={expanded}
+        discussionId={discussionId}
+        pending={pending}
+        canWrite={canWrite}
+        reactions={Array.from(grouped.values())}
+        hasReactions={grouped.size > 0}
+        pickerOpen={pickerOpen}
+        onToggleExpanded={toggleExpanded}
+        onToggleReaction={(reaction) => void toggleReaction(reaction)}
+        onPickerOpenChange={setPickerOpen}
+        t={t}
+      />
+      <UpdateCommentsPanel
+        expanded={expanded}
+        discussionId={discussionId}
+        data={comments.data}
+        error={comments.error}
+        isLoading={comments.isLoading}
+        isValidating={comments.isValidating}
+        canWrite={canWrite}
+        pending={pending}
+        validDraft={validDraft}
+        editor={editor}
+        editorRef={editorRef}
+        composerRef={composerRef}
+        pendingRef={pendingRef}
+        draft={draft}
+        setDraft={setDraft}
+        setEditor={setEditor}
+        setDeleteTarget={setDeleteTarget}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        onSave={saveComment}
+        onRetry={() => void retryComments()}
+        onSubmit={submitComment}
+        t={t}
+      />
       <ConfirmDialog
-        isOpen={Boolean(deleteTarget && canDelete(deleteTarget))}
+        isOpen={deletable}
         title={t(`${key}.delete_comment`)}
         content={t(`${key}.delete_comment_confirm`)}
         isSubmitting={pending}
-        isDisabled={!deleteTarget || !canDelete(deleteTarget) || pending}
+        isDisabled={!deletable || pending}
         handleSubmit={deleteComment}
         handleClose={() => {
           if (!pendingRef.current) setDeleteTarget(null);

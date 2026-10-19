@@ -12,6 +12,7 @@ import { getWorkItemTemplatePatch } from "@/components/settings/workspace/config
 import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
+import type { Control, FormState, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { FormProvider, useForm } from "react-hook-form";
 // editor
 import { ETabIndices, DEFAULT_WORK_ITEM_FORM_VALUES } from "@plane/constants";
@@ -24,7 +25,7 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { ChevronRight, X } from "lucide-react";
 import { DialogActions, DialogBody, DialogInfo, DialogMain, DialogTitle } from "@makeplane/propel/components/dialog";
 import { setToast } from "@plane/blocks/toast";
-import type { TIssue, TWorkspaceDraftIssue } from "@plane/types";
+import type { ISearchIssueResponse, TIssue, TProjectWorkflow, TWorkspaceDraftIssue } from "@plane/types";
 // hooks
 import { Switch } from "@makeplane/propel/components/switch";
 import {
@@ -43,6 +44,7 @@ import {
 } from "@/components/issues/issue-modal/components";
 // helpers
 // hooks
+import type { TIssueModalContext } from "@/components/issues/issue-modal/context";
 import { useIssueModal } from "@/hooks/context/use-issue-modal";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
@@ -54,7 +56,8 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
 import { CustomPropertyFields } from "@/components/issues/custom-properties";
 import { customPropertyDefaults, customPropertyPayload } from "@/helpers/custom-properties";
-import type { TCustomPropertyValues } from "@/services/project/custom-properties.types";
+import type { TCustomPropertyValue, TCustomPropertyValues } from "@/services/project/custom-properties.types";
+import type { WorkspaceTemplate } from "@/services/workspace-configuration.service";
 
 export interface IssueFormProps {
   data?: Partial<TIssue>;
@@ -84,6 +87,449 @@ export interface IssueFormProps {
   dataResetProperties?: any[];
 }
 
+type TTranslate = (key: string, params?: Record<string, unknown>) => string;
+
+type TPrimaryButtonText = NonNullable<IssueFormProps["primaryButtonText"]>;
+
+type TResolveWorkflow = (projectId: string, typeId?: string | null) => TProjectWorkflow | undefined;
+
+function getDefaultModalTitle(data: Partial<TIssue> | undefined, isDraft: boolean, t: TTranslate) {
+  if (data?.id) return t("update");
+  if (isDraft) return t("create_a_draft");
+  return t("create_new_issue");
+}
+
+function getDefaultPrimaryButtonText(
+  data: Partial<TIssue> | undefined,
+  isDraft: boolean,
+  t: TTranslate
+): TPrimaryButtonText {
+  if (data?.id) return { default: t("update"), loading: t("updating") };
+  return {
+    default: isDraft ? t("save_to_drafts") : t("create_new_issue"),
+    loading: t("saving"),
+  };
+}
+
+function hasFormContent(name: string | undefined, descriptionHtml: string | undefined) {
+  return Boolean(name) || (Boolean(descriptionHtml) && descriptionHtml !== "<p></p>");
+}
+
+function applyWorkItemTemplate({
+  template,
+  getValues,
+  setValue,
+  editorRef,
+  projectId,
+  resolveWorkflow,
+  onApplied,
+}: {
+  template: WorkspaceTemplate;
+  getValues: UseFormGetValues<TIssue>;
+  setValue: UseFormSetValue<TIssue>;
+  editorRef: React.MutableRefObject<EditorRefApi | null>;
+  projectId: string | null;
+  resolveWorkflow: TResolveWorkflow;
+  onApplied: () => void;
+}) {
+  const current = getValues();
+  const typeId = template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
+  const patch = getWorkItemTemplatePatch(template, current, resolveWorkflow(projectId ?? "", typeId));
+  setValue("name", patch.name, { shouldDirty: true });
+  setValue("description_html", patch.description_html, { shouldDirty: true });
+  setValue("priority", patch.priority, { shouldDirty: true });
+  if (patch.type_id !== undefined) setValue("type_id", patch.type_id, { shouldDirty: true });
+  setValue("state_id", patch.state_id, { shouldDirty: true });
+  setValue("assignee_ids", patch.assignee_ids, { shouldDirty: true });
+  setValue("label_ids", patch.label_ids, { shouldDirty: true });
+  setValue("module_ids", patch.module_ids, { shouldDirty: true });
+  setValue("template_children", patch.template_children, { shouldDirty: true });
+  editorRef.current?.setEditorValue(template.description_html, true);
+  onApplied();
+}
+
+function IssueFormHeader({
+  control,
+  data,
+  isProjectSelectionDisabled,
+  modalTitle,
+  editorRef,
+  handleFormChange,
+  onClose,
+  t,
+}: {
+  control: Control<TIssue>;
+  data: Partial<TIssue> | undefined;
+  isProjectSelectionDisabled: boolean;
+  modalTitle: string;
+  editorRef: React.MutableRefObject<EditorRefApi | null>;
+  handleFormChange: () => void;
+  onClose: () => void;
+  t: TTranslate;
+}) {
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <div data-composer-pill-group="">
+          <IssueProjectSelect
+            control={control}
+            disabled={!!data?.id || !!data?.sourceIssueId || isProjectSelectionDisabled}
+            handleFormChange={handleFormChange}
+          />
+        </div>
+        <ChevronRight className="size-3.5 shrink-0 text-placeholder" aria-hidden="true" />
+        <DialogTitle data-composer-heading="">{modalTitle}</DialogTitle>
+      </div>
+      <IconButton
+        variant="ghost"
+        size="md"
+        icon={<Icon icon={X} />}
+        aria-label={t("close")}
+        onClick={() => {
+          if (editorRef.current?.isEditorReadyToDiscard()) {
+            onClose();
+          } else {
+            setToast({
+              type: "error",
+              title: t("toast.error"),
+              message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
+            });
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function IssueFormSetup({
+  control,
+  data,
+  isDisabled,
+  issueTitleRef,
+  formState,
+  projectId,
+  parentId,
+  selectedParentIssue,
+  workspaceSlug,
+  getValues,
+  setValue,
+  editorRef,
+  resolveWorkflow,
+  handleFormChange,
+  setSelectedParentIssue,
+}: {
+  control: Control<TIssue>;
+  data: Partial<TIssue> | undefined;
+  isDisabled: boolean;
+  issueTitleRef: React.MutableRefObject<HTMLInputElement | null>;
+  formState: FormState<TIssue>;
+  projectId: string | null;
+  parentId: string | null;
+  selectedParentIssue: ISearchIssueResponse | null;
+  workspaceSlug: string;
+  getValues: UseFormGetValues<TIssue>;
+  setValue: UseFormSetValue<TIssue>;
+  editorRef: React.MutableRefObject<EditorRefApi | null>;
+  resolveWorkflow: TResolveWorkflow;
+  handleFormChange: () => void;
+  setSelectedParentIssue: React.Dispatch<React.SetStateAction<ISearchIssueResponse | null>>;
+}) {
+  return (
+    <div className="flex shrink-0 flex-col gap-3 pt-2">
+      {!data?.id && (
+        <TemplatePicker
+          workspaceSlug={workspaceSlug}
+          kind="work_item"
+          projectId={projectId ?? undefined}
+          disabled={isDisabled}
+          onApply={(template) =>
+            applyWorkItemTemplate({
+              template,
+              getValues,
+              setValue,
+              editorRef,
+              projectId,
+              resolveWorkflow,
+              onApplied: handleFormChange,
+            })
+          }
+        />
+      )}
+      {parentId && selectedParentIssue && (
+        <IssueParentTag
+          control={control}
+          selectedParentIssue={selectedParentIssue}
+          handleFormChange={handleFormChange}
+          setSelectedParentIssue={setSelectedParentIssue}
+        />
+      )}
+      <IssueTitleInput
+        control={control}
+        issueTitleRef={issueTitleRef}
+        formState={formState}
+        handleFormChange={handleFormChange}
+      />
+    </div>
+  );
+}
+
+function IssueFormDescription({
+  control,
+  isDraft,
+  issueName,
+  issueId,
+  descriptionHtmlData,
+  editorRef,
+  submitBtnRef,
+  gptAssistantModal,
+  workspaceSlug,
+  projectId,
+  handleFormChange,
+  setDescriptionHtml,
+  setGptAssistantModal,
+  handleGptAssistantClose,
+  onAssetUpload,
+  onClose,
+}: {
+  control: Control<TIssue>;
+  isDraft: boolean;
+  issueName: string;
+  issueId: string | undefined;
+  descriptionHtmlData: string | undefined;
+  editorRef: React.MutableRefObject<EditorRefApi | null>;
+  submitBtnRef: React.MutableRefObject<HTMLButtonElement | null>;
+  gptAssistantModal: boolean;
+  workspaceSlug: string;
+  projectId: string | null;
+  handleFormChange: () => void;
+  setDescriptionHtml: (descriptionHtml: string) => void;
+  setGptAssistantModal: React.Dispatch<React.SetStateAction<boolean>>;
+  handleGptAssistantClose: () => void;
+  onAssetUpload: (assetId: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <DialogBody tabIndex={0} render={<div className="vertical-scrollbar scrollbar-sm [&>div]:w-auto" />}>
+      <IssueDescriptionEditor
+        control={control}
+        isDraft={isDraft}
+        issueName={issueName}
+        issueId={issueId}
+        descriptionHtmlData={descriptionHtmlData}
+        editorRef={editorRef}
+        submitBtnRef={submitBtnRef}
+        gptAssistantModal={gptAssistantModal}
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        handleFormChange={handleFormChange}
+        handleDescriptionHTMLDataChange={setDescriptionHtml}
+        setGptAssistantModal={setGptAssistantModal}
+        handleGptAssistantClose={handleGptAssistantClose}
+        onAssetUpload={onAssetUpload}
+        onClose={onClose}
+      />
+    </DialogBody>
+  );
+}
+
+function IssueFormProperties({
+  control,
+  id,
+  projectId,
+  workspaceSlug,
+  selectedParentIssue,
+  startDate,
+  targetDate,
+  parentId,
+  isDraft,
+  handleFormChange,
+  setSelectedParentIssue,
+}: {
+  control: Control<TIssue>;
+  id: string | undefined;
+  projectId: string | null;
+  workspaceSlug: string;
+  selectedParentIssue: ISearchIssueResponse | null;
+  startDate: string | null;
+  targetDate: string | null;
+  parentId: string | null;
+  isDraft: boolean;
+  handleFormChange: () => void;
+  setSelectedParentIssue: (issue: ISearchIssueResponse) => void;
+}) {
+  return (
+    <div className="shrink-0" data-composer-pill-group="">
+      <IssueDefaultProperties
+        control={control}
+        id={id}
+        projectId={projectId}
+        workspaceSlug={workspaceSlug}
+        selectedParentIssue={selectedParentIssue}
+        startDate={startDate}
+        targetDate={targetDate}
+        parentId={parentId}
+        isDraft={isDraft}
+        handleFormChange={handleFormChange}
+        setSelectedParentIssue={setSelectedParentIssue}
+      />
+    </div>
+  );
+}
+
+function IssueCustomPropertiesFields({
+  error,
+  loading,
+  context,
+  expectedContext,
+  properties,
+  values,
+  projectId,
+  disabled,
+  errors,
+  onRetry,
+  onChange,
+  t,
+}: {
+  error: TIssueModalContext["customPropertiesError"];
+  loading: TIssueModalContext["customPropertiesLoading"];
+  context: TIssueModalContext["customPropertyContext"];
+  expectedContext: string;
+  properties: TIssueModalContext["customProperties"];
+  values: TIssueModalContext["customPropertyValues"];
+  projectId: string;
+  disabled: boolean;
+  errors: TIssueModalContext["customPropertyErrors"];
+  onRetry: TIssueModalContext["retryCustomProperties"];
+  onChange: (id: string, value: TCustomPropertyValue) => void;
+  t: TTranslate;
+}) {
+  return (
+    <div className="max-h-64 shrink-0 overflow-y-auto py-2">
+      {error ? (
+        <div role="alert">
+          <p className="text-caption-sm-regular text-danger-primary">{t("web.work_item_properties.load_failed")}</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            stretch="auto"
+            label={t("web.work_item_properties.retry")}
+            onClick={onRetry}
+          />
+        </div>
+      ) : loading || context !== expectedContext ? (
+        <p role="status">{t("web.work_item_properties.loading")}</p>
+      ) : (
+        <CustomPropertyFields
+          properties={properties}
+          values={values}
+          projectId={projectId}
+          disabled={disabled}
+          errors={errors}
+          onChange={onChange}
+        />
+      )}
+    </div>
+  );
+}
+
+function IssueFormActions({
+  data,
+  isDisabled,
+  isSubmitting,
+  isMoving,
+  isDraft,
+  moveToIssue,
+  isCreateMoreToggleEnabled,
+  primaryButtonText,
+  onDiscard,
+  onCreateMoreToggleChange,
+  handleMoveToProjects,
+  getIndex,
+  editorRef,
+  submitBtnRef,
+  t,
+}: {
+  data: Partial<TIssue> | undefined;
+  isDisabled: boolean;
+  isSubmitting: boolean;
+  isMoving: boolean;
+  isDraft: boolean;
+  moveToIssue: boolean;
+  isCreateMoreToggleEnabled: boolean;
+  primaryButtonText: TPrimaryButtonText;
+  onDiscard: (() => void) | undefined;
+  onCreateMoreToggleChange: (value: boolean) => void;
+  handleMoveToProjects: () => Promise<void>;
+  getIndex: (key: string) => number | undefined;
+  editorRef: React.MutableRefObject<EditorRefApi | null>;
+  submitBtnRef: React.MutableRefObject<HTMLButtonElement | null>;
+  t: TTranslate;
+}) {
+  return (
+    <DialogActions render={<div className="issue-composer-actions" />}>
+      {!data?.id && onDiscard && (
+        <DialogInfo>
+          <Button
+            variant="secondary"
+            size="md"
+            stretch="auto"
+            type="button"
+            label={t("web.discard")}
+            disabled={isDisabled || isMoving}
+            onClick={() => {
+              if (!editorRef.current?.isEditorReadyToDiscard()) {
+                setToast({
+                  type: "error",
+                  title: t("error"),
+                  message: t("editor_is_not_ready_to_discard_changes"),
+                });
+                return;
+              }
+              onDiscard();
+            }}
+          />
+        </DialogInfo>
+      )}
+      {!data?.id && (
+        <label className="inline-flex cursor-pointer items-center gap-1.5" tabIndex={getIndex("create_more")}>
+          <Switch
+            size="md"
+            checked={isCreateMoreToggleEnabled}
+            onCheckedChange={(checked) => onCreateMoreToggleChange(checked)}
+            aria-label={t("create_more")}
+          />
+          <span className="text-caption-sm-regular">{t("create_more")}</span>
+        </label>
+      )}
+      <div tabIndex={isDraft ? getIndex("submit_button") : getIndex("draft_button")}>
+        <Button
+          variant={moveToIssue ? "secondary" : "primary"}
+          size="md"
+          stretch="auto"
+          type="submit"
+          ref={submitBtnRef}
+          loading={isSubmitting}
+          disabled={isDisabled}
+          label={isSubmitting ? primaryButtonText.loading : primaryButtonText.default}
+        />
+      </div>
+      {moveToIssue && (
+        <Button
+          variant="primary"
+          type="button"
+          loading={isMoving}
+          onClick={handleMoveToProjects}
+          disabled={isMoving}
+          size="md"
+          stretch="auto"
+          label={t("add_to_project")}
+        />
+      )}
+    </DialogActions>
+  );
+}
+
 export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormProps) {
   const { t } = useTranslation();
   const {
@@ -101,11 +547,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     onCreateMoreToggleChange,
     isDraft,
     moveToIssue = false,
-    modalTitle = `${data?.id ? t("update") : isDraft ? t("create_a_draft") : t("create_new_issue")}`,
-    primaryButtonText = {
-      default: `${data?.id ? t("update") : isDraft ? t("save_to_drafts") : t("create_new_issue")}`,
-      loading: `${data?.id ? t("updating") : t("saving")}`,
-    },
+    modalTitle = getDefaultModalTitle(data, isDraft, t),
+    primaryButtonText = getDefaultPrimaryButtonText(data, isDraft, t),
     isProjectSelectionDisabled = false,
     showActionButtons = true,
     dataResetProperties = [],
@@ -349,8 +792,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     }
   };
 
-  const condition =
-    (watch("name") && watch("name") !== "") || (watch("description_html") && watch("description_html") !== "<p></p>");
+  const condition = hasFormContent(watch("name"), watch("description_html"));
 
   const handleFormChange = () => {
     if (!onChange) return;
@@ -416,208 +858,99 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
           className="flex min-h-0 w-full flex-1 flex-col"
         >
           <DialogMain render={<div className="issue-composer-main" />}>
-            <div className="flex shrink-0 items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <div data-composer-pill-group="">
-                  <IssueProjectSelect
-                    control={control}
-                    disabled={!!data?.id || !!data?.sourceIssueId || isProjectSelectionDisabled}
-                    handleFormChange={handleFormChange}
-                  />
-                </div>
-                <ChevronRight className="size-3.5 shrink-0 text-placeholder" aria-hidden="true" />
-                <DialogTitle data-composer-heading="">{modalTitle}</DialogTitle>
-              </div>
-              <IconButton
-                variant="ghost"
-                size="md"
-                icon={<Icon icon={X} />}
-                aria-label={t("close")}
-                onClick={() => {
-                  if (editorRef.current?.isEditorReadyToDiscard()) {
-                    onClose();
-                  } else {
-                    setToast({
-                      type: "error",
-                      title: t("toast.error"),
-                      message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
-                    });
-                  }
-                }}
-              />
-            </div>
-            <div className="flex shrink-0 flex-col gap-3 pt-2">
-              {!data?.id && (
-                <TemplatePicker
-                  workspaceSlug={workspaceSlug?.toString() ?? ""}
-                  kind="work_item"
-                  projectId={projectId ?? undefined}
-                  disabled={isDisabled}
-                  onApply={(template) => {
-                    const current = getValues();
-                    const typeId =
-                      template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
-                    const patch = getWorkItemTemplatePatch(
-                      template,
-                      current,
-                      workflowStore.resolve(projectId ?? "", typeId)
-                    );
-                    setValue("name", patch.name, { shouldDirty: true });
-                    setValue("description_html", patch.description_html, { shouldDirty: true });
-                    setValue("priority", patch.priority, { shouldDirty: true });
-                    if (patch.type_id !== undefined) setValue("type_id", patch.type_id, { shouldDirty: true });
-                    setValue("state_id", patch.state_id, { shouldDirty: true });
-                    setValue("assignee_ids", patch.assignee_ids, { shouldDirty: true });
-                    setValue("label_ids", patch.label_ids, { shouldDirty: true });
-                    setValue("module_ids", patch.module_ids, { shouldDirty: true });
-                    setValue("template_children", patch.template_children, { shouldDirty: true });
-                    editorRef.current?.setEditorValue(template.description_html, true);
-                    handleFormChange();
-                  }}
-                />
-              )}
-              {watch("parent_id") && selectedParentIssue && (
-                <IssueParentTag
-                  control={control}
-                  selectedParentIssue={selectedParentIssue}
-                  handleFormChange={handleFormChange}
-                  setSelectedParentIssue={setSelectedParentIssue}
-                />
-              )}
-              <IssueTitleInput
-                control={control}
-                issueTitleRef={issueTitleRef}
-                formState={formState}
-                handleFormChange={handleFormChange}
-              />
-            </div>
-            <DialogBody tabIndex={0} render={<div className="vertical-scrollbar scrollbar-sm [&>div]:w-auto" />}>
-              <IssueDescriptionEditor
-                control={control}
-                isDraft={isDraft}
-                issueName={watch("name")}
-                issueId={data?.id}
-                descriptionHtmlData={data?.description_html}
-                editorRef={editorRef}
-                submitBtnRef={submitBtnRef}
-                gptAssistantModal={gptAssistantModal}
-                workspaceSlug={workspaceSlug?.toString()}
-                projectId={projectId}
-                handleFormChange={handleFormChange}
-                handleDescriptionHTMLDataChange={(description_html) =>
-                  setValue<"description_html">("description_html", description_html)
-                }
-                setGptAssistantModal={setGptAssistantModal}
-                handleGptAssistantClose={() => reset(getValues())}
-                onAssetUpload={onAssetUpload}
-                onClose={onClose}
-              />
-            </DialogBody>
-            <div className="shrink-0" data-composer-pill-group="">
-              <IssueDefaultProperties
-                control={control}
-                id={data?.id}
-                projectId={projectId}
-                workspaceSlug={workspaceSlug?.toString()}
-                selectedParentIssue={selectedParentIssue}
-                startDate={watch("start_date")}
-                targetDate={watch("target_date")}
-                parentId={watch("parent_id")}
-                isDraft={isDraft}
-                handleFormChange={handleFormChange}
-                setSelectedParentIssue={setSelectedParentIssue}
-              />
-            </div>
-            <div className="max-h-64 shrink-0 overflow-y-auto py-2">
-              {customPropertiesError ? (
-                <div role="alert">
-                  <p className="text-caption-sm-regular text-danger-primary">
-                    {t("web.work_item_properties.load_failed")}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    stretch="auto"
-                    label={t("web.work_item_properties.retry")}
-                    onClick={retryCustomProperties}
-                  />
-                </div>
-              ) : customPropertiesLoading || customPropertyContext !== `${slug}:${projectId}:${typeId ?? ""}` ? (
-                <p role="status">{t("web.work_item_properties.loading")}</p>
-              ) : (
-                <CustomPropertyFields
-                  properties={customProperties}
-                  values={customPropertyValues}
-                  projectId={projectId!}
-                  disabled={isDisabled}
-                  errors={customPropertyErrors}
-                  onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
-                />
-              )}
-            </div>
+            <IssueFormHeader
+              control={control}
+              data={data}
+              isProjectSelectionDisabled={isProjectSelectionDisabled}
+              modalTitle={modalTitle}
+              editorRef={editorRef}
+              handleFormChange={handleFormChange}
+              onClose={onClose}
+              t={t}
+            />
+            <IssueFormSetup
+              control={control}
+              data={data}
+              isDisabled={isDisabled}
+              issueTitleRef={issueTitleRef}
+              formState={formState}
+              projectId={projectId}
+              parentId={watch("parent_id")}
+              selectedParentIssue={selectedParentIssue}
+              workspaceSlug={workspaceSlug?.toString() ?? ""}
+              getValues={getValues}
+              setValue={setValue}
+              editorRef={editorRef}
+              resolveWorkflow={workflowStore.resolve}
+              handleFormChange={handleFormChange}
+              setSelectedParentIssue={setSelectedParentIssue}
+            />
+            <IssueFormDescription
+              control={control}
+              isDraft={isDraft}
+              issueName={watch("name")}
+              issueId={data?.id}
+              descriptionHtmlData={data?.description_html}
+              editorRef={editorRef}
+              submitBtnRef={submitBtnRef}
+              gptAssistantModal={gptAssistantModal}
+              workspaceSlug={workspaceSlug?.toString()}
+              projectId={projectId}
+              handleFormChange={handleFormChange}
+              setDescriptionHtml={(description_html) =>
+                setValue<"description_html">("description_html", description_html)
+              }
+              setGptAssistantModal={setGptAssistantModal}
+              handleGptAssistantClose={() => reset(getValues())}
+              onAssetUpload={onAssetUpload}
+              onClose={onClose}
+            />
+            <IssueFormProperties
+              control={control}
+              id={data?.id}
+              projectId={projectId}
+              workspaceSlug={workspaceSlug?.toString()}
+              selectedParentIssue={selectedParentIssue}
+              startDate={watch("start_date")}
+              targetDate={watch("target_date")}
+              parentId={watch("parent_id")}
+              isDraft={isDraft}
+              handleFormChange={handleFormChange}
+              setSelectedParentIssue={setSelectedParentIssue}
+            />
+            <IssueCustomPropertiesFields
+              error={customPropertiesError}
+              loading={customPropertiesLoading}
+              context={customPropertyContext}
+              expectedContext={`${slug}:${projectId}:${typeId ?? ""}`}
+              properties={customProperties}
+              values={customPropertyValues}
+              projectId={projectId!}
+              disabled={isDisabled}
+              errors={customPropertyErrors}
+              onRetry={retryCustomProperties}
+              onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
+              t={t}
+            />
           </DialogMain>
           {showActionButtons && (
-            <DialogActions render={<div className="issue-composer-actions" />}>
-              {!data?.id && onDiscard && (
-                <DialogInfo>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    stretch="auto"
-                    type="button"
-                    label={t("web.discard")}
-                    disabled={isDisabled || isMoving}
-                    onClick={() => {
-                      if (!editorRef.current?.isEditorReadyToDiscard()) {
-                        setToast({
-                          type: "error",
-                          title: t("error"),
-                          message: t("editor_is_not_ready_to_discard_changes"),
-                        });
-                        return;
-                      }
-                      onDiscard();
-                    }}
-                  />
-                </DialogInfo>
-              )}
-              {!data?.id && (
-                <label className="inline-flex cursor-pointer items-center gap-1.5" tabIndex={getIndex("create_more")}>
-                  <Switch
-                    size="md"
-                    checked={isCreateMoreToggleEnabled}
-                    onCheckedChange={(checked) => onCreateMoreToggleChange(checked)}
-                    aria-label={t("create_more")}
-                  />
-                  <span className="text-caption-sm-regular">{t("create_more")}</span>
-                </label>
-              )}
-              <div tabIndex={isDraft ? getIndex("submit_button") : getIndex("draft_button")}>
-                <Button
-                  variant={moveToIssue ? "secondary" : "primary"}
-                  size="md"
-                  stretch="auto"
-                  type="submit"
-                  ref={submitBtnRef}
-                  loading={isSubmitting}
-                  disabled={isDisabled}
-                  label={isSubmitting ? primaryButtonText.loading : primaryButtonText.default}
-                />
-              </div>
-              {moveToIssue && (
-                <Button
-                  variant="primary"
-                  type="button"
-                  loading={isMoving}
-                  onClick={handleMoveToProjects}
-                  disabled={isMoving}
-                  size="md"
-                  stretch="auto"
-                  label={t("add_to_project")}
-                />
-              )}
-            </DialogActions>
+            <IssueFormActions
+              data={data}
+              isDisabled={isDisabled}
+              isSubmitting={isSubmitting}
+              isMoving={isMoving}
+              isDraft={isDraft}
+              moveToIssue={moveToIssue}
+              isCreateMoreToggleEnabled={isCreateMoreToggleEnabled}
+              primaryButtonText={primaryButtonText}
+              onDiscard={onDiscard}
+              onCreateMoreToggleChange={onCreateMoreToggleChange}
+              handleMoveToProjects={handleMoveToProjects}
+              getIndex={getIndex}
+              editorRef={editorRef}
+              submitBtnRef={submitBtnRef}
+              t={t}
+            />
           )}
         </form>
       </div>

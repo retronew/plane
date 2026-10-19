@@ -47,6 +47,11 @@ type Props = {
   isEpic?: boolean;
 };
 
+type Translate = ReturnType<typeof useTranslation>["t"];
+type DisplayFilterConfiguration = ILayoutDisplayFiltersOptions | undefined;
+type DisplayProperty = (typeof ISSUE_DISPLAY_PROPERTIES)[number];
+type OrderOption = (typeof ISSUE_ORDER_BY_OPTIONS)[number];
+
 function DisplayChoiceMenu<T extends string | null>({
   label,
   field,
@@ -97,6 +102,177 @@ function DisplayChoiceMenu<T extends string | null>({
   );
 }
 
+function getIgnoredGroupBy(
+  ignoreGroupedFilters: Partial<TIssueGroupByOptions>[],
+  cycleViewDisabled: boolean,
+  moduleViewDisabled: boolean
+) {
+  const ignored = new Set<TIssueGroupByOptions>(ignoreGroupedFilters);
+  if (cycleViewDisabled) ignored.add("cycle");
+  if (moduleViewDisabled) ignored.add("module");
+  return ignored;
+}
+
+function getDisplayPropertyOptions(
+  configuration: DisplayFilterConfiguration,
+  cycleViewDisabled: boolean,
+  moduleViewDisabled: boolean
+) {
+  return ISSUE_DISPLAY_PROPERTIES.filter((property) => {
+    if (!configuration?.display_properties?.includes(property.key)) return false;
+    if (cycleViewDisabled && property.key === "cycle") return false;
+    return !(moduleViewDisabled && property.key === "modules");
+  });
+}
+
+function getGroupByOptions(
+  configuration: DisplayFilterConfiguration,
+  ignored: Set<TIssueGroupByOptions>,
+  displayFilters: IIssueDisplayFilterOptions | undefined
+) {
+  const enabledGroupBy = configuration?.display_filters?.group_by ?? [];
+  if (enabledGroupBy.length === 0) return [];
+  return ISSUE_GROUP_BY_OPTIONS.filter((option) => {
+    if (!enabledGroupBy.includes(option.key) || ignored.has(option.key)) return false;
+    return !(
+      displayFilters?.layout === "kanban" &&
+      displayFilters.sub_group_by != null &&
+      option.key === displayFilters.sub_group_by
+    );
+  });
+}
+
+function getSubGroupByOptions(
+  configuration: DisplayFilterConfiguration,
+  ignored: Set<TIssueGroupByOptions>,
+  displayFilters: IIssueDisplayFilterOptions | undefined
+) {
+  if (displayFilters?.layout !== "kanban" || displayFilters.group_by == null) return [];
+  return ISSUE_GROUP_BY_OPTIONS.filter(
+    (option) =>
+      configuration?.display_filters?.sub_group_by?.includes(option.key) &&
+      !ignored.has(option.key) &&
+      option.key !== displayFilters.group_by
+  );
+}
+
+function getOrderState(
+  configuration: DisplayFilterConfiguration,
+  displayFilters: IIssueDisplayFilterOptions | undefined
+) {
+  const orders = ISSUE_ORDER_BY_OPTIONS.filter((option) =>
+    configuration?.display_filters?.order_by?.includes(option.key)
+  );
+  const orderBy = displayFilters?.order_by ?? "-created_at";
+  const orderField = orderBy.replace(/^-/, "");
+  const descending = orderBy.startsWith("-");
+  // Column headers can sort extra table fields (state, assignees, labels, ...).
+  const selectedColumnOrder = Object.values(SPREADSHEET_PROPERTY_DETAILS).find(
+    (property) => property?.ascendingOrderKey.replace(/^-/, "") === orderField
+  );
+  if (orders.length && !orders.some((option) => option.key.replace(/^-/, "") === orderField) && selectedColumnOrder)
+    orders.push({ key: orderBy, titleTranslationKey: selectedColumnOrder.i18n_title });
+  return { orders, orderField, descending };
+}
+
+function getExtras(configuration: DisplayFilterConfiguration) {
+  if (!configuration?.extra_options.access) return [];
+  return configuration.extra_options.values ?? [];
+}
+
+function getNextOrderBy(
+  field: string,
+  orderField: string,
+  descending: boolean,
+  orders: OrderOption[]
+): TIssueOrderByOptions {
+  const selected = orders.find((option) => option.key.replace(/^-/, "") === field)!;
+  if (field === "sort_order" || orderField === "sort_order") return selected.key;
+  return `${descending ? "-" : ""}${field}` as TIssueOrderByOptions;
+}
+
+function getOrderByForDirection(direction: "desc" | "asc", orderField: string) {
+  return `${direction === "desc" ? "-" : ""}${orderField}` as TIssueOrderByOptions;
+}
+
+function DisplayPropertiesGroup({
+  properties,
+  displayProperties,
+  isEpic,
+  onUpdate,
+  t,
+}: {
+  properties: DisplayProperty[];
+  displayProperties: IIssueDisplayProperties;
+  isEpic: boolean;
+  onUpdate: (updated: Partial<IIssueDisplayProperties>) => void;
+  t: Translate;
+}) {
+  return (
+    <MenuGroup>
+      <MenuLabel>{t("issue.display.properties.label")}</MenuLabel>
+      <div className="flex flex-wrap gap-2 px-2 pt-0.5 pb-1.5">
+        {properties.map((property) => {
+          const label = t(
+            isEpic && property.key === "sub_issue_count"
+              ? "issue.display.properties.work_item_count"
+              : property.titleTranslationKey
+          );
+          const checked = Boolean(displayProperties[property.key]);
+          return (
+            <BaseMenu.CheckboxItem
+              key={property.key}
+              nativeButton
+              data-display-property=""
+              checked={checked}
+              closeOnClick={false}
+              onCheckedChange={(value) => onUpdate({ [property.key]: value })}
+              render={<Toggle size="sm" data-pressed={checked ? "" : undefined} />}
+            >
+              <ToggleLabel>{label}</ToggleLabel>
+            </BaseMenu.CheckboxItem>
+          );
+        })}
+      </div>
+    </MenuGroup>
+  );
+}
+
+function DisplayExtras({
+  extras,
+  displayFilters,
+  onUpdate,
+  t,
+}: {
+  extras: ILayoutDisplayFiltersOptions["extra_options"]["values"];
+  displayFilters: IIssueDisplayFilterOptions | undefined;
+  onUpdate: (updated: Partial<IIssueDisplayFilterOptions>) => void;
+  t: Translate;
+}) {
+  return (
+    <>
+      {extras.includes("sub_issue") && (
+        <MenuCheckboxItem
+          label={t("issue.display.extra.show_sub_issues")}
+          icon={<FilterFieldIcon field="sub_issue" />}
+          checked={displayFilters?.sub_issue ?? true}
+          closeOnClick={false}
+          onCheckedChange={(sub_issue) => onUpdate({ sub_issue })}
+        />
+      )}
+      {extras.includes("show_empty_groups") && (
+        <MenuCheckboxItem
+          label={t("issue.display.extra.show_empty_groups")}
+          icon={<FilterFieldIcon field="show_empty_groups" />}
+          checked={displayFilters?.show_empty_groups ?? true}
+          closeOnClick={false}
+          onCheckedChange={(show_empty_groups) => onUpdate({ show_empty_groups })}
+        />
+      )}
+    </>
+  );
+}
+
 export const DisplayFiltersSelection = observer(function DisplayFiltersSelection(props: Props) {
   const {
     displayFilters,
@@ -110,81 +286,24 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
     isEpic = false,
   } = props;
   const { t } = useTranslation();
-  const enabledFilters = configuration?.display_filters ?? {};
-  const ignored = new Set<TIssueGroupByOptions>([
-    ...ignoreGroupedFilters,
-    ...(cycleViewDisabled ? ["cycle" as const] : []),
-    ...(moduleViewDisabled ? ["module" as const] : []),
-  ]);
-  const properties = ISSUE_DISPLAY_PROPERTIES.filter(
-    (property) =>
-      configuration?.display_properties?.includes(property.key) &&
-      !(cycleViewDisabled && property.key === "cycle") &&
-      !(moduleViewDisabled && property.key === "modules")
-  );
-  const groups =
-    (enabledFilters.group_by ?? []).length > 0
-      ? ISSUE_GROUP_BY_OPTIONS.filter(
-          (option) =>
-            enabledFilters.group_by?.includes(option.key) &&
-            !ignored.has(option.key) &&
-            !(
-              displayFilters?.layout === "kanban" &&
-              displayFilters.sub_group_by != null &&
-              option.key === displayFilters.sub_group_by
-            )
-        )
-      : [];
-  const subgroups =
-    displayFilters?.layout === "kanban" && displayFilters.group_by != null
-      ? ISSUE_GROUP_BY_OPTIONS.filter(
-          (option) =>
-            enabledFilters.sub_group_by?.includes(option.key) &&
-            !ignored.has(option.key) &&
-            option.key !== displayFilters.group_by
-        )
-      : [];
-  const orders = ISSUE_ORDER_BY_OPTIONS.filter((option) => enabledFilters.order_by?.includes(option.key));
-  const orderBy = displayFilters?.order_by ?? "-created_at";
-  const orderField = orderBy.replace(/^-/, "");
-  const descending = orderBy.startsWith("-");
-  // Column headers can sort extra table fields (state, assignees, labels, ...).
-  const selectedColumnOrder = Object.values(SPREADSHEET_PROPERTY_DETAILS).find(
-    (property) => property?.ascendingOrderKey.replace(/^-/, "") === orderField
-  );
-  if (orders.length && !orders.some((option) => option.key.replace(/^-/, "") === orderField) && selectedColumnOrder)
-    orders.push({ key: orderBy, titleTranslationKey: selectedColumnOrder.i18n_title });
-  const extras = configuration?.extra_options.access ? (configuration.extra_options.values ?? []) : [];
+  const ignored = getIgnoredGroupBy(ignoreGroupedFilters, cycleViewDisabled, moduleViewDisabled);
+  const properties = getDisplayPropertyOptions(configuration, cycleViewDisabled, moduleViewDisabled);
+  const groups = getGroupByOptions(configuration, ignored, displayFilters);
+  const subgroups = getSubGroupByOptions(configuration, ignored, displayFilters);
+  const { orders, orderField, descending } = getOrderState(configuration, displayFilters);
+  const extras = getExtras(configuration);
+
   return (
     <div className={styles.menu}>
       {properties.length > 0 && (
         <>
-          <MenuGroup>
-            <MenuLabel>{t("issue.display.properties.label")}</MenuLabel>
-            <div className="flex flex-wrap gap-2 px-2 pt-0.5 pb-1.5">
-              {properties.map((property) => {
-                const label = t(
-                  isEpic && property.key === "sub_issue_count"
-                    ? "issue.display.properties.work_item_count"
-                    : property.titleTranslationKey
-                );
-                const checked = Boolean(displayProperties[property.key]);
-                return (
-                  <BaseMenu.CheckboxItem
-                    key={property.key}
-                    nativeButton
-                    data-display-property=""
-                    checked={checked}
-                    closeOnClick={false}
-                    onCheckedChange={(value) => handleDisplayPropertiesUpdate({ [property.key]: value })}
-                    render={<Toggle size="sm" data-pressed={checked ? "" : undefined} />}
-                  >
-                    <ToggleLabel>{label}</ToggleLabel>
-                  </BaseMenu.CheckboxItem>
-                );
-              })}
-            </div>
-          </MenuGroup>
+          <DisplayPropertiesGroup
+            properties={properties}
+            displayProperties={displayProperties}
+            isEpic={isEpic}
+            onUpdate={handleDisplayPropertiesUpdate}
+            t={t}
+          />
           {(groups.length > 0 || orders.length > 0) && <MenuSeparator />}
         </>
       )}
@@ -215,16 +334,12 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
             label: t(option.titleTranslationKey),
           }))}
           onFieldChange={(field) => {
-            const selected = orders.find((option) => option.key.replace(/^-/, "") === field)!;
-            const next =
-              field === "sort_order" || orderField === "sort_order" ? selected.key : `${descending ? "-" : ""}${field}`;
-            handleDisplayFiltersUpdate({ order_by: next as TIssueOrderByOptions });
+            const next = getNextOrderBy(field, orderField, descending, orders);
+            handleDisplayFiltersUpdate({ order_by: next });
           }}
           directionDisabled={orderField === "sort_order"}
           onDirectionChange={(direction) =>
-            handleDisplayFiltersUpdate({
-              order_by: `${direction === "desc" ? "-" : ""}${orderField}` as TIssueOrderByOptions,
-            })
+            handleDisplayFiltersUpdate({ order_by: getOrderByForDirection(direction, orderField) })
           }
         />
       )}
@@ -232,24 +347,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
       {extras.length > 0 && (
         <>
           {(properties.length > 0 || groups.length > 0 || orders.length > 0) && <MenuSeparator />}
-          {extras.includes("sub_issue") && (
-            <MenuCheckboxItem
-              label={t("issue.display.extra.show_sub_issues")}
-              icon={<FilterFieldIcon field="sub_issue" />}
-              checked={displayFilters?.sub_issue ?? true}
-              closeOnClick={false}
-              onCheckedChange={(sub_issue) => handleDisplayFiltersUpdate({ sub_issue })}
-            />
-          )}
-          {extras.includes("show_empty_groups") && (
-            <MenuCheckboxItem
-              label={t("issue.display.extra.show_empty_groups")}
-              icon={<FilterFieldIcon field="show_empty_groups" />}
-              checked={displayFilters?.show_empty_groups ?? true}
-              closeOnClick={false}
-              onCheckedChange={(show_empty_groups) => handleDisplayFiltersUpdate({ show_empty_groups })}
-            />
-          )}
+          <DisplayExtras extras={extras} displayFilters={displayFilters} onUpdate={handleDisplayFiltersUpdate} t={t} />
         </>
       )}
     </div>
