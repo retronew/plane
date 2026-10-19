@@ -15,6 +15,7 @@ interface AppSidebarItemData {
   href?: string;
   label?: string;
   icon?: React.ReactNode;
+  iconClassName?: string;
   isActive?: boolean;
   onClick?: () => void;
   disabled?: boolean;
@@ -34,6 +35,7 @@ interface AppSidebarItemLabelProps {
 interface AppSidebarItemIconProps {
   icon?: React.ReactNode;
   highlight?: boolean;
+  className?: string;
 }
 
 interface AppSidebarLinkItemProps {
@@ -82,12 +84,12 @@ function AppSidebarItemLabel({ highlight = false, label }: AppSidebarItemLabelPr
   );
 }
 
-function AppSidebarItemIcon({ icon, highlight }: AppSidebarItemIconProps) {
+function AppSidebarItemIcon({ icon, highlight, className }: AppSidebarItemIconProps) {
   if (!icon) return null;
 
   return (
     <div
-      className={cn(styles.icon, {
+      className={cn(styles.icon, className, {
         [styles.iconActive]: highlight,
         [styles.iconInactive]: !highlight,
       })}
@@ -129,11 +131,11 @@ export type AppSidebarItemComponent = React.FC<AppSidebarItemProps> & {
 function AppSidebarItem({ variant = "link", item }: AppSidebarItemProps) {
   if (!item) return null;
 
-  const { icon, isActive, label, href, onClick, disabled, showLabel = true } = item;
+  const { icon, iconClassName, isActive, label, href, onClick, disabled, showLabel = true } = item;
 
   const commonItems = (
     <>
-      <AppSidebarItemIcon icon={icon} highlight={isActive} />
+      <AppSidebarItemIcon icon={icon} highlight={isActive} className={iconClassName} />
       {showLabel && <AppSidebarItemLabel highlight={isActive} label={label} />}
     </>
   );

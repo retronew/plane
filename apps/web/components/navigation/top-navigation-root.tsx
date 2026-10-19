@@ -67,18 +67,19 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
               href: `/${workspaceSlug?.toString()}/notifications/`,
               icon: (
                 <div className="relative">
-                  <InboxOutline className="size-5" />
+                  <InboxOutline className="size-4.5" />
                   {totalNotifications > 0 && (
                     <span className="absolute top-0 right-0 size-2 rounded-full bg-danger-primary" />
                   )}
                 </div>
               ),
+              iconClassName: "size-7",
               isActive: pathname?.includes("/notifications/"),
             }}
           />
         </Tooltip>
         <HelpMenuRoot />
-        <div className="flex size-8 items-center justify-center rounded-md hover:bg-layer-1-hover">
+        <div className="flex size-7 items-center justify-center rounded-md hover:bg-layer-1-hover">
           <UserMenuRoot />
         </div>
       </div>
