@@ -11,8 +11,7 @@ import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Avatar } from "@makeplane/propel/components/avatar";
-import { CloseOutline } from "@makeplane/propel/icons";
-import { ArrowRight, Check, FolderPlus, Settings2, Users } from "lucide-react";
+import { ArrowRight, Check, Clock3, FolderPlus, Settings2, Users } from "lucide-react";
 // plane ui
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -127,16 +126,17 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-end justify-between">
         <div className="text-14 font-semibold text-tertiary">{t("home.empty.quickstart_guide")}</div>
         <button
-          className="flex items-center gap-1 text-13 font-medium text-tertiary"
+          type="button"
+          className="-mr-2 -mb-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-12 font-medium text-tertiary transition-colors duration-150 outline-none hover:bg-layer-1-hover hover:text-primary focus-visible:ring-2 focus-visible:ring-accent-strong motion-reduce:transition-none"
           onClick={() => {
             if (!storedValue) return;
             setValue({ ...storedValue, hide: true });
           }}
         >
-          <CloseOutline className="size-3.5" />
+          <Clock3 className="size-3.5" aria-hidden="true" />
           {t("home.empty.not_right_now")}
         </button>
       </div>

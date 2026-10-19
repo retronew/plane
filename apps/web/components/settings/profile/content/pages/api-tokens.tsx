@@ -145,9 +145,9 @@ function TokensEmptyState({ isWorkspace, onCreate, t }: { isWorkspace: boolean; 
       title={t(isWorkspace ? "web.workspace_tokens_empty" : "settings_empty_state.tokens.title")}
       description={t("settings_empty_state.tokens.description")}
       actions={isWorkspace ? [] : [{ label: t("settings_empty_state.tokens.cta_primary"), onClick: onCreate }]}
-      align={isWorkspace ? "center" : "start"}
-      className={isWorkspace ? "max-w-none" : undefined}
-      rootClassName={isWorkspace ? "min-h-60 rounded-lg border border-subtle px-6 py-10" : "py-20"}
+      align="center"
+      className="max-w-none"
+      rootClassName="min-h-60 rounded-lg border border-subtle px-6 py-10"
     />
   );
 }

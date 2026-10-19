@@ -45,7 +45,7 @@
     "dev": "tsdown --watch --no-clean",
     "build": "tsdown",
     "test": "vitest run --project=unit --project=dom",
-    "check:lint": "oxlint .",
+    "check:lint": "oxlint --max-warnings=0 .",
     "check:types": "tsc --noEmit",
     "check:format": "oxfmt --check .",
     "fix:lint": "oxlint --fix .",

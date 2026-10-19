@@ -79,6 +79,7 @@ export function VirtualList({
   // rather than owning the scroll container ourselves
   const windowed = scrollElement !== undefined;
   // react-virtual
+  // oxlint-disable-next-line react/incompatible-library -- `useVirtualizer` returns an instance whose methods cannot be memoized; the compiler skips this component by design, and nothing derived from it is passed into a memoized ancestor.
   const virtualizer = useVirtualizer({
     count,
     getScrollElement: () => (windowed ? (scrollElement ?? null) : parentRef.current),
