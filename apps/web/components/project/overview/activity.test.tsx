@@ -122,6 +122,34 @@ it("renders a compact actor/action/time timeline and reveals values only in the 
   expect(screen.queryByText("After")).toBeNull();
 });
 
+it("keeps change details mounted until the closing animation finishes", async () => {
+  let finishAnimation!: () => void;
+  const finished = new Promise<void>((resolve) => {
+    finishAnimation = resolve;
+  });
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0));
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
+  Object.defineProperty(HTMLElement.prototype, "getAnimations", {
+    configurable: true,
+    value: () => [{ finished }],
+  });
+  try {
+    setup();
+    fireEvent.click((await screen.findAllByRole("button", { name: `${key}.view_changes` }))[0]);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.hasAttribute("data-starting-style")).toBe(true);
+    await waitFor(() => expect(dialog.hasAttribute("data-starting-style")).toBe(false));
+    fireEvent.click(within(dialog).getByRole("button", { name: /^close$/ }));
+    await waitFor(() => expect(dialog.hasAttribute("data-ending-style")).toBe(true));
+    expect(dialog.isConnected).toBe(true);
+    expect(within(dialog).getByText("Before")).toBeTruthy();
+    await act(async () => finishAnimation());
+    await waitFor(() => expect(dialog.isConnected).toBe(false));
+  } finally {
+    delete (HTMLElement.prototype as Partial<HTMLElement>).getAnimations;
+  }
+});
+
 it("loads cursor pages, locks pending requests, stops at the end and removes overlap by ID", async () => {
   let resolve!: (value: TProjectOverviewActivityPage) => void;
   mocks.list.mockImplementation(async (_slug, _id, cursor) =>

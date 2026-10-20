@@ -109,6 +109,11 @@ export function ResourceLinkDialog({
                       }}
                     />
                   </InputGroup>
+                  {invalidUrl && (
+                    <p id={`${id}-error`} role="alert" className="text-caption-sm-regular text-danger-primary">
+                      {t("web.project_overview.invalid_url")}
+                    </p>
+                  )}
                 </Field>
                 <Field name="title">
                   <FieldLabel htmlFor={`${id}-title`} size="lg" inset={false}>
@@ -125,11 +130,6 @@ export function ResourceLinkDialog({
                     />
                   </InputGroup>
                 </Field>
-                {invalidUrl && (
-                  <p id={`${id}-error`} role="alert" className="text-caption-sm-regular text-danger-primary">
-                    {t("web.project_overview.invalid_url")}
-                  </p>
-                )}
               </div>
             </DialogBody>
           </DialogMain>
