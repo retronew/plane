@@ -1,15 +1,18 @@
 # syntax=docker/dockerfile:1
 FROM node:22.22.0-bookworm-slim AS build
 WORKDIR /workspace
+ENV COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 RUN corepack enable && corepack prepare pnpm@11.10.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches/ patches/
 COPY apps/workflow-runner/package.json apps/workflow-runner/package.json
-RUN pnpm install --filter @plane/workflow-runner --frozen-lockfile --ignore-scripts
+RUN pnpm --config.registry=https://registry.npmmirror.com install --filter @plane/workflow-runner --frozen-lockfile --ignore-scripts
 COPY apps/workflow-runner/tsconfig.json apps/workflow-runner/tsconfig.json
 COPY apps/workflow-runner/src apps/workflow-runner/src
 RUN pnpm --filter @plane/workflow-runner build
 # pnpm deploy isolates the runner dependency closure from the application tree.
-RUN pnpm --filter @plane/workflow-runner deploy --legacy --prod /runner
+# Frontend-only workspace patches are absent from the runner production dependencies.
+RUN pnpm --config.registry=https://registry.npmmirror.com --config.allow-unused-patches=true --filter @plane/workflow-runner deploy --legacy --prod /runner
 
 FROM node:22.22.0-bookworm-slim AS runtime
 ENV NODE_ENV=production PORT=8080 HOST=0.0.0.0
