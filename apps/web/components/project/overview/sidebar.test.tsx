@@ -12,7 +12,12 @@ import { ProjectOverviewSidebar } from "./sidebar";
 
 vi.mock("./properties", () => ({ ProjectOverviewProperties: () => <h2>Properties content</h2> }));
 vi.mock("./updates", () => ({
-  ProjectOverviewUpdates: ({ project }: { project: IProject }) => <h2>Updates for {project.id}</h2>,
+  ProjectOverviewUpdates: ({ project }: { project: IProject }) => (
+    <div>
+      <h2>Updates for {project.id}</h2>
+      <textarea aria-label="Update draft" />
+    </div>
+  ),
 }));
 vi.mock("./activity", () => ({
   ProjectOverviewActivity: ({ projectId }: { projectId: string }) => <h2>Activity for {projectId}</h2>,
@@ -28,8 +33,11 @@ it("switches between properties and the real project-scoped updates and activity
   expect(screen.getByRole("heading", { name: "Properties content" })).toBeDefined();
   fireEvent.click(screen.getByRole("tab", { name: "Updates" }));
   expect(await screen.findByRole("heading", { name: "Updates for project" })).toBeDefined();
+  fireEvent.change(screen.getByRole("textbox", { name: "Update draft" }), { target: { value: "Unsaved update" } });
   fireEvent.click(screen.getByRole("tab", { name: "Activity" }));
   expect(await screen.findByRole("heading", { name: "Activity for project" })).toBeDefined();
   fireEvent.click(screen.getByRole("tab", { name: "Properties" }));
   expect(await screen.findByRole("heading", { name: "Properties content" })).toBeDefined();
+  fireEvent.click(screen.getByRole("tab", { name: "Updates" }));
+  expect(await screen.findByRole("textbox", { name: "Update draft" })).toHaveProperty("value", "Unsaved update");
 });

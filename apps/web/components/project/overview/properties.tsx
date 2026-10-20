@@ -123,7 +123,9 @@ function StatusProperty({
           aria-label={t("state")}
           prependIcon={selectedStatusIcon}
         >
-          {(entries) => <span className="truncate">{entries[0]?.name ?? t("web.no_project_status")}</span>}
+          {(entries) => (
+            <span className="min-w-0 flex-1 truncate text-left">{entries[0]?.name ?? t("web.no_project_status")}</span>
+          )}
         </Select.Trigger>
       </Select>
     </PropertyRow>

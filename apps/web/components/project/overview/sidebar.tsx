@@ -5,6 +5,7 @@
  */
 
 import { Tab, Tabs, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ActivityOutline, AlertCircleOutline, UpdatesOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import type { IProject } from "@plane/types";
@@ -22,26 +23,32 @@ export function ProjectOverviewSidebar(props: { project: IProject; workspaceSlug
     >
       <Tabs variant="contained" stretch="full" defaultValue="properties">
         <TabsList>
-          <Tab
-            value="properties"
-            label=""
-            aria-label={t("common.properties")}
-            icon={<AlertCircleOutline className="size-4" />}
-          />
-          <Tab
-            value="updates"
-            label=""
-            aria-label={t("web.project_overview.updates")}
-            icon={<UpdatesOutline className="size-4" />}
-          />
-          <Tab value="activity" label="" aria-label={t("activity")} icon={<ActivityOutline className="size-4" />} />
+          <Tooltip label={t("common.properties")}>
+            <Tab
+              value="properties"
+              label=""
+              aria-label={t("common.properties")}
+              icon={<AlertCircleOutline className="size-4" />}
+            />
+          </Tooltip>
+          <Tooltip label={t("web.project_overview.updates")}>
+            <Tab
+              value="updates"
+              label=""
+              aria-label={t("web.project_overview.updates")}
+              icon={<UpdatesOutline className="size-4" />}
+            />
+          </Tooltip>
+          <Tooltip label={t("activity")}>
+            <Tab value="activity" label="" aria-label={t("activity")} icon={<ActivityOutline className="size-4" />} />
+          </Tooltip>
         </TabsList>
         <TabsPanel value="properties">
           <div className="pt-4">
             <ProjectOverviewProperties {...props} />
           </div>
         </TabsPanel>
-        <TabsPanel value="updates">
+        <TabsPanel value="updates" keepMounted>
           <div className="pt-4">
             <ProjectOverviewUpdates project={props.project} workspaceSlug={props.workspaceSlug} />
           </div>

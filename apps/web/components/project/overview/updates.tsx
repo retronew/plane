@@ -275,10 +275,18 @@ function UpdateEditorForm({
   onSubmit: () => void;
 }) {
   const { t } = useTranslation();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   return (
+    // Blank-space clicks focus the textarea, which already provides keyboard access.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <form
       className="mb-3 w-full shrink-0 overflow-hidden rounded-xl border border-subtle-1 bg-layer-2 transition-[background-color,border-color,box-shadow] focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:ring-2 focus-within:ring-accent-strong/20 hover:border-strong hover:bg-layer-2-hover focus-within:hover:border-accent-strong"
       aria-label={t(`${key}.${editor.id ? "edit_update" : "post_update"}`)}
+      onClick={(event) => {
+        if (event.target instanceof Element && !event.target.closest("button, textarea, [role=menuitem]")) {
+          inputRef.current?.focus();
+        }
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
@@ -289,7 +297,7 @@ function UpdateEditorForm({
           <MenuTrigger
             disabled={pending}
             aria-label={`${t(`${key}.health`)}: ${t(`${key}.${editor.health}`)}`}
-            render={<Pill size="xs" variant="outline" />}
+            render={<Pill size="xs" variant="outline" className="-mt-1 -ml-1 h-auto rounded-lg! px-1! py-1" />}
           >
             <HealthIcon health={editor.health} compact />
             <PillLabel title={t(`${key}.${editor.health}`)}>{t(`${key}.${editor.health}`)}</PillLabel>
@@ -312,6 +320,7 @@ function UpdateEditorForm({
         </Menu>
         <div className="flex w-full">
           <TextArea
+            ref={inputRef}
             size="xl"
             surface="inline"
             autoResize
@@ -380,15 +389,17 @@ function UpdatesToolbar({
           />
         )}
       </div>
-      <IconButton
-        variant="secondary"
-        size="sm"
-        aria-label={t(`${key}.sort_updates`)}
-        aria-pressed={oldestFirst}
-        title={orderLabel}
-        onClick={onToggleSort}
-        icon={oldestFirst ? <SortDescendingOutline /> : <SortAscendingOutline />}
-      />
+      <Tooltip label={orderLabel}>
+        <IconButton
+          variant="secondary"
+          size="sm"
+          showTooltip={false}
+          aria-label={t(`${key}.sort_updates`)}
+          aria-pressed={oldestFirst}
+          onClick={onToggleSort}
+          icon={oldestFirst ? <SortDescendingOutline /> : <SortAscendingOutline />}
+        />
+      </Tooltip>
     </div>
   );
 }
@@ -562,7 +573,7 @@ function UpdatesFeedback({
           />
         </div>
       )}
-      {isEmpty && !error && <p className="text-13 text-tertiary">{t(`${key}.no_updates`)}</p>}
+      {isEmpty && !error && <p className="py-8 text-center text-13 text-tertiary">{t(`${key}.no_updates`)}</p>}
     </>
   );
 }
@@ -730,7 +741,7 @@ const Updates = observer(function Updates({ project, workspaceSlug }: Props) {
         isLoading={isLoading}
         error={error}
         isValidating={isValidating}
-        isEmpty={data?.length === 0}
+        isEmpty={data?.length === 0 && !isNewEditor}
         onRetry={retry}
       />
       <UpdateList

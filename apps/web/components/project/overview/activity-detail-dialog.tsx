@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useLayoutEffect, useState } from "react";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Button } from "@makeplane/propel/components/button";
 import {
@@ -23,15 +24,30 @@ import { activityFields, activityValue, overviewActorName, overviewTranslationKe
 
 export function ProjectActivityDetailDialog({
   entry,
+  open,
   onClose,
+  onOpenChangeComplete,
 }: {
   entry: TProjectOverviewActivity;
+  open: boolean;
   onClose: () => void;
+  onOpenChangeComplete: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
+  // Base UI needs a closed commit before opening a conditionally mounted dialog to animate entry.
+  const [mounted, setMounted] = useState(false);
+  useLayoutEffect(() => {
+    // Synchronize Base UI's enter transition before paint.
+    // eslint-disable-next-line react/set-state-in-effect, react-doctor/no-initialize-state
+    setMounted(true);
+  }, []);
   const field = activityFields.has(entry.field) ? t(`${key}.activity_fields.${entry.field}`) : entry.field;
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={mounted && open}
+      onOpenChange={(nextOpen) => !nextOpen && onClose()}
+      onOpenChangeComplete={onOpenChangeComplete}
+    >
       <DialogContent size="md">
         <DialogMain>
           <DialogHeader>
@@ -59,13 +75,13 @@ export function ProjectActivityDetailDialog({
               <dl className="space-y-4 text-13 break-words whitespace-pre-wrap">
                 <div>
                   <dt className="mb-2 font-medium text-secondary">{t(`${key}.activity_old_value`)}</dt>
-                  <dd className="max-h-64 overflow-y-auto rounded-md border border-subtle bg-layer-1 p-3 text-primary">
+                  <dd className="max-h-64 overflow-y-auto rounded-xl border border-subtle bg-layer-1 p-3 text-primary">
                     {activityValue(entry.old_value)}
                   </dd>
                 </div>
                 <div>
                   <dt className="mb-2 font-medium text-secondary">{t(`${key}.activity_new_value`)}</dt>
-                  <dd className="max-h-64 overflow-y-auto rounded-md border border-subtle bg-layer-1 p-3 text-primary">
+                  <dd className="max-h-64 overflow-y-auto rounded-xl border border-subtle bg-layer-1 p-3 text-primary">
                     {activityValue(entry.new_value)}
                   </dd>
                 </div>

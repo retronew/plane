@@ -177,11 +177,14 @@ it("renders updates safely as multiline plain text with actor, health and time",
 it("creates with the health menu and preserves whitespace and blank lines", async () => {
   mocks.list.mockResolvedValue([]);
   setup();
-  await screen.findByText(`${prefix}.no_updates`);
+  expect((await screen.findByText(`${prefix}.no_updates`)).classList.contains("text-center")).toBe(true);
   const body = "  First line\n\n<img src=x onerror=alert(1)>\n";
   startCreate(body);
+  expect(screen.queryByText(`${prefix}.no_updates`)).toBeNull();
   const editor = screen.getByRole<HTMLTextAreaElement>("textbox");
   const form = screen.getByRole("form", { name: `${prefix}.post_update` });
+  fireEvent.click(form);
+  expect(document.activeElement).toBe(editor);
   expect(screen.queryByRole("button", { name: `${prefix}.sort_updates` })).toBeNull();
   expect(screen.getAllByRole("button", { name: `${prefix}.add_update` })).toHaveLength(1);
   expect(within(form).getByRole("button", { name: `${prefix}.add_update` })).toBeTruthy();
@@ -427,14 +430,17 @@ it.each(["member", "guest"])("sorts updates locally in both directions for a %s"
   const bodies = () => screen.getAllByRole("article").map((article) => article.textContent);
   expect(bodies()[0]).toContain("Newer update");
   expect(sort.getAttribute("aria-pressed")).toBe("false");
-  expect(sort.getAttribute("title")).toBe(`${prefix}.newest_first`);
+  fireEvent.focus(sort);
+  expect(await screen.findByRole("tooltip")).toHaveProperty("textContent", `${prefix}.newest_first`);
   expect(sort.querySelector("svg")).toBeTruthy();
   if (role === "guest") expect(screen.queryByRole("button", { name: `${prefix}.add_update` })).toBeNull();
   fireEvent.click(sort);
   expect(bodies()[0]).toContain("Older update");
   expect(bodies()[1]).toContain("Newer update");
   expect(sort.getAttribute("aria-pressed")).toBe("true");
-  expect(sort.getAttribute("title")).toBe(`${prefix}.oldest_first`);
+  fireEvent.blur(sort);
+  fireEvent.focus(sort);
+  expect(await screen.findByRole("tooltip")).toHaveProperty("textContent", `${prefix}.oldest_first`);
   fireEvent.click(sort);
   expect(bodies()[0]).toContain("Newer update");
   expect(mocks.list).toHaveBeenCalledOnce();

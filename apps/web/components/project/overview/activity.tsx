@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { SortAscendingOutline, SortDescendingOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectActivityOrder, TProjectOverviewActivity, TProjectOverviewActivityPage } from "@plane/types";
@@ -45,7 +46,7 @@ function ActivityFeed({
   const { t } = useTranslation();
   const requesting = useRef(false);
   const [pending, setPending] = useState(false);
-  const [selected, setSelected] = useState<TProjectOverviewActivity | null>(null);
+  const [selected, setSelected] = useState<{ entry: TProjectOverviewActivity; open: boolean } | null>(null);
   const { data, error, isValidating, size, setSize, mutate } = useSWRInfinite<TProjectOverviewActivityPage>(
     (index, previous: TProjectOverviewActivityPage | null): ActivityKey | null => {
       if (!workspaceSlug || !projectId || (previous && (!previous.next_page_results || !previous.next_cursor)))
@@ -97,15 +98,17 @@ function ActivityFeed({
     <section aria-label={t("activity")} className="flex min-h-0 w-full flex-col">
       <div className="mb-3 flex min-h-7 shrink-0 items-center justify-between gap-2">
         <h2 className="text-h6-semibold text-secondary">{t("activity")}</h2>
-        <IconButton
-          variant="secondary"
-          size="sm"
-          aria-label={t(`${key}.sort_activity`)}
-          aria-pressed={orderBy === "created_at"}
-          title={orderLabel}
-          onClick={toggleOrder}
-          icon={orderBy === "-created_at" ? <SortAscendingOutline /> : <SortDescendingOutline />}
-        />
+        <Tooltip label={orderLabel}>
+          <IconButton
+            variant="secondary"
+            size="sm"
+            showTooltip={false}
+            aria-label={t(`${key}.sort_activity`)}
+            aria-pressed={orderBy === "created_at"}
+            onClick={toggleOrder}
+            icon={orderBy === "-created_at" ? <SortAscendingOutline /> : <SortDescendingOutline />}
+          />
+        </Tooltip>
       </div>
       {!data && !error && <output className="text-13 text-tertiary">{t("loading")}</output>}
       {data && !error && entries.length === 0 && <p className="text-13 text-tertiary">{t(`${key}.no_activity`)}</p>}
@@ -117,7 +120,7 @@ function ActivityFeed({
             workspaceSlug={workspaceSlug}
             first={index === 0}
             last={index === entries.length - 1}
-            onSelect={setSelected}
+            onSelect={(selectedEntry) => setSelected({ entry: selectedEntry, open: true })}
           />
         ))}
       </ol>
@@ -145,7 +148,16 @@ function ActivityFeed({
           onClick={() => void request(true)}
         />
       )}
-      {selected && <ProjectActivityDetailDialog entry={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <ProjectActivityDetailDialog
+          entry={selected.entry}
+          open={selected.open}
+          onClose={() => setSelected((current) => (current ? { ...current, open: false } : null))}
+          onOpenChangeComplete={(open) => {
+            if (!open) setSelected((current) => (current?.open ? current : null));
+          }}
+        />
+      )}
     </section>
   );
 }

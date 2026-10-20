@@ -338,7 +338,12 @@ describe("project overview resources", () => {
       await openCreate();
       fillLink("Draft", url);
       submitLink();
-      expect(await screen.findByRole("alert")).toHaveProperty("textContent", "web.project_overview.invalid_url");
+      const error = await screen.findByRole("alert");
+      expect(error).toHaveProperty("textContent", "web.project_overview.invalid_url");
+      const input = screen.getByRole("textbox", { name: "web.project_overview.link_url" });
+      expect(input.getAttribute("aria-describedby")).toBe(error.id);
+      expect(error.parentElement?.contains(input)).toBe(true);
+      expect(error.parentElement?.querySelector("input")?.id).toBe(input.id);
       expect(mocks.createLink).not.toHaveBeenCalled();
       expect(screen.getByRole("textbox", { name: "web.project_overview.link_title" })).toHaveProperty("value", "Draft");
     }
