@@ -29,7 +29,7 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
   const { workspaceSlug } = useParams();
   // store hooks
   const { allowPermissions } = useUserPermissions();
-  const { toggleCreateProjectModal } = useCommandPalette();
+  const { toggleCreateProjectModal, toggleProfileSettingsModal } = useCommandPalette();
   const { joinedProjectIds } = useProject();
   const { data: currentUser } = useUser();
   const { currentWorkspace: activeWorkspace } = useWorkspace();
@@ -104,7 +104,10 @@ export const NoProjectsEmptyState = observer(function NoProjectsEmptyState() {
       flag: "visited_profile",
       cta: {
         text: "home.empty.personalize_account.cta",
-        link: `/settings/profile/general`,
+        onClick: () => {
+          if (storedValue) setValue({ ...storedValue, visited_profile: true });
+          toggleProfileSettingsModal({ activeTab: "general", isOpen: true });
+        },
         disabled: false,
       },
     },

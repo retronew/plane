@@ -35,8 +35,8 @@ vi.mock("./activity-comment-root", () => ({
   }) => <div data-testid="activities" data-intake={isIntakeIssue} data-order={sortOrder} data-variant={variant} />,
 }));
 vi.mock("@/components/comments/comment-create", () => ({
-  CommentCreate: ({ isIntakeIssue }: { isIntakeIssue: boolean }) => (
-    <div data-testid="composer" data-intake={isIntakeIssue} />
+  CommentCreate: ({ isIntakeIssue, variant }: { isIntakeIssue: boolean; variant: string }) => (
+    <div data-testid="composer" data-intake={isIntakeIssue} data-variant={variant} />
   ),
 }));
 const props = { workspaceSlug: "workspace", projectId: "project", issueId: "issue" };
@@ -63,10 +63,31 @@ it("does not enable comments for disabled notification details", () => {
   expect(screen.queryByTestId("composer")).toBeNull();
 });
 
-it("keeps regular issue activity controls by default", () => {
+it("uses the shared Intake tabs and compact composer for regular issue details by default", () => {
   render(<IssueActivity {...props} />);
+  expect(screen.queryByText("common.activity")).toBeNull();
+  expect(screen.queryByText("filters")).toBeNull();
+  expect(screen.getByTestId("activities").getAttribute("data-variant")).toBe("tabs");
+  expect(screen.getByTestId("activities").getAttribute("data-intake")).toBe("false");
+  expect(screen.getByTestId("composer").getAttribute("data-variant")).toBe("compact");
+  expect(screen.getByTestId("composer").getAttribute("data-intake")).toBe("false");
+  fireEvent.click(screen.getByText("history"));
+  expect(screen.queryByTestId("composer")).toBeNull();
+  fireEvent.click(screen.getByText("comments"));
+  expect(screen.getByTestId("composer")).toBeTruthy();
+});
+
+it("retains legacy controls when explicitly requested", () => {
+  render(<IssueActivity {...props} variant="default" />);
   expect(screen.getByText("common.activity")).toBeTruthy();
   expect(screen.getByText("filters")).toBeTruthy();
+});
+
+it("keeps archived regular issue details read-only with the default tabs", () => {
+  render(<IssueActivity {...props} disabled />);
+  expect(screen.queryByTestId("composer")).toBeNull();
+  fireEvent.click(screen.getByText("comments"));
+  expect(screen.queryByTestId("composer")).toBeNull();
 });
 
 it("keeps the Intake composer below descending activities", () => {

@@ -24,6 +24,7 @@ import { ChangeEmailModal } from "@/components/core/modals/change-email-modal";
 import { UserImageUploadModal } from "@/components/core/modals/user-image-upload-modal";
 import { CoverImage } from "@/components/common/cover-image";
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
+import { ProfileSSOLink } from "./sso-link";
 // helpers
 import { getCoverImagePayload } from "@/helpers/cover-image.helper";
 // hooks
@@ -394,20 +395,23 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
           </div>
         </div>
       </form>
-      <div className="mt-10">
-        <SettingsBoxedControlItem
-          title={t("deactivate_account")}
-          description={t("deactivate_account_description")}
-          control={
-            <Button
-              variant="danger-outline"
-              size="sm"
-              stretch="auto"
-              label={t("deactivate_account")}
-              onClick={() => setDeactivateAccountModal(true)}
-            />
-          }
-        />
+      <div className="mt-10 space-y-6">
+        <ProfileSSOLink currentEmail={user.email} />
+        <div className="border-t border-subtle pt-6">
+          <SettingsBoxedControlItem
+            title={t("deactivate_account")}
+            description={t("deactivate_account_description")}
+            control={
+              <Button
+                variant="danger-outline"
+                size="sm"
+                stretch="auto"
+                label={t("deactivate_account")}
+                onClick={() => setDeactivateAccountModal(true)}
+              />
+            }
+          />
+        </div>
       </div>
     </>
   );

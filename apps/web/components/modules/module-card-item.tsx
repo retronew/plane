@@ -8,30 +8,27 @@ import type { SyntheticEvent } from "react";
 import React, { useRef } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import { CalendarOutline, InfoOutline, UserAltOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { useParams } from "next/navigation";
+import { CalendarOutline, ModuleOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 // plane package imports
 import { MODULE_STATUS, EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 import { LinearProgress } from "@makeplane/propel/components/linear-progress";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import type { IModule, IUserLite } from "@plane/types";
-import { Card } from "@plane/blocks/card";
+import type { IModule } from "@plane/types";
 import { FavoriteStar } from "@plane/blocks/common";
 import { DateRangeSelect } from "@plane/blocks/property-select";
 import type { DateRangeValue, WeekStart } from "@plane/blocks/property-select";
-import { getDate, renderFormattedPayloadDate, generateQueryParams } from "@plane/utils";
+import { formatCompactDateRange, getDate, renderFormattedPayloadDate } from "@plane/utils";
 // components
 import { handleTriggerKeyDown } from "@/components/common/trigger-guard";
-import { ButtonAvatars } from "@/components/dropdowns/member/avatar";
+import { MemberSelect } from "@/components/dropdowns/member/member-select";
 import { ModuleQuickActions } from "@/components/modules";
 import { ModuleStatusDropdown } from "@/components/modules/module-status-dropdown";
 // hooks
-import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
 import { useUserPermissions, useUserProfile } from "@/hooks/store/user";
-import { useAppRouter } from "@/hooks/use-app-router";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { translate } from "@plane/i18n";
 
@@ -53,13 +50,6 @@ type TModuleCardActionContext = {
   ) => Promise<IModule>;
   setFavoriteMenuOpen: (value: boolean) => void;
   storedValue: boolean | null;
-};
-
-type TModuleOverviewContext = {
-  router: ReturnType<typeof useAppRouter>;
-  pathname: string;
-  searchParams: ReturnType<typeof useSearchParams>;
-  moduleId: string;
 };
 
 const handleEventPropagation = (e: SyntheticEvent<HTMLDivElement>) => {
@@ -159,19 +149,6 @@ const handleModuleDetailsChange = async (payload: Partial<IModule>, context: TMo
     });
 };
 
-const handleOpenModuleOverview = (e: React.MouseEvent<HTMLButtonElement>, context: TModuleOverviewContext) => {
-  e.stopPropagation();
-  e.preventDefault();
-
-  const { router, pathname, searchParams, moduleId } = context;
-  const query = generateQueryParams(searchParams, ["peekModule"]);
-  if (searchParams.has("peekModule") && searchParams.get("peekModule") === moduleId) {
-    router.push(`${pathname}?${query}`);
-  } else {
-    router.push(`${pathname}?${query && `${query}&`}peekModule=${moduleId}`);
-  }
-};
-
 const getModuleCardStats = (moduleDetails: IModule) => {
   const moduleTotalIssues =
     moduleDetails.backlog_issues +
@@ -183,11 +160,13 @@ const getModuleCardStats = (moduleDetails: IModule) => {
   const moduleCompletedIssues = moduleDetails.completed_issues;
   const progressValue = moduleTotalIssues > 0 ? (moduleCompletedIssues / moduleTotalIssues) * 100 : 0;
 
-  let issueCount: string;
-  if (!moduleTotalIssues) issueCount = `0 work items`;
-  else if (moduleTotalIssues === moduleCompletedIssues)
-    issueCount = translate("web.runtime.items_count", { count: moduleTotalIssues });
-  else issueCount = `${moduleCompletedIssues}/${moduleTotalIssues} Work items`;
+  const issueCount =
+    moduleTotalIssues === 0 || moduleTotalIssues === moduleCompletedIssues
+      ? translate("web.runtime.items_count", { count: moduleTotalIssues })
+      : translate("web.runtime.module_work_item_progress", {
+          completed: moduleCompletedIssues,
+          total: moduleTotalIssues,
+        });
 
   return { issueCount, progressValue };
 };
@@ -204,21 +183,16 @@ const getDateRangePayload = (range: DateRangeValue): Partial<IModule> => ({
 
 const getIsDisabled = (isEditingAllowed: boolean, archivedAt: string | null) => !isEditingAllowed || !!archivedAt;
 
-const hasDateRange = (moduleDetails: IModule) =>
-  Boolean(moduleDetails.start_date) || Boolean(moduleDetails.target_date);
-
 type TModuleCardHeaderActionsProps = {
   moduleDetails: IModule;
   isDisabled: boolean;
   onModuleDetailsChange: (payload: Partial<IModule>) => Promise<void>;
-  onOpenOverview: (e: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
 const ModuleCardHeaderActions = observer(function ModuleCardHeaderActions({
   moduleDetails,
   isDisabled,
   onModuleDetailsChange,
-  onOpenOverview,
 }: TModuleCardHeaderActionsProps) {
   const moduleStatus = MODULE_STATUS.find((status) => status.value === moduleDetails.status);
 
@@ -232,14 +206,12 @@ const ModuleCardHeaderActions = observer(function ModuleCardHeaderActions({
     >
       {moduleStatus && (
         <ModuleStatusDropdown
+          variant="pill-sm"
           isDisabled={isDisabled}
           moduleDetails={moduleDetails}
           handleModuleDetailsChange={onModuleDetailsChange}
         />
       )}
-      <button onClick={onOpenOverview}>
-        <InfoOutline className="h-4 w-4 text-placeholder" />
-      </button>
     </div>
   );
 });
@@ -247,7 +219,6 @@ const ModuleCardHeaderActions = observer(function ModuleCardHeaderActions({
 type TModuleCardDateRangeProps = {
   moduleDetails: IModule;
   isDisabled: boolean;
-  hasDates: boolean;
   weekStartsOn: WeekStart | undefined;
   onDateRangeChange: (range: DateRangeValue) => void;
 };
@@ -255,7 +226,6 @@ type TModuleCardDateRangeProps = {
 const ModuleCardDateRange = observer(function ModuleCardDateRange({
   moduleDetails,
   isDisabled,
-  hasDates,
   weekStartsOn,
   onDateRangeChange,
 }: TModuleCardDateRangeProps) {
@@ -263,36 +233,24 @@ const ModuleCardDateRange = observer(function ModuleCardDateRange({
   // activation must not reach it.
   return (
     <div
-      className="flex items-center justify-between py-0.5"
+      className="flex min-w-0 items-center py-0.5"
       role="presentation"
       onClick={handleEventPropagation}
       onKeyDown={handleTriggerKeyDown}
     >
       <DateRangeSelect
-        variant="select-ghost-md"
-        className={`h-6 w-full gap-1.5 rounded-sm border-[0.5px] border-strong text-11 text-tertiary ${
-          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-        }`}
+        variant="pill-sm"
+        className={`min-w-0 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+        mergeDates
+        formatLabel={formatCompactDateRange}
         value={getModuleDateRange(moduleDetails)}
         onChange={onDateRangeChange}
         placeholder={translate("web.start_date_end_date")}
         weekStartsOn={weekStartsOn}
         disabled={isDisabled}
-        icon={hasDates ? undefined : <CalendarOutline aria-hidden="true" />}
+        icon={<CalendarOutline aria-hidden="true" />}
       />
     </div>
-  );
-});
-
-type TModuleCardLeadProps = {
-  leadDetails: IUserLite;
-};
-
-const ModuleCardLead = observer(function ModuleCardLead({ leadDetails }: TModuleCardLeadProps) {
-  return (
-    <span className="cursor-default">
-      <ButtonAvatars showTooltip={false} userIds={leadDetails?.id} />
-    </span>
   );
 });
 
@@ -301,14 +259,10 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
   // refs
   const parentRef = useRef(null);
   // router
-  const router = useAppRouter();
   const { workspaceSlug, projectId } = useParams();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
   // store hooks
   const { allowPermissions } = useUserPermissions();
   const { getModuleById, addModuleToFavorites, removeModuleFromFavorites, updateModuleDetails } = useModule();
-  const { getUserDetails } = useMember();
   const { data: userProfile } = useUserProfile();
   // local storage
   const { setValue: toggleFavoriteMenu, storedValue } = useLocalStorage<boolean>(IS_FAVORITE_MENU_OPEN, false);
@@ -325,7 +279,6 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
 
   const isDisabled = getIsDisabled(isEditingAllowed, moduleDetails.archived_at);
   const { issueCount, progressValue } = getModuleCardStats(moduleDetails);
-  const moduleLeadDetails = moduleDetails.lead_id ? getUserDetails(moduleDetails.lead_id) : undefined;
 
   const actionContext: TModuleCardActionContext = {
     workspaceSlug,
@@ -337,39 +290,19 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     setFavoriteMenuOpen: toggleFavoriteMenu,
     storedValue,
   };
-  const overviewContext: TModuleOverviewContext = { router, pathname, searchParams, moduleId };
 
   return (
     <div className="relative" data-prevent-progress>
-      <Link ref={parentRef} href={`/${workspaceSlug}/projects/${moduleDetails.project_id}/modules/${moduleDetails.id}`}>
-        <Card>
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <Tooltip label={moduleDetails.name} layout="stacked" disabled={isMobile}>
-                <span className="truncate text-14 font-medium">{moduleDetails.name}</span>
-              </Tooltip>
-              <ModuleCardHeaderActions
-                moduleDetails={moduleDetails}
-                isDisabled={isDisabled}
-                onModuleDetailsChange={(payload) => handleModuleDetailsChange(payload, actionContext)}
-                onOpenOverview={(e) => handleOpenModuleOverview(e, overviewContext)}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-secondary">
-                <WorkItemsOutline className="h-4 w-4 text-tertiary" />
-                <span className="text-11 text-tertiary">{issueCount ?? "0 Work item"}</span>
-              </div>
-              {moduleLeadDetails ? (
-                <ModuleCardLead leadDetails={moduleLeadDetails} />
-              ) : (
-                <Tooltip label={translate("web.no_lead")}>
-                  <UserAltOutline className="mx-1 h-4 w-4 text-tertiary" />
-                </Tooltip>
-              )}
-            </div>
+      <Link
+        ref={parentRef}
+        href={`/${workspaceSlug}/projects/${moduleDetails.project_id}/modules/${moduleDetails.id}`}
+        className="group/module-card focus-visible:outline-accent-primary relative flex w-full min-w-0 flex-col rounded-xl border border-subtle bg-layer-1 p-1 shadow-none transition-colors hover:bg-layer-1-hover focus-visible:outline-2"
+      >
+        <div className="relative flex h-[108px] shrink-0 flex-col justify-between overflow-hidden rounded-lg bg-layer-2 p-3">
+          <span className="grid size-9 place-items-center rounded-md bg-layer-1">
+            <ModuleOutline className="size-5 text-secondary" />
+          </span>
+          <div className="flex items-center gap-3">
             <LinearProgress
               value={progressValue}
               size="md"
@@ -377,34 +310,76 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
               showValue={false}
               aria-label={translate("web.module_progress")}
             />
+            <span className="shrink-0 text-12 text-tertiary tabular-nums">{Math.round(progressValue)}%</span>
+          </div>
+        </div>
+        <div>
+          <div className="flex items-start justify-between gap-2 px-2 pt-1.5">
+            <Tooltip label={moduleDetails.name} layout="stacked" disabled={isMobile}>
+              <span className="min-w-0 flex-1 truncate text-14 font-medium text-primary">{moduleDetails.name}</span>
+            </Tooltip>
+
+            <div
+              className="absolute top-4 right-4 z-10 flex shrink-0 items-center gap-1.5 rounded-md bg-layer-2/80 opacity-0 transition-opacity group-focus-within/module-card:opacity-100 group-hover/module-card:opacity-100 [@media(hover:none)]:opacity-100"
+              role="presentation"
+              onClick={handleEventPropagation}
+              onKeyDown={handleTriggerKeyDown}
+            >
+              {isEditingAllowed && (
+                <FavoriteStar
+                  onClick={(e) => handleFavoriteClick(e, !!moduleDetails.is_favorite, actionContext)}
+                  selected={!!moduleDetails.is_favorite}
+                />
+              )}
+              {workspaceSlug && projectId && (
+                <ModuleQuickActions
+                  parentRef={parentRef}
+                  moduleId={moduleId}
+                  projectId={projectId.toString()}
+                  workspaceSlug={workspaceSlug.toString()}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 px-2 pb-1.5">
+          <div className="flex min-w-0 items-center justify-between gap-2 py-1">
+            <div className="flex items-center gap-1.5 text-secondary">
+              <WorkItemsOutline className="h-4 w-4 text-tertiary" />
+              <span className="text-11 text-tertiary">{issueCount ?? "0 Work item"}</span>
+            </div>
+            <div role="presentation" onClick={handleEventPropagation} onKeyDown={handleTriggerKeyDown}>
+              <MemberSelect
+                variant="pill-sm"
+                value={moduleDetails.lead_id}
+                projectId={projectId?.toString()}
+                disabled={isDisabled}
+                placeholder={translate("web.no_lead")}
+                clearable
+                onChange={(lead) => {
+                  void handleModuleDetailsChange({ lead_id: lead || null }, actionContext);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             <ModuleCardDateRange
               moduleDetails={moduleDetails}
               isDisabled={isDisabled}
-              hasDates={hasDateRange(moduleDetails)}
               weekStartsOn={userProfile?.start_of_the_week}
               onDateRangeChange={(range) => {
                 void handleModuleDetailsChange(getDateRangePayload(range), actionContext);
               }}
             />
+            <ModuleCardHeaderActions
+              moduleDetails={moduleDetails}
+              isDisabled={isDisabled}
+              onModuleDetailsChange={(payload) => handleModuleDetailsChange(payload, actionContext)}
+            />
           </div>
-        </Card>
+        </div>
       </Link>
-      <div className="absolute right-4 bottom-[18px] flex items-center gap-1.5">
-        {isEditingAllowed && (
-          <FavoriteStar
-            onClick={(e) => handleFavoriteClick(e, !!moduleDetails.is_favorite, actionContext)}
-            selected={!!moduleDetails.is_favorite}
-          />
-        )}
-        {workspaceSlug && projectId && (
-          <ModuleQuickActions
-            parentRef={parentRef}
-            moduleId={moduleId}
-            projectId={projectId.toString()}
-            workspaceSlug={workspaceSlug.toString()}
-          />
-        )}
-      </div>
     </div>
   );
 });

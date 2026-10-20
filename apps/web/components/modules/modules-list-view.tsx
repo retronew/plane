@@ -59,7 +59,7 @@ function ModulesLayoutView({
   if (layout === "board") {
     return (
       <Row
-        className={`grid size-full grid-cols-1 gap-6 overflow-y-auto py-page-y ${
+        className={`grid size-full grid-cols-1 gap-4 overflow-y-auto py-page-y ${
           peekModule ? "3xl:grid-cols-3 lg:grid-cols-1 xl:grid-cols-2" : "3xl:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3"
         } vertical-scrollbar scrollbar-lg auto-rows-max transition-all`}
       >

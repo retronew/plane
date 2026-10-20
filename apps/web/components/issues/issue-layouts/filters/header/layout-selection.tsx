@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -17,13 +18,14 @@ import { IssueLayoutIcon } from "@/components/issues/issue-layouts/layout-icon";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 
 type Props = {
+  layoutOverrides?: Partial<Record<EIssueLayoutTypes, { label: string; icon: ReactNode }>>;
   layouts: EIssueLayoutTypes[];
   onChange: (layout: EIssueLayoutTypes) => void;
   selectedLayout: EIssueLayoutTypes | undefined;
 };
 
 export function LayoutSelection(props: Props) {
-  const { layouts, onChange, selectedLayout } = props;
+  const { layouts, onChange, selectedLayout, layoutOverrides } = props;
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
   const layoutsSet = useMemo(() => new Set(layouts), [layouts]);
@@ -38,13 +40,21 @@ export function LayoutSelection(props: Props) {
     >
       <TabsList aria-label={t("common.layout")}>
         {ISSUE_LAYOUTS.filter((layout) => layoutsSet.has(layout.key)).map((layout) => (
-          <Tooltip key={layout.key} label={t(layout.i18n_title)} disabled={isMobile}>
+          <Tooltip
+            key={layout.key}
+            label={layoutOverrides?.[layout.key]?.label ?? t(layout.i18n_title)}
+            disabled={isMobile}
+          >
             <Tab
               value={layout.key}
               label=""
-              aria-label={t(layout.i18n_title)}
+              aria-label={layoutOverrides?.[layout.key]?.label ?? t(layout.i18n_title)}
               data-testid={`layout-switch-${layout.key}`}
-              icon={<IssueLayoutIcon layout={layout.key} size={16} className="size-4" />}
+              icon={
+                layoutOverrides?.[layout.key]?.icon ?? (
+                  <IssueLayoutIcon layout={layout.key} size={16} className="size-4" />
+                )
+              }
             />
           </Tooltip>
         ))}

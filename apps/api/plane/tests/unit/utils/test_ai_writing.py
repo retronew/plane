@@ -200,3 +200,72 @@ class TestWriting:
             next(iter(response.streaming_content))
             response.close()
         assert closed == [True]
+
+
+@pytest.mark.unit
+class TestWorkspaceSlugSuggestion:
+    @pytest.fixture(autouse=True)
+    def setup_endpoint(self):
+        cache.clear()
+        with (
+            patch("plane.app.views.external.base.get_configuration_value", return_value=("0",)),
+            patch("plane.app.views.external.base.get_llm_config", return_value=object()),
+            patch("plane.app.views.external.base.chat", return_value="moon-team") as chat_mock,
+            patch("plane.app.views.external.base.Workspace.objects.filter") as workspace,
+        ):
+            workspace.return_value.exists.return_value = False
+            self.chat = chat_mock
+            self.workspace = workspace
+            yield
+
+    def request(self, data, authenticated=True):
+        from plane.app.views.external.base import WorkspaceSlugSuggestionEndpoint
+
+        request = APIRequestFactory().post("/api/ai/workspace-slug/", data, format="json")
+        if authenticated:
+            force_authenticate(request, user=SimpleNamespace(pk=91, is_authenticated=True, user_timezone="UTC"))
+        return WorkspaceSlugSuggestionEndpoint.as_view()(request)
+
+    def test_suggests_slug(self):
+        response = self.request({"name": "月亮团队"})
+        assert response.status_code == 200
+        assert response.data == {"slug": "moon-team"}
+        assert "月亮团队" in self.chat.call_args.args[1]
+        self.workspace.assert_called_once_with(slug__iexact="moon-team")
+
+    @pytest.mark.parametrize(
+        "data", [{"name": " "}, {"name": 123}, {"name": "x" * 81}, {"name": "ok", "prompt": "injected"}]
+    )
+    def test_rejects_invalid_input(self, data):
+        assert self.request(data).status_code == 400
+        self.chat.assert_not_called()
+
+    @pytest.mark.parametrize("slug", ["api", "中文", "two words", "x" * 49, "", "https://example.com"])
+    def test_rejects_invalid_output(self, slug):
+        self.chat.return_value = slug
+        assert self.request({"name": "name"}).status_code == 502
+
+    def test_rejects_taken_slug(self):
+        self.workspace.return_value.exists.return_value = True
+        assert self.request({"name": "name"}).status_code == 409
+
+    def test_requires_authentication(self):
+        assert self.request({"name": "name"}, authenticated=False).status_code in (401, 403)
+        self.chat.assert_not_called()
+
+    def test_disabled_creation(self):
+        with patch("plane.app.views.external.base.get_configuration_value", return_value=("1",)):
+            assert self.request({"name": "name"}).status_code == 403
+        self.chat.assert_not_called()
+
+    def test_missing_configuration(self):
+        with patch("plane.app.views.external.base.get_llm_config", return_value=None):
+            assert self.request({"name": "name"}).status_code == 400
+        self.chat.assert_not_called()
+
+    @patch("plane.app.views.external.base.log_exception")
+    def test_provider_error_is_redacted(self, log):
+        self.chat.side_effect = LLMError("secret-key")
+        response = self.request({"name": "name"})
+        assert response.status_code == 502
+        assert "secret-key" not in str(response.data)

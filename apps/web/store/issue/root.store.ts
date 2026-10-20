@@ -5,7 +5,7 @@
  */
 
 import { isEmpty } from "lodash-es";
-import { autorun, makeObservable, observable, observableRef } from "mobx";
+import { autorun, makeObservable, observable, observableRef, runInAction } from "mobx";
 // types
 import type { ICycle, IIssueLabel, IModule, IProject, IState, IUserLite, TIssueServiceType } from "@plane/types";
 import { EIssueServiceType } from "@plane/types";
@@ -192,26 +192,29 @@ export class IssueRootStore implements IIssueRootStore {
     this.rootStore = rootStore;
 
     autorun(() => {
-      if (rootStore?.user?.data?.id) this.currentUserId = rootStore?.user?.data?.id;
-      if (this.workspaceSlug !== rootStore.router.workspaceSlug) this.workspaceSlug = rootStore.router.workspaceSlug;
-      if (this.teamspaceId !== rootStore.router.teamspaceId) this.teamspaceId = rootStore.router.teamspaceId;
-      if (this.projectId !== rootStore.router.projectId) this.projectId = rootStore.router.projectId;
-      if (this.cycleId !== rootStore.router.cycleId) this.cycleId = rootStore.router.cycleId;
-      if (this.moduleId !== rootStore.router.moduleId) this.moduleId = rootStore.router.moduleId;
-      if (this.viewId !== rootStore.router.viewId) this.viewId = rootStore.router.viewId;
-      if (this.globalViewId !== rootStore.router.globalViewId) this.globalViewId = rootStore.router.globalViewId;
-      if (this.userId !== rootStore.router.userId) this.userId = rootStore.router.userId;
-      if (!isEmpty(rootStore?.state?.stateMap)) this.stateMap = rootStore?.state?.stateMap;
-      if (!isEmpty(rootStore?.state?.projectStates)) this.stateDetails = rootStore?.state?.projectStates;
-      if (!isEmpty(rootStore?.state?.workspaceStates)) this.workspaceStateDetails = rootStore?.state?.workspaceStates;
-      if (!isEmpty(rootStore?.label?.labelMap)) this.labelMap = rootStore?.label?.labelMap;
+      const updates: Partial<IIssueRootStore> = {};
+      if (rootStore?.user?.data?.id) updates.currentUserId = rootStore?.user?.data?.id;
+      if (this.workspaceSlug !== rootStore.router.workspaceSlug) updates.workspaceSlug = rootStore.router.workspaceSlug;
+      if (this.teamspaceId !== rootStore.router.teamspaceId) updates.teamspaceId = rootStore.router.teamspaceId;
+      if (this.projectId !== rootStore.router.projectId) updates.projectId = rootStore.router.projectId;
+      if (this.cycleId !== rootStore.router.cycleId) updates.cycleId = rootStore.router.cycleId;
+      if (this.moduleId !== rootStore.router.moduleId) updates.moduleId = rootStore.router.moduleId;
+      if (this.viewId !== rootStore.router.viewId) updates.viewId = rootStore.router.viewId;
+      if (this.globalViewId !== rootStore.router.globalViewId) updates.globalViewId = rootStore.router.globalViewId;
+      if (this.userId !== rootStore.router.userId) updates.userId = rootStore.router.userId;
+      if (!isEmpty(rootStore?.state?.stateMap)) updates.stateMap = rootStore?.state?.stateMap;
+      if (!isEmpty(rootStore?.state?.projectStates)) updates.stateDetails = rootStore?.state?.projectStates;
+      if (!isEmpty(rootStore?.state?.workspaceStates))
+        updates.workspaceStateDetails = rootStore?.state?.workspaceStates;
+      if (!isEmpty(rootStore?.label?.labelMap)) updates.labelMap = rootStore?.label?.labelMap;
       if (!isEmpty(rootStore?.memberRoot?.workspace?.workspaceMemberMap))
-        this.workSpaceMemberRolesMap = rootStore?.memberRoot?.workspace?.memberMap || undefined;
-      if (!isEmpty(rootStore?.memberRoot?.memberMap)) this.memberMap = rootStore?.memberRoot?.memberMap || undefined;
+        updates.workSpaceMemberRolesMap = rootStore?.memberRoot?.workspace?.memberMap || undefined;
+      if (!isEmpty(rootStore?.memberRoot?.memberMap)) updates.memberMap = rootStore?.memberRoot?.memberMap || undefined;
       if (!isEmpty(rootStore?.projectRoot?.project?.projectMap))
-        this.projectMap = rootStore?.projectRoot?.project?.projectMap;
-      if (!isEmpty(rootStore?.module?.moduleMap)) this.moduleMap = rootStore?.module?.moduleMap;
-      if (!isEmpty(rootStore?.cycle?.cycleMap)) this.cycleMap = rootStore?.cycle?.cycleMap;
+        updates.projectMap = rootStore?.projectRoot?.project?.projectMap;
+      if (!isEmpty(rootStore?.module?.moduleMap)) updates.moduleMap = rootStore?.module?.moduleMap;
+      if (!isEmpty(rootStore?.cycle?.cycleMap)) updates.cycleMap = rootStore?.cycle?.cycleMap;
+      runInAction(() => Object.assign(this, updates));
     });
 
     this.issues = new IssueStore();

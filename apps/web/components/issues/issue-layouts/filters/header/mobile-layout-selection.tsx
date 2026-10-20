@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
@@ -16,9 +17,11 @@ import { IssueLayoutIcon } from "../../layout-icon";
 
 export function MobileLayoutSelection({
   layouts,
+  layoutOverrides,
   onChange,
   activeLayout,
 }: {
+  layoutOverrides?: Partial<Record<EIssueLayoutTypes, { label: string; icon: ReactNode }>>;
   layouts: EIssueLayoutTypes[];
   onChange: (layout: EIssueLayoutTypes) => void;
   activeLayout?: EIssueLayoutTypes;
@@ -43,9 +46,10 @@ export function MobileLayoutSelection({
         >
           {/* `MenuTrigger` supplies the real button, so this is chrome only. */}
           <ButtonChrome variant="secondary" size="sm" stretch="auto" render={<span />}>
-            {activeLayout && (
-              <IssueLayoutIcon layout={activeLayout} size={14} strokeWidth={2} className="h-3.5 w-3.5" />
-            )}
+            {activeLayout &&
+              (layoutOverrides?.[activeLayout]?.icon ?? (
+                <IssueLayoutIcon layout={activeLayout} size={14} strokeWidth={2} className="h-3.5 w-3.5" />
+              ))}
             <ChevronDownOutline className="my-auto size-3 text-secondary" />
           </ButtonChrome>
         </MenuTrigger>
@@ -53,8 +57,14 @@ export function MobileLayoutSelection({
           {ISSUE_LAYOUTS.filter((l) => allowedLayouts.has(l.key)).map((layout) => (
             <MenuItem
               key={layout.key}
-              icon={<PropelIcon icon={<IssueLayoutIcon layout={layout.key} className="h-3 w-3" />} />}
-              label={t(layout.i18n_label)}
+              icon={
+                <PropelIcon
+                  icon={
+                    layoutOverrides?.[layout.key]?.icon ?? <IssueLayoutIcon layout={layout.key} className="h-3 w-3" />
+                  }
+                />
+              }
+              label={layoutOverrides?.[layout.key]?.label ?? t(layout.i18n_label)}
               onClick={() => {
                 onChange(layout.key);
               }}

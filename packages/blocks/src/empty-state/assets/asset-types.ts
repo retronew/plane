@@ -51,6 +51,7 @@ export type VerticalStackAssetType =
   | "error-404"
   | "inbox"
   | "initiative"
+  | "intake"
   | "invalid-link"
   | "milestone"
   | "module"

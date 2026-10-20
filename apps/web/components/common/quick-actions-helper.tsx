@@ -126,7 +126,7 @@ export const useViewMenuItems = (props: UseViewMenuItemsProps): MenuResult => {
 
   // Assemble final menu items - order defined here
   const items = [
-    factory.createEditMenuItem(handlers.handleEdit, isOwner),
+    factory.createEditMenuItem(handlers.handleEdit, isOwner && !view.is_locked),
     factory.createOpenInNewTabMenuItem(handlers.handleOpenInNewTab),
     factory.createCopyLinkMenuItem(handlers.handleCopyLink),
     factory.createDeleteMenuItem(handlers.handleDelete, isOwner || isAdmin),

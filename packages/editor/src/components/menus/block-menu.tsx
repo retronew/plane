@@ -13,6 +13,7 @@ import {
   useDismiss,
   useInteractions,
   FloatingPortal,
+  useMergeRefs,
 } from "@floating-ui/react";
 import type { Editor } from "@tiptap/react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -59,6 +60,7 @@ export function BlockMenu(props: Props) {
     placement: "left-start",
   });
 
+  const setMenuRef = useMergeRefs([refs.setFloating, menuRef]);
   const dismiss = useDismiss(context);
   const { getFloatingProps } = useInteractions([dismiss]);
 
@@ -212,10 +214,7 @@ export function BlockMenu(props: Props) {
   return (
     <FloatingPortal>
       <div
-        ref={(node) => {
-          refs.setFloating(node);
-          menuRef.current = node;
-        }}
+        ref={setMenuRef}
         style={{
           ...floatingStyles,
           animationFillMode: "forwards",

@@ -30,15 +30,18 @@ export const ThemeSwitcher = observer(function ThemeSwitcher(props: {
   // store hooks
   const { data: userProfile, updateUserTheme } = useUserProfile();
   // theme
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   // translation
   const { t } = useTranslation();
   // derived values
   const currentTheme = useMemo(() => {
-    // oxlint-disable-next-line no-shadow
-    const userThemeOption = THEME_OPTIONS.find((t) => t.value === userProfile?.theme?.theme);
-    return userThemeOption || null;
-  }, [userProfile?.theme?.theme]);
+    const selectedTheme = userProfile?.theme?.theme || theme || "system";
+    return (
+      THEME_OPTIONS.find((option) => option.value === selectedTheme) ??
+      THEME_OPTIONS.find((option) => option.value === "system") ??
+      null
+    );
+  }, [userProfile?.theme?.theme, theme]);
 
   const handleThemeChange = useCallback(
     async (themeOption: I_THEME_OPTION) => {

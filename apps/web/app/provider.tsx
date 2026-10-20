@@ -14,6 +14,7 @@ import { PlaneToastProvider } from "@plane/blocks/toast";
 import { StoreProvider } from "@/lib/store-context";
 
 import { EditorPreferencesProvider } from "@/components/editor/preferences-provider";
+import { ProfileSettingsHost } from "@/components/common/modal/profile-settings-host";
 
 // lazy imports
 const AppProgressBar = lazy(function AppProgressBar() {
@@ -47,7 +48,10 @@ export function AppProvider(props: IAppProvider) {
               <InstanceWrapper>
                 <Suspense>
                   <EditorPreferencesProvider>
-                    <SWRConfig value={WEB_SWR_CONFIG}>{children}</SWRConfig>
+                    <SWRConfig value={WEB_SWR_CONFIG}>
+                      {children}
+                      <ProfileSettingsHost />
+                    </SWRConfig>
                   </EditorPreferencesProvider>
                 </Suspense>
               </InstanceWrapper>

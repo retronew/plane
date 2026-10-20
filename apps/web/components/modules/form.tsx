@@ -87,7 +87,10 @@ export function ModuleForm(props: Props) {
   return (
     <form onSubmit={handleSubmit(handleCreateUpdateModule)}>
       <div className="space-y-5 p-5">
-        <div className="flex items-center gap-x-3">
+        <div className="flex flex-col items-start gap-3">
+          <h3 className="text-18 font-medium text-secondary">
+            {status ? t("project_module.update_module") : t("project_module.create_module")}
+          </h3>
           {!status && (
             <Controller
               control={control}
@@ -108,9 +111,6 @@ export function ModuleForm(props: Props) {
               )}
             />
           )}
-          <h3 className="text-18 font-medium text-secondary">
-            {status ? t("common.update") : t("common.create")} {t("common.module").toLowerCase()}
-          </h3>
         </div>
         <div className="space-y-3">
           <div className="space-y-1">
@@ -195,7 +195,7 @@ export function ModuleForm(props: Props) {
                 />
               )}
             />
-            <div className="h-7">
+            <div className="flex items-center">
               <ModuleStatusSelect control={control} error={errors.status} tabIndex={getIndex("status")} />
             </div>
             <Controller
@@ -223,7 +223,7 @@ export function ModuleForm(props: Props) {
                   projectId={projectId}
                   multiple
                   placeholder={t("members")}
-                  variant={value?.length ? "avatar-group-md" : "pill-md"}
+                  variant="pill-md"
                   tabIndex={getIndex("member_ids")}
                 />
               )}

@@ -74,6 +74,56 @@ def test_create_keeps_project_permission_scope(workspace, project, enabled, memb
     assert not IssueView.objects.exists()
 
 
+@pytest.mark.parametrize(
+    "role,owns_view,allowed", [(15, True, True), (20, False, True), (15, False, False), (5, True, False)]
+)
+def test_lock_permissions_and_unlock(workspace, project, role, owns_view, allowed):
+    client, user = member_client(workspace, project, role)
+    owner = user if owns_view else User.objects.create(email="owner@example.test", username="owner")
+    view = IssueView.objects.create(
+        name="View", workspace=workspace, project=project, owned_by=owner, created_by=owner, access=1
+    )
+    url = f"{project_url(workspace, project)}{view.pk}/lock/"
+    response = client.post(url)
+    assert response.status_code == (204 if allowed else 403), response.data
+    view.refresh_from_db()
+    assert view.is_locked is allowed
+    if allowed:
+        response = client.delete(url)
+        assert response.status_code == 204
+        view.refresh_from_db()
+        assert not view.is_locked
+
+
+@pytest.mark.parametrize("method", ["patch", "put"])
+def test_locked_view_rejects_edit_and_can_be_unlocked(workspace, project, method):
+    client, owner = member_client(workspace, project, 15)
+    view = IssueView.objects.create(
+        name="Original", workspace=workspace, project=project, owned_by=owner, created_by=owner
+    )
+    url = f"{project_url(workspace, project)}{view.pk}/"
+    assert client.patch(url, {"is_locked": True}, format="json").status_code == 200
+    view.refresh_from_db()
+    assert not view.is_locked
+    assert client.post(f"{url}lock/").status_code == 204
+    response = getattr(client, method)(url, {"name": "Changed", "is_locked": False}, format="json")
+    assert response.status_code == 400
+    view.refresh_from_db()
+    assert view.name == "Original"
+    assert view.is_locked
+    assert client.delete(f"{url}lock/").status_code == 204
+    assert client.patch(url, {"name": "Changed"}, format="json").status_code == 200
+
+
+def test_lock_requires_active_project_membership(workspace, project):
+    client, owner = member_client(workspace, project, 15)
+    view = IssueView.objects.create(name="View", workspace=workspace, project=project, owned_by=owner, created_by=owner)
+    ProjectMember.objects.filter(project=project, member=owner).update(is_active=False)
+    assert client.post(f"{project_url(workspace, project)}{view.pk}/lock/").status_code == 403
+    view.refresh_from_db()
+    assert not view.is_locked
+
+
 def test_create_workspace_view_with_project_views_disabled(session_client, workspace, project, create_user):
     project.issue_views_view = False
     project.save(update_fields=["issue_views_view"])

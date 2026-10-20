@@ -12,7 +12,6 @@ import { PageHead } from "@/components/core/page-title";
 import { useUser } from "@/hooks/store/user";
 // local imports
 import { GeneralProfileSettingsForm } from "./form";
-import { ProfileSSOLink } from "./sso-link";
 
 export const GeneralProfileSettings = observer(function GeneralProfileSettings() {
   const { t } = useTranslation();
@@ -25,9 +24,6 @@ export const GeneralProfileSettings = observer(function GeneralProfileSettings()
     <>
       <PageHead title={t("web.runtime.profile_settings_title")} />
       <GeneralProfileSettingsForm user={currentUser} profile={userProfile.data} />
-      <div className="mt-8">
-        <ProfileSSOLink currentEmail={currentUser.email} />
-      </div>
     </>
   );
 });

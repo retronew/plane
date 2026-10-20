@@ -5,26 +5,32 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { observer } from "mobx-react";
-import { MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { ExportOutline, LockedOutline, MoreHorizontalOutline, UnlockedOutline } from "@makeplane/propel/icons";
+import { useProjectView } from "@/hooks/store/use-project-view";
 // types
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { IProjectView } from "@plane/types";
 // ui
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
-import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
+import {
+  ContextMenu,
+  getRenderableItems,
+  hasMenuSeparatorBefore,
+  resolveItemVariant,
+} from "@plane/blocks/context-menu";
 import { copyUrlToClipboard } from "@plane/utils";
 // helpers
 import { useViewMenuItems } from "@/components/common/quick-actions-helper";
 // hooks
 import { useUser, useUserPermissions } from "@/hooks/store/user";
-import { useViewPublish } from "@/components/views/publish";
+import { ScopedWorkItemExportModal } from "@/components/cycles/export-modal";
 // local imports
 import { DeleteProjectViewModal } from "./delete-view-modal";
 import { CreateUpdateProjectViewModal } from "./modal";
@@ -49,14 +55,27 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
   // states
   const [createUpdateViewModal, setCreateUpdateViewModal] = useState(false);
   const [deleteViewModal, setDeleteViewModal] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
+  const [lockPending, setLockPending] = useState(false);
+  const { setViewLock } = useProjectView();
+  const handleToggleLock = async () => {
+    if (lockPending) return;
+    setLockPending(true);
+    try {
+      await setViewLock(workspaceSlug, projectId, view.id, !view.is_locked);
+    } catch (error) {
+      console.error("Failed to update view lock", error);
+      setToast({ type: "error", title: t("error") });
+    } finally {
+      setLockPending(false);
+    }
+  };
   // store hooks
   const { data } = useUser();
   const { allowPermissions } = useUserPermissions();
   // auth
   const isOwner = view?.owned_by === data?.id;
   const isAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId);
-
-  const { publishContextMenu } = useViewPublish(!!view.anchor, isAdmin || isOwner);
 
   const viewLink = `${workspaceSlug}/projects/${projectId}/views/${view.id}`;
   const handleCopyText = () =>
@@ -83,10 +102,43 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
   });
 
   // Handle both CE (array) and EE (object) return types
-  const MENU_ITEMS: TContextMenuItem[] = Array.isArray(menuResult) ? menuResult : menuResult.items;
+  const baseItems = Array.isArray(menuResult) ? menuResult : menuResult.items;
+  const MENU_ITEMS: TContextMenuItem[] = getRenderableItems([
+    ...baseItems.filter((item) => !["open-new-tab", "open-in-new-tab", "delete"].includes(item.key)),
+    {
+      key: "export",
+      title: t("export"),
+      icon: ExportOutline,
+      action: () => setExportModal(true),
+      shouldRender:
+        allowPermissions(
+          [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+          EUserPermissionsLevel.PROJECT,
+          workspaceSlug,
+          projectId
+        ) &&
+        allowPermissions(
+          [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+          EUserPermissionsLevel.WORKSPACE,
+          workspaceSlug
+        ),
+    },
+    {
+      key: "lock",
+      title: view.is_locked ? t("web.unlock") : t("web.lock"),
+      icon: view.is_locked ? UnlockedOutline : LockedOutline,
+      action: () => void handleToggleLock(),
+      shouldRender: isOwner || isAdmin,
+      disabled: lockPending,
+    },
+    ...baseItems.filter((item) => item.key === "delete"),
+  ]).map((item) =>
+    Object.assign({}, item, {
+      section: item.key === "delete" ? "danger" : item.key === "lock" ? "lock" : "actions",
+      variant: item.key === "delete" ? ("danger" as const) : ("neutral" as const),
+    })
+  );
   const additionalModals = Array.isArray(menuResult) ? null : menuResult.modals;
-
-  if (publishContextMenu) MENU_ITEMS.splice(2, 0, publishContextMenu);
 
   const CONTEXT_MENU_ITEMS = MENU_ITEMS.map(function CONTEXT_MENU_ITEMS(item) {
     return {
@@ -107,13 +159,23 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
         data={view}
       />
       <DeleteProjectViewModal data={view} isOpen={deleteViewModal} onClose={() => setDeleteViewModal(false)} />
+      <ScopedWorkItemExportModal
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        entityType="view"
+        entityId={view.id}
+        entityName={view.name}
+        richFilters={view.rich_filters}
+        open={exportModal}
+        onClose={() => setExportModal(false)}
+      />
       {additionalModals}
       <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
       <Menu>
         <MenuTrigger
           render={
             <IconButton
-              variant="tertiary"
+              variant="ghost"
               size="md"
               icon={<Icon icon={MoreHorizontalOutline} />}
               aria-label={t("aria_labels.common.more_actions")}
@@ -121,18 +183,21 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
           }
         />
         <MenuContent side="bottom" align="end">
-          {getRenderableItems(MENU_ITEMS).map((item) => (
-            <MenuItem
-              key={item.key}
-              variant={resolveItemVariant(item)}
-              icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-              label={item.title ?? ""}
-              description={item.description}
-              disabled={item.disabled}
-              onClick={() => {
-                item.action();
-              }}
-            />
+          {MENU_ITEMS.map((item, index) => (
+            <Fragment key={item.key}>
+              {hasMenuSeparatorBefore(MENU_ITEMS, index) && <MenuSeparator />}
+              <MenuItem
+                key={item.key}
+                variant={resolveItemVariant(item)}
+                icon={item.icon ? <Icon icon={item.icon} /> : undefined}
+                label={item.title ?? ""}
+                description={item.description}
+                disabled={item.disabled}
+                onClick={() => {
+                  item.action();
+                }}
+              />
+            </Fragment>
           ))}
         </MenuContent>
       </Menu>

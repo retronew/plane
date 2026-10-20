@@ -8,7 +8,7 @@ import { AnimatedUnderlineTabs } from "@/components/navigation/animated-underlin
 import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
-import { EmptyStateDetailed } from "@plane/blocks/empty-state";
+import { EmptyStateCompact, EmptyStateDetailed } from "@plane/blocks/empty-state";
 import type { TInboxIssueCurrentTab } from "@plane/types";
 import { EInboxIssueCurrentTab } from "@plane/types";
 // plane imports
@@ -109,7 +109,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
                       icon={
                         option.key === EInboxIssueCurrentTab.OPEN && currentTab === option.key ? (
                           // Propel has no trailing slot; keep the active-only count after the label.
-                          <span className="order-1 rounded-full bg-accent-primary/20 px-1.5 py-0.5 text-11 font-semibold text-accent-primary">
+                          <span className="order-1 text-11 font-semibold text-accent-primary">
                             {inboxIssuePaginationInfo?.total_results || 0}
                           </span>
                         ) : undefined
@@ -129,10 +129,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
         {loader != undefined && loader === "filter-loading" && !inboxIssuePaginationInfo?.next_page_results ? (
           <InboxSidebarLoader />
         ) : (
-          <div
-            className="vertical-scrollbar scrollbar-md h-full w-full overflow-hidden overflow-y-auto"
-            ref={containerRef}
-          >
+          <div className="vertical-scrollbar scrollbar-md min-h-0 w-full flex-1 overflow-y-auto" ref={containerRef}>
             {filteredInboxIssueIds.length > 0 ? (
               <InboxIssueList
                 setIsMobileSidebar={setIsMobileSidebar}
@@ -144,8 +141,9 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 {getAppliedFiltersCount > 0 ? (
-                  <EmptyStateDetailed
-                    assetKey="search"
+                  <EmptyStateCompact
+                    assetKey="search-compact"
+                    align="center"
                     title={t("common_empty_state.search.title")}
                     description={t("common_empty_state.search.description")}
                     assetClassName="size-20"
@@ -153,6 +151,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
                   />
                 ) : currentTab === EInboxIssueCurrentTab.OPEN ? (
                   <EmptyStateDetailed
+                    align="center"
                     assetKey="inbox"
                     title={t("project_empty_state.intake_sidebar.title")}
                     description={t("project_empty_state.intake_sidebar.description")}
@@ -169,6 +168,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
                 ) : (
                   // TODO: Add translation
                   <EmptyStateDetailed
+                    align="center"
                     assetKey="inbox"
                     title={t("web.no_request_closed_yet")}
                     description={t("web.all_the_work_items_whether_accepted_or_declined_can_be_found")}

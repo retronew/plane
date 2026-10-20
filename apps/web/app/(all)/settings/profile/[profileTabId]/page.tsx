@@ -1,60 +1,41 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
+import { useEffect } from "react";
 import { observer } from "mobx-react";
-// plane imports
-import { PROFILE_SETTINGS_TABS } from "@plane/constants";
-import { useTranslation } from "@plane/i18n";
-import type { TProfileSettingsTabs } from "@plane/types";
-// components
+import { useLocation, useNavigate, useParams } from "react-router";
+import useSWR from "swr";
 import { LogoSpinner } from "@/components/common/logo-spinner";
-import { PageHead } from "@/components/core/page-title";
-import { ProfileSettingsContent } from "@/components/settings/profile/content";
-import { ProfileSettingsSidebarRoot } from "@/components/settings/profile/sidebar";
-// hooks
-import { useUser } from "@/hooks/store/user";
-import { useAppRouter } from "@/hooks/use-app-router";
-// local imports
-import type { Route } from "../+types/layout";
+import { getProfileSettingsRedirect } from "@/helpers/profile-settings";
+import { useWorkspace } from "@/hooks/store/use-workspace";
+import { useUserSettings } from "@/hooks/store/user";
 
-function ProfileSettingsPage(props: Route.ComponentProps) {
-  const { profileTabId } = props.params;
-  // router
-  const router = useAppRouter();
-  // store hooks
-  const { data: currentUser } = useUser();
-  // translation
-  const { t } = useTranslation();
-  // derived values
-  const isAValidTab = PROFILE_SETTINGS_TABS.includes(profileTabId as TProfileSettingsTabs);
+function ProfileSettingsPage() {
+  const { profileTabId } = useParams();
+  const { search, hash } = useLocation();
+  const navigate = useNavigate();
+  const { fetchWorkspaces } = useWorkspace();
+  const { data: settings } = useUserSettings();
+  const { data: workspaces, error } = useSWR("PROFILE_SETTINGS_WORKSPACES", () => fetchWorkspaces(), {
+    revalidateOnFocus: false,
+  });
+  const preferredSlug = settings?.workspace?.last_workspace_slug || settings?.workspace?.fallback_workspace_slug;
 
-  if (!currentUser || !isAValidTab)
-    return (
-      <div className="grid size-full place-items-center px-4">
-        <LogoSpinner />
-      </div>
+  useEffect(() => {
+    if (!workspaces && !error) return;
+    void navigate(
+      getProfileSettingsRedirect(
+        profileTabId,
+        search,
+        hash,
+        (workspaces ?? []).map((workspace) => workspace.slug),
+        preferredSlug
+      ),
+      { replace: true }
     );
+  }, [workspaces, error, profileTabId, search, hash, preferredSlug, navigate]);
 
   return (
-    <>
-      <PageHead title={t("web.runtime.profile_settings_title")} />
-      <div className="relative size-full">
-        <div className="flex size-full">
-          <ProfileSettingsSidebarRoot
-            activeTab={profileTabId as TProfileSettingsTabs}
-            className="w-[250px]"
-            updateActiveTab={(tab) => router.push(`/settings/profile/${tab}`)}
-          />
-          <ProfileSettingsContent
-            activeTab={profileTabId as TProfileSettingsTabs}
-            className="mx-auto w-fit max-w-225 grow px-page-x py-20"
-          />
-        </div>
-      </div>
-    </>
+    <div className="grid size-full place-items-center">
+      <LogoSpinner />
+    </div>
   );
 }
 

@@ -34,6 +34,7 @@ export const ProjectViewListItem = observer(function ProjectViewListItem(props: 
 
   return (
     <ListItem
+      fullRowLink
       prependTitleElement={
         <>
           {view?.logo_props?.in_use ? (

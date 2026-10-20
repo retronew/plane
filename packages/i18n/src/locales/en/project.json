@@ -368,7 +368,7 @@
     },
     "layout": {
       "list": "List layout",
-      "board": "Gallery layout",
+      "board": "Card view",
       "timeline": "Timeline layout"
     },
     "order_by": {

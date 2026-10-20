@@ -31,6 +31,12 @@ export class ViewService extends APIService {
       });
   }
 
+  async setViewLock(workspaceSlug: string, projectId: string, viewId: string, locked: boolean): Promise<void> {
+    const url = `/api/workspaces/${workspaceSlug}/projects/${projectId}/views/${viewId}/lock/`;
+    if (locked) await this.post(url);
+    else await this.delete(url);
+  }
+
   async deleteView(workspaceSlug: string, projectId: string, viewId: string): Promise<any> {
     return this.delete(`/api/workspaces/${workspaceSlug}/projects/${projectId}/views/${viewId}/`)
       .then((response) => response?.data)

@@ -1,12 +1,20 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { CoreRootStore } from "./root.store";
+import type { IProjectView } from "@plane/types";
 import { ProjectViewStore } from "./project-view.store";
 import { GlobalViewStore } from "./global-view.store";
 
-const api = vi.hoisted(() => ({ createView: vi.fn(), createGlobalView: vi.fn() }));
+const api = vi.hoisted(() => ({
+  createView: vi.fn(),
+  createGlobalView: vi.fn(),
+  setViewLock: vi.fn(),
+  patchView: vi.fn(),
+}));
 vi.mock("@/services/view.service", () => ({
   ViewService: class {
     createView = api.createView;
+    setViewLock = api.setViewLock;
+    patchView = api.patchView;
   },
 }));
 vi.mock("@/services/workspace.service", () => ({
@@ -53,6 +61,29 @@ it("rechecks the feature on each create call", async () => {
   context.project = { issue_views_view: false };
   await expect(store.createView("workspace", "project", { name: "Another view" })).rejects.toThrow();
   expect(api.createView).toHaveBeenCalledOnce();
+});
+
+it("does not overwrite a locked view when the server rejects an edit", async () => {
+  const store = new ProjectViewStore(root);
+  store.viewMap.view = { id: "view", name: "Original", is_locked: true } as IProjectView;
+  api.patchView.mockRejectedValueOnce(new Error("view is locked"));
+  await expect(store.updateView("workspace", "project", "view", { name: "Changed" })).rejects.toThrow();
+  expect(store.viewMap.view.name).toBe("Original");
+});
+
+it("updates lock state only after a successful request and preserves it on failure", async () => {
+  const store = new ProjectViewStore(root);
+  store.viewMap.view = { id: "view", is_locked: false } as IProjectView;
+  api.setViewLock.mockResolvedValueOnce(undefined);
+  await store.setViewLock("workspace", "project", "view", true);
+  expect(api.setViewLock).toHaveBeenCalledWith("workspace", "project", "view", true);
+  expect(store.viewMap.view.is_locked).toBe(true);
+  api.setViewLock.mockRejectedValueOnce(new Error("Forbidden"));
+  await expect(store.setViewLock("workspace", "project", "view", false)).rejects.toThrow("Forbidden");
+  expect(store.viewMap.view.is_locked).toBe(true);
+  api.setViewLock.mockResolvedValueOnce(undefined);
+  await store.setViewLock("workspace", "project", "view", false);
+  expect(store.viewMap.view.is_locked).toBe(false);
 });
 
 it("allows workspace views when project views are disabled or unloaded", async () => {

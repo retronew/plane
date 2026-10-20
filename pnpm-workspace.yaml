@@ -348,3 +348,6 @@ peerDependencyRules:
     # _isComputingDerivation/_getGlobalState internals) all survive in v7; its memoization
     # behaviour is pinned by a test.
     "mobx-utils>mobx": "7"
+
+patchedDependencies:
+  is-emoji-supported@0.0.5: patches/is-emoji-supported@0.0.5.patch

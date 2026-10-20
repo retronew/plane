@@ -66,7 +66,7 @@ export const shouldFilterView = (view: IProjectView, filters: TViewFilterProps |
     }
 
     if (filterKey === "view_type" && filters?.view_type && filters?.view_type?.length > 0) {
-      fallsInFilters = viewTypeSet.has(view.access);
+      fallsInFilters = fallsInFilters && viewTypeSet.has(view.access);
     }
   });
 

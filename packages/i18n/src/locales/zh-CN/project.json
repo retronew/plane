@@ -368,7 +368,7 @@
     },
     "layout": {
       "list": "列表布局",
-      "board": "卡片布局",
+      "board": "卡片视图",
       "timeline": "时间线布局"
     },
     "order_by": {

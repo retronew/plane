@@ -9,7 +9,6 @@ import { CloseOutline } from "@makeplane/propel/icons";
 import type { TModuleDisplayFilters, TModuleFilters } from "@plane/types";
 // components
 import { Header, EHeaderVariant } from "@plane/blocks/layout";
-import { replaceUnderscoreIfSnakeCase } from "@plane/utils";
 import { AppliedDateFilters, AppliedMembersFilters, AppliedStatusFilters } from "@/components/modules";
 // helpers
 // types
@@ -63,7 +62,19 @@ export function ModuleAppliedFiltersList(props: Props) {
           return (
             <div key={filterKey} className={FILTER_GROUP_CLASSNAME}>
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-11 text-tertiary">{replaceUnderscoreIfSnakeCase(filterKey)}</span>
+                <span className="text-11 text-tertiary">
+                  {t(
+                    (
+                      {
+                        status: "web.status",
+                        lead: "lead",
+                        members: "members",
+                        start_date: "web.start_date",
+                        target_date: "web.due_date",
+                      } as const
+                    )[filterKey]
+                  )}
+                </span>
                 {filterKey === "status" && (
                   <AppliedStatusFilters
                     editable={isEditingAllowed}

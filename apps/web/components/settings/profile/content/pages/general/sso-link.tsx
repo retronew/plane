@@ -15,6 +15,7 @@ import { useTranslation } from "@plane/i18n";
 import { AuthService } from "@plane/services";
 // components
 import { ChangeEmailModal } from "@/components/core/modals/change-email-modal";
+import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 // helpers
 import type { EAuthenticationErrorCodes } from "@/helpers/authentication.helper";
 import { authErrorHandler } from "@/helpers/authentication.helper";
@@ -60,33 +61,37 @@ export const ProfileSSOLink = observer(function ProfileSSOLink({ currentEmail }:
         message: String(error?.message ?? ""),
       });
     }
-    // Drop the one-off params so a refresh does not repeat the toast
-    router.replace(window.location.pathname);
+    // Drop only the SSO result params so other navigation state is preserved.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("oidc_linked");
+    url.searchParams.delete("oidc_email");
+    url.searchParams.delete("error_code");
+    router.replace(`${url.pathname}${url.search}${url.hash}`);
   }, [searchParams, providerName, mutate, router, t]);
 
   if (!isOIDCEnabled) return null;
 
   return (
-    <div className="flex flex-col gap-3 border-t border-subtle pt-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h4 className="text-14 font-medium text-primary">{t("web.sso_link.title")}</h4>
-          <p className="text-13 text-tertiary">
-            {status?.linked
-              ? t("web.sso_link.linked_description", { provider: providerName })
-              : t("web.sso_link.unlinked_description", { provider: providerName })}
-          </p>
-        </div>
-        {status && (
-          <Button
-            variant={status.linked ? "secondary" : "primary"}
-            size="md"
-            stretch="auto"
-            onClick={() => window.location.assign(`${API_BASE_URL}/auth/oidc/link/`)}
-            label={status.linked ? t("web.sso_link.relink") : t("web.sso_link.link", { provider: providerName })}
-          />
-        )}
-      </div>
+    <div className="flex flex-col gap-3">
+      <SettingsBoxedControlItem
+        title={t("web.sso_link.title")}
+        description={
+          status?.linked
+            ? t("web.sso_link.linked_description", { provider: providerName })
+            : t("web.sso_link.unlinked_description", { provider: providerName })
+        }
+        control={
+          status && (
+            <Button
+              variant={status.linked ? "secondary" : "primary"}
+              size="sm"
+              stretch="auto"
+              onClick={() => window.location.assign(`${API_BASE_URL}/auth/oidc/link/`)}
+              label={status.linked ? t("web.sso_link.relink") : t("web.sso_link.link", { provider: providerName })}
+            />
+          )
+        }
+      />
       {suggestedEmail && suggestedEmail !== currentEmail && (
         <div className="flex items-center justify-between gap-4 rounded-md border border-subtle bg-layer-1 p-3">
           <p className="text-13 text-secondary">
