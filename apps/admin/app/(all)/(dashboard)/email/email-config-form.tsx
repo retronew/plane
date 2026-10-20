@@ -148,7 +148,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     <div className="space-y-8">
       <div>
         <SendTestEmailModal isOpen={isSendTestEmailModalOpen} handleClose={() => setIsSendTestEmailModalOpen(false)} />
-        <div className="grid-col grid w-full max-w-4xl grid-cols-1 items-start justify-between gap-10 lg:grid-cols-2">
+        <div className="grid-col grid w-full grid-cols-1 items-start justify-between gap-10 lg:grid-cols-2">
           {emailFormFields.map((field) => (
             <ControllerInput
               key={field.key}
@@ -191,7 +191,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
               </div>
             </div>
           </div>
-          <div className="grid-col grid w-full max-w-4xl grid-cols-1 items-center justify-between gap-10 lg:grid-cols-2">
+          <div className="grid-col grid w-full grid-cols-1 items-center justify-between gap-10 lg:grid-cols-2">
             {OptionalEmailFormFields.map((field) => (
               <ControllerInput
                 key={field.key}
@@ -208,7 +208,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           </div>
         </div>
       </div>
-      <div className="flex max-w-4xl items-center gap-4 py-1">
+      <div className="flex items-center gap-4 py-1">
         <Button
           variant="primary"
           size="md"

@@ -42,6 +42,41 @@ def lookups():
 
 
 @pytest.mark.unit
+class TestListUsers:
+    @pytest.mark.parametrize(
+        ("account_type", "expected_admin"),
+        [("admin", True), ("user", False)],
+    )
+    def test_filters_account_type_before_pagination(self, lookups, account_type, expected_admin):
+        request = _request()
+        request.query_params = {"account_type": account_type, "status": "active", "search": "Taylor"}
+        queryset = lookups["queryset"].return_value
+        queryset.filter.return_value = queryset
+        endpoint = views.InstanceUserEndpoint()
+
+        with patch.object(endpoint, "paginate") as paginate:
+            endpoint.get(request)
+
+        assert queryset.filter.call_count == 3
+        queryset.filter.assert_any_call(is_active=True)
+        queryset.filter.assert_any_call(is_instance_admin=expected_admin)
+        assert paginate.call_args.kwargs["queryset"] is queryset
+
+    @pytest.mark.parametrize("account_type", [None, "", "all", "unknown"])
+    def test_omitted_or_unknown_account_type_keeps_all_users(self, lookups, account_type):
+        request = _request()
+        request.query_params = {"account_type": account_type}
+        queryset = lookups["queryset"].return_value
+        endpoint = views.InstanceUserEndpoint()
+
+        with patch.object(endpoint, "paginate") as paginate:
+            endpoint.get(request)
+
+        queryset.filter.assert_not_called()
+        assert paginate.call_args.kwargs["queryset"] is queryset
+
+
+@pytest.mark.unit
 class TestDeactivateUser:
     def _post(self, lookups, target, request=None):
         lookups["users"].return_value.first.return_value = target

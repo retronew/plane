@@ -13,6 +13,7 @@ import type {
   IInstanceUser,
   TInstanceUserList,
   TInstanceUserStatus,
+  TInstanceUserAccountType,
   IInstanceConfiguration,
   IInstanceInfo,
   TInstanceAIConnectionPayload,
@@ -82,14 +83,15 @@ export class InstanceService extends APIService {
   }
 
   /**
-   * Lists users, optionally filtered by name/email and status
-   * @param {object} params Search text, status filter, page size and cursor
+   * Lists users, optionally filtered by name/email, status and account type
+   * @param {object} params Search text, status, account type, page size and cursor
    * @returns {Promise<TInstanceUserList>} One page of users with pagination info
    * @throws {Error} If the API request fails
    */
   async listUsers(params: {
     search?: string;
     status?: TInstanceUserStatus;
+    account_type?: TInstanceUserAccountType;
     per_page?: number;
     cursor?: string;
   }): Promise<TInstanceUserList> {

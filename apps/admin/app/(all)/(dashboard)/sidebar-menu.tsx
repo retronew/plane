@@ -31,7 +31,7 @@ export const AdminSidebarMenu = observer(function AdminSidebarMenu() {
   };
 
   return (
-    <div className="vertical-scrollbar scrollbar-sm flex h-full w-full flex-col gap-2.5 overflow-y-auto px-4 py-4">
+    <div className="vertical-scrollbar scrollbar-sm flex h-full w-full flex-col gap-1 overflow-y-auto px-4 py-4">
       {sidebarMenu.map((item) => {
         const isActive = item.href === pathName || pathName?.startsWith(item.href);
         return (
@@ -41,7 +41,7 @@ export const AdminSidebarMenu = observer(function AdminSidebarMenu() {
                 <>
                   <div
                     className={cn(
-                      "group flex w-full items-center gap-3 rounded-md px-3 py-2 transition-colors outline-none",
+                      "group flex w-full items-center gap-2 rounded-md px-3 py-2 transition-colors outline-none",
                       {
                         "!bg-layer-transparent-active text-primary": isActive,
                         "text-secondary hover:bg-layer-transparent-hover active:bg-layer-transparent-active": !isActive,
@@ -62,7 +62,7 @@ export const AdminSidebarMenu = observer(function AdminSidebarMenu() {
                 <Tooltip label={t(item.name)} side="right">
                   <div
                     className={cn(
-                      "group flex w-full items-center gap-3 rounded-md px-3 py-2 transition-colors outline-none",
+                      "group flex w-full items-center gap-2 rounded-md px-3 py-2 transition-colors outline-none",
                       {
                         "!bg-layer-transparent-active text-primary": isActive,
                         "text-secondary hover:bg-layer-transparent-hover active:bg-layer-transparent-active": !isActive,

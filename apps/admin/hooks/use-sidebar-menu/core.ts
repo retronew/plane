@@ -6,18 +6,11 @@
 
 import { BrainCog } from "lucide-react";
 // plane imports
-import {
-  LockOutline,
-  MailOutline,
-  MembersOutline,
-  SettingsOutline,
-  UserOutline,
-  WorkspaceOutline,
-} from "@makeplane/propel/icons";
+import { LockOutline, MailOutline, SettingsOutline, UserOutline, WorkspaceOutline } from "@makeplane/propel/icons";
 // types
 import type { TSidebarMenuItem } from "./types";
 
-export type TCoreSidebarMenuKey = "general" | "users" | "admins" | "email" | "workspace" | "authentication" | "ai";
+export type TCoreSidebarMenuKey = "general" | "users" | "email" | "workspace" | "authentication" | "ai";
 
 export const coreSidebarMenuLinks: Record<TCoreSidebarMenuKey, TSidebarMenuItem> = {
   general: {
@@ -31,12 +24,6 @@ export const coreSidebarMenuLinks: Record<TCoreSidebarMenuKey, TSidebarMenuItem>
     name: "admin.sidebar.users.name",
     description: "admin.sidebar.users.description",
     href: `/users/`,
-  },
-  admins: {
-    Icon: MembersOutline,
-    name: "admin.sidebar.admins.name",
-    description: "admin.sidebar.admins.description",
-    href: `/admins/`,
   },
   email: {
     Icon: MailOutline,
