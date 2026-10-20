@@ -86,6 +86,8 @@ export interface IInstanceUser {
 
 export type TInstanceUserStatus = "active" | "deactivated";
 
+export type TInstanceUserAccountType = "user" | "admin";
+
 export type TInstanceUserList = TPaginationInfo & { results: IInstanceUser[] };
 
 export interface IInstanceAdmin {

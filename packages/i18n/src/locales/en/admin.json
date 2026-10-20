@@ -465,8 +465,8 @@
       "add_hint": "Only people who already have a Plane account are listed (e.g. after signing in once with SSO). To sign in to God mode they set a password under Profile settings → Security in the web app.",
       "list_title": "Admins",
       "you": "(you)",
-      "remove": "Remove",
-      "confirm_remove": "Confirm remove",
+      "remove": "Revoke admin access",
+      "confirm_remove": "Confirm revoke",
       "cancel": "Cancel",
       "added": "Admin added.",
       "removed": "Admin removed.",
@@ -484,7 +484,8 @@
     },
     "users": {
       "title": "Users",
-      "description": "Everyone who has an account on this instance. Deactivated users cannot sign in.",
+      "description": "Manage accounts and admin access on this instance. Deactivated users cannot sign in.",
+      "admin_hint": "Instance admins can manage God Mode settings. Revoking admin access keeps the account and workspace memberships. Revoke admin access before deactivating an admin account.",
       "search_placeholder": "Search by name or email",
       "total": "{count, plural, one{# user} other{# users}}",
       "empty": "No matching users.",
@@ -493,6 +494,12 @@
         "all": "All",
         "active": "Active",
         "deactivated": "Deactivated"
+      },
+      "account_types": {
+        "label": "Account type",
+        "all": "All accounts",
+        "user": "Regular users",
+        "admin": "Instance admins"
       },
       "badges": {
         "admin": "Admin",

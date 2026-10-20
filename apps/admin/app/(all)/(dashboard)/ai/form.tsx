@@ -351,7 +351,7 @@ export function InstanceAIForm(props: IInstanceAIForm) {
 
   return (
     <div className="space-y-8">
-      <div className="grid w-full max-w-4xl grid-cols-1 items-start gap-x-10 gap-y-8 lg:grid-cols-2">
+      <div className="grid w-full grid-cols-1 items-start gap-x-10 gap-y-8 lg:grid-cols-2">
         <AIProviderField
           t={t}
           providerKeys={providerKeys}

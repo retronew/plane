@@ -80,7 +80,15 @@ class InstanceAdminEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        instance_admin = InstanceAdmin.objects.create(instance=instance, user=user, role=role, is_verified=True)
+        # Revoked admins are soft-deleted but still occupy the instance/user unique key.
+        instance_admin = InstanceAdmin.all_objects.filter(instance=instance, user=user).first()
+        if instance_admin is not None:
+            instance_admin.deleted_at = None
+            instance_admin.role = role
+            instance_admin.is_verified = True
+            instance_admin.save(update_fields=["deleted_at", "role", "is_verified"])
+        else:
+            instance_admin = InstanceAdmin.objects.create(instance=instance, user=user, role=role, is_verified=True)
         serializer = InstanceAdminSerializer(instance_admin)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

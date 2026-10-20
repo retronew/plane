@@ -100,7 +100,7 @@ export function WorkspaceCreateForm() {
 
   return (
     <div className="space-y-8">
-      <div className="grid-col grid w-full max-w-4xl grid-cols-1 items-start justify-between gap-x-10 gap-y-6 lg:grid-cols-2">
+      <div className="grid-col grid w-full grid-cols-1 items-start justify-between gap-x-10 gap-y-6 lg:grid-cols-2">
         <div className="flex flex-col gap-1">
           <h4 className="text-13 text-tertiary">{t("admin.workspace.create_page.name")}</h4>
           <div className="flex flex-col gap-1">
@@ -169,7 +169,7 @@ export function WorkspaceCreateForm() {
           {errors.slug && <span className="text-11 text-danger-primary">{errors.slug.message}</span>}
         </div>
       </div>
-      <div className="flex max-w-4xl items-center gap-4 py-1">
+      <div className="flex items-center gap-4 py-1">
         <Button
           variant="primary"
           size="md"

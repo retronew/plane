@@ -21,6 +21,7 @@ from plane.license.models import InstanceAdmin
 from .base import BaseAPIView
 
 USER_STATUSES = ("active", "deactivated")
+USER_ACCOUNT_TYPES = ("user", "admin")
 
 
 def _user_queryset():
@@ -77,6 +78,10 @@ class InstanceUserEndpoint(BaseAPIView):
         user_status = request.query_params.get("status")
         if user_status in USER_STATUSES:
             users = users.filter(is_active=user_status == "active")
+
+        account_type = request.query_params.get("account_type")
+        if account_type in USER_ACCOUNT_TYPES:
+            users = users.filter(is_instance_admin=account_type == "admin")
 
         return self.paginate(
             request=request,

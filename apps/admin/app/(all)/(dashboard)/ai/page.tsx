@@ -36,7 +36,7 @@ const InstanceAIPage = observer(function InstanceAIPage(_props: Route.ComponentP
       ) : (
         <Skeleton className="space-y-8">
           <Skeleton.Item height="50px" width="40%" />
-          <div className="grid w-2/3 grid-cols-2 gap-x-8 gap-y-4">
+          <div className="grid w-full grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-2">
             <Skeleton.Item height="50px" />
             <Skeleton.Item height="50px" />
           </div>

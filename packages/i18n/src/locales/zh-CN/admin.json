@@ -465,8 +465,8 @@
       "add_hint": "这里只列出已有 Plane 账号的用户（例如用单点登录登录过一次）。如需登录 God Mode，请对方在 Web 端「个人设置 → 安全」中设置密码。",
       "list_title": "管理员",
       "you": "（你）",
-      "remove": "移除",
-      "confirm_remove": "确认移除",
+      "remove": "撤销管理员权限",
+      "confirm_remove": "确认撤销",
       "cancel": "取消",
       "added": "已添加管理员。",
       "removed": "已移除管理员。",
@@ -484,7 +484,8 @@
     },
     "users": {
       "title": "用户",
-      "description": "本实例中的所有账号。已停用的用户无法登录。",
+      "description": "管理本实例中的账号及管理员权限。已停用的用户无法登录。",
+      "admin_hint": "实例管理员可以管理 God Mode 设置。撤销管理员权限会保留账号和工作区成员身份；如需停用管理员账号，请先撤销其管理员权限。",
       "search_placeholder": "按姓名或邮箱搜索",
       "total": "{count, plural, other{共 # 名用户}}",
       "empty": "没有匹配的用户。",
@@ -493,6 +494,12 @@
         "all": "全部",
         "active": "正常",
         "deactivated": "已停用"
+      },
+      "account_types": {
+        "label": "账号类型",
+        "all": "全部账号",
+        "user": "普通用户",
+        "admin": "实例管理员"
       },
       "badges": {
         "admin": "管理员",
