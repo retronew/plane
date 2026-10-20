@@ -232,7 +232,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       removeIssueFromList: actionBound,
 
       createIssue: action,
-      issueUpdate: action,
+      issueUpdate: actionBound,
       updateIssueDates: action,
       issueQuickAdd: actionBound,
       removeIssue: actionBound,
