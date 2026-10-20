@@ -5,11 +5,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/compo
 import { SelectDropdownPlacementContext } from "@plane/blocks/select";
 import { getPillButtonClassName } from "@plane/blocks/pill-button";
 import { useTranslation } from "@plane/i18n";
+import { ISSUE_DISPLAY_PROPERTIES } from "@plane/constants";
 import { WithDisplayPropertiesHOC } from "./with-display-properties-HOC";
 import type { IWithDisplayPropertiesHOC } from "./with-display-properties-HOC";
 
 const DROPDOWN_PLACEMENT = { side: "left", align: "start" } as const;
-type Property = { key: string; content: ReactNode };
+type Property = { key: string; content: ReactNode; labelKey?: string };
+const PROPERTY_LABEL_KEYS = new Map(
+  ISSUE_DISPLAY_PROPERTIES.map(({ key, titleTranslationKey }) => [key, titleTranslationKey])
+);
 
 // Resolve the existing display filters before counting or measuring properties. A merged date
 // range is one property; disabled filters and absent count badges consume no space.
@@ -27,7 +31,16 @@ function collectProperties(children: ReactNode): Property[] {
     const keys = Array.isArray(displayPropertyKey) ? displayPropertyKey : [displayPropertyKey];
     return keys.every((key) => displayProperties[key]) &&
       (!shouldRenderProperty || shouldRenderProperty(displayProperties))
-      ? [{ key: `${child.key}:${keys.join(",")}`, content }]
+      ? [
+          {
+            key: `${child.key}:${keys.join(",")}`,
+            content,
+            labelKey:
+              keys.includes("start_date") && keys.includes("due_date")
+                ? "project_cycles.date_range"
+                : PROPERTY_LABEL_KEYS.get(keys[0]),
+          },
+        ]
       : [];
   });
 }
@@ -44,13 +57,27 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const widths = useRef<number[]>([]);
-  const [visibleCount, setVisibleCount] = useState(Infinity);
+  const measuredKeys = useRef("");
+  const [measurement, setMeasurement] = useState({ keys: "", visibleCount: Infinity });
   const [open, setOpen] = useState(false);
+  const [present, setPresent] = useState(false);
   const properties = collectProperties(children);
   const count = properties.length;
   const propertyKeys = JSON.stringify(properties.map((property) => property.key));
+  // Render all new properties once so their intrinsic widths can be measured before hiding them.
+  const visibleCount = measurement.keys === propertyKeys ? measurement.visibleCount : Infinity;
 
   useLayoutEffect(() => {
+    if (measuredKeys.current !== propertyKeys) {
+      widths.current = [];
+      measuredKeys.current = propertyKeys;
+    }
+    const setVisibleCount = (nextCount: number) =>
+      setMeasurement((previous) =>
+        previous.keys === propertyKeys && previous.visibleCount === nextCount
+          ? previous
+          : { keys: propertyKeys, visibleCount: nextCount }
+      );
     const root = rootRef.current;
     const row = root?.closest<HTMLElement>("[data-issue-list-row]");
     if (!enabled || !root || !row) return;
@@ -63,9 +90,9 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
       });
       const rowWidth = row.getBoundingClientRect().width;
       const direction = getComputedStyle(row).flexDirection;
-      const measurement = `${rowWidth}:${direction}:${widths.current.join(",")}`;
-      if (measurement === previousMeasurement) return;
-      previousMeasurement = measurement;
+      const nextMeasurement = `${rowWidth}:${direction}:${widths.current.join(",")}`;
+      if (nextMeasurement === previousMeasurement) return;
+      previousMeasurement = nextMeasurement;
       if (!rowWidth || direction !== "row") {
         setVisibleCount(Infinity);
         return;
@@ -96,7 +123,7 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
     resizeObserver.observe(row);
     root.querySelectorAll<HTMLElement>("[data-list-property]").forEach((element) => resizeObserver.observe(element));
     return () => resizeObserver.disconnect();
-  }, [enabled, count, propertyKeys, open]);
+  }, [enabled, count, propertyKeys, present]);
 
   if (!enabled) return <div className={className}>{children}</div>;
 
@@ -107,7 +134,7 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
         const hidden = index >= visibleCount;
         // A closed overflow keeps its sole control mounted for intrinsic measurement.
         // Opening moves it to the popup; never render two interactive copies.
-        if (hidden && open) return null;
+        if (hidden && present) return null;
         return (
           <div
             key={property.key}
@@ -121,13 +148,22 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
         );
       })}
       {hiddenCount > 0 && (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+          open={open}
+          onOpenChange={(nextOpen) => {
+            if (nextOpen) setPresent(true);
+            setOpen(nextOpen);
+          }}
+          onOpenChangeComplete={(nextOpen) => {
+            if (!nextOpen) setPresent(false);
+          }}
+        >
           <PopoverTrigger
             render={
               <button
                 type="button"
                 aria-label={t("issue.display.properties.more_count", { count: hiddenCount })}
-                className={getPillButtonClassName("sm", open, "h-6 shrink-0 rounded-md")}
+                className={getPillButtonClassName("sm", open, "shrink-0")}
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -137,12 +173,26 @@ export const ListPropertiesOverflow = observer(function ListPropertiesOverflow({
           >
             +{hiddenCount}
           </PopoverTrigger>
-          <PopoverContent side="bottom" align="end" sideOffset={8} onClick={(event) => event.stopPropagation()}>
+          <PopoverContent
+            aria-label={t("common.properties")}
+            side="bottom"
+            align="end"
+            sideOffset={8}
+            onClick={(event) => event.stopPropagation()}
+          >
             <SelectDropdownPlacementContext.Provider value={DROPDOWN_PLACEMENT}>
-              <div className="flex flex-col items-start gap-3">
-                <div className="text-caption-md-medium text-secondary">{t("common.properties")}</div>
-                {open &&
-                  properties.slice(visibleCount).map((property) => <div key={property.key}>{property.content}</div>)}
+              <div className="flex min-w-56 flex-col gap-3">
+                <dl className="grid grid-cols-[minmax(5rem,1fr)_auto] items-center gap-x-6 gap-y-3">
+                  {present &&
+                    properties.slice(visibleCount).map((property) => (
+                      <Fragment key={property.key}>
+                        <dt className="text-caption-md-regular text-secondary">
+                          {t(property.labelKey ?? "common.properties")}
+                        </dt>
+                        <dd className="flex min-w-0 items-center justify-end">{property.content}</dd>
+                      </Fragment>
+                    ))}
+                </dl>
               </div>
             </SelectDropdownPlacementContext.Provider>
           </PopoverContent>

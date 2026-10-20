@@ -547,6 +547,9 @@ overrides:
   source-map-js: '>=1.2.2 <2'
   tinypool@2: '>=2.1.2 <3'
 
+patchedDependencies:
+  is-emoji-supported@0.0.5: f5ae05a0d8876efae74a85f1cba1bbe88207be38c6fa0ac9a52f9a5a3dbeff56
+
 importers:
 
   .:
@@ -1484,7 +1487,7 @@ importers:
         version: 11.12.0
       is-emoji-supported:
         specifier: 'catalog:'
-        version: 0.0.5
+        version: 0.0.5(patch_hash=f5ae05a0d8876efae74a85f1cba1bbe88207be38c6fa0ac9a52f9a5a3dbeff56)
       jsx-dom-cjs:
         specifier: 'catalog:'
         version: 8.1.6
@@ -10456,7 +10459,7 @@ snapshots:
       '@tiptap/suggestion': 2.26.1(@tiptap/core@2.26.3(@tiptap/pm@2.26.1))(@tiptap/pm@2.26.1)
       emoji-regex: 10.5.0
       emojibase-data: 15.3.2(emojibase@16.0.0)
-      is-emoji-supported: 0.0.5
+      is-emoji-supported: 0.0.5(patch_hash=f5ae05a0d8876efae74a85f1cba1bbe88207be38c6fa0ac9a52f9a5a3dbeff56)
     transitivePeerDependencies:
       - emojibase
 
@@ -12416,7 +12419,7 @@ snapshots:
 
   is-docker@2.2.1: {}
 
-  is-emoji-supported@0.0.5: {}
+  is-emoji-supported@0.0.5(patch_hash=f5ae05a0d8876efae74a85f1cba1bbe88207be38c6fa0ac9a52f9a5a3dbeff56): {}
 
   is-extglob@2.1.1: {}
 

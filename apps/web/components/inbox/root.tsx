@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { IntakeOutline, LeftSidePaneOutline } from "@makeplane/propel/icons";
 // plane imports
 import { useTranslation } from "@plane/i18n";
-import { EmptyStateCompact } from "@plane/blocks/empty-state";
+import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { EInboxIssueCurrentTab } from "@plane/types";
 import { cn } from "@plane/utils";
 // components
@@ -107,10 +107,12 @@ export const InboxIssueRoot = observer(function InboxIssueRoot(props: TInboxIssu
             inboxIssueId={inboxIssueId.toString()}
           />
         ) : (
-          <EmptyStateCompact
+          <EmptyStateDetailed
             assetKey="intake"
+            align="center"
             title={t("project_empty_state.intake_main.title")}
-            assetClassName="size-20"
+            assetClassName="h-[171px] w-[150px]"
+            rootClassName="min-w-0 flex-1"
           />
         )}
       </div>

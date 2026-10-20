@@ -176,7 +176,7 @@ function createIssueOperations(
   };
 }
 
-function SubIssuesProperty({
+function renderSubIssuesProperty({
   displayProperties,
   subIssueCount,
   isMobile,
@@ -220,7 +220,7 @@ function SubIssuesProperty({
   );
 }
 
-function CountBadgeProperty({
+function renderCountBadgeProperty({
   displayProperties,
   displayPropertyKey,
   count,
@@ -292,7 +292,7 @@ function getWorkItemLink(workspaceSlug: string | undefined, issue: TIssue, proje
   });
 }
 
-function IssueDateProperties({
+function renderIssueDateProperties({
   issue,
   displayProperties,
   isDateRangeEnabled,
@@ -415,7 +415,7 @@ function IssueDateProperties({
   );
 }
 
-function ProjectRelationProperties({
+function renderProjectRelationProperties({
   issue,
   projectDetails,
   displayProperties,
@@ -476,7 +476,7 @@ function ProjectRelationProperties({
   );
 }
 
-function EstimateProperty({
+function renderEstimateProperty({
   show,
   issue,
   projectId,
@@ -629,22 +629,22 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         </div>
       </WithDisplayPropertiesHOC>
 
-      <IssueDateProperties
-        issue={issue}
-        displayProperties={displayProperties}
-        isDateRangeEnabled={isDateRangeEnabled}
-        activeLayout={activeLayout}
-        pillVariant={pillVariant}
-        propertyHeight={propertyHeight}
-        isReadOnly={isReadOnly}
-        weekStartsOn={userProfile?.start_of_the_week}
-        stateDetails={stateDetails}
-        onEvent={handleEventPropagation}
-        onChangeRange={handleDateRangeUpdate}
-        onChangeStart={handleStartDate}
-        onChangeDue={handleTargetDate}
-        t={t}
-      />
+      {renderIssueDateProperties({
+        issue: issue,
+        displayProperties: displayProperties,
+        isDateRangeEnabled: isDateRangeEnabled,
+        activeLayout: activeLayout,
+        pillVariant: pillVariant,
+        propertyHeight: propertyHeight,
+        isReadOnly: isReadOnly,
+        weekStartsOn: userProfile?.start_of_the_week,
+        stateDetails: stateDetails,
+        onEvent: handleEventPropagation,
+        onChangeRange: handleDateRangeUpdate,
+        onChangeStart: handleStartDate,
+        onChangeDue: handleTargetDate,
+        t: t,
+      })}
 
       {/* assignee */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="assignee">
@@ -663,61 +663,61 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         </div>
       </WithDisplayPropertiesHOC>
 
-      <ProjectRelationProperties
-        issue={issue}
-        projectDetails={projectDetails}
-        displayProperties={displayProperties}
-        propertyHeight={propertyHeight}
-        pillVariant={pillVariant}
-        isReadOnly={isReadOnly}
-        onModuleChange={handleModule}
-        onCycleChange={handleCycle}
-        onEvent={handleEventPropagation}
-      />
+      {renderProjectRelationProperties({
+        issue,
+        projectDetails,
+        displayProperties,
+        propertyHeight,
+        pillVariant,
+        isReadOnly,
+        onModuleChange: handleModule,
+        onCycleChange: handleCycle,
+        onEvent: handleEventPropagation,
+      })}
 
       {/* estimates */}
-      <EstimateProperty
-        show={showEstimate}
-        issue={issue}
-        projectId={issue.project_id}
-        displayProperties={displayProperties}
-        propertyHeight={propertyHeight}
-        pillVariant={pillVariant}
-        isReadOnly={isReadOnly}
-        onEvent={handleEventPropagation}
-        onChange={handleEstimate}
-      />
+      {renderEstimateProperty({
+        show: showEstimate,
+        issue: issue,
+        projectId: issue.project_id,
+        displayProperties: displayProperties,
+        propertyHeight: propertyHeight,
+        pillVariant: pillVariant,
+        isReadOnly: isReadOnly,
+        onEvent: handleEventPropagation,
+        onChange: handleEstimate,
+      })}
 
       {/* extra render properties */}
       {/* sub-issues */}
-      <SubIssuesProperty
-        displayProperties={displayProperties}
-        subIssueCount={subIssueCount}
-        isMobile={isMobile}
-        onOpen={redirectToIssueDetail}
-      />
+      {renderSubIssuesProperty({
+        displayProperties: displayProperties,
+        subIssueCount: subIssueCount,
+        isMobile: isMobile,
+        onOpen: redirectToIssueDetail,
+      })}
 
       {/* attachments */}
-      <CountBadgeProperty
-        displayProperties={displayProperties}
-        displayPropertyKey="attachment_count"
-        count={issue.attachment_count}
-        label={translate("web.runtime.attachments_count", { count: issue.attachment_count ?? 0 })}
-        icon={<AttachOutline className="h-3 w-3 flex-shrink-0" />}
-        isMobile={isMobile}
-        onEvent={handleEventPropagation}
-      />
+      {renderCountBadgeProperty({
+        displayProperties: displayProperties,
+        displayPropertyKey: "attachment_count",
+        count: issue.attachment_count,
+        label: translate("web.runtime.attachments_count", { count: issue.attachment_count ?? 0 }),
+        icon: <AttachOutline className="h-3 w-3 flex-shrink-0" />,
+        isMobile: isMobile,
+        onEvent: handleEventPropagation,
+      })}
 
       {/* link */}
-      <CountBadgeProperty
-        displayProperties={displayProperties}
-        displayPropertyKey="link"
-        count={issue.link_count}
-        label={translate("web.runtime.links_count", { count: issue.link_count ?? 0 })}
-        icon={<LinkOutline className="h-3 w-3 flex-shrink-0" />}
-        isMobile={isMobile}
-        onEvent={handleEventPropagation}
-      />
+      {renderCountBadgeProperty({
+        displayProperties: displayProperties,
+        displayPropertyKey: "link",
+        count: issue.link_count,
+        label: translate("web.runtime.links_count", { count: issue.link_count ?? 0 }),
+        icon: <LinkOutline className="h-3 w-3 flex-shrink-0" />,
+        isMobile: isMobile,
+        onEvent: handleEventPropagation,
+      })}
 
       {/* label */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="labels">

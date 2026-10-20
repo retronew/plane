@@ -19,12 +19,13 @@ const renderModuleStatusIcon = (status: ModuleStatusOption) => <ModuleStatusIcon
 
 type Props = {
   isDisabled: boolean;
+  variant?: "pill-sm";
   moduleDetails: IModule;
   handleModuleDetailsChange: (payload: Partial<IModule>) => Promise<void>;
 };
 
 export const ModuleStatusDropdown = observer(function ModuleStatusDropdown(props: Props) {
-  const { isDisabled, moduleDetails, handleModuleDetailsChange } = props;
+  const { isDisabled, moduleDetails, handleModuleDetailsChange, variant } = props;
   const { t } = useTranslation();
   const moduleStatus = MODULE_STATUS.find((status) => status.value === moduleDetails.status);
 
@@ -46,22 +47,32 @@ export const ModuleStatusDropdown = observer(function ModuleStatusDropdown(props
     >
       {/* The chip carries the status colour (a runtime hex), so the trigger chrome is neutralised
           and the coloured surface stays on the inner span — as it was under `customButton`. */}
-      <Select.Trigger
-        variant="pill-md"
-        className={`h-6 border-none bg-transparent p-0 hover:bg-transparent active:bg-transparent ${
-          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-        }`}
-      >
-        <span
-          className="flex h-6 w-20 items-center justify-center rounded-sm text-center text-11"
-          style={{
-            color: moduleStatus.color,
-            backgroundColor: `${moduleStatus.color}20`,
-          }}
+      {variant ? (
+        <Select.Trigger<ModuleStatusOption>
+          variant={variant}
+          prependIcon={(statuses) => (statuses[0] ? renderModuleStatusIcon(statuses[0]) : undefined)}
+          label={(statuses) => (statuses[0] ? t(statuses[0].i18n_label) : "")}
         >
           {t(moduleStatus.i18n_label)}
-        </span>
-      </Select.Trigger>
+        </Select.Trigger>
+      ) : (
+        <Select.Trigger
+          variant="pill-md"
+          className={`h-6 border-none bg-transparent p-0 hover:bg-transparent active:bg-transparent ${
+            isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          <span
+            className="flex h-6 w-20 items-center justify-center rounded-sm text-center text-11"
+            style={{
+              color: moduleStatus.color,
+              backgroundColor: `${moduleStatus.color}20`,
+            }}
+          >
+            {t(moduleStatus.i18n_label)}
+          </span>
+        </Select.Trigger>
+      )}
     </Select>
   );
 });

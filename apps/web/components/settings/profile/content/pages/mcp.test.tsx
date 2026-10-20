@@ -30,15 +30,15 @@ describe("MCP personal settings", () => {
     render(<McpProfileSettings />);
     expect(screen.getByText("MCP template")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.manage_tokens" }));
-    expect(state.toggle).toHaveBeenCalledWith({ activeTab: "api-tokens" });
+    expect(state.toggle).toHaveBeenCalledWith({ activeTab: "api-tokens", isOpen: true });
     expect(state.push).not.toHaveBeenCalled();
   });
 
-  it("navigates to token settings from the standalone page", () => {
+  it("opens the token settings modal when settings were closed", () => {
     state.isOpen = false;
     render(<McpProfileSettings />);
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.manage_tokens" }));
-    expect(state.push).toHaveBeenCalledWith("/settings/profile/api-tokens");
-    expect(state.toggle).not.toHaveBeenCalled();
+    expect(state.toggle).toHaveBeenCalledWith({ activeTab: "api-tokens", isOpen: true });
+    expect(state.push).not.toHaveBeenCalled();
   });
 });

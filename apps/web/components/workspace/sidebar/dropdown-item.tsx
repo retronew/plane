@@ -37,8 +37,8 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
 
   return (
     <div
-      className={cn("flex w-full flex-col gap-2.5 rounded-md p-2", {
-        "bg-layer-transparent-active": isActiveWorkspace,
+      className={cn("flex w-full flex-col gap-2.5 rounded-md", {
+        "bg-layer-transparent-active p-2": isActiveWorkspace,
       })}
     >
       <Menu.Item
@@ -52,7 +52,7 @@ const SidebarDropdownItem = observer(function SidebarDropdownItem(props: TProps)
         className={cn(
           "flex items-center justify-between gap-2 rounded-md text-13 text-primary outline-none focus-visible:ring-2 focus-visible:ring-accent-strong",
           {
-            "hover:bg-layer-transparent-hover data-highlighted:bg-layer-transparent-hover": !isActiveWorkspace,
+            "p-2 hover:bg-layer-transparent-hover data-highlighted:bg-layer-transparent-hover": !isActiveWorkspace,
           }
         )}
       >

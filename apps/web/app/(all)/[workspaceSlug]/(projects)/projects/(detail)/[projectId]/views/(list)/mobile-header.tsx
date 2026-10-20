@@ -6,16 +6,13 @@
 
 import { observer } from "mobx-react";
 // icons
-import { ChevronDownOutline, FilterOutline } from "@makeplane/propel/icons";
 // components
 import { Row } from "@plane/blocks/layout";
-import { FiltersDropdown } from "@/components/issues/issue-layouts/filters";
-import { ViewFiltersSelection } from "@/components/views/filters/filter-selection";
+import { ViewFiltersDropdown } from "@/components/views/filters/filter-selection";
 import { ViewOrderByDropdown } from "@/components/views/filters/order-by";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useProjectView } from "@/hooks/store/use-project-view";
-import { translate } from "@plane/i18n";
 
 export const ViewMobileHeader = observer(function ViewMobileHeader() {
   // store hooks
@@ -39,24 +36,11 @@ export const ViewMobileHeader = observer(function ViewMobileHeader() {
           />
         </Row>
         <div className="flex flex-grow items-center justify-center border-l border-subtle text-13 text-secondary">
-          <FiltersDropdown
-            icon={<FilterOutline className="h-3 w-3" />}
-            title={translate("web.filters")}
-            placement="bottom-end"
-            isFiltersApplied={false}
-            menuButton={
-              <Row className="flex items-center text-13 text-secondary">
-                {translate("web.filters")}
-                <ChevronDownOutline className="ml-2 h-4 w-4 text-secondary" />
-              </Row>
-            }
-          >
-            <ViewFiltersSelection
-              filters={filters}
-              handleFiltersUpdate={updateFilters}
-              memberIds={projectMemberIds ?? undefined}
-            />
-          </FiltersDropdown>
+          <ViewFiltersDropdown
+            filters={filters}
+            handleFiltersUpdate={updateFilters}
+            memberIds={projectMemberIds ?? undefined}
+          />
         </div>
       </div>
     </>

@@ -66,31 +66,33 @@ export function ProjectActionsMenu({
           }
         />
         <MenuContent side="bottom" align="start">
-          {/* Publish project settings */}
-          {isAdmin && (
-            <MenuItem icon={<Icon icon={ShareAltOutline} />} label={t("publish_project")} onClick={onPublishModal} />
-          )}
-          <MenuItem icon={<Icon icon={LinkOutline} />} label={t("copy_link")} onClick={onCopyText} />
-          {isAuthorized && (
+          <div className="flex flex-col gap-0.5">
+            {/* Publish project settings */}
+            {isAdmin && (
+              <MenuItem icon={<Icon icon={ShareAltOutline} />} label={t("publish_project")} onClick={onPublishModal} />
+            )}
+            <MenuItem icon={<Icon icon={LinkOutline} />} label={t("copy_link")} onClick={onCopyText} />
+            {isAuthorized && (
+              <MenuItem
+                icon={<Icon icon={ArchiveOutline} />}
+                label={t("archives")}
+                onClick={() => {
+                  void navigate(`/${workspaceSlug}/projects/${project?.id}/archives/issues`);
+                }}
+              />
+            )}
             <MenuItem
-              icon={<Icon icon={ArchiveOutline} />}
-              label={t("archives")}
+              icon={<Icon icon={SettingsOutline} />}
+              label={t("settings")}
               onClick={() => {
-                void navigate(`/${workspaceSlug}/projects/${project?.id}/archives/issues`);
+                void navigate(`/${workspaceSlug}/settings/projects/${project?.id}`);
               }}
             />
-          )}
-          <MenuItem
-            icon={<Icon icon={SettingsOutline} />}
-            label={t("settings")}
-            onClick={() => {
-              void navigate(`/${workspaceSlug}/settings/projects/${project?.id}`);
-            }}
-          />
-          {/* Leave project */}
-          {!isAuthorized && (
-            <MenuItem icon={<Icon icon={LogOutOutline} />} label={t("leave_project")} onClick={onLeaveProject} />
-          )}
+            {/* Leave project */}
+            {!isAuthorized && (
+              <MenuItem icon={<Icon icon={LogOutOutline} />} label={t("leave_project")} onClick={onLeaveProject} />
+            )}
+          </div>
         </MenuContent>
       </Menu>
     </div>

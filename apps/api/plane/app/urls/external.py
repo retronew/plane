@@ -6,9 +6,11 @@ from django.urls import path
 
 
 from plane.app.views import GPTIntegrationEndpoint, WorkspaceGPTIntegrationEndpoint
+from plane.app.views.external.base import WorkspaceSlugSuggestionEndpoint
 
 
 urlpatterns = [
+    path("ai/workspace-slug/", WorkspaceSlugSuggestionEndpoint.as_view(), name="workspace-slug-suggestion"),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/ai-assistant/",
         GPTIntegrationEndpoint.as_view(),

@@ -99,14 +99,18 @@ it("keeps title navigation separate from favorite and menu actions", async () =>
   expect(mocks.push).toHaveBeenCalledWith("/workspace/projects/project/pages/page");
 });
 
-it("navigates from row padding and gaps while keeping real anchors separate", () => {
+it("covers row padding and gaps with the page anchor while keeping action links separate", () => {
   const { container } = render(fixture());
-  const row = screen.getByRole("link", { name: "Project notes" }).closest(".group")!;
-  fireEvent.click(row);
+  const link = screen.getByRole("link", { name: "Project notes" });
+  const row = link.closest(".group")!;
+  expect(link.className).toContain("after:inset-0");
+  expect(row.className).toContain("isolate");
+  // jsdom cannot hit-test pseudo-elements; the anchor owns the row-sized overlay.
+  fireEvent.click(link);
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith("/workspace/projects/project/pages/page");
   mocks.push.mockClear();
-  fireEvent.click(screen.getByRole("button", { name: "Page labels" }).parentElement!.parentElement!);
-  expect(mocks.push).toHaveBeenCalledExactlyOnceWith("/workspace/projects/project/pages/page");
+  fireEvent.click(row);
+  expect(mocks.push).not.toHaveBeenCalled();
   expect(container.querySelector("a a")).toBeNull();
 });
 

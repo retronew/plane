@@ -16,6 +16,7 @@ import { useAppRouter } from "@/hooks/use-app-router";
 interface IListItemProps {
   id?: string;
   compact?: boolean;
+  fullRowLink?: boolean;
   title: string;
   itemLink: string;
   onItemClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
@@ -43,6 +44,7 @@ export function ListItem(props: IListItemProps) {
   const {
     id,
     compact = false,
+    fullRowLink = false,
     title,
     leadingElement,
     prependTitleElement,
@@ -66,6 +68,16 @@ export function ListItem(props: IListItemProps) {
     rightElementClassName = "",
   } = props;
 
+  const stretchLink = compact || fullRowLink;
+
+  const appendedTitle = appendTitleElement && (
+    <Tooltip label={appendTitleTooltip ?? ""} disabled={!appendTitleTooltip || isMobile}>
+      <span className={cn("flex flex-shrink-0 items-center", stretchLink && "relative z-20", rightElementClassName)}>
+        {appendTitleElement}
+      </span>
+    </Tooltip>
+  );
+
   // router
   const router = useAppRouter();
 
@@ -81,6 +93,7 @@ export function ListItem(props: IListItemProps) {
         className={cn(
           "group flex min-h-[52px] w-full flex-col items-center justify-between gap-3 border-b border-subtle bg-layer-transparent py-4 text-13 hover:bg-layer-transparent-hover",
           { "xl:flex-row xl:gap-5 xl:py-0": isSidebarOpen, "lg:flex-row lg:gap-5 lg:py-0": !isSidebarOpen },
+          fullRowLink && "relative isolate",
           compact && "group/list-item relative isolate min-h-[38px]! flex-row! gap-0! rounded-[6px] p-0!",
           className
         )}
@@ -88,17 +101,22 @@ export function ListItem(props: IListItemProps) {
         <div
           className={cn(
             "relative flex w-full items-center justify-between gap-3 truncate",
-            compact && "static gap-2 p-2",
+            stretchLink && "static",
+            compact && "gap-2 p-2",
             itemClassName
           )}
         >
-          {leadingElement}
+          {stretchLink && leadingElement ? (
+            <div className="relative z-20 shrink-0">{leadingElement}</div>
+          ) : (
+            leadingElement
+          )}
           <ControlLink
             id={id}
             className={cn(
               "relative flex w-full items-center gap-3 overflow-hidden",
-              compact &&
-                "static gap-2 overflow-visible after:absolute after:inset-0 after:z-10 after:rounded-[6px] after:content-['']"
+              stretchLink && "static overflow-visible after:absolute after:inset-0 after:z-10 after:content-['']",
+              compact && "gap-2 after:rounded-[6px]"
             )}
             href={itemLink}
             target="_self"
@@ -120,17 +138,10 @@ export function ListItem(props: IListItemProps) {
                 </span>
               </Tooltip>
             </div>
-            {appendTitleElement && (
-              <Tooltip label={appendTitleTooltip ?? ""} disabled={!appendTitleTooltip || isMobile}>
-                <span
-                  className={cn("flex flex-shrink-0 items-center", compact && "relative z-20", rightElementClassName)}
-                >
-                  {appendTitleElement}
-                </span>
-              </Tooltip>
-            )}
+            {!fullRowLink && appendedTitle}
           </ControlLink>
-          {compact ? <div className="relative z-20 shrink-0">{quickActionElement}</div> : quickActionElement}
+          {fullRowLink && appendedTitle}
+          {stretchLink ? <div className="relative z-20 shrink-0">{quickActionElement}</div> : quickActionElement}
         </div>
         {actionableItems && (
           <div
@@ -140,6 +151,7 @@ export function ListItem(props: IListItemProps) {
                 "xl:w-auto xl:flex-shrink-0 xl:flex-nowrap": isSidebarOpen,
                 "lg:w-auto lg:flex-shrink-0 lg:flex-nowrap": !isSidebarOpen,
               },
+              fullRowLink && "z-20",
               actionItemContainerClassName
             )}
           >

@@ -400,7 +400,10 @@ class IssueViewViewSet(BaseViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @allow_permission(allowed_roles=[], creator=True, model=IssueView)
+    def update(self, request, slug, project_id, pk):
+        return self.partial_update(request, slug=slug, project_id=project_id, pk=pk)
+
+    @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER])
     def partial_update(self, request, slug, project_id, pk):
         with transaction.atomic():
             issue_view = IssueView.objects.select_for_update().get(pk=pk, workspace__slug=slug, project_id=project_id)
@@ -421,6 +424,33 @@ class IssueViewViewSet(BaseViewSet):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER])
+    def lock(self, request, slug, project_id, pk):
+        return self._set_lock(request, slug, project_id, pk, True)
+
+    @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER])
+    def unlock(self, request, slug, project_id, pk):
+        return self._set_lock(request, slug, project_id, pk, False)
+
+    def _set_lock(self, request, slug, project_id, pk, is_locked):
+        with transaction.atomic():
+            issue_view = IssueView.objects.select_for_update().get(
+                pk=pk, id__in=self.get_queryset().values("id")
+            )
+            is_admin = ProjectMember.objects.filter(
+                project_id=project_id, member=request.user, role=ROLE.ADMIN.value, is_active=True
+            ).exists() or WorkspaceMember.objects.filter(
+                workspace__slug=slug, member=request.user, role=ROLE.ADMIN.value, is_active=True
+            ).exists()
+            if issue_view.owned_by_id != request.user.id and not is_admin:
+                return Response(
+                    {"error": "Only admin or owner can lock or unlock the view"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            issue_view.is_locked = is_locked
+            issue_view.save(update_fields=["is_locked", "updated_at"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=IssueView)
     def destroy(self, request, slug, project_id, pk):

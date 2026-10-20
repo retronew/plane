@@ -8,7 +8,7 @@ import React, { useRef } from "react";
 import { observer } from "mobx-react";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 // icons
-import { InfoOutline, TickOutline } from "@makeplane/propel/icons";
+import { TickOutline } from "@makeplane/propel/icons";
 // ui
 import { CircularProgress } from "@makeplane/propel/components/circular-progress";
 // components
@@ -72,6 +72,11 @@ export const ModuleListItem = observer(function ModuleListItem(props: Props) {
 
   return (
     <ListItem
+      fullRowLink
+      itemClassName="lg:min-w-0 lg:flex-1"
+      titleClassName="lg:whitespace-normal lg:break-words"
+      leftElementClassName="lg:overflow-visible"
+      actionItemContainerClassName="gap-2 lg:gap-3"
       title={moduleDetails?.name ?? ""}
       itemLink={`/${workspaceSlug?.toString()}/projects/${moduleDetails.project_id}/modules/${moduleDetails.id}`}
       onItemClick={handleItemClick}
@@ -99,14 +104,6 @@ export const ModuleListItem = observer(function ModuleListItem(props: Props) {
             )}
           </div>
         </div>
-      }
-      appendTitleElement={
-        <button
-          onClick={openModuleOverview}
-          className={`z-[5] flex-shrink-0 ${isMobile ? "flex" : "hidden group-hover:flex"}`}
-        >
-          <InfoOutline className="h-4 w-4 text-placeholder" />
-        </button>
       }
       actionableItems={<ModuleListItemAction moduleId={moduleId} moduleDetails={moduleDetails} parentRef={parentRef} />}
       quickActionElement={

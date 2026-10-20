@@ -33,6 +33,7 @@ import {
 } from "@plane/constants";
 // hooks
 import { useFavorite } from "@/hooks/store/use-favorite";
+import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -164,6 +165,7 @@ type TWorkspaceNotFoundViewProps = {
 
 const WorkspaceNotFoundView = (props: TWorkspaceNotFoundViewProps) => {
   const { allWorkspaces, currentUserEmail, isMobile, onSignOut } = props;
+  const { toggleProfileSettingsModal } = useCommandPalette();
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center bg-surface-2">
@@ -207,7 +209,7 @@ const WorkspaceNotFoundView = (props: TWorkspaceNotFoundViewProps) => {
                 variant="secondary"
                 size="sm"
                 stretch="auto"
-                render={<Link href="/settings/profile/general/" />}
+                onClick={() => toggleProfileSettingsModal({ activeTab: "general", isOpen: true })}
               >
                 {translate("web.visit_profile")}
               </ButtonElement>

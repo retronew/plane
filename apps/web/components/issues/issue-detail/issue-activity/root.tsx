@@ -96,7 +96,7 @@ function ActivityHeader({
 }
 
 export const IssueActivity = observer(function IssueActivity(props: TIssueActivity) {
-  const { workspaceSlug, projectId, issueId, disabled = false, isIntakeIssue = false, variant = "default" } = props;
+  const { workspaceSlug, projectId, issueId, disabled = false, isIntakeIssue = false, variant = "tabs" } = props;
   const showTabs = isIntakeIssue || variant === "tabs";
   const [intakeTab, setIntakeTab] = useState<TIntakeActivityTab>("all");
   // hooks

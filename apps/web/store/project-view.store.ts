@@ -41,6 +41,7 @@ export interface IProjectViewStore {
     viewId: string,
     data: Partial<IProjectView>
   ) => Promise<IProjectView>;
+  setViewLock: (workspaceSlug: string, projectId: string, viewId: string, locked: boolean) => Promise<void>;
   deleteView: (workspaceSlug: string, projectId: string, viewId: string) => Promise<any>;
   updateFilters: <T extends keyof TViewFilters>(filterKey: T, filterValue: TViewFilters[T]) => void;
   clearAllFilters: () => void;
@@ -230,16 +231,19 @@ export class ProjectViewStore implements IProjectViewStore {
     viewId: string,
     data: Partial<IProjectView>
   ): Promise<IProjectView> {
-    const currentView = this.getViewById(viewId);
-
-    runInAction(() => {
-      set(this.viewMap, [viewId], { ...currentView, ...data });
-    });
-
     const response = await this.viewService.patchView(workspaceSlug, projectId, viewId, data);
-
+    runInAction(() => {
+      set(this.viewMap, [viewId], response);
+    });
     return response;
   }
+
+  setViewLock = async (workspaceSlug: string, projectId: string, viewId: string, locked: boolean): Promise<void> => {
+    await this.viewService.setViewLock(workspaceSlug, projectId, viewId, locked);
+    runInAction(() => {
+      if (this.viewMap[viewId]) this.viewMap[viewId].is_locked = locked;
+    });
+  };
 
   /**
    * Deletes a view and removes it from the viewMap object

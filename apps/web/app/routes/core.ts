@@ -428,7 +428,7 @@ export const coreRoutes: RouteConfigEntry[] = [
     // --------------------------------------------------------------------
 
     layout("./(all)/settings/profile/layout.tsx", [
-      route("settings/profile/:profileTabId", "./(all)/settings/profile/[profileTabId]/page.tsx"),
+      route("settings/profile/:profileTabId?", "./(all)/settings/profile/[profileTabId]/page.tsx"),
     ]),
   ]),
 

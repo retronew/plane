@@ -129,6 +129,7 @@ export const CyclesListItem = observer(function CyclesListItem(props: TCyclesLis
 
   return (
     <ListItem
+      fullRowLink
       title={cycleDetails?.name ?? ""}
       itemLink={`/${workspaceSlug}/projects/${projectId}/cycles/${cycleDetails.id}`}
       onItemClick={handleItemClick}

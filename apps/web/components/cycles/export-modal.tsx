@@ -15,22 +15,27 @@ import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@m
 import { EUserPermissions, EUserPermissionsLevel, EXPORTERS_LIST } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
+import type { TWorkItemFilterExpression } from "@plane/types";
 import { useUserPermissions } from "@/hooks/store/user";
 import { ProjectExportService } from "@/services/project/project-export.service";
 
 const service = new ProjectExportService();
-export const CycleExportModal = observer(function CycleExportModal({
+export const ScopedWorkItemExportModal = observer(function ScopedWorkItemExportModal({
   workspaceSlug,
   projectId,
-  cycleId,
-  cycleName,
+  entityId,
+  entityName,
+  entityType,
+  richFilters,
   open,
   onClose,
 }: {
   workspaceSlug: string;
   projectId: string;
-  cycleId: string;
-  cycleName: string;
+  entityId: string;
+  entityName: string;
+  entityType: "cycle" | "module" | "view";
+  richFilters?: TWorkItemFilterExpression;
   open: boolean;
   onClose: () => void;
 }) {
@@ -58,7 +63,7 @@ export const CycleExportModal = observer(function CycleExportModal({
         provider,
         project: [projectId],
         multiple: false,
-        rich_filters: { cycle_id__in: cycleId },
+        rich_filters: entityType === "view" ? (richFilters ?? {}) : { [`${entityType}_id__in`]: entityId },
       });
       setToast({
         type: "success",
@@ -91,12 +96,12 @@ export const CycleExportModal = observer(function CycleExportModal({
           <DialogHeader>
             <DialogHeading>
               <DialogTitle>
-                {t("export")} · {cycleName}
+                {t("export")} · {entityName}
               </DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody>
-            <label htmlFor={`cycle-export-${cycleId}`} className="text-13 text-secondary">
+            <label htmlFor={`${entityType}-export-${entityId}`} className="text-13 text-secondary">
               {t("workspace_settings.settings.exports.format")}
             </label>
             <Select
@@ -107,7 +112,7 @@ export const CycleExportModal = observer(function CycleExportModal({
               disabled={loading}
               items={EXPORTERS_LIST.map(({ provider: value }) => ({ value, label: value.toUpperCase() }))}
             >
-              <SelectTrigger id={`cycle-export-${cycleId}`} size="md" />
+              <SelectTrigger id={`${entityType}-export-${entityId}`} size="md" />
               <SelectContent sizing="anchor-fixed">
                 <SelectList>
                   {EXPORTERS_LIST.map(({ provider: value }) => (
@@ -144,3 +149,18 @@ export const CycleExportModal = observer(function CycleExportModal({
     </Dialog>
   );
 });
+
+export function CycleExportModal({
+  cycleId,
+  cycleName,
+  ...props
+}: {
+  workspaceSlug: string;
+  projectId: string;
+  cycleId: string;
+  cycleName: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  return <ScopedWorkItemExportModal {...props} entityType="cycle" entityId={cycleId} entityName={cycleName} />;
+}

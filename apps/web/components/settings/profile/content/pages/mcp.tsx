@@ -10,20 +10,12 @@ import { useTranslation } from "@plane/i18n";
 import { ApiTokenMcpSetup } from "@/components/api-token/mcp-setup";
 import { ProfileSettingsHeading } from "@/components/settings/profile/heading";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
-import { useAppRouter } from "@/hooks/use-app-router";
 
 export const McpProfileSettings = observer(function McpProfileSettings() {
   const { t } = useTranslation();
-  const router = useAppRouter();
-  const { profileSettingsModal, toggleProfileSettingsModal } = useCommandPalette();
+  const { toggleProfileSettingsModal } = useCommandPalette();
 
-  const manageTokens = () => {
-    if (profileSettingsModal.isOpen) {
-      toggleProfileSettingsModal({ activeTab: "api-tokens" });
-    } else {
-      router.push("/settings/profile/api-tokens");
-    }
-  };
+  const manageTokens = () => toggleProfileSettingsModal({ activeTab: "api-tokens", isOpen: true });
 
   return (
     <div className="size-full">

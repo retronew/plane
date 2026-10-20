@@ -41,6 +41,8 @@ const isValidURL = isValidNextPath;
 
 type TAuthenticationState = {
   pathname: string;
+  search: string;
+  hash: string;
   nextPath: string | null;
   pageType: TPageType;
   isUserLoading: boolean;
@@ -74,7 +76,8 @@ const isUserOnboarded = (profile: TAuthenticationState["currentUserProfile"] | u
   );
 };
 
-const getUnauthenticatedRedirectUrl = (pathname: string): string => `/${pathname ? `?next_path=${pathname}` : ``}`;
+export const getUnauthenticatedRedirectUrl = (pathname: string, search = "", hash = ""): string =>
+  `/${pathname ? `?next_path=${encodeURIComponent(`${pathname}${search ? `?${search}` : ""}${hash}`)}` : ``}`;
 
 const getWorkspaceRedirectionUrl = (state: TAuthenticationState): string => {
   const { nextPath, currentUserSettings, workspaces } = state;
@@ -104,21 +107,24 @@ const resolveNonAuthenticatedOutcome = (state: TAuthenticationState): TAuthentic
 };
 
 const resolveOnboardingOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
-  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (!state.currentUser?.id)
+    return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname, state.search, state.hash));
   if (state.currentUserProfile?.id && state.isUserOnboard)
     return getRedirectOutcome("replace", getWorkspaceRedirectionUrl(state));
   return { type: "children" };
 };
 
 const resolveSetPasswordOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
-  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (!state.currentUser?.id)
+    return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname, state.search, state.hash));
   if (!state.currentUser?.is_password_autoset && state.currentUserProfile?.id && state.isUserOnboard)
     return getRedirectOutcome("push", getWorkspaceRedirectionUrl(state));
   return { type: "children" };
 };
 
 const resolveAuthenticatedOutcome = (state: TAuthenticationState): TAuthenticationOutcome => {
-  if (!state.currentUser?.id) return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname));
+  if (!state.currentUser?.id)
+    return getRedirectOutcome("push", getUnauthenticatedRedirectUrl(state.pathname, state.search, state.hash));
   if (state.currentUserProfile?.id && state.isUserOnboard) return { type: "children" };
   return getRedirectOutcome("push", "/onboarding");
 };
@@ -167,6 +173,8 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
 
   const outcome = resolveAuthenticationOutcome({
     pathname,
+    search: searchParams.toString(),
+    hash: typeof window !== "undefined" ? window.location.hash : "",
     nextPath,
     pageType,
     isUserLoading,

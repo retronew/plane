@@ -222,13 +222,13 @@ export function ColumnDragHandle(props: ColumnDragHandleProps) {
     [col, editor]
   );
 
+  const { setReference, setFloating } = refs;
+
   return (
     <>
       <div className="table-col-handle-container absolute top-0 left-0 z-20 flex w-full -translate-y-1/2 items-center justify-center">
         <button
-          ref={(element) => {
-            refs.setReference(element);
-          }}
+          ref={setReference}
           {...getReferenceProps()}
           type="button"
           onMouseDown={handleMouseDown}
@@ -251,9 +251,7 @@ export function ColumnDragHandle(props: ColumnDragHandleProps) {
           />
           <div
             className="max-h-[90vh] w-[12rem] overflow-y-auto rounded-md border-[0.5px] border-strong bg-surface-1 px-2 py-2.5 shadow-raised-200"
-            ref={(element) => {
-              refs.setFloating(element);
-            }}
+            ref={setFloating}
             {...getFloatingProps()}
             style={{
               ...floatingStyles,

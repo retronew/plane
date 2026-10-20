@@ -1638,6 +1638,7 @@
       "due_date_removed": "{actor}移除了截止日期。"
     },
     "runtime": {
+      "view_type": "视图类型",
       "filter_created_date": "{count, plural, =0 {创建日期} other {创建日期（#）}}",
       "filter_created_by": "{count, plural, =0 {创建人} other {创建人（#）}}",
       "filter_due_date": "{count, plural, =0 {截止日期} other {截止日期（#）}}",
@@ -1679,6 +1680,7 @@
       "links_count": "链接：{count}",
       "members_count": "成员：{count}",
       "items_count": "{count} 个工作项",
+      "module_work_item_progress": "{total, plural, one {{completed}/# 个工作项} other {{completed}/# 个工作项}}",
       "labels_count": "{count} 个标签",
       "labels_value": "标签：{labels}",
       "created_on": "创建于 {date}",

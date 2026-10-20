@@ -7,25 +7,23 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { CalendarOutline, UserAltOutline } from "@makeplane/propel/icons";
+import { CalendarOutline } from "@makeplane/propel/icons";
 // Plane imports
 import { MODULE_STATUS, EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 import { useTranslation, translate } from "@plane/i18n";
 import { setPromiseToast, setToast } from "@plane/blocks/toast";
-import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IModule } from "@plane/types";
 import { FavoriteStar } from "@plane/blocks/common";
 import { DateRangeSelect } from "@plane/blocks/property-select";
-import { renderFormattedPayloadDate, getDate } from "@plane/utils";
+import { formatCompactDateRange, renderFormattedPayloadDate, getDate } from "@plane/utils";
 // components
 import { ModuleQuickActions } from "@/components/modules";
 import { ModuleStatusDropdown } from "@/components/modules/module-status-dropdown";
 // hooks
-import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
 import { useUserPermissions, useUserProfile } from "@/hooks/store/user";
-import { ButtonAvatars } from "../dropdowns/member/avatar";
+import { MemberSelect } from "@/components/dropdowns/member/member-select";
 
 type Props = {
   moduleId: string;
@@ -40,7 +38,6 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
   //   store hooks
   const { allowPermissions } = useUserPermissions();
   const { addModuleToFavorites, removeModuleFromFavorites, updateModuleDetails } = useModule();
-  const { getUserDetails } = useMember();
   const { data: userProfile } = useUserProfile();
 
   const { t } = useTranslation();
@@ -55,7 +52,6 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
     EUserPermissionsLevel.PROJECT
   );
   const isDisabled = !isEditingAllowed || !!moduleDetails?.archived_at;
-  const renderIcon = Boolean(moduleDetails.start_date) || Boolean(moduleDetails.target_date);
 
   // handlers
   const handleAddToFavorites = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -129,61 +125,68 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
       });
   };
 
-  const moduleLeadDetails = moduleDetails.lead_id ? getUserDetails(moduleDetails.lead_id) : undefined;
-
   return (
-    <>
-      <DateRangeSelect
-        variant="select-ghost-md"
-        className={`h-6 w-full gap-1.5 rounded-sm border-[0.5px] border-strong text-11 text-tertiary ${
-          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
-        }`}
-        value={{
-          from: getDate(moduleDetails.start_date) ?? null,
-          to: getDate(moduleDetails.target_date) ?? null,
-        }}
-        onChange={(range) => {
-          void handleModuleDetailsChange({
-            start_date: range.from ? renderFormattedPayloadDate(range.from) : null,
-            target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
-          });
-        }}
-        mergeDates
-        placeholder={translate("web.runtime.date_range_placeholder")}
-        weekStartsOn={userProfile?.start_of_the_week}
-        disabled={isDisabled}
-        icon={renderIcon ? undefined : <CalendarOutline aria-hidden="true" />}
-      />
-
-      {moduleStatus && (
-        <ModuleStatusDropdown
-          isDisabled={isDisabled}
-          moduleDetails={moduleDetails}
-          handleModuleDetailsChange={handleModuleDetailsChange}
-        />
-      )}
-
-      {moduleLeadDetails ? (
-        <span className="cursor-default">
-          <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
-        </span>
-      ) : (
-        <Tooltip label={t("web.no_lead")}>
-          <UserAltOutline className="h-4 w-4 text-tertiary" />
-        </Tooltip>
-      )}
-
-      {isEditingAllowed && !moduleDetails.archived_at && (
-        <FavoriteStar
-          onClick={(e) => {
-            if (moduleDetails.is_favorite) handleRemoveFromFavorites(e);
-            else handleAddToFavorites(e);
+    <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex h-7 w-auto shrink-0 items-center">
+        <DateRangeSelect
+          variant="pill-sm"
+          className={`min-w-0 ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+          value={{
+            from: getDate(moduleDetails.start_date) ?? null,
+            to: getDate(moduleDetails.target_date) ?? null,
           }}
-          selected={moduleDetails.is_favorite}
+          onChange={(range) => {
+            void handleModuleDetailsChange({
+              start_date: range.from ? renderFormattedPayloadDate(range.from) : null,
+              target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
+            });
+          }}
+          formatLabel={formatCompactDateRange}
+          mergeDates
+          placeholder={translate("web.runtime.date_range_placeholder")}
+          weekStartsOn={userProfile?.start_of_the_week}
+          disabled={isDisabled}
+          icon={<CalendarOutline aria-hidden="true" />}
         />
-      )}
+      </div>
+
+      <div className="flex h-7 w-auto shrink-0 items-center">
+        {moduleStatus && (
+          <ModuleStatusDropdown
+            variant="pill-sm"
+            isDisabled={isDisabled}
+            moduleDetails={moduleDetails}
+            handleModuleDetailsChange={handleModuleDetailsChange}
+          />
+        )}
+      </div>
+      <div className="flex h-7 min-w-0 shrink-0 items-center">
+        <MemberSelect
+          variant="pill-sm"
+          value={moduleDetails.lead_id}
+          projectId={projectId?.toString()}
+          disabled={isDisabled}
+          placeholder={t("web.no_lead")}
+          clearable
+          onChange={(lead) => {
+            void handleModuleDetailsChange({ lead_id: lead || null });
+          }}
+        />
+      </div>
+      <div className="flex h-7 w-auto shrink-0 items-center justify-center">
+        {isEditingAllowed && !moduleDetails.archived_at && (
+          <FavoriteStar
+            buttonClassName="h-7 w-7"
+            onClick={(e) => {
+              if (moduleDetails.is_favorite) handleRemoveFromFavorites(e);
+              else handleAddToFavorites(e);
+            }}
+            selected={moduleDetails.is_favorite}
+          />
+        )}
+      </div>
       {workspaceSlug && projectId && (
-        <div className="hidden md:block">
+        <div className="hidden h-7 items-center md:flex">
           <ModuleQuickActions
             parentRef={parentRef}
             moduleId={moduleId}
@@ -192,6 +195,6 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
           />
         </div>
       )}
-    </>
+    </div>
   );
 });

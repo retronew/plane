@@ -1638,6 +1638,7 @@
       "due_date_removed": "{actor} removed the due date."
     },
     "runtime": {
+      "view_type": "View type",
       "filter_created_date": "{count, plural, =0 {Created date} other {Created date (#)}}",
       "filter_created_by": "{count, plural, =0 {Created by} other {Created by (#)}}",
       "filter_due_date": "{count, plural, =0 {Due date} other {Due date (#)}}",
@@ -1679,6 +1680,7 @@
       "links_count": "Links: {count}",
       "members_count": "Members: {count}",
       "items_count": "{count, plural, one {# work item} other {# work items}}",
+      "module_work_item_progress": "{total, plural, one {{completed}/# work item} other {{completed}/# work items}}",
       "labels_count": "{count, plural, one {# label} other {# labels}}",
       "labels_value": "Labels: {labels}",
       "created_on": "Created on {date}",

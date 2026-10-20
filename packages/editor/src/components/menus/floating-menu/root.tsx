@@ -24,14 +24,13 @@ export function FloatingMenuRoot(props: Props) {
   const { children, classNames, getFloatingProps, getReferenceProps, menuButton, onClick, options } = props;
   // derived values
   const { refs, floatingStyles, context } = options;
+  const { setReference, setFloating } = refs;
 
   return (
     <>
       <div className={classNames?.buttonContainer}>
         <button
-          ref={(element) => {
-            refs.setReference(element);
-          }}
+          ref={setReference}
           {...getReferenceProps()}
           type="button"
           className={classNames?.button}
@@ -53,9 +52,7 @@ export function FloatingMenuRoot(props: Props) {
             lockScroll
           />
           <div
-            ref={(element) => {
-              refs.setFloating(element);
-            }}
+            ref={setFloating}
             {...getFloatingProps()}
             style={{
               ...floatingStyles,

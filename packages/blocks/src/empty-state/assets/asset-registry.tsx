@@ -114,6 +114,7 @@ export const VERTICAL_STACK_ASSETS: Record<VerticalStackAssetType, LazyIllustrat
   "error-404": lazyIllustration(() => import("./vertical-stack/404-error"), "Error404VerticalStackIllustration"),
   inbox: lazyIllustration(() => import("./vertical-stack/inbox"), "InboxVerticalStackIllustration"),
   initiative: lazyIllustration(() => import("./vertical-stack/initiative"), "InitiativeVerticalStackIllustration"),
+  intake: lazyIllustration(() => import("./vertical-stack/intake"), "IntakeVerticalStackIllustration"),
   "invalid-link": lazyIllustration(
     () => import("./vertical-stack/invalid-link"),
     "InvalidLinkVerticalStackIllustration"

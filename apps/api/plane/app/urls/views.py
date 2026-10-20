@@ -32,6 +32,11 @@ urlpatterns = [
         name="project-view",
     ),
     path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/views/<uuid:pk>/lock/",
+        IssueViewViewSet.as_view({"post": "lock", "delete": "unlock"}),
+        name="project-view-lock-unlock",
+    ),
+    path(
         "workspaces/<str:slug>/views/",
         WorkspaceViewViewSet.as_view({"get": "list", "post": "create"}),
         name="global-view",
