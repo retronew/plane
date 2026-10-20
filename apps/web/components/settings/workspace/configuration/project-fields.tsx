@@ -39,6 +39,7 @@ export function ProjectCategoryFields({
   disabled = false,
   compact = false,
   children,
+  renderFields,
 }: {
   workspaceSlug: string;
   status?: string | null;
@@ -48,6 +49,7 @@ export function ProjectCategoryFields({
   disabled?: boolean;
   compact?: boolean;
   children?: ReactNode;
+  renderFields?: (fields: { status: ReactNode; labels: ReactNode }) => ReactNode;
 }) {
   const { t } = useTranslation();
   const categories = useProjectCategories(workspaceSlug);
@@ -58,62 +60,68 @@ export function ProjectCategoryFields({
       categories.statuses.find((entry) => entry.id === status) ??
       (!status ? categories.statuses.find((entry) => entry.is_default) : undefined) ??
       null;
-    return (
-      <>
-        {categories.statesEnabled && (
-          <Select<ProjectCategory>
-            getValues={() => categories.statuses}
-            value={selectedStatus}
-            onChange={onStatus}
-            getOptionValue={(entry) => entry.id}
-            getOptionLabel={(entry) => entry.name}
-            getOptionIcon={statusIcon}
-            disabled={disabled || Boolean(categories.error)}
-            placeholder={t("state")}
-            showSearch
-          >
-            <Select.Trigger<ProjectCategory>
-              variant="pill-md"
-              className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
-              aria-label={t("state")}
-              prependIcon={selectedStatusIcon}
-            >
-              {(entries) => entries[0]?.name ?? t("state")}
-            </Select.Trigger>
-          </Select>
-        )}
-        {children}
-        <LabelSelect
-          getValues={async ({ search }) => ({
-            results: categories.labels.filter((entry) =>
-              entry.name.toLocaleLowerCase().includes(search?.trim().toLocaleLowerCase() ?? "")
-            ),
-            next_page_results: false,
-          })}
-          value={(labels ?? []).map((id) => categories.labels.find((entry) => entry.id === id) ?? { id, name: id })}
-          onChange={onLabels}
-          disabled={disabled || Boolean(categories.error)}
-          placeholder={t("labels")}
+    const statusField = categories.statesEnabled && (
+      <Select<ProjectCategory>
+        getValues={() => categories.statuses}
+        value={selectedStatus}
+        onChange={onStatus}
+        getOptionValue={(entry) => entry.id}
+        getOptionLabel={(entry) => entry.name}
+        getOptionIcon={statusIcon}
+        disabled={disabled || Boolean(categories.error)}
+        placeholder={t("state")}
+        showSearch
+      >
+        <Select.Trigger<ProjectCategory>
           variant="pill-md"
           className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
-          createLabel={{
-            canCreate: canCreateLabel,
-            onCreate: async (name) => {
-              const created = await service.save<ProjectCategory>(workspaceSlug, "project-categories/label", {
-                name: name.trim(),
-                color: "#60646C",
-              });
-              await categories.refreshLabels(
-                (entries: ProjectCategory[] | undefined) => [
-                  ...(entries ?? []).filter((entry) => entry.id !== created.id),
-                  created,
-                ],
-                { revalidate: false }
-              );
-              return created;
-            },
-          }}
-        />
+          aria-label={t("state")}
+          prependIcon={selectedStatusIcon}
+        >
+          {(entries) => entries[0]?.name ?? t("state")}
+        </Select.Trigger>
+      </Select>
+    );
+    const labelsField = (
+      <LabelSelect
+        getValues={async ({ search }) => ({
+          results: categories.labels.filter((entry) =>
+            entry.name.toLocaleLowerCase().includes(search?.trim().toLocaleLowerCase() ?? "")
+          ),
+          next_page_results: false,
+        })}
+        value={(labels ?? []).map((id) => categories.labels.find((entry) => entry.id === id) ?? { id, name: id })}
+        onChange={onLabels}
+        disabled={disabled || Boolean(categories.error)}
+        placeholder={t("labels")}
+        variant="pill-md"
+        className={PROJECT_ATTRIBUTE_TRIGGER_CLASS_NAME}
+        createLabel={{
+          canCreate: canCreateLabel,
+          onCreate: async (name) => {
+            const created = await service.save<ProjectCategory>(workspaceSlug, "project-categories/label", {
+              name: name.trim(),
+              color: "#60646C",
+            });
+            await categories.refreshLabels(
+              (entries: ProjectCategory[] | undefined) => [
+                ...(entries ?? []).filter((entry) => entry.id !== created.id),
+                created,
+              ],
+              { revalidate: false }
+            );
+            return created;
+          },
+        }}
+      />
+    );
+    return renderFields ? (
+      renderFields({ status: statusField, labels: labelsField })
+    ) : (
+      <>
+        {statusField}
+        {children}
+        {labelsField}
       </>
     );
   }

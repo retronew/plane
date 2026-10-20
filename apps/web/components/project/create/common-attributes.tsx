@@ -5,11 +5,15 @@
  */
 
 import type { ChangeEvent } from "react";
+import { ProjectCreateLogo } from "./header";
 import type { UseFormSetValue } from "react-hook-form";
 import { Controller, useFormContext } from "react-hook-form";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
-import { TextArea, TextAreaGroup } from "@makeplane/propel/components/text-area";
+import { RichTextEditor } from "@/components/editor/rich-text";
+import { projectDescriptionToHTML, projectDescriptionToMarkdown } from "@/helpers/project-description";
+import { useWorkspace } from "@/hooks/store/use-workspace";
+import { WorkspaceService } from "@/services/workspace.service";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { InfoOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -58,38 +62,47 @@ function ProjectCommonAttributes(props: Props) {
     handleFormOnChange?.();
   };
   return (
-    <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-4">
-      <div className="md:col-span-3">
-        <Controller
-          control={control}
-          name="name"
-          rules={{
-            required: t("name_is_required"),
-            maxLength: {
-              value: 255,
-              message: t("title_should_be_less_than_255_characters"),
-            },
-          }}
-          render={({ field: { value, onChange } }) => (
-            <Field name="name" invalid={Boolean(errors.name)}>
-              <InputGroup size="lg">
-                <Input
+    <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+      <div className="flex min-w-0 flex-1 basis-64 items-start gap-3">
+        <ProjectCreateLogo handleFormOnChange={handleFormOnChange} />
+        <div className="min-w-0 flex-1">
+          <Controller
+            control={control}
+            name="name"
+            rules={{
+              required: t("name_is_required"),
+              maxLength: {
+                value: 255,
+                message: t("title_should_be_less_than_255_characters"),
+              },
+            }}
+            render={({ field: { value, onChange, ref } }) => (
+              <Field name="name" invalid={Boolean(errors.name)}>
+                <InputGroup
                   size="lg"
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={value}
-                  onChange={handleNameChange(onChange)}
-                  placeholder={t("project_name")}
-                  tabIndex={getIndex("name")}
-                />
-              </InputGroup>
-            </Field>
-          )}
-        />
-        <span className="text-11 text-danger-primary">{errors?.name?.message}</span>
+                  className="h-10! shrink-0 rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!"
+                >
+                  <Input
+                    size="2xl"
+                    className="h-full! w-full border-0! bg-transparent! p-0! text-18! leading-7! font-semibold! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!"
+                    aria-label={t("project_name")}
+                    ref={ref}
+                    aria-invalid={Boolean(errors.name)}
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={value}
+                    onChange={handleNameChange(onChange)}
+                    placeholder={t("project_name")}
+                    tabIndex={getIndex("name")}
+                  />
+                </InputGroup>
+              </Field>
+            )}
+          />
+        </div>
       </div>
-      <div className="relative">
+      <div className="relative w-36 shrink-0">
         <Controller
           control={control}
           name="identifier"
@@ -107,11 +120,18 @@ function ProjectCommonAttributes(props: Props) {
               message: t("project_id_max_char", { max: 12 }),
             },
           }}
-          render={({ field: { value, onChange } }) => (
+          render={({ field: { value, onChange, ref } }) => (
             <Field name="identifier" invalid={Boolean(errors.identifier)}>
-              <InputGroup size="lg">
+              <InputGroup
+                size="sm"
+                className="h-10! rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!"
+              >
                 <Input
-                  size="lg"
+                  size="sm"
+                  className="border-0! bg-transparent! p-0! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!"
+                  aria-label={t("project_id")}
+                  ref={ref}
+                  aria-invalid={Boolean(errors.identifier)}
                   id="identifier"
                   name="identifier"
                   type="text"
@@ -133,34 +153,59 @@ function ProjectCommonAttributes(props: Props) {
             </Field>
           )}
         />
-        <span className="text-11 text-danger-primary">{errors?.identifier?.message}</span>
       </div>
-      <div className="md:col-span-4">
-        <Controller
-          name="description"
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <Field name="description" invalid={Boolean(errors?.description)}>
-              <TextAreaGroup resize="none" render={<div className="h-[98px] shrink-0" />}>
-                <TextArea
-                  size="lg"
-                  surface="field"
-                  rows={4}
-                  id="description"
-                  name="description"
-                  value={value}
-                  placeholder={t("description")}
-                  onChange={(e) => {
-                    onChange(e);
-                    handleFormOnChange?.();
-                  }}
-                  tabIndex={getIndex("description")}
-                />
-              </TextAreaGroup>
-            </Field>
-          )}
-        />
-      </div>
+    </div>
+  );
+}
+
+export function ProjectCreateDescription({
+  isMobile,
+  workspaceSlug,
+  handleFormOnChange,
+}: {
+  isMobile: boolean;
+  workspaceSlug: string;
+  handleFormOnChange?: () => void;
+}) {
+  const { control, setValue, watch } = useFormContext<TProject>();
+  const { getWorkspaceBySlug } = useWorkspace();
+  const { t } = useTranslation();
+  const { getIndex } = getTabIndex(ETabIndices.PROJECT_CREATE, isMobile);
+  const description = watch("description");
+  const workspaceId = getWorkspaceBySlug(workspaceSlug)?.id ?? "";
+  return (
+    <div className="issue-composer-description">
+      <Controller
+        name="description_html"
+        control={control}
+        render={({ field: { value, onChange } }) => (
+          <RichTextEditor
+            editable
+            id="project-create-description"
+            workspaceSlug={workspaceSlug}
+            workspaceId={workspaceId}
+            initialValue={value ?? projectDescriptionToHTML(description ?? "")}
+            value={value ?? projectDescriptionToHTML(description ?? "")}
+            disabledExtensions={["image", "issue-embed"]}
+            containerClassName="issue-composer-editor min-h-[140px] rounded-lg bg-layer-1 border-0! p-3! shadow-none! ring-0! [--color-placeholder:lch(66_1_282)] [--font-size-regular:14px] [&_.tiptap]:text-14! [&_.tiptap]:leading-6! [&_.tiptap]:min-h-[140px] [&_.tiptap]:border-0 [&_.tiptap]:outline-none [&_.tiptap]:ring-0"
+            placeholder={t("description")}
+            tabIndex={getIndex("description")}
+            onChange={(json, html) => {
+              onChange(html);
+              setValue("description_text", json, { shouldDirty: true });
+              setValue("description", projectDescriptionToMarkdown(html), { shouldDirty: true });
+              handleFormOnChange?.();
+            }}
+            searchMentionCallback={(payload) => new WorkspaceService().searchEntity(workspaceSlug, payload)}
+            uploadFile={async () => {
+              throw new Error("Project creation does not support image uploads.");
+            }}
+            duplicateFile={async () => {
+              throw new Error("Project creation does not support image uploads.");
+            }}
+          />
+        )}
+      />
     </div>
   );
 }

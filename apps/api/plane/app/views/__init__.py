@@ -61,6 +61,7 @@ from .workspace.member import (
     WorkspaceMemberUserViewsEndpoint,
 )
 from .workspace.invite import (
+    WorkspaceInviteCandidatesEndpoint,
     WorkspaceInvitationsViewset,
     WorkspaceJoinEndpoint,
     UserWorkspaceInvitationsViewSet,

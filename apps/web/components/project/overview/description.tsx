@@ -13,6 +13,11 @@ import { useTranslation } from "@plane/i18n";
 import type { IProject } from "@plane/types";
 import { useProject } from "@/hooks/store/use-project";
 import { useRefreshProjectActivities } from "./use-refresh-activities";
+import { RichTextEditor } from "@/components/editor/rich-text";
+import { useWorkspace } from "@/hooks/store/use-workspace";
+import { WorkspaceService } from "@/services/workspace.service";
+import { projectDescriptionToMarkdown } from "@/helpers/project-description";
+import { Button } from "@makeplane/propel/components/button";
 
 type DescriptionBlock = {
   type: string;
@@ -65,6 +70,11 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
 }: Props) {
   const { t } = useTranslation();
   const { updateProject } = useProject();
+  const { getWorkspaceBySlug } = useWorkspace();
+  const workspaceId = getWorkspaceBySlug(workspaceSlug)?.id ?? "";
+  const richDescription = typeof project.description_html === "string" ? project.description_html : null;
+  const [richDraft, setRichDraft] = useState(richDescription ?? "");
+  const [richJSON, setRichJSON] = useState<object | null>(project.description_text ?? null);
   const refreshActivities = useRefreshProjectActivities(workspaceSlug, project.id);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(project.description ?? "");
@@ -81,19 +91,31 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
     if (disabled || saving.current) return;
     initialDescription.current = project.description ?? "";
     setDraft(initialDescription.current);
+    setRichDraft(richDescription ?? "");
+    setRichJSON(project.description_text ?? null);
     setEditing(true);
   };
 
   const save = async () => {
     if (disabled || saving.current || !workspaceSlug) return;
-    if (draft === initialDescription.current) {
+    if (richDescription !== null ? richDraft === richDescription : draft === initialDescription.current) {
       setEditing(false);
       return;
     }
     saving.current = true;
     setBusy(true);
     try {
-      await updateProject(workspaceSlug, project.id, { description: draft });
+      await updateProject(
+        workspaceSlug,
+        project.id,
+        richDescription !== null
+          ? {
+              description: projectDescriptionToMarkdown(richDraft),
+              description_html: richDraft,
+              description_text: richJSON,
+            }
+          : { description: draft, description_html: null, description_text: null }
+      );
       void refreshActivities();
       setEditing(false);
     } catch {
@@ -127,13 +149,66 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
         className={`focus-visible:ring-primary flex min-h-10 items-start gap-2 rounded-sm text-14 leading-6 outline-none focus-visible:ring-2 ${disabled ? "" : "cursor-text"}`}
       >
         <div className="[&_code]:font-mono min-w-0 flex-1 break-words text-primary [&_a]:text-accent-primary [&_a]:underline [&_a]:underline-offset-2 [&_blockquote]:border-l-2 [&_blockquote]:border-subtle [&_blockquote]:pl-4 [&_blockquote]:text-secondary [&_code]:rounded-sm [&_code]:bg-surface-2 [&_code]:px-1 [&_h1]:text-24 [&_h1]:font-semibold [&_h2]:text-20 [&_h2]:font-semibold [&_h3]:text-18 [&_h3]:font-semibold [&_h4]:font-semibold [&_h5]:font-semibold [&_h6]:font-semibold [&_li>p]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_pre]:overflow-x-auto [&_pre]:rounded-sm [&_pre]:bg-surface-2 [&_pre]:p-3 [&_pre_code]:p-0 [&_ul]:list-disc [&_ul]:pl-6 [&>*+*]:mt-3">
-          {project.description ? (
+          {richDescription !== null ? (
+            <RichTextEditor
+              editable={false}
+              id={`project-description-${project.id}`}
+              workspaceSlug={workspaceSlug}
+              workspaceId={workspaceId}
+              projectId={project.id}
+              initialValue={richDescription}
+              value={richDescription}
+              containerClassName="border-0! p-0! shadow-none! ring-0!"
+            />
+          ) : project.description ? (
             <ReactMarkdown components={markdownComponents} remarkPlugins={descriptionRemarkPlugins}>
               {project.description}
             </ReactMarkdown>
           ) : (
             <span className="text-placeholder">{t("common.click_to_add_description")}</span>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (richDescription !== null) {
+    return (
+      <div className="issue-composer-description">
+        <RichTextEditor
+          editable
+          id={`project-description-edit-${project.id}`}
+          workspaceSlug={workspaceSlug}
+          workspaceId={workspaceId}
+          projectId={project.id}
+          initialValue={richDraft}
+          disabledExtensions={["image", "issue-embed"]}
+          containerClassName="issue-composer-editor min-h-[140px] border-0! p-0! shadow-none! ring-0! [&_.tiptap]:min-h-[140px] [&_.tiptap]:outline-none [&_.tiptap]:ring-0"
+          placeholder={t("description")}
+          onChange={(json, html) => {
+            setRichDraft(html);
+            setRichJSON(json);
+          }}
+          searchMentionCallback={(payload) =>
+            new WorkspaceService().searchEntity(workspaceSlug, { ...payload, project_id: project.id })
+          }
+          uploadFile={async () => {
+            throw new Error("Project descriptions do not support image uploads.");
+          }}
+          duplicateFile={async () => {
+            throw new Error("Project descriptions do not support image uploads.");
+          }}
+        />
+        <div className="mt-2 flex justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            label={t("cancel")}
+            disabled={busy}
+            onClick={() => setEditing(false)}
+          />
+          <Button type="button" size="sm" label={t("save")} disabled={busy} onClick={() => void save()} />
         </div>
       </div>
     );

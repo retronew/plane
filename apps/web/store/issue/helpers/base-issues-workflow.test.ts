@@ -79,6 +79,22 @@ it("reconciles optimistic changes with the saved server response", async () => {
   await BaseIssuesStore.prototype.issueUpdate.call(fake as never, "w", "p", "i", { priority: "high" });
   expect(update).toHaveBeenLastCalledWith("i", saved);
 });
+it("keeps the store bound when updateIssue is passed as a drag-and-drop callback", async () => {
+  class TestIssuesStore extends BaseIssuesStore {
+    updateIssue = this.issueUpdate;
+    fetchParentStats = vi.fn();
+    updateParentStats = vi.fn();
+    updateIssueList = vi.fn();
+  }
+  const store = new TestIssuesStore(fake.rootIssueStore as never, {} as never);
+  store.issueService = fake.issueService as never;
+  const { updateIssue } = store;
+
+  await updateIssue("w", "p", "i", { sort_order: 100 });
+
+  expect(patch).toHaveBeenCalledWith("w", "p", "i", { sort_order: 100 });
+  expect(store.updateIssueList).toHaveBeenCalled();
+});
 it("keeps explicit null on creation mapped to the default workflow", async () => {
   await expect(
     BaseIssuesStore.prototype.createIssue.call(fake as never, "w", "p", { type_id: null, state_id: "b" })

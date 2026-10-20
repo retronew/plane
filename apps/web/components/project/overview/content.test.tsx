@@ -12,13 +12,6 @@ import { ProjectOverviewContent } from "./content";
 const mocks = vi.hoisted(() => ({ save: vi.fn(), toast: vi.fn() }));
 vi.mock("@/hooks/store/use-project", () => ({ useProject: () => ({ updateProject: mocks.save }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: mocks.toast }));
-vi.mock("@/components/core/cover-image-upload-button", () => ({
-  CoverImageUploadButton: ({ onChange, disabled }: { onChange: (url: string) => void; disabled: boolean }) => (
-    <button disabled={disabled} onClick={() => onChange("/api/assets/v2/static/cover/")}>
-      Upload cover
-    </button>
-  ),
-}));
 vi.mock("@plane/blocks/emoji-icon-picker", () => ({
   EmojiPicker: ({ onChange, disabled }: { onChange: (value: object) => void; disabled: boolean }) => (
     <button disabled={disabled} onClick={() => onChange({ type: "emoji", value: "128077" })}>
@@ -40,18 +33,16 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.save.mockResolvedValue(project);
 });
-it("saves the uploaded cover association and the selected project logo", async () => {
-  render(<ProjectOverviewContent project={project} workspaceSlug="workspace" disabled={false} />);
-  fireEvent.click(screen.getByRole("button", { name: "Upload cover" }));
-  await waitFor(() =>
-    expect(mocks.save).toHaveBeenCalledWith("workspace", "project", {
-      cover_image: expect.stringContaining("/api/assets/v2/static/cover/"),
-      cover_image_url: "/api/assets/v2/static/cover/",
-    })
+it("omits the cover even for projects with an image and saves the selected project logo", async () => {
+  const { container } = render(
+    <ProjectOverviewContent
+      project={{ ...project, cover_image_url: "https://example.com/cover.png" }}
+      workspaceSlug="workspace"
+      disabled={false}
+    />
   );
-  await waitFor(() =>
-    expect((screen.getByRole("button", { name: "Change logo" }) as HTMLButtonElement).disabled).toBe(false)
-  );
+  expect(container.querySelector("img")).toBeNull();
+  expect(screen.getByRole("heading", { name: project.name })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Change logo" }));
   await waitFor(() =>
     expect(mocks.save).toHaveBeenCalledWith("workspace", "project", {
@@ -69,8 +60,8 @@ it("reports failed saves and allows a retry", async () => {
   mocks.save.mockRejectedValueOnce(new Error("offline"));
   vi.spyOn(console, "error").mockImplementationOnce(() => {});
   render(<ProjectOverviewContent project={project} workspaceSlug="workspace" disabled={false} />);
-  fireEvent.click(screen.getByRole("button", { name: "Upload cover" }));
+  fireEvent.click(screen.getByRole("button", { name: "Change logo" }));
   await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "error" })));
-  fireEvent.click(screen.getByRole("button", { name: "Upload cover" }));
+  fireEvent.click(screen.getByRole("button", { name: "Change logo" }));
   await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
 });

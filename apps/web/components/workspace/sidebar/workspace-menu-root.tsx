@@ -24,6 +24,7 @@ import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUser, useUserProfile } from "@/hooks/store/user";
 import { useInstance } from "@/hooks/store/use-instance";
+import { useWorkspaceInvitations } from "@/hooks/use-workspace-invitations";
 // components
 import { WorkspaceLogo } from "../logo";
 import SidebarDropdownItem from "./dropdown-item";
@@ -37,6 +38,8 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
   // store hooks
   const { toggleSidebar, toggleAnySidebarDropdown } = useAppTheme();
   const { config } = useInstance();
+  const { data: invitations } = useWorkspaceInvitations();
+  const invitationCount = invitations?.length ?? 0;
   const { signOut } = useUser();
   const { updateUserProfile } = useUserProfile();
   const { currentWorkspace: activeWorkspace, workspaces } = useWorkspace();
@@ -127,6 +130,16 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
                     classNames="size-6 rounded-md border border-subtle text-12 leading-none"
                   />
                   <h4 className="truncate text-14 font-medium text-primary">{activeWorkspace?.name ?? t("loading")}</h4>
+                  {invitationCount > 0 && (
+                    <span
+                      className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-sm bg-layer-2 px-1 text-caption-sm-medium leading-none text-accent-primary tabular-nums"
+                      aria-label={t("workspace_settings.settings.members.pending_invitation_count", {
+                        count: invitationCount,
+                      })}
+                    >
+                      {invitationCount}
+                    </span>
+                  )}
                 </div>
                 <ChevronDownOutline
                   className={cn("size-4 flex-shrink-0 text-placeholder duration-300", {
@@ -175,7 +188,11 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
             )}
             <MenuItem
               icon={<Icon icon={MailsOutline} />}
-              label={t("workspace_invites")}
+              label={
+                invitationCount > 0
+                  ? t("workspace_settings.settings.members.invitation_menu_count", { count: invitationCount })
+                  : t("workspace_invites")
+              }
               render={<Link href="/invitations" />}
               onClick={handleItemClick}
             />

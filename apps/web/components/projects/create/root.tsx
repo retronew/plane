@@ -15,7 +15,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 // components
-import ProjectCommonAttributes from "@/components/project/create/common-attributes";
+import ProjectCommonAttributes, { ProjectCreateDescription } from "@/components/project/create/common-attributes";
 import ProjectCreateHeader from "@/components/project/create/header";
 import ProjectCreateButtons from "@/components/project/create/project-create-buttons";
 // hooks
@@ -53,7 +53,6 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   // states
   const [templateConfiguration, setTemplateConfiguration] = useState<TemplateConfiguration | null>(null);
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
-  const [isCoverUploading, setIsCoverUploading] = useState(false);
   // form info
   const methods = useForm<TProject>({
     defaultValues: { ...getProjectFormValues(), ...data },
@@ -80,7 +79,6 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
     // Upper case identifier
     formData.identifier = formData.identifier?.toUpperCase();
     const coverImage = formData.cover_image_url;
-    if (isCoverUploading) return;
     Object.assign(formData, getCoverImagePayload(undefined, coverImage));
 
     return createProject(workspaceSlug.toString(), {
@@ -168,17 +166,26 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col p-2">
+      <form
+        onSubmit={handleSubmit(onSubmit, (errors) => {
+          const message = errors.name?.message ?? errors.identifier?.message;
+          setToast({
+            type: "error",
+            title: t("toast.error"),
+            message: message ?? t("something_went_wrong"),
+          });
+        })}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="flex min-h-0 flex-1 flex-col px-2 pt-1">
           <ProjectCreateHeader
             handleClose={handleClose}
-            onCoverUploadingChange={setIsCoverUploading}
             isMobile={isMobile}
             templatePicker={
               <TemplatePicker
                 workspaceSlug={workspaceSlug}
                 kind="project"
-                variant="cover"
+                variant="page"
                 disabled={methods.formState.isSubmitting}
                 onApply={(template) => {
                   const config = template.configuration;
@@ -188,6 +195,8 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
                     setValue("identifier", projectIdentifierSanitizer(name).substring(0, 10), { shouldDirty: true });
                   setValue("priority", template.priority ?? "none", { shouldDirty: true });
                   setValue("description", config.description ?? "", { shouldDirty: true });
+                  setValue("description_html", null, { shouldDirty: true });
+                  setValue("description_text", null, { shouldDirty: true });
                   setValue("network", config.network ?? 2, { shouldDirty: true });
                   setValue("project_lead", config.project_lead ?? null, { shouldDirty: true });
                   for (const field of ["cycle_view", "module_view", "page_view", "issue_views_view"] as const)
@@ -197,8 +206,8 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
               />
             }
           />
-          <div className="min-h-0 overflow-y-auto px-3 pt-8 pb-4">
-            <div className="space-y-5">
+          <div className="min-h-0 overflow-y-auto px-3 pt-2 pb-3">
+            <div className="space-y-3">
               <ProjectCommonAttributes
                 setValue={setValue}
                 isMobile={isMobile}
@@ -213,14 +222,16 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
                   labels={watch("labels")}
                   onStatus={(id) => setValue("status", id)}
                   onLabels={(ids) => setValue("labels", ids)}
-                >
-                  <ProjectAttributes isMobile={isMobile} />
-                </ProjectCategoryFields>
+                  renderFields={({ status, labels }) => (
+                    <ProjectAttributes isMobile={isMobile} status={status} labels={labels} />
+                  )}
+                />
               </div>
+              <ProjectCreateDescription isMobile={isMobile} workspaceSlug={workspaceSlug} />
             </div>
           </div>
         </div>
-        <ProjectCreateButtons handleClose={handleClose} disabled={isCoverUploading} />
+        <ProjectCreateButtons handleClose={handleClose} />
       </form>
     </FormProvider>
   );

@@ -16,9 +16,6 @@ import { CloseOutline } from "@makeplane/propel/icons";
 import type { IProject } from "@plane/types";
 // plane ui
 import { getTabIndex } from "@plane/utils";
-// components
-import { CoverImage } from "@/components/common/cover-image";
-import { CoverImageUploadButton } from "@/components/core/cover-image-upload-button";
 
 type Props = {
   handleClose: () => void;
@@ -28,111 +25,90 @@ type Props = {
   handleTemplateSelect?: () => void;
   showActionButtons?: boolean;
   templatePicker?: ReactNode;
-  onCoverUploadingChange?: (uploading: boolean) => void;
 };
 
 function ProjectCreateHeader(props: Props) {
-  const {
-    handleClose,
-    isMobile = false,
-    handleFormOnChange,
-    isClosable = true,
-    templatePicker,
-    onCoverUploadingChange,
-  } = props;
-  const { watch, control, setValue } = useFormContext<IProject>();
+  const { handleClose, isMobile = false, isClosable = true, templatePicker } = props;
   const { t } = useTranslation();
-  // derived values
-  const coverImage = watch("cover_image_url");
 
-  const [isOpen, setIsOpen] = useState(false);
   const { getIndex } = getTabIndex(ETabIndices.PROJECT_CREATE, isMobile);
 
   return (
-    <div className="group relative h-44 w-full shrink-0 rounded-lg bg-[#262626]">
-      {coverImage && (
-        <CoverImage
-          src={coverImage}
-          alt={t("project_cover_image_alt")}
-          className="absolute top-0 left-0 h-full w-full rounded-lg"
-        />
-      )}
-      {templatePicker && <div className="absolute top-2 left-2">{templatePicker}</div>}
-      {isClosable && (
-        <div className="absolute top-2 right-2 p-2">
-          <button type="button" aria-label={t("close")} onClick={handleClose} tabIndex={getIndex("close")}>
-            <CloseOutline className="h-5 w-5 text-on-color" />
+    <div className="flex w-full shrink-0 items-center justify-between gap-3 px-3 pt-3 pb-2">
+      <h3 className="text-13 font-medium text-primary">{t("create_project")}</h3>
+      <div className="flex items-center gap-2">
+        {templatePicker}
+        {isClosable && (
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={handleClose}
+            tabIndex={getIndex("close")}
+            className="rounded-md p-1 text-secondary outline-none hover:bg-layer-1 hover:text-primary focus-visible:ring-2 focus-visible:ring-accent-strong"
+          >
+            <CloseOutline className="size-5" />
           </button>
-        </div>
-      )}
-      <div className="absolute right-2 bottom-2">
-        <Controller
-          name="cover_image_url"
-          control={control}
-          render={({ field: { onChange } }) => (
-            <CoverImageUploadButton
-              onUploadingChange={onCoverUploadingChange}
-              label={t("change_cover")}
-              onChange={(data) => {
-                onChange(data);
-                handleFormOnChange?.();
-              }}
-              tabIndex={getIndex("cover_image")}
-            />
-          )}
-        />
+        )}
       </div>
-      <div className="absolute -bottom-[22px] left-3">
-        <Controller
-          name="logo_props"
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <EmojiPicker
-              iconType="material"
-              isOpen={isOpen}
-              handleToggle={(val: boolean) => setIsOpen(val)}
-              className="flex items-center justify-center"
-              buttonClassName="flex items-center justify-center"
-              searchPlaceholder={t("common.search.label")}
-              label={
-                <span
-                  style={getIconBackgroundStyle(value)}
-                  className="grid h-11 w-11 place-items-center rounded-md border border-subtle bg-layer-2"
-                >
-                  <ProjectLogo background={false} logo={value} size={20} />
-                </span>
-              }
-              onChange={(val: any) => {
-                let logoValue = {};
+    </div>
+  );
+}
 
-                if (val?.type === "emoji")
-                  logoValue = {
-                    value: val.value,
-                  };
-                else if (val?.type === "icon") logoValue = val.value;
+export function ProjectCreateLogo({ handleFormOnChange }: { handleFormOnChange?: () => void }) {
+  const { control, setValue } = useFormContext<IProject>();
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="shrink-0">
+      <Controller
+        name="logo_props"
+        control={control}
+        render={({ field: { value, onChange } }) => (
+          <EmojiPicker
+            iconType="material"
+            isOpen={isOpen}
+            handleToggle={(val: boolean) => setIsOpen(val)}
+            className="flex items-center justify-center"
+            buttonClassName="flex items-center justify-center"
+            searchPlaceholder={t("common.search.label")}
+            label={
+              <span
+                style={getIconBackgroundStyle(value)}
+                className="grid size-10 place-items-center rounded-lg bg-layer-1"
+              >
+                <ProjectLogo background={false} logo={value} size={20} />
+              </span>
+            }
+            onChange={(val: any) => {
+              let logoValue = {};
 
-                const newLogoProps = {
-                  in_use: val?.type,
-                  [val?.type]: logoValue,
+              if (val?.type === "emoji")
+                logoValue = {
+                  value: val.value,
                 };
-                setValue("logo_props", newLogoProps, {
-                  shouldDirty: true,
-                });
-                onChange(newLogoProps);
-                handleFormOnChange?.();
-                setIsOpen(false);
-              }}
-              defaultIconBackground={value?.icon?.background_color}
-              onIconBackgroundChange={(background) => {
-                if (value?.in_use === "icon")
-                  onChange({ ...value, icon: { ...value.icon, background_color: background } });
-              }}
-              defaultIconColor={value?.in_use && value.in_use === "icon" ? value.icon?.color : undefined}
-              defaultOpen={value?.in_use && value.in_use === "emoji" ? "emoji" : "icon"}
-            />
-          )}
-        />
-      </div>
+              else if (val?.type === "icon") logoValue = val.value;
+
+              const newLogoProps = {
+                in_use: val?.type,
+                [val?.type]: logoValue,
+              };
+              setValue("logo_props", newLogoProps, {
+                shouldDirty: true,
+              });
+              onChange(newLogoProps);
+              handleFormOnChange?.();
+              setIsOpen(false);
+            }}
+            defaultIconBackground={value?.icon?.background_color}
+            onIconBackgroundChange={(background) => {
+              if (value?.in_use === "icon")
+                onChange({ ...value, icon: { ...value.icon, background_color: background } });
+            }}
+            defaultIconColor={value?.in_use && value.in_use === "icon" ? value.icon?.color : undefined}
+            defaultOpen={value?.in_use && value.in_use === "emoji" ? "emoji" : "icon"}
+          />
+        )}
+      />
     </div>
   );
 }
