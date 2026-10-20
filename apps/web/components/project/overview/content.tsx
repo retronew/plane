@@ -10,9 +10,6 @@ import { EmojiPicker, ProjectLogo, getIconBackgroundStyle } from "@plane/blocks/
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
 import type { IProject } from "@plane/types";
-import { getFileURL } from "@plane/utils";
-import { CoverImage } from "@/components/common/cover-image";
-import { CoverImageUploadButton } from "@/components/core/cover-image-upload-button";
 import { useProject } from "@/hooks/store/use-project";
 import { ProjectOverviewDescription } from "./description";
 import { ProjectOverviewProgress } from "./progress";
@@ -51,25 +48,8 @@ export const ProjectOverviewContent = observer(function ProjectOverviewContent({
   };
   return (
     <section className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto" aria-label={t("common.overview")}>
-      <div className="relative h-[118px] w-full">
-        <CoverImage
-          src={project.cover_image_url || project.cover_image}
-          alt={t("web.project_cover_image")}
-          className="size-full"
-        />
-        {!disabled && (
-          <div className="absolute top-4 right-4">
-            <CoverImageUploadButton
-              label={t("change_cover")}
-              projectId={project.id}
-              disabled={saving}
-              onChange={(url) => void save({ cover_image: getFileURL(url) || url, cover_image_url: url })}
-            />
-          </div>
-        )}
-      </div>
-      <div className="relative px-5 pb-10 sm:px-10">
-        <div className="relative -mt-5 mb-7 w-fit">
+      <div className="px-5 py-8 sm:px-10 sm:py-10">
+        <div className="mb-5 flex items-center gap-3">
           <EmojiPicker
             isOpen={iconOpen}
             handleToggle={setIconOpen}
@@ -106,8 +86,8 @@ export const ProjectOverviewContent = observer(function ProjectOverviewContent({
                 });
             }}
           />
+          <h1 className="min-w-0 text-20 font-semibold break-words text-primary">{project.name}</h1>
         </div>
-        <h1 className="mb-5 text-20 font-semibold break-words text-primary">{project.name}</h1>
         <ProjectOverviewDescription
           key={project.id}
           project={project}

@@ -58,7 +58,7 @@ export const CreateProjectModal = observer(function CreateProjectModal(props: Pr
         if (!open) onClose();
       }}
     >
-      <DialogContent size="lg">
+      <DialogContent size="lg" className="max-w-[min(750px,calc(100vw-2rem))]! rounded-[20px]!">
         <ProjectCreationSession key={session.id} {...props} setToFavorite={setToFavorite} />
       </DialogContent>
     </Dialog>

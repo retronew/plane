@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme as useNextTheme } from "next-themes";
 import { Icon } from "@makeplane/propel/components/icon";
 import {
@@ -14,10 +15,15 @@ import {
   MenuGroup,
   MenuItem,
   MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSeparator,
+  MenuSubmenu,
+  MenuSubmenuContent,
+  MenuSubmenuTrigger,
   MenuTrigger,
 } from "@makeplane/propel/components/menu";
-import { WorkspaceAvatar } from "@makeplane/propel/components/workspace-avatar";
+import { Avatar } from "@makeplane/propel/components/avatar";
 import { AccessAndRolesOutline, LogOutOutline, PaletteOutline } from "@makeplane/propel/icons";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
@@ -36,7 +42,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
   const { t } = useTranslation();
   const { currentUser, signOut } = useUser();
   // hooks
-  const { resolvedTheme, setTheme } = useNextTheme();
+  const { theme, setTheme } = useNextTheme();
   // state
   const [csrfToken, setCsrfToken] = useState<string | undefined>(undefined);
   // refs
@@ -44,11 +50,6 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
   // panel would be detached before the browser ran the default action. The sign-out form lives
   // outside the menu and the row submits it explicitly.
   const signOutFormRef = useRef<HTMLFormElement>(null);
-
-  const handleThemeSwitch = () => {
-    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-  };
 
   const handleSignOut = () => signOut();
 
@@ -58,11 +59,16 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
         <MenuLabel>{currentUser?.email}</MenuLabel>
       </MenuGroup>
       <MenuSeparator />
-      <MenuItem
-        icon={<Icon icon={PaletteOutline} />}
-        label={resolvedTheme === "dark" ? t("admin.sidebar.switch_to_light") : t("admin.sidebar.switch_to_dark")}
-        onClick={handleThemeSwitch}
-      />
+      <MenuSubmenu>
+        <MenuSubmenuTrigger icon={<Icon icon={PaletteOutline} />} label={t("admin.sidebar.appearance")} />
+        <MenuSubmenuContent>
+          <MenuRadioGroup value={theme ?? "system"} onValueChange={(value) => setTheme(String(value))}>
+            <MenuRadioItem value="light" icon={<Icon icon={Sun} />} label={t("admin.sidebar.light")} />
+            <MenuRadioItem value="dark" icon={<Icon icon={Moon} />} label={t("admin.sidebar.dark")} />
+            <MenuRadioItem value="system" icon={<Icon icon={Monitor} />} label={t("admin.sidebar.follow_system")} />
+          </MenuRadioGroup>
+        </MenuSubmenuContent>
+      </MenuSubmenu>
       <MenuSeparator />
       <MenuItem
         icon={<Icon icon={LogOutOutline} />}
@@ -130,7 +136,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
                 aria-label={t("admin.sidebar.account_menu")}
                 className="grid flex-shrink-0 place-items-center outline-none"
               >
-                <WorkspaceAvatar
+                <Avatar
                   alt={currentUser.display_name ?? t("admin.sidebar.admin_user")}
                   fallback={currentUser.display_name?.[0]?.toUpperCase()}
                   src={getFileURL(currentUser.avatar_url)}

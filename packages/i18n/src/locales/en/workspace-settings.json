@@ -40,6 +40,9 @@
         "title": "Members",
         "add_member": "Add member",
         "pending_invites": "Pending invites",
+        "invitation_reminder": "{count, plural, one {You have # workspace invitation · View} other {You have # workspace invitations · View}}",
+        "pending_invitation_count": "{count, plural, one {# pending workspace invitation} other {# pending workspace invitations}}",
+        "invitation_menu_count": "Workspace invitations ({count})",
         "invitations_sent_successfully": "Invitations sent successfully",
         "details": {
           "full_name": "Full name",
@@ -55,6 +58,15 @@
           "button": "Send invitations",
           "button_loading": "Sending invitations",
           "placeholder": "name@company.com",
+          "choose_users_description": "Select registered users and choose their roles to invite them to this workspace.",
+          "search_users": "Search by name or email",
+          "selected_count": "{count, plural, one {# user selected} other {# users selected}}",
+          "user_role": "Role for {name}",
+          "loading_users": "Loading users…",
+          "load_users_error": "Could not load users. Please try again.",
+          "retry": "Try again",
+          "no_matching_users": "No matching users found.",
+          "no_available_users": "All available users have already joined or have a pending invitation.",
           "errors": {
             "required": "We need an email address to invite them.",
             "invalid": "Email is invalid"

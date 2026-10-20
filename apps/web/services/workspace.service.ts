@@ -30,6 +30,15 @@ import type {
 // services
 import { APIService } from "@/services/api.service";
 
+export type TWorkspaceInviteCandidate = {
+  id: string;
+  email: string;
+  display_name: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+};
+
 export class WorkspaceService extends APIService {
   constructor() {
     super(API_BASE_URL);
@@ -70,6 +79,14 @@ export class WorkspaceService extends APIService {
   async deleteWorkspace(workspaceSlug: string): Promise<any> {
     return this.delete(`/api/workspaces/${workspaceSlug}/`)
       .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async getInviteCandidates(workspaceSlug: string): Promise<TWorkspaceInviteCandidate[]> {
+    return this.get(`/api/workspaces/${workspaceSlug}/invite-candidates/`)
+      .then((response) => response.data)
       .catch((error) => {
         throw error?.response?.data;
       });

@@ -8,7 +8,8 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 
-import useSWR, { mutate } from "swr";
+import { mutate } from "swr";
+import { useWorkspaceInvitations } from "@/hooks/use-workspace-invitations";
 import { TickCircleOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ROLE } from "@plane/constants";
@@ -49,7 +50,7 @@ function UserInvitationsPage() {
 
   const { fetchWorkspaces } = useWorkspace();
 
-  const { data: invitations } = useSWR("USER_WORKSPACE_INVITATIONS", () => workspaceService.userWorkspaceInvitations());
+  const { data: invitations, mutate: refreshInvitations } = useWorkspaceInvitations();
 
   const invitationsRespondSet = new Set(invitationsRespond);
 
@@ -81,6 +82,7 @@ function UserInvitationsPage() {
     workspaceService
       .joinWorkspaces({ invitations: invitationsRespond })
       .then(() => {
+        void refreshInvitations((current) => current?.filter((invite) => !invitationsRespondSet.has(invite.id)));
         mutate(USER_WORKSPACES_LIST);
         const firstInviteId = invitationsRespond[0];
         const redirectWorkspace = invitations?.find((i) => i.id === firstInviteId)?.workspace;

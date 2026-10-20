@@ -12,10 +12,12 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.utils import timezone
+from django.db.models import Exists, OuterRef, Q
 
 # Third party modules
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 # Module imports
@@ -24,6 +26,7 @@ from plane.app.serializers import (
     WorkSpaceMemberInviteSerializer,
     WorkSpaceMemberInvitePublicSerializer,
     WorkSpaceMemberSerializer,
+    UserAdminLiteSerializer,
 )
 from plane.app.views.base import BaseAPIView
 from plane.bgtasks.workspace_invitation_task import workspace_invitation
@@ -31,6 +34,42 @@ from plane.db.models import User, Workspace, WorkspaceMember, WorkspaceMemberInv
 from plane.utils.cache import invalidate_cache, invalidate_cache_directly
 from plane.utils.host import base_host
 from .. import BaseViewSet
+
+
+class WorkspaceInviteCandidateSerializer(UserAdminLiteSerializer):
+    class Meta(UserAdminLiteSerializer.Meta):
+        fields = ("id", "email", "display_name", "first_name", "last_name", "avatar_url")
+
+
+class WorkspaceInviteCandidatesEndpoint(BaseAPIView):
+    """List registered users eligible for an invitation by a workspace admin."""
+
+    def get(self, request, slug):
+        if not WorkspaceMember.objects.filter(
+            workspace__slug=slug, member=request.user, role=20, is_active=True
+        ).exists():
+            raise PermissionDenied()
+
+        active_members = WorkspaceMember.objects.filter(workspace__slug=slug, member_id=OuterRef("pk"), is_active=True)
+        pending_invites = WorkspaceMemberInvite.objects.filter(
+            workspace__slug=slug, email__iexact=OuterRef("email"), responded_at__isnull=True
+        )
+        users = (
+            User.objects.filter(is_active=True, is_bot=False, email__isnull=False)
+            .exclude(email="")
+            .filter(~Exists(active_members), ~Exists(pending_invites))
+            .select_related("avatar_asset")
+            .order_by("display_name", "email", "id")
+        )
+        search = request.query_params.get("search", "").strip()
+        if search:
+            users = users.filter(
+                Q(email__icontains=search)
+                | Q(display_name__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+            )
+        return Response(WorkspaceInviteCandidateSerializer(users, many=True).data)
 
 
 class WorkspaceInvitationsViewset(BaseViewSet):
@@ -239,7 +278,10 @@ class UserWorkspaceInvitationsViewSet(BaseViewSet):
 
     def get_queryset(self):
         return self.filter_queryset(
-            super().get_queryset().filter(email=self.request.user.email).select_related("workspace")
+            super()
+            .get_queryset()
+            .filter(email__iexact=self.request.user.email, responded_at__isnull=True)
+            .select_related("workspace")
         )
 
     @invalidate_cache(path="/api/workspaces/", user=False)
@@ -247,7 +289,7 @@ class UserWorkspaceInvitationsViewSet(BaseViewSet):
     def create(self, request):
         invitations = request.data.get("invitations", [])
         workspace_invitations = WorkspaceMemberInvite.objects.filter(
-            pk__in=invitations, email=request.user.email
+            pk__in=invitations, email__iexact=request.user.email, responded_at__isnull=True
         ).order_by("-created_at")
 
         # If the user is already a member of workspace and was deactivated then activate the user

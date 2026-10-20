@@ -67,9 +67,8 @@ const WorkspaceMembersSettingsPage = observer(function WorkspaceMembersSettingsP
       });
     } catch (error: unknown) {
       let message = undefined;
-      if (error instanceof Error) {
-        const err = error as Error & { error?: string };
-        message = err.error;
+      if (typeof error === "object" && error !== null && "error" in error && typeof error.error === "string") {
+        message = error.error;
       }
       setToast({
         type: "error",

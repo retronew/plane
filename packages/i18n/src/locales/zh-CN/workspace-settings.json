@@ -40,6 +40,9 @@
         "title": "成员",
         "add_member": "添加成员",
         "pending_invites": "待处理邀请",
+        "invitation_reminder": "{count, plural, one {您有 # 条工作区邀请 · 查看} other {您有 # 条工作区邀请 · 查看}}",
+        "pending_invitation_count": "{count, plural, one {# 条待处理工作区邀请} other {# 条待处理工作区邀请}}",
+        "invitation_menu_count": "工作区邀请（{count}）",
         "invitations_sent_successfully": "邀请已发送",
         "details": {
           "full_name": "姓名",
@@ -55,6 +58,15 @@
           "button": "发送邀请",
           "button_loading": "正在发送邀请",
           "placeholder": "name@company.com",
+          "choose_users_description": "选择已注册的用户并设置角色，邀请他们加入此工作区。",
+          "search_users": "搜索姓名或邮箱",
+          "selected_count": "{count, plural, one {已选择 # 位用户} other {已选择 # 位用户}}",
+          "user_role": "{name}的角色",
+          "loading_users": "正在加载用户…",
+          "load_users_error": "无法加载用户，请重试。",
+          "retry": "重试",
+          "no_matching_users": "未找到匹配的用户。",
+          "no_available_users": "所有可用用户均已加入，或已有待处理的邀请。",
           "errors": {
             "required": "请输入要邀请的邮箱地址。",
             "invalid": "邮箱地址无效"

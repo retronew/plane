@@ -63,6 +63,8 @@ export interface IProject extends IPartialProject {
   default_assignee?: IUser | string | null;
   default_state?: string | null;
   description?: string;
+  description_html?: string | null;
+  description_text?: object | null;
   estimate?: string | null;
   anchor?: string | null;
   is_favorite?: boolean;
