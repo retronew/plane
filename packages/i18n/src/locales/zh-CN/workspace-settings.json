@@ -66,7 +66,9 @@
           "load_users_error": "无法加载用户，请重试。",
           "retry": "重试",
           "no_matching_users": "未找到匹配的用户。",
-          "no_available_users": "所有可用用户均已加入，或已有待处理的邀请。",
+          "no_available_users": "暂无用户。",
+          "already_joined": "已加入",
+          "already_invited": "已邀请",
           "errors": {
             "required": "请输入要邀请的邮箱地址。",
             "invalid": "邮箱地址无效"
