@@ -18,11 +18,11 @@ export function InlineCopyCode({ value, block = false }: Props) {
   return (
     <span
       className={cn(
-        "max-w-full items-center gap-0.5 rounded-md border border-subtle bg-surface-2 py-0.5 pr-0.5 pl-1.5 align-middle",
+        "max-w-full items-center gap-0.5 rounded-md border border-subtle bg-surface-2 pr-0.5 pl-1.5 align-middle leading-none",
         block ? "flex w-full" : "inline-flex"
       )}
     >
-      <code className="font-mono min-w-0 flex-1 text-11 break-all text-primary">{value}</code>
+      <code className="font-mono min-w-0 flex-1 text-11 leading-4 break-all text-primary">{value}</code>
       <button
         type="button"
         className="focus-visible:outline-primary grid size-5 shrink-0 place-items-center rounded text-tertiary transition-colors hover:bg-layer-1 hover:text-primary focus-visible:outline-2"
