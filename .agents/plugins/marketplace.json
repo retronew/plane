@@ -1,0 +1,20 @@
+{
+  "name": "plane-openai",
+  "interface": {
+    "displayName": "Plane Workflow"
+  },
+  "plugins": [
+    {
+      "name": "plane-workflow",
+      "source": {
+        "source": "local",
+        "path": "./plugins/plane-workflow-openai"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

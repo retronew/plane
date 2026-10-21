@@ -27,7 +27,7 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
     def get_api_token(self, request):
         return request.headers.get(self.auth_header_name)
 
-    def validate_api_token(self, token, request=None):
+    def validate_api_token(self, token, request=None, *, workspace_slug=None):
         try:
             api_token = APIToken.objects.get(
                 Q(Q(expired_at__gt=timezone.now()) | Q(expired_at__isnull=True)),
@@ -39,9 +39,12 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
             raise AuthenticationFailed("Given API token is not valid")
 
         if api_token.workspace_id:
-            match = getattr(request, "resolver_match", None) if request is not None else None
-            slug = match.kwargs.get("slug") if match else None
-            if slug != api_token.workspace.slug:
+            # HTTP API requests must use their URL scope; transports such as MCP
+            # can supply a workspace explicitly when no API request exists yet.
+            if request is not None:
+                match = getattr(request, "resolver_match", None)
+                workspace_slug = match.kwargs.get("slug") if match else None
+            if workspace_slug != api_token.workspace.slug:
                 raise PermissionDenied("This API token is restricted to its workspace")
             if not WorkspaceMember.objects.filter(
                 workspace_id=api_token.workspace_id, member_id=api_token.user_id, role=20, is_active=True

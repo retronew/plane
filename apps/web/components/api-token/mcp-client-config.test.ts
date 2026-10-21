@@ -15,35 +15,14 @@ function commandArguments(command: string): string[] {
 }
 
 describe("buildMcpClientConfig", () => {
-  it("builds the HTTP configurations with the same authentication and workspace headers", () => {
-    const config = buildMcpClientConfig(url, token, "engineering");
-    const headers = { Authorization: `Bearer ${token}`, "X-Workspace-Slug": "engineering" };
+  it("builds the HTTP configurations with the same authentication headers", () => {
+    const config = buildMcpClientConfig(url, token);
+    const headers = { Authorization: `Bearer ${token}` };
 
     expect(config.headers).toEqual(headers);
     expect(config.jsonConfig).toBe(JSON.stringify({ mcpServers: { plane: { type: "http", url, headers } } }, null, 4));
     expect(config.vscodeConfig).toEqual({ name: "plane", type: "http", url, headers });
     expect(config.cursorConfig).toEqual({ url, headers });
-    expect(commandArguments(config.claudeCommand)).toEqual([
-      "mcp",
-      "add",
-      "--transport",
-      "http",
-      "plane",
-      url,
-      "--header",
-      `Authorization: Bearer ${token}`,
-      "--header",
-      "X-Workspace-Slug: engineering",
-    ]);
-  });
-
-  it.each([undefined, ""])("omits the workspace header when the workspace slug is %s", (workspaceSlug) => {
-    const config = buildMcpClientConfig(url, token, workspaceSlug);
-
-    expect(config.headers).toEqual({ Authorization: `Bearer ${token}` });
-    expect(JSON.parse(config.jsonConfig).mcpServers.plane.headers).toEqual(config.headers);
-    expect(config.vscodeConfig.headers).toEqual(config.headers);
-    expect(config.cursorConfig.headers).toEqual(config.headers);
     expect(commandArguments(config.claudeCommand)).toEqual([
       "mcp",
       "add",
@@ -59,9 +38,8 @@ describe("buildMcpClientConfig", () => {
   it("preserves quotes, substitutions, separators, whitespace and newlines as literal shell arguments", () => {
     const unsafeUrl = "https://plane.example/mcp?q='\"&value=$(printf injected);`printf injected`\nnext";
     const unsafeToken = "token'\" $HOME $(printf injected) `printf injected`; & | \\ \nnext";
-    const workspace = "工作区'\" $(printf injected);\nnext";
 
-    expect(commandArguments(buildMcpClientConfig(unsafeUrl, unsafeToken, workspace).claudeCommand)).toEqual([
+    expect(commandArguments(buildMcpClientConfig(unsafeUrl, unsafeToken).claudeCommand)).toEqual([
       "mcp",
       "add",
       "--transport",
@@ -70,13 +48,11 @@ describe("buildMcpClientConfig", () => {
       unsafeUrl,
       "--header",
       `Authorization: Bearer ${unsafeToken}`,
-      "--header",
-      `X-Workspace-Slug: ${workspace}`,
     ]);
   });
 
   it("encodes the Cursor installation payload as UTF-8 base64 JSON", () => {
-    const config = buildMcpClientConfig("https://plane.example/mcp?label=中文&other=✓", "令牌🔑+/=", "工作区🚀");
+    const config = buildMcpClientConfig("https://plane.example/mcp?label=中文&other=✓", "令牌🔑+/=");
     const installUrl = new URL(config.cursorInstallUrl);
 
     expect(`${installUrl.protocol}//${installUrl.host}${installUrl.pathname}`).toBe(
@@ -89,11 +65,7 @@ describe("buildMcpClientConfig", () => {
   });
 
   it("encodes the VS Code installation payload as URI-encoded JSON", () => {
-    const config = buildMcpClientConfig(
-      "https://plane.example/mcp?x=1&label=中文#fragment",
-      "令牌'\"&#+/=🔑",
-      "工作区"
-    );
+    const config = buildMcpClientConfig("https://plane.example/mcp?x=1&label=中文#fragment", "令牌'\"&#+/=🔑");
     const prefix = "vscode:mcp/install?";
 
     expect(config.vscodeInstallUrl.startsWith(prefix)).toBe(true);
@@ -102,11 +74,11 @@ describe("buildMcpClientConfig", () => {
   });
 
   it("creates independent configuration values on each call", () => {
-    const first = buildMcpClientConfig(url, "first-token", "first-workspace");
+    const first = buildMcpClientConfig(url, "first-token");
     first.headers.Authorization = "changed";
-    const second = buildMcpClientConfig(url, "second-token", "second-workspace");
+    const second = buildMcpClientConfig(url, "second-token");
 
-    expect(second.headers).toEqual({ Authorization: "Bearer second-token", "X-Workspace-Slug": "second-workspace" });
+    expect(second.headers).toEqual({ Authorization: "Bearer second-token" });
     expect(second.jsonConfig).not.toContain("first-token");
   });
 });

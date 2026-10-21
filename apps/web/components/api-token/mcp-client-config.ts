@@ -15,9 +15,8 @@ function utf8Base64(value: string): string {
 }
 
 /** Build copyable configurations and installation links without browser globals. */
-export function buildMcpClientConfig(url: string, token: string, workspaceSlug?: string) {
+export function buildMcpClientConfig(url: string, token: string) {
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-  if (workspaceSlug) headers["X-Workspace-Slug"] = workspaceSlug;
 
   const claudeCommand = [
     `claude mcp add --transport http plane ${shellQuote(url)}`,

@@ -7,11 +7,13 @@ disable-model-invocation: true
 
 # standup：站会汇总
 
+先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+
 ## 1. 取数据
 
-1. `workitem` 工具 `action="my_summary"`
-2. `workitem` 工具 `action="my_items"`，`filters={"state_group__in":"unstarted,started"}`
-3. `workitem` 工具 `action="my_items"`，`filters={"and":[{"state_group__in":"completed"},{"updated_at__range":"<昨天>,<今天>"}]}`（日期用 YYYY-MM-DD；周一则从上周五算起）
+1. `workitem` 工具 `action="my_summary", workspace_slug="<目标 slug>"`
+2. `workitem` 工具 `action="my_items", workspace_slug="<目标 slug>"`，`filters={"state_group__in":"unstarted,started"}`
+3. `workitem` 工具 `action="my_items", workspace_slug="<目标 slug>"`，`filters={"and":[{"state_group__in":"completed"},{"updated_at__range":"<昨天>,<今天>"}]}`（日期用 YYYY-MM-DD；周一则从上周五算起）
 
 ## 2. 汇总（Markdown）
 
@@ -34,4 +36,4 @@ disable-model-invocation: true
 
 ## 3. 可选：写入 Plane
 
-参数里给了项目标识，或用户要求时，用 `page` 工具 `action="create"`，标题「站会 YYYY-MM-DD <姓名>」，内容为上面的 Markdown。写入前先确认。
+参数里给了项目标识，或用户要求时，用 `page` 工具 `action="create", workspace_slug="<目标 slug>"`，标题「站会 YYYY-MM-DD <姓名>」，内容为上面的 Markdown。写入前先确认。

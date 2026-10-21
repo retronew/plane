@@ -12,16 +12,21 @@ SERVER_INSTRUCTIONS = """\
 周期（cycle，迭代）、模块（module）、页面（page，文档）、视图（view，保存的筛选条件）。
 
 用法要点：
-- 不确定对象在哪时，先用 workspace(action='search')。
+- 先用 workspace(action='list') 查看可访问的工作区；每次工具调用显式传 workspace_slug。
+- 除工作区列表外，缺少 workspace_slug 或无权限都会报错，不会使用默认工作区。
+- 个人 API Key 可跨已加入的工作区；工作区 API Key 仍仅能访问其授权工作区。
+- 不确定对象在哪时，先用 workspace(action='search', workspace_slug='目标工作区 slug')。
 - 状态、标签、负责人可以直接传名称；负责人可以传 me、邮箱或显示名。
 - 正文、评论、页面内容都用 Markdown。
 - 列表结果带 next_cursor 时表示还有下一页，把它作为 cursor 传入即可。
 - 删除、批量归档前先向用户确认。
 
 常见流程：
-- 我今天做什么：先 workitem(action='my_summary')，
-  再 workitem(action='my_items', filters={"state_group__in":"unstarted,started"})。
-- 拆需求：用 workitem(action='create') 建父工作项，再逐个创建子任务（传 parent），或用 add_sub_items 挂载已有工作项。
-- 迭代规划：cycle(action='list') 找到周期，再 cycle(action='add_items')。
-- 写文档：page(action='create', content='Markdown 正文')。
+- 我今天做什么：先 workitem(action='my_summary', workspace_slug='目标工作区 slug')，
+  再 workitem(action='my_items', workspace_slug='目标工作区 slug', filters={"state_group__in":"unstarted,started"})。
+- 拆需求：用 workitem(action='create', workspace_slug='目标工作区 slug') 建父工作项，
+  再逐个创建子任务（传 parent），或用 add_sub_items 挂载已有工作项。
+- 迭代规划：cycle(action='list', workspace_slug='目标工作区 slug') 找到周期，
+  再 cycle(action='add_items', workspace_slug='目标工作区 slug')。
+- 写文档：page(action='create', workspace_slug='目标工作区 slug', content='Markdown 正文')。
 """

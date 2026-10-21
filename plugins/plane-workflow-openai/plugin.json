@@ -1,0 +1,8 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "plane-workflow",
+  "version": "0.1.0",
+  "description": "通过已连接的 Plane MCP 查询待办、拆解需求、规划周期和生成站会汇总。MCP 连接与认证需单独配置。",
+  "repository": "https://github.com/retronew/plane",
+  "keywords": ["plane", "workflow", "productivity"]
+}

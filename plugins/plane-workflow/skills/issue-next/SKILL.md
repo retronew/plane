@@ -5,12 +5,14 @@ description: 我接下来该做什么——列出分配给我、未完成的 Pla
 
 # issue-next：下一个该做的
 
+先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+
 只读。给出一个五秒钟就能做的决定，不做规划（规划用 `issue-plan-cycle`）。
 
 ## 1. 取数据
 
-1. Plane MCP `workitem` 工具：`action="my_summary"`。
-2. `workitem` 工具：`action="my_items"`，`filters={"state_group__in":"unstarted,started"}`，`per_page=50`。
+1. Plane MCP `workitem` 工具：`action="my_summary", workspace_slug="<目标 slug>"`。
+2. `workitem` 工具：`action="my_items", workspace_slug="<目标 slug>"`，`filters={"state_group__in":"unstarted,started"}`，`per_page=50`。
 
 ## 2. 排序
 

@@ -4,8 +4,7 @@
       "type": "http",
       "url": "${user_config.plane_url}/mcp",
       "headers": {
-        "Authorization": "Bearer ${user_config.api_key}",
-        "X-Workspace-Slug": "${user_config.workspace_slug}"
+        "Authorization": "Bearer ${user_config.api_key}"
       }
     }
   }

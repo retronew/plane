@@ -67,3 +67,5 @@ temp/
 build/
 node_modules/
 README.md
+# Portable distribution checks run during the web build and read this guide.
+!plugins/plane-workflow/README.md

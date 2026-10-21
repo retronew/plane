@@ -64,3 +64,25 @@ def test_tool_list_is_compact():
     payload = json.dumps([tool.definition() for tool in TOOLS], ensure_ascii=False)
     # Tool definitions land in every model context; keep them well under ~60 KB
     assert len(payload.encode("utf-8")) < 60_000, len(payload)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("slug", [None, "", "   ", [], {}, True, 42])
+def test_tool_run_rejects_invalid_workspace_before_handler(slug):
+    from types import SimpleNamespace
+    from plane.mcp.tools.base import ToolError
+
+    with pytest.raises(ToolError, match="workspace_slug"):
+        TOOLS_BY_NAME["project"].run(SimpleNamespace(slug="test"), {"action": "list", "workspace_slug": slug})
+
+
+@pytest.mark.unit
+def test_workspace_schema_requires_target_except_discovery():
+    schema = TOOLS_BY_NAME["workspace"].definition()["inputSchema"]
+    assert schema["anyOf"] == [
+        {"properties": {"action": {"const": "list"}}},
+        {"required": ["workspace_slug"]},
+    ]
+    for tool in TOOLS:
+        if tool.name != "workspace":
+            assert "workspace_slug" in tool.definition()["inputSchema"]["required"]

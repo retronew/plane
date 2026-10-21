@@ -24,12 +24,6 @@
       "description": "在 Plane「个人设置 → API 令牌」中创建的个人 Key；只读 Key 只能查询不能修改",
       "sensitive": true,
       "required": true
-    },
-    "workspace_slug": {
-      "type": "string",
-      "title": "工作区 slug",
-      "description": "Plane 网址中工作区那一段，例如 https://plane.example.com/moondrop/ 中的 moondrop；留空则使用你最近访问的工作区",
-      "default": ""
     }
   }
 }

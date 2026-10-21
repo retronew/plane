@@ -6,7 +6,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { observer } from "mobx-react";
-import { Code } from "lucide-react";
+import { ChevronDown, Code } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -14,41 +14,26 @@ import { Collapsible } from "@base-ui/react/collapsible";
 import { ApiTokenCopyButton } from "./copy-feedback";
 import { API_BASE_URL } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { useUser } from "@/hooks/store/user";
-import { useWorkspace } from "@/hooks/store/use-workspace";
 import { buildMcpClientConfig } from "./mcp-client-config";
+import { buildMcpAgentPrompt } from "./mcp-agent-prompt";
+import type { McpClient } from "./mcp-agent-prompt";
 
 import { McpCodePreview } from "./mcp-code-preview";
 const subscribeToOrigin = () => () => {};
 const getOrigin = () => window.location.origin;
 const getServerOrigin = () => "";
-type Client =
-  | "cursor"
-  | "vscode"
-  | "claude"
-  | "json"
-  | "chatgpt"
-  | "desktop"
-  | "windsurf"
-  | "cline"
-  | "roo"
-  | "gemini"
-  | "codex";
+type Client = McpClient;
 type Props = { token?: string };
 
 export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Props) {
   const { t } = useTranslation();
-  const { data: currentUser } = useUser();
-  const { workspaces } = useWorkspace();
   const [personalToken, setPersonalToken] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
   const [showMore, setShowMore] = useState(false);
   const origin = useSyncExternalStore(subscribeToOrigin, getOrigin, getServerOrigin);
   const mcpUrl = `${API_BASE_URL || origin}/mcp`;
-  const workspaceList = Object.values(workspaces);
-  const workspace = workspaceList.find((item) => item.id === currentUser?.last_workspace_id) ?? workspaceList[0];
   const resolvedToken = token || personalToken.trim();
-  const config = buildMcpClientConfig(mcpUrl, resolvedToken || "YOUR_PERSONAL_API_TOKEN", workspace?.slug);
+  const config = buildMcpClientConfig(mcpUrl, resolvedToken || "YOUR_PERSONAL_API_TOKEN");
   const clients: { id: Client; name: string; logo: string; action: string; href?: string; guide?: string }[] = [
     {
       id: "cursor" as const,
@@ -77,28 +62,28 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
       name: "ChatGPT",
       logo: "openai.svg",
       action: t("account_settings.mcp.guide"),
-      guide: "https://platform.openai.com/docs/guides/developer-mode",
+      guide: "https://learn.chatgpt.com/docs/extend/mcp?surface=cli",
     },
     {
       id: "windsurf",
       name: "Windsurf",
       logo: "windsurf.svg",
       action: t("account_settings.mcp.guide"),
-      guide: "https://docs.windsurf.com/windsurf/cascade/mcp",
+      guide: "https://docs.devin.ai/desktop/cascade/mcp",
     },
     {
       id: "cline",
       name: "Cline",
       logo: "cline.svg",
       action: t("account_settings.mcp.guide"),
-      guide: "https://docs.cline.bot/mcp/configuring-mcp-servers",
+      guide: "https://docs.cline.bot/mcp/mcp-overview",
     },
     {
       id: "roo",
       name: "Roo Code",
       logo: "roocode.svg",
       action: t("account_settings.mcp.guide"),
-      guide: "https://docs.roocode.com/features/mcp/using-mcp-in-roo",
+      guide: "https://roocodeinc.github.io/Roo-Code/features/mcp/using-mcp-in-roo/",
     },
     {
       id: "gemini",
@@ -112,7 +97,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
       name: "Codex",
       logo: "codex-color.svg",
       action: t("account_settings.mcp.guide"),
-      guide: "https://developers.openai.com/codex/mcp",
+      guide: "https://developers.openai.com/codex/extend/mcp",
     },
     {
       id: "json" as const,
@@ -121,14 +106,16 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
       action: t("account_settings.mcp.download"),
     },
   ];
+  const openaiConfig = `[mcp_servers.plane]\nurl = ${JSON.stringify(mcpUrl)}\nbearer_token_env_var = "PLANE_API_TOKEN"`;
   const snippets: Partial<Record<Client, string>> = {
+    chatgpt: openaiConfig,
     claude: config.claudeCommand,
     vscode: JSON.stringify({ servers: { plane: { type: "http", ...config.cursorConfig } } }, null, 4),
     windsurf: JSON.stringify({ mcpServers: { plane: { serverUrl: mcpUrl, headers: config.headers } } }, null, 4),
     cline: JSON.stringify({ mcpServers: { plane: { type: "streamableHttp", ...config.cursorConfig } } }, null, 4),
     roo: JSON.stringify({ mcpServers: { plane: { type: "streamable-http", ...config.cursorConfig } } }, null, 4),
     gemini: JSON.stringify({ mcpServers: { plane: { httpUrl: mcpUrl, headers: config.headers } } }, null, 4),
-    codex: `[mcp_servers.plane]\nurl = ${JSON.stringify(mcpUrl)}\nbearer_token_env_var = "PLANE_API_TOKEN"\n\n[mcp_servers.plane.http_headers]\n${workspace ? `"X-Workspace-Slug" = ${JSON.stringify(workspace.slug)}` : ""}`,
+    codex: openaiConfig,
     desktop: JSON.stringify({ url: mcpUrl, headers: config.headers }, null, 4),
   };
   const download = () => {
@@ -160,6 +147,8 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
           <p className="text-11 text-tertiary">{t("account_settings.mcp.token_hint")}</p>
         </div>
       )}
+      <p className="text-11 text-tertiary">{t("account_settings.mcp.workspace_auto_hint")}</p>
+      <p className="text-11 text-tertiary">{t("account_settings.mcp.agent_hint")}</p>
       <div className="divide-y divide-subtle overflow-hidden rounded-lg border border-subtle">
         {(
           [
@@ -207,6 +196,11 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
                     }}
                   />
                 )}
+                <ApiTokenCopyButton
+                  value={buildMcpAgentPrompt(client.id, client.name, mcpUrl)}
+                  label={t("account_settings.mcp.agent_prompt")}
+                  ariaLabel={t("account_settings.mcp.agent_prompt_label", { name: client.name })}
+                />
                 <IconButton
                   variant="ghost"
                   size="sm"
@@ -219,32 +213,37 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
                 <div className="space-y-2 border-t border-subtle px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-11 text-tertiary">
-                      {resolvedToken
-                        ? t("account_settings.mcp.code_description")
-                        : t("account_settings.mcp.template_hint", { token: "YOUR_PERSONAL_API_TOKEN" })}
+                      {client.id === "chatgpt" || client.id === "codex"
+                        ? t("account_settings.mcp.openai_config_hint")
+                        : resolvedToken
+                          ? t("account_settings.mcp.code_description")
+                          : t("account_settings.mcp.template_hint", { token: "YOUR_PERSONAL_API_TOKEN" })}
                     </p>
                   </div>
                   {activeClient === client.id && client.id === "chatgpt" && (
                     <p className="text-13 text-secondary">{t("account_settings.mcp.chatgpt_hint")}</p>
                   )}
-                  {client.id !== "chatgpt" && (
-                    <McpCodePreview value={snippets[client.id] ?? config.jsonConfig} label={client.name} />
-                  )}
+                  <McpCodePreview value={snippets[client.id] ?? config.jsonConfig} label={client.name} />
                 </div>
               </Collapsible.Panel>
             </Collapsible.Root>
           ))}
+        <button
+          type="button"
+          className="focus-visible:outline-primary flex w-full items-center justify-center gap-2 bg-surface-1 px-3 py-2 text-secondary transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:-outline-offset-2"
+          aria-expanded={showMore}
+          onClick={() => {
+            setShowMore(!showMore);
+            setActiveClient(null);
+          }}
+        >
+          {t(showMore ? "account_settings.mcp.fewer_tools" : "account_settings.mcp.more_tools")}
+          <ChevronDown
+            aria-hidden="true"
+            className={`size-4 transition-transform duration-200 motion-reduce:transition-none ${showMore ? "rotate-180" : ""}`}
+          />
+        </button>
       </div>
-      <Button
-        variant="secondary"
-        size="sm"
-        stretch="auto"
-        label={t(showMore ? "account_settings.mcp.fewer_tools" : "account_settings.mcp.more_tools")}
-        onClick={() => {
-          setShowMore(!showMore);
-          setActiveClient(null);
-        }}
-      />
       <p className="text-11 break-all text-tertiary">
         {t("account_settings.mcp.server_url")}:{" "}
         <code className="font-mono rounded bg-surface-2 px-1.5 py-0.5 text-11 text-secondary">{mcpUrl}</code>

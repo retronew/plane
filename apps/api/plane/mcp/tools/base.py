@@ -34,8 +34,9 @@ class ToolError(Exception):
 class Context:
     request: Any
     user: Any
-    slug: str
+    slug: str | None
     gateway: ApiGateway
+    workspace_scope: str | None = None
 
     # -- API ------------------------------------------------------------------
 
@@ -178,11 +179,16 @@ class Tool:
 
     def definition(self) -> dict:
         properties = {
+            "workspace_slug": {
+                "type": "string",
+                "minLength": 1,
+                "description": "本次调用的工作区 slug。除 workspace(action='list') 外必须显式提供。",
+            },
             "action": {
                 "type": "string",
                 "enum": [a.name for a in self.actions],
                 "description": "要执行的操作",
-            }
+            },
         }
         for action in self.actions:
             for name, schema in action.params.items():
@@ -198,7 +204,17 @@ class Tool:
             "inputSchema": {
                 "type": "object",
                 "properties": properties,
-                "required": ["action"],
+                "required": ["action"] if self.name == "workspace" else ["action", "workspace_slug"],
+                **(
+                    {
+                        "anyOf": [
+                            {"properties": {"action": {"const": "list"}}},
+                            {"required": ["workspace_slug"]},
+                        ]
+                    }
+                    if self.name == "workspace"
+                    else {}
+                ),
                 "additionalProperties": False,
             },
             "annotations": {
@@ -212,6 +228,14 @@ class Tool:
 
     def run(self, ctx: Context, arguments: dict):
         arguments = dict(arguments or {})
+        has_workspace = "workspace_slug" in arguments
+        slug = arguments.pop("workspace_slug", None)
+        listing = self.name == "workspace" and arguments.get("action") == "list"
+        if not listing or has_workspace:
+            if not isinstance(slug, str) or not slug.strip():
+                raise ToolError("缺少有效的 workspace_slug：每次操作必须显式指定工作区。")
+            if slug != ctx.slug:
+                raise ToolError("workspace_slug 与本次授权工作区不匹配。")
         action = self.action(arguments.pop("action", None))
         if action is None:
             raise ToolError(f"未知操作。{self.name} 支持：{', '.join(a.name for a in self.actions)}")

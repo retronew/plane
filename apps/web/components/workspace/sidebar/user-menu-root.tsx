@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
-import { Plug, type LucideIcon } from "lucide-react";
+import { Blocks, Plug, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   KeyOutline,
@@ -42,10 +42,19 @@ const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutlin
   security: LockOutline,
   "api-tokens": KeyOutline,
   mcp: Plug,
+  skills: Blocks,
 };
 
 // Same order as the settings sidebar.
-const MENU_TABS: TProfileSettingsTabs[] = ["general", "preferences", "notifications", "security", "api-tokens", "mcp"];
+const MENU_TABS: TProfileSettingsTabs[] = [
+  "general",
+  "preferences",
+  "notifications",
+  "security",
+  "api-tokens",
+  "mcp",
+  "skills",
+];
 
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states

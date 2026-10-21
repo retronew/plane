@@ -19,11 +19,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Third party imports
 from crum import impersonate
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 # Module imports
 from plane.api.middleware.api_authentication import APIKeyAuthentication
-from plane.db.models import Workspace, WorkspaceMember
+from plane.db.models import APIToken, WorkspaceMember
 from plane.mcp.gateway import ApiGateway
 from plane.mcp.protocol import (
     INVALID_REQUEST,
@@ -98,16 +98,22 @@ class MCPEndpoint(View):
             user, token = self.authenticate(request)
         except RpcError as error:
             response = rpc_response(error.body(request_id), status=error.http_status)
-            if error.code == UNAUTHORIZED:
+            if error.http_status == 401:
                 response["WWW-Authenticate"] = 'Bearer realm="plane"'
             return response
 
         def ctx_factory(arguments):
+            listing = params.get("name") == "workspace" and arguments.get("action") == "list"
+            slug = self.workspace_slug(request, user, arguments, required=not listing)
+            scope = APIToken.objects.values_list("workspace__slug", flat=True).get(token=token)
+            if scope and slug and slug != scope:
+                raise ToolError("This API token is restricted to its workspace")
             return Context(
                 request=request,
                 user=user,
-                slug=self.workspace_slug(request, user),
+                slug=slug,
                 gateway=ApiGateway(request, token),
+                workspace_scope=scope,
             )
 
         try:
@@ -182,21 +188,24 @@ class MCPEndpoint(View):
             raise RpcError(UNAUTHORIZED, "Missing API key: send `Authorization: Bearer <key>`", http_status=401)
         try:
             # Scope (read-only keys) is enforced on each underlying API call by its HTTP method
-            user, _ = APIKeyAuthentication().validate_api_token(token)
+            scope = APIToken.objects.filter(token=token).values_list("workspace__slug", flat=True).first()
+            user, _ = APIKeyAuthentication().validate_api_token(token, workspace_slug=scope)
         except AuthenticationFailed:
             raise RpcError(UNAUTHORIZED, "Invalid or expired API key", http_status=401)
+        except PermissionDenied as error:
+            raise RpcError(UNAUTHORIZED, str(error.detail), http_status=403)
         return user, token
 
-    def workspace_slug(self, request, user) -> str:
-        memberships = WorkspaceMember.objects.filter(member=user, is_active=True)
-        slug = request.headers.get("X-Workspace-Slug")
-        if slug:
-            if not memberships.filter(workspace__slug=slug).exists():
-                raise ToolError(f"你不是工作区 {slug} 的成员，请检查 X-Workspace-Slug 请求头。")
-            return slug
-        if user.last_workspace_id and memberships.filter(workspace_id=user.last_workspace_id).exists():
-            return Workspace.objects.get(pk=user.last_workspace_id).slug
-        membership = memberships.select_related("workspace").order_by("created_at").first()
-        if membership is None:
-            raise ToolError("你还没有加入任何工作区。")
-        return membership.workspace.slug
+    def workspace_slug(self, request, user, arguments, *, required=True) -> str | None:
+        slug = arguments.get("workspace_slug")
+        if not required and "workspace_slug" not in arguments:
+            return None
+        if not isinstance(slug, str) or not slug.strip():
+            raise ToolError(
+                "缺少有效的 workspace_slug：每次操作必须显式指定工作区，可用 workspace(action='list') 查看。"
+            )
+        if not WorkspaceMember.objects.filter(
+            member=user, is_active=True, workspace__slug=slug, workspace__deleted_at__isnull=True
+        ).exists():
+            raise ToolError(f"你不是工作区 {slug} 的活跃成员，或该工作区不存在。")
+        return slug

@@ -5,15 +5,17 @@ description: 把一段需求、一个 Plane 页面或一个大工作项拆成父
 
 # issue-breakdown：拆需求
 
+先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+
 ## 1. 输入
 
 需求可能来自：
 
 - 用户直接给的文字
-- Plane 页面：`page` 工具 `action="get"`
-- 已有工作项：`workitem` 工具 `action="get"`（拆成它的子工作项）
+- Plane 页面：`page` 工具 `action="get", workspace_slug="<目标 slug>"`
+- 已有工作项：`workitem` 工具 `action="get", workspace_slug="<目标 slug>"`（拆成它的子工作项）
 
-确定目标项目；不明确就问。用 `project` 工具 `action="labels"` 和 `action="states"` 了解可用的标签和状态。
+确定目标项目；不明确就问。用 `project` 工具 `action="labels", workspace_slug="<目标 slug>"` 和 `action="states", workspace_slug="<目标 slug>"` 了解可用的标签和状态。
 
 ## 2. 拆分方案（先不创建）
 
@@ -28,9 +30,9 @@ description: 把一段需求、一个 Plane 页面或一个大工作项拆成父
 
 确认后：
 
-1. 需要时创建父工作项：`workitem` 工具 `action="create"`，描述里写完整背景与验收标准。
+1. 需要时创建父工作项：`workitem` 工具 `action="create", workspace_slug="<目标 slug>"`，描述里写完整背景与验收标准。
 2. 逐个创建子工作项，传 `parent=<父编号>`。
-3. 如果用户要求，把它们加入周期（`cycle` 工具 `action="add_items"`）或模块。
+3. 如果用户要求，把它们加入周期（`cycle` 工具 `action="add_items", workspace_slug="<目标 slug>"`）或模块。
 
 任何一步失败就停下，报告已创建的部分，不要重试到底。
 

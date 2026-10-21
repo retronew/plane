@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from rest_framework.test import APIClient
 
-from plane.db.models import APIToken, Issue, Label, Page, Project, ProjectMember, State
+from plane.db.models import APIToken, Issue, Label, Page, Project, ProjectMember, State, Workspace, WorkspaceMember
 
 MODERN = "2026-07-28"
 META = {
@@ -41,8 +41,15 @@ def project(db, workspace, create_user):
 def mcp(db, api_token, workspace):
     client = APIClient()
 
-    def call(method, params=None, *, modern=True, headers=None, request_id=1, token=api_token.token):
+    def call(
+        method, params=None, *, modern=True, headers=None, request_id=1, token=api_token.token, explicit_workspace=True
+    ):
         params = dict(params or {})
+        if method == "tools/call" and explicit_workspace:
+            arguments = dict(params.get("arguments") or {})
+            if not (params.get("name") == "workspace" and arguments.get("action") == "list"):
+                arguments.setdefault("workspace_slug", workspace.slug)
+            params["arguments"] = arguments
         extra = {"HTTP_X_WORKSPACE_SLUG": workspace.slug}
         if token:
             extra["HTTP_AUTHORIZATION"] = f"Bearer {token}"
@@ -145,6 +152,71 @@ class TestMCPProtocol:
     def test_rejects_foreign_origin(self, mcp):
         response = mcp("tools/list", headers={"HTTP_ORIGIN": "https://evil.example"})
         assert response.status_code == 403
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestMCPWorkspaceToken:
+    @pytest.fixture
+    def scoped_token(self, workspace, create_user):
+        return APIToken.objects.create(user=create_user, workspace=workspace, label="mcp", token="mcp-scoped")
+
+    def test_matching_workspace_can_initialize_and_read(self, mcp, scoped_token, project):
+        response = mcp("initialize", {"protocolVersion": "2025-06-18"}, modern=False, token=scoped_token.token)
+        assert response.status_code == 200
+        response = mcp("tools/call", {"name": "project", "arguments": {"action": "list"}}, token=scoped_token.token)
+        assert response.json()["result"]["isError"] is False
+
+    def test_write_token_can_write_in_its_workspace(self, mcp, scoped_token, project):
+        response = mcp(
+            "tools/call",
+            {"name": "workitem", "arguments": {"action": "create", "project": "WEB", "name": "Allowed"}},
+            token=scoped_token.token,
+        )
+        assert response.status_code == 200
+        assert response.json()["result"]["isError"] is False
+        assert Issue.objects.filter(project=project, name="Allowed").exists()
+
+    @pytest.mark.parametrize("slug", ["", "another-workspace"])
+    def test_legacy_header_does_not_bind_token(self, mcp, scoped_token, slug):
+        response = mcp("tools/list", token=scoped_token.token, headers={"HTTP_X_WORKSPACE_SLUG": slug})
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("role, active", [(15, True), (20, False)])
+    def test_revoked_administrator_is_forbidden(self, mcp, scoped_token, workspace, create_user, role, active):
+        WorkspaceMember.objects.filter(workspace=workspace, member=create_user).update(role=role, is_active=active)
+        response = mcp("tools/list", token=scoped_token.token)
+        assert response.status_code == 403
+        assert "administrator" in response.json()["error"]["message"]
+
+    def test_foreign_workspace_membership_does_not_expand_scope(self, mcp, scoped_token, create_user):
+        other = Workspace.objects.create(name="Other", slug="other", owner=create_user)
+        WorkspaceMember.objects.create(workspace=other, member=create_user, role=20)
+        response = mcp(
+            "tools/call",
+            {"name": "project", "arguments": {"action": "list", "workspace_slug": other.slug}},
+            token=scoped_token.token,
+        )
+        assert response.json()["result"]["isError"] is True
+        assert "restricted" in response.json()["result"]["content"][0]["text"]
+        response = mcp("tools/call", {"name": "workspace", "arguments": {"action": "list"}}, token=scoped_token.token)
+        data = json.loads(response.json()["result"]["content"][0]["text"])
+        assert other.slug not in [row["slug"] for row in data]
+        assert len(data) == 1
+
+    def test_read_only_scope_is_enforced_by_tool_method(self, mcp, scoped_token, project):
+        scoped_token.scope = APIToken.SCOPE_READ
+        scoped_token.save(update_fields=["scope"])
+        response = mcp("tools/call", {"name": "project", "arguments": {"action": "list"}}, token=scoped_token.token)
+        assert response.json()["result"]["isError"] is False
+        response = mcp(
+            "tools/call",
+            {"name": "workitem", "arguments": {"action": "create", "project": "WEB", "name": "Forbidden"}},
+            token=scoped_token.token,
+        )
+        assert response.json()["result"]["isError"] is True
+        assert "read-only" in response.json()["result"]["content"][0]["text"]
+        assert not Issue.objects.exists()
 
 
 @pytest.mark.contract
@@ -257,3 +329,150 @@ class TestMCPProjectInsights:
         )
         is_error, progress = mcp.tool("cycle", action="progress", project="WEB", cycle="sprint 1")
         assert not is_error and progress["total_issues"] == 0
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestMCPCrossWorkspace:
+    @pytest.fixture
+    def other(self, create_user):
+        workspace = Workspace.objects.create(name="Other", slug="other", owner=create_user)
+        WorkspaceMember.objects.create(workspace=workspace, member=create_user, role=20)
+        project = Project.objects.create(
+            name="Other web", identifier="WEB", workspace=workspace, created_by=create_user
+        )
+        ProjectMember.objects.create(project=project, member=create_user, role=20)
+        State.objects.create(name="Todo", group="unstarted", project=project, workspace=workspace, default=True)
+        return workspace, project
+
+    def test_personal_token_reads_and_writes_both_workspaces(self, mcp, workspace, project, other):
+        for target, expected_project in [(workspace, project), other]:
+            error, projects = mcp.tool("project", action="list", workspace_slug=target.slug)
+            assert not error and [p["id"] for p in projects["results"]] == [str(expected_project.id)]
+            error, item = mcp.tool(
+                "workitem", action="create", workspace_slug=target.slug, project="WEB", name=target.slug
+            )
+            assert not error, item
+            assert Issue.objects.get(pk=item["id"]).workspace_id == target.id
+            error, item = mcp.tool("workitem", action="get", workspace_slug=target.slug, work_item=item["id"])
+            assert not error and item["name"] == target.slug
+
+    @pytest.mark.parametrize("slug", [None, "", "   ", [], {}, True, 12])
+    def test_invalid_explicit_workspace_never_uses_header_or_last(self, mcp, workspace, create_user, slug):
+        from plane.db.models import Profile
+
+        Profile.objects.update_or_create(user=create_user, defaults={"last_workspace_id": workspace.id})
+        response = mcp("tools/call", {"name": "project", "arguments": {"action": "list", "workspace_slug": slug}})
+        assert response.json()["result"]["isError"] is True
+        assert "workspace_slug" in response.json()["result"]["content"][0]["text"]
+
+    def test_missing_workspace_never_uses_header(self, mcp):
+        response = mcp("tools/call", {"name": "project", "arguments": {"action": "list"}}, explicit_workspace=False)
+        assert response.json()["result"]["isError"] is True
+        assert "workspace_slug" in response.json()["result"]["content"][0]["text"]
+
+    @pytest.mark.parametrize("active", [True, False])
+    def test_membership_required_for_target(self, mcp, other, create_user, active):
+        target, project = other
+        memberships = WorkspaceMember.objects.filter(workspace=target, member=create_user)
+        if active:
+            memberships.delete()
+        else:
+            memberships.update(is_active=False)
+        error, message = mcp.tool(
+            "workitem", action="create", workspace_slug=target.slug, project="WEB", name="Forbidden"
+        )
+        assert error and "活跃成员" in message
+        assert not Issue.objects.filter(project=project).exists()
+
+    def test_project_membership_still_required(self, mcp, other, create_user):
+        target, project = other
+        ProjectMember.objects.filter(project=project, member=create_user).update(is_active=False)
+        error, message = mcp.tool(
+            "workitem", action="create", workspace_slug=target.slug, project="WEB", name="Forbidden"
+        )
+        assert error and "项目成员" in message
+        assert not Issue.objects.filter(project=project).exists()
+
+    def test_list_filters_memberships_and_ignores_stale_header(self, mcp, workspace, other, create_user):
+        target, _ = other
+        response = mcp(
+            "tools/call",
+            {"name": "workspace", "arguments": {"action": "list"}},
+            headers={"HTTP_X_WORKSPACE_SLUG": "missing"},
+        )
+        result = response.json()["result"]
+        assert not result["isError"]
+        rows = json.loads(result["content"][0]["text"])
+        assert {row["slug"] for row in rows} == {workspace.slug, target.slug}
+        assert set(rows[0]) == {"id", "name", "slug", "role"}
+        WorkspaceMember.objects.filter(workspace=target, member=create_user).update(is_active=False)
+        error, rows = mcp.tool("workspace", action="list")
+        assert not error and [row["slug"] for row in rows] == [workspace.slug]
+        WorkspaceMember.objects.filter(member=create_user).delete()
+        error, rows = mcp.tool("workspace", action="list")
+        assert not error and rows == []
+
+    def test_explicit_unauthorized_list_target_fails(self, mcp):
+        error, message = mcp.tool("workspace", action="list", workspace_slug="missing")
+        assert error and "活跃成员" in message
+
+    def test_nonmember_workspace_is_not_listed(self, mcp, create_user):
+        Workspace.objects.create(name="Private", slug="private", owner=create_user)
+        error, rows = mcp.tool("workspace", action="list")
+        assert not error and "private" not in [row["slug"] for row in rows]
+
+    def test_scoped_token_without_header_lists_and_requires_target(self, mcp, workspace, create_user):
+        token = APIToken.objects.create(user=create_user, workspace=workspace, label="Scope", token="scope-no-header")
+        response = mcp(
+            "tools/call",
+            {"name": "workspace", "arguments": {"action": "list"}},
+            token=token.token,
+            headers={"HTTP_X_WORKSPACE_SLUG": ""},
+            explicit_workspace=False,
+        )
+        assert response.json()["result"]["isError"] is False
+        rows = json.loads(response.json()["result"]["content"][0]["text"])
+        assert [row["slug"] for row in rows] == [workspace.slug]
+        response = mcp(
+            "tools/call",
+            {"name": "project", "arguments": {"action": "list"}},
+            token=token.token,
+            explicit_workspace=False,
+        )
+        assert response.json()["result"]["isError"] is True
+        assert "workspace_slug" in response.json()["result"]["content"][0]["text"]
+
+    def test_scoped_me_keeps_root_api_scope_boundary(self, mcp, workspace, create_user):
+        token = APIToken.objects.create(user=create_user, workspace=workspace, label="Scope", token="scope-me")
+        response = mcp(
+            "tools/call",
+            {"name": "workspace", "arguments": {"action": "me", "workspace_slug": workspace.slug}},
+            token=token.token,
+        )
+        result = response.json()["result"]
+        assert result["isError"] is True
+        assert "restricted" in result["content"][0]["text"]
+
+    def test_cross_workspace_uuid_cannot_cross_target(self, mcp, workspace, project, other):
+        target, other_project = other
+        error, item = mcp.tool(
+            "workitem", action="create", workspace_slug=target.slug, project="WEB", name="Private item"
+        )
+        assert not error
+        error, message = mcp.tool("workitem", action="get", workspace_slug=workspace.slug, work_item=item["id"])
+        assert error and "找不到工作项" in message
+        error, message = mcp.tool(
+            "workitem", action="list", workspace_slug=workspace.slug, project=str(other_project.id)
+        )
+        assert error and "找不到项目" in message
+
+    def test_deleted_workspace_is_not_discoverable_or_accessible(self, mcp, other):
+        from django.utils import timezone
+
+        target, _ = other
+        Workspace.objects.filter(pk=target.pk).update(deleted_at=timezone.now())
+        error, rows = mcp.tool("workspace", action="list")
+        assert not error and target.slug not in [row["slug"] for row in rows]
+        error, message = mcp.tool("project", action="list", workspace_slug=target.slug)
+        assert error and "活跃成员" in message

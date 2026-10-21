@@ -36,6 +36,23 @@ def _project_path(ctx, args, suffix=""):
 # -- workspace -------------------------------------------------------------------
 
 
+def _list_workspaces(ctx, args):
+    from plane.db.models import WorkspaceMember
+
+    memberships = WorkspaceMember.objects.filter(member=ctx.user, is_active=True, workspace__deleted_at__isnull=True)
+    if ctx.workspace_scope:
+        memberships = memberships.filter(workspace__slug=ctx.workspace_scope)
+    return [
+        {
+            "id": str(member.workspace_id),
+            "slug": member.workspace.slug,
+            "name": member.workspace.name,
+            "role": member.role,
+        }
+        for member in memberships.select_related("workspace").order_by("created_at", "id")
+    ]
+
+
 def _me(ctx, args):
     me = compact(ctx.api_root("GET", "users/me/"))
     me["workspace"] = ctx.slug
@@ -53,8 +70,11 @@ def _search(ctx, args):
 workspace_tool = Tool(
     name="workspace",
     title="工作区",
-    description="当前用户、工作区成员与全局搜索。不确定某个项目、工作项或页面在哪时，先用 search。",
+    description="列出可访问工作区，查看当前用户、指定工作区成员，并在指定工作区内搜索项目、工作项或页面。",
     actions=[
+        Action(
+            "list", "列出当前用户加入的活跃工作区（工作区 token 仅返回其授权工作区）", _list_workspaces, read_only=True
+        ),
         Action("me", "当前登录用户及所在工作区", _me, read_only=True),
         Action(
             "members",

@@ -7,18 +7,20 @@ disable-model-invocation: true
 
 # issue-start：开工
 
+先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+
 参数：`$ARGUMENTS`（工作项编号）。没给编号就先运行 `/plane-workflow:issue-next` 让用户选。
 
 ## 1. 读取
 
-Plane MCP `workitem` 工具 `action="get"`，`work_item="<编号>"`。展示标题、状态、优先级、负责人、描述要点（最多 8 行）。
+Plane MCP `workitem` 工具 `action="get", workspace_slug="<目标 slug>"`，`work_item="<编号>"`。展示标题、状态、优先级、负责人、描述要点（最多 8 行）。
 
 - 状态组已是 `completed` / `cancelled`：提醒用户并确认是否仍要继续。
 - 负责人是别人：提醒「当前负责人是 X」，确认后再改。
 
 ## 2. 更新 Plane
 
-先用 `project` 工具 `action="states"` 找到该项目 `started` 状态组里的第一个状态，然后调用 `workitem` 工具 `action="update"`：
+先用 `project` 工具 `action="states", workspace_slug="<目标 slug>"` 找到该项目 `started` 状态组里的第一个状态，然后调用 `workitem` 工具 `action="update", workspace_slug="<目标 slug>"`：
 
 - `state`：该状态名
 - `assignees`：原负责人加上 `me`（不要移除原负责人，除非用户要求）

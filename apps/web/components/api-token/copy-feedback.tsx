@@ -84,10 +84,12 @@ export function ApiTokenCopyButton({
   value,
   label,
   iconOnly = false,
+  ariaLabel,
 }: {
   value: string;
   label: string;
   iconOnly?: boolean;
+  ariaLabel?: string;
 }) {
   const { copied, copy } = useCopyFeedback();
   if (iconOnly)
@@ -95,7 +97,7 @@ export function ApiTokenCopyButton({
       <IconButton
         variant="ghost"
         size="sm"
-        aria-label={label}
+        aria-label={ariaLabel ?? label}
         onClick={() => void copy(value)}
         icon={<CopyFeedback copied={copied} />}
       />
@@ -106,7 +108,7 @@ export function ApiTokenCopyButton({
       size="sm"
       stretch="auto"
       type="button"
-      aria-label={label}
+      aria-label={ariaLabel ?? label}
       onClick={() => void copy(value)}
     >
       <CopyFeedback copied={copied} label={label} />
