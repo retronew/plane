@@ -14,7 +14,7 @@ def candidate(email="candidate@example.com", **kwargs):
     return User.objects.create(email=email, username=email, **kwargs)
 
 
-def test_candidates_filter_members_invites_and_return_minimal_fields(session_client, workspace, create_user):
+def test_candidates_return_invitation_status_and_minimal_fields(session_client, workspace, create_user):
     eligible = candidate(
         display_name="Candidate", first_name="First", last_name="Last", avatar="https://example.com/a.png"
     )
@@ -22,8 +22,14 @@ def test_candidates_filter_members_invites_and_return_minimal_fields(session_cli
     WorkspaceMember.objects.create(workspace=workspace, member=inactive_member, role=15, is_active=False)
     active_member = candidate("member@example.com")
     WorkspaceMember.objects.create(workspace=workspace, member=active_member, role=15)
-    candidate("inactive@example.com", is_active=False)
-    candidate("bot@example.com", is_bot=True)
+    WorkspaceMemberInvite.objects.create(workspace=workspace, email=active_member.email, token="joined-pending")
+    for email, flags in (("inactive@example.com", {"is_active": False}), ("bot@example.com", {"is_bot": True})):
+        excluded = candidate(email, **flags)
+        WorkspaceMember.objects.create(workspace=workspace, member=excluded, role=15)
+        WorkspaceMemberInvite.objects.create(workspace=workspace, email=excluded.email, token=email)
+    for index, email in enumerate(("", None)):
+        no_email = candidate(f"no-email-{index}@example.com")
+        User.objects.filter(pk=no_email.pk).update(email=email)
     pending = candidate("pending@example.com")
     WorkspaceMemberInvite.objects.create(workspace=workspace, email=pending.email.upper(), token="pending")
     responded = candidate("declined@example.com")
@@ -41,11 +47,18 @@ def test_candidates_filter_members_invites_and_return_minimal_fields(session_cli
     response = session_client.get(url(workspace))
     assert response.status_code == 200
     assert isinstance(response.data, list)
-    assert {str(row["id"]) for row in response.data} == {
-        str(user.id) for user in (eligible, inactive_member, responded, accepted)
+    assert {str(row["id"]): row["invitation_status"] for row in response.data} == {
+        str(create_user.id): "joined",
+        str(active_member.id): "joined",
+        str(pending.id): "invited",
+        str(eligible.id): "available",
+        str(inactive_member.id): "available",
+        str(responded.id): "available",
+        str(accepted.id): "available",
     }
     assert all(
-        set(row) == {"id", "email", "display_name", "first_name", "last_name", "avatar_url"} for row in response.data
+        set(row) == {"id", "email", "display_name", "first_name", "last_name", "avatar_url", "invitation_status"}
+        for row in response.data
     )
     row = next(row for row in response.data if str(row["id"]) == str(eligible.id))
     assert row["avatar_url"] == eligible.avatar
@@ -63,7 +76,7 @@ def test_search_is_case_insensitive_and_trimmed(session_client, workspace, field
     assert response.status_code == 200
     assert [str(row["id"]) for row in response.data] == [str(match.id)]
     assert session_client.get(url(workspace), {"search": "missing"}).data == []
-    assert len(session_client.get(url(workspace), {"search": "  "}).data) == 2
+    assert len(session_client.get(url(workspace), {"search": "  "}).data) == 3
 
 
 @pytest.mark.parametrize("role,active", [(15, True), (10, True), (5, True), (20, False)])
@@ -82,8 +95,8 @@ def test_anonymous_cannot_list(api_client, workspace):
     assert api_client.get(url(workspace)).status_code in (401, 403)
 
 
-def test_empty_candidates(session_client, workspace):
-    assert session_client.get(url(workspace)).data == []
+def test_empty_search_candidates(session_client, workspace):
+    assert session_client.get(url(workspace), {"search": "missing"}).data == []
 
 
 def test_user_invitations_only_list_unanswered_case_insensitive_email(session_client, workspace, create_user):

@@ -1,9 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { filterInviteCandidates, getInviteCandidateName } from "./invite-candidates";
+import type { TWorkspaceInviteCandidate } from "@/services/workspace.service";
 
-const users = [
-  { id: "1", first_name: "吴", last_name: "佐", display_name: "wuzuo", email: "wu@example.com", avatar_url: null },
-  { id: "2", first_name: "", last_name: "", display_name: "Alice", email: "alice@example.com", avatar_url: null },
+const users: TWorkspaceInviteCandidate[] = [
+  {
+    id: "1",
+    first_name: "吴",
+    last_name: "佐",
+    display_name: "wuzuo",
+    email: "wu@example.com",
+    avatar_url: null,
+    invitation_status: "available",
+  },
+  {
+    id: "2",
+    first_name: "",
+    last_name: "",
+    display_name: "Alice",
+    email: "alice@example.com",
+    avatar_url: null,
+    invitation_status: "available",
+  },
 ];
 
 describe("workspace invitation candidates", () => {

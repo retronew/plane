@@ -37,6 +37,7 @@ export type TWorkspaceInviteCandidate = {
   first_name: string;
   last_name: string;
   avatar_url: string | null;
+  invitation_status: "available" | "joined" | "invited";
 };
 
 export class WorkspaceService extends APIService {

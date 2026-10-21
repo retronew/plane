@@ -12,10 +12,10 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.utils import timezone
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Case, CharField, Exists, OuterRef, Q, Value, When
 
 # Third party modules
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -37,12 +37,14 @@ from .. import BaseViewSet
 
 
 class WorkspaceInviteCandidateSerializer(UserAdminLiteSerializer):
+    invitation_status = serializers.CharField(read_only=True)
+
     class Meta(UserAdminLiteSerializer.Meta):
-        fields = ("id", "email", "display_name", "first_name", "last_name", "avatar_url")
+        fields = ("id", "email", "display_name", "first_name", "last_name", "avatar_url", "invitation_status")
 
 
 class WorkspaceInviteCandidatesEndpoint(BaseAPIView):
-    """List registered users eligible for an invitation by a workspace admin."""
+    """List registered users and their invitation status for a workspace admin."""
 
     def get(self, request, slug):
         if not WorkspaceMember.objects.filter(
@@ -57,7 +59,14 @@ class WorkspaceInviteCandidatesEndpoint(BaseAPIView):
         users = (
             User.objects.filter(is_active=True, is_bot=False, email__isnull=False)
             .exclude(email="")
-            .filter(~Exists(active_members), ~Exists(pending_invites))
+            .annotate(
+                invitation_status=Case(
+                    When(Exists(active_members), then=Value("joined")),
+                    When(Exists(pending_invites), then=Value("invited")),
+                    default=Value("available"),
+                    output_field=CharField(),
+                )
+            )
             .select_related("avatar_asset")
             .order_by("display_name", "email", "id")
         )

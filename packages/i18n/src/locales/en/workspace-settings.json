@@ -66,7 +66,9 @@
           "load_users_error": "Could not load users. Please try again.",
           "retry": "Try again",
           "no_matching_users": "No matching users found.",
-          "no_available_users": "All available users have already joined or have a pending invitation.",
+          "no_available_users": "No users found.",
+          "already_joined": "Already joined",
+          "already_invited": "Already invited",
           "errors": {
             "required": "We need an email address to invite them.",
             "invalid": "Email is invalid"

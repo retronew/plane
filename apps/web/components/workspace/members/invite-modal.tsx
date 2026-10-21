@@ -57,7 +57,9 @@ export const SendWorkspaceInvitationModal = observer(function SendWorkspaceInvit
     .filter(([key]) => currentRole !== undefined && Number(key) <= currentRole)
     .map(([key, details]) => ({ key: Number(key), label: t(details.i18n_title) }));
   const visibleCandidates = filterInviteCandidates(candidates ?? [], search);
-  const selectedCandidates = (candidates ?? []).filter((user) => selected[user.id] !== undefined);
+  const selectedCandidates = (candidates ?? []).filter(
+    (user) => user.invitation_status === "available" && selected[user.id] !== undefined
+  );
 
   const handleClose = () => {
     if (isSubmitting) return;
@@ -166,17 +168,28 @@ export const SendWorkspaceInvitationModal = observer(function SendWorkspaceInvit
                 <ul className="divide-y divide-subtle">
                   {visibleCandidates.map((user) => {
                     const name = getInviteCandidateName(user);
-                    const checked = selected[user.id] !== undefined;
+                    const unavailable = user.invitation_status !== "available";
+                    const checked = !unavailable && selected[user.id] !== undefined;
                     return (
-                      <li key={user.id} className={cn("flex items-center gap-3 px-3 py-2.5", checked && "bg-layer-2")}>
+                      <li
+                        key={user.id}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5",
+                          checked && "bg-layer-2",
+                          unavailable && "opacity-50"
+                        )}
+                      >
                         <label
                           htmlFor={`invite-user-${user.id}`}
-                          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
+                          className={cn(
+                            "flex min-w-0 flex-1 items-center gap-3",
+                            unavailable ? "cursor-not-allowed" : "cursor-pointer"
+                          )}
                         >
                           <Checkbox
                             id={`invite-user-${user.id}`}
                             checked={checked}
-                            disabled={isSubmitting}
+                            disabled={unavailable || isSubmitting}
                             aria-label={name}
                             onCheckedChange={() =>
                               setSelected((previous) => {
@@ -198,30 +211,44 @@ export const SendWorkspaceInvitationModal = observer(function SendWorkspaceInvit
                             <span className="block truncate text-body-xs-regular text-secondary">{user.email}</span>
                           </span>
                         </label>
-                        <div className="w-24 shrink-0">
-                          <Select<TRoleOption>
-                            value={
-                              roleOptions.find((role) => role.key === (selected[user.id] ?? EUserPermissions.MEMBER)) ??
-                              null
-                            }
-                            onChange={(value) =>
-                              setSelected((previous) => ({ ...previous, [user.id]: Number(value) as EUserPermissions }))
-                            }
-                            getValues={() => roleOptions}
-                            getOptionValue={(role) => String(role.key)}
-                            getOptionLabel={(role) => role.label}
-                            showSearch={false}
-                            placeholder={t("workspace_settings.settings.members.modal.user_role", { name })}
-                            disabled={!checked || isSubmitting}
-                            contentMinWidth={160}
-                          >
-                            <Select.Trigger<TRoleOption> variant="select-md" className="w-full">
-                              <span className="min-w-0 flex-1 truncate text-left">
-                                <Select.Value />
-                              </span>
-                            </Select.Trigger>
-                          </Select>
-                        </div>
+                        {unavailable ? (
+                          <span className="w-24 shrink-0 text-right text-body-xs-regular text-secondary">
+                            {t(
+                              user.invitation_status === "joined"
+                                ? "workspace_settings.settings.members.modal.already_joined"
+                                : "workspace_settings.settings.members.modal.already_invited"
+                            )}
+                          </span>
+                        ) : (
+                          <div className="w-24 shrink-0">
+                            <Select<TRoleOption>
+                              value={
+                                roleOptions.find(
+                                  (role) => role.key === (selected[user.id] ?? EUserPermissions.MEMBER)
+                                ) ?? null
+                              }
+                              onChange={(value) =>
+                                setSelected((previous) => ({
+                                  ...previous,
+                                  [user.id]: Number(value) as EUserPermissions,
+                                }))
+                              }
+                              getValues={() => roleOptions}
+                              getOptionValue={(role) => String(role.key)}
+                              getOptionLabel={(role) => role.label}
+                              showSearch={false}
+                              placeholder={t("workspace_settings.settings.members.modal.user_role", { name })}
+                              disabled={!checked || isSubmitting}
+                              contentMinWidth={160}
+                            >
+                              <Select.Trigger<TRoleOption> variant="select-md" className="w-full">
+                                <span className="min-w-0 flex-1 truncate text-left">
+                                  <Select.Value />
+                                </span>
+                              </Select.Trigger>
+                            </Select>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
