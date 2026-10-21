@@ -6,36 +6,89 @@ const { writeText } = vi.hoisted(() => ({ writeText: vi.fn().mockResolvedValue(u
 Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
 vi.mock("@plane/i18n", () => ({
   useTranslation: () => ({
-    t: (key: string, params?: { name?: string }) => (params?.name ? `${key}:${params.name}` : key),
+    t: (key: string, params?: { name?: string; value?: string }) => {
+      const param = params?.name ?? params?.value;
+      return param ? `${key}:${param}` : key;
+    },
   }),
 }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn() }));
-vi.mock("@plane/utils", () => ({ cn: (...classes: string[]) => classes.filter(Boolean).join(" ") }));
-vi.mock("./mcp-code-preview", () => ({ McpCodePreview: ({ value }: { value: string }) => <pre>{value}</pre> }));
+vi.mock("@plane/utils", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
 const skillCommand = "npx skills add https://github.com/retronew/plane/tree/preview/plugins/plane-workflow/skills";
+const openSection = (title: "agent_title" | "manual_title") =>
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(`account_settings\\.skills\\.${title}`) }));
+const openClient = (name: string) =>
+  fireEvent.click(screen.getByRole("button", { name: `account_settings.skills.view_steps:${name}` }));
 
 describe("Skill installation", () => {
-  it("offers eight-skill archives for ChatGPT, Codex and generic clients", () => {
+  it("keeps agent and manual setup collapsed by default", () => {
     render(<ApiTokenSkillSetup />);
-    const skillDownloads = screen.getAllByRole("link", { name: "account_settings.skills.download" });
-    expect(skillDownloads).toHaveLength(3);
-    for (const link of skillDownloads) {
-      expect(link.getAttribute("href")).toBe("/skills/plane-workflow.zip");
-    }
+    expect(screen.getByText("account_settings.skills.connection_hint")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /agent_prompt_label/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /view_steps/ })).toBeNull();
+  });
+
+  it("lists an agent prompt for every supported client", async () => {
+    render(<ApiTokenSkillSetup />);
+    openSection("agent_title");
+    await screen.findByRole("button", { name: "account_settings.skills.agent_prompt_label:ChatGPT" });
+    for (const name of ["ChatGPT", "Codex", "Claude Desktop", "Claude Code", "GitHub Copilot CLI"])
+      expect(screen.getByRole("button", { name: `account_settings.skills.agent_prompt_label:${name}` })).toBeTruthy();
+  });
+
+  it("shows manual steps for each plugin client, one client at a time", async () => {
+    render(<ApiTokenSkillSetup />);
+    openSection("manual_title");
+    await screen.findByRole("button", { name: "account_settings.skills.view_steps:ChatGPT" });
+    for (const name of ["ChatGPT", "Codex", "Claude Desktop", "Claude Code", "GitHub Copilot CLI", "VS Code"])
+      expect(screen.getByRole("button", { name: `account_settings.skills.view_steps:${name}` })).toBeTruthy();
+    expect(screen.getAllByText("account_settings.skills.mode_plugin")).toHaveLength(6);
+    expect(screen.getByText("account_settings.skills.mode_skills")).toBeTruthy();
+
+    openClient("ChatGPT");
+    expect(await screen.findByText("account_settings.skills.chatgpt_step_3")).toBeTruthy();
+    expect(screen.getByText("https://github.com/retronew/plane")).toBeTruthy();
+    expect(screen.getByText("preview")).toBeTruthy();
+    expect(screen.getByText("plane-openai")).toBeTruthy();
+    expect(screen.getByText("account_settings.skills.field_branch")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "account_settings.skills.download" }).getAttribute("href")).toBe(
+      "/skills/plane-workflow.zip"
+    );
+
+    openClient("Claude Desktop");
+    expect(await screen.findByText("plane-ai")).toBeTruthy();
+    await waitFor(() => expect(screen.queryByText("account_settings.skills.chatgpt_step_3")).toBeNull());
     expect(screen.getByRole("link", { name: "account_settings.skills.download_plugin" }).getAttribute("href")).toBe(
       "/skills/plane-workflow-claude.zip"
     );
   });
 
-  it("preserves human ChatGPT instructions and shows the shared skill command", () => {
+  it("shows CLI and chat commands for Copilot, VS Code and other clients", async () => {
     render(<ApiTokenSkillSetup />);
-    expect(screen.getByText(skillCommand)).toBeTruthy();
-    for (const client of ["chatgpt", "generic", "desktop"]) {
-      for (const step of [1, 2, 3, 4]) {
-        expect(screen.getByText(`account_settings.skills.${client}_step_${step}`)).toBeTruthy();
-      }
-    }
+    openSection("manual_title");
+    openClient("GitHub Copilot CLI");
+    expect(await screen.findByText("copilot plugin install plane-workflow@plane-ai")).toBeTruthy();
+    openClient("VS Code");
+    expect(await screen.findByText("chat.plugins.enabled")).toBeTruthy();
+    expect(screen.getByText("/plugin install plane-workflow@plane-ai")).toBeTruthy();
+    openClient("account_settings.skills.generic_title");
+    expect(await screen.findByText(skillCommand)).toBeTruthy();
+  });
+
+  it("copies a single value with its compact copy button", async () => {
+    writeText.mockClear();
+    render(<ApiTokenSkillSetup />);
+    openSection("manual_title");
+    openClient("Codex");
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "account_settings.skills.copy_value:codex plugin marketplace add retronew/plane --ref preview",
+      })
+    );
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith("codex plugin marketplace add retronew/plane --ref preview")
+    );
   });
 
   it.each(["chatgpt", "codex"] as const)("uses CLI installation and actual host verification for %s", (client) => {
@@ -65,7 +118,7 @@ describe("Skill installation", () => {
     expect(prompt).not.toContain("/SKILL.md");
   });
 
-  it.each(["claude", "desktop", "chatgpt", "codex", "generic"] as const)(
+  it.each(["claude", "desktop", "chatgpt", "codex", "copilot", "generic"] as const)(
     "separates skills and manual MCP for %s",
     (client) => {
       const prompt = buildSkillAgentPrompt(client, "https://plane.example");
@@ -85,7 +138,8 @@ describe("Skill installation", () => {
 
   it("copies the matching client prompt", async () => {
     render(<ApiTokenSkillSetup />);
-    fireEvent.click(screen.getByRole("button", { name: "account_settings.skills.agent_prompt_label:ChatGPT" }));
+    openSection("agent_title");
+    fireEvent.click(await screen.findByRole("button", { name: "account_settings.skills.agent_prompt_label:ChatGPT" }));
     await waitFor(() =>
       expect(writeText).toHaveBeenCalledWith(buildSkillAgentPrompt("chatgpt", window.location.origin))
     );
@@ -95,6 +149,11 @@ describe("Skill installation", () => {
     expect(buildSkillAgentPrompt("claude", "https://plane.example")).toContain(
       "claude plugin install plane-workflow@plane-ai"
     );
+    const copilot = buildSkillAgentPrompt("copilot", "https://plane.example");
+    expect(copilot).toContain(
+      "copilot plugin marketplace add retronew/plane\ncopilot plugin install plane-workflow@plane-ai"
+    );
+    expect(copilot).not.toContain("claude plugin install");
     const prompt = buildSkillAgentPrompt("desktop", "https://plane.example");
     expect(prompt).toContain("Add from a repository");
     expect(prompt).toContain("https://plane.example/skills/plane-workflow.zip");

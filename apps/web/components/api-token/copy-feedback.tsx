@@ -54,7 +54,15 @@ export function useCopyFeedback() {
   return { copied, copy };
 }
 
-export function CopyFeedback({ copied, label }: { copied: boolean; label?: string }) {
+export function CopyFeedback({
+  copied,
+  label,
+  iconClassName = "size-4",
+}: {
+  copied: boolean;
+  label?: string;
+  iconClassName?: string;
+}) {
   const { t } = useTranslation();
   const copiedLabel = t("common.copied");
   const layer =
@@ -68,9 +76,9 @@ export function CopyFeedback({ copied, label }: { copied: boolean; label?: strin
     );
   return (
     <span className="inline-flex shrink-0 items-center gap-1.5">
-      <span aria-hidden="true" className="grid size-4 place-items-center">
-        <Copy className={cn("size-4", iconLayer(!copied))} />
-        <Check className={cn("size-4", iconLayer(copied))} />
+      <span aria-hidden="true" className={cn("grid place-items-center", iconClassName)}>
+        <Copy className={cn(iconClassName, iconLayer(!copied))} />
+        <Check className={cn(iconClassName, iconLayer(copied))} />
       </span>
       {label && <span>{label}</span>}
       <output className="sr-only" aria-live="polite" aria-atomic="true">
