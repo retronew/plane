@@ -10,7 +10,8 @@ const sourceDir = resolve(here, "../skills");
 
 function createZip(entries) {
   // Stored entries, UTF-8 filenames, fixed DOS date (1980-01-01).
-  // No dependencies, host timestamps, directory entries, or platform attributes.
+  // No dependencies, host timestamps or directory entries. Unix modes are fixed
+  // (755 for .sh, 644 otherwise) so hook scripts stay executable after extraction.
   const files = [];
   const directory = [];
   let offset = 0;
@@ -33,7 +34,7 @@ function createZip(entries) {
     local.writeUInt16LE(name.length, 26);
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50);
-    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE((3 << 8) | 20, 4); // Made by Unix, so external attributes carry the mode.
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0x800, 8);
     central.writeUInt16LE(33, 14);
@@ -41,6 +42,7 @@ function createZip(entries) {
     central.writeUInt32LE(content.length, 20);
     central.writeUInt32LE(content.length, 24);
     central.writeUInt16LE(name.length, 28);
+    central.writeUInt32LE((path.endsWith(".sh") ? 0o100755 : 0o100644) * 0x10000, 38);
     central.writeUInt32LE(offset, 42);
     files.push(local, name, content);
     directory.push(central, name);
@@ -59,6 +61,24 @@ function createZip(entries) {
 // All generated destinations below are owned exclusively by this builder.
 const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
 const manifest = Buffer.from(`${JSON.stringify(codeManifest, null, 2)}\n`);
+// The Agent Plugins manifest is derived from the Claude manifest so metadata cannot drift.
+const { name, version, description, author, homepage, repository, license, keywords } = codeManifest;
+const openaiManifest = {
+  $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  name,
+  version,
+  description,
+  author: { name: author.name, ...(author.email && { email: author.email }), ...(author.url && { url: author.url }) },
+  homepage,
+  repository,
+  license,
+  keywords,
+};
+// Claude-only components shipped in the Claude upload package alongside the skills.
+const claudeExtras = [
+  ...(await collectFiles(resolve(here, "../agents"), "agents/")),
+  ...(await collectFiles(resolve(here, "../hooks"), "hooks/")),
+];
 const entries = await collectFiles(sourceDir);
 const names = entries.filter(([name]) => /^[^/]+\/SKILL\.md$/.test(name)).map(([name]) => name.split("/")[0]);
 if (names.length !== 8) throw new Error("Expected eight canonical skills");
@@ -90,7 +110,7 @@ ${names
     entries
       .find(([path]) => path === `${name}/SKILL.md`)[1]
       .toString()
-      .replace(/^---\n[\s\S]*?\n---\n/, "")
+      .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
       .trim()
   )
   .join("\n\n---\n\n")}\n`);
@@ -98,11 +118,16 @@ for (const dir of [resolve(publicDir, "plane-workflow"), portableDir]) {
   await mkdir(dir, { recursive: true });
   await writeFile(resolve(dir, "SKILL.md"), aggregate);
 }
+await writeFile(
+  resolve(here, "../../plane-workflow-openai/plugin.json"),
+  `${JSON.stringify(openaiManifest, null, 2)}\n`
+);
 await writeFile(resolve(publicDir, "plane-workflow.zip"), createZip(entries));
 await writeFile(
   resolve(publicDir, "plane-workflow-claude.zip"),
   createZip([
     [".claude-plugin/plugin.json", manifest],
+    ...claudeExtras,
     ...entries.map(([name, content]) => [`skills/${name}`, content]),
   ])
 );

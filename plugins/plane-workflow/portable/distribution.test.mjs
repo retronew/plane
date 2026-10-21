@@ -55,8 +55,11 @@ function unzip(data) {
     offset += 30 + length + size;
   }
   const centralStart = offset;
+  const modes = new Map();
   for (const [name, entry] of entries) {
     assert.equal(data.readUInt32LE(offset), 0x02014b50);
+    assert.equal(data.readUInt16LE(offset + 4) >> 8, 3);
+    modes.set(name, data.readUInt32LE(offset + 38) >>> 16);
     const length = data.readUInt16LE(offset + 28);
     assert.equal(data.subarray(offset + 46, offset + 46 + length).toString(), name);
     assert.equal(data.readUInt32LE(offset + 42), entry.offset);
@@ -70,7 +73,9 @@ function unzip(data) {
   assert.equal(data.readUInt32LE(offset + 12), offset - centralStart);
   assert.equal(data.readUInt32LE(offset + 16), centralStart);
   assert.equal(offset + 22, data.length);
-  return new Map([...entries].map(([name, entry]) => [name, entry.content]));
+  const result = new Map([...entries].map(([name, entry]) => [name, entry.content]));
+  result.modes = modes;
+  return result;
 }
 
 test("all eight complete canonical skills are identical across directories and archives", async () => {
@@ -83,7 +88,20 @@ test("all eight complete canonical skills are identical across directories and a
     [...generic.keys()],
     entries.map(([name]) => name)
   );
-  assert.deepEqual([...claude.keys()], [".claude-plugin/plugin.json", ...entries.map(([name]) => `skills/${name}`)]);
+  const extras = [
+    ...(await files(resolve(here, "../agents"), "agents/")),
+    ...(await files(resolve(here, "../hooks"), "hooks/")),
+  ];
+  assert.ok(extras.some(([name]) => name === "hooks/hooks.json"));
+  assert.ok(extras.some(([name]) => name.startsWith("agents/")));
+  assert.deepEqual(
+    [...claude.keys()],
+    [".claude-plugin/plugin.json", ...extras.map(([name]) => name), ...entries.map(([name]) => `skills/${name}`)]
+  );
+  for (const [name, content] of extras) assert.deepEqual(claude.get(name), content);
+  for (const [name, mode] of [...claude.modes, ...generic.modes])
+    assert.equal(mode, name.endsWith(".sh") ? 0o100755 : 0o100644, `${name}: mode`);
+  assert.ok(claude.modes.has("hooks/branch-work-item.sh"));
   assert.deepEqual(await files(resolve(root, "plugins/plane-workflow-openai/skills")), entries);
   const aggregate = await readFile(resolve(publicDir, "plane-workflow/SKILL.md"), "utf8");
   for (const [name, content] of entries) {
@@ -96,17 +114,25 @@ test("all eight complete canonical skills are identical across directories and a
     assert.doesNotMatch(text, /\$ARGUMENTS|plane-workflow:|AskUserQuestion|TodoWrite|\.claude\//);
     for (const phrase of ["workspace_slug", "分页", "明确确认", "失败", "核验"])
       assert.ok(text.includes(phrase), `${name}: ${phrase}`);
-    assert.ok(aggregate.includes(text.replace(/^---\n[\s\S]*?\n---\n/, "").trim()));
+    assert.ok(aggregate.includes(text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim()));
   }
   const standup = (await readFile(resolve(source, "standup/SKILL.md"))).toString();
   assert.match(standup, /completed_at/);
   assert.match(standup, /updated_at.*不能作为完成时间证据/);
   for (const name of ["issue-start", "issue-ship"])
     assert.match((await readFile(resolve(source, name, "SKILL.md"))).toString(), /工具.*可用/);
-  assert.deepEqual(
-    JSON.parse(claude.get(".claude-plugin/plugin.json")),
-    JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json")))
-  );
+  const claudeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json")));
+  assert.deepEqual(JSON.parse(claude.get(".claude-plugin/plugin.json")), claudeManifest);
+  const openaiManifest = JSON.parse(await readFile(resolve(root, "plugins/plane-workflow-openai/plugin.json")));
+  assert.deepEqual(openaiManifest, {
+    $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    ...Object.fromEntries(
+      ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"].map((key) => [
+        key,
+        claudeManifest[key],
+      ])
+    ),
+  });
 });
 
 test("distributions contain no connection configuration or secrets", async () => {
@@ -122,9 +148,10 @@ test("distributions contain no connection configuration or secrets", async () =>
 });
 
 test("rebuilding produces identical complete artifacts", async () => {
-  const before = await files(publicDir);
+  const openaiDir = resolve(root, "plugins/plane-workflow-openai");
+  const before = [await files(publicDir), await files(openaiDir)];
   execFileSync(process.execPath, [resolve(here, "build.mjs")], { cwd: root });
-  assert.deepEqual(await files(publicDir), before);
+  assert.deepEqual([await files(publicDir), await files(openaiDir)], before);
 });
 
 test("nested scripts, references and assets survive traversal while Finder files are ignored", async () => {

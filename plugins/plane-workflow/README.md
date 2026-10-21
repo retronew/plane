@@ -24,9 +24,9 @@ claude plugin marketplace add retronew/plane
 claude plugin install plane-workflow@plane-ai
 ```
 
-目标 Git ref 必须包含本次版本。Claude Desktop 使用当前客户端实际提供的 marketplace 或插件上传入口。普通聊天附件不代表持久安装。上传插件使用 `/skills/plane-workflow-claude.zip`；其根目录包含 `.claude-plugin/plugin.json` 和 `skills/<八项技能>/`，没有外层目录。上传包和 marketplace 业务技能完全一致。
+目标 Git ref 必须包含本次版本。Claude Desktop 使用当前客户端实际提供的 marketplace 或插件上传入口。普通聊天附件不代表持久安装。上传插件使用 `/skills/plane-workflow-claude.zip`；其根目录包含 `.claude-plugin/plugin.json`、`agents/`、`hooks/` 和 `skills/<八项技能>/`，没有外层目录，`.sh` 脚本在包内保留可执行权限。上传包和 marketplace 插件内容完全一致。
 
-Claude marketplace 额外保留 `hooks/` 和 `agents/`，仅供支持这些能力的 Claude 客户端使用；上传包和 OpenAI 插件不包含它们。没有相关能力时不能承诺自动识别分支或运行代理。
+`hooks/` 和 `agents/` 是 Claude 专属组件，仅供支持这些能力的 Claude 客户端使用；OpenAI 插件和通用 ZIP 不包含它们。OpenAI 插件的 `plugin.json` 由 `portable/build.mjs` 从 `.claude-plugin/plugin.json` 生成，请勿手工编辑。没有相关能力时不能承诺自动识别分支或运行代理。
 
 支持插件命令的 Codex CLI 可注册并安装 OpenAI catalog：
 

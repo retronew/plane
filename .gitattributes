@@ -1,1 +1,6 @@
 *.sh text eol=lf
+
+# Skill sources and generated distributions are hashed into reproducible zips,
+# so they must keep LF on every platform (including Windows with autocrlf).
+plugins/** text=auto eol=lf
+apps/web/public/skills/** text=auto eol=lf

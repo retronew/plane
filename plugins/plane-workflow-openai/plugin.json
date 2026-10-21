@@ -2,7 +2,18 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "plane-workflow",
   "version": "0.2.0",
-  "description": "通过已连接的 Plane MCP 查询待办、拆解需求、规划周期和生成站会汇总。MCP 连接与认证需单独配置。",
+  "description": "八项完整 Plane 工作流技能；MCP URL 和令牌由用户独立手动配置。",
+  "author": {
+    "name": "Moondrop",
+    "url": "https://github.com/retronew/plane"
+  },
+  "homepage": "https://github.com/retronew/plane/tree/preview/plugins/plane-workflow",
   "repository": "https://github.com/retronew/plane",
-  "keywords": ["plane", "workflow", "productivity"]
+  "license": "AGPL-3.0-only",
+  "keywords": [
+    "plane",
+    "project-management",
+    "mcp",
+    "workflow"
+  ]
 }
