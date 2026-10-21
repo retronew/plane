@@ -1,15 +1,21 @@
 ---
 name: issue-plan-cycle
 description: 迭代规划——从 Plane 待办中挑选候选工作项，经用户确认后加入当前或指定周期
-argument-hint: <项目标识> [周期名称]
-disable-model-invocation: true
 ---
 
 # issue-plan-cycle：给周期排活
 
-先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+## 执行边界
 
-参数：`$ARGUMENTS`（项目标识，可选周期名称）。没给项目就用 `project` 工具 `action="list", workspace_slug="<目标 slug>"` 让用户选。
+先遵循 Plane 团队规范。没有可用 Plane MCP 时只草拟，不宣称读取或写入成功。调用参数以当前工具 schema 为准。
+
+先调用 `workspace(action="list")` 定位目标；歧义时询问。除该发现调用外，每次读取、分页、写入及核验都显式传 `workspace_slug`，同时携带目标项目和对象标识。跨工作区分别查询、分别分页并标明 slug 与项目来源；不得使用历史默认工作区，不得在无权限时切换工作区重试同名对象。
+
+列表按返回的 cursor、next_page 或 has_more 连续分页，直到结束；如果达到客户端预算、权限受限或某页失败，明确标注仅覆盖已读取范围，不把部分数据当作全量排名、计数或规划依据。不要猜测分页参数。
+
+写入前展示具体目标与变更，获得用户明确确认；已有明确授权仅在原范围内沿用。沉默、空消息或回车不算确认。任何步骤失败立即停止依赖它的后续操作，报告已成功、失败和未执行部分；结果不明时先读取核验，避免重复创建。写后读取核验，只报告已证实的结果。
+
+从用户请求获取项目标识和可选周期名称。没给项目就用 `project` 工具 `action="list", workspace_slug="<目标 slug>"` 让用户选。
 
 ## 1. 确定周期
 

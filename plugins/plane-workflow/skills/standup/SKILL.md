@@ -1,19 +1,25 @@
 ---
 name: standup
 description: 生成站会汇总——昨天做了什么、今天计划、风险与阻塞，来自 Plane 中我的工作项与操作记录；可选写入 Plane 页面
-argument-hint: [写入页面的项目标识]
-disable-model-invocation: true
 ---
 
 # standup：站会汇总
 
-先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+## 执行边界
+
+先遵循 Plane 团队规范。没有可用 Plane MCP 时只草拟，不宣称读取或写入成功。调用参数以当前工具 schema 为准。
+
+先调用 `workspace(action="list")` 定位目标；歧义时询问。除该发现调用外，每次读取、分页、写入及核验都显式传 `workspace_slug`，同时携带目标项目和对象标识。跨工作区分别查询、分别分页并标明 slug 与项目来源；不得使用历史默认工作区，不得在无权限时切换工作区重试同名对象。
+
+列表按返回的 cursor、next_page 或 has_more 连续分页，直到结束；如果达到客户端预算、权限受限或某页失败，明确标注仅覆盖已读取范围，不把部分数据当作全量排名、计数或规划依据。不要猜测分页参数。
+
+写入前展示具体目标与变更，获得用户明确确认；已有明确授权仅在原范围内沿用。沉默、空消息或回车不算确认。任何步骤失败立即停止依赖它的后续操作，报告已成功、失败和未执行部分；结果不明时先读取核验，避免重复创建。写后读取核验，只报告已证实的结果。
 
 ## 1. 取数据
 
 1. `workitem` 工具 `action="my_summary", workspace_slug="<目标 slug>"`
 2. `workitem` 工具 `action="my_items", workspace_slug="<目标 slug>"`，`filters={"state_group__in":"unstarted,started"}`
-3. `workitem` 工具 `action="my_items", workspace_slug="<目标 slug>"`，`filters={"and":[{"state_group__in":"completed"},{"updated_at__range":"<昨天>,<今天>"}]}`（日期用 YYYY-MM-DD；周一则从上周五算起）
+3. 明确用户时区和汇总区间（周一可从上周五算起），读取已完成工作项及必要的活动记录。只有 `completed_at` 或活动记录中的“进入 completed 状态”时间落在区间内，才能列为该时段完成。`updated_at` 只表示更新，不能作为完成时间证据；缺少完成时间证据时列为“近期更新的已完成项，完成时间待确认”，不计入昨天完成。
 
 ## 2. 汇总（Markdown）
 

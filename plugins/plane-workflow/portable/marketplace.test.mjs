@@ -20,7 +20,7 @@ test("marketplace fields and policy match the documented OpenAI catalog format",
   assert.equal(entry.name, "plane-workflow");
   assert.equal(entry.source.source, "local");
   assert.ok(entry.source.path.startsWith("./"));
-  assert.deepEqual(entry.policy, { installation: "AVAILABLE", authentication: "ON_INSTALL" });
+  assert.deepEqual(entry.policy, { installation: "AVAILABLE" });
   assert.equal(entry.category, "Productivity");
 });
 
@@ -51,10 +51,13 @@ test("catalog resolves inside repository root to a self-contained portable plugi
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.ok(Array.isArray(manifest.keywords));
   for (const keyword of manifest.keywords) assert.equal(typeof keyword, "string");
-  assert.deepEqual((await readdir(pluginRoot)).toSorted(), ["plugin.json", "skills"]);
-  assert.deepEqual(await readdir(resolve(pluginRoot, "skills")), ["plane-workflow"]);
-  assert.deepEqual(
-    await readFile(resolve(pluginRoot, "skills/plane-workflow/SKILL.md")),
-    await readFile(resolve(root, "plugins/plane-workflow/portable/plane-workflow/SKILL.md"))
-  );
+  assert.deepEqual((await readdir(pluginRoot)).filter((name) => name !== ".DS_Store").toSorted(), [
+    "plugin.json",
+    "skills",
+  ]);
+  assert.equal((await readdir(resolve(pluginRoot, "skills"))).length, 8);
+  const claude = await json("plugins/plane-workflow/.claude-plugin/plugin.json");
+  const claudeCatalog = await json(".claude-plugin/marketplace.json");
+  assert.equal(manifest.version, claude.version);
+  assert.equal(claudeCatalog.plugins[0].version, claude.version);
 });

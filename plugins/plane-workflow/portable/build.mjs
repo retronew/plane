@@ -1,10 +1,12 @@
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { collectFiles } from "./files.mjs";
+/* eslint-disable no-await-in-loop -- Ordered filesystem traversal and artifact verification are intentionally sequential. */
+import { readFile, mkdir, writeFile, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(here, "../../../apps/web/public/skills");
-const data = await readFile(resolve(here, "plane-workflow/SKILL.md"));
+const sourceDir = resolve(here, "../skills");
 
 function createZip(entries) {
   // Stored entries, UTF-8 filenames, fixed DOS date (1980-01-01).
@@ -54,36 +56,54 @@ function createZip(entries) {
   return Buffer.concat([...files, centralData, end]);
 }
 
-// Deliberate metadata allowlist: never copy the Code plugin's userConfig or MCP configuration.
+// All generated destinations below are owned exclusively by this builder.
 const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
-const manifest = Buffer.from(
-  `${JSON.stringify(
-    {
-      name: codeManifest.name,
-      displayName: codeManifest.displayName,
-      version: codeManifest.version,
-      description: "通过独立配置的 Plane MCP 查询待办、拆解需求、规划周期、汇总站会并遵循团队规范。",
-      author: codeManifest.author,
-      homepage: codeManifest.homepage,
-      repository: codeManifest.repository,
-      license: codeManifest.license,
-      keywords: codeManifest.keywords,
-    },
-    null,
-    2
-  )}\n`
-);
-const openaiSkillDir = resolve(here, "../../plane-workflow-openai/skills/plane-workflow");
-await mkdir(openaiSkillDir, { recursive: true });
-await writeFile(resolve(openaiSkillDir, "SKILL.md"), data);
-await mkdir(resolve(publicDir, "plane-workflow"), { recursive: true });
-await writeFile(resolve(publicDir, "plane-workflow/SKILL.md"), data);
-await writeFile(resolve(publicDir, "plane-workflow.zip"), createZip([["plane-workflow/SKILL.md", data]]));
+const manifest = Buffer.from(`${JSON.stringify(codeManifest, null, 2)}\n`);
+const entries = await collectFiles(sourceDir);
+const names = entries.filter(([name]) => /^[^/]+\/SKILL\.md$/.test(name)).map(([name]) => name.split("/")[0]);
+if (names.length !== 8) throw new Error("Expected eight canonical skills");
+const openaiDir = resolve(here, "../../plane-workflow-openai/skills");
+const portableDir = resolve(here, "plane-workflow");
+for (const dir of [publicDir, openaiDir, portableDir]) {
+  await rm(dir, { recursive: true, force: true });
+  await mkdir(dir, { recursive: true });
+}
+for (const [name, content] of entries) {
+  for (const dir of [publicDir, openaiDir]) {
+    await mkdir(dirname(resolve(dir, name)), { recursive: true });
+    await writeFile(resolve(dir, name), content);
+  }
+}
+const aggregate = Buffer.from(`---
+name: plane-workflow
+description: 完整八项 Plane 工作流的兼容聚合索引，包含连接检查、团队规范、待办、开工、提交、拆需求、周期规划与站会
+---
+
+# Plane Workflow：完整八项技能
+
+本文件由 build.mjs 生成，请勿手工编辑。兼容下载索引；主安装目录是 plugins/plane-workflow/skills。安装不代表 MCP 已配置，需用户手动配置 URL 与令牌。
+
+${names.map((name) => `- ${name}：见下文完整流程`).join("\n")}
+
+${names
+  .map((name) =>
+    entries
+      .find(([path]) => path === `${name}/SKILL.md`)[1]
+      .toString()
+      .replace(/^---\n[\s\S]*?\n---\n/, "")
+      .trim()
+  )
+  .join("\n\n---\n\n")}\n`);
+for (const dir of [resolve(publicDir, "plane-workflow"), portableDir]) {
+  await mkdir(dir, { recursive: true });
+  await writeFile(resolve(dir, "SKILL.md"), aggregate);
+}
+await writeFile(resolve(publicDir, "plane-workflow.zip"), createZip(entries));
 await writeFile(
   resolve(publicDir, "plane-workflow-claude.zip"),
   createZip([
     [".claude-plugin/plugin.json", manifest],
-    ["skills/plane-workflow/SKILL.md", data],
+    ...entries.map(([name, content]) => [`skills/${name}`, content]),
   ])
 );
-console.log("Generated public skill, plane-workflow.zip and plane-workflow-claude.zip");
+console.log("Generated eight skills, compatibility index, and reproducible archives");

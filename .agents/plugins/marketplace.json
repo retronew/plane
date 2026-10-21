@@ -11,8 +11,7 @@
         "path": "./plugins/plane-workflow-openai"
       },
       "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
+        "installation": "AVAILABLE"
       },
       "category": "Productivity"
     }

@@ -1,16 +1,25 @@
 ---
 name: issue-ship
 description: 提交当前工作——从分支名找到 Plane 工作项，推送并创建 PR，在工作项下评论 PR 链接，状态改为评审中
-disable-model-invocation: true
 ---
 
 # issue-ship：提交 PR 并更新 Plane
 
-先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+## 执行边界
+
+先遵循 Plane 团队规范。没有可用 Plane MCP 时只草拟，不宣称读取或写入成功。调用参数以当前工具 schema 为准。
+
+先调用 `workspace(action="list")` 定位目标；歧义时询问。除该发现调用外，每次读取、分页、写入及核验都显式传 `workspace_slug`，同时携带目标项目和对象标识。跨工作区分别查询、分别分页并标明 slug 与项目来源；不得使用历史默认工作区，不得在无权限时切换工作区重试同名对象。
+
+列表按返回的 cursor、next_page 或 has_more 连续分页，直到结束；如果达到客户端预算、权限受限或某页失败，明确标注仅覆盖已读取范围，不把部分数据当作全量排名、计数或规划依据。不要猜测分页参数。
+
+写入前展示具体目标与变更，获得用户明确确认；已有明确授权仅在原范围内沿用。沉默、空消息或回车不算确认。任何步骤失败立即停止依赖它的后续操作，报告已成功、失败和未执行部分；结果不明时先读取核验，避免重复创建。写后读取核验，只报告已证实的结果。
 
 ## 1. 找到工作项
 
-从 `git branch --show-current` 中匹配 `[A-Z0-9]+-[0-9]+`（如 `fix/WEB-12-safari-login` → `WEB-12`）。匹配不到就问用户编号。用 Plane MCP `workitem` 工具 `action="get", workspace_slug="<目标 slug>"` 读取。
+先检查 shell/Git、远程推送和 PR 工具是否可用以及授权范围。缺少工具时仅提供待执行步骤；没有真实 PR URL 时停止，不能写“已提交 PR”评论或更新为评审中。
+
+从 `git branch --show-current` 中以忽略大小写方式匹配 `[A-Z0-9]+-[0-9]+`，再将编号转为大写（如 `fix/WEB-12-safari-login` → `WEB-12`）。匹配不到就问用户编号。用 Plane MCP `workitem` 工具 `action="get", workspace_slug="<目标 slug>"` 读取。
 
 ## 2. 检查
 
@@ -19,8 +28,8 @@ disable-model-invocation: true
 
 ## 3. 推送并创建 PR
 
-1. `git push -u origin HEAD`
-2. 如果项目里有 `create-pull-request` 技能就用它；否则用 `gh pr create`。PR 标题以 `[WEB-12]` 开头，正文第一行写 Plane 工作项链接或编号。
+1. 明确确认目标分支、远程和推送/创建 PR 的范围，重新检查当前分支后执行 `git push -u origin HEAD`；失败立即停止。
+2. 使用当前客户端可用的 PR 创建工具；有 shell 且已安装并认证 gh 时可用 `gh pr create`。先检查是否已有该分支的 PR，避免重复。PR 标题以 `[WEB-12]` 开头，正文第一行写 Plane 工作项链接或编号。
 3. 记下 PR 地址。
 
 ## 4. 更新 Plane

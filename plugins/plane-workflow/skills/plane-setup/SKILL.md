@@ -1,30 +1,30 @@
 ---
 name: plane-setup
-description: 配置并检查 Plane 连接——引导创建个人 API Key、填写插件配置，并调用 Plane MCP 自检。用户第一次使用、或 Plane 工具报“API Key 无效/未连接”时使用
-disable-model-invocation: true
+description: 检查 Plane MCP 连接，指导用户在当前客户端独立手动填写 MCP URL 与 API 令牌，并核验身份和目标工作区
 ---
 
 # plane-setup：连接 Plane
 
-## 1. 自检
+## 执行边界
 
-先调用 Plane MCP 的 `workspace(action="list")` 列出当前令牌可访问的工作区，按用户的名称、slug 或链接自动定位；歧义时询问。确定后调用 `workspace(action="me", workspace_slug="<目标 slug>")`。
+先遵循 Plane 团队规范。没有可用 Plane MCP 时只草拟，不宣称读取或写入成功。调用参数以当前工具 schema 为准。
 
-- 成功：报告「已连接：<display_name>（<email>），工作区 <workspace>」，再调用 `project` 工具 `action="list", workspace_slug="<目标 slug>"`，列出可用项目的标识和名称（最多 10 个）。结束。
-- 没有 Plane 工具，或返回 401 / “API Key 无效或已过期”：进入第 2 步。
-- 返回 403 或“你不是工作区 X 的成员”：报告该目标的权限限制并停止，不切到其他工作区重试同名对象；需要更正配置时进入第 2 步。
+先调用 `workspace(action="list")` 定位目标；歧义时询问。除该发现调用外，每次读取、分页、写入及核验都显式传 `workspace_slug`，同时携带目标项目和对象标识。跨工作区分别查询、分别分页并标明 slug 与项目来源；不得使用历史默认工作区，不得在无权限时切换工作区重试同名对象。
 
-`workspace(action="list")` 无需 slug；其他工作区操作必须显式提供 `workspace_slug`。缺失时先 list 定位，仍不明确则询问，不使用请求头或历史默认值。个人 token 可跨有权限的工作区，workspace-scoped token 不得超出绑定工作区；每次调用仍校验成员与项目权限。
+列表按返回的 cursor、next_page 或 has_more 连续分页，直到结束；如果达到客户端预算、权限受限或某页失败，明确标注仅覆盖已读取范围，不把部分数据当作全量排名、计数或规划依据。不要猜测分页参数。
 
-## 2. 引导配置
+写入前展示具体目标与变更，获得用户明确确认；已有明确授权仅在原范围内沿用。沉默、空消息或回车不算确认。任何步骤失败立即停止依赖它的后续操作，报告已成功、失败和未执行部分；结果不明时先读取核验，避免重复创建。写后读取核验，只报告已证实的结果。
 
-按顺序告诉用户（每次只给需要的那一步）：
+## 1. 检查连接
 
-1. **创建 Key**：打开 Plane →「个人设置 → API 令牌」→ 创建令牌。只想让 AI 查询时，打开“只读”。创建后的弹窗里可以一键复制 MCP 配置，但用本插件只需要复制 Key 本身。
-2. **填写插件配置**：运行 `/plugin`，找到 plane-workflow → 配置，填写：
-   - Plane 地址：如 `https://plane.example.com`（不带 `/mcp`）
-   - API Key：上一步复制的 Key（会存入系统钥匙串，不会写进配置文件）
+调用 `workspace(action="list")`，确定目标后调用 `workspace(action="me", workspace_slug="<目标 slug>")` 核验身份，再分页查询 `project(action="list", workspace_slug="<目标 slug>")`。展示身份、工作区 slug 和最多十个项目，并说明是否只展示部分。
 
-3. 改完配置后运行 `/mcp` 重新连接 plane，再运行一次 `/plane-workflow:plane-setup` 自检。
+没有 Plane 工具或返回 401 时指导下面的手动配置；403 表示权限不足，停止该目标操作，不切区回退。只读令牌可查询，不能执行写入。
 
-不要让用户把 Key 粘贴到对话里；如果用户已经粘贴，提醒他稍后在 Plane 里删除这个 Key 并重新创建一个。
+## 2. 用户手动配置
+
+1. 在 Plane「个人设置 → API 令牌」创建令牌，仅查询可选择只读。
+2. 用户在当前客户端的 MCP 设置中手动添加 Streamable HTTP URL：`https://plane.example.com/mcp`，认证请求头为 `Authorization: Bearer <Plane API token>`，或使用该客户端支持的安全环境变量引用。
+3. 由用户保存并重新连接，再执行上述只读自检。客户端没有相应设置或不能发送所需请求头时，报告限制并停止，不能声称已连接。
+
+安装技能或插件不会配置连接。本插件不包含 MCP 配置，不生成 mcp.json，不进行 OAuth；不要把 API token 填入 OAuth 凭据。不要代用户操作 ChatGPT 的安装或连接按钮。不要要求用户将令牌贴进对话、技能或仓库；已暴露的令牌应由用户撤销后重新创建。

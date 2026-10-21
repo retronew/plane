@@ -1,15 +1,21 @@
 ---
 name: issue-start
 description: 开始做一个 Plane 工作项——读取详情、改为进行中、分配给自己，并按团队规范创建 git 分支
-argument-hint: <工作项编号，如 WEB-12>
-disable-model-invocation: true
 ---
 
 # issue-start：开工
 
-先遵循 `plane-workflow:plane-conventions` 的工作区规范：调用 `workspace(action="list")` 定位，歧义询问；后续每次调用显式传 `workspace_slug`，跨区分别查询并标来源，写入前核实目标与授权，无权限拒绝该目标且不切区回退。下文示例中的 `<目标 slug>` 必须替换为已定位的工作区 slug。
+## 执行边界
 
-参数：`$ARGUMENTS`（工作项编号）。没给编号就先运行 `/plane-workflow:issue-next` 让用户选。
+先遵循 Plane 团队规范。没有可用 Plane MCP 时只草拟，不宣称读取或写入成功。调用参数以当前工具 schema 为准。
+
+先调用 `workspace(action="list")` 定位目标；歧义时询问。除该发现调用外，每次读取、分页、写入及核验都显式传 `workspace_slug`，同时携带目标项目和对象标识。跨工作区分别查询、分别分页并标明 slug 与项目来源；不得使用历史默认工作区，不得在无权限时切换工作区重试同名对象。
+
+列表按返回的 cursor、next_page 或 has_more 连续分页，直到结束；如果达到客户端预算、权限受限或某页失败，明确标注仅覆盖已读取范围，不把部分数据当作全量排名、计数或规划依据。不要猜测分页参数。
+
+写入前展示具体目标与变更，获得用户明确确认；已有明确授权仅在原范围内沿用。沉默、空消息或回车不算确认。任何步骤失败立即停止依赖它的后续操作，报告已成功、失败和未执行部分；结果不明时先读取核验，避免重复创建。写后读取核验，只报告已证实的结果。
+
+从用户请求获取工作项编号；没有编号时按“下一个该做的”流程展示待办，让用户明确选择。
 
 ## 1. 读取
 
@@ -27,7 +33,9 @@ Plane MCP `workitem` 工具 `action="get", workspace_slug="<目标 slug>"`，`wo
 
 ## 3. 创建分支
 
-1. `git status --porcelain` 有未提交改动时，先问用户是暂存（stash）还是继续。
+仅在 shell/Git 工具可用、仓库已确认且用户授权建分支时执行；工具不可用就报告 Plane 更新结果和待用户执行的分支命令，不能宣称已建分支。
+
+1. 检查当前分支和 `git status --porcelain`；有未提交改动时报告并等待用户明确决定如何处理，不自动 stash、丢弃或覆盖。
 2. 分支名：`<type>/<编号>-<描述>`。type 按工作项内容判断（缺陷 fix，新功能 feat，其他 chore），描述取标题的英文概括，小写，用连字符，不超过 40 个字符。
 3. `git switch -c <分支名>`；分支已存在就 `git switch <分支名>`。
 

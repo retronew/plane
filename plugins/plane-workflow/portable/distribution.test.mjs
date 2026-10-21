@@ -1,14 +1,28 @@
+import { collectFiles } from "./files.mjs";
+import { tmpdir } from "node:os";
+/* eslint-disable no-await-in-loop -- Ordered filesystem traversal and artifact verification are intentionally sequential. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const source = await readFile(resolve(here, "plane-workflow/SKILL.md"));
-const published = await readFile(resolve(here, "../../../apps/web/public/skills/plane-workflow/SKILL.md"));
-const zip = await readFile(resolve(here, "../../../apps/web/public/skills/plane-workflow.zip"));
-
+const root = resolve(here, "../../..");
+const source = resolve(here, "../skills");
+const publicDir = resolve(root, "apps/web/public/skills");
+async function files(dir, prefix = "") {
+  const result = [];
+  for (const item of (await readdir(dir, { withFileTypes: true })).toSorted((a, b) =>
+    a.name.localeCompare(b.name, "en")
+  )) {
+    if (item.name === ".DS_Store") continue;
+    if (item.isDirectory()) result.push(...(await files(resolve(dir, item.name), `${prefix}${item.name}/`)));
+    else result.push([prefix + item.name, await readFile(resolve(dir, item.name))]);
+  }
+  return result;
+}
 function crc32(data) {
   // Independent table-based CRC check for the ZIP payload.
   const table = Array.from({ length: 256 }, (_, n) => {
@@ -20,250 +34,121 @@ function crc32(data) {
   return (value ^ 0xffffffff) >>> 0;
 }
 
-test("public copy matches the canonical portable skill byte for byte", () => {
-  assert.deepEqual(published, source);
-});
-
-test("single skill metadata and portable instructions have no client-specific dependencies", () => {
-  const text = source.toString("utf8");
-  const frontmatter = text.match(/^---\n([\s\S]*?)\n---\n/);
-  assert.ok(frontmatter);
-  const lines = frontmatter[1].split("\n");
-  assert.equal(lines.length, 2);
-  assert.equal(lines[0], "name: plane-workflow");
-  assert.match(lines[1], /^description: .{20,}$/u);
-  assert.doesNotMatch(
-    text,
-    /claude|anthropic|user_config|\$ARGUMENTS|disable-model-invocation|allowed-tools|argument-hint|\b(?:hooks?|subagents?|Task|AskUserQuestion|TodoWrite)\b|子代理|子智能体|slash|\/plane-workflow:|\/plugin|`\/mcp`|\.claude\//i
-  );
-  for (const workflow of ["setup", "conventions", "issue-next", "breakdown", "plan-cycle", "standup"]) {
-    assert.ok(text.includes(`（${workflow}）`));
-  }
-  assert.match(text, /必须先.*连接 Plane MCP/);
-  assert.doesNotMatch(text, /(?:目前|当前) Plane Bearer token 与 ChatGPT 的 OAuth 连接流程不兼容/);
-  assert.match(text, /等待用户确认/);
-  assert.match(text, /ChatGPT 没有 shell\/Git 工具/);
-  assert.match(text, /Codex.*工具可用且用户授权/);
-  assert.match(text, /整体替换/);
-  assert.match(text, /updated_at.*不证明完成时间/);
-});
-
-test("MCP guidance distinguishes local clients from web authentication limits", async () => {
-  const readme = await readFile(resolve(here, "../README.md"), "utf8");
-  for (const text of [source.toString("utf8"), readme]) {
-    assert.ok(text.includes("https://learn.chatgpt.com/docs/extend/mcp?surface=cli"));
-    assert.match(text, /ChatGPT desktop、Codex CLI 和 IDE.*同一 Codex host.*~\/\.codex\/config\.toml/);
-    assert.ok(text.includes("设置 → 插件 → 右上角添加 → 添加 MCP 服务器"));
-    assert.doesNotMatch(text, /Settings → MCP servers → Add server/);
-    assert.ok(text.includes("Streamable HTTP"));
-    assert.match(text, /保存后点击.*Restart/);
-    assert.ok(text.includes("[mcp_servers.plane]"));
-    assert.ok(text.includes('url = "https://plane.example.com/mcp"'));
-    assert.ok(text.includes('bearer_token_env_var = "PLANE_API_TOKEN"'));
-    assert.doesNotMatch(text, /http_headers\s*=.*X-Workspace-Slug/);
-    assert.ok(text.includes("export PLANE_API_TOKEN='<你的 Plane API token>'"));
-    assert.ok(text.includes("$env:PLANE_API_TOKEN = '<你的 Plane API token>'"));
-    assert.match(text, /图形界面启动.*host.*读取.*变量/);
-    assert.match(text, /ChatGPT 网页版不读取本地/);
-    assert.match(text, /只有具体入口要求 OAuth 且无法发送.*请求头时，该入口才受限/);
-    assert.doesNotMatch(text, /(?:目前|当前) Plane Bearer token 与 ChatGPT 的 OAuth 连接流程不兼容/);
-    assert.doesNotMatch(text, /ChatGPT 的 OAuth 连接流程与该认证方式不兼容/);
-  }
-});
-
-test("Claude connection configuration contains only endpoint and credentials", async () => {
-  const config = JSON.parse(await readFile(resolve(here, "../.mcp.json"), "utf8"));
-  const manifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
-  assert.deepEqual(config.mcpServers.plane.headers, { Authorization: "Bearer ${user_config.api_key}" });
-  assert.deepEqual(Object.keys(manifest.userConfig).toSorted(), ["api_key", "plane_url"]);
-  const skills = await Promise.all(
-    ["issue-next", "issue-start", "issue-ship", "issue-breakdown", "issue-plan-cycle", "standup"].map((name) =>
-      readFile(resolve(here, `../skills/${name}/SKILL.md`), "utf8")
-    )
-  );
-  for (const skill of skills) {
-    assert.ok(skill.includes('workspace(action="list")'));
-    assert.match(skill, /每次调用显式传 `workspace_slug`/);
-    assert.match(skill, /无权限拒绝.*不切区回退/);
-  }
-});
-
-test("workspace guidance discovers targets and keeps explicit scope across calls", async () => {
-  const readme = await readFile(resolve(here, "../README.md"), "utf8");
-  const conventions = await readFile(resolve(here, "../skills/plane-conventions/SKILL.md"), "utf8");
-  const setup = await readFile(resolve(here, "../skills/plane-setup/SKILL.md"), "utf8");
-  for (const text of [source.toString("utf8"), readme, conventions, setup]) {
-    assert.ok(text.includes('workspace(action="list")'));
-    assert.ok(text.includes("workspace_slug"));
-    assert.ok(text.includes("workspace-scoped token"));
-    assert.match(text, /个人 token.*跨/);
-    assert.match(text, /歧义.*询问/);
-    assert.match(text, /每次.*(?:检查|校验)/);
-    assert.match(text, /(?:无权限|权限限制).*(?:拒绝|停止)|拒绝.*无权限/);
-    assert.match(text, /不切.*(?:其他|区)/);
-  }
-  for (const text of [source.toString("utf8"), readme, conventions]) {
-    assert.match(text, /每次.*显式传.*workspace_slug/);
-    assert.match(text, /分别调用/);
-    assert.match(text, /来源/);
-    assert.match(text, /(?:其他工作区操作必须显式|每次工具调用显式)/);
-    assert.match(text, /写入前核实目标/);
-    assert.match(text, /缺失时先 list 定位/);
-  }
-});
-
-test("all concrete resource examples include explicit workspace scope except discovery", async () => {
-  const names = [
-    "issue-next",
-    "issue-start",
-    "issue-ship",
-    "issue-breakdown",
-    "issue-plan-cycle",
-    "standup",
-    "plane-conventions",
-    "plane-setup",
-  ];
-  const texts = [source.toString("utf8"), await readFile(resolve(here, "../README.md"), "utf8")];
-  texts.push(
-    ...(await Promise.all(names.map((name) => readFile(resolve(here, `../skills/${name}/SKILL.md`), "utf8"))))
-  );
-  let examples = 0;
-  for (const text of texts) {
-    for (const match of text.matchAll(
-      /\b(workspace|project|workitem|cycle|module|page|view|notification)\(action="([^"]+)"([^)]*)\)/g
-    )) {
-      examples++;
-      if (match[1] === "workspace" && match[2] === "list") continue;
-      assert.match(match[3], /workspace_slug=/, match[0]);
-    }
-    for (const match of text.matchAll(/`action="[^"]+"[^`]*`/g)) {
-      assert.match(match[0], /workspace_slug=/, match[0]);
-    }
-  }
-  assert.ok(examples > 30);
-});
-
-test("branch hint and manager resolve workspace before reading branch identifiers", async () => {
-  const texts = await Promise.all(
-    ["../hooks/branch-work-item.sh", "../agents/plane-manager.md"].map((path) => readFile(resolve(here, path), "utf8"))
-  );
-  for (const text of texts) {
-    assert.match(text, /workspace\(action=/);
-    assert.match(text, /workspace_slug/);
-    assert.match(text, /歧义.*询问/);
-    assert.match(text, /X-Workspace-Slug/);
-    assert.match(text, /每次调用仍校验成员资格与项目权限/);
-  }
-});
-
-test("Claude plugin ZIP has root manifest and canonical portable skill, without executable components or credentials", async () => {
-  const archive = await readFile(resolve(here, "../../../apps/web/public/skills/plane-workflow-claude.zip"));
-  const end = archive.length - 22;
-  assert.equal(archive.readUInt32LE(end), 0x06054b50);
-  assert.equal(archive.readUInt16LE(end + 4), 0);
-  assert.equal(archive.readUInt16LE(end + 6), 0);
-  assert.equal(archive.readUInt16LE(end + 8), 2);
-  assert.equal(archive.readUInt16LE(end + 10), 2);
-  assert.equal(archive.readUInt16LE(end + 20), 0);
-  const centralStart = archive.readUInt32LE(end + 16);
-  assert.equal(centralStart + archive.readUInt32LE(end + 12), end);
+function unzip(data) {
   const entries = new Map();
-  let central = centralStart;
-  let local = 0;
-  for (let index = 0; index < 2; index++) {
-    assert.equal(archive.readUInt32LE(central), 0x02014b50);
-    assert.equal(archive.readUInt32LE(local), 0x04034b50);
-    assert.equal(archive.readUInt32LE(central + 42), local);
-    assert.equal(archive.readUInt16LE(central + 8), 0x800);
-    assert.equal(archive.readUInt16LE(local + 6), 0x800);
-    assert.equal(archive.readUInt16LE(central + 10), 0);
-    assert.equal(archive.readUInt16LE(local + 8), 0);
-    for (const position of [central + 12, local + 10]) {
-      assert.equal(archive.readUInt16LE(position), 0);
-      assert.equal(archive.readUInt16LE(position + 2), 33);
-    }
-    for (const position of [central + 30, central + 32, central + 34, local + 28]) {
-      assert.equal(archive.readUInt16LE(position), 0);
-    }
-    assert.equal(archive.readUInt32LE(central + 38), 0);
-    const nameLength = archive.readUInt16LE(central + 28);
-    const size = archive.readUInt32LE(central + 24);
-    assert.equal(archive.readUInt16LE(local + 26), nameLength);
-    const name = archive.subarray(central + 46, central + 46 + nameLength);
-    assert.deepEqual(archive.subarray(local + 30, local + 30 + nameLength), name);
-    const payloadStart = local + 30 + nameLength;
-    const payload = archive.subarray(payloadStart, payloadStart + size);
-    for (const position of [central + 20, local + 18, local + 22]) {
-      assert.equal(archive.readUInt32LE(position), size);
-    }
-    assert.equal(archive.readUInt32LE(central + 16), crc32(payload));
-    assert.equal(archive.readUInt32LE(local + 14), crc32(payload));
-    assert.ok(!entries.has(name.toString()));
-    entries.set(name.toString(), payload);
-    local = payloadStart + size;
-    central += 46 + nameLength;
+  let offset = 0;
+  while (data.readUInt32LE(offset) === 0x04034b50) {
+    assert.equal(data.readUInt16LE(offset + 6), 0x800);
+    assert.equal(data.readUInt16LE(offset + 8), 0);
+    assert.equal(data.readUInt16LE(offset + 10), 0);
+    assert.equal(data.readUInt16LE(offset + 12), 33);
+    const size = data.readUInt32LE(offset + 18);
+    assert.equal(data.readUInt32LE(offset + 22), size);
+    const length = data.readUInt16LE(offset + 26);
+    const extra = data.readUInt16LE(offset + 28);
+    assert.equal(extra, 0);
+    const name = data.subarray(offset + 30, offset + 30 + length).toString();
+    assert.ok(!entries.has(name));
+    const content = data.subarray(offset + 30 + length, offset + 30 + length + size);
+    assert.equal(crc32(content), data.readUInt32LE(offset + 14));
+    entries.set(name, { content, offset });
+    offset += 30 + length + size;
   }
-  assert.equal(local, centralStart);
-  assert.equal(central, end);
-  assert.deepEqual([...entries.keys()], [".claude-plugin/plugin.json", "skills/plane-workflow/SKILL.md"]);
-  assert.deepEqual(entries.get("skills/plane-workflow/SKILL.md"), source);
-  const manifest = JSON.parse(entries.get(".claude-plugin/plugin.json").toString("utf8"));
+  const centralStart = offset;
+  for (const [name, entry] of entries) {
+    assert.equal(data.readUInt32LE(offset), 0x02014b50);
+    const length = data.readUInt16LE(offset + 28);
+    assert.equal(data.subarray(offset + 46, offset + 46 + length).toString(), name);
+    assert.equal(data.readUInt32LE(offset + 42), entry.offset);
+    assert.equal(data.readUInt32LE(offset + 16), crc32(entry.content));
+    assert.equal(data.readUInt32LE(offset + 20), entry.content.length);
+    assert.equal(data.readUInt32LE(offset + 24), entry.content.length);
+    offset += 46 + length;
+  }
+  assert.equal(data.readUInt32LE(offset), 0x06054b50);
+  assert.equal(data.readUInt16LE(offset + 10), entries.size);
+  assert.equal(data.readUInt32LE(offset + 12), offset - centralStart);
+  assert.equal(data.readUInt32LE(offset + 16), centralStart);
+  assert.equal(offset + 22, data.length);
+  return new Map([...entries].map(([name, entry]) => [name, entry.content]));
+}
+
+test("all eight complete canonical skills are identical across directories and archives", async () => {
+  const entries = await files(source);
+  const names = entries.filter(([name]) => /^[^/]+\/SKILL\.md$/.test(name));
+  assert.equal(names.length, 8);
+  const generic = unzip(await readFile(resolve(publicDir, "plane-workflow.zip")));
+  const claude = unzip(await readFile(resolve(publicDir, "plane-workflow-claude.zip")));
   assert.deepEqual(
-    Object.keys(manifest).toSorted(),
-    [
-      "name",
-      "displayName",
-      "version",
-      "description",
-      "author",
-      "homepage",
-      "repository",
-      "license",
-      "keywords",
-    ].toSorted()
+    [...generic.keys()],
+    entries.map(([name]) => name)
   );
-  const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
-  for (const key of Object.keys(manifest).filter((field) => field !== "description")) {
-    assert.deepEqual(manifest[key], codeManifest[key]);
+  assert.deepEqual([...claude.keys()], [".claude-plugin/plugin.json", ...entries.map(([name]) => `skills/${name}`)]);
+  assert.deepEqual(await files(resolve(root, "plugins/plane-workflow-openai/skills")), entries);
+  const aggregate = await readFile(resolve(publicDir, "plane-workflow/SKILL.md"), "utf8");
+  for (const [name, content] of entries) {
+    assert.deepEqual(generic.get(name), content);
+    assert.deepEqual(claude.get(`skills/${name}`), content);
+    assert.deepEqual(await readFile(resolve(publicDir, name)), content);
+    if (!name.endsWith("/SKILL.md")) continue;
+    const text = content.toString();
+    assert.match(text, /^---\nname: [a-z-]+\ndescription: .+\n---\n/);
+    assert.doesNotMatch(text, /\$ARGUMENTS|plane-workflow:|AskUserQuestion|TodoWrite|\.claude\//);
+    for (const phrase of ["workspace_slug", "分页", "明确确认", "失败", "核验"])
+      assert.ok(text.includes(phrase), `${name}: ${phrase}`);
+    assert.ok(aggregate.includes(text.replace(/^---\n[\s\S]*?\n---\n/, "").trim()));
   }
-  assert.equal(manifest.name, "plane-workflow");
-  assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
-  assert.match(manifest.description, /独立配置.*Plane MCP/);
-  assert.doesNotMatch(JSON.stringify(manifest), /user_?config|mcpServers|api_key|token|hooks|agents/i);
-  assert.ok(archive.length < 200 * 1024 * 1024);
+  const standup = (await readFile(resolve(source, "standup/SKILL.md"))).toString();
+  assert.match(standup, /completed_at/);
+  assert.match(standup, /updated_at.*不能作为完成时间证据/);
+  for (const name of ["issue-start", "issue-ship"])
+    assert.match((await readFile(resolve(source, name, "SKILL.md"))).toString(), /工具.*可用/);
+  assert.deepEqual(
+    JSON.parse(claude.get(".claude-plugin/plugin.json")),
+    JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json")))
+  );
 });
 
-test("ZIP contains exactly plane-workflow/SKILL.md with matching metadata, bytes and CRC", () => {
-  const end = zip.length - 22;
-  assert.equal(zip.readUInt32LE(end), 0x06054b50);
-  assert.equal(zip.readUInt16LE(end + 4), 0);
-  assert.equal(zip.readUInt16LE(end + 6), 0);
-  assert.equal(zip.readUInt16LE(end + 8), 1);
-  assert.equal(zip.readUInt16LE(end + 10), 1);
-  assert.equal(zip.readUInt16LE(end + 20), 0);
-  const central = zip.readUInt32LE(end + 16);
-  assert.equal(central + zip.readUInt32LE(end + 12), end);
-  assert.equal(zip.readUInt32LE(central), 0x02014b50);
-  assert.equal(zip.readUInt16LE(central + 10), 0); // stored
-  assert.equal(zip.readUInt16LE(central + 8), 0x800); // UTF-8; no encryption
-  assert.equal(zip.readUInt16LE(central + 30), 0); // no extra field
-  assert.equal(zip.readUInt16LE(central + 32), 0); // no comment
-  assert.equal(zip.readUInt16LE(central + 34), 0); // disk number
-  assert.equal(zip.readUInt32LE(central + 42), 0); // local header offset
-  const nameLength = zip.readUInt16LE(central + 28);
-  assert.equal(central + 46 + nameLength, end);
-  const name = zip.subarray(central + 46, end);
-  assert.equal(name.toString(), "plane-workflow/SKILL.md");
-  assert.equal(zip.readUInt32LE(0), 0x04034b50);
-  assert.equal(zip.readUInt16LE(6), 0x800);
-  assert.equal(zip.readUInt16LE(8), 0);
-  assert.equal(zip.readUInt16LE(26), nameLength);
-  assert.equal(zip.readUInt16LE(28), 0);
-  assert.deepEqual(zip.subarray(30, 30 + nameLength), name);
-  const payload = zip.subarray(30 + nameLength, central);
-  assert.deepEqual(payload, source);
-  for (const offset of [18, 22]) assert.equal(zip.readUInt32LE(offset), source.length);
-  for (const offset of [20, 24]) assert.equal(zip.readUInt32LE(central + offset), source.length);
-  assert.equal(zip.readUInt32LE(14), crc32(payload));
-  assert.equal(zip.readUInt32LE(central + 16), crc32(payload));
+test("distributions contain no connection configuration or secrets", async () => {
+  for (const dir of [resolve(here, ".."), resolve(root, "plugins/plane-workflow-openai"), publicDir]) {
+    for (const [name, content] of await files(dir)) {
+      assert.doesNotMatch(name, /(?:^|\/)(?:\.mcp\.json|mcp\.json|\.env|\.DS_Store)$/);
+      if (name.endsWith(".json"))
+        assert.doesNotMatch(content.toString(), /"(?:userConfig|mcpServers|mcp_servers|connectors)"/);
+      if (!name.endsWith(".zip"))
+        assert.doesNotMatch(content.toString(), /(?:sk_live_|sk-proj-|ghp_)[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9_-]{32,}/);
+    }
+  }
+});
+
+test("rebuilding produces identical complete artifacts", async () => {
+  const before = await files(publicDir);
+  execFileSync(process.execPath, [resolve(here, "build.mjs")], { cwd: root });
+  assert.deepEqual(await files(publicDir), before);
+});
+
+test("nested scripts, references and assets survive traversal while Finder files are ignored", async () => {
+  const dir = await mkdtemp(resolve(tmpdir(), "plane-skill-fixture-"));
+  try {
+    const expected = [];
+    for (const name of [
+      "example/SKILL.md",
+      "example/scripts/nested/tool.js",
+      "example/references/nested/guide.txt",
+      "example/assets/nested/icon.bin",
+    ]) {
+      const content = Buffer.from([0, 1, 2, 255]);
+      await mkdir(dirname(resolve(dir, name)), { recursive: true });
+      await writeFile(resolve(dir, name), content);
+      expected.push([name, content]);
+    }
+    await writeFile(resolve(dir, ".DS_Store"), "ignore");
+    await writeFile(resolve(dir, "example/assets/.DS_Store"), "ignore");
+    assert.deepEqual(
+      await collectFiles(dir),
+      expected.toSorted(([a], [b]) => a.localeCompare(b, "en"))
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

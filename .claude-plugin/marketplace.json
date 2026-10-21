@@ -12,7 +12,7 @@
       "name": "plane-workflow",
       "source": "./plugins/plane-workflow",
       "description": "Plane 工作流：连接 Plane MCP，提供站会、拆需求、迭代规划、开工与提交等技能",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }
