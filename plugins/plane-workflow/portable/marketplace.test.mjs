@@ -59,5 +59,19 @@ test("catalog resolves inside repository root to a self-contained portable plugi
   const claude = await json("plugins/plane-workflow/.claude-plugin/plugin.json");
   const claudeCatalog = await json(".claude-plugin/marketplace.json");
   assert.equal(manifest.version, claude.version);
-  assert.equal(claudeCatalog.plugins[0].version, claude.version);
+  // Relative-path entries fall back to plugin.json for display fields and version,
+  // so the entry must not carry its own copies that could drift.
+  const claudeEntry = claudeCatalog.plugins.find((plugin) => plugin.name === entry.name);
+  assert.equal(claudeEntry.source, "./plugins/plane-workflow");
+  for (const key of [
+    "description",
+    "version",
+    "displayName",
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+  ])
+    assert.ok(!(key in claudeEntry), `Claude marketplace entry duplicates plugin.json field: ${key}`);
 });

@@ -46,6 +46,7 @@ COPY turbo.json turbo.json
 # verifies portable plugin downloads from these repository-level sources.
 COPY --from=builder /app/plugins/ ./plugins/
 COPY --from=builder /app/.agents/plugins/ ./.agents/plugins/
+COPY --from=builder /app/.claude-plugin/ ./.claude-plugin/
 
 # Fetch dependencies to cache store, then install offline with dev deps
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm fetch --store-dir=/pnpm/store
