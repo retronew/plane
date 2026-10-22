@@ -123,9 +123,12 @@ test("all eight complete canonical skills are identical across directories and a
     assert.match((await readFile(resolve(source, name, "SKILL.md"))).toString(), /工具.*可用/);
   const claudeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json")));
   assert.deepEqual(JSON.parse(claude.get(".claude-plugin/plugin.json")), claudeManifest);
-  const openaiManifest = JSON.parse(await readFile(resolve(root, "plugins/plane-workflow-openai/plugin.json")));
+  const openaiManifest = JSON.parse(
+    await readFile(resolve(root, "plugins/plane-workflow-openai/.codex-plugin/plugin.json"))
+  );
   assert.deepEqual(openaiManifest, {
-    $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    skills: "./skills/",
+    mcpServers: "./.mcp.json",
     ...Object.fromEntries(
       ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"].map((key) => [
         key,
@@ -185,8 +188,11 @@ test("OpenAI archive carries the same OAuth endpoint and full skills as the inst
   const expected = await files(pluginRoot);
   assert.equal(archive.size, expected.length);
   for (const [name, content] of expected) assert.deepEqual(archive.get(name), content);
-  const config = JSON.parse(archive.get("mcp.json"));
+  const config = JSON.parse(archive.get(".mcp.json"));
   assert.equal(config.mcpServers.plane.url, "https://plane.mdropwork.com/mcp");
-  assert.equal(config.mcpServers.plane.extensions["com.openai"].auth.type, "oauth");
+  assert.equal(config.mcpServers.plane.type, "http");
+  assert.ok(!archive.has("plugin.json"), "root manifest would shadow desktop MCP wiring");
+  const manifest = JSON.parse(archive.get(".codex-plugin/plugin.json"));
+  assert.ok(archive.has(manifest.mcpServers.slice(2)));
   assert.ok(!("headers" in config.mcpServers.plane));
 });

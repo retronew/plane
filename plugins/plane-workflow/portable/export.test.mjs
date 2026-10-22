@@ -56,7 +56,7 @@ test("marketplace sources resolve inside the distribution repository", async () 
       assert.ok((await stat(resolve(dir, entry.source, ".claude-plugin/plugin.json"))).isFile());
     const openai = JSON.parse(await readFile(resolve(dir, ".agents/plugins/marketplace.json"), "utf8"));
     for (const entry of openai.plugins)
-      assert.ok((await stat(resolve(dir, entry.source.path, "plugin.json"))).isFile());
+      assert.ok((await stat(resolve(dir, entry.source.path, ".codex-plugin/plugin.json"))).isFile());
   });
 });
 

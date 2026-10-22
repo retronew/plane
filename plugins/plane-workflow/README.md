@@ -26,7 +26,7 @@ claude plugin install plane-workflow@plane-ai
 
 插件市场发布在独立的分发仓库 [retronew/plane-plugins](https://github.com/retronew/plane-plugins)，客户端只需拉取约 0.1 MB；它由 `.github/workflows/sync-plugins.yml` 在 `preview` 更新后通过 `portable/export.mjs` 自动同步，请勿直接修改分发仓库。Claude Desktop 使用当前客户端实际提供的 marketplace 或插件上传入口。普通聊天附件不代表持久安装。上传插件使用 `/skills/plane-workflow-claude.zip`；其根目录包含 `.claude-plugin/plugin.json`、`agents/`、`hooks/` 和 `skills/<八项技能>/`，没有外层目录，`.sh` 脚本在包内保留可执行权限。上传包和 marketplace 插件内容完全一致。
 
-`hooks/` 和 `agents/` 是 Claude 专属组件，仅供支持这些能力的 Claude 客户端使用；OpenAI 插件和通用 ZIP 不包含它们。OpenAI 插件的 `plugin.json` 由 `portable/build.mjs` 从 `.claude-plugin/plugin.json` 生成，请勿手工编辑。没有相关能力时不能承诺自动识别分支或运行代理。
+`hooks/` 和 `agents/` 是 Claude 专属组件，仅供支持这些能力的 Claude 客户端使用；OpenAI 插件和通用 ZIP 不包含它们。OpenAI 插件的 `.codex-plugin/plugin.json` 由 `portable/build.mjs` 从 `.claude-plugin/plugin.json` 生成，请勿手工编辑。没有相关能力时不能承诺自动识别分支或运行代理。
 
 支持插件命令的 Codex CLI 可注册并安装 OpenAI catalog：
 
@@ -52,7 +52,7 @@ npx skills add https://github.com/retronew/plane-plugins/tree/main/plugins/plane
 
 ## 手动连接 MCP
 
-OpenAI 0.3.0 插件提供 OAuth 连接；Claude 与通用技能包继续支持手动连接。由用户在 Plane「个人设置 → API 令牌」创建令牌，然后在客户端手动配置：
+OpenAI 0.3.1 插件提供 OAuth 连接；Claude 与通用技能包继续支持手动连接。由用户在 Plane「个人设置 → API 令牌」创建令牌，然后在客户端手动配置：
 
 - Streamable HTTP URL：`https://plane.example.com/mcp`
 - 请求头：`Authorization: Bearer <Plane API token>`，或客户端支持的安全环境变量引用。
@@ -98,9 +98,13 @@ pnpm --filter web build:skills
 
 测试核对八项语义边界、完整目录和两类 ZIP 的字节一致性、CRC 与中央目录、OAuth 连接配置、无真实秘密、版本一致及重新构建可复现。生成后一起分发源、生成目录、公开 Markdown 和 ZIP。测试直接检查生成产物，失败会中止现有 web 构建。
 
-## OAuth 部署与实例绑定（0.3.0）
+## OAuth 部署与实例绑定（0.3.1）
 
-OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件根目录 `mcp.json` 声明 OAuth MCP，用户安装后连接、登录 Plane 并授权工作区。默认只读，可显式勾选读写；授权不提升用户原本的项目权限。安装入口和提示文案取决于桌面客户端版本，本仓库不能控制客户端 UI。
+OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.codex-plugin/plugin.json` 引用根目录 `.mcp.json`，声明 HTTP MCP，由服务端发现文档提供 OAuth/DCR，用户安装后连接、登录 Plane 并授权工作区。默认只读，可显式勾选读写；授权不提升用户原本的项目权限。安装入口和提示文案取决于桌面客户端版本，本仓库不能控制客户端 UI。
+
+当前桌面兼容包不同时提供根目录 `plugin.json`：实测内置 CLI `0.163.0-alpha.11.1` 会优先读取它、忽略兼容清单，导致 `plugin/read` 返回空的 `mcpServers`。升级后应通过该协议确认返回 `["plane"]`，再验证 OAuth；文件存在或技能出现都不能证明 MCP 已加载。
+
+安装了桌面 CLI 的开发机可运行 `PLANE_TEST_CODEX_BIN=/absolute/path/to/codex node --test --test-concurrency=1 plugins/plane-workflow/portable/*.test.mjs`。这会额外用实际客户端读取临时本地包，断言 MCP、八项技能和版本均被识别；不安装插件、不启动 MCP 或改变客户端配置。普通 CI 仍运行包结构、导出、地址隔离和可复现检查。安装后的 `mcpServerStatus/list` 应能识别 `plane`；未授权时 `authStatus` 为 `notLoggedIn`，完成用户授权后才应验收工具调用。
 
 当前正式包绑定 `https://plane.mdropwork.com/mcp`；公开下载为 `/skills/plane-workflow-openai.zip`。配置源在 `plugins/plane-workflow/instance.json`，修改 URL 后运行 `node plugins/plane-workflow/portable/build.mjs`。不要直接修改生成目录或安装缓存。不同实例要分别构建包，不存在安装时输入任意地址的表单。
 
@@ -122,11 +126,11 @@ OAuth 采用 public client + 动态注册（DCR）+ Authorization Code + PKCE S2
 
 | 渠道                        | 打包的 MCP 能力                                 | 本地测试方式                                            |
 | --------------------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| ChatGPT / Codex OpenAI 插件 | 根目录 `mcp.json`，实例固定地址 + OAuth         | 用 `local-package.mjs` 生成独立本地市场，安装后连接授权 |
+| ChatGPT / Codex OpenAI 插件 | 根目录 `.mcp.json`，实例固定地址 + OAuth        | 用 `local-package.mjs` 生成独立本地市场，安装后连接授权 |
 | Claude Code / Claude 插件包 | 当前只有技能、agents 和 hooks，没有 `.mcp.json` | 单独添加 HTTP MCP，可走 OAuth 或原 API Token            |
 | 通用 skills ZIP             | 仅技能，不包含 MCP                              | 在宿主独立设置 MCP                                      |
 
-同步由 `.github/workflows/sync-plugins.yml` 在远端 `preview` 的相关路径更新后触发（或人工 workflow_dispatch）。仅本地 commit 不触发；同步需要 `PLANE_PLUGINS_DEPLOY_KEY`。导出会包含 `plugins/plane-workflow-openai/mcp.json`，但不部署 Plane 服务端。
+同步由 `.github/workflows/sync-plugins.yml` 在远端 `preview` 的相关路径更新后触发（或人工 workflow_dispatch）。仅本地 commit 不触发；同步需要 `PLANE_PLUGINS_DEPLOY_KEY`。导出会包含 `plugins/plane-workflow-openai/.mcp.json`，但不部署 Plane 服务端。
 
 本地后端启动并应用迁移后，检查 `http://localhost:8000/.well-known/oauth-authorization-server` 的 issuer 为 `http://localhost:8000`，前端登录入口为 `http://localhost:3000`。生成测试包：
 

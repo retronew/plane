@@ -8,8 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const json = async (path) => JSON.parse(await readFile(resolve(root, path), "utf8"));
 const catalog = await json(".agents/plugins/marketplace.json");
 
-// Basic assertions for the fields we use from Agent Plugins 1.0.0:
-// https://agent-plugins.org/schemas/1.0.0/plugin.schema.json
+// Assertions for the desktop compatibility manifest and marketplace.
 // Marketplace fields follow https://developers.openai.com/plugins/build/plugins
 // (OpenAI does not publish a marketplace schema URL on that page).
 test("marketplace fields and policy match the documented OpenAI catalog format", () => {
@@ -24,18 +23,20 @@ test("marketplace fields and policy match the documented OpenAI catalog format",
   assert.equal(entry.category, "Productivity");
 });
 
-test("catalog resolves inside repository root to a self-contained portable plugin", async () => {
+test("catalog resolves inside repository root to a self-contained desktop plugin", async () => {
   const entry = catalog.plugins[0];
   const pluginRoot = await realpath(resolve(root, entry.source.path));
   const path = relative(await realpath(root), pluginRoot);
   assert.ok(path && !path.startsWith("..") && !isAbsolute(path));
-  const manifest = JSON.parse(await readFile(resolve(pluginRoot, "plugin.json"), "utf8"));
-  assert.equal(manifest.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+  const manifest = JSON.parse(await readFile(resolve(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
+  assert.equal(manifest.skills, "./skills/");
+  assert.equal(manifest.mcpServers, "./.mcp.json");
   assert.equal(manifest.name, entry.name);
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.ok(manifest.name.length <= 64);
   const allowed = new Set([
-    "$schema",
+    "skills",
+    "mcpServers",
     "name",
     "version",
     "description",
@@ -52,8 +53,8 @@ test("catalog resolves inside repository root to a self-contained portable plugi
   assert.ok(Array.isArray(manifest.keywords));
   for (const keyword of manifest.keywords) assert.equal(typeof keyword, "string");
   assert.deepEqual((await readdir(pluginRoot)).filter((name) => name !== ".DS_Store").toSorted(), [
-    "mcp.json",
-    "plugin.json",
+    ".codex-plugin",
+    ".mcp.json",
     "skills",
   ]);
   assert.equal((await readdir(resolve(pluginRoot, "skills"))).length, 8);

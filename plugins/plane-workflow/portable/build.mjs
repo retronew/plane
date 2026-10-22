@@ -62,18 +62,10 @@ export function createZip(entries) {
 // All generated destinations below are owned exclusively by this builder.
 const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
 const manifest = Buffer.from(`${JSON.stringify(codeManifest, null, 2)}\n`);
-// The Agent Plugins manifest is derived from the Claude manifest so metadata cannot drift.
-const { author } = codeManifest;
-const openaiManifest = {
-  $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  name: codeManifest.name,
-  version: codeManifest.version,
-  description: codeManifest.description,
-  author: { name: author.name, ...(author.email && { email: author.email }), ...(author.url && { url: author.url }) },
-  homepage: codeManifest.homepage,
-  repository: codeManifest.repository,
-  license: codeManifest.license,
-  keywords: codeManifest.keywords,
+const compatibilityManifest = {
+  ...codeManifest,
+  skills: "./skills/",
+  mcpServers: "./.mcp.json",
 };
 // Claude-only components shipped in the Claude upload package alongside the skills.
 const claudeExtras = [
@@ -119,10 +111,11 @@ for (const dir of [resolve(publicDir, "plane-workflow"), portableDir]) {
   await mkdir(dir, { recursive: true });
   await writeFile(resolve(dir, "SKILL.md"), aggregate);
 }
-await writeFile(
-  resolve(here, "../../plane-workflow-openai/plugin.json"),
-  `${JSON.stringify(openaiManifest, null, 2)}\n`
-);
+// Root portable manifests shadow the compatibility manifest in current desktop clients.
+// Remove stale generated files when upgrading an existing checkout.
+for (const name of ["plugin.json", "mcp.json"]) {
+  await rm(resolve(here, "../../plane-workflow-openai", name), { force: true });
+}
 await writeFile(resolve(publicDir, "plane-workflow.zip"), createZip(entries));
 await writeFile(
   resolve(publicDir, "plane-workflow-claude.zip"),
@@ -135,13 +128,16 @@ await writeFile(
 console.log("Generated eight skills, compatibility index, and reproducible archives");
 
 const instance = JSON.parse(await readFile(resolve(here, "../instance.json"), "utf8"));
-const mcp = Buffer.from(`${JSON.stringify(mcpConfig(instance.url), null, 2)}\n`);
-await writeFile(resolve(here, "../../plane-workflow-openai/mcp.json"), mcp);
+const compatibilityEntries = [
+  [".codex-plugin/plugin.json", Buffer.from(`${JSON.stringify(compatibilityManifest, null, 2)}\n`)],
+  [".mcp.json", Buffer.from(`${JSON.stringify(mcpConfig(instance.url), null, 2)}\n`)],
+];
+for (const [name, content] of compatibilityEntries) {
+  const path = resolve(here, "../../plane-workflow-openai", name);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, content);
+}
 await writeFile(
   resolve(publicDir, "plane-workflow-openai.zip"),
-  createZip([
-    ["plugin.json", Buffer.from(`${JSON.stringify(openaiManifest, null, 2)}\n`)],
-    ["mcp.json", mcp],
-    ...entries.map(([name, content]) => [`skills/${name}`, content]),
-  ])
+  createZip([...compatibilityEntries, ...entries.map(([name, content]) => [`skills/${name}`, content])])
 );

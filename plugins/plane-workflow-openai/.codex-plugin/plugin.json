@@ -1,7 +1,6 @@
 {
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "plane-workflow",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "八项 Plane 工作流技能；OpenAI 插件通过实例绑定的 OAuth 连接，保留手动 API Token 接入。",
   "author": {
     "name": "Moondrop",
@@ -15,5 +14,7 @@
     "project-management",
     "mcp",
     "workflow"
-  ]
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
 }
