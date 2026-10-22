@@ -131,11 +131,20 @@ class _CardStateSerializer(IssueCreateSerializer):
             or issue.updated_at != self.context["expected_updated_at"]
         ):
             raise WorkflowConflict({"action": "FEISHU_ACTION_STALE"})
+        self.state_before = issue.state.name
         self.before = json.dumps(IssueDetailSerializer(issue).data, cls=DjangoJSONEncoder)
         self.actor = actor
 
     def finish_locked_write(self, issue):
-        _succeed(self.card_action, {"code": "state_updated"})
+        _succeed(
+            self.card_action,
+            {
+                "code": "state_updated",
+                "state_before": self.state_before,
+                "state_after": issue.state.name,
+                "actor_name": self.actor.display_name or self.actor.first_name,
+            },
+        )
         data = {"state_id": str(issue.state_id)}
         activity_kwargs = {
             "type": "issue.activity.updated",
@@ -210,6 +219,19 @@ def execute_card_action(action):
                 locked_action, _, _, _ = _context(action, locked=True, issue=issue)
 
             result = {"code": "approved" if action.operation == "approve" else "rejected"}
+
+            def complete(approval):
+                branch = next(branch for branch in approval.branches if branch["id"] == str(transition_id))
+                target = branch["destination" if action.operation == "approve" else "reject_state"]
+                result.update(
+                    {
+                        "state_before": branch["source"]["name"],
+                        "state_after": target["name"],
+                        "actor_name": actor.display_name or actor.first_name,
+                    }
+                )
+                _succeed(locked_action, result)
+
             with impersonate(actor):
                 decide_approval(
                     delivery.project_id,
@@ -221,7 +243,7 @@ def execute_card_action(action):
                     str(action.pk),
                     actor,
                     verify_locked=verify,
-                    complete_locked=lambda approval: _succeed(locked_action, result),
+                    complete_locked=complete,
                 )
             return result
         _invalid()

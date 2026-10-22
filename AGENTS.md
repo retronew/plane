@@ -22,7 +22,7 @@ See the Development guide for [versions](docs/development.md#版本与依赖), [
 - **Error Handling**: Use try-catch with proper error types, log errors appropriately
 - **State Management**: MobX stores in `packages/shared-state`, reactive patterns
 - **Testing**: All features require unit tests, use existing test framework per package
-- **Components**: Primitives come from the published `@makeplane/propel` npm package (`@makeplane/propel/components/*`, `elements/*`, `icons`); composite/Plane-specific components live in `@plane/blocks` (`packages/blocks`, subpath imports only, e.g. `@plane/blocks/toast`)
+- **Components**: Primitives come from the published `@makeplane/propel` npm package (`@makeplane/propel/components/*`, `elements/*`, `icons`); composite/Plane-specific components live in `@plane/blocks` (`packages/blocks`, subpath imports only, e.g. `@plane/blocks/toast`). Prefer existing project UI components and nearby usage patterns for all frontend controls (especially selects, dropdowns, buttons, inputs, and dialogs). Do not substitute browser-native controls or build duplicate widgets when an existing component fits; preserve its styling, accessibility, and interaction conventions.
 
 ## Backend dependencies (uv)
 

@@ -63,10 +63,33 @@ def callback_body(action):
     return body
 
 
-def post(body, client=None):
-    raw = encrypt_body(body)
+def post(body, client=None, *, encrypted=True):
+    raw = encrypt_body(body) if encrypted else json.dumps(body).encode()
     headers = {"HTTP_" + key.upper().replace("-", "_"): value for key, value in signed_headers(raw).items()}
     return (client or APIClient()).post(URL, data=raw, content_type="application/json", **headers)
+
+
+@pytest.mark.parametrize("encrypted", [False, True])
+def test_signed_callback_without_verification_token_queues(card_action, encrypted):
+    body = callback_body(card_action)
+    del body["header"]["token"]
+    assert post(body, encrypted=encrypted).status_code == 200
+    card_action.refresh_from_db()
+    assert card_action.status == "queued"
+
+
+@pytest.mark.parametrize("encrypted", [False, True])
+def test_wrong_callback_token_is_rejected_without_logging_secrets(card_action, encrypted, caplog):
+    body = callback_body(card_action)
+    body["header"]["token"] = "private-invalid-token"
+    response = post(body, encrypted=encrypted)
+    assert response.status_code == 403
+    assert response.json() == {"error": "invalid_feishu_callback"}
+    assert "verification_token_mismatch" in caplog.text
+    assert "private-invalid-token" not in caplog.text
+    assert action_token(card_action) not in caplog.text
+    card_action.refresh_from_db()
+    assert card_action.status == "pending"
 
 
 def test_anonymous_callback_only_queues_without_broker_or_http(card_action):

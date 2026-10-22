@@ -6,6 +6,7 @@
 from datetime import timedelta
 from urllib.parse import quote
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from bs4 import BeautifulSoup
 from django.db import transaction
@@ -208,6 +209,41 @@ def _action_specs(delivery, issue, approval, chinese):
     return specs
 
 
+def _result_theme(action):
+    if action.status == "succeeded":
+        return {
+            "approve": ("✓ 审批已通过", "✓ Approval approved", "green"),
+            "reject": ("✓ 已拒绝审批", "✓ Approval rejected", "green"),
+            "state": ("✓ 状态已更新", "✓ Status updated", "green"),
+        }.get(action.operation, ("✓ 操作成功", "✓ Action completed", "green"))
+    return {
+        "failed": ("✕ 操作失败", "✕ Action failed", "red"),
+        "queued": ("操作已受理", "Action received", "blue"),
+        "processing": ("操作处理中", "Action in progress", "blue"),
+    }.get(action.status, ("操作已失效", "Action unavailable", "grey"))
+
+
+def _result_elements(action, delivery, chinese):
+    elements = []
+    if action.status == "succeeded":
+        before, after = action.result.get("state_before"), action.result.get("state_after")
+        if before and after:
+            elements.append(_div(f"{'状态' if chinese else 'Status'}：{before} → {after}"))
+        actor = delivery.user
+        actor_name = action.result.get("actor_name") or actor.display_name or actor.first_name
+        elements.append(_div(f"{'操作人' if chinese else 'By'}：{actor_name}"))
+    elif action.status == "failed":
+        elements.append(_div("请在 Plane 中查看并处理。" if chinese else "Open Plane to review and retry."))
+    if action.completed_at:
+        try:
+            zone = ZoneInfo(delivery.user.user_timezone or "UTC")
+        except (ZoneInfoNotFoundError, ValueError):
+            zone = ZoneInfo("UTC")
+        completed = action.completed_at.astimezone(zone).strftime("%Y-%m-%d %H:%M:%S %Z")
+        elements.append(_div(f"{'完成时间' if chinese else 'Completed at'}：{completed}"))
+    return elements
+
+
 def _interactive_elements(delivery, issue, approval, chinese):
     if not getattr(delivery, "pk", None) or getattr(delivery, "is_test", False):
         return []
@@ -218,15 +254,7 @@ def _interactive_elements(delivery, issue, approval, chinese):
         actions = list(FeishuCardAction.objects.filter(delivery=locked).order_by("created_at", "key"))
         used = next((action for action in actions if action.status != "pending"), None)
         if used:
-            messages = {
-                "queued": ("操作已提交，等待处理。", "Action submitted; waiting to be processed."),
-                "processing": ("操作处理中。", "Action is being processed."),
-                "succeeded": ("操作成功。", "Action completed successfully."),
-                "failed": ("操作失败，请在 Plane 中查看并重试。", "Action failed. Open Plane to review and retry."),
-            }
-            return [
-                _div(messages.get(used.status, ("操作已失效。", "Action is no longer available."))[0 if chinese else 1])
-            ]
+            return []  # The result summary is rendered prominently above issue details.
         expires_at = locked.created_at + timedelta(hours=24)
         if expires_at <= timezone.now():
             return (
@@ -311,6 +339,16 @@ def delivery_card(delivery):
     chinese = (getattr(getattr(delivery.user, "profile", None), "language", "en") or "en").startswith("zh")
     kind = getattr(delivery, "kind", "")
     event = EVENTS.get(kind, (delivery.title, delivery.title, "blue"))
+    used = (
+        FeishuCardAction.objects.filter(delivery_id=delivery.pk)
+        .exclude(status="pending")
+        .order_by("created_at", "key")
+        .first()
+        if getattr(delivery, "pk", None) and not getattr(delivery, "is_test", False)
+        else None
+    )
+    if used:
+        event = _result_theme(used)
     issue = None
     if getattr(delivery, "issue_id", None):
         # Refreshes must reflect the committed action even when delivery.issue was cached.
@@ -324,7 +362,7 @@ def delivery_card(delivery):
     activity = _activity(delivery) if issue else None
     approval = _approval(delivery) if issue and kind == "approval_requested" else None
     path = "settings/profile/notifications/"
-    elements = []
+    elements = _result_elements(used, delivery, chinese) + [{"tag": "hr"}] if used else []
     if delivery.workspace_id:
         slug = quote(delivery.workspace.slug, safe="")
         path = f"{slug}/notifications/"
@@ -335,7 +373,8 @@ def delivery_card(delivery):
                 path += f"#comment-{activity.issue_comment_id}"
     if issue:
         elements.append(_div(f"{issue.project.identifier}-{issue.sequence_id} · {issue.name}"[:500]))
-        elements.extend(_activity_elements(activity, chinese))
+        if not used:
+            elements.extend(_activity_elements(activity, chinese))
         priority = PRIORITIES.get(issue.priority, (issue.priority, issue.priority))[0 if chinese else 1]
         state = issue.state.name if issue.state else "—"
         due = issue.target_date.isoformat() if issue.target_date else "—"
@@ -346,7 +385,7 @@ def delivery_card(delivery):
                 f"{'截止日期' if chinese else 'Due date'}：{due}"
             )
         )
-        if kind == "approval_requested" and approval:
+        if kind == "approval_requested" and approval and not used:
             elements.append(_div("请确认下方属于你的审批分支。" if chinese else "Review your approval branches below."))
     else:
         elements.append(
@@ -364,7 +403,7 @@ def delivery_card(delivery):
                     "tag": "button",
                     "text": _text("在 Plane 中查看" if chinese else "Open in Plane"),
                     "type": "default",
-                    "url": web_url(path),
+                    "url": web_url(path, is_app=True),
                 }
             ],
         }

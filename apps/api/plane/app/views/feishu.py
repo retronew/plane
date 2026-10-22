@@ -162,7 +162,7 @@ class FeishuCallbackEndpoint(BaseAPIView):
         except FeishuError:
             # Provider response and authorization code must never enter logs or URLs.
             pass
-        return HttpResponseRedirect(web_url(f"settings/profile/notifications/?feishu={result}"))
+        return HttpResponseRedirect(web_url(f"settings/profile/notifications/?feishu={result}", is_app=True))
 
 
 class FeishuTestEndpoint(BaseAPIView):

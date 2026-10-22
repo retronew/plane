@@ -3,6 +3,7 @@
 
 from datetime import timedelta
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from django.db import IntegrityError, transaction
@@ -94,6 +95,33 @@ def test_enqueue_deduplicates_persistently(binding):
         )
     assert first.pk == second.pk
     assert FeishuDelivery.objects.filter(event_key="same").count() == 1
+
+
+@pytest.mark.parametrize("app_url", [None, "http://localhost:3000"])
+def test_oauth_uses_api_callback_and_returns_to_frontend(session_client, create_user, settings, app_url):
+    settings.WEB_URL = "http://localhost:8000"
+    settings.APP_BASE_URL = app_url
+    callback_url = "http://localhost:8000/api/users/me/integrations/feishu/callback/"
+    with (
+        patch("plane.app.views.feishu.get_feishu_config", return_value=FeishuConfig(True, "app", "secret")),
+        patch("plane.app.views.feishu.FeishuClient") as client,
+    ):
+        response = session_client.post("/api/users/me/integrations/feishu/authorize/", {}, format="json")
+        assert response.status_code == 200
+        query = parse_qs(urlsplit(response.json()["authorization_url"]).query)
+        assert query["redirect_uri"] == [callback_url]
+        client.return_value.identity.return_value = {"open_id": "open", "tenant_key": "tenant", "name": "Name"}
+        response = session_client.get(
+            "/api/users/me/integrations/feishu/callback/", {"state": query["state"][0], "code": "code"}
+        )
+        assert response.status_code == 302
+        assert response["Location"] == (
+            f"{app_url or settings.WEB_URL}/settings/profile/notifications/?feishu=connected"
+        )
+        assert client.return_value.identity.call_args.args[2] == callback_url
+        assert FeishuBinding.objects.filter(user=create_user, open_id="open").exists()
+        response = session_client.get("/api/users/me/integrations/feishu/callback/", {"error": "access_denied"})
+        assert response["Location"] == f"{app_url or settings.WEB_URL}/settings/profile/notifications/?feishu=error"
 
 
 def test_callback_consumes_state_before_identity_conflict(session_client, create_user, settings):

@@ -20,7 +20,47 @@ vi.mock("./preferences-form", () => ({
     <output data-testid="scope">{JSON.stringify(scope)}</output>
   ),
 }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+it("disables the project selector during loading and after a load failure, then enables it on retry", async () => {
+  state.list.mockResolvedValue([{ id: "one", name: "First", slug: "first" }]);
+  let rejectProjects!: (reason: Error) => void;
+  state.projects
+    .mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectProjects = reject;
+        })
+    )
+    .mockResolvedValue([{ id: "project", name: "Project" }]);
+  render(
+    <SWRConfig value={{ provider: () => new Map(), shouldRetryOnError: false }}>
+      <NotificationsProfileSettings />
+    </SWRConfig>
+  );
+  fireEvent.click(screen.getByRole("combobox", { name: "notification_preferences.workspace" }));
+  await chooseOption("First");
+  const project = await screen.findByRole("combobox", { name: "notification_preferences.project" });
+  expect(project.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(project);
+  expect(screen.queryByRole("listbox")).toBeNull();
+  rejectProjects(new Error("network"));
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  expect(project.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "notification_preferences.retry" }));
+  await waitFor(() => expect(project.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(project);
+  await chooseOption("Project");
+  expect(screen.getByTestId("scope").textContent).toBe('{"workspace_id":"one","project_id":"project"}');
+});
+async function chooseOption(name: string) {
+  const option = await screen.findByRole("option", { name });
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+}
 it("selects workspace and project scopes and clears the project when changing workspace", async () => {
   state.list.mockResolvedValue([
     { id: "one", name: "First", slug: "first" },
@@ -35,14 +75,23 @@ it("selects workspace and project scopes and clears the project when changing wo
     </SWRConfig>
   );
   expect(screen.getByTestId("scope").textContent).toBe("{}");
-  await screen.findByRole("option", { name: "First" });
-  fireEvent.change(screen.getByLabelText("notification_preferences.workspace"), { target: { value: "one" } });
-  await screen.findByRole("option", { name: "Project" });
+  const workspace = screen.getByRole("combobox", { name: "notification_preferences.workspace" });
+  expect(workspace.textContent).toContain("notification_preferences.global");
+  fireEvent.click(workspace);
+  await chooseOption("First");
+  const project = await screen.findByRole("combobox", { name: "notification_preferences.project" });
+  await waitFor(() => expect(project.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(project);
+  await chooseOption("Project");
   expect(state.projects).toHaveBeenCalledWith("first");
-  fireEvent.change(screen.getByLabelText("notification_preferences.project"), { target: { value: "project" } });
   expect(screen.getByTestId("scope").textContent).toBe('{"workspace_id":"one","project_id":"project"}');
-  fireEvent.change(screen.getByLabelText("notification_preferences.workspace"), { target: { value: "two" } });
+  fireEvent.click(workspace);
+  await chooseOption("Second");
   await waitFor(() => expect(state.projects).toHaveBeenCalledWith("second"));
   expect(screen.getByTestId("scope").textContent).toBe('{"workspace_id":"two"}');
-  expect((screen.getByLabelText("notification_preferences.project") as HTMLSelectElement).value).toBe("");
+  expect(project.textContent).toContain("notification_preferences.workspace_defaults");
+  fireEvent.click(workspace);
+  await chooseOption("notification_preferences.global");
+  expect(screen.getByTestId("scope").textContent).toBe("{}");
+  expect(screen.queryByRole("combobox", { name: "notification_preferences.project" })).toBeNull();
 });

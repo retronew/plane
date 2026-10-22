@@ -1,6 +1,8 @@
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 
+import logging
+
 from django.core.exceptions import RequestDataTooBig
 from django.db import transaction
 from django.http import JsonResponse
@@ -16,6 +18,8 @@ from plane.utils.feishu_card_security import (
     read_callback,
 )
 from plane.utils.feishu_client import get_feishu_callback_config, get_feishu_config
+
+logger = logging.getLogger("plane.api.feishu_cards")
 
 
 def _toast(status):
@@ -121,6 +125,25 @@ class FeishuCardCallbackEndpoint(APIView):
                 return _toast("unavailable")
             return accept_card_action(body)
         except FeishuCardSecurityError as exc:
+            timestamp = request.headers.get("X-Lark-Request-Timestamp", "")
+            logger.warning(
+                "Feishu card callback rejected: %s",
+                exc.reason,
+                extra={
+                    "timestamp_length": len(timestamp),
+                    "timestamp_shape": "".join(
+                        "9" if char.isdecimal() else "A" if char.isalpha() else char
+                        for char in timestamp[:96]
+                    ),
+                    "timestamp_ascii": timestamp.isascii(),
+                    "timestamp_decimal": timestamp.isdecimal(),
+                    "timestamp_has_dot": "." in timestamp,
+                    "timestamp_has_comma": "," in timestamp,
+                    "timestamp_has_whitespace": any(char.isspace() for char in timestamp),
+                    "nonce_length": len(request.headers.get("X-Lark-Request-Nonce", "")),
+                    "signature_length": len(request.headers.get("X-Lark-Signature", "")),
+                },
+            )
             return JsonResponse({"error": "invalid_feishu_callback"}, status=exc.status)
         except RequestDataTooBig:
             return JsonResponse({"error": "invalid_feishu_callback"}, status=400)

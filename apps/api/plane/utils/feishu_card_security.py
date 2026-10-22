@@ -8,6 +8,7 @@ import hmac
 import json
 import re
 import time
+from datetime import datetime
 from uuid import UUID
 
 from cryptography.hazmat.primitives import padding
@@ -22,8 +23,9 @@ SIGNATURE_HEADERS = ("X-Lark-Request-Timestamp", "X-Lark-Request-Nonce", "X-Lark
 class FeishuCardSecurityError(Exception):
     """Fixed public error only: never include callback bodies or credentials."""
 
-    def __init__(self, status=403):
+    def __init__(self, status=403, *, reason="invalid_callback"):
         self.status = status
+        self.reason = reason
         super().__init__("invalid_feishu_callback")
 
 
@@ -65,21 +67,41 @@ def _same_token(actual, expected):
     return bounded_string(actual, 256) and hmac.compare_digest(actual.encode(), expected.encode())
 
 
+def _timestamp_seconds(timestamp):
+    if not bounded_string(timestamp, 128) or not timestamp.isascii():
+        raise FeishuCardSecurityError(reason="invalid_signature_timestamp")
+    if timestamp.isdecimal() and len(timestamp) <= 13:
+        return int(timestamp) / 1000 if len(timestamp) == 13 else int(timestamp)
+    # Feishu card callbacks can use Go time.Time.String(), including a monotonic
+    # suffix. Only the wall clock and numeric timezone determine freshness.
+    match = re.fullmatch(
+        r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))? "
+        r"([+-]\d{4}) [A-Za-z0-9+-]{1,16}(?: m=[+-]\d{1,20}\.\d{1,9})?",
+        timestamp,
+    )
+    if match:
+        try:
+            value = datetime.strptime(f"{match[1]} {match[3]}", "%Y-%m-%d %H:%M:%S %z")
+            return value.timestamp() + (int(match[2]) / 10 ** len(match[2]) if match[2] else 0)
+        except ValueError:
+            pass
+    raise FeishuCardSecurityError(reason="invalid_signature_timestamp")
+
+
 def _verify_signature(raw, headers, encrypt_key):
     timestamp, nonce, signature = (headers.get(name) for name in SIGNATURE_HEADERS)
-    if (
-        not bounded_string(timestamp, 12)
-        or not timestamp.isascii()
-        or not timestamp.isdecimal()
-        or not bounded_string(nonce, 256)
-        or not bounded_string(signature, 64)
-        or not re.fullmatch(r"[0-9a-f]{64}", signature)
-        or abs(time.time() - int(timestamp)) > 300
-    ):
-        raise FeishuCardSecurityError()
+    if any(value is None for value in (timestamp, nonce, signature)):
+        raise FeishuCardSecurityError(reason="missing_signature_header")
+    timestamp_seconds = _timestamp_seconds(timestamp)
+    if not bounded_string(nonce, 256):
+        raise FeishuCardSecurityError(reason="invalid_signature_nonce")
+    if not bounded_string(signature, 64) or not re.fullmatch(r"[0-9a-f]{64}", signature):
+        raise FeishuCardSecurityError(reason="invalid_signature_format")
+    if abs(time.time() - timestamp_seconds) > 300:
+        raise FeishuCardSecurityError(reason="signature_timestamp_out_of_window")
     expected = hashlib.sha256((timestamp + nonce + encrypt_key).encode() + raw).hexdigest()
     if not hmac.compare_digest(signature, expected):
-        raise FeishuCardSecurityError()
+        raise FeishuCardSecurityError(reason="signature_mismatch")
 
 
 def _decrypt(encrypted, encrypt_key):
@@ -120,13 +142,15 @@ def read_callback(raw, headers, config):
         if not bounded_string(body.get("challenge"), 4096):
             raise FeishuCardSecurityError(400)
         return body
-    if not config.encrypt_key or not has_signature or not encrypted:
-        raise FeishuCardSecurityError()
+    if not config.encrypt_key or not has_signature:
+        raise FeishuCardSecurityError(reason="missing_signature")
     header, event = body.get("header"), body.get("event")
     if body.get("schema") != "2.0" or not isinstance(header, dict) or not isinstance(event, dict):
-        raise FeishuCardSecurityError(400)
-    if not _same_token(header.get("token"), config.verification_token):
-        raise FeishuCardSecurityError()
+        raise FeishuCardSecurityError(400, reason="invalid_event_structure")
+    # Match Feishu's Python SDK: signed callbacks may be plaintext and omit the legacy
+    # verification token. A supplied token must still match; signature is mandatory.
+    if "token" in header and not _same_token(header["token"], config.verification_token):
+        raise FeishuCardSecurityError(reason="verification_token_mismatch")
     if header.get("event_type") != "card.action.trigger" or event.get("host") != "im_message":
         raise FeishuCardSecurityError(400)
     if any(not bounded_string(header.get(key)) for key in ("event_id", "app_id", "tenant_key")):

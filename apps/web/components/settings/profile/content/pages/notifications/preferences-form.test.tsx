@@ -73,6 +73,12 @@ function mount(local = false) {
     </SWRConfig>
   );
 }
+async function chooseOption(name: string) {
+  const option = await screen.findByRole("option", { name });
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+}
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 describe("notification preferences", () => {
@@ -94,7 +100,7 @@ describe("notification preferences", () => {
     await waitFor(() => expect(api.update).toHaveBeenCalledWith({ override_scopes: { email: true } }, {}));
     expect(screen.getAllByRole("row")).toHaveLength(9);
   });
-  it("saves off and inherit distinctly and shows effective sources", async () => {
+  it("saves on, off and inherit distinctly and shows effective sources", async () => {
     const data = preferences(true);
     api.retrieve.mockResolvedValue(data);
     api.update.mockImplementation(async (patch) => ({
@@ -105,16 +111,54 @@ describe("notification preferences", () => {
     const input = await screen.findByRole("combobox", {
       name: "notification_preferences.cell_label notification_preferences.events.comment notification_preferences.channels.email",
     });
-    fireEvent.change(input, { target: { value: "off" } });
+    expect(input.textContent).toContain("notification_preferences.inherit");
+    fireEvent.click(input);
+    await chooseOption("notification_preferences.on");
+    await waitFor(() =>
+      expect(api.update).toHaveBeenCalledWith({ events: { email: { comment: true } } }, { workspace_id: "workspace" })
+    );
+    await waitFor(() => expect(input.hasAttribute("disabled")).toBe(false));
+    expect(input.textContent).toContain("notification_preferences.on");
+    fireEvent.click(input);
+    await chooseOption("notification_preferences.off");
     await waitFor(() =>
       expect(api.update).toHaveBeenCalledWith({ events: { email: { comment: false } } }, { workspace_id: "workspace" })
     );
-    await waitFor(() => expect((input as HTMLSelectElement).value).toBe("off"));
-    fireEvent.change(input, { target: { value: "inherit" } });
+    await waitFor(() => expect(input.hasAttribute("disabled")).toBe(false));
+    expect(input.textContent).toContain("notification_preferences.off");
+    fireEvent.click(input);
+    await chooseOption("notification_preferences.inherit");
     await waitFor(() =>
       expect(api.update).toHaveBeenCalledWith({ events: { email: { comment: null } } }, { workspace_id: "workspace" })
     );
+    await waitFor(() => expect(input.textContent).toContain("notification_preferences.inherit"));
     expect(screen.getAllByText(/notification_preferences.sources.channel_disabled/)).toHaveLength(8);
+  });
+  it("disables scope selectors while saving and restores the saved value after failure", async () => {
+    api.retrieve.mockResolvedValue(preferences(true));
+    let rejectUpdate!: (reason: Error) => void;
+    api.update.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectUpdate = reject;
+        })
+    );
+    mount(true);
+    const input = await screen.findByRole("combobox", {
+      name: "notification_preferences.cell_label notification_preferences.events.comment notification_preferences.channels.email",
+    });
+    fireEvent.click(input);
+    await chooseOption("notification_preferences.off");
+    await waitFor(() =>
+      expect(screen.getAllByRole("combobox").every((item) => item.hasAttribute("disabled"))).toBe(true)
+    );
+    expect(api.update).toHaveBeenCalledTimes(1);
+    rejectUpdate(new Error("network"));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getAllByRole("combobox").every((item) => !item.hasAttribute("disabled"))).toBe(true)
+    );
+    expect(input.textContent).toContain("notification_preferences.inherit");
   });
   it("keeps the last saved value when a request fails", async () => {
     api.retrieve.mockResolvedValue(preferences());
