@@ -20,18 +20,18 @@
 Claude Code 从仓库安装 marketplace，再安装插件：
 
 ```bash
-claude plugin marketplace add retronew/plane
+claude plugin marketplace add retronew/plane-plugins
 claude plugin install plane-workflow@plane-ai
 ```
 
-目标 Git ref 必须包含本次版本。Claude Desktop 使用当前客户端实际提供的 marketplace 或插件上传入口。普通聊天附件不代表持久安装。上传插件使用 `/skills/plane-workflow-claude.zip`；其根目录包含 `.claude-plugin/plugin.json`、`agents/`、`hooks/` 和 `skills/<八项技能>/`，没有外层目录，`.sh` 脚本在包内保留可执行权限。上传包和 marketplace 插件内容完全一致。
+插件市场发布在独立的分发仓库 [retronew/plane-plugins](https://github.com/retronew/plane-plugins)，客户端只需拉取约 0.1 MB；它由 `.github/workflows/sync-plugins.yml` 在 `preview` 更新后通过 `portable/export.mjs` 自动同步，请勿直接修改分发仓库。Claude Desktop 使用当前客户端实际提供的 marketplace 或插件上传入口。普通聊天附件不代表持久安装。上传插件使用 `/skills/plane-workflow-claude.zip`；其根目录包含 `.claude-plugin/plugin.json`、`agents/`、`hooks/` 和 `skills/<八项技能>/`，没有外层目录，`.sh` 脚本在包内保留可执行权限。上传包和 marketplace 插件内容完全一致。
 
 `hooks/` 和 `agents/` 是 Claude 专属组件，仅供支持这些能力的 Claude 客户端使用；OpenAI 插件和通用 ZIP 不包含它们。OpenAI 插件的 `plugin.json` 由 `portable/build.mjs` 从 `.claude-plugin/plugin.json` 生成，请勿手工编辑。没有相关能力时不能承诺自动识别分支或运行代理。
 
 支持插件命令的 Codex CLI 可注册并安装 OpenAI catalog：
 
 ```bash
-codex plugin marketplace add retronew/plane --ref preview
+codex plugin marketplace add retronew/plane-plugins
 codex plugin add plane-workflow@plane-openai
 ```
 
@@ -42,11 +42,11 @@ ChatGPT 是否支持 marketplace 或自定义技能导入，由具体客户端�
 支持 skills CLI 的客户端可发现并安装 canonical 八项技能：
 
 ```bash
-npx skills add https://github.com/retronew/plane/tree/preview/plugins/plane-workflow/skills --list
-npx skills add https://github.com/retronew/plane/tree/preview/plugins/plane-workflow/skills
+npx skills add https://github.com/retronew/plane-plugins/tree/main/plugins/plane-workflow/skills --list
+npx skills add https://github.com/retronew/plane-plugins/tree/main/plugins/plane-workflow/skills
 ```
 
-`--list` 只发现；在交互安装器选择技能、客户端和范围。远程分支必须先包含这些源文件。安装后用 `npx skills list` 检查，再按客户端要求重新加载。覆盖已有自定义技能前先比较并确认，不默认添加跳过确认的选项。
+`--list` 只发现；在交互安装器选择技能、客户端和范围。分发仓库同步完成后才能安装到新版本。安装后用 `npx skills list` 检查，再按客户端要求重新加载。覆盖已有自定义技能前先比较并确认，不默认添加跳过确认的选项。
 
 通用 `/skills/plane-workflow.zip` 含八个顶层 skill 目录，供解压后安装到客户端的技能目录（例如 `~/.agents/skills/`），完整保留每项的资源子目录。这是多技能分发包，不能保证 ChatGPT 的单技能上传入口接受八目录 ZIP。只有客户端明确提供相应导入能力时才能使用。缺少安装能力时可阅读 Markdown 作为会话参考，不能报告持久安装成功。
 

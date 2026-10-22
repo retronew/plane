@@ -15,7 +15,7 @@ vi.mock("@plane/i18n", () => ({
 vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn() }));
 vi.mock("@plane/utils", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
-const skillCommand = "npx skills add https://github.com/retronew/plane/tree/preview/plugins/plane-workflow/skills";
+const skillCommand = "npx skills add https://github.com/retronew/plane-plugins/tree/main/plugins/plane-workflow/skills";
 const openSection = (title: "agent_title" | "manual_title") =>
   fireEvent.click(screen.getByRole("button", { name: new RegExp(`account_settings\\.skills\\.${title}`) }));
 const openClient = (name: string) =>
@@ -48,8 +48,8 @@ describe("Skill installation", () => {
 
     openClient("ChatGPT");
     expect(await screen.findByText("account_settings.skills.chatgpt_step_3")).toBeTruthy();
-    expect(screen.getByText("https://github.com/retronew/plane")).toBeTruthy();
-    expect(screen.getByText("preview")).toBeTruthy();
+    expect(screen.getByText("https://github.com/retronew/plane-plugins")).toBeTruthy();
+    expect(screen.getByText("main")).toBeTruthy();
     expect(screen.getByText("plane-openai")).toBeTruthy();
     expect(screen.getByText("account_settings.skills.field_branch")).toBeTruthy();
     expect(screen.getByRole("link", { name: "account_settings.skills.download" }).getAttribute("href")).toBe(
@@ -83,12 +83,10 @@ describe("Skill installation", () => {
     openClient("Codex");
     fireEvent.click(
       await screen.findByRole("button", {
-        name: "account_settings.skills.copy_value:codex plugin marketplace add retronew/plane --ref preview",
+        name: "account_settings.skills.copy_value:codex plugin marketplace add retronew/plane-plugins",
       })
     );
-    await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith("codex plugin marketplace add retronew/plane --ref preview")
-    );
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("codex plugin marketplace add retronew/plane-plugins"));
   });
 
   it.each(["chatgpt", "codex"] as const)("uses CLI installation and actual host verification for %s", (client) => {
@@ -97,7 +95,7 @@ describe("Skill installation", () => {
     expect(prompt).toContain("缺少 CLI 时明确停止");
     expect(prompt).toContain("不尝试 ChatGPT 或 Codex desktop UI 自动化");
     expect(prompt).toContain(
-      "codex plugin marketplace add retronew/plane --ref preview\ncodex plugin add plane-workflow@plane-openai\ncodex plugin list --marketplace plane-openai"
+      "codex plugin marketplace add retronew/plane-plugins\ncodex plugin add plane-workflow@plane-openai\ncodex plugin list --marketplace plane-openai"
     );
     expect(prompt).toContain("同一 host 的目标客户端重新加载，实际验证全部 8 个 skills 已加载");
     expect(prompt).toContain("不能承诺 ChatGPT 云端、网页或其他 host 同步");
@@ -151,7 +149,7 @@ describe("Skill installation", () => {
     );
     const copilot = buildSkillAgentPrompt("copilot", "https://plane.example");
     expect(copilot).toContain(
-      "copilot plugin marketplace add retronew/plane\ncopilot plugin install plane-workflow@plane-ai"
+      "copilot plugin marketplace add retronew/plane-plugins\ncopilot plugin install plane-workflow@plane-ai"
     );
     expect(copilot).not.toContain("claude plugin install");
     const prompt = buildSkillAgentPrompt("desktop", "https://plane.example");

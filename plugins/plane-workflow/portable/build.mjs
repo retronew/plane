@@ -62,17 +62,17 @@ function createZip(entries) {
 const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
 const manifest = Buffer.from(`${JSON.stringify(codeManifest, null, 2)}\n`);
 // The Agent Plugins manifest is derived from the Claude manifest so metadata cannot drift.
-const { name, version, description, author, homepage, repository, license, keywords } = codeManifest;
+const { author } = codeManifest;
 const openaiManifest = {
   $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  name,
-  version,
-  description,
+  name: codeManifest.name,
+  version: codeManifest.version,
+  description: codeManifest.description,
   author: { name: author.name, ...(author.email && { email: author.email }), ...(author.url && { url: author.url }) },
-  homepage,
-  repository,
-  license,
-  keywords,
+  homepage: codeManifest.homepage,
+  repository: codeManifest.repository,
+  license: codeManifest.license,
+  keywords: codeManifest.keywords,
 };
 // Claude-only components shipped in the Claude upload package alongside the skills.
 const claudeExtras = [

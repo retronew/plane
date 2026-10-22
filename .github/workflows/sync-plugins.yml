@@ -1,0 +1,89 @@
+name: Sync plugin marketplaces
+
+# Publishes the plugin marketplaces to retronew/plane-plugins so AI clients
+# clone a small repository instead of this monorepo. Requires the secret
+# PLANE_PLUGINS_DEPLOY_KEY: the private half of a deploy key with write access
+# on retronew/plane-plugins.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "preview"
+    paths:
+      - "plugins/**"
+      - ".claude-plugin/**"
+      - ".agents/plugins/**"
+      - "LICENSE.txt"
+      - ".github/workflows/sync-plugins.yml"
+
+concurrency:
+  group: sync-plugins
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync to retronew/plane-plugins
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.repository == 'retronew/plane'
+    steps:
+      - name: Check deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.PLANE_PLUGINS_DEPLOY_KEY }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "::error::Add the PLANE_PLUGINS_DEPLOY_KEY secret (deploy key with write access on retronew/plane-plugins)."
+            exit 1
+          fi
+
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          path: source
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.22.0"
+
+      - name: Verify generated plugin files are committed
+        working-directory: source
+        run: |
+          node plugins/plane-workflow/portable/build.mjs
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            echo "::error::Generated plugin files are stale. Run node plugins/plane-workflow/portable/build.mjs and commit the result."
+            exit 1
+          fi
+          # One file at a time: distribution.test.mjs rebuilds the directories export.test.mjs copies.
+          node --test --test-concurrency=1 plugins/plane-workflow/portable/*.test.mjs
+
+      - name: Checkout distribution repository
+        uses: actions/checkout@v6
+        with:
+          repository: retronew/plane-plugins
+          ref: main
+          path: dist
+          fetch-depth: 1
+          ssh-key: ${{ secrets.PLANE_PLUGINS_DEPLOY_KEY }}
+
+      - name: Export marketplaces
+        run: node source/plugins/plane-workflow/portable/export.mjs dist "$GITHUB_SHA"
+
+      - name: Commit and push
+        working-directory: dist
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Distribution repository is already up to date."
+            exit 0
+          fi
+          git -c user.name=retronew -c user.email=7346148+retronew@users.noreply.github.com \
+            commit -m "sync: retronew/plane@${GITHUB_SHA::9}"
+          git push origin HEAD:main

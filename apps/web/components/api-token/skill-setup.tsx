@@ -11,26 +11,29 @@ const subscribe = () => () => {};
 const getOrigin = () => window.location.origin;
 const getServerOrigin = () => "";
 
-const REPO_URL = "https://github.com/retronew/plane";
-const BRANCH = "preview";
+// Marketplaces are published to a small distribution repository (synced from this
+// monorepo by .github/workflows/sync-plugins.yml) so clients don't clone the monorepo.
+const REPO = "retronew/plane-plugins";
+const REPO_URL = `https://github.com/${REPO}`;
+const BRANCH = "main";
 const PLUGIN = "plane-workflow";
 const CLAUDE_MARKETPLACE = "plane-ai";
 const OPENAI_MARKETPLACE = "plane-openai";
 const claudeCommands = [
-  "claude plugin marketplace add retronew/plane",
+  `claude plugin marketplace add ${REPO}`,
   `claude plugin install ${PLUGIN}@${CLAUDE_MARKETPLACE}`,
 ];
 const codexCommands = [
-  `codex plugin marketplace add retronew/plane --ref ${BRANCH}`,
+  `codex plugin marketplace add ${REPO}`,
   `codex plugin add ${PLUGIN}@${OPENAI_MARKETPLACE}`,
   `codex plugin list --marketplace ${OPENAI_MARKETPLACE}`,
 ];
 // Copilot CLI and VS Code agent plugins read the Claude-format marketplace.
 const copilotCommands = [
-  "copilot plugin marketplace add retronew/plane",
+  `copilot plugin marketplace add ${REPO}`,
   `copilot plugin install ${PLUGIN}@${CLAUDE_MARKETPLACE}`,
 ];
-const vscodeCommands = ["/plugin marketplace add retronew/plane", `/plugin install ${PLUGIN}@${CLAUDE_MARKETPLACE}`];
+const vscodeCommands = [`/plugin marketplace add ${REPO}`, `/plugin install ${PLUGIN}@${CLAUDE_MARKETPLACE}`];
 const marketplaceCommand = codexCommands.join("\n");
 const claudeInstallCommand = claudeCommands.join("\n");
 const skillInstallCommand = `npx skills add ${REPO_URL}/tree/${BRANCH}/plugins/plane-workflow/skills`;
@@ -38,7 +41,7 @@ const skillInstallCommand = `npx skills add ${REPO_URL}/tree/${BRANCH}/plugins/p
 export type SkillClient = "claude" | "desktop" | "chatgpt" | "codex" | "copilot" | "generic";
 
 function buildPortableInstallPrompt(origin: string) {
-  return `先检查 shell、Node.js/npx 和客户端技能加载能力。运行 ${skillInstallCommand} --list，确认 preview 源可发现全部 8 个 skills；--list 只发现技能，不会安装。确认后运行 ${skillInstallCommand}，安装全部 8 个 skills，让用户选择目标客户端和项目级或全局安装范围；没有明确授权，不默认添加 --global、--agent 或 --yes。运行 npx skills list（全局安装使用 npx skills list --global），再检查当前客户端是否实际加载全部 8 个 skills，按需重新加载。缺少安装能力时，提供 ${origin}/skills/plane-workflow.zip，解压后按客户端支持的方式逐个上传或安装其中 8 个技能目录；普通聊天附件不算安装。不支持技能时明确说明限制，不声称已安装。`;
+  return `先检查 shell、Node.js/npx 和客户端技能加载能力。运行 ${skillInstallCommand} --list，确认分发仓库可发现全部 8 个 skills；--list 只发现技能，不会安装。确认后运行 ${skillInstallCommand}，安装全部 8 个 skills，让用户选择目标客户端和项目级或全局安装范围；没有明确授权，不默认添加 --global、--agent 或 --yes。运行 npx skills list（全局安装使用 npx skills list --global），再检查当前客户端是否实际加载全部 8 个 skills，按需重新加载。缺少安装能力时，提供 ${origin}/skills/plane-workflow.zip，解压后按客户端支持的方式逐个上传或安装其中 8 个技能目录；普通聊天附件不算安装。不支持技能时明确说明限制，不声称已安装。`;
 }
 
 export function buildSkillAgentPrompt(client: SkillClient, origin: string) {

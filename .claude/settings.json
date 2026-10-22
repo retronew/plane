@@ -3,8 +3,7 @@
     "plane-ai": {
       "source": {
         "source": "github",
-        "repo": "retronew/plane",
-        "sparsePaths": [".claude-plugin", "plugins"]
+        "repo": "retronew/plane-plugins"
       }
     }
   },
