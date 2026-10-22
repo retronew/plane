@@ -13,6 +13,9 @@ const sourceDir = resolve(here, "../skills");
 // All generated destinations below are owned exclusively by this builder.
 const codeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json"), "utf8"));
 const manifest = Buffer.from(`${JSON.stringify(codeManifest, null, 2)}\n`);
+const instance = JSON.parse(await readFile(resolve(here, "../instance.json"), "utf8"));
+const connection = Buffer.from(`${JSON.stringify(mcpConfig(instance.url), null, 2)}\n`);
+await writeFile(resolve(here, "../.mcp.json"), connection);
 const compatibilityManifest = {
   ...codeManifest,
   skills: "./skills/",
@@ -45,7 +48,7 @@ description: 完整八项 Plane 工作流的兼容聚合索引，包含连接检
 
 # Plane Workflow：完整八项技能
 
-本文件由 build.mjs 生成，请勿手工编辑。兼容下载索引；主安装目录是 plugins/plane-workflow/skills。OpenAI 插件绑定实例地址，安装后需连接并登录授权；其他客户端也可手动配置 URL 与 API 令牌。
+本文件由 build.mjs 生成，请勿手工编辑。兼容下载索引；主安装目录是 plugins/plane-workflow/skills。Claude 和 OpenAI 插件绑定实例地址，安装后需连接并登录授权；支持手动 MCP 配置的客户端也可使用 URL 与 API 令牌。
 
 ${names.map((name) => `- ${name}：见下文完整流程`).join("\n")}
 
@@ -72,16 +75,16 @@ await writeFile(
   resolve(publicDir, "plane-workflow-claude.zip"),
   createZip([
     [".claude-plugin/plugin.json", manifest],
+    [".mcp.json", connection],
     ...claudeExtras,
     ...entries.map(([name, content]) => [`skills/${name}`, content]),
   ])
 );
 console.log("Generated eight skills, compatibility index, and reproducible archives");
 
-const instance = JSON.parse(await readFile(resolve(here, "../instance.json"), "utf8"));
 const compatibilityEntries = [
   [".codex-plugin/plugin.json", Buffer.from(`${JSON.stringify(compatibilityManifest, null, 2)}\n`)],
-  [".mcp.json", Buffer.from(`${JSON.stringify(mcpConfig(instance.url), null, 2)}\n`)],
+  [".mcp.json", connection],
 ];
 for (const [name, content] of compatibilityEntries) {
   const path = resolve(here, "../../plane-workflow-openai", name);

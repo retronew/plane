@@ -96,8 +96,17 @@ test("all eight complete canonical skills are identical across directories and a
   assert.ok(extras.some(([name]) => name.startsWith("agents/")));
   assert.deepEqual(
     [...claude.keys()],
-    [".claude-plugin/plugin.json", ...extras.map(([name]) => name), ...entries.map(([name]) => `skills/${name}`)]
+    [
+      ".claude-plugin/plugin.json",
+      ".mcp.json",
+      ...extras.map(([name]) => name),
+      ...entries.map(([name]) => `skills/${name}`),
+    ]
   );
+  assert.deepEqual(claude.get(".mcp.json"), await readFile(resolve(here, "../.mcp.json")));
+  assert.deepEqual(JSON.parse(claude.get(".mcp.json")), {
+    mcpServers: { plane: { type: "http", url: "https://plane.mdropwork.com/mcp" } },
+  });
   for (const [name, content] of extras) assert.deepEqual(claude.get(name), content);
   for (const [name, mode] of [...claude.modes, ...generic.modes])
     assert.equal(mode, name.endsWith(".sh") ? 0o100755 : 0o100644, `${name}: mode`);

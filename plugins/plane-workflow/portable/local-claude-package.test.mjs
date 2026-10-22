@@ -32,12 +32,24 @@ test("Claude test ZIP contains OAuth and all skills, preserves production, and v
     const args = [resolve(here, "local-claude-package.mjs"), output, "http://localhost:8000"];
     execFileSync(process.execPath, args);
     const plugin = resolve(output, "plane-workflow");
-    assert.deepEqual((await readdir(plugin)).toSorted(), [".claude-plugin", ".mcp.json", "agents", "hooks", "skills"]);
+    assert.deepEqual((await readdir(plugin)).toSorted(), [
+      ".claude-plugin",
+      ".mcp.json",
+      "README.md",
+      "agents",
+      "hooks",
+      "skills",
+    ]);
     const config = JSON.parse(await readFile(resolve(plugin, ".mcp.json")));
     assert.deepEqual(config, { mcpServers: { plane: { type: "http", url: "http://localhost:8000/mcp" } } });
     const manifest = JSON.parse(await readFile(resolve(plugin, ".claude-plugin/plugin.json")));
     assert.equal(manifest.name, "plane-workflow");
-    assert.match(manifest.version, /-local\.1$/);
+    assert.match(manifest.version, /-local\.2$/);
+    assert.match(await readFile(resolve(plugin, "README.md"), "utf8"), /HTTP，只用于终端 Claude Code/);
+    assert.throws(() =>
+      execFileSync(process.execPath, [args[0], resolve(dir, "desktop-http"), args[2], "--desktop"], { stdio: "pipe" })
+    );
+    await assert.rejects(stat(resolve(dir, "desktop-http")), { code: "ENOENT" });
     assert.deepEqual(await collectFiles(resolve(plugin, "skills")), await collectFiles(resolve(source, "skills")));
     assert.equal((await readdir(resolve(plugin, "skills"))).length, 8);
     assert.ok((await stat(resolve(plugin, "hooks/branch-work-item.sh"))).mode & 0o111);
