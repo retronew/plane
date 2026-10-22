@@ -1,6 +1,6 @@
 """Narrow MCP OAuth authorization-code flow for public clients (S256 only).
 
-No client-supplied URLs are fetched. DCR only admits HTTPS callbacks and IP-loopback
+No client-supplied URLs are fetched. DCR only admits HTTPS callbacks and loopback
 HTTP callbacks. The exact registered redirect is bound to each code, as are the
 client, PKCE challenge, resource, user, workspace and approved scope.
 """
@@ -106,7 +106,8 @@ def valid_redirect(value):
             and not url.username
             and not url.password
             and not url.fragment
-            and (url.scheme == "https" or (url.scheme == "http" and url.hostname in ("127.0.0.1", "::1")))
+            # Claude Code uses localhost; never permit suffixes or arbitrary local hostnames.
+            and (url.scheme == "https" or (url.scheme == "http" and url.hostname in ("localhost", "127.0.0.1", "::1")))
         )
     except ValueError:
         return False
@@ -417,12 +418,13 @@ def consent(request):
 def issue_token(grant):
     access = "plane_mcp_" + secrets.token_urlsafe(32)
     refresh = secrets.token_urlsafe(48)
-    expires_in = max(0, min(3600, int((grant.expires_at - timezone.now()).total_seconds())))
+    now = timezone.now()
+    expires_in = max(0, min(3600, int((grant.expires_at - now).total_seconds())))
     MCPOAuthToken.objects.create(
         grant=grant,
         access_hash=digest(access),
         refresh_hash=digest(refresh),
-        access_expires_at=timezone.now() + timedelta(seconds=expires_in),
+        access_expires_at=now + timedelta(seconds=expires_in),
     )
     return secure(
         JsonResponse(

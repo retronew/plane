@@ -108,7 +108,7 @@ OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.co
 
 当前桌面兼容包不同时提供根目录 `plugin.json`：实测内置 CLI `0.163.0-alpha.11.1` 会优先读取它、忽略兼容清单，导致 `plugin/read` 返回空的 `mcpServers`。升级后应通过该协议确认返回 `["plane"]`，再验证 OAuth；文件存在或技能出现都不能证明 MCP 已加载。
 
-安装了桌面 CLI 的开发机可运行 `PLANE_TEST_CODEX_BIN=/absolute/path/to/codex node --test --test-concurrency=1 plugins/plane-workflow/portable/*.test.mjs`。这会额外用实际客户端读取临时本地包，断言 MCP、八项技能和版本均被识别；不安装插件、不启动 MCP 或改变客户端配置。普通 CI 仍运行包结构、导出、地址隔离和可复现检查。安装后的 `mcpServerStatus/list` 应能识别 `plane`；未授权时 `authStatus` 为 `notLoggedIn`，完成用户授权后才应验收工具调用。
+安装了桌面 CLI 的开发机可运行 `PLANE_TEST_CODEX_BIN=/absolute/path/to/codex node --test --test-concurrency=1 plugins/plane-workflow/portable/*.test.mjs`。这会额外用实际客户端读取临时本地包，断言 MCP、八项技能和版本均被识别；不安装插件、不启动 MCP 或改变客户端配置。普通 CI 仍运行包结构、导出、地址隔离和可复现检查。安装后的 `mcpServerStatus/list` 应能识别 `plane`；首次未授权时 `authStatus` 通常为 `notLoggedIn`；撤销后仍可能显示缓存的 `oAuth` 和工具列表，必须以实际只读调用为准。
 
 当前正式包绑定 `https://plane.mdropwork.com/mcp`；公开下载为 `/skills/plane-workflow-openai.zip`。配置源在 `plugins/plane-workflow/instance.json`，修改 URL 后运行 `node plugins/plane-workflow/portable/build.mjs`。不要直接修改生成目录或安装缓存。不同实例要分别构建包，不存在安装时输入任意地址的表单。
 
@@ -120,7 +120,7 @@ OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.co
 4. 部署后读取发现文档，确认 issuer、resource 和所有 endpoint 都是线上域名，再发布/更新插件。仅更新插件不会部署 OAuth 后端。本次不自动推送或部署。
 5. 安装新版本后连接。授权管理位于个人设置 → 开发者 → 授权连接，与 API Token 入口一起管理，不另开页面。撤销会使整个授权族失效。
 
-OAuth 采用 public client + 动态注册（DCR）+ Authorization Code + PKCE S256，不要求用户填写 client secret。客户端回调仅接受 HTTPS 或 IP loopback HTTP，严格绑定注册的完整回调地址。授权码两分钟有效、一次性使用；访问令牌一小时、授权/刷新最多三十天；刷新令牌轮换，旧刷新令牌重用撤销授权族。令牌和授权码仅存 SHA-256 摘要，OAuth 令牌只用于 MCP，不作为通用 API Key 使用。成员资格、账户状态、工作区和读写权限在请求时复核。
+OAuth 采用 public client + 动态注册（DCR）+ Authorization Code + PKCE S256，不要求用户填写 client secret。客户端回调仅接受 HTTPS 或精确的 localhost / 127.0.0.1 / ::1 loopback HTTP，严格绑定注册的完整回调地址。授权码两分钟有效、一次性使用；访问令牌最多一小时；新授权/刷新默认 180 天，由 MCP_OAUTH_GRANT_DAYS 配置（1–365 天），刷新不会延长总授权。已有授权保持原到期时间，旧版确认票据保留 30 天；授权页显示签名请求中的实际天数；刷新令牌轮换，旧刷新令牌重用撤销授权族。令牌和授权码仅存 SHA-256 摘要，OAuth 令牌只用于 MCP，不作为通用 API Key 使用。成员资格、账户状态、工作区和读写权限在请求时复核。
 
 本地验证使用独立测试包，运行 `node plugins/plane-workflow/portable/local-package.mjs /absolute/output-directory http://localhost:8000`；它不会修改正式包的实例地址。测试实例的 `MCP_OAUTH_ISSUER` 必须匹配这个本地地址。后端测试使用 `docker compose -p plane-test -f docker-compose-test.yml` 隔离栈。
 
@@ -146,6 +146,16 @@ codex plugin add plane-workflow@plane-local-test
 
 在同一 host 的客户端重新加载插件，点击连接并亲自登录、确认账号范围。客户端不显示连接入口时先检查插件详情是否加载 MCP；不能仅凭技能出现就认定已连接。本地市场与正式 `plane-openai` 市场分开，不修改正式包或已有连接。
 
+Claude 内置 MCP 测试包可以独立生成（不会改动正式包或安装缓存）：
+
+```bash
+node plugins/plane-workflow/portable/local-claude-package.mjs /absolute/new-claude-test http://localhost:8000
+claude plugin validate --strict /absolute/new-claude-test/plane-workflow
+claude --plugin-dir /absolute/new-claude-test/plane-workflow-claude-local.zip
+```
+
+输出包含插件 ZIP、解压目录和中文测试说明。测试包保留八项技能与 Claude agents/hooks，并额外包含 `.mcp.json`；版本带 `-local.1`，不带任何凭据。支持 ZIP 的桌面插件导入入口也可使用；云端或隔离虚拟机中的连接无法访问宿主机 localhost，需改用可达的 HTTPS 测试实例。通过 `/mcp` 找到 `plugin:plane-workflow:plane` 后认证；远端撤销后再次认证该连接，不需要修改 API Token。
+
 Claude Code 单独测试服务端 OAuth：
 
 ```bash
@@ -154,7 +164,7 @@ claude mcp add --transport http --scope local plane-oauth-local http://localhost
 
 启动 Claude Code 后通过 `/mcp` 选择 `plane-oauth-local` 并认证。该方式验证服务端 OAuth，不代表 Claude 插件已打包 MCP。客户端若从云端访问远程 MCP，无法访问你电脑的 localhost；此时需使用可达的 HTTPS 测试地址并重新生成对应实例的包，不能把本地地址当成公网地址。
 
-验收顺序：首次只读授权 → 初始化与工具列表 → `workspace(action="list")` 显示当前有权限的工作区 → 无权限工作区请求失败 → 在个人设置的开发者 MCP 中撤销 → 原连接失效。写入授权只在测试工作区验证，不用真实工作项做破坏性测试。
+验收顺序：首次只读授权 → 初始化与工具列表 → `workspace(action="list")` 显示当前有权限的工作区 → 无权限工作区请求失败 → 在个人设置 → 开发者 → 授权连接中撤销 → 原连接失效。写入授权只在测试工作区验证，不用真实工作项做破坏性测试。
 
 审查加固：授权确认票据绑定浏览器会话且只能使用一次；已发放但尚未兑换的授权码也可以撤销；会话接口独立校验 Origin，不依赖全局宽松 CORS；只读 OAuth 的写请求返回 `403 insufficient_scope`；一体化代理将 `/mcp-connect` 留给前端。令牌兑换与刷新通过数据库行锁处理并发。
 

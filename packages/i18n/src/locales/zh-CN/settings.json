@@ -122,7 +122,7 @@
       "generic_title": "其他客户端",
       "chatgpt_step_1": "在 ChatGPT 桌面客户端打开“设置”→“插件”，点击“添加”→“添加插件市场”。",
       "chatgpt_step_2": "填写下方仓库和分支，子目录留空，完成添加。",
-      "chatgpt_step_3": "从市场安装插件，点击连接，登录 Plane 并选择工作区及权限。",
+      "chatgpt_step_3": "从市场安装插件，点击连接，登录 Plane 并确认账号访问范围及权限。",
       "codex_step_1": "在终端依次运行：",
       "codex_step_2": "重新加载 Codex，确认 8 个技能均已加载。同一台电脑上的 ChatGPT 桌面客户端也会显示这个插件市场。",
       "desktop_step_1": "在 Claude Desktop 打开 Customize → Plugins，选择 Add → Add marketplace。",

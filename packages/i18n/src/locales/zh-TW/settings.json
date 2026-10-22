@@ -132,6 +132,9 @@
       "token_hint": "貼上 API 權杖即可連線，此處不儲存權杖。",
       "agent_hint": "複製「Agent 安裝」提示詞交給 AI 助手；OpenAI 外掛使用 OAuth。",
       "chatgpt_hint": "安裝目前實例的 Plane Workflow OpenAI 外掛，連線並授權帳號，無需填寫 API 權杖。下方 TOML 供手動權杖接入使用。"
+    },
+    "skills": {
+      "chatgpt_step_3": "從市集安裝外掛，點選連線，登入 Plane 並確認帳號存取範圍及權限。"
     }
   },
   "profile": {

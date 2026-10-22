@@ -122,7 +122,7 @@
       "generic_title": "Other clients",
       "chatgpt_step_1": "In the ChatGPT desktop app, open Settings → Plugins, then select Add → Add plugin marketplace.",
       "chatgpt_step_2": "Enter the repository and branch below, leave the subdirectory empty, and add the marketplace.",
-      "chatgpt_step_3": "Install the plugin, click Connect, and sign in to Plane to authorize a workspace and permissions.",
+      "chatgpt_step_3": "Install the plugin, click Connect, and sign in to Plane to confirm account access and permissions.",
       "codex_step_1": "Run these commands in a terminal:",
       "codex_step_2": "Reload Codex and confirm all 8 skills are loaded. The ChatGPT desktop app on the same machine also lists this marketplace.",
       "desktop_step_1": "In Claude Desktop, open Customize → Plugins, then select Add → Add marketplace.",

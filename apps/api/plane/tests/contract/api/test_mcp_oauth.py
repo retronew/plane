@@ -133,6 +133,10 @@ def test_discovery_and_401():
     [
         "javascript:alert(1)",
         "http://example.com/cb",
+        "http://localhost.evil.invalid:43210/callback",
+        "http://evil.localhost:43210/callback",
+        "http://localhost@evil.invalid:43210/callback",
+        "http://localhost.:43210/callback",
         "https://user:pass@host/cb",
         "https://host/cb#x",
         "https://host/\\bad",
@@ -157,6 +161,35 @@ def test_registration_rate_limit():
             == 201
         )
     assert client.post("/auth/mcp/register/", "{}", content_type="application/json").status_code == 429
+
+
+@pytest.mark.parametrize("host", ["localhost", "127.0.0.1", "[::1]"])
+def test_loopback_clients_bind_exact_callback_and_reauthorize(flow, host):
+    browser, params, _, exchange = flow
+    redirect = f"http://{host}:43211/callback"
+    registration = browser.post(
+        "/auth/mcp/register/",
+        json.dumps({"client_name": "Loopback test", "redirect_uris": [redirect]}),
+        content_type="application/json",
+    )
+    assert registration.status_code == 201
+    client_id = registration.json()["client_id"]
+    request = {**params, "client_id": client_id, "redirect_uri": redirect}
+    assert (
+        browser.get("/auth/mcp/authorize/", {**request, "redirect_uri": f"http://{host}:43212/callback"}).status_code
+        == 400
+    )
+    for _ in range(2):
+        form = consent_page(browser, request).json()
+        response = browser.post("/auth/mcp/authorize/", {"ticket": form["ticket"], "decision": "allow"})
+        assert response["Location"].startswith(redirect + "?")
+        code = parse_qs(urlsplit(response["Location"]).query)["code"][0]
+        assert exchange(code, client_id=client_id, redirect_uri=REDIRECT).status_code == 400
+        tokens = exchange(code, client_id=client_id, redirect_uri=redirect).json()
+        assert call_mcp(browser, tokens["access_token"], method="tools/list").status_code == 200
+        grant = MCPOAuthToken.objects.get(access_hash=digest(tokens["access_token"])).grant
+        assert browser.post("/auth/mcp/connections/", {"grant": grant.pk}).status_code == 200
+        assert call_mcp(browser, tokens["access_token"]).status_code == 401
 
 
 def test_consent_login_deny_csrf_and_account_binding(flow, create_user):
@@ -755,9 +788,12 @@ def test_in_flight_legacy_consent_does_not_silently_expand_access(flow, workspac
     form = consent_page(browser, params).json()
     legacy = signing.loads(form["ticket"], salt="mcp-consent")
     legacy.pop("access")
+    legacy.pop("grant_days")
     ticket = signing.dumps(legacy, salt="mcp-consent")
     response = browser.post(
         "/auth/mcp/authorize/", {"ticket": ticket, "workspace": workspace.slug, "decision": "allow"}
     )
     assert response.status_code == 302
-    assert MCPOAuthGrant.objects.get().workspace_id == workspace.pk
+    grant = MCPOAuthGrant.objects.get()
+    assert grant.workspace_id == workspace.pk
+    assert timedelta(days=30) - timedelta(seconds=5) < grant.expires_at - grant.created_at <= timedelta(days=30)
