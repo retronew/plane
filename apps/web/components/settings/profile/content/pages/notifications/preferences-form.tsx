@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import useSWR from "swr";
 import { Switch } from "@makeplane/propel/components/switch";
 import { Button } from "@makeplane/propel/components/button";
+import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
 import { useTranslation } from "@plane/i18n";
 import { NotificationPreferencesService } from "@plane/services";
 import { NOTIFICATION_CHANNELS, NOTIFICATION_EVENTS } from "@plane/types";
@@ -9,12 +10,17 @@ import type { TNotificationPreferencesPatch, TNotificationScope } from "@plane/t
 import { SettingsControlItem } from "@/components/settings/control-item";
 
 const service = new NotificationPreferencesService();
-const selectClass = "rounded-md border border-subtle bg-surface-1 px-2 py-1.5 text-13 text-primary";
+type TPreferenceValue = "inherit" | "on" | "off";
 
 const GLOBAL_SCOPE: TNotificationScope = {};
 
 export function NotificationPreferencesForm({ scope = GLOBAL_SCOPE }: { scope?: TNotificationScope }) {
   const { t } = useTranslation();
+  const preferenceOptions: { value: TPreferenceValue; label: string }[] = [
+    { value: "inherit", label: t("notification_preferences.inherit") },
+    { value: "on", label: t("notification_preferences.on") },
+    { value: "off", label: t("notification_preferences.off") },
+  ];
   const global = !scope.workspace_id;
   const { data, error, mutate } = useSWR(["NOTIFICATION_PREFERENCES", scope.workspace_id, scope.project_id], () =>
     service.retrieve(scope)
@@ -140,23 +146,28 @@ export function NotificationPreferencesForm({ scope = GLOBAL_SCOPE }: { scope?: 
                           onCheckedChange={(enabled) => void update({ events: { [channel]: { [event]: enabled } } })}
                         />
                       ) : (
-                        <select
-                          className={selectClass}
-                          aria-label={label}
+                        <Select<TPreferenceValue>
+                          items={preferenceOptions}
                           disabled={saving}
                           value={value === null ? "inherit" : value ? "on" : "off"}
-                          onChange={(e) =>
+                          onValueChange={(next) => {
+                            if (next === null) return;
                             void update({
                               events: {
-                                [channel]: { [event]: e.target.value === "inherit" ? null : e.target.value === "on" },
+                                [channel]: { [event]: next === "inherit" ? null : next === "on" },
                               },
-                            })
-                          }
+                            });
+                          }}
                         >
-                          <option value="inherit">{t("notification_preferences.inherit")}</option>
-                          <option value="on">{t("notification_preferences.on")}</option>
-                          <option value="off">{t("notification_preferences.off")}</option>
-                        </select>
+                          <SelectTrigger size="md" width="fit" aria-label={label} />
+                          <SelectContent>
+                            <SelectList>
+                              {preferenceOptions.map((option) => (
+                                <SelectItem key={option.value} {...option} size="md" />
+                              ))}
+                            </SelectList>
+                          </SelectContent>
+                        </Select>
                       )}
                       <p className="mt-1 max-w-44 text-11 text-secondary">
                         {t("notification_preferences.effective", {

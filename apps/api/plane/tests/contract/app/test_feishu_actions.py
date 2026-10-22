@@ -91,7 +91,12 @@ def test_state_write_is_atomic_and_emits_normal_activity_once(card, django_captu
         result = feishu_actions.execute_card_action(card.action)
     card.issue.refresh_from_db()
     card.action.refresh_from_db()
-    assert result == {"code": "state_updated"}
+    assert result == {
+        "code": "state_updated",
+        "state_before": card.todo.name,
+        "state_after": card.done.name,
+        "actor_name": card.user.display_name or card.user.first_name,
+    }
     assert card.issue.state_id == card.done.pk
     assert card.issue.updated_by_id == card.user.pk
     assert card.issue.completed_at is not None
@@ -218,6 +223,9 @@ def test_approval_uses_service_and_replay_is_idempotent(card, outcome):
     approval.refresh_from_db()
     card.action.refresh_from_db()
     assert card.issue.state_id == (card.done.pk if outcome == "approve" else card.rejected.pk)
+    assert result["state_before"] == card.todo.name
+    assert result["state_after"] == (card.done.name if outcome == "approve" else card.rejected.name)
+    assert result["actor_name"] == (card.user.display_name or card.user.first_name)
     assert approval.idempotency_key == str(card.action.pk)
     assert card.action.status == "succeeded"
     assert feishu_actions.execute_card_action(card.action) == result
@@ -228,7 +236,13 @@ def test_approval_uses_service_and_replay_is_idempotent(card, outcome):
 def test_approval_recovers_previously_committed_idempotent_decision(card):
     approval, rule = approval_action(card, "approve")
     decide_approval(card.project.pk, card.issue.pk, approval.pk, rule.pk, "approve", 1, str(card.action.pk), card.user)
-    assert feishu_actions.execute_card_action(card.action) == {"code": "approved"}
+    Issue.objects.filter(pk=card.issue.pk).update(state=card.rejected)
+    assert feishu_actions.execute_card_action(card.action) == {
+        "code": "approved",
+        "state_before": card.todo.name,
+        "state_after": card.done.name,
+        "actor_name": card.user.display_name or card.user.first_name,
+    }
     card.action.refresh_from_db()
     assert card.action.status == "succeeded"
 

@@ -3,11 +3,12 @@
 
 from datetime import timedelta
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import pytest
 from django.utils import timezone
 
-from plane.db.models import Issue, IssueActivity, IssueComment, Project, ProjectMember, State, User
+from plane.db.models import Issue, IssueActivity, IssueComment, Profile, Project, ProjectMember, State, User
 from plane.db.models.feishu import FeishuBinding, FeishuCardAction, FeishuDelivery
 from plane.db.models.workflow import ProjectWorkflow, WorkflowApproval, WorkflowTransition
 from plane.services.workflow_approval import transition_snapshot
@@ -21,6 +22,7 @@ pytestmark = [pytest.mark.contract, pytest.mark.django_db]
 @pytest.fixture
 def card_context(workspace, create_user, settings):
     settings.WEB_URL = "https://plane.example"
+    settings.APP_BASE_URL = None
     project = Project.objects.create(workspace=workspace, name="Cards", identifier="CARD")
     ProjectMember.objects.create(project=project, member=create_user, role=20)
     review = State.objects.create(project=project, name="Review", group="started", default=True)
@@ -181,7 +183,44 @@ def test_claimed_action_hides_every_other_operation(card_context, status):
     action.save()
     card = delivery_card(delivery)
     assert len(controls(card)) == 1 and "url" in controls(card)[0]
-    assert "Action" in text(card)
+    assert card["header"]["template"] == ("green" if status == "succeeded" else "red" if status == "failed" else "blue")
+
+
+@pytest.mark.parametrize("language", ["en", "zh-CN"])
+@pytest.mark.parametrize("operation", ["state", "approve", "reject"])
+def test_completed_card_has_prominent_persistent_result(card_context, language, operation):
+    delivery, issue, *_ = card_context
+    Profile.objects.create(user=delivery.user, language=language)
+    delivery.user.user_timezone = "Asia/Shanghai"
+    delivery.user.save()
+    delivery_card(delivery)
+    action = FeishuCardAction.objects.filter(delivery=delivery).first()
+    action.operation = operation
+    action.status = "succeeded"
+    action.result = {"state_before": "Original", "state_after": "Finished", "actor_name": "Action actor"}
+    action.completed_at = timezone.now()
+    action.save()
+    card = delivery_card(delivery)
+    assert card["header"]["template"] == "green"
+    assert card["header"]["title"]["content"].startswith("✓")
+    assert "Original → Finished" in text(card)
+    assert "Action actor" in text(card)
+    assert action.completed_at.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%H:%M:%S") in text(card)
+    assert len(controls(card)) == 1 and "url" in controls(card)[0]
+    assert "Review your approval branches" not in text(card)
+
+
+def test_failed_card_does_not_expose_result_details(card_context):
+    delivery, *_ = card_context
+    delivery_card(delivery)
+    action = FeishuCardAction.objects.filter(delivery=delivery).first()
+    action.status = "failed"
+    action.result = {"code": "private-error", "actor_name": "secret", "state_after": "secret"}
+    action.save()
+    card = delivery_card(delivery)
+    assert card["header"]["template"] == "red"
+    assert "private-error" not in text(card) and "secret" not in text(card)
+    assert "Open Plane to review" in text(card)
 
 
 def test_expiry_does_not_extend_on_resend(card_context):

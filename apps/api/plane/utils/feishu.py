@@ -14,8 +14,8 @@ from plane.db.models.feishu import FeishuBinding, FeishuDelivery
 from plane.utils.feishu_client import FeishuError, get_feishu_config
 
 
-def web_url(path=""):
-    base = (settings.WEB_URL or "").rstrip("/")
+def web_url(path="", *, is_app=False):
+    base = ((settings.APP_BASE_URL if is_app else None) or settings.WEB_URL or "").rstrip("/")
     parsed = urlsplit(base)
     if parsed.scheme not in ("https", "http") or not parsed.netloc or parsed.query or parsed.fragment:
         raise FeishuError("invalid_web_url")

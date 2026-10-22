@@ -155,14 +155,18 @@ def test_removed_membership_blocks_delivery_before_preference_check():
         )
 
 
+@pytest.mark.parametrize("app_url", [None, "http://localhost:3000"])
 @override_settings(WEB_URL="https://plane.example")
-def test_card_uses_fixed_origin_and_plain_text():
+def test_card_uses_fixed_origin_and_plain_text(settings, app_url):
+    settings.APP_BASE_URL = app_url
     delivery = SimpleNamespace(
         user=SimpleNamespace(), workspace_id=None, title="<script>test</script>", body="[text](https://evil.example)"
     )
     card = delivery_card(delivery)
     assert card["elements"][0]["text"]["tag"] == "plain_text"
-    assert card["elements"][1]["actions"][0]["url"] == "https://plane.example/settings/profile/notifications/"
+    assert card["elements"][1]["actions"][0]["url"] == (
+        f"{app_url or 'https://plane.example'}/settings/profile/notifications/"
+    )
 
 
 def test_live_preferences_are_checked_for_business_delivery():

@@ -4,6 +4,7 @@
 import base64
 import hashlib
 import json
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import patch
 from uuid import uuid4
@@ -119,10 +120,11 @@ def test_plaintext_challenge_works_before_encrypt_key_is_configured():
     assert read(raw, {}, FeishuCallbackConfig("token", ""))["challenge"] == "challenge"
 
 
+@pytest.mark.parametrize("scale", [1, 1000])
 @pytest.mark.parametrize("offset,accepted", [(-301, False), (301, False), (-300, True), (300, True)])
-def test_signature_five_minute_window(offset, accepted):
+def test_signature_five_minute_window(offset, accepted, scale):
     raw = encrypt_body(event_body())
-    headers = signed_headers(raw, NOW + offset)
+    headers = signed_headers(raw, (NOW + offset) * scale)
     if accepted:
         assert read(raw, headers)["schema"] == "2.0"
     else:
@@ -131,22 +133,91 @@ def test_signature_five_minute_window(offset, accepted):
 
 
 @pytest.mark.parametrize(
-    "header,value",
+    "header,value,reason",
     [
-        ("X-Lark-Request-Timestamp", "invalid"),
-        ("X-Lark-Request-Timestamp", "9" * 13),
-        ("X-Lark-Request-Nonce", ""),
-        ("X-Lark-Request-Nonce", "n" * 257),
-        ("X-Lark-Signature", "0" * 64),
-        ("X-Lark-Signature", "é" * 64),
+        ("X-Lark-Request-Timestamp", None, "missing_signature_header"),
+        ("X-Lark-Request-Timestamp", "invalid", "invalid_signature_timestamp"),
+        ("X-Lark-Request-Timestamp", "9" * 14, "invalid_signature_timestamp"),
+        ("X-Lark-Request-Timestamp", "9" * 13, "signature_timestamp_out_of_window"),
+        ("X-Lark-Request-Timestamp", str(NOW - 301), "signature_timestamp_out_of_window"),
+        ("X-Lark-Request-Nonce", "", "invalid_signature_nonce"),
+        ("X-Lark-Request-Nonce", "n" * 257, "invalid_signature_nonce"),
+        ("X-Lark-Signature", "0" * 64, "signature_mismatch"),
+        ("X-Lark-Signature", "é" * 64, "invalid_signature_format"),
     ],
 )
-def test_invalid_signature_headers(header, value):
+def test_invalid_signature_headers(header, value, reason):
     raw = encrypt_body(event_body())
     headers = signed_headers(raw)
     headers[header] = value
-    with pytest.raises(FeishuCardSecurityError):
+    with pytest.raises(FeishuCardSecurityError) as exc:
         read(raw, headers)
+    assert exc.value.reason == reason
+
+
+def test_millisecond_timestamp_is_not_normalized_for_signature():
+    raw = encrypt_body(event_body())
+    headers = signed_headers(raw, NOW * 1000 + 123)
+    assert read(raw, headers)["schema"] == "2.0"
+    headers["X-Lark-Signature"] = signed_headers(raw, NOW)["X-Lark-Signature"]
+    with pytest.raises(FeishuCardSecurityError) as exc:
+        read(raw, headers)
+    assert exc.value.reason == "signature_mismatch"
+
+
+@pytest.mark.parametrize("offset", [-300001, 300001])
+def test_millisecond_timestamp_just_outside_window_is_rejected(offset):
+    raw = encrypt_body(event_body())
+    with pytest.raises(FeishuCardSecurityError) as exc:
+        read(raw, signed_headers(raw, NOW * 1000 + offset))
+    assert exc.value.reason == "signature_timestamp_out_of_window"
+
+
+@pytest.mark.parametrize("zone_hours", [0, 8, -5])
+@pytest.mark.parametrize("suffix", ["", " m=+12345.123456789"])
+@pytest.mark.parametrize("fraction", ["", ".12345678", ".123456789"])
+def test_go_timestamp_format_keeps_original_signature(zone_hours, suffix, fraction):
+    value = datetime.fromtimestamp(NOW, timezone(timedelta(hours=zone_hours)))
+    timestamp = value.strftime("%Y-%m-%d %H:%M:%S") + fraction + value.strftime(" %z") + " UTC" + suffix
+    raw = encrypt_body(event_body())
+    headers = signed_headers(raw, timestamp)
+    assert read(raw, headers)["schema"] == "2.0"
+    headers["X-Lark-Signature"] = signed_headers(raw, NOW)["X-Lark-Signature"]
+    with pytest.raises(FeishuCardSecurityError) as exc:
+        read(raw, headers)
+    assert exc.value.reason == "signature_mismatch"
+
+
+@pytest.mark.parametrize("offset,accepted", [(-301, False), (301, False), (-300, True), (300, True)])
+def test_go_timestamp_freshness_uses_wall_clock(offset, accepted):
+    value = datetime.fromtimestamp(NOW + offset, timezone.utc)
+    timestamp = value.strftime("%Y-%m-%d %H:%M:%S +0000 UTC") + " m=+1800000000.0"
+    raw = encrypt_body(event_body())
+    if accepted:
+        assert read(raw, signed_headers(raw, timestamp))["schema"] == "2.0"
+    else:
+        with pytest.raises(FeishuCardSecurityError) as exc:
+            read(raw, signed_headers(raw, timestamp))
+        assert exc.value.reason == "signature_timestamp_out_of_window"
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-99-22 15:10:38.123 +0000 UTC m=+12345.0",
+        "2026-10-22 15:10:38.123 +9999 UTC m=+12345.0",
+        "2026-10-22 15:10:38.123 UTC",
+        "2026-10-22 15:10:38.123 +0000 UTC trailing",
+        "2026-10-22 15:10:38.1234567890 +0000 UTC",
+        "NaN",
+        "Infinity",
+    ],
+)
+def test_invalid_go_timestamps_are_rejected(timestamp):
+    raw = encrypt_body(event_body())
+    with pytest.raises(FeishuCardSecurityError) as exc:
+        read(raw, signed_headers(raw, timestamp))
+    assert exc.value.reason == "invalid_signature_timestamp"
 
 
 def test_signature_covers_exact_raw_bytes():
@@ -155,11 +226,42 @@ def test_signature_covers_exact_raw_bytes():
         read(raw + b" ", signed_headers(raw))
 
 
-@pytest.mark.parametrize("encrypted,signed", [(False, False), (False, True), (True, False)])
-def test_ordinary_events_require_encryption_and_signature(encrypted, signed):
+@pytest.mark.parametrize("encrypted", [False, True])
+def test_ordinary_events_require_signature(encrypted):
     raw = encrypt_body(event_body()) if encrypted else json.dumps(event_body()).encode()
     with pytest.raises(FeishuCardSecurityError):
-        read(raw, signed_headers(raw) if signed else {})
+        read(raw, {})
+
+
+@pytest.mark.parametrize("encrypted", [False, True])
+@pytest.mark.parametrize("include_token", [False, True])
+def test_signed_callbacks_support_python_sdk_envelopes(encrypted, include_token):
+    body = event_body()
+    if not include_token:
+        del body["header"]["token"]
+    raw = encrypt_body(body) if encrypted else json.dumps(body).encode()
+    assert read(raw, signed_headers(raw)) == body
+
+
+@pytest.mark.parametrize("encrypted", [False, True])
+@pytest.mark.parametrize("token", [None, "", "wrong", 123, {}])
+def test_supplied_verification_token_must_match(encrypted, token):
+    body = event_body()
+    body["header"]["token"] = token
+    raw = encrypt_body(body) if encrypted else json.dumps(body).encode()
+    with pytest.raises(FeishuCardSecurityError):
+        read(raw, signed_headers(raw))
+
+
+@pytest.mark.parametrize("encrypted", [False, True])
+def test_callback_without_token_still_requires_valid_signature(encrypted):
+    body = event_body()
+    del body["header"]["token"]
+    raw = encrypt_body(body) if encrypted else json.dumps(body).encode()
+    headers = signed_headers(raw)
+    headers["X-Lark-Signature"] = "0" * 64
+    with pytest.raises(FeishuCardSecurityError):
+        read(raw, headers)
 
 
 @pytest.mark.parametrize("config", [FeishuCallbackConfig("", "key"), FeishuCallbackConfig("token", "")])

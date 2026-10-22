@@ -10,7 +10,7 @@
 
 `https://<Plane 域名>/api/users/me/integrations/feishu/callback/`
 
-此域名必须把 `/api/` 转发到 Plane API，并携带用户登录 Cookie。个人中心返回地址为 `/settings/profile/notifications/`。在本地前后端分端口部署时，不能仅把回调指向未代理 API 的前端开发服务器；需配置同源代理后再实际授权。
+OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API 处理；OAuth 回调还需携带用户登录 Cookie。授权完成后的个人中心地址 `/settings/profile/notifications/` 和卡片查看链接优先使用 `APP_BASE_URL`，未配置时回退到 `WEB_URL`。本地前后端分端口部署可使用 `WEB_URL=http://localhost:8000`、`APP_BASE_URL=http://localhost:3000`，确保登录 Cookie 能随回调发送；不要把 API 回调指向未代理 API 的前端开发服务器。
 
 配置项：`FEISHU_ENABLED`、`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_VERIFICATION_TOKEN`、`FEISHU_ENCRYPT_KEY`。后三项均加密且只写，留空保留。当 `SKIP_ENV_VAR=0` 时由环境变量管理，后台禁止修改。部署时执行迁移及 `configure_instance` 初始化配置键，重启 API、worker 和 Beat。不要在已有环境重跑 setup.sh。
 
@@ -22,11 +22,13 @@
 
 `https://<Plane 域名>/api/integrations/feishu/cards/`
 
-此接口与个人绑定 OAuth 回调不同，必须公网 HTTPS 可达且 `/api/` 正确转发。配置 Encrypt Key 开启请求加密。地址校验使用 challenge；普通交互严格校验原始请求签名、时间窗口、Verification Token、App ID、操作者租户及 open_id、绑定账号、消息 ID 和动作签名。未配置完整回调凭据时，卡片仅提供跳转。
+此接口与个人绑定 OAuth 回调不同，必须公网 HTTPS 可达且 `/api/` 正确转发。配置 Encrypt Key 用于签名验证及请求解密。地址校验使用 challenge 并强制核验 Verification Token；普通交互严格校验原始请求签名、时间窗口、App ID、操作者租户及 open_id、绑定账号、消息 ID 和动作签名。兼容官方 Python SDK 接受的已签名明文及加密 JSON，普通回调可省略 `header.token`，但提供时必须与 Verification Token 匹配。缺失或无效签名始终拒绝；拒绝日志只记录固定原因码，不输出请求内容或凭据。未配置完整回调凭据时，卡片仅提供跳转。
 
 个人消息不需要群权限，可关闭「允许被其他机器人邀请进群」。应用发布后配置才生效；更新自己发送的卡片沿用应用消息权限。不要订阅旧版 `card.action.trigger_v1`，也无需接收群聊天消息。
 
 每条卡片的快捷操作有效期为创建后24小时，动作参数固定。用户点击后立即收到「已受理」提示；Beat 每10秒扫描等待至少5秒的动作，worker 再执行审批或状态更新，通常需等待5–15秒加业务执行时间。现有 runner 的前置步骤仍在数据库事务外执行，提交时再次核验权限、绑定、源状态/版本和工作流。重复点击或并发点击不同选项只会受理一个动作；失败或已过期时通过 Plane 页面重新处理。卡片不自动替换为新的审批或新的状态上下文。
+
+结果卡片使用绿色标题明确区分「审批已通过」「已拒绝审批」「状态已更新」，执行失败使用红色标题；待处理保持蓝色。结果区显示本次操作的状态前后快照、操作人及用户时区的完成时间，隐藏旧通知活动和已使用的操作控件，保留查看链接。旧动作缺少状态快照时不猜测历史变化，只展示可确认的结果。拒绝审批成功同样显示绿色，红色仅表示执行失败。
 
 执行结果与业务提交保持原子性，worker 中断可恢复；完成后通过消息 PATCH 更新原卡片，卡片刷新失败单独重试，最多6次，不重复执行业务。失去项目访问权限后仅更新简短结果，不再显示实体详情。审批按钮的 `confirm` 字段保留，但飞书客户端的二次确认行为需真实应用联调；服务端授权不依赖此弹窗。
 
@@ -65,6 +67,10 @@ Web全量类型检查存在9处非本次通知变更文件的既有错误（项�
 
 同日交互卡片扩展验证：配置与原投递85项通过；动作/验签/回调/原工作流155项通过；卡片渲染/任务/原outbox最终80项通过（各轮有重叠，不相加作为独立用例数）。`makemigrations --check --dry-run` 无变化，Ruff通过。Admin helper 5项、类型/lint/React Doctor通过；浏览器验证Token/Key保存清空、留空保留和两个回调地址，修复受控输入警告。
 
-飞书应用「Plane 通知」已创建，机器人能力和 `im:message:send_as_bot` 已开通，「允许被其他机器人邀请进群」已关闭。应用仍待上线；尚未配置生产回调、发布或验证真实 OAuth、消息送达和客户端交互。代码已与本地 `preview` 的 MCP OAuth 工作整合，尚未部署。飞书迁移调整为 `0155_feishu_notification_preferences` → `0156_feishu_delivery_retry_window` → `0157_feishu_card_actions`，依赖 `0154_mcp_oauth_account_scope`；旧飞书迁移仅在已清理的专用测试数据库应用过。
+飞书应用「Plane 通知」已创建，机器人能力和 `im:message:send_as_bot` 已开通，「允许被其他机器人邀请进群」已关闭。代码已与 `preview` 的 MCP OAuth 工作整合并推送，本机开发环境已更新。真实 OAuth 绑定已成功，测试消息首次投递为 `sent`，飞书返回消息 ID；这不代表已验证客户端阅读或卡片交互。应用 1.0.0 已于同日发布，仅对当前测试成员可用，卡片回调暂时使用用户授权的 Tailscale Funnel 接入本机；尚未配置生产回调或部署线上 Plane 服务。飞书迁移调整为 `0155_feishu_notification_preferences` → `0156_feishu_delivery_retry_window` → `0157_feishu_card_actions`，依赖 `0154_mcp_oauth_account_scope`；旧飞书迁移仅在已清理的专用测试数据库应用过。
 
 合并验证：从空数据库应用完整迁移链成功，迁移检查无遗漏；MCP OAuth、飞书通知与卡片等366项后端回归通过，个人设置/通知30项前端测试和admin类型检查通过。飞书OAuth回调同步纳入敏感请求日志保护，查询中的授权码与state不落日志。
+
+真实事件联调：在本机 `test` 工作区的 `FSCARD22` 专用项目，通过业务 API 真实创建和修改工作项、发表评论和提及、提交 Intake，并运行到期提醒任务。八类事件已生成14条卡片（含创建分配产生的属性通知），全部 `sent`。审批通过正常工作流预览/应用及审批规则配置后触发，`FSCARD22-7` 保持真实 `pending`；Intake 在发送验证后通过正常接口接受。评论链接包含评论锚点。个人飞书渠道已开启，专用项目关闭邮件事件，测试工作项保留供查看。发布后真实点击已到达本机，但返回 403（飞书客户端 `200671`），动作仍 pending。随后补齐官方 Python SDK 回调兼容性，106 项安全/接口回归通过；公网使用不存在的动作验证已签名明文及加密请求（省略 header.token）均返回 200 和失效提示，未执行业务。后续真实请求诊断确认时间戳采用 Go `time.Time.String()` 格式（含时区和单调时钟后缀），补齐严格解析，签名仍使用原始请求头且保留五分钟时间窗，145 项安全/接口回归通过。真实客户端批准、拒绝、状态变更均已执行成功并更新原卡片：FSCARD22-7 审批通过进入 Done，FSCARD22-2 状态切换和后续拒绝审批成功。结果卡片展示另有73项动作/渲染/任务回归通过，三张真实卡片已更新为绿色结果标题，正文不重复标题。本机查看链接不能直接从手机访问。
+
+本机联调修复：授权后的前端跳转和卡片链接支持独立 `APP_BASE_URL`，API 回调仍使用 `WEB_URL`；后端66项定向回归通过。中文统一为“飞书”，通知设置下拉框复用 Propel `Select`，前端18项回归通过，React Doctor 100分。本轮浏览器预览因端口占用及备用启动审批受阻，视觉验证未完成；web全量类型检查仍报告上述9项既有错误。
