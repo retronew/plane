@@ -9,7 +9,8 @@ from plane.license.utils.encryption import decrypt_data
 
 # Secrets that are never sent back in full: the admin UI shows a masked hint and keeps the
 # saved value when the field is submitted empty.
-WRITE_ONLY_SECRETS = {"LLM_API_KEY"}
+FEISHU_WRITE_ONLY_SECRETS = {"FEISHU_APP_SECRET", "FEISHU_VERIFICATION_TOKEN", "FEISHU_ENCRYPT_KEY"}
+WRITE_ONLY_SECRETS = {"LLM_API_KEY", *FEISHU_WRITE_ONLY_SECRETS}
 
 
 def mask_secret(value: str) -> str:
@@ -28,6 +29,10 @@ class InstanceConfigurationSerializer(BaseSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        if instance.key in FEISHU_WRITE_ONLY_SECRETS:
+            data["is_configured"] = bool(decrypt_data(instance.value)) if instance.value else False
+            data["value"] = ""
+            return data
         # Decrypt secrets value
         if instance.is_encrypted and instance.value is not None:
             data["value"] = decrypt_data(instance.value)

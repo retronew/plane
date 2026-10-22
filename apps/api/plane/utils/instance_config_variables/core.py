@@ -319,6 +319,39 @@ llm_config_variables = [
     },
 ]
 
+feishu_config_variables = [
+    {
+        "key": "FEISHU_ENABLED",
+        "value": os.environ.get("FEISHU_ENABLED", "0"),
+        "category": "FEISHU",
+        "is_encrypted": False,
+    },
+    {
+        "key": "FEISHU_APP_ID",
+        "value": os.environ.get("FEISHU_APP_ID", ""),
+        "category": "FEISHU",
+        "is_encrypted": False,
+    },
+    {
+        "key": "FEISHU_APP_SECRET",
+        "value": os.environ.get("FEISHU_APP_SECRET", ""),
+        "category": "FEISHU",
+        "is_encrypted": True,
+    },
+    {
+        "key": "FEISHU_VERIFICATION_TOKEN",
+        "value": os.environ.get("FEISHU_VERIFICATION_TOKEN", ""),
+        "category": "FEISHU",
+        "is_encrypted": True,
+    },
+    {
+        "key": "FEISHU_ENCRYPT_KEY",
+        "value": os.environ.get("FEISHU_ENCRYPT_KEY", ""),
+        "category": "FEISHU",
+        "is_encrypted": True,
+    },
+]
+
 core_config_variables = [
     *authentication_config_variables,
     *session_config_variables,
@@ -329,5 +362,6 @@ core_config_variables = [
     *gitea_config_variables,
     *oidc_config_variables,
     *smtp_config_variables,
+    *feishu_config_variables,
     *llm_config_variables,
 ]

@@ -63,6 +63,8 @@ it("lets email be disabled independently and exposes no in-app opt-out", () => {
   render(<AutoRemindAutomation handleChange={change} />);
   fireEvent.click(screen.getByRole("switch", { name: "project_settings.automations.auto-remind.email_label" }));
   expect(change).toHaveBeenCalledWith({ remind_email_enabled: false });
-  expect(screen.getByText("project_settings.automations.auto-remind.in_app_always_on")).toBeTruthy();
-  expect(screen.getAllByRole("switch")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("switch", { name: "notification_preferences.project_feishu_reminder" }));
+  expect(change).toHaveBeenCalledWith({ remind_feishu_enabled: false });
+  expect(screen.getByText("notification_preferences.project_reminder_hint")).toBeTruthy();
+  expect(screen.getAllByRole("switch")).toHaveLength(3);
 });

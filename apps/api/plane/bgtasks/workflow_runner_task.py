@@ -9,11 +9,13 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
-from plane.db.models import ProjectMember, UserNotificationPreference, WorkspaceMember
+from plane.db.models import ProjectMember, WorkspaceMember
 from plane.db.models.workflow import WorkflowApproval
 from plane.db.models.workflow_runner import WorkflowApprovalEmail, WorkflowExecution
 from plane.license.utils.instance_value import get_email_configuration
 from plane.utils.workflow_runner import execute_workflow_run, recover_workflow_executions
+from plane.utils.feishu import enqueue_feishu_notification
+from plane.utils.notification_preferences import should_notify
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,17 @@ def queue_approval_email(approval_id):
         return
     recipients = {person["id"] for branch in approval.branches for person in branch["approvers"]}
     for receiver_id in recipients:
+        if should_notify(receiver_id, approval.workspace_id, approval.project_id, "approval_requested", "feishu"):
+            enqueue_feishu_notification(
+                event_key=f"approval-requested:{approval.pk}",
+                user_id=receiver_id,
+                kind="approval_requested",
+                title=f"Approval requested: {approval.issue.name}",
+                body=approval.issue.name,
+                workspace_id=approval.workspace_id,
+                project_id=approval.project_id,
+                issue_id=approval.issue_id,
+            )
         delivery, _ = WorkflowApprovalEmail.objects.get_or_create(
             approval=approval,
             receiver_id=receiver_id,
@@ -96,7 +109,6 @@ def send_approval_email(delivery_id):
                 workspace_id=approval.workspace_id, member=receiver, is_active=True
             ).exists()
         )
-        preference = UserNotificationPreference.objects.filter(user=receiver).first()
         if (
             approval.status != "pending"
             or approval.deleted_at is not None
@@ -107,7 +119,7 @@ def send_approval_email(delivery_id):
             or issue.project.workspace.deleted_at is not None
             or not valid_member
             or not receiver.is_active
-            or (preference and not preference.state_change)
+            or not should_notify(receiver, approval.workspace_id, approval.project_id, "approval_requested", "email")
         ):
             delivery.status = "cancelled"
             delivery.save(update_fields=["status", "updated_at"])

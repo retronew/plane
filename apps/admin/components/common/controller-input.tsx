@@ -60,7 +60,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
               id={name}
               name={name}
               type={type === "password" && showPassword ? "text" : type}
-              value={value}
+              value={value ?? ""}
               onChange={onChange}
               ref={ref}
               aria-invalid={error}

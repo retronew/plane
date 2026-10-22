@@ -14,6 +14,7 @@ export default [
     route("workspace", "./(all)/(dashboard)/workspace/page.tsx"),
     route("workspace/create", "./(all)/(dashboard)/workspace/create/page.tsx"),
     route("email", "./(all)/(dashboard)/email/page.tsx"),
+    route("feishu", "./(all)/(dashboard)/feishu/page.tsx"),
     route("authentication", "./(all)/(dashboard)/authentication/page.tsx"),
     route("ai", "./(all)/(dashboard)/ai/page.tsx"),
     route("admins", "./(all)/(dashboard)/admins/page.tsx"),

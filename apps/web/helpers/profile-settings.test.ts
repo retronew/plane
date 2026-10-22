@@ -1,5 +1,32 @@
 import { describe, expect, it } from "vitest";
+import { matchRoutes } from "react-router";
+import type { RouteObject } from "react-router";
+import type { RouteConfigEntry } from "@react-router/dev/routes";
+import { coreRoutes } from "@/app/routes/core";
 import { getProfileSettingsRedirect } from "./profile-settings";
+
+function toRoutes(entries: RouteConfigEntry[]): RouteObject[] {
+  return entries.map(({ file, path, index, children }) =>
+    index ? { id: file, path, index: true } : { id: file, path, children: children ? toRoutes(children) : undefined }
+  );
+}
+
+describe("Feishu notification settings callback routing", () => {
+  it.each(["connected", "error", "identity_in_use"])("routes %s through standalone personal settings", (result) => {
+    const matches = matchRoutes(toRoutes(coreRoutes), `/settings/profile/notifications/?feishu=${result}`);
+    expect(matches?.at(-1)?.route.id).toBe("./(all)/settings/profile/[profileTabId]/page.tsx");
+    expect(matches?.at(-1)?.params).toEqual({ profileTabId: "notifications" });
+    expect(getProfileSettingsRedirect("notifications", `?feishu=${result}`, "", ["profile"])).toBe(
+      `/profile?feishu=${result}&profileSettings=notifications`
+    );
+  });
+
+  it("keeps the profile workspace notification inbox distinct from personal preferences", () => {
+    const matches = matchRoutes(toRoutes(coreRoutes), "/profile/notifications/");
+    expect(matches?.at(-1)?.route.id).toBe("./(all)/[workspaceSlug]/(projects)/notifications/page.tsx");
+    expect(matches?.at(-1)?.params.workspaceSlug).toBe("profile");
+  });
+});
 
 describe("legacy personal settings redirect", () => {
   it("returns to a valid preferred workspace with the requested modal tab", () => {

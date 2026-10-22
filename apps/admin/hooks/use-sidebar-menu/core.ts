@@ -10,7 +10,7 @@ import { LockOutline, MailOutline, SettingsOutline, UserOutline, WorkspaceOutlin
 // types
 import type { TSidebarMenuItem } from "./types";
 
-export type TCoreSidebarMenuKey = "general" | "users" | "email" | "workspace" | "authentication" | "ai";
+export type TCoreSidebarMenuKey = "general" | "users" | "email" | "feishu" | "workspace" | "authentication" | "ai";
 
 export const coreSidebarMenuLinks: Record<TCoreSidebarMenuKey, TSidebarMenuItem> = {
   general: {
@@ -30,6 +30,12 @@ export const coreSidebarMenuLinks: Record<TCoreSidebarMenuKey, TSidebarMenuItem>
     name: "admin.sidebar.email.name",
     description: "admin.sidebar.email.description",
     href: `/email/`,
+  },
+  feishu: {
+    Icon: MailOutline,
+    name: "admin.feishu.title",
+    description: "admin.feishu.description",
+    href: `/feishu/`,
   },
   workspace: {
     Icon: WorkspaceOutline,

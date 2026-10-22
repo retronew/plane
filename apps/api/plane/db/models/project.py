@@ -135,6 +135,7 @@ class Project(BaseModel):
     )
     remind_in = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(7)])
     remind_email_enabled = models.BooleanField(default=True)
+    remind_feishu_enabled = models.BooleanField(default=True)
     logo_props = models.JSONField(default=dict)
     default_state = models.ForeignKey("db.State", on_delete=models.SET_NULL, null=True, related_name="default_state")
     archived_at = models.DateTimeField(null=True)

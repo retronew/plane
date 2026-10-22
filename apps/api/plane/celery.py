@@ -27,6 +27,14 @@ app = Celery("plane")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.beat_schedule = {
+    "dispatch-feishu-card-actions": {
+        "task": "plane.bgtasks.feishu_card_task.dispatch_feishu_card_actions",
+        "schedule": 10.0,
+    },
+    "dispatch-feishu-notifications": {
+        "task": "plane.bgtasks.feishu_task.dispatch_feishu_deliveries",
+        "schedule": 30.0,
+    },
     "capture-current-cycle-progress-every-fifteen-minutes": {
         "task": "plane.bgtasks.cycle_snapshot_task.capture_cycle_progress",
         "schedule": crontab(minute="*/15"),

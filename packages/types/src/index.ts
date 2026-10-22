@@ -34,6 +34,7 @@ export * from "./issues/issue-property-values";
 export * from "./layout";
 export * from "./module";
 export * from "./navigation-preferences";
+export * from "./notification-preferences";
 export * from "./page";
 export * from "./payment";
 export * from "./pragmatic";

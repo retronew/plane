@@ -19,12 +19,13 @@ from plane.db.models import (
     Notification,
     Project,
     ProjectMember,
-    UserNotificationPreference,
     WorkspaceMember,
 )
 from plane.license.utils.instance_value import get_email_configuration
 from plane.utils.email import generate_plain_text_from_html
 from plane.utils.exception_logger import log_exception
+from plane.utils.feishu import enqueue_feishu_notification
+from plane.utils.notification_preferences import should_notify
 
 
 def active_recipients(project):
@@ -58,9 +59,8 @@ def eligible(issue, receiver_id, now):
     )
 
 
-def email_enabled(receiver_id):
-    preference = UserNotificationPreference.objects.filter(user_id=receiver_id).first()
-    return preference is None or preference.property_change
+def email_enabled(receiver_id, project):
+    return should_notify(receiver_id, project.workspace_id, project.pk, "due_reminder", "email")
 
 
 @shared_task
@@ -95,40 +95,59 @@ def send_due_reminders():
                             receiver_id=assignee.assignee_id,
                             target_date=issue.target_date,
                         )
-                        if created:
-                            Notification.objects.create(
-                                workspace=project.workspace,
-                                project=project,
-                                receiver_id=assignee.assignee_id,
-                                triggered_by=None,
-                                entity_name="issue",
-                                entity_identifier=issue.id,
-                                sender="in_app:issue_reminder:due",
-                                title=issue.name,
-                                data={
-                                    "issue": {
-                                        "id": str(issue.id),
-                                        "name": issue.name,
-                                        "identifier": project.identifier,
-                                        "sequence_id": issue.sequence_id,
-                                        "state_name": issue.state.name,
-                                        "state_group": issue.state.group,
-                                    },
-                                    "issue_activity": {
-                                        "id": str(delivery.id),
-                                        "field": "due_reminder",
-                                        "verb": "reminded",
-                                        "new_value": issue.target_date.isoformat(),
-                                        "old_value": None,
-                                    },
-                                },
+                        if project.remind_feishu_enabled and should_notify(
+                            assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "feishu"
+                        ):
+                            enqueue_feishu_notification(
+                                event_key=f"due-reminder:{delivery.id}",
+                                user_id=assignee.assignee_id,
+                                kind="due_reminder",
+                                title=f"Work item due soon: {issue.name}",
+                                body=issue.target_date.isoformat(),
+                                workspace_id=project.workspace_id,
+                                project_id=project.pk,
+                                issue_id=issue.pk,
                             )
-                            created_count += 1
+                        if created and should_notify(
+                            assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "in_app"
+                        ):
+                            try:
+                                with transaction.atomic():
+                                    Notification.objects.create(
+                                        workspace=project.workspace,
+                                        project=project,
+                                        receiver_id=assignee.assignee_id,
+                                        triggered_by=None,
+                                        entity_name="issue",
+                                        entity_identifier=issue.id,
+                                        sender="in_app:issue_reminder:due",
+                                        title=issue.name,
+                                        data={
+                                            "issue": {
+                                                "id": str(issue.id),
+                                                "name": issue.name,
+                                                "identifier": project.identifier,
+                                                "sequence_id": issue.sequence_id,
+                                                "state_name": issue.state.name,
+                                                "state_group": issue.state.group,
+                                            },
+                                            "issue_activity": {
+                                                "id": str(delivery.id),
+                                                "field": "due_reminder",
+                                                "verb": "reminded",
+                                                "new_value": issue.target_date.isoformat(),
+                                                "old_value": None,
+                                            },
+                                        },
+                                    )
+                                    created_count += 1
+                            except Exception as error:
+                                log_exception(error)
                         # Durable outbox: broker/SMTP failures can be retried on the next scan.
                         if (
                             project.remind_email_enabled
                             and delivery.email_sent_at is None
-                            and email_enabled(assignee.assignee_id)
+                            and email_enabled(assignee.assignee_id, project)
                             and (
                                 delivery.email_queued_at is None
                                 or delivery.email_queued_at < now - timedelta(minutes=30)
@@ -162,7 +181,7 @@ def send_due_reminder_email(delivery_id):
             issue.target_date != delivery.target_date
             or not eligible(issue, receiver.id, timezone.now())
             or not issue.project.remind_email_enabled
-            or not email_enabled(receiver.id)
+            or not email_enabled(receiver.id, issue.project)
         ):
             return
         host, user, password, port, use_tls, use_ssl, from_email = get_email_configuration()

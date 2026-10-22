@@ -28,7 +28,16 @@ from plane.license.api.views import (
     InstanceAITestEndpoint,
 )
 
+from plane.license.api.views.feishu import (
+    InstanceFeishuEndpoint,
+    InstanceFeishuCheckEndpoint,
+    InstanceFeishuTestEndpoint,
+)
+
 urlpatterns = [
+    path("feishu/", InstanceFeishuEndpoint.as_view(), name="instance-feishu"),
+    path("feishu/check/", InstanceFeishuCheckEndpoint.as_view(), name="instance-feishu-check"),
+    path("feishu/test/", InstanceFeishuTestEndpoint.as_view(), name="instance-feishu-test"),
     path("", InstanceEndpoint.as_view(), name="instance"),
     path("admins/", InstanceAdminEndpoint.as_view(), name="instance-admins"),
     path("admins/me/", InstanceAdminUserMeEndpoint.as_view(), name="instance-admins"),

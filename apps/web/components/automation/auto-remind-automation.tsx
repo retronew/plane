@@ -59,7 +59,17 @@ export const AutoRemindAutomation = observer(function AutoRemindAutomation({
             onCheckedChange={(checked) => void handleChange({ remind_email_enabled: checked }).catch(() => undefined)}
           />
         </div>
-        <p className="text-12 text-tertiary">{t("project_settings.automations.auto-remind.in_app_always_on")}</p>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-13 font-medium">{t("notification_preferences.project_feishu_reminder")}</p>
+          <Switch
+            size="md"
+            checked={project?.remind_feishu_enabled ?? true}
+            disabled={!editable || days === 0}
+            aria-label={t("notification_preferences.project_feishu_reminder")}
+            onCheckedChange={(checked) => void handleChange({ remind_feishu_enabled: checked }).catch(() => undefined)}
+          />
+        </div>
+        <p className="text-12 text-tertiary">{t("notification_preferences.project_reminder_hint")}</p>
       </div>
     </AutomationSettingCard>
   );

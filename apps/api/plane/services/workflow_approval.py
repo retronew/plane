@@ -6,6 +6,8 @@ from django.utils import timezone
 
 from plane.db.models import Issue, IssueActivity, Notification, Project
 from plane.db.models.workflow import WorkflowApproval, WorkflowTransition
+from plane.utils.notification_preferences import should_notify
+from plane.utils.exception_logger import log_exception
 from plane.utils.workflow import (
     _eligible_actor,
     eligible_workflow_members,
@@ -139,29 +141,34 @@ def sync_issue_approval(issue, actor=None, force=False):
     )
     _activity(issue, approval, actor, "requested")
     recipients = {person["id"] for branch in branches for person in branch["approvers"]}
-    Notification.objects.bulk_create(
-        [
-            Notification(
-                workspace_id=issue.workspace_id,
-                project_id=issue.project_id,
-                entity_identifier=issue.pk,
-                entity_name="issue",
-                title=f"Approval requested: {issue.name}",
-                sender="in_app",
-                receiver_id=receiver_id,
-                triggered_by=actor,
-                data={
-                    "issue_id": str(issue.pk),
-                    "project_id": str(issue.project_id),
-                    "approval_id": str(approval.pk),
-                    "event": "approval_requested",
-                    "entry_sequence": sequence,
-                },
-                message={"approval_id": str(approval.pk), "status": "pending"},
+    try:
+        with transaction.atomic():
+            Notification.objects.bulk_create(
+                [
+                    Notification(
+                        workspace_id=issue.workspace_id,
+                        project_id=issue.project_id,
+                        entity_identifier=issue.pk,
+                        entity_name="issue",
+                        title=f"Approval requested: {issue.name}",
+                        sender="in_app",
+                        receiver_id=receiver_id,
+                        triggered_by=actor,
+                        data={
+                            "issue_id": str(issue.pk),
+                            "project_id": str(issue.project_id),
+                            "approval_id": str(approval.pk),
+                            "event": "approval_requested",
+                            "entry_sequence": sequence,
+                        },
+                        message={"approval_id": str(approval.pk), "status": "pending"},
+                    )
+                    for receiver_id in recipients
+                    if should_notify(receiver_id, issue.workspace_id, issue.project_id, "approval_requested", "in_app")
+                ]
             )
-            for receiver_id in recipients
-        ]
-    )
+    except Exception as error:
+        log_exception(error)
 
     def queue_email():
         from plane.bgtasks.workflow_runner_task import queue_approval_email
@@ -224,7 +231,19 @@ def _decision_context(approval, issue, transition_id, actor, outcome):
     return rule, state
 
 
-def decide_approval(project_id, issue_id, approval_id, transition_id, outcome, version, idempotency_key, actor):
+def decide_approval(
+    project_id,
+    issue_id,
+    approval_id,
+    transition_id,
+    outcome,
+    version,
+    idempotency_key,
+    actor,
+    *,
+    verify_locked=None,
+    complete_locked=None,
+):
     if outcome not in ("approve", "reject") or not idempotency_key:
         workflow_error("WORKFLOW_INVALID_APPROVAL_DECISION")
     approval = WorkflowApproval.objects.get(pk=approval_id, project_id=project_id, issue_id=issue_id)
@@ -235,6 +254,15 @@ def decide_approval(project_id, issue_id, approval_id, transition_id, outcome, v
             or approval.decision.get("outcome") != outcome
         ):
             workflow_conflict("WORKFLOW_IDEMPOTENCY_CONFLICT")
+        if verify_locked or complete_locked:
+            with transaction.atomic():
+                Project.objects.select_for_update().get(pk=project_id)
+                issue = Issue.objects.select_for_update().get(pk=issue_id, project_id=project_id)
+                approval = WorkflowApproval.objects.select_for_update().get(pk=approval_id)
+                if verify_locked:
+                    verify_locked(issue)
+                if complete_locked:
+                    complete_locked(approval)
         return approval
     if approval.version != version:
         workflow_conflict()
@@ -258,12 +286,16 @@ def decide_approval(project_id, issue_id, approval_id, transition_id, outcome, v
         Project.objects.select_for_update().get(pk=project_id)
         issue = Issue.objects.select_for_update().get(pk=issue_id, project_id=project_id)
         approval = WorkflowApproval.objects.select_for_update().get(pk=approval_id)
+        if verify_locked:
+            verify_locked(issue)
         if approval.idempotency_key == idempotency_key and approval.decision:
             if (
                 approval.decision.get("actor_id") == str(actor.pk)
                 and approval.decision.get("transition_id") == str(transition_id)
                 and approval.decision.get("outcome") == outcome
             ):
+                if complete_locked:
+                    complete_locked(approval)
                 return approval
             workflow_conflict("WORKFLOW_IDEMPOTENCY_CONFLICT")
         if approval.version != version:
@@ -305,4 +337,6 @@ def decide_approval(project_id, issue_id, approval_id, transition_id, outcome, v
             from plane.utils.workflow_runner import finish_runner_execution
 
             finish_runner_execution(evidence, issue, actor=actor, rule=rule, outcome=outcome)
+        if complete_locked:
+            complete_locked(approval)
         return approval

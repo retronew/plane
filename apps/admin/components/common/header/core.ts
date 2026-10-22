@@ -11,6 +11,7 @@ export const CORE_HEADER_SEGMENT_LABELS: Record<string, string> = {
   admins: "admin.header.admins",
   ai: "admin.header.ai",
   email: "admin.header.email",
+  feishu: "admin.feishu.title",
   authentication: "admin.header.authentication",
   workspace: "admin.header.workspace",
   create: "admin.header.create",

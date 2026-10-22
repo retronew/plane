@@ -12,6 +12,8 @@ from smtplib import (
 )
 
 # Django imports
+from django.conf import settings
+from django.db import transaction
 from django.core.mail import BadHeaderError, EmailMultiAlternatives, get_connection
 from django.db.models import Q, Case, When, Value
 
@@ -24,7 +26,7 @@ from .base import BaseAPIView
 from plane.license.api.permissions import InstanceAdminPermission
 from plane.license.models import InstanceConfiguration
 from plane.license.api.serializers import InstanceConfigurationSerializer
-from plane.license.api.serializers.configuration import WRITE_ONLY_SECRETS
+from plane.license.api.serializers.configuration import FEISHU_WRITE_ONLY_SECRETS, WRITE_ONLY_SECRETS
 from plane.license.utils.encryption import encrypt_data
 from plane.utils.cache import cache_response, invalidate_cache
 from plane.license.utils.instance_value import get_email_configuration
@@ -43,7 +45,23 @@ class InstanceConfigurationEndpoint(BaseAPIView):
     @invalidate_cache(path="/api/instances/configurations/", user=False)
     @invalidate_cache(path="/api/instances/", user=False)
     def patch(self, request):
+        feishu_keys = {"FEISHU_ENABLED", "FEISHU_APP_ID", *FEISHU_WRITE_ONLY_SECRETS}
+        if feishu_keys.intersection(request.data):
+            if not settings.SKIP_ENV_VAR:
+                return Response({"error": "Feishu configuration is managed by environment variables."}, status=400)
+            if "FEISHU_ENABLED" in request.data and str(request.data["FEISHU_ENABLED"]) not in {"0", "1"}:
+                return Response({"error": "FEISHU_ENABLED must be 0 or 1."}, status=400)
+            if "FEISHU_APP_ID" in request.data:
+                app_id = request.data["FEISHU_APP_ID"]
+                if not isinstance(app_id, str) or (
+                    app_id and (not app_id.startswith("cli_") or not app_id.replace("_", "").isalnum())
+                ):
+                    return Response({"error": "Invalid Feishu App ID."}, status=400)
+            for key in FEISHU_WRITE_ONLY_SECRETS.intersection(request.data):
+                if not isinstance(request.data[key], str):
+                    return Response({"error": f"{key} must be a string."}, status=400)
         configurations = InstanceConfiguration.objects.filter(key__in=request.data.keys())
+        old_feishu_app_id = next((item.value for item in configurations if item.key == "FEISHU_APP_ID"), None)
 
         bulk_configurations = []
         for configuration in configurations:
@@ -60,6 +78,12 @@ class InstanceConfigurationEndpoint(BaseAPIView):
 
         InstanceConfiguration.objects.bulk_update(bulk_configurations, ["value"], batch_size=100)
         clear_session_config_cache()
+        if str(request.data.get("FEISHU_ENABLED", "")) == "0" or (
+            "FEISHU_APP_ID" in request.data and request.data["FEISHU_APP_ID"].strip() != old_feishu_app_id
+        ):
+            from plane.utils.feishu import cancel_pending_feishu_deliveries
+
+            transaction.on_commit(cancel_pending_feishu_deliveries)
 
         serializer = InstanceConfigurationSerializer(configurations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

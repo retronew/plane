@@ -306,6 +306,12 @@ class WorkflowIssueTypeMixin:
 class WorkflowIssueWriteMixin(WorkflowIssueTypeMixin):
     """Prepare scripts outside locks, then atomically recheck and persist all related writes."""
 
+    def verify_locked_write(self, issue):
+        """Optional caller checks after the project and issue locks are acquired."""
+
+    def finish_locked_write(self, issue):
+        """Optional caller bookkeeping committed atomically with the issue write."""
+
     def save(self, **kwargs):
         project_id = self.context["project_id"]
         actor = getattr(self.context.get("request"), "user", None) or get_current_user()
@@ -322,6 +328,7 @@ class WorkflowIssueWriteMixin(WorkflowIssueTypeMixin):
             Project.objects.select_for_update().get(pk=project_id)
             if self.instance:
                 self.instance = Issue.objects.select_for_update().get(pk=self.instance.pk)
+            self.verify_locked_write(self.instance)
             verify_workflow_write(prepared, self.instance, actor=actor)
             from plane.services.custom_properties import issue_property_values
 
@@ -340,6 +347,7 @@ class WorkflowIssueWriteMixin(WorkflowIssueTypeMixin):
                 child["attrs"]["custom_properties"] = issue_property_values(project_id, child["attrs"])
             issue = super().save(**kwargs)
             finish_workflow_write(prepared, issue, actor)
+            self.finish_locked_write(issue)
             return issue
 
 

@@ -7,6 +7,8 @@ from uuid import UUID
 
 from django.db.models import Exists, OuterRef, Q, Case, When, BooleanField, IntegerField, Value, Subquery
 from django.utils import timezone
+from django.db import transaction
+from plane.utils.notification_preferences import sync_legacy_preferences
 
 # Third party imports
 from rest_framework import status
@@ -22,6 +24,7 @@ from plane.db.models import (
     IssueSubscriber,
     Notification,
     UserNotificationPreference,
+    User,
     WorkspaceMember,
 )
 from plane.utils.paginator import BasePaginator
@@ -294,10 +297,13 @@ class UserNotificationPreferenceEndpoint(BaseAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # update the object
+    @transaction.atomic
     def patch(self, request):
+        User.objects.select_for_update().get(pk=request.user.pk)
         user_notification_preference = UserNotificationPreference.objects.get(user=request.user)
         serializer = UserNotificationPreferenceSerializer(user_notification_preference, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            sync_legacy_preferences(request.user, serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

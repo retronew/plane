@@ -55,6 +55,7 @@ export interface IProject extends IPartialProject {
   close_in?: number;
   remind_in?: number;
   remind_email_enabled?: boolean;
+  remind_feishu_enabled?: boolean;
   // only for uploading the cover image
   cover_image_asset?: null;
   cover_image?: string;

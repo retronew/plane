@@ -13,7 +13,26 @@ from plane.app.views import (
 )
 
 
+from plane.app.views.feishu_cards import FeishuCardCallbackEndpoint
+from plane.app.views.notification.preferences import UnifiedNotificationPreferenceEndpoint
+from plane.app.views.feishu import (
+    FeishuBindingEndpoint,
+    FeishuAuthorizeEndpoint,
+    FeishuCallbackEndpoint,
+    FeishuTestEndpoint,
+)
+
 urlpatterns = [
+    path("integrations/feishu/cards/", FeishuCardCallbackEndpoint.as_view(), name="feishu-card-callback"),
+    path(
+        "users/me/notification-preferences/v2/",
+        UnifiedNotificationPreferenceEndpoint.as_view(),
+        name="unified-user-notification-preferences",
+    ),
+    path("users/me/integrations/feishu/", FeishuBindingEndpoint.as_view(), name="feishu-binding"),
+    path("users/me/integrations/feishu/authorize/", FeishuAuthorizeEndpoint.as_view(), name="feishu-authorize"),
+    path("users/me/integrations/feishu/callback/", FeishuCallbackEndpoint.as_view(), name="feishu-callback"),
+    path("users/me/integrations/feishu/test/", FeishuTestEndpoint.as_view(), name="feishu-test"),
     path(
         "workspaces/<str:slug>/users/notifications/",
         NotificationViewSet.as_view({"get": "list"}),
