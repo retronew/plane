@@ -624,6 +624,23 @@ def test_configuration_change_and_refresh_do_not_extend_existing_grants(flow, se
     assert grant.expires_at == original_expiry
 
 
+def test_consent_lifetime_is_signed_and_cannot_change_after_display(flow, settings):
+    settings.MCP_OAUTH_GRANT_DAYS = 180
+    browser, params, _, exchange = flow
+    form = consent_page(browser, params).json()
+    assert form["grant_days"] == 180
+    settings.MCP_OAUTH_GRANT_DAYS = 365
+    before = timezone.now()
+    response = browser.post(
+        "/auth/mcp/authorize/",
+        {"ticket": form["ticket"], "decision": "allow", "grant_days": "365"},
+    )
+    code = parse_qs(urlsplit(response["Location"]).query)["code"][0]
+    assert exchange(code).status_code == 200
+    grant = MCPOAuthGrant.objects.get()
+    assert before + timedelta(days=180) <= grant.expires_at <= timezone.now() + timedelta(days=180)
+
+
 @pytest.mark.parametrize("reason", ["expired", "revoked"])
 def test_invalid_grant_requires_fresh_consent_with_same_registered_client(flow, reason):
     browser, params, _, exchange = flow

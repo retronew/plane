@@ -109,7 +109,7 @@
       "write_hint": "允許在你的權限範圍內建立、修改與刪除內容。選填，預設關閉。",
       "details": "連線詳情",
       "unverified_client": "用戶端名稱由其自行提供，請確認是你剛剛發起的連線。返回位址：",
-      "consent_expiry": "授權有效期為 30 天，可隨時在個人設定的「授權連線」中撤銷。",
+      "consent_expiry": "授權有效期為 {days} 天，可隨時在「授權連線」中撤銷。",
       "allow": "授權連線",
       "submit_error": "未能完成請求。請重試；若仍失敗，請從用戶端重新發起連線。",
       "expired_title": "請重新發起連線",
@@ -123,10 +123,15 @@
       "return_client": "返回用戶端",
       "close": "關閉此頁面",
       "close_hint": "瀏覽器未關閉此分頁，你可以手動關閉。",
-      "return_home": "返回 Plane"
+      "return_home": "返回 Plane",
+      "consent_expiry_unknown": "可隨時在「授權連線」中查看有效期或撤銷授權。"
     },
     "mcp": {
-      "workspace_auto_hint": "AI 先唯讀列出工作區，每次呼叫明確傳入 workspace_slug。新 OAuth 連線依帳號現有權限存取；舊授權保留原工作區限制。"
+      "workspace_auto_hint": "無需設定工作區，存取範圍取決於帳號權限。",
+      "oauth_description": "在「授權連線」中查看到期時間或撤銷授權。",
+      "token_hint": "貼上 API 權杖即可連線，此處不儲存權杖。",
+      "agent_hint": "複製「Agent 安裝」提示詞交給 AI 助手；OpenAI 外掛使用 OAuth。",
+      "chatgpt_hint": "安裝目前實例的 Plane Workflow OpenAI 外掛，連線並授權帳號，無需填寫 API 權杖。下方 TOML 供手動權杖接入使用。"
     }
   },
   "profile": {

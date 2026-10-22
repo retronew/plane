@@ -42,6 +42,10 @@
 
 Plane 的「重新授权」操作会撤销所选连接，并提示回到客户端连接；它不能直接唤起客户端的 PKCE 流程。如果桌面客户端没有显示重连入口，可先新建聊天调用插件，让客户端重新检测认证；具体重连入口由客户端版本决定。卸载插件不等于撤销服务端授权。
 
+本地 Codex 插件还可通过客户端随附的 CLI 发起重连：先用 `codex mcp list` 确认服务名，再运行 `codex mcp login plane`（服务名不同时替换 `plane`），在浏览器中完成授权。也可通过官方 app-server 的 `mcpServer/oauth/login` 发起；已在本地验证该接口完成浏览器回调后，当前聊天的 Plane 工具恢复可用。这不代表所有桌面版本都在设置页提供重连按钮。
+
+授权页从后端读取有效天数，并将该天数绑定到签名授权请求；用户确认前即使管理员调整配置，也不会改变已展示的授权时长。旧版签名请求保留原先展示的 30 天，新请求采用当前配置。
+
 ### Runner token
 
 本地 Compose 启动包含真实 Workflow Runner，必须配置至少 32 字符的独立随机 `WORKFLOW_RUNNER_SERVICE_TOKEN`。在私有根 `.env` 中持久保存一次，API、worker、Beat 与 Runner 通过 Compose 的 `environment` 接收同一值；不要每次启动都生成新值，也不要只放在 API env 中。

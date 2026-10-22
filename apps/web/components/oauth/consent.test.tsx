@@ -9,7 +9,8 @@ vi.mock("@plane/i18n", () => ({
     currentLocale: "en",
     languages: [{ value: "en", label: "English" }],
     changeLanguage: vi.fn(),
-    t: (key: string) => key.split(".").pop(),
+    t: (key: string, params?: { days?: number }) =>
+      key.endsWith(".consent_expiry") ? `Access lasts ${params?.days} days` : key.split(".").pop(),
   }),
 }));
 vi.mock("@/helpers/mcp-connect", () => ({ returnToMcpClient: vi.fn() }));
@@ -26,6 +27,7 @@ describe("account OAuth consent", () => {
       account_email: "test@example.test",
       redirect_uri: "http://127.0.0.1:43210/callback",
       write_requested: true,
+      grant_days: 180,
     };
     vi.stubGlobal(
       "fetch",
@@ -34,6 +36,16 @@ describe("account OAuth consent", () => {
         json: async () => ({ redirect_url: "http://127.0.0.1:43210/callback?state=s" }),
       })
     );
+  });
+  it.each([30, 180, 365])("shows the server-provided lifetime of %i days", (days) => {
+    state.data = { ...(state.data as object), grant_days: days };
+    render(<OAuthConsent flow={flow} />);
+    expect(screen.getByText(`Access lasts ${days} days`)).toBeTruthy();
+  });
+  it("does not invent a lifetime when connected to an older backend", () => {
+    state.data = { ...(state.data as object), grant_days: undefined };
+    render(<OAuthConsent flow={flow} />);
+    expect(screen.getByText("consent_expiry_unknown")).toBeTruthy();
   });
   it("defaults to read only without a workspace selector and explains account scope", async () => {
     render(<OAuthConsent flow={flow} />);

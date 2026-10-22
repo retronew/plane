@@ -16,6 +16,7 @@ type Consent = {
   account_email: string;
   redirect_uri: string;
   write_requested: boolean;
+  grant_days?: number;
 };
 const endpoint = `${API_BASE_URL}/auth/mcp/authorize/`;
 
@@ -211,7 +212,9 @@ export function OAuthConsent({ flow }: { flow: string | null }) {
         <p className="mt-2">{tr("unverified_client")}</p>
         <p className="mt-2 break-all">{data.redirect_uri}</p>
       </details>
-      <p className="mt-4 text-caption-sm-regular text-tertiary">{tr("consent_expiry")}</p>
+      <p className="mt-4 text-caption-sm-regular text-tertiary">
+        {data.grant_days ? tr("consent_expiry", { days: data.grant_days }) : tr("consent_expiry_unknown")}
+      </p>
       {failed && (
         <p role="alert" className="mt-3 text-body-xs-regular text-danger-primary">
           {tr("submit_error")}

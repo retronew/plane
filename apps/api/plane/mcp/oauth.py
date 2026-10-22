@@ -316,6 +316,7 @@ def authorize(request):
             {
                 "params": params,
                 "access": "account",
+                "grant_days": settings.MCP_OAUTH_GRANT_DAYS,
                 "user": str(request.user.pk),
                 "session": digest(request.session.session_key or ""),
                 "nonce": secrets.token_urlsafe(32),
@@ -369,7 +370,7 @@ def authorize(request):
         code_hash=digest(code),
         code_challenge=params["code_challenge"],
         code_expires_at=timezone.now() + timedelta(minutes=2),
-        expires_at=timezone.now() + timedelta(days=settings.MCP_OAUTH_GRANT_DAYS),
+        expires_at=timezone.now() + timedelta(days=ticket.get("grant_days", 30)),
     )
     return callback(params, request=request, code=code)
 
@@ -407,6 +408,7 @@ def consent(request):
                 "account_email": request.user.email,
                 "redirect_uri": data["params"]["redirect_uri"],
                 "write_requested": WRITE in data["params"]["scope"].split(),
+                "grant_days": data.get("grant_days", 30),
             }
         )
     )
