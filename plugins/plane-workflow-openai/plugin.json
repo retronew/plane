@@ -10,5 +10,10 @@
   "homepage": "https://github.com/retronew/plane-plugins",
   "repository": "https://github.com/retronew/plane",
   "license": "AGPL-3.0-only",
-  "keywords": ["plane", "project-management", "mcp", "workflow"]
+  "keywords": [
+    "plane",
+    "project-management",
+    "mcp",
+    "workflow"
+  ]
 }

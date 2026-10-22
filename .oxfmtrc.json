@@ -2,7 +2,12 @@
   "printWidth": 120,
   "tabWidth": 2,
   "trailingComma": "es5",
-  "ignorePatterns": [".agents/skills/**"],
+  "ignorePatterns": [
+    ".agents/skills/**",
+    "plugins/plane-workflow-openai/**",
+    "plugins/plane-workflow/portable/plane-workflow/**",
+    "apps/web/public/skills/**"
+  ],
   "sortTailwindcss": {
     "stylesheet": "packages/tailwind-config/index.css",
     "functions": ["cn", "clsx", "cva"]
