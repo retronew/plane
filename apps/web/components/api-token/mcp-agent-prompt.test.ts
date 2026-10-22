@@ -21,7 +21,7 @@ describe("MCP agent installation prompts", () => {
     const prompt = buildMcpAgentPrompt(client, client, "https://plane.example/mcp");
     expect(prompt).toContain("https://plane.example/mcp");
     expect(prompt).not.toContain("X-Workspace-Slug");
-    expect(prompt).toContain("PLANE_API_TOKEN");
+    expect(prompt).toContain(client === "chatgpt" ? "OAuth" : "PLANE_API_TOKEN");
     expect(prompt).toContain("只读查询工作区");
     expect(prompt).toContain("保留其他服务器配置");
     expect(prompt).not.toContain("/skills/plane-workflow");
@@ -52,10 +52,10 @@ describe("MCP agent installation prompts", () => {
 
   it("explains ChatGPT authentication constraints", () => {
     const prompt = buildMcpAgentPrompt("chatgpt", "ChatGPT", "https://plane.example/mcp");
-    expect(prompt).toContain("设置 → 插件 → 右上角添加 → 添加 MCP 服务器");
+    expect(prompt).toContain("点击连接，通过 OAuth 登录 Plane");
     expect(prompt).not.toContain("Settings → MCP servers → Add server");
     expect(prompt).toContain("Streamable HTTP");
-    expect(prompt).toContain("bearer_token_env_var");
-    expect(prompt).toContain("ChatGPT 网页不读取本地配置");
+    expect(prompt).not.toContain("bearer_token_env_var");
+    expect(prompt).toContain("不需要填写个人 Token");
   });
 });

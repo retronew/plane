@@ -77,3 +77,21 @@ class TestAPITokenLogMiddleware:
         with patch("plane.middleware.logger.process_logs") as process_logs:
             middleware.process_request(request, HttpResponse(b"{}"), request_body=b"")
             assert not process_logs.delay.called
+
+
+@pytest.mark.unit
+def test_oauth_exchange_is_not_persisted_even_with_api_key(middleware, request_factory):
+    request = request_factory.post("/auth/mcp/token/", HTTP_X_API_KEY="test-key")
+    with patch("plane.middleware.logger.process_logs") as logs:
+        middleware.process_request(request, HttpResponse(b'{"access_token":"secret"}'), b"code=secret")
+        logs.delay.assert_not_called()
+
+
+@pytest.mark.unit
+def test_oauth_request_log_omits_query_state(request_factory):
+    from plane.middleware.logger import RequestLoggerMiddleware
+    request = request_factory.get("/auth/mcp/authorize/?state=secret-state")
+    request.user = AnonymousUser()
+    with patch("plane.middleware.logger.api_logger") as logger:
+        RequestLoggerMiddleware(lambda request: HttpResponse())(request)
+        assert "secret-state" not in str(logger.info.call_args)

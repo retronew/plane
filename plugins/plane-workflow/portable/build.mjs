@@ -1,3 +1,4 @@
+import { mcpConfig } from "./mcp-config.mjs";
 import { collectFiles } from "./files.mjs";
 /* eslint-disable no-await-in-loop -- Ordered filesystem traversal and artifact verification are intentionally sequential. */
 import { readFile, mkdir, writeFile, rm } from "node:fs/promises";
@@ -8,7 +9,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(here, "../../../apps/web/public/skills");
 const sourceDir = resolve(here, "../skills");
 
-function createZip(entries) {
+export function createZip(entries) {
   // Stored entries, UTF-8 filenames, fixed DOS date (1980-01-01).
   // No dependencies, host timestamps or directory entries. Unix modes are fixed
   // (755 for .sh, 644 otherwise) so hook scripts stay executable after extraction.
@@ -101,7 +102,7 @@ description: 完整八项 Plane 工作流的兼容聚合索引，包含连接检
 
 # Plane Workflow：完整八项技能
 
-本文件由 build.mjs 生成，请勿手工编辑。兼容下载索引；主安装目录是 plugins/plane-workflow/skills。安装不代表 MCP 已配置，需用户手动配置 URL 与令牌。
+本文件由 build.mjs 生成，请勿手工编辑。兼容下载索引；主安装目录是 plugins/plane-workflow/skills。OpenAI 插件绑定实例地址，安装后需连接并登录授权；其他客户端也可手动配置 URL 与 API 令牌。
 
 ${names.map((name) => `- ${name}：见下文完整流程`).join("\n")}
 
@@ -132,3 +133,15 @@ await writeFile(
   ])
 );
 console.log("Generated eight skills, compatibility index, and reproducible archives");
+
+const instance = JSON.parse(await readFile(resolve(here, "../instance.json"), "utf8"));
+const mcp = Buffer.from(`${JSON.stringify(mcpConfig(instance.url), null, 2)}\n`);
+await writeFile(resolve(here, "../../plane-workflow-openai/mcp.json"), mcp);
+await writeFile(
+  resolve(publicDir, "plane-workflow-openai.zip"),
+  createZip([
+    ["plugin.json", Buffer.from(`${JSON.stringify(openaiManifest, null, 2)}\n`)],
+    ["mcp.json", mcp],
+    ...entries.map(([name, content]) => [`skills/${name}`, content]),
+  ])
+);

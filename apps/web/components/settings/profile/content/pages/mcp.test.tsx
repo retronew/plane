@@ -29,6 +29,7 @@ describe("MCP personal settings", () => {
   it("shows setup without requiring a token and switches the open settings modal to tokens", () => {
     render(<McpProfileSettings />);
     expect(screen.getByText("MCP template")).toBeTruthy();
+    expect(screen.getByText("OAuth inline management")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.manage_tokens" }));
     expect(state.toggle).toHaveBeenCalledWith({ activeTab: "api-tokens", isOpen: true });
     expect(state.push).not.toHaveBeenCalled();
@@ -42,3 +43,7 @@ describe("MCP personal settings", () => {
     expect(state.push).not.toHaveBeenCalled();
   });
 });
+
+vi.mock("@/components/api-token/oauth-connections", () => ({
+  OAuthConnections: () => <div>OAuth inline management</div>,
+}));

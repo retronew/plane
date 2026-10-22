@@ -65,6 +65,11 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
         if not token:
             return None
 
+        if getattr(request, "_plane_mcp_oauth", False):
+            from plane.mcp.oauth import authenticate_gateway
+
+            return authenticate_gateway(request, token)
+
         # Validate the API token
         user, token = self.validate_api_token(token, request=request)
         return user, token

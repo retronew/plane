@@ -1,4 +1,8 @@
 (plane_proxy) {
+	handle /.well-known/oauth-* {
+        reverse_proxy localhost:3004
+    }
+
 	request_body {
 		max_size {$FILE_SIZE_LIMIT}
 	}
@@ -18,7 +22,8 @@
         reverse_proxy localhost:3004
     }
 
-	handle /mcp* {
+	@mcp path /mcp /mcp/*
+	handle @mcp {
         reverse_proxy localhost:3004
     }
 

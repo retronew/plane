@@ -25,6 +25,7 @@ from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.db.models import APIToken, WorkspaceMember
 from plane.mcp.gateway import ApiGateway
+from plane.mcp import oauth
 from plane.mcp.protocol import (
     INVALID_REQUEST,
     HEADER_MISMATCH,
@@ -37,6 +38,7 @@ from plane.mcp.protocol import (
     unsupported_version,
 )
 from plane.mcp.tools.base import Context, ToolError
+from plane.mcp.tools.resources import TOOLS_BY_NAME
 
 NAMED_METHODS = {"tools/call": "name", "prompts/get": "name", "resources/read": "uri"}
 UNAUTHORIZED = -32001
@@ -99,20 +101,49 @@ class MCPEndpoint(View):
         except RpcError as error:
             response = rpc_response(error.body(request_id), status=error.http_status)
             if error.http_status == 401:
-                response["WWW-Authenticate"] = 'Bearer realm="plane"'
+                response["WWW-Authenticate"] = (
+                    f'Bearer resource_metadata="{oauth.issuer()}/.well-known/oauth-protected-resource", '
+                    'scope="plane:read"'
+                )
+            return response
+
+        grant = getattr(request, "mcp_oauth_grant", None)
+        arguments = params.get("arguments")
+        name = params.get("name")
+        tool = TOOLS_BY_NAME.get(name) if isinstance(name, str) else None
+        action = tool.action(arguments.get("action")) if tool and isinstance(arguments, dict) else None
+        if (
+            method == "tools/call"
+            and grant
+            and action
+            and not action.read_only
+            and oauth.WRITE not in grant.scope.split()
+        ):
+            response = rpc_response(
+                RpcError(UNAUTHORIZED, "Additional write permission required").body(request_id), status=403
+            )
+            response["WWW-Authenticate"] = (
+                f'Bearer error="insufficient_scope", scope="{oauth.READ} {oauth.WRITE}", '
+                f'resource_metadata="{oauth.issuer()}/.well-known/oauth-protected-resource"'
+            )
             return response
 
         def ctx_factory(arguments):
             listing = params.get("name") == "workspace" and arguments.get("action") == "list"
             slug = self.workspace_slug(request, user, arguments, required=not listing)
-            scope = APIToken.objects.values_list("workspace__slug", flat=True).get(token=token)
+            grant = getattr(request, "mcp_oauth_grant", None)
+            scope = (
+                grant.workspace.slug
+                if grant
+                else APIToken.objects.values_list("workspace__slug", flat=True).get(token=token)
+            )
             if scope and slug and slug != scope:
-                raise ToolError("This API token is restricted to its workspace")
+                raise ToolError("This credential is restricted to its workspace")
             return Context(
                 request=request,
                 user=user,
                 slug=slug,
-                gateway=ApiGateway(request, token),
+                gateway=ApiGateway(request, token, oauth=grant is not None),
                 workspace_scope=scope,
             )
 
@@ -185,8 +216,12 @@ class MCPEndpoint(View):
         token = authorization[7:].strip() if authorization.lower().startswith("bearer ") else None
         token = token or request.headers.get("X-Api-Key")
         if not token:
-            raise RpcError(UNAUTHORIZED, "Missing API key: send `Authorization: Bearer <key>`", http_status=401)
+            raise RpcError(UNAUTHORIZED, "Missing credential: send `Authorization: Bearer <token>`", http_status=401)
         try:
+            if token.startswith("plane_mcp_"):
+                grant = oauth.authenticate_access(token)
+                request.mcp_oauth_grant = grant
+                return grant.user, token
             # Scope (read-only keys) is enforced on each underlying API call by its HTTP method
             scope = APIToken.objects.filter(token=token).values_list("workspace__slug", flat=True).first()
             user, _ = APIKeyAuthentication().validate_api_token(token, workspace_slug=scope)

@@ -5,7 +5,7 @@
 """Server instructions, sent to clients so the model knows Plane's vocabulary and common recipes."""
 
 SERVER_INSTRUCTIONS = """\
-你连接的是 Plane 项目管理系统。所有操作都以 API Key 所属用户的身份和权限执行，并记录在其账号下。
+你连接的是 Plane 项目管理系统。所有操作都以 OAuth 授权用户或 API Key 所属用户的身份和权限执行，并记录在其账号下。
 
 术语：项目（project，用 WEB 这样的标识表示）、工作项（workitem，即任务，用 WEB-12 这样的编号表示）、
 状态（state，属于 backlog / unstarted / started / completed / cancelled 五个状态组之一）、
@@ -14,6 +14,7 @@ SERVER_INSTRUCTIONS = """\
 用法要点：
 - 先用 workspace(action='list') 查看可访问的工作区；每次工具调用显式传 workspace_slug。
 - 除工作区列表外，缺少 workspace_slug 或无权限都会报错，不会使用默认工作区。
+- OAuth 连接仅能访问授权时选定的工作区，只读授权不能写入；需要写入时请用户重新连接并明确授权读写。
 - 个人 API Key 可跨已加入的工作区；工作区 API Key 仍仅能访问其授权工作区。
 - 不确定对象在哪时，先用 workspace(action='search', workspace_slug='目标工作区 slug')。
 - 状态、标签、负责人可以直接传名称；负责人可以传 me、邮箱或显示名。

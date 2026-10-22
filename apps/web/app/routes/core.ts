@@ -12,6 +12,8 @@ export const coreRoutes: RouteConfigEntry[] = [
   // USER MANAGEMENT ROUTES
   // ========================================================================
 
+  route("mcp-connect", "./mcp-connect.tsx"),
+
   // Home - Sign In
   layout("./(home)/layout.tsx", [index("./(home)/page.tsx")]),
 

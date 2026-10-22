@@ -1,0 +1,23 @@
+{% extends "mcp/base.html" %}
+{% block content %}
+<h1>授权连接 Plane</h1>
+<p><strong>{{ client.name }}</strong> 请求访问你的 Plane 工作区。</p>
+<small>应用名称由客户端自行声明。请核对你刚刚发起的连接，授权后将返回：<br>{{ redirect_uri }}</small>
+<p>当前账号：{{ request.user.email }}</p>
+<form method="post">
+  {% csrf_token %}<input type="hidden" name="ticket" value="{{ ticket }}">
+  {% if workspaces %}
+  <label for="workspace">允许访问的工作区</label>
+  <select id="workspace" name="workspace" required>
+    {% for member in workspaces %}<option value="{{ member.workspace.slug }}">{{ member.workspace.name }}（{{ member.workspace.slug }}）</option>{% endfor %}
+  </select>
+  <p>允许读取该工作区中你有权访问的项目和工作项。</p>
+  {% if write_requested %}<label><input type="checkbox" name="write" value="yes"> 同时允许创建、修改和删除你有权限操作的内容</label>{% endif %}
+  <small>默认只读。授权有效期为 30 天，可随时在 <a href="{{ settings_url }}" target="_blank" rel="noopener noreferrer">个人设置 → 开发者 → MCP</a> 中撤销。</small>
+  {% else %}<p>你还没有可授权的工作区，请先在 Plane 中加入工作区。</p>{% endif %}
+  <div class="actions">
+    {% if workspaces %}<button name="decision" value="allow">授权连接</button>{% endif %}
+    <button name="decision" value="deny">取消</button>
+  </div>
+</form>
+{% endblock %}

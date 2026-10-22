@@ -582,3 +582,6 @@ if ENABLE_DRF_SPECTACULAR:
     REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "drf_spectacular.openapi.AutoSchema"
     INSTALLED_APPS.append("drf_spectacular")
     from .openapi import SPECTACULAR_SETTINGS  # noqa: F401
+
+# Canonical public origin used by MCP OAuth discovery and audience checks.
+MCP_OAUTH_ISSUER = os.environ.get("MCP_OAUTH_ISSUER", WEB_URL or "http://localhost:8000").rstrip("/")

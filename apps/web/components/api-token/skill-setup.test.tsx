@@ -124,8 +124,8 @@ describe("Skill installation", () => {
       expect(prompt).toContain("全部 8 个 skills");
       expect(prompt).toContain("技能安装不等于 MCP 连接");
       expect(prompt).toContain("MCP 由用户独立手动配置");
-      expect(prompt).toContain("URL 和个人访问令牌");
-      expect(prompt).toContain("不使用 OAuth");
+      expect(prompt).toContain("安全入口提供 API Token");
+      expect(prompt).toContain("通过 OAuth 登录并授权工作区");
       expect(prompt).toContain("不读取、搜集或回显凭据");
       expect(prompt).toContain('先调用 workspace(action="list")');
       expect(prompt).toContain("仅继承用户已明确的目标 workspace_slug，目标不明确时先询问");

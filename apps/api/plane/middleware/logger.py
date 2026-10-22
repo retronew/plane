@@ -59,9 +59,11 @@ class RequestLoggerMiddleware:
 
         user_agent = request.META.get("HTTP_USER_AGENT", "")
 
+        # OAuth query parameters may carry client state; never persist them.
+        log_path = request.path if request.path.startswith("/auth/mcp/") else request.get_full_path()
         # Log the request information
         api_logger.info(
-            f"{request.method} {request.get_full_path()} {response.status_code}",
+            f"{request.method} {log_path} {response.status_code}",
             extra={
                 "path": request.path,
                 "method": request.method,
@@ -128,6 +130,9 @@ class APITokenLogMiddleware:
         return str(redacted)
 
     def process_request(self, request, response, request_body):
+        # OAuth exchanges carry codes, verifiers and tokens, including in responses.
+        if request.path.startswith("/auth/mcp/"):
+            return
         api_key_header = "X-Api-Key"
         api_key = request.headers.get(api_key_header)
 

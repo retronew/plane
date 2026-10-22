@@ -135,12 +135,11 @@ test("all eight complete canonical skills are identical across directories and a
   });
 });
 
-test("distributions contain no connection configuration or secrets", async () => {
+test("distributions contain no embedded credentials or unsupported installation prompts", async () => {
   for (const dir of [resolve(here, ".."), resolve(root, "plugins/plane-workflow-openai"), publicDir]) {
     for (const [name, content] of await files(dir)) {
-      assert.doesNotMatch(name, /(?:^|\/)(?:\.mcp\.json|mcp\.json|\.env|\.DS_Store)$/);
-      if (name.endsWith(".json"))
-        assert.doesNotMatch(content.toString(), /"(?:userConfig|mcpServers|mcp_servers|connectors)"/);
+      assert.doesNotMatch(name, /(?:^|\/)(?:\.env|\.DS_Store)$/);
+      if (name.endsWith(".json")) assert.doesNotMatch(content.toString(), /"(?:userConfig|mcp_servers|connectors)"/);
       if (!name.endsWith(".zip"))
         assert.doesNotMatch(content.toString(), /(?:sk_live_|sk-proj-|ghp_)[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9_-]{32,}/);
     }
@@ -178,4 +177,16 @@ test("nested scripts, references and assets survive traversal while Finder files
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("OpenAI archive carries the same OAuth endpoint and full skills as the installed plugin", async () => {
+  const pluginRoot = resolve(root, "plugins/plane-workflow-openai");
+  const archive = unzip(await readFile(resolve(publicDir, "plane-workflow-openai.zip")));
+  const expected = await files(pluginRoot);
+  assert.equal(archive.size, expected.length);
+  for (const [name, content] of expected) assert.deepEqual(archive.get(name), content);
+  const config = JSON.parse(archive.get("mcp.json"));
+  assert.equal(config.mcpServers.plane.url, "https://plane.mdropwork.com/mcp");
+  assert.equal(config.mcpServers.plane.extensions["com.openai"].auth.type, "oauth");
+  assert.ok(!("headers" in config.mcpServers.plane));
 });

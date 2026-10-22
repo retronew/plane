@@ -6,8 +6,8 @@
 In-process calls from MCP tools to the public ``/api/v1/`` endpoints.
 
 Every tool goes through the same views, serializers, permissions, read-only
-token scope, rate limit and activity tracking as a direct API call made with
-the user's own key, so the MCP layer never re-implements business rules.
+token scope and rate limit as a direct API call made with
+the user's own credentials, so the MCP layer never re-implements business rules.
 """
 
 # Python imports
@@ -34,7 +34,8 @@ class ApiResult:
 
 
 class ApiGateway:
-    def __init__(self, request, token: str):
+    def __init__(self, request, token: str, *, oauth=False):
+        self.oauth = oauth
         self.token = token
         # Sub-requests reuse the outer request's host and client address so host validation,
         # absolute links and throttling behave as for a direct call
@@ -65,6 +66,8 @@ class ApiGateway:
                 **self.environ,
             )
 
+        # Private in-process marker: an HTTP header cannot enable OAuth on the public API.
+        request._plane_mcp_oauth = self.oauth
         try:
             match = resolve(path)
         except Resolver404:

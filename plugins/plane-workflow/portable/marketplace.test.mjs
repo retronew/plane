@@ -20,7 +20,7 @@ test("marketplace fields and policy match the documented OpenAI catalog format",
   assert.equal(entry.name, "plane-workflow");
   assert.equal(entry.source.source, "local");
   assert.ok(entry.source.path.startsWith("./"));
-  assert.deepEqual(entry.policy, { installation: "AVAILABLE" });
+  assert.deepEqual(entry.policy, { installation: "AVAILABLE", authentication: "ON_INSTALL" });
   assert.equal(entry.category, "Productivity");
 });
 
@@ -52,6 +52,7 @@ test("catalog resolves inside repository root to a self-contained portable plugi
   assert.ok(Array.isArray(manifest.keywords));
   for (const keyword of manifest.keywords) assert.equal(typeof keyword, "string");
   assert.deepEqual((await readdir(pluginRoot)).filter((name) => name !== ".DS_Store").toSorted(), [
+    "mcp.json",
     "plugin.json",
     "skills",
   ]);
