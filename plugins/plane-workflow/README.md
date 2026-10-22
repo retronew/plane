@@ -100,7 +100,7 @@ pnpm --filter web build:skills
 
 ## OAuth 部署与实例绑定（0.3.3）
 
-上线配置、客户端更新、撤销重连及手动 Token 接入见 [MCP 插件上线与验收](../../docs/mcp-client-testing.md)。
+上线配置、客户端更新、撤销重连及手动 Token 接入见 [MCP 插件上线与验收](https://github.com/retronew/plane/blob/preview/docs/mcp-client-testing.md)。
 
 Claude 正式包根目录的 `.mcp.json` 与 OpenAI 包使用同一份实例配置。OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.codex-plugin/plugin.json` 引用根目录 `.mcp.json`，声明 HTTP MCP，由服务端发现文档提供 OAuth/DCR，用户安装后连接、登录 Plane 并授权账号范围。默认只读，可显式勾选读写；授权不提升用户原本的项目权限。安装入口和提示文案取决于桌面客户端版本，本仓库不能控制客户端 UI。
 
