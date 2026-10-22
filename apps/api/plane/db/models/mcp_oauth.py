@@ -17,7 +17,8 @@ class MCPOAuthGrant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(MCPOAuthClient, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE)
+    # NULL means explicitly consented account access. Existing grants stay workspace-bound.
+    workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, null=True, blank=True)
     scope = models.CharField(max_length=40)
     resource = models.URLField(max_length=2048)
     redirect_uri = models.URLField(max_length=2048)

@@ -14,6 +14,7 @@ export type TProfileSettingsTabs =
   | "notifications"
   | "security"
   | "api-tokens"
+  | "oauth-connections"
   | "mcp"
   | "skills";
 

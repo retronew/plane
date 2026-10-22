@@ -24,6 +24,7 @@ urlpatterns = [
     path(".well-known/oauth-authorization-server", oauth.authorization_metadata),
     path("auth/mcp/register/", oauth.register),
     path("auth/mcp/authorize/", oauth.authorize),
+    path("auth/mcp/consent/", oauth.consent),
     path("auth/mcp/token/", oauth.token),
     path("auth/mcp/revoke/", oauth.revoke),
     path("auth/mcp/connections/", oauth.connections),

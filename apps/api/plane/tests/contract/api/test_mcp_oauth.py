@@ -29,6 +29,15 @@ def config(settings):
     cache.clear()
 
 
+def consent_page(browser, params):
+    response = browser.get("/auth/mcp/authorize/", params)
+    assert response.status_code == 302
+    target = urlsplit(response["Location"])
+    assert target.netloc == "localhost:3000" and target.path == "/mcp-connect"
+    flow_id = parse_qs(target.query)["consent"][0]
+    return browser.get("/auth/mcp/consent/", {"flow": flow_id})
+
+
 @pytest.fixture
 def flow(create_user, workspace):
     browser = Client()
@@ -57,12 +66,12 @@ def flow(create_user, workspace):
     }
 
     def consent(*, write=False, overrides=None):
-        response = browser.get("/auth/mcp/authorize/", {**params, **(overrides or {})})
+        response = consent_page(browser, {**params, **(overrides or {})})
         assert response.status_code == 200, response.content
         result = browser.post(
             "/auth/mcp/authorize/",
             {
-                "ticket": response.context["ticket"],
+                "ticket": response.json()["ticket"],
                 "decision": "allow",
                 "workspace": workspace.slug,
                 "write": "yes" if write else "no",
@@ -161,9 +170,9 @@ def test_consent_login_deny_csrf_and_account_binding(flow, create_user):
     flow_id = parse_qs(urlsplit(next_path).query)["flow"][0]
     assert Client().get("/auth/mcp/authorize/", {"flow": flow_id}).status_code == 400
     anonymous.force_login(create_user)
-    assert anonymous.get("/auth/mcp/authorize/", {"flow": flow_id}).status_code == 200
-    consent = browser.get("/auth/mcp/authorize/", params)
-    ticket = consent.context["ticket"]
+    assert consent_page(anonymous, {"flow": flow_id}).status_code == 200
+    consent = consent_page(browser, params)
+    ticket = consent.json()["ticket"]
     response = browser.post("/auth/mcp/authorize/", {"ticket": ticket, "decision": "deny"})
     assert parse_qs(urlsplit(response["Location"]).query)["error"] == ["access_denied"]
     assert not MCPOAuthGrant.objects.exists()
@@ -235,6 +244,8 @@ def test_read_only_workspace_boundary_and_api_token_preserved(flow, workspace, c
     assert response["Cache-Control"] == "no-store"
     tokens = response.json()
     assert tokens["scope"] == "plane:read"
+    # Previously issued single-workspace grants must never expand on upgrade.
+    MCPOAuthGrant.objects.update(workspace=workspace)
     row = MCPOAuthToken.objects.get()
     assert row.access_hash == digest(tokens["access_token"])
     assert row.refresh_hash == digest(tokens["refresh_token"])
@@ -281,7 +292,11 @@ def test_write_scope_and_membership_revocation(flow, workspace, create_user):
     )
     assert response.status == 201, response.data
     WorkspaceMember.objects.filter(member=create_user, workspace=workspace).update(is_active=False)
-    assert call_mcp(browser, tokens["access_token"]).status_code == 401
+    result = call_mcp(
+        browser, tokens["access_token"], arguments={"action": "me", "workspace_slug": workspace.slug}
+    ).json()["result"]
+    assert result["isError"]
+    assert call_mcp(browser, tokens["access_token"]).status_code == 200
 
 
 def test_refresh_rotation_reuse_and_client_binding(flow):
@@ -321,7 +336,15 @@ def test_expired_access_revocation_and_user_connections(flow):
     page = browser.get("/auth/mcp/connections/")
     assert page.status_code == 200
     assert page["Cache-Control"] == "no-store"
-    assert set(page.json()["connections"][0]) == {"id", "client_name", "workspace_name", "scope", "expires_at"}
+    assert set(page.json()["connections"][0]) == {
+        "id",
+        "client_name",
+        "workspace_name",
+        "scope",
+        "expires_at",
+        "created_at",
+        "status",
+    }
     assert page.json()["csrf_token"]
     grant = MCPOAuthToken.objects.get(access_hash=digest(tokens["access_token"])).grant
     assert browser.post("/auth/mcp/connections/", {"grant": grant.pk}).status_code == 200
@@ -353,18 +376,18 @@ def test_real_login_preserves_pending_authorization(flow, create_user, settings)
         )
     assert signed_in.status_code == 302
     assert parse_qs(urlsplit(signed_in["Location"]).query)["next_path"] == [next_path]
-    response = browser.get("/auth/mcp/authorize/", {"flow": flow_id})
+    response = consent_page(browser, {"flow": flow_id})
     assert response.status_code == 200
-    assert response.context["client"].pk == MCPOAuthClient.objects.get().pk
+    assert response.json()["client_name"] == MCPOAuthClient.objects.get().name
 
 
 def test_csrf_form_accepts_same_origin_and_rejects_foreign_origin(flow, create_user):
     _, params, _, _ = flow
     browser = Client(enforce_csrf_checks=True)
     browser.force_login(create_user)
-    page = browser.get("/auth/mcp/authorize/", params)
+    page = consent_page(browser, params)
     csrf = browser.cookies["csrftoken"].value
-    data = {"csrfmiddlewaretoken": csrf, "ticket": page.context["ticket"], "decision": "deny"}
+    data = {"csrfmiddlewaretoken": csrf, "ticket": page.json()["ticket"], "decision": "deny"}
     assert page["Referrer-Policy"] == "same-origin"
     assert browser.post("/auth/mcp/authorize/", data, HTTP_ORIGIN="https://evil.invalid").status_code == 403
     response = browser.post("/auth/mcp/authorize/", data, HTTP_ORIGIN=ORIGIN, HTTP_HOST="plane.test", secure=True)
@@ -423,10 +446,10 @@ def test_connections_require_session_and_csrf(flow):
 def test_consent_is_single_use_and_bound_to_browser_session(flow, create_user, workspace):
     browser, params, _, _ = flow
     previous_session = browser.session
-    page = browser.get("/auth/mcp/authorize/", params)
+    page = consent_page(browser, params)
     # Simulate an in-flight app request saving its older session snapshot.
     previous_session.save()
-    data = {"ticket": page.context["ticket"], "decision": "allow", "workspace": workspace.slug}
+    data = {"ticket": page.json()["ticket"], "decision": "allow", "workspace": workspace.slug}
     another_session = Client()
     another_session.force_login(create_user)
     assert another_session.post("/auth/mcp/authorize/", data).status_code == 403
@@ -454,7 +477,7 @@ def test_session_oauth_endpoints_reject_foreign_origin_even_with_permissive_cors
     for path, data in [("/auth/mcp/authorize/", params), ("/auth/mcp/connections/", {})]:
         assert browser.get(path, data, HTTP_ORIGIN="https://evil.invalid").status_code == 403
         assert browser.get(path, data, HTTP_ORIGIN="null").status_code == 403
-        assert browser.get(path, data, HTTP_ORIGIN=ORIGIN).status_code == 200
+        assert browser.get(path, data, HTTP_ORIGIN=ORIGIN).status_code == (302 if "authorize" in path else 200)
 
 
 def test_oauth_write_requires_transport_scope_challenge(flow, workspace):
@@ -562,3 +585,92 @@ def test_refresh_lifetime_is_capped_by_original_grant(flow):
     assert 0 < response.json()["expires_in"] <= 30
     token = MCPOAuthToken.objects.get(access_hash=digest(response.json()["access_token"]))
     assert token.access_expires_at <= token.grant.expires_at
+
+
+def test_account_grants_follow_current_membership_without_workspace_selection(flow, workspace, create_user):
+    browser, _, _, exchange = flow
+    token = exchange().json()["access_token"]
+    assert MCPOAuthGrant.objects.get().workspace_id is None
+    other = Workspace.objects.create(name="Second", slug="second-oauth", owner=create_user)
+    WorkspaceMember.objects.create(workspace=other, member=create_user, role=20)
+    result = call_mcp(browser, token).json()["result"]
+    assert workspace.slug in result["content"][0]["text"] and other.slug in result["content"][0]["text"]
+    assert not call_mcp(browser, token, arguments={"action": "me", "workspace_slug": other.slug}).json()["result"][
+        "isError"
+    ]
+    WorkspaceMember.objects.filter(member=create_user, workspace=other).update(is_active=False)
+    assert call_mcp(browser, token, arguments={"action": "me", "workspace_slug": other.slug}).json()["result"][
+        "isError"
+    ]
+    assert other.slug not in call_mcp(browser, token).json()["result"]["content"][0]["text"]
+
+
+def test_multiple_clients_and_repeated_connections_revoke_independently(flow):
+    browser, params, _, exchange = flow
+    first = exchange().json()["access_token"]
+    second_client = MCPOAuthClient.objects.create(name="Second client", redirect_uris=[REDIRECT])
+    form = consent_page(browser, {**params, "client_id": str(second_client.pk)}).json()
+    response = browser.post("/auth/mcp/authorize/", {"ticket": form["ticket"], "decision": "allow"})
+    code = parse_qs(urlsplit(response["Location"]).query)["code"][0]
+    second = exchange(code, client_id=str(second_client.pk)).json()["access_token"]
+    third = exchange().json()["access_token"]
+    assert len(browser.get("/auth/mcp/connections/").json()["connections"]) == 3
+    first_grant = MCPOAuthToken.objects.get(access_hash=digest(first)).grant
+    assert browser.post("/auth/mcp/connections/", {"grant": first_grant.pk}).status_code == 200
+    assert call_mcp(browser, first).status_code == 401
+    assert call_mcp(browser, second, method="tools/list").status_code == 200
+    assert call_mcp(browser, third, method="tools/list").status_code == 200
+
+
+def test_consent_details_are_private_expiring_and_single_use(flow, create_user):
+    browser, params, _, _ = flow
+    response = browser.get("/auth/mcp/authorize/", params)
+    flow_id = parse_qs(urlsplit(response["Location"]).query)["consent"][0]
+    path = "/auth/mcp/consent/"
+    assert Client().get(path, {"flow": flow_id}).status_code == 403
+    other_session = Client()
+    other_session.force_login(create_user)
+    assert other_session.get(path, {"flow": flow_id}).status_code == 403
+    assert browser.get(path, {"flow": flow_id}, HTTP_ORIGIN="https://evil.invalid").status_code == 403
+    page = browser.get(path, {"flow": flow_id})
+    assert page["Cache-Control"] == "no-store"
+    assert "frame-ancestors 'none'" in page["Content-Security-Policy"]
+    data = page.json()
+    assert data["write_requested"] is True and data["account_email"] == create_user.email
+    response = browser.post(
+        "/auth/mcp/authorize/", {"ticket": data["ticket"], "decision": "deny"}, HTTP_ACCEPT="application/json"
+    )
+    assert response.status_code == 200
+    assert "error=access_denied" in response.json()["redirect_url"]
+    assert not MCPOAuthGrant.objects.exists()
+    assert browser.get(path, {"flow": flow_id}).status_code == 410
+    cache.clear()
+    assert browser.get(path, {"flow": flow_id}).status_code == 410
+
+
+def test_json_consent_preserves_pkce_callback_and_defaults_to_read(flow):
+    browser, params, _, exchange = flow
+    data = consent_page(browser, params).json()
+    response = browser.post(
+        "/auth/mcp/authorize/", {"ticket": data["ticket"], "decision": "allow"}, HTTP_ACCEPT="application/json"
+    )
+    target = response.json()["redirect_url"]
+    assert target.startswith(REDIRECT + "?")
+    query = parse_qs(urlsplit(target).query)
+    assert query["state"] == [params["state"]] and query["iss"] == [ORIGIN]
+    assert exchange(query["code"][0]).json()["scope"] == "plane:read"
+
+
+def test_in_flight_legacy_consent_does_not_silently_expand_access(flow, workspace):
+    from django.core import signing
+
+    browser, params, _, _ = flow
+    form = consent_page(browser, params).json()
+    legacy = signing.loads(form["ticket"], salt="mcp-consent")
+    legacy.pop("access")
+    ticket = signing.dumps(legacy, salt="mcp-consent")
+    response = browser.post(
+        "/auth/mcp/authorize/", {"ticket": ticket, "workspace": workspace.slug, "decision": "allow"}
+    )
+    assert response.status_code == 302
+    assert MCPOAuthGrant.objects.get().workspace_id == workspace.pk

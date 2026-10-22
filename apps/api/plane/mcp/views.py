@@ -133,7 +133,7 @@ class MCPEndpoint(View):
             slug = self.workspace_slug(request, user, arguments, required=not listing)
             grant = getattr(request, "mcp_oauth_grant", None)
             scope = (
-                grant.workspace.slug
+                (grant.workspace.slug if grant.workspace_id else None)
                 if grant
                 else APIToken.objects.values_list("workspace__slug", flat=True).get(token=token)
             )

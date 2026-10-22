@@ -14,6 +14,7 @@ export const PROFILE_SETTINGS_PAGES_MAP: Record<TProfileSettingsTabs, React.Lazy
   notifications: lazy(() => import("./notifications").then((m) => ({ default: m.NotificationsProfileSettings }))),
   security: lazy(() => import("./security").then((m) => ({ default: m.SecurityProfileSettings }))),
   "api-tokens": lazy(() => import("./api-tokens").then((m) => ({ default: m.APITokensProfileSettings }))),
+  "oauth-connections": lazy(() => import("./oauth-connections").then((m) => ({ default: m.OAuthProfileSettings }))),
   mcp: lazy(() => import("./mcp").then((m) => ({ default: m.McpProfileSettings }))),
   skills: lazy(() => import("./skills").then((m) => ({ default: m.SkillsProfileSettings }))),
 };

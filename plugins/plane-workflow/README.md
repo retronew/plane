@@ -52,7 +52,7 @@ npx skills add https://github.com/retronew/plane-plugins/tree/main/plugins/plane
 
 ## 手动连接 MCP
 
-OpenAI 0.3.1 插件提供 OAuth 连接；Claude 与通用技能包继续支持手动连接。由用户在 Plane「个人设置 → API 令牌」创建令牌，然后在客户端手动配置：
+OpenAI 0.3.2 插件提供 OAuth 连接；Claude 与通用技能包继续支持手动连接。由用户在 Plane「个人设置 → API 令牌」创建令牌，然后在客户端手动配置：
 
 - Streamable HTTP URL：`https://plane.example.com/mcp`
 - 请求头：`Authorization: Bearer <Plane API token>`，或客户端支持的安全环境变量引用。
@@ -98,9 +98,13 @@ pnpm --filter web build:skills
 
 测试核对八项语义边界、完整目录和两类 ZIP 的字节一致性、CRC 与中央目录、OAuth 连接配置、无真实秘密、版本一致及重新构建可复现。生成后一起分发源、生成目录、公开 Markdown 和 ZIP。测试直接检查生成产物，失败会中止现有 web 构建。
 
-## OAuth 部署与实例绑定（0.3.1）
+## OAuth 部署与实例绑定（0.3.2）
 
-OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.codex-plugin/plugin.json` 引用根目录 `.mcp.json`，声明 HTTP MCP，由服务端发现文档提供 OAuth/DCR，用户安装后连接、登录 Plane 并授权工作区。默认只读，可显式勾选读写；授权不提升用户原本的项目权限。安装入口和提示文案取决于桌面客户端版本，本仓库不能控制客户端 UI。
+OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.codex-plugin/plugin.json` 引用根目录 `.mcp.json`，声明 HTTP MCP，由服务端发现文档提供 OAuth/DCR，用户安装后连接、登录 Plane 并授权账号范围。默认只读，可显式勾选读写；授权不提升用户原本的项目权限。安装入口和提示文案取决于桌面客户端版本，本仓库不能控制客户端 UI。
+
+新授权不要求选择工作区；账号范围包含以后加入的工作区，但每次请求仍校验成员资格与项目权限。已有单工作区授权和升级前已签发的确认票据保留原限制，不能自动扩大。多个客户端可以同时连接，撤销或重新授权仅针对所选的一条连接。重新授权须回到客户端启动新的 PKCE 流程。
+
+授权页使用前端 `/mcp-connect` 与会话保护的 `/auth/mcp/consent/`，请同时部署前后端，并保留前端的防嵌入安全响应头。客户端 `127.0.0.1/callback` 完成页由客户端提供，不属于 Plane 的多语言或样式范围。
 
 当前桌面兼容包不同时提供根目录 `plugin.json`：实测内置 CLI `0.163.0-alpha.11.1` 会优先读取它、忽略兼容清单，导致 `plugin/read` 返回空的 `mcpServers`。升级后应通过该协议确认返回 `["plane"]`，再验证 OAuth；文件存在或技能出现都不能证明 MCP 已加载。
 
@@ -111,10 +115,10 @@ OpenAI marketplace 的 `policy.authentication` 为 `ON_INSTALL`。插件的 `.co
 上线步骤：
 
 1. 后端运行环境（仓库 Docker Compose 使用 `apps/api/.env`）设置 `MCP_OAUTH_ISSUER=https://plane.mdropwork.com`（不带 `/mcp`）。未设置时回退 `WEB_URL`；`WEB_URL`、`APP_BASE_URL` 配置实际前端登录地址 `https://plane.mdropwork.com`。这是管理员的部署配置，不要求每位安装插件的用户填写；改变环境变量后需重新创建 API 容器使其生效。正式环境使用 HTTPS。
-2. 按开发指南先构建 API 镜像、执行数据库迁移 `0153_mcp_oauth`，再更新 API 服务；更新 web 以包含登录返回路由 `/mcp-connect`。
+2. 按开发指南先构建 API 镜像、执行数据库迁移 `0154_mcp_oauth_account_scope`，再更新 API 服务；更新 web 以包含登录返回路由 `/mcp-connect`。
 3. 更新代理：`/.well-known/oauth-protected-resource`、`/.well-known/oauth-protected-resource/mcp`、`/.well-known/oauth-authorization-server`、`/auth/mcp/*` 和 `/mcp` 必须到 API。本仓库两份 Caddy 配置已包含转发；外部反向代理也必须配置。
 4. 部署后读取发现文档，确认 issuer、resource 和所有 endpoint 都是线上域名，再发布/更新插件。仅更新插件不会部署 OAuth 后端。本次不自动推送或部署。
-5. 安装新版本后连接。授权管理位于个人设置 → 开发者 → MCP，与 API Token 入口一起管理，不另开页面。撤销会使整个授权族失效。
+5. 安装新版本后连接。授权管理位于个人设置 → 开发者 → 授权连接，与 API Token 入口一起管理，不另开页面。撤销会使整个授权族失效。
 
 OAuth 采用 public client + 动态注册（DCR）+ Authorization Code + PKCE S256，不要求用户填写 client secret。客户端回调仅接受 HTTPS 或 IP loopback HTTP，严格绑定注册的完整回调地址。授权码两分钟有效、一次性使用；访问令牌一小时、授权/刷新最多三十天；刷新令牌轮换，旧刷新令牌重用撤销授权族。令牌和授权码仅存 SHA-256 摘要，OAuth 令牌只用于 MCP，不作为通用 API Key 使用。成员资格、账户状态、工作区和读写权限在请求时复核。
 
@@ -140,7 +144,7 @@ codex plugin marketplace add /absolute/new-test-marketplace
 codex plugin add plane-workflow@plane-local-test
 ```
 
-在同一 host 的客户端重新加载插件，点击连接并亲自登录、选择工作区。客户端不显示连接入口时先检查插件详情是否加载 MCP；不能仅凭技能出现就认定已连接。本地市场与正式 `plane-openai` 市场分开，不修改正式包或已有连接。
+在同一 host 的客户端重新加载插件，点击连接并亲自登录、确认账号范围。客户端不显示连接入口时先检查插件详情是否加载 MCP；不能仅凭技能出现就认定已连接。本地市场与正式 `plane-openai` 市场分开，不修改正式包或已有连接。
 
 Claude Code 单独测试服务端 OAuth：
 
@@ -150,7 +154,7 @@ claude mcp add --transport http --scope local plane-oauth-local http://localhost
 
 启动 Claude Code 后通过 `/mcp` 选择 `plane-oauth-local` 并认证。该方式验证服务端 OAuth，不代表 Claude 插件已打包 MCP。客户端若从云端访问远程 MCP，无法访问你电脑的 localhost；此时需使用可达的 HTTPS 测试地址并重新生成对应实例的包，不能把本地地址当成公网地址。
 
-验收顺序：首次只读授权 → 初始化与工具列表 → `workspace(action="list")` 只显示所选工作区 → 其他工作区请求失败 → 在个人设置的开发者 MCP 中撤销 → 原连接失效。写入授权只在测试工作区验证，不用真实工作项做破坏性测试。
+验收顺序：首次只读授权 → 初始化与工具列表 → `workspace(action="list")` 显示当前有权限的工作区 → 无权限工作区请求失败 → 在个人设置的开发者 MCP 中撤销 → 原连接失效。写入授权只在测试工作区验证，不用真实工作项做破坏性测试。
 
 审查加固：授权确认票据绑定浏览器会话且只能使用一次；已发放但尚未兑换的授权码也可以撤销；会话接口独立校验 Origin，不依赖全局宽松 CORS；只读 OAuth 的写请求返回 `403 insufficient_scope`；一体化代理将 `/mcp-connect` 留给前端。令牌兑换与刷新通过数据库行锁处理并发。
 

@@ -9,6 +9,9 @@ describe("legacy personal settings redirect", () => {
   });
 
   it("uses an accessible workspace when the remembered workspace was removed", () => {
+    expect(getProfileSettingsRedirect("oauth-connections", "", "", ["first"], "removed")).toBe(
+      "/first?profileSettings=oauth-connections"
+    );
     expect(getProfileSettingsRedirect("mcp", "", "", ["first"], "removed")).toBe("/first?profileSettings=mcp");
   });
 

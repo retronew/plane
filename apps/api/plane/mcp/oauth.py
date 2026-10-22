@@ -21,7 +21,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.middleware.csrf import get_token
-from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -196,12 +195,15 @@ def valid_grant(grant):
         and grant.expires_at > timezone.now()
         and grant.resource == resource()
         and grant.user.is_active
-        and WorkspaceMember.objects.filter(
-            workspace=grant.workspace,
-            workspace__deleted_at__isnull=True,
-            member=grant.user,
-            is_active=True,
-        ).exists()
+        and (
+            grant.workspace_id is None
+            or WorkspaceMember.objects.filter(
+                workspace=grant.workspace,
+                workspace__deleted_at__isnull=True,
+                member=grant.user,
+                is_active=True,
+            ).exists()
+        )
     )
 
 
@@ -219,20 +221,31 @@ def authenticate_access(value):
 def authenticate_gateway(request, value):
     grant = authenticate_access(value)
     match = request.resolver_match
-    if not match or (
-        match.kwargs.get("slug") != grant.workspace.slug
-        and not (request.method == "GET" and request.path == "/api/v1/users/me/")
+    slug = match.kwargs.get("slug") if match else None
+    identity = request.method == "GET" and request.path == "/api/v1/users/me/"
+    if not identity and (
+        not slug
+        or (grant.workspace_id is not None and slug != grant.workspace.slug)
+        or not WorkspaceMember.objects.filter(
+            workspace__slug=slug,
+            workspace__deleted_at__isnull=True,
+            member=grant.user,
+            is_active=True,
+        ).exists()
     ):
-        raise PermissionDenied("OAuth grant is restricted to its workspace")
+        raise PermissionDenied("OAuth grant cannot access this workspace")
     if WRITE not in grant.scope.split() and request.method not in ("GET", "HEAD", "OPTIONS"):
         raise PermissionDenied("OAuth grant is read-only")
     return grant.user, "mcp-oauth:" + str(grant.pk)
 
 
-def callback(params, **values):
+def callback(params, *, request=None, **values):
     values.update(state=params.get("state", ""), iss=issuer())
     uri = params["redirect_uri"]
-    return secure(HttpResponseRedirect(uri + ("&" if "?" in uri else "?") + urlencode(values)))
+    target = uri + ("&" if "?" in uri else "?") + urlencode(values)
+    if request is not None and request.headers.get("Accept") == "application/json":
+        return secure(JsonResponse({"redirect_url": target}))
+    return secure(HttpResponseRedirect(target))
 
 
 @require_http_methods(["GET", "POST"])
@@ -302,31 +315,17 @@ def authorize(request):
         ticket = signing.dumps(
             {
                 "params": params,
+                "access": "account",
                 "user": str(request.user.pk),
                 "session": digest(request.session.session_key or ""),
                 "nonce": secrets.token_urlsafe(32),
             },
             salt="mcp-consent",
         )
-        workspaces = WorkspaceMember.objects.filter(
-            member=request.user,
-            is_active=True,
-            workspace__deleted_at__isnull=True,
-        ).select_related("workspace")
-        return secure(
-            render(
-                request,
-                "mcp/authorize.html",
-                {
-                    "client": client,
-                    "ticket": ticket,
-                    "workspaces": workspaces,
-                    "write_requested": WRITE in scopes,
-                    "settings_url": (settings.APP_BASE_URL or settings.WEB_URL).rstrip("/") + "/settings/profile/mcp",
-                    "redirect_uri": params["redirect_uri"],
-                },
-            )
-        )
+        flow_id = secrets.token_urlsafe(32)
+        cache.set("mcp-consent:" + flow_id, ticket, 600)
+        frontend = (settings.APP_BASE_URL or settings.WEB_URL).rstrip("/")
+        return secure(HttpResponseRedirect(frontend + "/mcp-connect?consent=" + flow_id))
     if not request.user.is_authenticated or not request.user.is_active:
         return error("access_denied", 403)
     try:
@@ -343,15 +342,19 @@ def authorize(request):
     if not cache.add("mcp-consent-used:" + digest(request.POST["ticket"]), True, 600):
         return error()
     if request.POST.get("decision") != "allow":
-        return callback(params, error="access_denied")
-    member = WorkspaceMember.objects.filter(
-        member=request.user,
-        is_active=True,
-        workspace__slug=request.POST.get("workspace"),
-        workspace__deleted_at__isnull=True,
-    ).first()
-    if not member:
-        return error("access_denied", 403)
+        return callback(params, request=request, error="access_denied")
+    # Tickets issued by the old workspace consent screen must not gain account access.
+    workspace = None
+    if ticket.get("access") != "account":
+        member = WorkspaceMember.objects.filter(
+            member=request.user,
+            is_active=True,
+            workspace__slug=request.POST.get("workspace"),
+            workspace__deleted_at__isnull=True,
+        ).first()
+        if not member:
+            return error("access_denied", 403)
+        workspace = member.workspace
     scope = READ
     if request.POST.get("write") == "yes" and WRITE in params["scope"].split():
         scope += " " + WRITE
@@ -359,7 +362,7 @@ def authorize(request):
     MCPOAuthGrant.objects.create(
         client_id=params["client_id"],
         user=request.user,
-        workspace=member.workspace,
+        workspace=workspace,
         scope=scope,
         resource=resource(),
         redirect_uri=params["redirect_uri"],
@@ -368,7 +371,45 @@ def authorize(request):
         code_expires_at=timezone.now() + timedelta(minutes=2),
         expires_at=timezone.now() + timedelta(days=30),
     )
-    return callback(params, code=code)
+    return callback(params, request=request, code=code)
+
+
+@require_GET
+def consent(request):
+    """Return a session-bound consent form to the first-party frontend only."""
+    if not session_origin_allowed(request) or not request.user.is_authenticated or not request.user.is_active:
+        return error("access_denied", 403)
+    flow_id = request.GET.get("flow", "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{43}", flow_id):
+        return error()
+    ticket = cache.get("mcp-consent:" + flow_id)
+    if not ticket:
+        return error("expired_request", 410)
+    try:
+        data = signing.loads(ticket, salt="mcp-consent", max_age=600)
+    except signing.BadSignature:
+        return error("expired_request", 410)
+    if data["user"] != str(request.user.pk) or not secrets.compare_digest(
+        data.get("session", ""), digest(request.session.session_key or "")
+    ):
+        return error("access_denied", 403)
+    if cache.get("mcp-consent-used:" + digest(ticket)):
+        return error("expired_request", 410)
+    client = client_by_id(data["params"]["client_id"])
+    if not client:
+        return error("invalid_client", 410)
+    return secure(
+        JsonResponse(
+            {
+                "ticket": ticket,
+                "csrf_token": get_token(request),
+                "client_name": client.name,
+                "account_email": request.user.email,
+                "redirect_uri": data["params"]["redirect_uri"],
+                "write_requested": WRITE in data["params"]["scope"].split(),
+            }
+        )
+    )
 
 
 def issue_token(grant):
@@ -489,7 +530,11 @@ def connections(request):
                     {
                         "id": str(grant.pk),
                         "client_name": grant.client.name,
-                        "workspace_name": grant.workspace.name,
+                        "workspace_name": grant.workspace.name if grant.workspace_id else None,
+                        "created_at": grant.created_at.isoformat(),
+                        "status": "expired"
+                        if grant.expires_at <= timezone.now()
+                        else ("active" if grant.code_used else "pending"),
                         "scope": grant.scope,
                         "expires_at": grant.expires_at.isoformat(),
                     }

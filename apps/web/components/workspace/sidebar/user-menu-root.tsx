@@ -42,6 +42,7 @@ const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutlin
   security: LockOutline,
   "api-tokens": KeyOutline,
   mcp: Plug,
+  "oauth-connections": LockOutline,
   skills: Blocks,
 };
 
@@ -53,6 +54,7 @@ const MENU_TABS: TProfileSettingsTabs[] = [
   "security",
   "api-tokens",
   "mcp",
+  "oauth-connections",
   "skills",
 ];
 

@@ -6,7 +6,6 @@
 
 import { observer } from "mobx-react";
 import { Button } from "@makeplane/propel/components/button";
-import { OAuthConnections } from "@/components/api-token/oauth-connections";
 import { useTranslation } from "@plane/i18n";
 import { ApiTokenMcpSetup } from "@/components/api-token/mcp-setup";
 import { ProfileSettingsHeading } from "@/components/settings/profile/heading";
@@ -34,7 +33,13 @@ export const McpProfileSettings = observer(function McpProfileSettings() {
           onClick={manageTokens}
         />
       </div>
-      <OAuthConnections />
+      <Button
+        variant="ghost"
+        size="sm"
+        stretch="auto"
+        label={t("account_settings.mcp.manage_connections")}
+        onClick={() => toggleProfileSettingsModal({ activeTab: "oauth-connections", isOpen: true })}
+      />
     </div>
   );
 });
