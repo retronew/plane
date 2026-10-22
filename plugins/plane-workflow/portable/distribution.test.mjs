@@ -96,8 +96,17 @@ test("all eight complete canonical skills are identical across directories and a
   assert.ok(extras.some(([name]) => name.startsWith("agents/")));
   assert.deepEqual(
     [...claude.keys()],
-    [".claude-plugin/plugin.json", ...extras.map(([name]) => name), ...entries.map(([name]) => `skills/${name}`)]
+    [
+      ".claude-plugin/plugin.json",
+      ".mcp.json",
+      ...extras.map(([name]) => name),
+      ...entries.map(([name]) => `skills/${name}`),
+    ]
   );
+  assert.deepEqual(claude.get(".mcp.json"), await readFile(resolve(here, "../.mcp.json")));
+  assert.deepEqual(JSON.parse(claude.get(".mcp.json")), {
+    mcpServers: { plane: { type: "http", url: "https://plane.mdropwork.com/mcp" } },
+  });
   for (const [name, content] of extras) assert.deepEqual(claude.get(name), content);
   for (const [name, mode] of [...claude.modes, ...generic.modes])
     assert.equal(mode, name.endsWith(".sh") ? 0o100755 : 0o100644, `${name}: mode`);
@@ -123,9 +132,12 @@ test("all eight complete canonical skills are identical across directories and a
     assert.match((await readFile(resolve(source, name, "SKILL.md"))).toString(), /工具.*可用/);
   const claudeManifest = JSON.parse(await readFile(resolve(here, "../.claude-plugin/plugin.json")));
   assert.deepEqual(JSON.parse(claude.get(".claude-plugin/plugin.json")), claudeManifest);
-  const openaiManifest = JSON.parse(await readFile(resolve(root, "plugins/plane-workflow-openai/plugin.json")));
+  const openaiManifest = JSON.parse(
+    await readFile(resolve(root, "plugins/plane-workflow-openai/.codex-plugin/plugin.json"))
+  );
   assert.deepEqual(openaiManifest, {
-    $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+    skills: "./skills/",
+    mcpServers: "./.mcp.json",
     ...Object.fromEntries(
       ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"].map((key) => [
         key,
@@ -135,12 +147,11 @@ test("all eight complete canonical skills are identical across directories and a
   });
 });
 
-test("distributions contain no connection configuration or secrets", async () => {
+test("distributions contain no embedded credentials or unsupported installation prompts", async () => {
   for (const dir of [resolve(here, ".."), resolve(root, "plugins/plane-workflow-openai"), publicDir]) {
     for (const [name, content] of await files(dir)) {
-      assert.doesNotMatch(name, /(?:^|\/)(?:\.mcp\.json|mcp\.json|\.env|\.DS_Store)$/);
-      if (name.endsWith(".json"))
-        assert.doesNotMatch(content.toString(), /"(?:userConfig|mcpServers|mcp_servers|connectors)"/);
+      assert.doesNotMatch(name, /(?:^|\/)(?:\.env|\.DS_Store)$/);
+      if (name.endsWith(".json")) assert.doesNotMatch(content.toString(), /"(?:userConfig|mcp_servers|connectors)"/);
       if (!name.endsWith(".zip"))
         assert.doesNotMatch(content.toString(), /(?:sk_live_|sk-proj-|ghp_)[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9_-]{32,}/);
     }
@@ -178,4 +189,19 @@ test("nested scripts, references and assets survive traversal while Finder files
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("OpenAI archive carries the same OAuth endpoint and full skills as the installed plugin", async () => {
+  const pluginRoot = resolve(root, "plugins/plane-workflow-openai");
+  const archive = unzip(await readFile(resolve(publicDir, "plane-workflow-openai.zip")));
+  const expected = await files(pluginRoot);
+  assert.equal(archive.size, expected.length);
+  for (const [name, content] of expected) assert.deepEqual(archive.get(name), content);
+  const config = JSON.parse(archive.get(".mcp.json"));
+  assert.equal(config.mcpServers.plane.url, "https://plane.mdropwork.com/mcp");
+  assert.equal(config.mcpServers.plane.type, "http");
+  assert.ok(!archive.has("plugin.json"), "root manifest would shadow desktop MCP wiring");
+  const manifest = JSON.parse(archive.get(".codex-plugin/plugin.json"));
+  assert.ok(archive.has(manifest.mcpServers.slice(2)));
+  assert.ok(!("headers" in config.mcpServers.plane));
 });

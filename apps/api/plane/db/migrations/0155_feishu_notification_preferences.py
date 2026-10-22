@@ -9,7 +9,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("db", "0152_remove_issue_type_is_epic"),
+        ("db", "0154_mcp_oauth_account_scope"),
     ]
 
     operations = [

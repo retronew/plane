@@ -34,6 +34,7 @@ export default defineConfig(() => ({
   },
   server: {
     host: "127.0.0.1",
+    headers: { "X-Frame-Options": "DENY", "Content-Security-Policy": "frame-ancestors 'none'" },
   },
   ssr: {
     // Bundle directory-based entry points for Node during SPA fallback prerendering.

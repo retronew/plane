@@ -24,13 +24,20 @@ export const McpProfileSettings = observer(function McpProfileSettings() {
         description={t("account_settings.mcp.description")}
       />
       <ApiTokenMcpSetup />
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
           variant="secondary"
           size="sm"
           stretch="auto"
           label={t("account_settings.mcp.manage_tokens")}
           onClick={manageTokens}
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          stretch="auto"
+          label={t("account_settings.mcp.manage_connections")}
+          onClick={() => toggleProfileSettingsModal({ activeTab: "oauth-connections", isOpen: true })}
         />
       </div>
     </div>

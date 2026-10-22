@@ -1,4 +1,6 @@
 (plane_proxy) {
+	reverse_proxy /.well-known/oauth-* api:8000
+
 	request_body {
 		max_size {$FILE_SIZE_LIMIT}
 	}

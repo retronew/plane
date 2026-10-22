@@ -1,6 +1,6 @@
 ---
 name: plane-setup
-description: 检查 Plane MCP 连接，指导用户在当前客户端独立手动填写 MCP URL 与 API 令牌，并核验身份和目标工作区
+description: 检查 Plane MCP 连接，指导用户连接 OAuth 或手动配置 API 令牌，并核验身份和目标工作区
 ---
 
 # plane-setup：连接 Plane
@@ -19,12 +19,22 @@ description: 检查 Plane MCP 连接，指导用户在当前客户端独立手�
 
 调用 `workspace(action="list")`，确定目标后调用 `workspace(action="me", workspace_slug="<目标 slug>")` 核验身份，再分页查询 `project(action="list", workspace_slug="<目标 slug>")`。展示身份、工作区 slug 和最多十个项目，并说明是否只展示部分。
 
-没有 Plane 工具或返回 401 时指导下面的手动配置；403 表示权限不足，停止该目标操作，不切区回退。只读令牌可查询，不能执行写入。
+没有 Plane 工具或返回 401 时指导下面的 OAuth 连接或手动配置；403 表示权限不足，停止该目标操作，不切区回退。只读令牌可查询，不能执行写入。
 
-## 2. 用户手动配置
+## 2. 插件 OAuth 连接
+
+Claude 和 OpenAI 插件包含绑定实例的 MCP 地址（Claude 从 0.3.3 起，OpenAI 从 0.3.1 起）。用户在客户端点击连接，浏览器打开 Plane 登录与授权页，确认账号访问范围和只读或读写权限（账号范围包含以后加入的工作区，每次请求仍校验成员与项目权限），完成后返回客户端。没有连接入口时检查版本、是否启用，以及是否需要新建会话；不要把安装技能等同于连接成功。
+
+Claude 桌面端 Code 模式需要先打开已加载此插件的本机会话，再从 Connectors → Manage connectors 点击 Connect；未加载 MCP 的会话会导致插件详情按钮灰显。更新实例地址后，旧会话可能仍缓存旧地址，应在新会话重试。授权页必须使用 HTTPS，HTTP localhost 仅供终端 Claude Code 测试。Chat / Cowork 的远程连接需要云端可达的 HTTPS 服务。
+
+连接地址以当前插件的 .mcp.json 为准，不从历史会话推断。其他部署需要从源码修改 instance.json 并重新构建插件；不能要求用户把 Token 放进聊天或通过 URL 参数传递。实例须部署 OAuth 后端，并通过 /.well-known/oauth-protected-resource 提供发现信息。连接失败时报告实际错误，不回退到无认证模式。
+
+授权默认只读；需要修改数据时用户须显式勾选读写权限，并仍按每项技能的具体操作授权执行。用户可以在该实例个人设置 → 开发者 → 授权连接 中查看和撤销连接。支持同时授权多个客户端，每条授权独立撤销。授权过期或撤销后，从客户端重新连接。旧单工作区授权保留原限制，不会自动扩大。工作区成员资格失效后，客户端不能继续访问该工作区。
+
+## 3. 保留 API Token 接入
 
 1. 在 Plane「个人设置 → API 令牌」创建令牌，仅查询可选择只读。
-2. 用户在当前客户端的 MCP 设置中手动添加 Streamable HTTP URL：`https://plane.example.com/mcp`，认证请求头为 `Authorization: Bearer <Plane API token>`，或使用该客户端支持的安全环境变量引用。
-3. 由用户保存并重新连接，再执行上述只读自检。客户端没有相应设置或不能发送所需请求头时，报告限制并停止，不能声称已连接。
+2. 支持手动 MCP 配置的客户端可添加 Streamable HTTP URL：`https://plane.example.com/mcp`，认证请求头为 `Authorization: Bearer <Plane API token>`，或使用安全环境变量引用。
+3. 保存并重新连接，再执行上述只读自检。客户端没有相应设置或不能发送所需请求头时，报告限制，不声称已连接。
 
-安装技能或插件不会配置连接。本插件不包含 MCP 配置，不生成 mcp.json，不进行 OAuth；不要把 API token 填入 OAuth 凭据。不要代用户操作 ChatGPT 的安装或连接按钮。不要要求用户将令牌贴进对话、技能或仓库；已暴露的令牌应由用户撤销后重新创建。
+不要把 API Token 填入 OAuth client secret。不要要求用户将令牌贴进对话、技能或仓库。只有只读自检成功后才能报告连接成功。

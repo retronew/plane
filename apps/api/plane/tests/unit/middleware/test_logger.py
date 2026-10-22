@@ -3,11 +3,12 @@
 # See the LICENSE file for details.
 
 """
-Unit tests for APITokenLogMiddleware.
+Unit tests for request logging middleware.
 
-Covers the credential-hygiene guarantees of the external API request logger:
+Covers the credential-hygiene guarantees of the request loggers:
 - the raw API key is never persisted (a non-reversible hash is stored instead)
 - sensitive request headers are redacted before being logged
+- OAuth query parameters are omitted and sensitive exchanges are not persisted
 """
 
 import hashlib
@@ -20,7 +21,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from plane.middleware.logger import APITokenLogMiddleware
+from plane.middleware.logger import APITokenLogMiddleware, RequestLoggerMiddleware
 
 
 @pytest.fixture
@@ -77,3 +78,63 @@ class TestAPITokenLogMiddleware:
         with patch("plane.middleware.logger.process_logs") as process_logs:
             middleware.process_request(request, HttpResponse(b"{}"), request_body=b"")
             assert not process_logs.delay.called
+
+
+@pytest.mark.unit
+def test_oauth_exchange_is_not_persisted_even_with_api_key(middleware, request_factory):
+    request = request_factory.post("/auth/mcp/token/", HTTP_X_API_KEY="test-key")
+    with patch("plane.middleware.logger.process_logs") as logs:
+        middleware.process_request(request, HttpResponse(b'{"access_token":"secret"}'), b"code=secret")
+        logs.delay.assert_not_called()
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "path",
+    ["/auth/mcp/authorize/", "/api/users/me/integrations/feishu/callback/"],
+)
+def test_oauth_request_log_omits_sensitive_query(request_factory, path):
+    request = request_factory.get(path, {"code": "secret-code", "state": "secret-state"})
+    request.user = AnonymousUser()
+    response = HttpResponse(status=302)
+    assert "code=secret-code" in request.get_full_path()
+    assert "state=secret-state" in request.get_full_path()
+
+    with patch("plane.middleware.logger.api_logger") as logger:
+        assert RequestLoggerMiddleware(lambda request: response)(request) is response
+
+    logger.info.assert_called_once()
+    assert logger.info.call_args.args == (f"GET {path} 302",)
+    assert logger.info.call_args.kwargs["extra"]["path"] == path
+    logged_data = str(logger.mock_calls)
+    assert "secret-code" not in logged_data
+    assert "secret-state" not in logged_data
+
+
+@pytest.mark.unit
+def test_feishu_callback_is_not_persisted_even_with_api_key(request_factory):
+    request = request_factory.get(
+        "/api/users/me/integrations/feishu/callback/",
+        {"code": "secret-code", "state": "secret-state"},
+        HTTP_X_API_KEY="test-key",
+    )
+    response = HttpResponse(status=302)
+    middleware = APITokenLogMiddleware(Mock(return_value=response))
+
+    with patch("plane.middleware.logger.process_logs") as logs:
+        assert middleware(request) is response
+
+    middleware.get_response.assert_called_once_with(request)
+    logs.delay.assert_not_called()
+
+
+@pytest.mark.unit
+def test_regular_request_log_preserves_query(request_factory):
+    request = request_factory.get("/api/v1/workspaces/?page=2")
+    request.user = AnonymousUser()
+
+    with patch("plane.middleware.logger.api_logger") as logger:
+        RequestLoggerMiddleware(lambda request: HttpResponse())(request)
+
+    logger.info.assert_called_once()
+    assert logger.info.call_args.args == ("GET /api/v1/workspaces/?page=2 200",)

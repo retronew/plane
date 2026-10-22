@@ -30,6 +30,7 @@ const ICONS: Record<TProfileSettingsTabs, LucideIcon | React.FC<ISvgIcons>> = {
   notifications: SubscribeOutline,
   "api-tokens": KeyOutline,
   mcp: Plug,
+  "oauth-connections": LockOutline,
   skills: Blocks,
 };
 

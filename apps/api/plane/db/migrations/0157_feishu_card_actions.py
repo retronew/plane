@@ -8,7 +8,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("db", "0154_feishu_delivery_retry_window"),
+        ("db", "0156_feishu_delivery_retry_window"),
     ]
 
     operations = [

@@ -19,6 +19,9 @@ class ApiKeyRateThrottle(SimpleRateThrottle):
         if not api_key:
             return None  # Allow the request if there's no API key
 
+        if getattr(request, "_plane_mcp_oauth", False):
+            return f"{self.scope}:{request.auth}"
+
         # Use the API key as part of the cache key
         return f"{self.scope}:{api_key}"
 

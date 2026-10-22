@@ -65,4 +65,6 @@ Web全量类型检查存在9处非本次通知变更文件的既有错误（项�
 
 同日交互卡片扩展验证：配置与原投递85项通过；动作/验签/回调/原工作流155项通过；卡片渲染/任务/原outbox最终80项通过（各轮有重叠，不相加作为独立用例数）。`makemigrations --check --dry-run` 无变化，Ruff通过。Admin helper 5项、类型/lint/React Doctor通过；浏览器验证Token/Key保存清空、留空保留和两个回调地址，修复受控输入警告。
 
-飞书应用「Plane 通知」已创建，机器人能力和 `im:message:send_as_bot` 已开通，「允许被其他机器人邀请进群」已关闭。应用仍待上线；尚未配置生产回调、发布或验证真实 OAuth、消息送达和客户端交互。代码保留在隔离worktree，未提交、未合并、未部署；部署前还需处理与主分支并行迁移的编号依赖。
+飞书应用「Plane 通知」已创建，机器人能力和 `im:message:send_as_bot` 已开通，「允许被其他机器人邀请进群」已关闭。应用仍待上线；尚未配置生产回调、发布或验证真实 OAuth、消息送达和客户端交互。代码已与本地 `preview` 的 MCP OAuth 工作整合，尚未部署。飞书迁移调整为 `0155_feishu_notification_preferences` → `0156_feishu_delivery_retry_window` → `0157_feishu_card_actions`，依赖 `0154_mcp_oauth_account_scope`；旧飞书迁移仅在已清理的专用测试数据库应用过。
+
+合并验证：从空数据库应用完整迁移链成功，迁移检查无遗漏；MCP OAuth、飞书通知与卡片等366项后端回归通过，个人设置/通知30项前端测试和admin类型检查通过。飞书OAuth回调同步纳入敏感请求日志保护，查询中的授权码与state不落日志。

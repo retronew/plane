@@ -37,7 +37,7 @@ Plugin marketplaces for the Plane workflow skills. Generated from [${origin}](ht
 | Claude Desktop / ChatGPT | Add the marketplace from \`https://github.com/${DISTRIBUTION_REPO}\` in the client's plugin settings |
 | Other skills clients | \`npx skills add https://github.com/${DISTRIBUTION_REPO}/tree/main/plugins/plane-workflow/skills\` |
 
-The plugins contain no MCP connection or credentials. Connect MCP manually with the URL and token from Plane's MCP settings.
+Both the Claude and OpenAI plugins include an instance-bound OAuth MCP connection. Install, connect, and sign in to Plane to authorize account access. In Claude Desktop Code mode, open a local Code session that loads the plugin first; use its Connectors panel to connect. OAuth sign-in requires HTTPS. API Token connections remain supported in clients with manual MCP configuration. No credentials are included.
 `;
 }
 

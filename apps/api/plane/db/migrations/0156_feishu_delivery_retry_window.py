@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("db", "0153_feishu_notification_preferences"),
+        ("db", "0155_feishu_notification_preferences"),
     ]
 
     operations = [

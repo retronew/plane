@@ -135,7 +135,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
             {t("account_settings.mcp.token_label")}
           </label>
           <InputField
-            size="lg"
+            size="md"
             orientation="vertical"
             id="mcp-personal-token"
             type="password"

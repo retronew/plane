@@ -49,6 +49,10 @@ export const PROFILE_SETTINGS: Record<
     key: "api-tokens",
     i18n_label: "profile.actions.api-tokens",
   },
+  "oauth-connections": {
+    key: "oauth-connections",
+    i18n_label: "account_settings.oauth.title",
+  },
   mcp: {
     key: "mcp",
     i18n_label: "account_settings.mcp.title",
@@ -74,6 +78,7 @@ export const GROUPED_PROFILE_SETTINGS: Record<
   [PROFILE_SETTINGS_CATEGORY.DEVELOPER]: [
     PROFILE_SETTINGS["api-tokens"],
     PROFILE_SETTINGS.mcp,
+    PROFILE_SETTINGS["oauth-connections"],
     PROFILE_SETTINGS.skills,
   ],
 };

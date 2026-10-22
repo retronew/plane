@@ -14,10 +14,20 @@ from drf_spectacular.views import (
 )
 
 from plane.mcp.views import MCPEndpoint
+from plane.mcp import oauth
 
 handler404 = "plane.app.views.error_404.custom_404_view"
 
 urlpatterns = [
+    path(".well-known/oauth-protected-resource", oauth.protected_metadata),
+    path(".well-known/oauth-protected-resource/mcp", oauth.protected_metadata),
+    path(".well-known/oauth-authorization-server", oauth.authorization_metadata),
+    path("auth/mcp/register/", oauth.register),
+    path("auth/mcp/authorize/", oauth.authorize),
+    path("auth/mcp/consent/", oauth.consent),
+    path("auth/mcp/token/", oauth.token),
+    path("auth/mcp/revoke/", oauth.revoke),
+    path("auth/mcp/connections/", oauth.connections),
     path("api/", include("plane.app.urls")),
     path("api/", include("plane.app.urls.workflow_runner")),
     path("api/public/", include("plane.space.urls")),

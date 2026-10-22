@@ -22,6 +22,11 @@ from plane.bgtasks.logger_task import process_logs
 
 api_logger = logging.getLogger("plane.api.request")
 
+SENSITIVE_OAUTH_PATH_PREFIXES = (
+    "/auth/mcp/",
+    "/api/users/me/integrations/feishu/callback/",
+)
+
 
 class RequestLoggerMiddleware:
     def __init__(self, get_response):
@@ -59,9 +64,13 @@ class RequestLoggerMiddleware:
 
         user_agent = request.META.get("HTTP_USER_AGENT", "")
 
+        # OAuth query parameters may carry client state; never persist them.
+        log_path = (
+            request.path if request.path.startswith(SENSITIVE_OAUTH_PATH_PREFIXES) else request.get_full_path()
+        )
         # Log the request information
         api_logger.info(
-            f"{request.method} {request.get_full_path()} {response.status_code}",
+            f"{request.method} {log_path} {response.status_code}",
             extra={
                 "path": request.path,
                 "method": request.method,
@@ -128,6 +137,9 @@ class APITokenLogMiddleware:
         return str(redacted)
 
     def process_request(self, request, response, request_body):
+        # OAuth exchanges carry codes, verifiers and tokens, including in responses.
+        if request.path.startswith(SENSITIVE_OAUTH_PATH_PREFIXES):
+            return
         api_key_header = "X-Api-Key"
         api_key = request.headers.get(api_key_header)
 
