@@ -369,7 +369,7 @@ def authorize(request):
         code_hash=digest(code),
         code_challenge=params["code_challenge"],
         code_expires_at=timezone.now() + timedelta(minutes=2),
-        expires_at=timezone.now() + timedelta(days=30),
+        expires_at=timezone.now() + timedelta(days=settings.MCP_OAUTH_GRANT_DAYS),
     )
     return callback(params, request=request, code=code)
 

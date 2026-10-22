@@ -587,6 +587,76 @@ def test_refresh_lifetime_is_capped_by_original_grant(flow):
     assert token.access_expires_at <= token.grant.expires_at
 
 
+@pytest.mark.parametrize("days", [1, 180, 365])
+def test_configured_grant_lifetime_keeps_access_tokens_short(flow, settings, days):
+    settings.MCP_OAUTH_GRANT_DAYS = days
+    _, _, _, exchange = flow
+    before = timezone.now()
+    response = exchange()
+    after = timezone.now()
+    assert response.status_code == 200
+    grant = MCPOAuthGrant.objects.get()
+    assert before + timedelta(days=days) <= grant.expires_at <= after + timedelta(days=days)
+    assert 0 < response.json()["expires_in"] <= 3600
+
+
+def test_configuration_change_and_refresh_do_not_extend_existing_grants(flow, settings):
+    settings.MCP_OAUTH_GRANT_DAYS = 30
+    browser, params, _, exchange = flow
+    tokens = exchange().json()
+    grant = MCPOAuthGrant.objects.get()
+    original_expiry = grant.expires_at
+    settings.MCP_OAUTH_GRANT_DAYS = 180
+    MCPOAuthToken.objects.update(access_expires_at=timezone.now() - timedelta(seconds=1))
+    assert call_mcp(browser, tokens["access_token"]).status_code == 401
+    refreshed = browser.post(
+        "/auth/mcp/token/",
+        {
+            "grant_type": "refresh_token",
+            "client_id": params["client_id"],
+            "resource": ORIGIN + "/mcp",
+            "refresh_token": tokens["refresh_token"],
+        },
+    )
+    assert refreshed.status_code == 200
+    assert call_mcp(browser, refreshed.json()["access_token"]).status_code == 200
+    grant.refresh_from_db()
+    assert grant.expires_at == original_expiry
+
+
+@pytest.mark.parametrize("reason", ["expired", "revoked"])
+def test_invalid_grant_requires_fresh_consent_with_same_registered_client(flow, reason):
+    browser, params, _, exchange = flow
+    tokens = exchange().json()
+    grant = MCPOAuthGrant.objects.get()
+    if reason == "expired":
+        MCPOAuthGrant.objects.filter(pk=grant.pk).update(expires_at=timezone.now() - timedelta(seconds=1))
+    else:
+        assert browser.post("/auth/mcp/connections/", {"grant": grant.pk}).status_code == 200
+    response = call_mcp(browser, tokens["access_token"])
+    assert response.status_code == 401
+    assert 'error="invalid_token"' in response["WWW-Authenticate"]
+    assert f'resource_metadata="{ORIGIN}/.well-known/oauth-protected-resource"' in response["WWW-Authenticate"]
+    refreshed = browser.post(
+        "/auth/mcp/token/",
+        {
+            "grant_type": "refresh_token",
+            "client_id": params["client_id"],
+            "resource": ORIGIN + "/mcp",
+            "refresh_token": tokens["refresh_token"],
+        },
+    )
+    assert refreshed.status_code == 400
+    assert refreshed.json()["error"] == "invalid_grant"
+    assert MCPOAuthToken.objects.count() == 1
+    replacement = exchange()
+    assert replacement.status_code == 200
+    assert call_mcp(browser, replacement.json()["access_token"]).status_code == 200
+    assert call_mcp(browser, tokens["access_token"]).status_code == 401
+    assert MCPOAuthClient.objects.count() == 1
+    assert MCPOAuthGrant.objects.count() == 2
+
+
 def test_account_grants_follow_current_membership_without_workspace_selection(flow, workspace, create_user):
     browser, _, _, exchange = flow
     token = exchange().json()["access_token"]

@@ -105,6 +105,8 @@ class MCPEndpoint(View):
                     f'Bearer resource_metadata="{oauth.issuer()}/.well-known/oauth-protected-resource", '
                     'scope="plane:read"'
                 )
+                if request.headers.get("Authorization", "").lower().startswith("bearer "):
+                    response["WWW-Authenticate"] += ', error="invalid_token"'
             return response
 
         grant = getattr(request, "mcp_oauth_grant", None)

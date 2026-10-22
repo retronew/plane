@@ -17,6 +17,7 @@ import dj_database_url
 
 # Django imports
 from django.core.management.utils import get_random_secret_key
+from django.core.exceptions import ImproperlyConfigured
 from corsheaders.defaults import default_headers
 
 
@@ -585,3 +586,10 @@ if ENABLE_DRF_SPECTACULAR:
 
 # Canonical public origin used by MCP OAuth discovery and audience checks.
 MCP_OAUTH_ISSUER = os.environ.get("MCP_OAUTH_ISSUER", WEB_URL or "http://localhost:8000").rstrip("/")
+# Absolute lifetime for new grants only; refreshing never extends existing grants.
+try:
+    MCP_OAUTH_GRANT_DAYS = int(os.environ.get("MCP_OAUTH_GRANT_DAYS", "180"))
+except ValueError as exc:
+    raise ImproperlyConfigured("MCP_OAUTH_GRANT_DAYS must be an integer between 1 and 365") from exc
+if not 1 <= MCP_OAUTH_GRANT_DAYS <= 365:
+    raise ImproperlyConfigured("MCP_OAUTH_GRANT_DAYS must be an integer between 1 and 365")
