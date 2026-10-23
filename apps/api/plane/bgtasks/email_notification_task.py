@@ -20,7 +20,7 @@ from django.utils import timezone
 from plane.db.models import EmailNotificationLog, Issue, User
 from plane.license.utils.instance_value import get_email_configuration
 from plane.settings.redis import redis_instance
-from plane.utils.email import generate_plain_text_from_html
+from plane.utils.email import generate_plain_text_from_html, get_email_language
 from plane.utils.exception_logger import log_exception
 
 
@@ -180,7 +180,8 @@ def send_email_notification(issue_id, notification_data, receiver_id, email_noti
                 EMAIL_FROM,
             ) = get_email_configuration()
 
-            receiver = User.objects.get(pk=receiver_id)
+            receiver = User.objects.select_related("profile").get(pk=receiver_id)
+            language = get_email_language(receiver)
             issue = Issue.objects.get(pk=issue_id)
             template_data = []
             total_changes = 0
@@ -216,6 +217,14 @@ def send_email_notification(issue_id, notification_data, receiver_id, email_noti
                             },
                         }
                     )
+                if "priority" in changes:
+                    labels = {"urgent": "紧急", "high": "高", "medium": "中", "low": "低", "none": "无"}
+                    for value_type in ("old_value", "new_value"):
+                        values = changes["priority"].get(value_type, [])
+                        changes["priority"][f"{value_type}_label"] = [
+                            labels.get(value, value) if language == "zh-CN" else value
+                            for value in values
+                        ]
                 activity_time = changes.pop("activity_time")
                 # Parse the input string into a datetime object
                 formatted_time = datetime.strptime(activity_time, "%Y-%m-%d %H:%M:%S").strftime("%H:%M %p")
@@ -237,11 +246,12 @@ def send_email_notification(issue_id, notification_data, receiver_id, email_noti
                         }
                     )
 
-            summary = "Updates were made to the issue by"
+            summary = "以下成员更新了工作项：" if language == "zh-CN" else "Work item updated by"
 
             # Send the mail
             subject = f"{issue.project.identifier}-{issue.sequence_id} {remove_unwanted_characters(issue.name)}"
             context = {
+                "language": language,
                 "data": template_data,
                 "summary": summary,
                 "actors_involved": len(set(actors_involved)),

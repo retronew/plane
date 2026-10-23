@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language|default:'en' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{{inviter_first_name}} invited you to {{project_name}} on Plane</title>
+    <title>{% if language == "zh-CN" %}{{inviter_first_name}} 邀请你加入 Plane 项目 {{project_name}}{% else %}{{inviter_first_name}} invited you to {{project_name}} on Plane{% endif %}</title>
 
     <style>
       /* Basic resets for email clients */
@@ -76,10 +76,10 @@
         mso-hide: all;
         visibility: hidden;
       "
-    >
+    >{% if language == "zh-CN" %}{{inviter_first_name}} 邀请你加入 Plane 工作空间 {{workspace_name}} 中的项目 {{project_name}}。{% else %}
       {{inviter_first_name}} has invited you to the {{project_name}} project in
       {{workspace_name}} on Plane.
-    </span>
+    {% endif %}</span>
 
     <!-- Outer Wrapper -->
     <center
@@ -153,16 +153,16 @@
                       font-weight: 600;
                       color: #111111;
                     "
-                  >
+                  >{% if language == "zh-CN" %}你已获邀加入 Plane 项目 {{project_name}}{% else %}
                     You've been invited to the {{project_name}} project on Plane
-                  </h1>
+                  {% endif %}</h1>
 
                   <!-- Intro text -->
-                  <p style="margin: 0 0 12px;">
+                  <p style="margin: 0 0 12px;">{% if language == "zh-CN" %}{{inviter_first_name}} 邀请你加入项目{% else %}
                     {{inviter_first_name}} has invited you to work with them in
-                    <strong>{{project_name}}</strong> in the workspace
-                    <strong>{{workspace_name}}</strong> on Plane.
-                  </p>
+                    {% endif %}<strong>{{project_name}}</strong>{% if language == "zh-CN" %}，所属工作空间为{% else %} in the workspace
+                    {% endif %}<strong>{{workspace_name}}</strong>{% if language == "zh-CN" %}。{% else %} on Plane.
+                  {% endif %}</p>
 
                   <!-- CTA button -->
                   <table
@@ -189,9 +189,9 @@
                             font-weight: 500;
                             white-space: nowrap;
                           "
-                        >
+                        >{% if language == "zh-CN" %}打开项目{% else %}
                           Go to project
-                        </a>
+                        {% endif %}</a>
                       </td>
                     </tr>
                   </table>
@@ -204,10 +204,10 @@
                       line-height: 1.6;
                       color: #5f5e5e;
                     "
-                  >
+                  >{% if language == "zh-CN" %}如果按钮无法打开，请将以下链接复制到浏览器：{% else %}
                     If the button doesn’t work, copy and paste this link into
                     your browser:
-                  </p>
+                  {% endif %}</p>
 
                   <p
                     style="
@@ -241,9 +241,9 @@
                       line-height: 1.6;
                       color: #5f5e5e;
                     "
-                  >
+                  >{% if language == "zh-CN" %}此邮件发送至{% else %}
                     Note: This email was sent to
-                    <span
+                    {% endif %}<span
                       style="
                         font-family: 'Courier New', Courier, monospace;
                         font-size: 12px;
@@ -254,10 +254,10 @@
                       "
                     >
                       {{email}}
-                    </span>.
+                    </span>{% if language == "zh-CN" %}。如果你没有预期收到邀请，请忽略此邮件。{% else %}.
                     If you weren’t expecting this invitation, you can safely
                     ignore this email.
-                  </p>
+                  {% endif %}</p>
                 </td>
               </tr>
             </table>

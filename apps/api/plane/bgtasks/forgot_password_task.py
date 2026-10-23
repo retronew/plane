@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 
 # Module imports
 from plane.license.utils.instance_value import get_email_configuration
-from plane.utils.email import generate_plain_text_from_html
+from plane.utils.email import generate_plain_text_from_html, get_email_language, email_subject
 from plane.utils.exception_logger import log_exception
 
 
@@ -35,7 +35,9 @@ def forgot_password(first_name, email, uidb64, token, current_site):
             EMAIL_FROM,
         ) = get_email_configuration()
 
-        subject = "A new password to your Plane account has been requested"
+        language = get_email_language(email=email)
+
+        subject = email_subject("password", language)
 
         context = {
             "first_name": first_name,
@@ -43,6 +45,7 @@ def forgot_password(first_name, email, uidb64, token, current_site):
             "email": email,
         }
 
+        context["language"] = language
         html_content = render_to_string("emails/auth/forgot_password.html", context)
 
         text_content = generate_plain_text_from_html(html_content)

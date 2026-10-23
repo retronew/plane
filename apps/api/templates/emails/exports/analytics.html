@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language|default:'en' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Your Plane Analytics export is ready</title>
+    <title>{% if language == "zh-CN" %}你的 Plane 分析数据已导出{% else %}Your Plane Analytics export is ready{% endif %}</title>
 
     <style>
       /* Basic resets for email clients */
@@ -72,9 +72,9 @@
         mso-hide: all;
         visibility: hidden;
       "
-    >
+    >{% if language == "zh-CN" %}你请求导出的 Plane 分析数据已作为 CSV 文件附在邮件中。{% else %}
       Your requested Plane Analytics data export is attached as a CSV file.
-    </span>
+    {% endif %}</span>
 
     <!-- Outer Wrapper -->
     <center
@@ -144,14 +144,14 @@
                       font-weight: 600;
                       color: #111111;
                     "
-                  >
+                  >{% if language == "zh-CN" %}你的 Plane 分析数据已导出{% else %}
                     Your Plane Analytics export is ready
-                  </h1>
+                  {% endif %}</h1>
 
                   <!-- Body copy -->
-                  <p style="margin: 0 0 16px;">
+                  <p style="margin: 0 0 16px;">{% if language == "zh-CN" %}你请求导出的 Plane 分析数据已准备就绪，CSV 文件已附在邮件中。{% else %}
                     Your requested data export from Plane Analytics is ready. We’ve attached it as a CSV file for your convenience.
-                  </p>
+                  {% endif %}</p>
 
                   <!-- Small-note styled paragraphs -->
                   <p
@@ -161,9 +161,9 @@
                       line-height: 1.6;
                       color: #5f5e5e;
                     "
-                  >
+                  >{% if language == "zh-CN" %}你可以使用电子表格或商业智能工具打开 CSV 文件，分析数据、制作报告并与团队分享。{% else %}
                     You can open the CSV in any spreadsheet or BI tool to analyze the data, build reports, or share insights with your team.
-                  </p>
+                  {% endif %}</p>
                 </td>
               </tr>
             </table>

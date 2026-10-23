@@ -22,7 +22,7 @@ from plane.db.models import (
     WorkspaceMember,
 )
 from plane.license.utils.instance_value import get_email_configuration
-from plane.utils.email import generate_plain_text_from_html
+from plane.utils.email import generate_plain_text_from_html, get_email_language
 from plane.utils.exception_logger import log_exception
 from plane.utils.feishu import enqueue_feishu_notification
 from plane.utils.notification_preferences import should_notify
@@ -190,7 +190,7 @@ def send_due_reminder_email(delivery_id):
         base_url = (settings.WEB_URL or settings.APP_BASE_URL or "").rstrip("/")
         if not base_url:
             return
-        chinese = getattr(getattr(receiver, "profile", None), "language", "en").startswith("zh")
+        chinese = get_email_language(receiver) == "zh-CN"
         identifier = f"{issue.project.identifier}-{issue.sequence_id}"
         heading = "工作项即将到期" if chinese else "Work item due soon"
         context = {

@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html
+<html lang="{{ language|default:'en' }}"
   xmlns="http://www.w3.org/1999/xhtml"
   xmlns:v="urn:schemas-microsoft-com:vml"
   xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Your Plane account has been deactivated</title>
+    <title>{% if language == "zh-CN" %}你的 Plane 账号已停用{% else %}Your Plane account has been deactivated{% endif %}</title>
     <style type="text/css" emogrify="no">
       #outlook a {
         padding: 0;
@@ -595,8 +595,8 @@
                                                 font-size: 32px;
                                               "
                                               ><strong
-                                                >You are out of Plane
-                                                now.</strong
+                                                >{% if language == "zh-CN" %}你的 Plane 账号已停用{% else %}You are out of Plane
+                                                now.{% endif %}</strong
                                               ></span
                                             >
                                           </p>
@@ -621,13 +621,13 @@
                                         "
                                       >
                                         <div>
-                                          <p style="margin: 0">
+                                          <p style="margin: 0">{% if language == "zh-CN" %}你的账号已成功停用。如果项目仍然有效且有其他成员，项目中的工作项、迭代和其他数据仍可由这些成员访问。{% else %}
                                             You have deactivated your account
                                             successfully. Your issues, cycles,
                                             and other project data will still be
                                             accessible if the project is active
                                             and there are other members in it.
-                                          </p>
+                                          {% endif %}</p>
                                         </div>
                                       </td>
                                     </tr>
@@ -700,7 +700,7 @@
                                                 "
                                               >
                                                 <span
-                                                  >Reactivate account</span
+                                                  >{% if language == "zh-CN" %}重新启用账号{% else %}Reactivate account{% endif %}</span
                                                 ></a
                                               >
                                             </td>
@@ -952,13 +952,13 @@
                                               <div>
                                                 <p style="margin: 0">
                                                   <span style="font-size: 13px"
-                                                    >Despite our popularity, we
+                                                    >{% if language == "zh-CN" %}我们持续改进 Plane，欢迎向我们提出功能建议和问题反馈。我们会认真阅读每一条{% else %}Despite our popularity, we
                                                     are humbly early-stage. We
                                                     are shipping fast, so please
                                                     reach out to us with feature
                                                     requests, major and minor
                                                     nits, and anything else you
-                                                    find missing. We read every </span
+                                                    find missing. We read every {% endif %}</span
                                                   ><a
                                                     href="https://forum.plane.so"
                                                     title="Plane Forum"
@@ -969,7 +969,7 @@
                                                     "
                                                     ><span
                                                       style="font-size: 13px"
-                                                      >message</span
+                                                      >{% if language == "zh-CN" %}消息{% else %}message{% endif %}</span
                                                     ></a
                                                   ><span style="font-size: 13px"
                                                     >, </span
@@ -983,10 +983,10 @@
                                                     "
                                                     ><span
                                                       style="font-size: 13px"
-                                                      >tweet</span
+                                                      >{% if language == "zh-CN" %}推文{% else %}tweet{% endif %}</span
                                                     ></a
                                                   ><span style="font-size: 13px"
-                                                    >, and </span
+                                                    >{% if language == "zh-CN" %}和{% else %}, and {% endif %}</span
                                                   ><a
                                                     href="https://github.com/makeplane/plane/pulls"
                                                     title="Plane's GitHub conversations"
@@ -997,12 +997,12 @@
                                                     "
                                                     ><span
                                                       style="font-size: 13px"
-                                                      >conversation</span
+                                                      >{% if language == "zh-CN" %}讨论{% else %}conversation{% endif %}</span
                                                     ></a
                                                   ><span
                                                     style="font-size: 13px"
-                                                  >
-                                                    and update </span
+                                                  >{% if language == "zh-CN" %}，并更新{% else %}
+                                                    and update {% endif %}</span
                                                   ><a
                                                     href="https://plane.sh/plane/0b170a1c-0e55-47cb-9307-ea49a05672b5?board=kanban"
                                                     title="Plane's roadmap"
@@ -1013,7 +1013,7 @@
                                                     "
                                                     ><span
                                                       style="font-size: 13px"
-                                                      >our public roadmap</span
+                                                      >{% if language == "zh-CN" %}公开路线图{% else %}our public roadmap{% endif %}</span
                                                     ></a
                                                   ><span style="font-size: 13px"
                                                     >.</span
@@ -1539,10 +1539,10 @@
                                                   "
                                                 >
                                                   <span style="font-size: 12px"
-                                                    >This email was sent to
+                                                    >{% if language == "zh-CN" %}此邮件发送至 {{email}}。如果你不是预期收件人，请删除此邮件。{% else %}This email was sent to
                                                     {{email}}. Please delete if
                                                     you aren't the intended
-                                                    recipient.</span
+                                                    recipient.{% endif %}</span
                                                   >
                                                 </p>
                                               </div>
