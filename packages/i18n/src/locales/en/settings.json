@@ -71,10 +71,10 @@
       "guide": "Setup guide",
       "more_tools": "More tools",
       "fewer_tools": "Show fewer tools",
-      "chatgpt_hint": "Install the Plane Workflow OpenAI plugin for this instance, then connect and authorize your account. No API token needed. The TOML below is for manual API token setup.",
+      "chatgpt_hint": "Add this server URL through your client’s remote MCP connection settings, then sign in with OAuth. Availability depends on your client version and account.",
       "agent_prompt": "Agent setup",
-      "agent_prompt_label": "Copy {name} agent installation prompt",
-      "agent_hint": "Copy “Agent setup” to your AI assistant. Claude and OpenAI plugins use OAuth.",
+      "agent_prompt_label": "Copy {name} MCP configuration prompt",
+      "agent_hint": "Copy the agent setup prompt to configure the server URL and verify the connection.",
       "download_skill": "Download {name} Skill",
       "chatgpt_skill_hint": "Install the OpenAI plugin with MCP included. Uploading a standalone Skill does not create an OAuth connection.",
       "codex_skill_hint": "Save SKILL.md to ~/.agents/skills/plane-workflow/SKILL.md. Merge the MCP configuration into ~/.codex/config.toml and provide PLANE_API_TOKEN to the Codex process.",
@@ -86,7 +86,7 @@
       "copy_failed": "Could not copy. Select and copy the configuration manually.",
       "code_description": "Copy this configuration into your client.",
       "template_hint": "Replace {token} with your personal access token before connecting.",
-      "oauth_description": "View expiry dates and revoke access in Authorized apps.",
+      "oauth_description": "View expiry dates and revoke access in Authorizations.",
       "oauth_load_error": "Unable to load connections.",
       "oauth_retry": "Retry",
       "oauth_loading": "Loading connections…",
@@ -105,7 +105,7 @@
       "description": "Install all 8 Plane workflow skills for planning work, breaking down requirements, and preparing updates.",
       "configure_mcp": "Configure MCP",
       "agent_prompt_label": "Copy {name} Skill installation prompt",
-      "connection_hint": "Claude and OpenAI plugins include the instance MCP URL. Connect and sign in, or use manual API token setup in supported clients.",
+      "connection_hint": "Install workflow skills using the command or ZIP. To connect to Plane data, open MCP.",
       "agent_title": "Install with an agent",
       "agent_description": "Copy a prompt to your client's AI agent. It checks the environment, installs, and verifies the result.",
       "manual_title": "Manual setup",
@@ -150,8 +150,8 @@
       "description": "Manage your workspace connections settings."
     },
     "oauth": {
-      "title": "Authorized apps",
-      "description": "Manage the clients connected to your Plane account. Each authorization is independent.",
+      "title": "Authorizations",
+      "description": "Manage the access granted to applications.",
       "search": "Search clients",
       "refresh": "Refresh",
       "client": "Client / access",
@@ -192,7 +192,7 @@
       "write_hint": "Create, update and delete content within your existing permissions. Optional; off by default.",
       "details": "Connection details",
       "unverified_client": "The client supplies its own name. Only continue if you started this connection. Return address:",
-      "consent_expiry": "Access lasts {days} days. You can revoke it at any time in Authorized apps.",
+      "consent_expiry": "Access lasts {days} days. You can revoke it at any time in Authorizations.",
       "allow": "Authorize",
       "submit_error": "Could not complete this request. Try once more; if it persists, start a new connection from your client.",
       "expired_title": "Start a new connection",
@@ -207,7 +207,13 @@
       "close": "Close this page",
       "close_hint": "Your browser did not close this tab. You can close it manually.",
       "return_home": "Back to Plane",
-      "consent_expiry_unknown": "You can revoke access at any time in Authorized apps."
+      "consent_expiry_unknown": "You can revoke access at any time in Authorizations."
+    },
+    "plugins": {
+      "title": "Plugins",
+      "authorizations": "Authorizations",
+      "description": "Choose a plugin for your client. View and revoke access in Authorizations.",
+      "manual_description": "Install through your client’s plugin settings using the commands and values below."
     }
   },
   "profile": {

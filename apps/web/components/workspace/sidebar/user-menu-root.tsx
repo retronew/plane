@@ -20,7 +20,13 @@ import {
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
-import { GOD_MODE_URL, PROFILE_SETTINGS, PROFILE_SETTINGS_TABS } from "@plane/constants";
+import {
+  GOD_MODE_URL,
+  GROUPED_PROFILE_SETTINGS,
+  PROFILE_SETTINGS,
+  PROFILE_SETTINGS_CATEGORIES,
+  PROFILE_SETTINGS_TABS,
+} from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { TProfileSettingsTabs } from "@plane/types";
@@ -46,17 +52,10 @@ const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutlin
   skills: Blocks,
 };
 
-// Same order as the settings sidebar.
-const MENU_TABS: TProfileSettingsTabs[] = [
-  "general",
-  "preferences",
-  "notifications",
-  "security",
-  "api-tokens",
-  "mcp",
-  "oauth-connections",
-  "skills",
-];
+// Share the settings sidebar's order so both entry points stay in sync.
+const MENU_TABS = PROFILE_SETTINGS_CATEGORIES.flatMap((category) =>
+  GROUPED_PROFILE_SETTINGS[category].map(({ key }) => key)
+);
 
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states

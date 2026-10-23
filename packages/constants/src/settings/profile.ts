@@ -76,9 +76,9 @@ export const GROUPED_PROFILE_SETTINGS: Record<
     PROFILE_SETTINGS["security"],
   ],
   [PROFILE_SETTINGS_CATEGORY.DEVELOPER]: [
-    PROFILE_SETTINGS["api-tokens"],
     PROFILE_SETTINGS.mcp,
-    PROFILE_SETTINGS["oauth-connections"],
     PROFILE_SETTINGS.skills,
+    PROFILE_SETTINGS["oauth-connections"],
+    PROFILE_SETTINGS["api-tokens"],
   ],
 };

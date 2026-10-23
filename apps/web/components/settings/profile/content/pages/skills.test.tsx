@@ -16,6 +16,7 @@ vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key
 vi.mock("@/hooks/store/use-command-palette", () => ({
   useCommandPalette: () => ({ toggleProfileSettingsModal: state.toggle }),
 }));
+vi.mock("@/components/api-token/plugin-setup", () => ({ ApiTokenPluginSetup: () => <div>Plugin setup</div> }));
 vi.mock("@/components/api-token/skill-setup", () => ({ ApiTokenSkillSetup: () => <div>Skills setup</div> }));
 vi.mock("@/components/settings/profile/heading", () => ({
   ProfileSettingsHeading: ({ title }: { title: string }) => <h1>{title}</h1>,
@@ -33,13 +34,23 @@ describe("Skills personal settings", () => {
     expect(state.toggle).toHaveBeenCalledWith({ activeTab: "mcp", isOpen: true });
   });
 
+  it("switches between skills and plugins in one page", async () => {
+    render(<SkillsProfileSettings />);
+    expect(screen.getByText("Skills setup")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "account_settings.plugins.title" }));
+    expect(await screen.findByText("Plugin setup")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "account_settings.skills.mode_skills" }));
+    expect(await screen.findByText("Skills setup")).toBeTruthy();
+  });
+
   it("registers skills as its own developer tab with a page and route validation", () => {
     expect(PROFILE_SETTINGS.skills).toEqual({ key: "skills", i18n_label: "account_settings.skills.title" });
     expect(PROFILE_SETTINGS_TABS).toContain("skills");
     expect(GROUPED_PROFILE_SETTINGS[PROFILE_SETTINGS_CATEGORY.DEVELOPER].map(({ key }) => key)).toEqual([
-      "api-tokens",
       "mcp",
       "skills",
+      "oauth-connections",
+      "api-tokens",
     ]);
     expect(getProfileSettingsTab("skills")).toBe("skills");
     expect(Object.keys(PROFILE_SETTINGS_PAGES_MAP)).toHaveLength(PROFILE_SETTINGS_TABS.length);

@@ -8,7 +8,6 @@ import { useState, useSyncExternalStore } from "react";
 import { observer } from "mobx-react";
 import { ChevronDown, Code } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
-import { InputField } from "@makeplane/propel/components/input-field";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Collapsible } from "@base-ui/react/collapsible";
 import { ApiTokenCopyButton } from "./copy-feedback";
@@ -27,12 +26,11 @@ type Props = { token?: string };
 
 export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Props) {
   const { t } = useTranslation();
-  const [personalToken, setPersonalToken] = useState("");
   const [activeClient, setActiveClient] = useState<Client | null>(null);
   const [showMore, setShowMore] = useState(false);
   const origin = useSyncExternalStore(subscribeToOrigin, getOrigin, getServerOrigin);
   const mcpUrl = `${API_BASE_URL || origin}/mcp`;
-  const resolvedToken = token || personalToken.trim();
+  const resolvedToken = token;
   const config = buildMcpClientConfig(mcpUrl, resolvedToken || "YOUR_PERSONAL_API_TOKEN");
   const clients: { id: Client; name: string; logo: string; action: string; href?: string; guide?: string }[] = [
     {
@@ -108,7 +106,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
   ];
   const openaiConfig = `[mcp_servers.plane]\nurl = ${JSON.stringify(mcpUrl)}\nbearer_token_env_var = "PLANE_API_TOKEN"`;
   const snippets: Partial<Record<Client, string>> = {
-    chatgpt: openaiConfig,
+    chatgpt: JSON.stringify({ url: mcpUrl, transport: "streamable-http", authentication: "oauth" }, null, 4),
     claude: config.claudeCommand,
     vscode: JSON.stringify({ servers: { plane: { type: "http", ...config.cursorConfig } } }, null, 4),
     windsurf: JSON.stringify({ mcpServers: { plane: { serverUrl: mcpUrl, headers: config.headers } } }, null, 4),
@@ -128,27 +126,7 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
   };
 
   return (
-    <div className="mt-5 space-y-4 [&_button]:text-12 [&_input]:h-8 [&_input]:text-12 [&_input::placeholder]:text-12">
-      {!token && (
-        <div className="space-y-2">
-          <label htmlFor="mcp-personal-token" className="mb-3 block text-13 font-medium">
-            {t("account_settings.mcp.token_label")}
-          </label>
-          <InputField
-            size="md"
-            orientation="vertical"
-            id="mcp-personal-token"
-            type="password"
-            autoComplete="off"
-            value={personalToken}
-            onChange={(event) => setPersonalToken(event.target.value)}
-            placeholder={t("account_settings.mcp.token_placeholder")}
-          />
-          <p className="text-11 text-tertiary">{t("account_settings.mcp.token_hint")}</p>
-        </div>
-      )}
-      <p className="text-11 text-tertiary">{t("account_settings.mcp.workspace_auto_hint")}</p>
-      <p className="text-11 text-tertiary">{t("account_settings.mcp.agent_hint")}</p>
+    <div className="mt-5 space-y-4 [&_button]:text-12">
       <div className="divide-y divide-subtle overflow-hidden rounded-lg border border-subtle">
         {(
           [
@@ -187,7 +165,6 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
                     variant="secondary"
                     size="sm"
                     stretch="auto"
-                    disabled={Boolean(client.href) && !resolvedToken}
                     label={client.action}
                     onClick={() => {
                       if (client.guide) window.open(client.guide, "_blank", "noopener,noreferrer");
@@ -213,16 +190,15 @@ export const ApiTokenMcpSetup = observer(function ApiTokenMcpSetup({ token }: Pr
                 <div className="space-y-2 border-t border-subtle px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-11 text-tertiary">
-                      {client.id === "chatgpt" || client.id === "codex"
-                        ? t("account_settings.mcp.openai_config_hint")
-                        : resolvedToken
-                          ? t("account_settings.mcp.code_description")
-                          : t("account_settings.mcp.template_hint", { token: "YOUR_PERSONAL_API_TOKEN" })}
+                      {client.id === "chatgpt"
+                        ? t("account_settings.mcp.chatgpt_hint")
+                        : client.id === "codex"
+                          ? t("account_settings.mcp.openai_config_hint")
+                          : resolvedToken
+                            ? t("account_settings.mcp.code_description")
+                            : t("account_settings.mcp.template_hint", { token: "YOUR_PERSONAL_API_TOKEN" })}
                     </p>
                   </div>
-                  {activeClient === client.id && client.id === "chatgpt" && (
-                    <p className="text-13 text-secondary">{t("account_settings.mcp.chatgpt_hint")}</p>
-                  )}
                   <McpCodePreview value={snippets[client.id] ?? config.jsonConfig} label={client.name} />
                 </div>
               </Collapsible.Panel>

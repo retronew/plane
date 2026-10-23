@@ -30,7 +30,7 @@ describe("MCP client setup", () => {
     await waitFor(() => expect(copyTextToClipboard).toHaveBeenCalledTimes(1));
     expect(copyTextToClipboard.mock.calls[0][0]).not.toContain("X-Workspace-Slug");
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.view_code:ChatGPT" }));
-    expect((await screen.findByText(/\[mcp_servers.plane\]/)).textContent).not.toContain("http_headers");
+    expect((await screen.findByText(/"authentication": "oauth"/)).textContent).not.toContain("http_headers");
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.view_code:VS Code" }));
     expect((await screen.findByText(/"servers"/)).textContent).not.toContain("X-Workspace-Slug");
     fireEvent.click(screen.getByRole("button", { name: "account_settings.mcp.agent_prompt_label:ChatGPT" }));
@@ -46,17 +46,10 @@ describe("MCP client setup", () => {
     expect(screen.getByText(/claude mcp add --transport/).textContent).toContain("YOUR_PERSONAL_API_TOKEN");
   });
 
-  it("enables one-click setup only after a token is entered", () => {
+  it("allows one-click setup without collecting a token", () => {
     render(<ApiTokenMcpSetup />);
+    expect(screen.queryByLabelText("account_settings.mcp.token_label")).toBeNull();
     const installButtons = screen.getAllByRole("button", { name: "account_settings.mcp.add" });
-    expect(
-      installButtons.every(
-        (button) => button.getAttribute("aria-disabled") === "true" || (button as HTMLButtonElement).disabled
-      )
-    ).toBe(true);
-    fireEvent.change(screen.getByLabelText("account_settings.mcp.token_label"), {
-      target: { value: "personal-token" },
-    });
     expect(
       installButtons.every(
         (button) => !button.hasAttribute("disabled") && button.getAttribute("aria-disabled") !== "true"

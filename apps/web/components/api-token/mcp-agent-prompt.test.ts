@@ -52,7 +52,8 @@ describe("MCP agent installation prompts", () => {
 
   it("explains ChatGPT authentication constraints", () => {
     const prompt = buildMcpAgentPrompt("chatgpt", "ChatGPT", "https://plane.example/mcp");
-    expect(prompt).toContain("点击连接，通过 OAuth 登录 Plane");
+    expect(prompt).toContain("通过 OAuth 登录 Plane");
+    expect(prompt).not.toContain("插件");
     expect(prompt).not.toContain("Settings → MCP servers → Add server");
     expect(prompt).toContain("Streamable HTTP");
     expect(prompt).not.toContain("bearer_token_env_var");
