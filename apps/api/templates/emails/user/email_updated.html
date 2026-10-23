@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html
+<html lang="{{ language|default:'en' }}"
   xmlns="http://www.w3.org/1999/xhtml"
   xmlns:v="urn:schemas-microsoft-com:vml"
   xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plane email address successfully updated</title>
+    <title>{% if language == "zh-CN" %}Plane 邮箱地址已更新{% else %}Plane email address successfully updated{% endif %}</title>
     <style type="text/css" emogrify="no">
       #outlook a {
         padding: 0;
@@ -493,10 +493,10 @@
                                                     font-size: 32px;
                                                     word-break: break-word;
                                                   "
-                                                >
+                                                >{% if language == "zh-CN" %}Plane 邮箱地址已更新{% else %}
                                                   Plane email address
                                                   successfully updated
-                                                </h2>
+                                                {% endif %}</h2>
                                               </div>
                                             </td>
                                           </tr>
@@ -534,21 +534,21 @@
                                               "
                                             >
                                               <div>
-                                                <p style="margin: 0">
+                                                <p style="margin: 0">{% if language == "zh-CN" %}你的 Plane 邮箱地址已更新为{% else %}
                                                   You have successfully updated
                                                   your email address with Plane
                                                   to
-                                                  <strong>{{email}}</strong>.
+                                                  {% endif %}<strong>{{email}}</strong>.
                                                 </p>
                                                 <p
                                                   style="
                                                     margin: 0;
                                                     margin-top: 15px;
                                                   "
-                                                >
+                                                >{% if language == "zh-CN" %}现在可以使用此邮箱地址登录。{% else %}
                                                   You can now log in using this
                                                   email address.
-                                                </p>
+                                                {% endif %}</p>
                                               </div>
                                             </td>
                                           </tr>
@@ -1026,10 +1026,10 @@
                                                   "
                                                 >
                                                   <span style="font-size: 12px"
-                                                    >This email was sent to
+                                                    >{% if language == "zh-CN" %}此邮件发送至 {{email}}。如果你不是预期收件人，请删除此邮件。{% else %}This email was sent to
                                                     {{email}}. Please delete if
                                                     you aren't the intended
-                                                    recipient.</span
+                                                    recipient.{% endif %}</span
                                                   >
                                                 </p>
                                               </div>

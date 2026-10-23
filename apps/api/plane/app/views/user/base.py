@@ -160,7 +160,7 @@ class UserEndpoint(BaseViewSet):
             cache.set(cache_key, cache_data, timeout=600)
 
             # Send magic code to the new email
-            send_email_update_magic_code.delay(new_email, token)
+            send_email_update_magic_code.delay(new_email, token, str(request.user.id))
 
             return Response(
                 {"message": "Verification code sent to email"},
@@ -241,9 +241,9 @@ class UserEndpoint(BaseViewSet):
         logout(request)
 
         # Send confirmation email to the new email address
-        send_email_update_confirmation.delay(new_email)
+        send_email_update_confirmation.delay(new_email, str(user.id))
         # send the email to the old email address
-        send_email_update_confirmation.delay(old_email)
+        send_email_update_confirmation.delay(old_email, str(user.id))
 
         # Return updated user data
         serialized_data = UserMeSerializer(user).data

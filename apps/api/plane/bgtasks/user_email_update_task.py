@@ -14,12 +14,12 @@ from django.template.loader import render_to_string
 
 # Module imports
 from plane.license.utils.instance_value import get_email_configuration
-from plane.utils.email import generate_plain_text_from_html
+from plane.utils.email import generate_plain_text_from_html, get_email_language, email_subject
 from plane.utils.exception_logger import log_exception
 
 
 @shared_task
-def send_email_update_magic_code(email, token):
+def send_email_update_magic_code(email, token, user_id=None):
     try:
         (
             EMAIL_HOST,
@@ -32,8 +32,9 @@ def send_email_update_magic_code(email, token):
         ) = get_email_configuration()
 
         # Send the mail
-        subject = "Verify your new email address"
-        context = {"code": token, "email": email}
+        language = get_email_language(email=email, user_id=user_id)
+        subject = email_subject("verify_email", language)
+        context = {"language": language, "code": token, "email": email}
 
         html_content = render_to_string("emails/auth/magic_signin.html", context)
         text_content = generate_plain_text_from_html(html_content)
@@ -64,7 +65,7 @@ def send_email_update_magic_code(email, token):
 
 
 @shared_task
-def send_email_update_confirmation(email):
+def send_email_update_confirmation(email, user_id=None):
     """
     Send a confirmation email to the user after their email address has been successfully updated.
 
@@ -83,8 +84,9 @@ def send_email_update_confirmation(email):
         ) = get_email_configuration()
 
         # Send the confirmation email
-        subject = "Plane email address successfully updated"
-        context = {"email": email}
+        language = get_email_language(email=email, user_id=user_id)
+        subject = email_subject("email_updated", language)
+        context = {"language": language, "email": email}
 
         html_content = render_to_string("emails/user/email_updated.html", context)
         text_content = generate_plain_text_from_html(html_content)

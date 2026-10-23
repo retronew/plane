@@ -13,6 +13,7 @@ from plane.db.models import ProjectMember, WorkspaceMember
 from plane.db.models.workflow import WorkflowApproval
 from plane.db.models.workflow_runner import WorkflowApprovalEmail, WorkflowExecution
 from plane.license.utils.instance_value import get_email_configuration
+from plane.utils.email import get_email_language
 from plane.utils.workflow_runner import execute_workflow_run, recover_workflow_executions
 from plane.utils.feishu import enqueue_feishu_notification
 from plane.utils.notification_preferences import should_notify
@@ -128,7 +129,7 @@ def send_approval_email(delivery_id):
         base_url = (settings.WEB_URL or settings.APP_BASE_URL or "").rstrip("/")
         if not host or not base_url:
             return
-        chinese = getattr(getattr(receiver, "profile", None), "language", "en").startswith("zh")
+        chinese = get_email_language(receiver) == "zh-CN"
         heading = "工作项等待审批" if chinese else "Work item awaiting approval"
         identifier = f"{issue.project.identifier}-{issue.sequence_id}"
         url = f"{base_url}/{issue.project.workspace.slug}/projects/{issue.project_id}/issues/{issue.pk}/"
