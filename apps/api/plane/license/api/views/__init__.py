@@ -12,7 +12,12 @@ from .configuration import (
 )
 
 
-from .user import InstanceUserActivateEndpoint, InstanceUserDeactivateEndpoint, InstanceUserEndpoint
+from .user import (
+    InstanceUserActivateEndpoint,
+    InstanceUserDeactivateEndpoint,
+    InstanceUserDetailEndpoint,
+    InstanceUserEndpoint,
+)
 from .admin_sso import InstanceAdminOIDCCallbackEndpoint, InstanceAdminOIDCInitiateEndpoint
 from .admin import (
     InstanceAdminEndpoint,

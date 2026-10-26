@@ -9,12 +9,13 @@ from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 
 # Third party imports
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 
 # Module imports
 from plane.authentication.utils.host import user_ip
-from plane.db.models import Account, Session, User
+from plane.db.models import Account, Session, User, WorkspaceMember
+from plane.utils.url import contains_url
 from plane.license.api.permissions import InstanceAdminPermission
 from plane.license.models import InstanceAdmin
 
@@ -32,11 +33,15 @@ def _user_queryset():
             has_sso=Exists(Account.objects.filter(user=OuterRef("pk"), provider="oidc")),
             workspace_count=Count(
                 "member_workspace",
-                filter=Q(member_workspace__is_active=True, member_workspace__deleted_at__isnull=True),
+                filter=Q(
+                    member_workspace__is_active=True,
+                    member_workspace__deleted_at__isnull=True,
+                    member_workspace__workspace__deleted_at__isnull=True,
+                ),
                 distinct=True,
             ),
         )
-        .order_by("-is_active", "first_name", "email")
+        .order_by("-date_joined", "id")
     )
 
 
@@ -56,6 +61,76 @@ def serialize_user(user):
         "workspace_count": user.workspace_count,
         "date_joined": user.date_joined,
     }
+
+
+class InstanceUserUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    display_name = serializers.CharField(required=False, allow_blank=False, max_length=255)
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            errors = {key: ["Unknown field."] for key in data if key not in self.fields}
+            for key in self.fields:
+                if key in data and not isinstance(data[key], str):
+                    errors[key] = ["Must be a string."]
+            if errors:
+                raise serializers.ValidationError(errors)
+        return super().to_internal_value(data)
+
+    def validate_first_name(self, value):
+        if contains_url(value):
+            raise serializers.ValidationError("First name cannot contain a URL.")
+        return value
+
+    def validate_last_name(self, value):
+        if contains_url(value):
+            raise serializers.ValidationError("Last name cannot contain a URL.")
+        return value
+
+
+def serialize_user_detail(user):
+    memberships = (
+        WorkspaceMember.objects.filter(
+            member=user, is_active=True, deleted_at__isnull=True, workspace__deleted_at__isnull=True
+        )
+        .select_related("workspace")
+        .order_by("workspace__name", "workspace_id")
+    )
+    return {
+        **serialize_user(user),
+        "workspaces": [
+            {
+                "id": str(membership.workspace_id),
+                "name": membership.workspace.name,
+                "slug": membership.workspace.slug,
+                "role": membership.role,
+            }
+            for membership in memberships
+        ],
+    }
+
+
+class InstanceUserDetailEndpoint(BaseAPIView):
+    permission_classes = [InstanceAdminPermission]
+
+    def get(self, request, pk):
+        user = _user_queryset().filter(pk=pk).first()
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(serialize_user_detail(user))
+
+    def patch(self, request, pk):
+        user = _user_queryset().filter(pk=pk).first()
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = InstanceUserUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        for field, value in serializer.validated_data.items():
+            setattr(user, field, value)
+        if serializer.validated_data:
+            user.save(update_fields=[*serializer.validated_data, "updated_at"])
+        return Response(serialize_user_detail(user))
 
 
 class InstanceUserEndpoint(BaseAPIView):

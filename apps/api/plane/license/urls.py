@@ -8,6 +8,7 @@ from plane.license.api.views import (
     EmailCredentialCheckEndpoint,
     InstanceAdminEndpoint,
     InstanceUserEndpoint,
+    InstanceUserDetailEndpoint,
     InstanceUserActivateEndpoint,
     InstanceUserDeactivateEndpoint,
     InstanceAdminOIDCInitiateEndpoint,
@@ -53,6 +54,7 @@ urlpatterns = [
     ),
     path("admins/<uuid:pk>/", InstanceAdminEndpoint.as_view(), name="instance-admins"),
     path("users/", InstanceUserEndpoint.as_view(), name="instance-users"),
+    path("users/<uuid:pk>/", InstanceUserDetailEndpoint.as_view(), name="instance-user-detail"),
     path(
         "users/<uuid:pk>/deactivate/",
         InstanceUserDeactivateEndpoint.as_view(),

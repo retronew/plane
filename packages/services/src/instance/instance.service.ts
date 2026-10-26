@@ -11,6 +11,8 @@ import type {
   IInstance,
   IInstanceAdmin,
   IInstanceUser,
+  IInstanceUserDetail,
+  TInstanceUserProfile,
   TInstanceUserList,
   TInstanceUserStatus,
   TInstanceUserAccountType,
@@ -96,6 +98,22 @@ export class InstanceService extends APIService {
     cursor?: string;
   }): Promise<TInstanceUserList> {
     return this.get("/api/instances/users/", { params })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async getUser(userId: string): Promise<IInstanceUserDetail> {
+    return this.get(`/api/instances/users/${userId}/`)
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async updateUser(userId: string, data: TInstanceUserProfile): Promise<IInstanceUserDetail> {
+    return this.patch(`/api/instances/users/${userId}/`, data)
       .then((response) => response.data)
       .catch((error) => {
         throw error?.response?.data;

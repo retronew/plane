@@ -583,6 +583,66 @@
         "workspaces": "工作区",
         "last_login": "最近登录",
         "actions": "操作"
+      },
+      "details": {
+        "edit_profile": "编辑资料",
+        "menu_label": "{email} 的操作菜单",
+        "processing": "正在处理…",
+        "title": "用户资料与账号管理",
+        "manage": "详情 / 管理",
+        "loading": "正在加载用户资料…",
+        "retry": "重试",
+        "refresh_failed": "更改已保存，但部分资料刷新失败。请重新打开弹窗以加载最新数据。",
+        "saved": "个人资料已更新。",
+        "none": "无",
+        "linked": "已关联",
+        "not_linked": "未关联",
+        "email": "邮箱",
+        "id": "用户 ID",
+        "date_joined": "注册时间",
+        "last_login": "最近登录",
+        "login_medium": "最近登录方式",
+        "sso": "SSO 身份",
+        "status": "状态",
+        "role": "账号类型",
+        "profile": "个人资料",
+        "first_name": "名",
+        "last_name": "姓",
+        "display_name": "显示名称",
+        "no_workspaces": "该用户尚未加入任何工作区。",
+        "account": "账号管理",
+        "self_protection": "您不能停用自己的账号或撤销自己的管理员权限。",
+        "confirm_action": "确认",
+        "validation": {
+          "required": "请输入显示名称。",
+          "too_long": "最多输入 255 个字符。",
+          "url": "姓名不能包含 URL。"
+        },
+        "roles": {
+          "guest": "访客",
+          "viewer": "查看者",
+          "member": "成员",
+          "admin": "管理员",
+          "unknown": "未知角色"
+        },
+        "actions": {
+          "activate": "恢复账号",
+          "deactivate": "停用账号",
+          "promote": "授予管理员权限",
+          "revoke": "撤销管理员权限"
+        },
+        "confirm": {
+          "activate": "确认恢复 {email}？该用户将可以重新登录并访问原有工作区。",
+          "deactivate": "确认停用 {email}？该用户将在所有设备上退出登录，并无法通过密码、SSO 和 API 令牌访问。工作区成员身份将保留。",
+          "promote": "确认授予 {email} 管理员权限？该用户将可以管理 God Mode 中的所有实例设置和用户。",
+          "revoke": "确认撤销 {email} 的管理员权限？该用户将无法访问 God Mode，账号和工作区成员身份将保留。"
+        },
+        "success": {
+          "activate": "账号已恢复。",
+          "deactivate": "账号已停用，并已在所有设备上退出登录。",
+          "promote": "已授予管理员权限。",
+          "revoke": "已撤销管理员权限。"
+        }
       }
     }
   }

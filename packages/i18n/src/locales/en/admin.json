@@ -583,6 +583,66 @@
         "workspaces": "Workspaces",
         "last_login": "Last sign-in",
         "actions": "Actions"
+      },
+      "details": {
+        "edit_profile": "Edit profile",
+        "menu_label": "Actions for {email}",
+        "processing": "Processing…",
+        "title": "User details and account",
+        "manage": "Details / manage",
+        "loading": "Loading user details…",
+        "retry": "Retry",
+        "refresh_failed": "Changes were saved, but some details could not be refreshed. Reopen this dialog to load the latest data.",
+        "saved": "Profile updated.",
+        "none": "None",
+        "linked": "Linked",
+        "not_linked": "Not linked",
+        "email": "Email",
+        "id": "User ID",
+        "date_joined": "Joined",
+        "last_login": "Last sign-in",
+        "login_medium": "Last sign-in method",
+        "sso": "SSO identity",
+        "status": "Status",
+        "role": "Account type",
+        "profile": "Personal profile",
+        "first_name": "First name",
+        "last_name": "Last name",
+        "display_name": "Display name",
+        "no_workspaces": "This user has not joined any workspaces.",
+        "account": "Account management",
+        "self_protection": "You cannot deactivate your own account or revoke your own admin access.",
+        "confirm_action": "Confirm",
+        "validation": {
+          "required": "Enter a display name.",
+          "too_long": "Use at most 255 characters.",
+          "url": "Names cannot contain URLs."
+        },
+        "roles": {
+          "guest": "Guest",
+          "viewer": "Viewer",
+          "member": "Member",
+          "admin": "Admin",
+          "unknown": "Unknown role"
+        },
+        "actions": {
+          "activate": "Reactivate account",
+          "deactivate": "Deactivate account",
+          "promote": "Grant admin access",
+          "revoke": "Revoke admin access"
+        },
+        "confirm": {
+          "activate": "Reactivate {email}? They will be able to sign in and access their existing workspaces again.",
+          "deactivate": "Deactivate {email}? They will be signed out everywhere, and password, SSO and API token access will be blocked. Their workspace memberships will be kept.",
+          "promote": "Grant admin access to {email}? They will be able to manage all God Mode instance settings and users.",
+          "revoke": "Revoke admin access from {email}? They will lose access to God Mode. Their account and workspace memberships will be kept."
+        },
+        "success": {
+          "activate": "Account reactivated.",
+          "deactivate": "Account deactivated and signed out everywhere.",
+          "promote": "Admin access granted.",
+          "revoke": "Admin access revoked."
+        }
       }
     }
   }
