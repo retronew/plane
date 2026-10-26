@@ -95,6 +95,7 @@ def complete_oidc_link(request, code, host):
         "access_token_expired_at": token_data.get("access_token_expired_at"),
         "refresh_token_expired_at": token_data.get("refresh_token_expired_at"),
         "id_token": token_data.get("id_token", ""),
+        "metadata": token_data.get("metadata", {}),
         "last_connected_at": timezone.now(),
     }
     # A user links one identity: re-linking replaces the previous one

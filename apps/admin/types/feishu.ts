@@ -1,3 +1,35 @@
+export type TFeishuDirectoryMode = "unbound" | "all";
+export type TFeishuDirectoryUser = { id: string; email: string; display_name: string };
+export type TFeishuDirectoryRow = {
+  id: string;
+  email: string;
+  name: string;
+  user_id: string | null;
+  match_basis: "email" | "oidc" | "unmatched" | "identity_conflict";
+  matched_user?: TFeishuDirectoryUser | null;
+  member_id: string | null;
+  binding_id?: string | null;
+  binding_name?: string;
+  result: null | "already_bound" | "bound" | "conflict" | "user_ineligible" | "match_changed";
+};
+export type TFeishuDirectoryPreview = {
+  mode: TFeishuDirectoryMode;
+  id: string;
+  status: "complete" | "partial" | "expired";
+  error: string;
+  expires_at: string;
+  rows: TFeishuDirectoryRow[];
+  members: TFeishuDirectoryMember[];
+};
+export type TFeishuDirectoryMember = {
+  id: string;
+  name: string;
+  email: string;
+  user_id: string | null;
+  match_basis: string;
+};
+export type TFeishuDirectorySelection = { row_id: string; member_id?: string };
+
 export type TFeishuConfiguration = {
   enabled: boolean;
   app_id: string;
