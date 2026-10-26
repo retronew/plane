@@ -3,10 +3,203 @@
 # See the LICENSE file for details.
 
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+from django.urls import resolve
+from django.utils import timezone
+from rest_framework.test import APIClient
+
+from plane.db.models import User, Workspace, WorkspaceMember
+from plane.license.models import Instance, InstanceAdmin
 
 import pytest
 
 from plane.license.api.views import user as views
+
+
+@pytest.fixture
+def detail_client(db):
+    admin = User.objects.create(email="detail-admin@example.com", username="detail-admin")
+    instance = Instance.objects.create(
+        instance_name="Test", instance_id="user-detail", current_version="test", last_checked_at=timezone.now()
+    )
+    InstanceAdmin.objects.create(instance=instance, user=admin, role=15)
+    client = APIClient()
+    client.force_authenticate(user=admin)
+    return client
+
+
+@pytest.fixture
+def detail_user(db):
+    return User.objects.create(
+        email="detail-target@example.com",
+        username="detail-target",
+        first_name="Original",
+        last_name="Name",
+        display_name="Original Name",
+    )
+
+
+def _detail_url(user_id):
+    return f"/api/instances/users/{user_id}/"
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestUserDetail:
+    def test_list_order_is_stable_after_profile_edit(self, detail_client):
+        joined = timezone.now()
+        users = [
+            User.objects.create(
+                id=f"00000000-0000-0000-0000-{index:012d}",
+                email=f"sort-{index}@example.com",
+                username=f"sort-{index}",
+                date_joined=joined if index != 3 else joined - timezone.timedelta(days=1),
+                is_active=index != 1,
+            )
+            for index in [3, 2, 1]
+        ]
+        url = "/api/instances/users/?search=sort-&per_page=2"
+        response = detail_client.get(url)
+        assert response.status_code == 200
+        expected = [str(users[2].pk), str(users[1].pk)]
+        assert [user["id"] for user in response.data["results"]] == expected
+        next_page = detail_client.get(f"{url}&cursor={response.data['next_cursor']}")
+        assert [user["id"] for user in next_page.data["results"]] == [str(users[0].pk)]
+
+        updated = detail_client.patch(
+            _detail_url(users[2].pk),
+            {"first_name": "Zed", "display_name": "Updated"},
+            format="json",
+        )
+        assert updated.status_code == 200
+        assert [user["id"] for user in detail_client.get(url).data["results"]] == expected
+
+    def test_detail_route_and_workspace_filtering(self, detail_client, detail_user):
+        other = User.objects.create(email="other@example.com", username="other")
+        visible = None
+        for state in ["active", "inactive", "deleted-member", "deleted-workspace", "other-user"]:
+            workspace = Workspace.objects.create(name=state, slug=state, owner=detail_user)
+            WorkspaceMember.objects.create(
+                workspace=workspace,
+                member=other if state == "other-user" else detail_user,
+                role=15,
+                is_active=state != "inactive",
+                deleted_at=timezone.now() if state == "deleted-member" else None,
+            )
+            if state == "deleted-workspace":
+                Workspace.objects.filter(pk=workspace.pk).update(deleted_at=timezone.now())
+            if state == "active":
+                visible = workspace
+        url = _detail_url(detail_user.pk)
+        assert resolve(url).func.view_class is views.InstanceUserDetailEndpoint
+        response = detail_client.get(url)
+        assert response.status_code == 200
+        expected = views.serialize_user(views._user_queryset().get(pk=detail_user.pk))
+        assert response.data == {
+            **expected,
+            "workspaces": [{"id": str(visible.pk), "name": "active", "slug": "active", "role": 15}],
+        }
+        assert response.data["workspace_count"] == 1
+        assert set(response.data) == {
+            "id",
+            "email",
+            "display_name",
+            "first_name",
+            "last_name",
+            "avatar_url",
+            "is_active",
+            "is_instance_admin",
+            "has_sso",
+            "last_login_medium",
+            "last_login_time",
+            "workspace_count",
+            "date_joined",
+            "workspaces",
+        }
+
+    def test_patch_trims_and_returns_updated_detail(self, detail_client, detail_user):
+        response = detail_client.patch(
+            _detail_url(detail_user.pk),
+            {
+                "first_name": "  Taylor  ",
+                "last_name": "  ",
+                "display_name": "  Taylor T  ",
+            },
+            format="json",
+        )
+        assert response.status_code == 200
+        detail_user.refresh_from_db()
+        assert (detail_user.first_name, detail_user.last_name, detail_user.display_name) == ("Taylor", "", "Taylor T")
+        assert response.data == detail_client.get(_detail_url(detail_user.pk)).data
+        assert detail_user.email == "detail-target@example.com"
+
+    def test_partial_and_empty_patch(self, detail_client, detail_user):
+        url = _detail_url(detail_user.pk)
+        assert detail_client.patch(url, {"first_name": ""}, format="json").status_code == 200
+        detail_user.refresh_from_db()
+        assert detail_user.first_name == ""
+        assert detail_user.last_name == "Name"
+        assert detail_client.patch(url, {}, format="json").data == detail_client.get(url).data
+
+    @pytest.mark.parametrize("field", ["first_name", "last_name", "display_name"])
+    @pytest.mark.parametrize("value", [None, 123, True, [], {}, "x" * 256])
+    def test_rejects_invalid_values(self, detail_client, detail_user, field, value):
+        response = detail_client.patch(_detail_url(detail_user.pk), {field: value}, format="json")
+        assert response.status_code == 400
+        assert field in response.data
+        detail_user.refresh_from_db()
+        assert detail_user.first_name == "Original"
+        assert detail_user.last_name == "Name"
+        assert detail_user.display_name == "Original Name"
+
+    @pytest.mark.parametrize("field", ["first_name", "last_name", "display_name"])
+    def test_accepts_max_length(self, detail_client, detail_user, field):
+        response = detail_client.patch(_detail_url(detail_user.pk), {field: "x" * 255}, format="json")
+        assert response.status_code == 200
+        assert response.data[field] == "x" * 255
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"display_name": ""},
+            {"display_name": "  "},
+            {"first_name": "https://example.com"},
+            {"last_name": "https://example.com"},
+            {"email": "new@example.com"},
+            {"is_active": False},
+            {"is_superuser": True},
+            {"password": "new-password"},
+            {"workspaces": []},
+            {"unknown": "value"},
+        ],
+    )
+    def test_rejects_invalid_fields_without_partial_update(self, detail_client, detail_user, data):
+        response = detail_client.patch(_detail_url(detail_user.pk), {"first_name": "Changed", **data}, format="json")
+        assert response.status_code == 400
+        detail_user.refresh_from_db()
+        assert detail_user.first_name == "Original"
+
+    @pytest.mark.parametrize("method", ["get", "patch"])
+    @pytest.mark.parametrize("kind", ["unknown", "bot"])
+    def test_missing_or_bot_user_returns_404(self, detail_client, detail_user, method, kind):
+        target_id = uuid4()
+        if kind == "bot":
+            detail_user.is_bot = True
+            detail_user.save(update_fields=["is_bot"])
+            target_id = detail_user.pk
+        response = getattr(detail_client, method)(_detail_url(target_id))
+        assert response.status_code == 404
+
+    @pytest.mark.parametrize("method", ["get", "patch"])
+    @pytest.mark.parametrize("identity", ["anonymous", "regular", "low-role"])
+    def test_requires_instance_admin(self, detail_client, detail_user, method, identity):
+        if identity == "low-role":
+            InstanceAdmin.objects.create(instance=Instance.objects.first(), user=detail_user, role=5)
+        detail_client.force_authenticate(user=None if identity == "anonymous" else detail_user)
+        response = getattr(detail_client, method)(_detail_url(detail_user.pk))
+        assert response.status_code in (401, 403)
+
 
 ADMIN_ID = "11111111-1111-1111-1111-111111111111"
 TARGET_ID = "22222222-2222-2222-2222-222222222222"

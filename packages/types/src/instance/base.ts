@@ -84,6 +84,12 @@ export interface IInstanceUser {
   date_joined: string;
 }
 
+export interface IInstanceUserDetail extends IInstanceUser {
+  workspaces: { id: string; name: string; slug: string; role: number }[];
+}
+
+export type TInstanceUserProfile = Pick<IInstanceUser, "first_name" | "last_name" | "display_name">;
+
 export type TInstanceUserStatus = "active" | "deactivated";
 
 export type TInstanceUserAccountType = "user" | "admin";
