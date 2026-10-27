@@ -27,7 +27,7 @@
 
 1. 更新 `retronew/plane-plugins` 市场中的 Plane 插件到 **0.3.3 或更高版本**。若之前上传过本地测试 ZIP，先移除或替换该测试包，避免它覆盖市场版本。也可从部署后的 Plane 下载 [Claude ZIP](https://plane.mdropwork.com/skills/plane-workflow-claude.zip) 或 [OpenAI ZIP](https://plane.mdropwork.com/skills/plane-workflow-openai.zip)，通过客户端支持的插件安装入口安装。
 2. **Claude Desktop Code 模式**：新建本机 Code 会话，确认已加载插件；在 Connectors → Manage connectors 中等待 `plane` 出现，再点击 Connect。必要时先发送“只回复 OK，不调用工具、不修改文件”初始化会话。旧会话可能缓存测试地址；安装本身不会自动打开授权页。Chat / Cowork 的远程连接需要云端能够访问的 HTTPS 地址。
-3. **ChatGPT / Codex**：从插件连接入口发起 OAuth；若旧聊天仍缓存测试连接，使用新聊天。各客户端版本的连接入口可能不同。
+3. **ChatGPT / Codex**：OpenAI 包保留 `.codex-plugin/plugin.json` → `.mcp.json` 的桌面兼容入口，并在 MCP 服务的 `extensions["com.openai"].auth` 中声明 OAuth、DCR 和默认只读权限；不要为添加认证而恢复会覆盖兼容入口的根目录清单。市场的 `ON_INSTALL` 声明安装时认证时机，但是否自动打开授权页仍需在目标 ChatGPT 版本实测。从插件连接入口发起 OAuth；若旧聊天仍缓存测试连接，使用新聊天。各客户端版本的连接入口可能不同。
 4. 登录 Plane，在授权页核对账号、客户端和 **180 天**，首次选择只读授权。不需要选择工作区；新授权可访问该账号当前有权限的工作区。
 5. 发送：“检查 Plane 连接，只读列出我可访问的工作区，不修改数据。”然后明确指定一个 `workspace_slug` 查询工作项，确认身份、工作区和只读工具调用正常。需要测试写入时，另外授权读写，并只在专用测试工作区创建、修改和删除标记为 `【演示】OAuth 测试` 的工作项。
 6. 分别连接 Claude 与 OpenAI，确认 Plane「个人菜单 → 开发者 → 授权连接」中可独立管理连接。只撤销其中一条，再调用该客户端工具：应要求重新认证，另一条连接应继续可用。
