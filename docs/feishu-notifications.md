@@ -6,11 +6,7 @@
 
 在 Plane 实例后台的「飞书通知」页面填写 App ID、App Secret。Secret 加密存储，接口不返回密钥内容；保存时留空表示保留。检查配置只验证应用凭据，不能证明目标用户可接收消息。
 
-将页面显示的回调 URL 原样加入飞书应用安全设置。回调格式：
-
-`https://<Plane 域名>/api/users/me/integrations/feishu/callback/`
-
-OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API 处理；OAuth 回调还需携带用户登录 Cookie。授权完成后的个人中心地址 `/settings/profile/notifications/` 和卡片查看链接优先使用 `APP_BASE_URL`，未配置时回退到 `WEB_URL`。本地前后端分端口部署可使用 `WEB_URL=http://localhost:8000`、`APP_BASE_URL=http://localhost:3000`，确保登录 Cookie 能随回调发送；不要把 API 回调指向未代理 API 的前端开发服务器。
+个人绑定 OAuth 已停用，无需配置其回调 URL。卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API 处理；卡片查看链接优先使用 `APP_BASE_URL`，未配置时回退到 `WEB_URL`。
 
 配置项：`FEISHU_ENABLED`、`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_VERIFICATION_TOKEN`、`FEISHU_ENCRYPT_KEY`。后三项均加密且只写，留空保留。当 `SKIP_ENV_VAR=0` 时由环境变量管理，后台禁止修改。部署时执行迁移及 `configure_instance` 初始化配置键，重启 API、worker 和 Beat。不要在已有环境重跑 setup.sh。
 
@@ -36,9 +32,11 @@ OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API
 
 ## 用户绑定
 
-用户登录 Plane 后，在个人中心 → 通知中绑定飞书账号。绑定使用独立 OAuth 授权与 PKCE，不改变 OIDC 登录绑定；发送使用应用 tenant token，用户访问令牌不持久保存。更换 App ID 后需重新绑定；仅轮换同一应用 Secret 不需要重新绑定。
+飞书通知绑定和解绑仅由实例管理员通过后台账号同步管理。个人中心 → 通知只读展示绑定状态，保留个人飞书渠道、事件偏好和已绑定账号的测试通知；如需绑定、更换或解绑，请联系实例管理员。更换 App ID 后需由管理员重新绑定；仅轮换同一应用 Secret 不需要重新绑定。OIDC 登录及其可信身份 metadata 保持独立，不受此政策影响。
 
-绑定成功后，开启个人飞书渠道，并发送测试通知。测试按钮成功表示已入队；最近投递状态显示发送结果。用户必须在应用可用范围内，且未拒收机器人。
+遗留个人端点保留明确拒绝响应：`POST /api/users/me/integrations/feishu/authorize/`、`DELETE /api/users/me/integrations/feishu/` 和 `GET /api/users/me/integrations/feishu/callback/` 对已认证用户统一返回 `403 {"error": "administrator_managed"}`。即使携带停用前签发且尚未过期的 state，回调也不会交换授权码或写入绑定；不会跳转或生成个人授权结果提示。`GET /api/users/me/integrations/feishu/` 和 `POST /api/users/me/integrations/feishu/test/` 继续可用。配置接口的 `callback_url` 仅保留兼容字段，后台不再展示或要求配置个人 OAuth 回调。
+
+测试按钮成功表示已入队；最近投递状态显示发送结果。用户必须在应用可用范围内，且未拒收机器人。
 
 ## 管理员通讯录绑定
 
@@ -48,7 +46,7 @@ OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API
 
 预览保存系统用户行与独立飞书候选快照，提交 `row_id` 和可选 `member_id`，不接受客户端指定其他 Plane 用户或 open_id。优先可信 OIDC、其次唯一已验证邮箱，管理员可手动选择可用成员；身份冲突和已有占用不可绕过。同批不能将一个飞书成员绑定给多个用户。没有定时自动绑定，必须由管理员确认提交。
 
-全量核对提供解绑确认，`POST /api/instances/feishu/directory/unbind/` 接收预览 ID 与行 ID。服务端检查管理员、预览归属/有效期/配置及绑定 ID，防止旧确认删除新绑定；记录审计并复用个人解绑，取消待发送消息与旧授权 state，保留 OIDC 登录和通知偏好。解绑后重新同步即可选择新成员。
+全量核对提供解绑确认，`POST /api/instances/feishu/directory/unbind/` 接收预览 ID 与行 ID。服务端检查管理员、预览归属/有效期/配置及绑定 ID，防止旧确认删除新绑定；记录审计并复用统一解绑服务，取消待发送消息与旧授权 state，保留 OIDC 登录和通知偏好。解绑后重新同步即可选择新成员。
 
 租户和通讯录权限需要发布并审批通过后才能使用：
 

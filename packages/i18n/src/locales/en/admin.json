@@ -39,7 +39,7 @@
       "callback_url": "Callback URL",
       "callback_description": "Add this exact URL to the redirect URLs in your Feishu app settings.",
       "saved_config_actions": "Checks and test notifications use saved settings. Save any changes first.",
-      "bind_first": "Link your Feishu account in your personal settings before sending a test notification.",
+      "bind_first": "Use account sync in the instance Feishu settings to link your account before sending a test notification.",
       "enable_first": "Enable and save Feishu notifications before sending a test.",
       "check": "Check configuration",
       "test": "Send test to my linked account",

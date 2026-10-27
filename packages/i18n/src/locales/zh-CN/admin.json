@@ -39,7 +39,7 @@
       "callback_url": "回调 URL",
       "callback_description": "请将此完整 URL 添加到飞书应用设置的重定向 URL 中。",
       "saved_config_actions": "配置检查和测试通知使用已保存的设置，请先保存更改。",
-      "bind_first": "请先在个人中心绑定您的飞书账号，再发送测试通知。",
+      "bind_first": "请先在实例飞书设置中通过账号同步绑定您的账号，再发送测试通知。",
       "enable_first": "请先启用并保存飞书通知，再发送测试。",
       "check": "检查配置",
       "test": "向我的绑定账号发送测试",

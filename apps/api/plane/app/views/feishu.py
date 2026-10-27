@@ -1,25 +1,21 @@
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
 
-import base64
 import hashlib
-import secrets
 import uuid
-from datetime import timedelta
-from urllib.parse import urlencode
 
-from django.db import IntegrityError, transaction
-from django.http import HttpResponseRedirect
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from plane.app.views.base import BaseAPIView
-from plane.db.models import User
 from plane.db.models.feishu import FeishuBinding, FeishuDelivery, FeishuOAuthState
-from plane.utils.feishu import cancel_pending_feishu_deliveries, enqueue_feishu_notification, unbind_feishu, web_url
-from plane.utils.feishu_client import AUTHORIZE_URL, FeishuClient, FeishuError, get_feishu_config
+from plane.utils.feishu import enqueue_feishu_notification
+from plane.utils.feishu_client import FeishuError, get_feishu_config
 
+
+# Retained for the legacy read-only configuration response.
 CALLBACK_PATH = "api/users/me/integrations/feishu/callback/"
 
 
@@ -59,48 +55,12 @@ class FeishuBindingEndpoint(BaseAPIView):
         )
 
     def delete(self, request):
-        unbind_feishu(request.user.pk)
-        return Response(status=204)
+        return Response({"error": "administrator_managed"}, status=403)
 
 
 class FeishuAuthorizeEndpoint(BaseAPIView):
-    throttle_classes = [FeishuActionThrottle]
-
     def post(self, request):
-        config = get_feishu_config()
-        if not config.enabled:
-            return Response({"error": "feishu_disabled"}, status=503)
-        if not request.session.session_key:
-            request.session.save()
-        state, verifier = secrets.token_urlsafe(32), secrets.token_urlsafe(64)
-        challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
-        with transaction.atomic():
-            User.objects.select_for_update().get(pk=request.user.pk)
-            FeishuOAuthState.objects.filter(user=request.user).delete()
-            FeishuOAuthState.objects.create(
-                state_hash=digest(state),
-                user=request.user,
-                session_hash=digest(request.session.session_key),
-                app_id=config.app_id,
-                verifier=verifier,
-                expires_at=timezone.now() + timedelta(minutes=10),
-            )
-        return Response(
-            {
-                "authorization_url": AUTHORIZE_URL
-                + "?"
-                + urlencode(
-                    {
-                        "client_id": config.app_id,
-                        "redirect_uri": web_url(CALLBACK_PATH),
-                        "response_type": "code",
-                        "state": state,
-                        "code_challenge": challenge,
-                        "code_challenge_method": "S256",
-                    }
-                )
-            }
-        )
+        return Response({"error": "administrator_managed"}, status=403)
 
 
 def consume_oauth_state(state, user_id, session_key, app_id):
@@ -124,45 +84,9 @@ def consume_oauth_state(state, user_id, session_key, app_id):
 
 class FeishuCallbackEndpoint(BaseAPIView):
     def get(self, request):
-        result = "error"
-        try:
-            config = get_feishu_config()
-            state = request.query_params.get("state", "")
-            code = request.query_params.get("code", "")
-            session_key = request.session.session_key
-            if not config.enabled or not state or not session_key:
-                raise FeishuError("invalid_oauth_callback")
-            verifier = consume_oauth_state(state, request.user.pk, session_key, config.app_id)
-            if not code or request.query_params.get("error"):
-                raise FeishuError("authorization_denied")
-            identity = FeishuClient(config).identity(code, verifier, web_url(CALLBACK_PATH))
-            with transaction.atomic():
-                # Serializes concurrent binds for one Plane user. The database identity
-                # constraint protects against two different users claiming one identity.
-                User.objects.select_for_update().get(pk=request.user.pk)
-                if not FeishuOAuthState.objects.filter(state_hash=digest(state), user=request.user).exists():
-                    raise FeishuError("authorization_cancelled")
-                current = get_feishu_config()
-                if not current.enabled or current.app_id != config.app_id:
-                    raise FeishuError("configuration_changed")
-                binding = FeishuBinding.objects.select_for_update().filter(user=request.user).first()
-                cancel_pending_feishu_deliveries(request.user.pk)
-                if binding:
-                    binding.delete()
-                FeishuBinding.objects.create(
-                    user=request.user,
-                    app_id=config.app_id,
-                    tenant_key=identity["tenant_key"],
-                    open_id=identity["open_id"],
-                    display_name=str(identity.get("name", ""))[:255],
-                )
-            result = "connected"
-        except IntegrityError:
-            result = "identity_in_use"
-        except FeishuError:
-            # Provider response and authorization code must never enter logs or URLs.
-            pass
-        return HttpResponseRedirect(web_url(f"settings/profile/notifications/?feishu={result}", is_app=True))
+        # Reject even valid states issued before administrator-only management.
+        # This endpoint must never exchange codes or mutate notification bindings.
+        return Response({"error": "administrator_managed"}, status=403)
 
 
 class FeishuTestEndpoint(BaseAPIView):

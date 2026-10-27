@@ -27,14 +27,6 @@ export class NotificationPreferencesService extends APIService {
     return (await this.get(FEISHU_URL)).data;
   }
 
-  async authorizeFeishu(): Promise<{ authorization_url: string }> {
-    return (await this.post(`${FEISHU_URL}authorize/`, {})).data;
-  }
-
-  async unlinkFeishu(): Promise<void> {
-    await this.delete(FEISHU_URL);
-  }
-
   async testFeishu(): Promise<{ delivery_id: string; status: string }> {
     return (await this.post(`${FEISHU_URL}test/`, {})).data;
   }

@@ -199,11 +199,6 @@ function FeishuForm({ config, refresh }: { config: TFeishuConfiguration; refresh
               </div>
             </fieldset>
             <CopyField
-              label={t("admin.feishu.callback_url")}
-              url={config.callback_url}
-              description={t("admin.feishu.callback_description")}
-            />
-            <CopyField
               label={t("admin.feishu.card_callback_url")}
               url={config.card_callback_url}
               description={t("admin.feishu.card_callback_description")}

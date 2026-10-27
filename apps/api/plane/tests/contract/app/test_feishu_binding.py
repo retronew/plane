@@ -3,7 +3,6 @@
 
 from datetime import timedelta
 from unittest.mock import patch
-from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from django.db import IntegrityError, transaction
@@ -97,96 +96,52 @@ def test_enqueue_deduplicates_persistently(binding):
     assert FeishuDelivery.objects.filter(event_key="same").count() == 1
 
 
-@pytest.mark.parametrize("app_url", [None, "http://localhost:3000"])
-def test_oauth_uses_api_callback_and_returns_to_frontend(session_client, create_user, settings, app_url):
-    settings.WEB_URL = "http://localhost:8000"
-    settings.APP_BASE_URL = app_url
-    callback_url = "http://localhost:8000/api/users/me/integrations/feishu/callback/"
-    with (
-        patch("plane.app.views.feishu.get_feishu_config", return_value=FeishuConfig(True, "app", "secret")),
-        patch("plane.app.views.feishu.FeishuClient") as client,
-    ):
-        response = session_client.post("/api/users/me/integrations/feishu/authorize/", {}, format="json")
-        assert response.status_code == 200
-        query = parse_qs(urlsplit(response.json()["authorization_url"]).query)
-        assert query["redirect_uri"] == [callback_url]
-        client.return_value.identity.return_value = {"open_id": "open", "tenant_key": "tenant", "name": "Name"}
-        response = session_client.get(
-            "/api/users/me/integrations/feishu/callback/", {"state": query["state"][0], "code": "code"}
-        )
-        assert response.status_code == 302
-        assert response["Location"] == (
-            f"{app_url or settings.WEB_URL}/settings/profile/notifications/?feishu=connected"
-        )
-        assert client.return_value.identity.call_args.args[2] == callback_url
-        assert FeishuBinding.objects.filter(user=create_user, open_id="open").exists()
-        response = session_client.get("/api/users/me/integrations/feishu/callback/", {"error": "access_denied"})
-        assert response["Location"] == f"{app_url or settings.WEB_URL}/settings/profile/notifications/?feishu=error"
-
-
-def test_callback_consumes_state_before_identity_conflict(session_client, create_user, settings):
-    settings.WEB_URL = "https://plane.example"
-    other = User.objects.create(email="claimed-feishu@example.com", username="claimed-feishu")
-    FeishuBinding.objects.create(user=other, app_id="app", tenant_key="tenant", open_id="claimed")
+@pytest.mark.parametrize("enabled", [True, False])
+@pytest.mark.parametrize("bound", [True, False])
+def test_personal_binding_writes_are_administrator_managed(session_client, create_user, enabled, bound):
+    if bound:
+        FeishuBinding.objects.create(user=create_user, app_id="app", tenant_key="tenant", open_id="existing")
     session = session_client.session
-    if not session.session_key:
-        session.save()
-    FeishuOAuthState.objects.create(
-        state_hash=digest("callback-state"),
-        user=create_user,
-        app_id="app",
-        session_hash=digest(session.session_key),
-        verifier="verifier",
+    row = FeishuOAuthState.objects.create(
+        state_hash=digest("old-state"), user=create_user, app_id="app",
+        session_hash=digest(session.session_key), verifier="verifier",
         expires_at=timezone.now() + timedelta(minutes=5),
     )
     with (
-        patch("plane.app.views.feishu.get_feishu_config", return_value=FeishuConfig(True, "app", "secret")),
-        patch("plane.app.views.feishu.FeishuClient") as client,
+        patch("plane.app.views.feishu.get_feishu_config", return_value=FeishuConfig(enabled, "app", "secret")),
+        patch("plane.utils.feishu_client.FeishuClient.identity") as identity,
     ):
-        client.return_value.identity.return_value = {"open_id": "claimed", "tenant_key": "tenant", "name": "Name"}
-        first = session_client.get(
-            "/api/users/me/integrations/feishu/callback/", {"state": "callback-state", "code": "code"}
-        )
-        assert first.status_code == 302
-        assert first["Location"].endswith("?feishu=identity_in_use")
-        second = session_client.get(
-            "/api/users/me/integrations/feishu/callback/", {"state": "callback-state", "code": "code"}
-        )
-        assert second["Location"].endswith("?feishu=error")
-        assert client.return_value.identity.call_count == 1
-    assert not FeishuBinding.objects.filter(user=create_user).exists()
-    assert FeishuBinding.objects.get(open_id="claimed").user_id == other.pk
+        responses = [
+            session_client.post("/api/users/me/integrations/feishu/authorize/", {}, format="json"),
+            session_client.delete("/api/users/me/integrations/feishu/"),
+            session_client.get("/api/users/me/integrations/feishu/callback/", {"state": "old-state", "code": "code"}),
+            session_client.get("/api/users/me/integrations/feishu/callback/", {"error": "access_denied"}),
+        ]
+    for response in responses:
+        assert response.status_code == 403
+        assert response.json() == {"error": "administrator_managed"}
+    identity.assert_not_called()
+    assert FeishuBinding.objects.filter(user=create_user).count() == int(bound)
+    if bound:
+        assert FeishuBinding.objects.get(user=create_user).open_id == "existing"
+    row.refresh_from_db()
+    assert row.verifier == "verifier"
+    assert row.consumed_at is None
+    assert FeishuOAuthState.objects.filter(user=create_user).count() == 1
 
 
-def test_new_authorization_invalidates_consumed_in_flight_callback(session_client, create_user, settings):
-    settings.WEB_URL = "https://plane.example"
-    session = session_client.session
-    FeishuOAuthState.objects.create(
-        state_hash=digest("old-state"),
-        user=create_user,
-        app_id="app",
-        session_hash=digest(session.session_key),
-        verifier="verifier",
-        expires_at=timezone.now() + timedelta(minutes=5),
-    )
-
-    def identity_after_new_authorization(*args):
-        response = session_client.post("/api/users/me/integrations/feishu/authorize/", {}, format="json")
-        assert response.status_code == 200
-        return {"open_id": "old-identity", "tenant_key": "tenant"}
-
+def test_personal_status_and_test_remain_available(session_client, binding):
     with (
         patch("plane.app.views.feishu.get_feishu_config", return_value=FeishuConfig(True, "app", "secret")),
-        patch("plane.app.views.feishu.FeishuClient") as client,
+        patch("plane.utils.feishu.get_feishu_config", return_value=FeishuConfig(True, "app", "secret")),
     ):
-        client.return_value.identity.side_effect = identity_after_new_authorization
-        response = session_client.get(
-            "/api/users/me/integrations/feishu/callback/", {"state": "old-state", "code": "code"}
-        )
-    assert response["Location"].endswith("?feishu=error")
-    assert not FeishuBinding.objects.filter(user=create_user).exists()
-    assert not FeishuOAuthState.objects.filter(state_hash=digest("old-state")).exists()
-    assert FeishuOAuthState.objects.filter(user=create_user, consumed_at__isnull=True).count() == 1
+        response = session_client.get("/api/users/me/integrations/feishu/")
+        assert response.status_code == 200
+        assert response.json()["binding"]["app_id"] == "app"
+        response = session_client.post("/api/users/me/integrations/feishu/test/", {}, format="json")
+    assert response.status_code == 202
+    assert FeishuDelivery.objects.get(pk=response.json()["delivery_id"]).is_test is True
+    assert FeishuBinding.objects.filter(pk=binding.pk).exists()
 
 
 @pytest.mark.django_db(transaction=True)
