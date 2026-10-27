@@ -446,6 +446,7 @@ class IssueRelationSerializer(BaseSerializer):
     name = serializers.CharField(source="related_issue.name", read_only=True)
     relation_type = serializers.CharField(read_only=True)
     state_id = serializers.UUIDField(source="related_issue.state.id", read_only=True)
+    type_id = serializers.UUIDField(source="related_issue.type_id", read_only=True, allow_null=True)
     priority = serializers.CharField(source="related_issue.priority", read_only=True)
     assignee_ids = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
@@ -487,6 +488,7 @@ class RelatedIssueSerializer(BaseSerializer):
     name = serializers.CharField(source="issue.name", read_only=True)
     relation_type = serializers.CharField(read_only=True)
     state_id = serializers.UUIDField(source="issue.state.id", read_only=True)
+    type_id = serializers.UUIDField(source="issue.type_id", read_only=True, allow_null=True)
     priority = serializers.CharField(source="issue.priority", read_only=True)
     assignee_ids = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
