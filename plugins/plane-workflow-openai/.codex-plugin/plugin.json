@@ -1,6 +1,6 @@
 {
   "name": "plane-workflow",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "八项 Plane 工作流技能；Claude 与 OpenAI 插件通过实例绑定的 OAuth 连接，保留手动 API Token 接入。",
   "author": {
     "name": "Moondrop",
