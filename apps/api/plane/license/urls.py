@@ -33,10 +33,28 @@ from plane.license.api.views.feishu import (
     InstanceFeishuEndpoint,
     InstanceFeishuCheckEndpoint,
     InstanceFeishuTestEndpoint,
+    InstanceFeishuDirectoryEndpoint,
+    InstanceFeishuDirectoryUsersEndpoint,
+    InstanceFeishuDirectoryBindEndpoint,
+    InstanceFeishuDirectoryUnbindEndpoint,
 )
 
 urlpatterns = [
     path("feishu/", InstanceFeishuEndpoint.as_view(), name="instance-feishu"),
+    path("feishu/directory/", InstanceFeishuDirectoryEndpoint.as_view(), name="instance-feishu-directory"),
+    path(
+        "feishu/directory/users/",
+        InstanceFeishuDirectoryUsersEndpoint.as_view(),
+        name="instance-feishu-directory-users",
+    ),
+    path(
+        "feishu/directory/bind/", InstanceFeishuDirectoryBindEndpoint.as_view(), name="instance-feishu-directory-bind"
+    ),
+    path(
+        "feishu/directory/unbind/",
+        InstanceFeishuDirectoryUnbindEndpoint.as_view(),
+        name="instance-feishu-directory-unbind",
+    ),
     path("feishu/check/", InstanceFeishuCheckEndpoint.as_view(), name="instance-feishu-check"),
     path("feishu/test/", InstanceFeishuTestEndpoint.as_view(), name="instance-feishu-test"),
     path("", InstanceEndpoint.as_view(), name="instance"),

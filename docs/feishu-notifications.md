@@ -6,11 +6,7 @@
 
 在 Plane 实例后台的「飞书通知」页面填写 App ID、App Secret。Secret 加密存储，接口不返回密钥内容；保存时留空表示保留。检查配置只验证应用凭据，不能证明目标用户可接收消息。
 
-将页面显示的回调 URL 原样加入飞书应用安全设置。回调格式：
-
-`https://<Plane 域名>/api/users/me/integrations/feishu/callback/`
-
-OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API 处理；OAuth 回调还需携带用户登录 Cookie。授权完成后的个人中心地址 `/settings/profile/notifications/` 和卡片查看链接优先使用 `APP_BASE_URL`，未配置时回退到 `WEB_URL`。本地前后端分端口部署可使用 `WEB_URL=http://localhost:8000`、`APP_BASE_URL=http://localhost:3000`，确保登录 Cookie 能随回调发送；不要把 API 回调指向未代理 API 的前端开发服务器。
+个人绑定 OAuth 已停用，无需配置其回调 URL。卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API 处理；卡片查看链接优先使用 `APP_BASE_URL`，未配置时回退到 `WEB_URL`。
 
 配置项：`FEISHU_ENABLED`、`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_VERIFICATION_TOKEN`、`FEISHU_ENCRYPT_KEY`。后三项均加密且只写，留空保留。当 `SKIP_ENV_VAR=0` 时由环境变量管理，后台禁止修改。部署时执行迁移及 `configure_instance` 初始化配置键，重启 API、worker 和 Beat。不要在已有环境重跑 setup.sh。
 
@@ -36,9 +32,42 @@ OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API
 
 ## 用户绑定
 
-用户登录 Plane 后，在个人中心 → 通知中绑定飞书账号。绑定使用独立 OAuth 授权与 PKCE，不改变 OIDC 登录绑定；发送使用应用 tenant token，用户访问令牌不持久保存。更换 App ID 后需重新绑定；仅轮换同一应用 Secret 不需要重新绑定。
+飞书通知绑定和解绑仅由实例管理员通过后台账号同步管理。个人中心 → 通知只读展示绑定状态，保留个人飞书渠道、事件偏好和已绑定账号的测试通知；如需绑定、更换或解绑，请联系实例管理员。更换 App ID 后需由管理员重新绑定；仅轮换同一应用 Secret 不需要重新绑定。OIDC 登录及其可信身份 metadata 保持独立，不受此政策影响。
 
-绑定成功后，开启个人飞书渠道，并发送测试通知。测试按钮成功表示已入队；最近投递状态显示发送结果。用户必须在应用可用范围内，且未拒收机器人。
+遗留个人端点保留明确拒绝响应：`POST /api/users/me/integrations/feishu/authorize/`、`DELETE /api/users/me/integrations/feishu/` 和 `GET /api/users/me/integrations/feishu/callback/` 对已认证用户统一返回 `403 {"error": "administrator_managed"}`。即使携带停用前签发且尚未过期的 state，回调也不会交换授权码或写入绑定；不会跳转或生成个人授权结果提示。`GET /api/users/me/integrations/feishu/` 和 `POST /api/users/me/integrations/feishu/test/` 继续可用。配置接口的 `callback_url` 仅保留兼容字段，后台不再展示或要求配置个人 OAuth 回调。
+
+测试按钮成功表示已入队；最近投递状态显示发送结果。用户必须在应用可用范围内，且未拒收机器人。
+
+## 管理员通讯录绑定
+
+实例管理员可在「飞书通知」中同步应用授权范围内的通讯录、核对匹配目标并每批绑定最多 20 人。预览不等于整个企业：只能覆盖应用通讯录权限范围。读取指定成员、部门及所有子部门，并分别展开用户组的用户和部门成员；所有接口分页必须完整成功，任何权限错误、重复分页游标、异常响应或预算超限都会保存 `partial` 预览，禁止提交。
+
+同步以 Plane 用户为主列表：默认 `unbound` 展示所有启用、非机器人、未匿名化且未绑定的系统用户；没有飞书候选时仍保留为待处理。`all` 同时展示已有绑定（包括需解除的停用账号）。飞书目录仅作为候选来源，两模式都完整读取授权范围。
+
+预览保存系统用户行与独立飞书候选快照，提交 `row_id` 和可选 `member_id`，不接受客户端指定其他 Plane 用户或 open_id。优先可信 OIDC、其次唯一已验证邮箱，管理员可手动选择可用成员；身份冲突和已有占用不可绕过。同批不能将一个飞书成员绑定给多个用户。没有定时自动绑定，必须由管理员确认提交。
+
+全量核对提供解绑确认，`POST /api/instances/feishu/directory/unbind/` 接收预览 ID 与行 ID。服务端检查管理员、预览归属/有效期/配置及绑定 ID，防止旧确认删除新绑定；记录审计并复用统一解绑服务，取消待发送消息与旧授权 state，保留 OIDC 登录和通知偏好。解绑后重新同步即可选择新成员。
+
+租户和通讯录权限需要发布并审批通过后才能使用：
+
+- `tenant:tenant:readonly`：通过 `/tenant/v2/tenant/query` 读取租户身份；同步首先验证此身份，缺少该权限会返回 `provider_error_99991672` 并中止同步，即使通讯录权限已开通。
+- `contact:contact.base:readonly`：读取通讯录授权范围及部门成员。
+- `contact:user.base:readonly`：成员姓名等基本信息。
+- `contact:user.email:readonly`：成员邮箱；缺少邮箱时不会按姓名猜测。
+- `contact:user.employee:readonly`：成员状态，排除冻结、离职、退出、未加入或未激活成员。
+- `contact:group:readonly`：展开授权用户组；没有此权限且范围含组时同步失败，不能忽略组。
+
+API 使用 `user_id_type=open_id`、`open_department_id`，租户来自 `/tenant/v2/tenant/query`。组成员协议见[获取用户组成员列表](https://open.feishu.cn/document/server-docs/contact-v3/group-member/simplelist)。同步最多 500 名成员、40 次请求，25 秒预算，单次请求限制连接与读取超时；最后一个请求可能使总耗时略超预算。超过限制需缩小应用授权范围后重新同步，本版本不提供异步全企业导入。
+
+匹配先使用已保存的可信飞书 OIDC 身份，再使用邮箱。只有成功认证流程从精确 HTTPS 飞书 userinfo 端点取得的 `tenant_key` 与 `open_id` 才保存为身份元数据；同应用使用 `open_id`，跨应用仅在同租户且唯一的 `union_id` 相符时使用（飞书 `union_id` 的一致性仍受同开发者范围约束）。既有登录记录只保存通用 `sub`，没有可信来源及应用/租户证明，因此不会冒充飞书身份；再次通过适用认证流程登录后才有可复用元数据。身份冲突禁止回退邮箱或手选。不会解析未验证的 ID token 来绑定用户。
+
+邮箱只做 `strip().lower()`，两侧必须唯一；自动匹配的 Plane 目标必须邮箱已验证、启用、非机器人且未被匿名化。管理员可为未匹配成员手动选人，也可覆盖自动邮箱建议，或跳过成员不提交；手动目标无需邮箱已验证，但必须启用、非机器人、未被匿名化且没有已有飞书绑定。手动操作记录为 `manual` 审计，不改变账号的邮箱验证状态；不按姓名自动匹配。明确的 OIDC 匹配不能改给其他用户，身份冲突不能手动绕过；提交时新出现的可信 OIDC 身份同样优先校验。预览展示实际 Plane 目标姓名和邮箱，便于识别 OIDC 匹配时两侧邮箱不相同的情况。
+
+预览保存在服务端，有效期 15 分钟且仅创建它的管理员可读取或提交，浏览器只提交预览 ID、行 ID 和手动用户选择。过期后不再返回人员数据，下次同步清空过期预览的人员内容。审计另存管理员、目标用户、匹配依据、来源、时间和通知选择；当前未配置定时物理删除预览表记录，审计按运维留存政策管理。
+
+提交前重新读取完整授权通讯录验证身份、邮箱唯一性和状态，避免预览后新增的同邮箱成员造成误匹配；事务内重新验证 Plane 用户与自动匹配，按用户 ID 稳定顺序加锁。已有任意应用绑定或已占用飞书身份返回冲突，绝不覆盖。管理员成功绑定时删除包括已消费在途 state 在内的旧 OAuth 授权，阻止旧回调覆盖。重复提交已成功行直接复用审计结果，不重建绑定、不再次修改通知偏好。勾选通知只为这次新绑定用户调用现有全局偏好更新，保留其他渠道和事件设置。
+
+部署先应用迁移 `0158_feishu_admin_directory` 、`0159_feishu_directory_preview_mode` 和 `0160_feishu_preview_members`，再更新 API 与 admin 前端；无需修改已有环境文件。迁移新增预览和审计表及预览模式字段，不改写现有绑定或用户通知设置。完整审批前可验证失败/partial 行为，但不能声称真实通讯录全量联调已完成。
 
 ## 偏好规则
 
@@ -60,6 +89,10 @@ OAuth 与卡片回调使用 `WEB_URL`，此地址的 `/api/` 必须由 Plane API
 解绑、关闭实例通知或更换应用会取消未发送记录。已经提交给飞书的请求无法撤回。
 
 ## 本次验证
+
+2026-10-26 同步模式补充：隔离 `plane-test` 栈运行管理员通讯录绑定、目录读取及飞书工具回归，共 94 项通过，覆盖两种模式、重复同步不写入、未匹配待处理、已绑定只读及通知不变、身份占用冲突、过滤后仍保持完整目录邮箱唯一性、权限撤回拒绝绑定。改动后端文件 Ruff 通过，`makemigrations --check --dry-run` 无遗漏；测试栈及其卷已清理，未操作日常环境卷。未调用真实飞书 API。
+
+2026-10-26 管理员通讯录绑定：隔离 `plane-test` 栈运行目录分页/预算/组/状态单测、管理员预览与绑定契约测试、原个人绑定及 OIDC provider/link/email_bind 回归，共 76 项通过；包含完整 userinfo → 账号 metadata 写入、OIDC 优先/租户冲突、提交时完整重同步发现新增邮箱重复。改动后端文件 Ruff 全部通过，`makemigrations --check --dry-run` 显示 `No changes detected`。测试未调用真实飞书 API，生产权限及实际通讯录仍需审批完成后联调。
 
 2026-10-22，在独立 worktree 与用户授权的 `plane-feishu-test` 栈完成197项后端通知相关回归测试。回跳路径修复后另行复测飞书测试与迁移检查。前端20项UI、4项service、13项路由/设置宿主、3项admin测试通过；web/admin lint及React Doctor通过，admin类型检查通过。
 

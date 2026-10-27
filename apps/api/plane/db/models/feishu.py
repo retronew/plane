@@ -24,6 +24,45 @@ class FeishuBinding(models.Model):
         ]
 
 
+class FeishuDirectoryPreview(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    administrator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    config_digest = models.CharField(max_length=64)
+    app_id = models.CharField(max_length=128)
+    tenant_key = models.CharField(max_length=128, blank=True)
+    mode = models.CharField(max_length=16, choices=[("unbound", "unbound"), ("all", "all")], default="unbound")
+    status = models.CharField(max_length=16, default="partial")
+    error = models.CharField(max_length=64, blank=True)
+    rows = models.JSONField(default=list)
+    members = models.JSONField(default=list)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        db_table = "feishu_directory_previews"
+
+
+class FeishuAdminBindingAudit(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    preview = models.ForeignKey(FeishuDirectoryPreview, null=True, on_delete=models.SET_NULL)
+    row_id = models.UUIDField()
+    administrator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="feishu_admin_actions"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="feishu_admin_bindings"
+    )
+    binding = models.ForeignKey(FeishuBinding, null=True, on_delete=models.SET_NULL)
+    source = models.CharField(max_length=32, default="admin_directory")
+    match_basis = models.CharField(max_length=16)
+    notifications_enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = "feishu_admin_binding_audits"
+        constraints = [models.UniqueConstraint(fields=["preview", "row_id"], name="feishu_admin_unique_row")]
+
+
 class FeishuOAuthState(models.Model):
     # Only the digest of the browser's random state and session key is stored.
     state_hash = models.CharField(max_length=64, primary_key=True)

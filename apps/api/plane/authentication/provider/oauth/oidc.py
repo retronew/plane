@@ -38,6 +38,26 @@ def large_avatar_url(url):
     return parsed._replace(query=urlencode(query)).geturl()
 
 
+def trusted_feishu_identity(endpoint, client_id, data):
+    # Only authenticated userinfo from Feishu itself is an identity assertion.
+    # A generic OIDC `sub`, including an unverified ID token, is never a Feishu ID.
+    if endpoint != "https://open.feishu.cn/open-apis/authen/v1/user_info" or not isinstance(data, dict):
+        return None
+    identity = data.get("data", data)
+    if not isinstance(identity, dict):
+        return None
+    result = {"client_id": client_id, "endpoint": endpoint}
+    for key in ("tenant_key", "open_id"):
+        value = identity.get(key)
+        if not isinstance(value, str) or not 1 <= len(value) <= 128:
+            return None
+        result[key] = value
+    union_id = identity.get("union_id")
+    if isinstance(union_id, str) and 1 <= len(union_id) <= 128:
+        result["union_id"] = union_id
+    return result
+
+
 class OIDCEmailMissing(Exception):
     """The IdP authenticated the user but returned no email and the identity
     is not linked to any Plane account yet. Carries what is needed to finish
@@ -173,6 +193,18 @@ class OIDCOAuthProvider(OauthAdapter):
                 "id_token": token_response.get("id_token", ""),
             }
         )
+
+    def get_user_response(self):
+        data = super().get_user_response()
+        metadata = trusted_feishu_identity(self.userinfo_url, self.client_id, data)
+        self.token_data["metadata"] = {"feishu_identity": metadata} if metadata else {}
+        if metadata:
+            identity = data.get("data", data)
+            # Feishu's authenticated user_info envelope uses open_id instead of OIDC sub.
+            # Keep the provider's existing sub when present; this mapping is scoped to
+            # the exact trusted endpoint, never to a generic OIDC provider.
+            return {**identity, "sub": identity.get("sub") or metadata["open_id"]}
+        return data
 
     def set_user_data(self):
         user_info_response = self.get_user_response()

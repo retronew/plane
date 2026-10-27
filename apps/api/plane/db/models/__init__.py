@@ -6,7 +6,14 @@ from .analytic import AnalyticView
 from .api import APIActivityLog, APIToken
 from .asset import FileAsset
 from .base import BaseModel
-from .feishu import FeishuBinding, FeishuOAuthState, FeishuDelivery, FeishuCardAction
+from .feishu import (
+    FeishuBinding,
+    FeishuOAuthState,
+    FeishuDelivery,
+    FeishuCardAction,
+    FeishuDirectoryPreview,
+    FeishuAdminBindingAudit,
+)
 from .notification_preference import NotificationPreference
 from .cycle import Cycle, CycleIssue, CycleUserProperties, CycleProgressSnapshot
 from .deploy_board import DeployBoard

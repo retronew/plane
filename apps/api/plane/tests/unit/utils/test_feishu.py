@@ -45,6 +45,40 @@ def test_http_and_provider_errors(client, http, body, retryable):
         assert "secret" not in str(error.value)
 
 
+@pytest.mark.parametrize(
+    "http,code,reason,retryable",
+    [
+        (400, 99991672, "provider_error_99991672", False),
+        (403, 99991672, "provider_error_99991672", False),
+        (400, 99991663, "provider_error_99991663", True),
+        (400, 99991668, "provider_error_99991668", True),
+        (400, "secret-token", "provider_http_error", False),
+        (400, True, "provider_http_error", False),
+        (400, 0, "provider_http_error", False),
+        (400, 10**30, "provider_http_error", False),
+        (429, 99991672, "provider_unavailable", True),
+        (503, 99991672, "provider_unavailable", True),
+    ],
+)
+def test_http_error_preserves_only_safe_provider_code(client, http, code, reason, retryable):
+    response = SimpleNamespace(status_code=http, json=lambda: {"code": code, "msg": "secret-token"})
+    with patch("plane.utils.feishu_client.requests.request", return_value=response):
+        with pytest.raises(FeishuError) as error:
+            client.request("GET", "/tenant/v2/tenant/query")
+    assert str(error.value) == reason
+    assert error.value.retryable is retryable
+    assert "secret-token" not in repr(error.value)
+
+
+def test_http_error_with_non_json_body_is_safe(client):
+    response = MagicMock(status_code=400)
+    response.json.side_effect = ValueError("secret-token")
+    with patch("plane.utils.feishu_client.requests.request", return_value=response):
+        with pytest.raises(FeishuError) as error:
+            client.request("GET", "/test")
+    assert str(error.value) == "provider_http_error"
+
+
 def test_transport_error_does_not_expose_secrets(client):
     with patch("plane.utils.feishu_client.requests.request", side_effect=requests.Timeout("secret body")):
         with pytest.raises(FeishuError, match="transport_error") as error:

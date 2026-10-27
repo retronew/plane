@@ -25,19 +25,19 @@ describe("notification preference API contract", () => {
     await new NotificationPreferencesService().update(data, scope);
     expect(patch).toHaveBeenCalledWith("/api/users/me/notification-preferences/v2/", data, { params: scope });
   });
-  it("uses the personal Feishu endpoints for status, authorization, test and unlink", async () => {
+  it("uses the personal Feishu endpoints for status and test", async () => {
     const get = vi.spyOn(APIService.prototype, "get").mockResolvedValue(response({ enabled: true, binding: null }));
     const post = vi.spyOn(APIService.prototype, "post").mockResolvedValue(response({ status: "pending" }));
     const destroy = vi.spyOn(APIService.prototype, "delete").mockResolvedValue(response(undefined));
     const service = new NotificationPreferencesService();
     await service.feishuStatus();
-    await service.authorizeFeishu();
     await service.testFeishu();
-    await service.unlinkFeishu();
     expect(get).toHaveBeenCalledWith("/api/users/me/integrations/feishu/");
-    expect(post).toHaveBeenCalledWith("/api/users/me/integrations/feishu/authorize/", {});
     expect(post).toHaveBeenCalledWith("/api/users/me/integrations/feishu/test/", {});
-    expect(destroy).toHaveBeenCalledWith("/api/users/me/integrations/feishu/");
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(destroy).not.toHaveBeenCalled();
+    expect(service).not.toHaveProperty("authorizeFeishu");
+    expect(service).not.toHaveProperty("unlinkFeishu");
   });
   it("preserves network errors for caller recovery", async () => {
     const error = new Error("offline");

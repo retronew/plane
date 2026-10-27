@@ -63,12 +63,25 @@ class FeishuClient:
 
     def request(self, method, path, **kwargs):
         try:
-            response = requests.request(method, API_ROOT + path, timeout=(5, 15), allow_redirects=False, **kwargs)
+            timeout = kwargs.pop("timeout", (5, 15))
+            response = requests.request(method, API_ROOT + path, timeout=timeout, allow_redirects=False, **kwargs)
         except requests.RequestException:
             raise FeishuError("transport_error", retryable=True) from None
         if response.status_code == 429 or response.status_code >= 500:
             raise FeishuError("provider_unavailable", retryable=True)
         if not 200 <= response.status_code < 300:
+            # Feishu returns permission failures with HTTP 400. Preserve only the
+            # numeric identifier; provider messages may contain sensitive data.
+            try:
+                error_data = response.json()
+            except ValueError:
+                error_data = None
+            error_code = error_data.get("code") if isinstance(error_data, dict) else None
+            if type(error_code) is int and 0 < error_code <= 999999999:
+                raise FeishuError(
+                    f"provider_error_{error_code}",
+                    retryable=error_code in (99991400, 99991401, 99991403, 230020, 99991663, 99991668),
+                )
             raise FeishuError("provider_http_error")
         try:
             data = response.json()
