@@ -4,14 +4,13 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 // plane imports
 import { ROLE, EUserPermissions } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
 import { Button } from "@makeplane/propel/components/button";
-import { AddOutline, ChevronDownOutline, CloseOutline } from "@makeplane/propel/icons";
+import { ChevronDownOutline, CloseOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
 import { Select } from "@plane/blocks/select";
 import {
@@ -54,12 +53,7 @@ type TRoleOption = {
 };
 
 const defaultValues: FormValues = {
-  members: [
-    {
-      role: 5,
-      member_id: "",
-    },
-  ],
+  members: [],
 };
 
 export const SendProjectInvitationModal = observer(function SendProjectInvitationModal(props: Props) {
@@ -76,12 +70,12 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
   const {
     formState: { errors, isSubmitting },
     watch,
-    setValue,
+
     reset,
     handleSubmit,
     control,
-  } = useForm<FormValues>();
-  const { fields, append, remove } = useFieldArray({
+  } = useForm<FormValues>({ defaultValues });
+  const { fields, replace, remove } = useFieldArray({
     control,
     name: "members",
   });
@@ -128,24 +122,6 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
     }, 500);
   };
 
-  const appendField = () => {
-    append({
-      role: 5,
-      member_id: "",
-    });
-  };
-
-  useEffect(() => {
-    if (fields.length === 0) {
-      append([
-        {
-          role: 5,
-          member_id: "",
-        },
-      ]);
-    }
-  }, [fields, append]);
-
   const checkCurrentOptionWorkspaceRole = (value: string) => {
     const currentMemberWorkspaceRole = getWorkspaceMemberDetails(value)?.role;
     if (!value || !currentMemberWorkspaceRole) return ROLE;
@@ -164,13 +140,18 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
       .filter(([key]) => parseInt(key) <= (currentProjectRole ?? EUserPermissions.GUEST))
       .map(([key, label]) => ({ key: parseInt(key) as EUserPermissions, label }));
 
-  const handleMemberChange = (index: number, memberId: string, onChange: (val: string) => void) => {
-    onChange(memberId);
-    // Update the role to the workspace role when member ID changes
-    const workspaceMemberDetails = getWorkspaceMemberDetails(memberId);
-    const workspaceRole = workspaceMemberDetails?.role ?? 5;
-    const newValue = ROLE[workspaceRole].toUpperCase();
-    setValue(`members.${index}.role`, EUserPermissions[newValue as keyof typeof EUserPermissions]);
+  const selectedMembers = watch("members");
+  const handleMembersChange = (ids: string[]) => {
+    const previous = new Map(selectedMembers.map((member) => [member.member_id, member]));
+    replace(
+      ids.map(
+        (id) =>
+          previous.get(id) ?? {
+            member_id: id,
+            role: (getWorkspaceMemberDetails(id)?.role ?? EUserPermissions.GUEST) as EUserPermissions,
+          }
+      )
+    );
   };
 
   return (
@@ -191,30 +172,19 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
             </DialogHeader>
             <DialogBody>
               <div className="space-y-4">
+                <MemberSelect
+                  multiple
+                  showSelectAll
+                  value={selectedMembers.map((member) => member.member_id)}
+                  onChange={handleMembersChange}
+                  variant="select-lg"
+                  memberIds={uninvitedPeople}
+                  placeholder={t("web.select_co_worker")}
+                  disabled={isSubmitting}
+                />
                 {fields.map((field, index) => (
-                  <div key={field.id} className="group mb-1 flex w-full items-start justify-between gap-x-4 text-13">
-                    <div className="flex w-full grow flex-col gap-1">
-                      <Controller
-                        control={control}
-                        name={`members.${index}.member_id`}
-                        rules={{ required: t("web.please_select_a_member") }}
-                        render={({ field: { value, onChange } }) => (
-                          <MemberSelect
-                            value={value || null}
-                            onChange={(val: string) => handleMemberChange(index, val, onChange)}
-                            variant="select-lg"
-                            memberIds={uninvitedPeople}
-                            placeholder={t("web.select_co_worker")}
-                          />
-                        )}
-                      />
-                      {errors.members && errors.members[index]?.member_id && (
-                        <span className="px-1 text-13 text-danger-primary">
-                          {errors.members[index]?.member_id?.message}
-                        </span>
-                      )}
-                    </div>
-
+                  <div key={field.id} className="flex items-center justify-between gap-4 text-13">
+                    <span className="truncate">{getWorkspaceMemberDetails(field.member_id)?.member.display_name}</span>
                     <div className="flex shrink-0 items-center justify-between gap-2">
                       <div className="flex flex-col gap-1">
                         <Controller
@@ -256,7 +226,7 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
                         )}
                       </div>
 
-                      {fields.length > 1 && (
+                      {fields.length > 0 && (
                         <div className="flex-item flex w-6">
                           <button
                             type="button"
@@ -276,14 +246,6 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
           </DialogMain>
           <DialogActions>
             <div className="flex w-full items-center justify-between gap-2">
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-transparent py-2 pr-3 text-13 font-medium text-accent-primary outline-accent-strong"
-                onClick={appendField}
-              >
-                <AddOutline className="h-4 w-4" />
-                {t("common.add_more")}
-              </button>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
                 <Button
@@ -296,6 +258,7 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
                       ? `${fields && fields.length > 1 ? translate("web.runtime.loading_label", { label: t("add_members") }) : translate("web.runtime.loading_label", { label: t("add_member") })}`
                       : `${fields && fields.length > 1 ? t("add_members") : t("add_member")}`
                   }
+                  disabled={fields.length === 0 || isSubmitting}
                   loading={isSubmitting}
                 />
               </div>
