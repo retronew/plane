@@ -194,7 +194,7 @@ function getOrderByForDirection(direction: "desc" | "asc", orderField: string) {
   return `${direction === "desc" ? "-" : ""}${orderField}` as TIssueOrderByOptions;
 }
 
-function DisplayPropertiesGroup({
+const DisplayPropertiesGroup = observer(function DisplayPropertiesGroup({
   properties,
   displayProperties,
   onUpdate,
@@ -229,7 +229,7 @@ function DisplayPropertiesGroup({
       </div>
     </MenuGroup>
   );
-}
+});
 
 function DisplayExtras({
   extras,

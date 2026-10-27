@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
+import { observable, runInAction } from "mobx";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { setLanguage } from "@plane/i18n";
 import type { ILayoutDisplayFiltersOptions, IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
@@ -74,6 +75,31 @@ it("toggles properties and extra options in place without closing the menu", asy
   await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ sub_issue: true }));
   expect(screen.getByRole("menu")).toBeTruthy();
   expect(screen.queryByRole("menuitemcheckbox", { name: "周期" })).toBeNull();
+});
+it.each(["ID", "标签"])("reacts to in-place observable updates when toggling %s repeatedly", async (name) => {
+  const properties = observable<IIssueDisplayProperties>({ key: true, labels: false });
+  render(
+    <FiltersDropdown displayMenu title="显示">
+      <DisplayFiltersSelection
+        layoutDisplayFiltersOptions={configuration}
+        displayFilters={{ layout: "list" }}
+        displayProperties={properties}
+        handleDisplayFiltersUpdate={() => {}}
+        handleDisplayPropertiesUpdate={(next) => {
+          runInAction(() => Object.assign(properties, next));
+        }}
+      />
+    </FiltersDropdown>
+  );
+  fireEvent.click(screen.getByRole("button", { name: "显示" }));
+  const property = await screen.findByRole("menuitemcheckbox", { name });
+  const initial = property.getAttribute("aria-checked") === "true";
+  fireEvent.click(property);
+  await waitFor(() => expect(property.getAttribute("aria-checked")).toBe(String(!initial)));
+  expect(property.hasAttribute("data-pressed")).toBe(!initial);
+  fireEvent.click(property);
+  await waitFor(() => expect(property.getAttribute("aria-checked")).toBe(String(initial)));
+  expect(property.hasAttribute("data-pressed")).toBe(initial);
 });
 it("uses submenus for grouping and sorting, preserving the allowed option order and source config", async () => {
   const before = JSON.stringify(configuration);
