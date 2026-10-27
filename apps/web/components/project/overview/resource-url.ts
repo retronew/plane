@@ -10,6 +10,11 @@ export function normalizeResourceUrl(value: string): string {
 }
 
 export function isResourceUrl(value: string): boolean {
+  if (
+    /\s/u.test(value) ||
+    Array.from(value).some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)
+  )
+    return false;
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:";

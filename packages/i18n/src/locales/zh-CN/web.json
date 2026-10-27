@@ -1978,7 +1978,7 @@
       "delete_attachment": "删除附件",
       "delete_attachment_confirm": "确定删除此项目附件吗？",
       "resources_error": "无法加载项目资源，请重试。",
-      "invalid_url": "请输入有效的 HTTP 或 HTTPS URL。",
+      "invalid_url": "请仅输入有效的 HTTP 或 HTTPS 网址，不要包含标题、空格或分享文本。",
       "upload_attachment": "上传附件",
       "upload_failed": "附件上传失败，请重试。",
       "updates": "更新",

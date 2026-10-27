@@ -1978,7 +1978,7 @@
       "delete_attachment": "Delete attachment",
       "delete_attachment_confirm": "Delete this project attachment?",
       "resources_error": "Unable to load project resources. Try again.",
-      "invalid_url": "Enter a valid HTTP or HTTPS URL.",
+      "invalid_url": "Enter only a valid HTTP or HTTPS URL, without a title, spaces, or sharing text.",
       "upload_attachment": "Upload attachment",
       "upload_failed": "Unable to upload the attachment. Try again.",
       "updates": "Updates",
