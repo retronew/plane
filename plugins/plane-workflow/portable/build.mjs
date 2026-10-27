@@ -84,7 +84,7 @@ console.log("Generated eight skills, compatibility index, and reproducible archi
 
 const compatibilityEntries = [
   [".codex-plugin/plugin.json", Buffer.from(`${JSON.stringify(compatibilityManifest, null, 2)}\n`)],
-  [".mcp.json", connection],
+  [".mcp.json", Buffer.from(`${JSON.stringify(mcpConfig(instance.url, { openai: true }), null, 2)}\n`)],
 ];
 for (const [name, content] of compatibilityEntries) {
   const path = resolve(here, "../../plane-workflow-openai", name);

@@ -200,6 +200,11 @@ test("OpenAI archive carries the same OAuth endpoint and full skills as the inst
   const config = JSON.parse(archive.get(".mcp.json"));
   assert.equal(config.mcpServers.plane.url, "https://plane.mdropwork.com/mcp");
   assert.equal(config.mcpServers.plane.type, "http");
+  assert.deepEqual(config.mcpServers.plane.extensions, {
+    "com.openai": {
+      auth: { type: "oauth", client: { mode: "dcr" }, baseScopes: ["plane:read"] },
+    },
+  });
   assert.ok(!archive.has("plugin.json"), "root manifest would shadow desktop MCP wiring");
   const manifest = JSON.parse(archive.get(".codex-plugin/plugin.json"));
   assert.ok(archive.has(manifest.mcpServers.slice(2)));

@@ -32,6 +32,12 @@ test("catalog resolves inside repository root to a self-contained desktop plugin
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./.mcp.json");
   assert.equal(manifest.name, entry.name);
+  const connection = JSON.parse(await readFile(resolve(pluginRoot, manifest.mcpServers), "utf8"));
+  assert.deepEqual(connection.mcpServers.plane.extensions["com.openai"].auth, {
+    type: "oauth",
+    client: { mode: "dcr" },
+    baseScopes: ["plane:read"],
+  });
   assert.match(manifest.name, /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/);
   assert.ok(manifest.name.length <= 64);
   const allowed = new Set([

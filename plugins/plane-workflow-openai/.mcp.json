@@ -2,7 +2,20 @@
   "mcpServers": {
     "plane": {
       "type": "http",
-      "url": "https://plane.mdropwork.com/mcp"
+      "url": "https://plane.mdropwork.com/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            },
+            "baseScopes": [
+              "plane:read"
+            ]
+          }
+        }
+      }
     }
   }
 }

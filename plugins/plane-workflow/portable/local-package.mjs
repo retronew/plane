@@ -7,7 +7,7 @@ import { mcpConfig } from "./mcp-config.mjs";
 import { collectFiles } from "./files.mjs";
 const [destination, origin] = process.argv.slice(2);
 if (!destination || !origin) throw new Error("Usage: node local-package.mjs <new-output-directory> <local-origin>");
-const config = mcpConfig(origin, { allowLocal: true });
+const config = mcpConfig(origin, { allowLocal: true, openai: true });
 const output = resolve(destination);
 await mkdir(output); // Refuse existing output: never overwrite another checkout.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");

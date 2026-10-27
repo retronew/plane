@@ -60,7 +60,10 @@ test("local marketplace rewrites the active MCP endpoint without changing produc
     assert.deepEqual((await readdir(plugin)).toSorted(), [".codex-plugin", ".mcp.json", "skills"]);
     const manifest = JSON.parse(await readFile(resolve(plugin, ".codex-plugin/plugin.json")));
     const config = JSON.parse(await readFile(resolve(plugin, manifest.mcpServers)));
-    assert.deepEqual(config, { mcpServers: { plane: { type: "http", url: "http://localhost:8000/mcp" } } });
+    const production = JSON.parse(before);
+    production.mcpServers.plane.url = "http://localhost:8000/mcp";
+    assert.deepEqual(config, production);
+    assert.equal(config.mcpServers.plane.extensions["com.openai"].auth.type, "oauth");
     assert.deepEqual(await readFile(productionPath), before);
     const catalog = JSON.parse(await readFile(resolve(output, ".agents/plugins/marketplace.json")));
     assert.equal(catalog.plugins[0].name, manifest.name);

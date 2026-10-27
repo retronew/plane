@@ -14,6 +14,21 @@ test("instance binding rejects credentials and non-origin URLs", () => {
     assert.throws(() => mcpConfig(value));
   }
 });
+test("OpenAI declares read-only OAuth with dynamic registration without changing the compatibility transport", () => {
+  const config = mcpConfig("https://plane.test", { openai: true });
+  assert.deepEqual(config.mcpServers.plane, {
+    type: "http",
+    url: "https://plane.test/mcp",
+    extensions: {
+      "com.openai": {
+        auth: { type: "oauth", client: { mode: "dcr" }, baseScopes: ["plane:read"] },
+      },
+    },
+  });
+  assert.ok(!("extensions" in mcpConfig("https://plane.test").mcpServers.plane));
+  assert.throws(() => mcpConfig("http://remote.test", { openai: true }));
+});
+
 test("local test binding is explicit and never permits remote HTTP", () => {
   assert.throws(() => mcpConfig("http://localhost:8000"));
   assert.equal(
