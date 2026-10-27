@@ -123,7 +123,9 @@ function applyWorkItemTemplate({
   projectId,
   resolveWorkflow,
   onApplied,
+  getState,
 }: {
+  getState: Parameters<typeof getWorkItemTemplatePatch>[3];
   template: WorkspaceTemplate;
   getValues: UseFormGetValues<TIssue>;
   setValue: UseFormSetValue<TIssue>;
@@ -134,7 +136,7 @@ function applyWorkItemTemplate({
 }) {
   const current = getValues();
   const typeId = template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
-  const patch = getWorkItemTemplatePatch(template, current, resolveWorkflow(projectId ?? "", typeId));
+  const patch = getWorkItemTemplatePatch(template, current, resolveWorkflow(projectId ?? "", typeId), getState);
   setValue("name", patch.name, { shouldDirty: true });
   setValue("description_html", patch.description_html, { shouldDirty: true });
   setValue("priority", patch.priority, { shouldDirty: true });
@@ -234,6 +236,7 @@ function IssueFormSetup({
   handleFormChange: () => void;
   setSelectedParentIssue: React.Dispatch<React.SetStateAction<ISearchIssueResponse | null>>;
 }) {
+  const { getStateById } = useProjectState();
   return (
     <div className="flex shrink-0 flex-col gap-3 pt-2">
       {!data?.id && (
@@ -251,6 +254,7 @@ function IssueFormSetup({
               projectId,
               resolveWorkflow,
               onApplied: handleFormChange,
+              getState: getStateById,
             })
           }
         />

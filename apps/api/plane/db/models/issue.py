@@ -231,10 +231,9 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         if self.state is not None:
             return
         try:
-            from plane.db.models import State
+            from plane.utils.workflow import effective_creation_state
 
-            default_state = State.objects.filter(~models.Q(is_triage=True), project=self.project, default=True).first()
-            self.state = default_state or State.objects.filter(~models.Q(is_triage=True), project=self.project).first()
+            self.state = effective_creation_state(self.project_id, type_id=self.type_id)
         except ImportError as e:
             log_exception(e)
 

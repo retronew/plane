@@ -160,7 +160,7 @@ class WorkflowBaseView(BaseAPIView):
                     "color": s.color,
                     "group": s.group,
                     "sequence": s.sequence,
-                    "allow_creation": s.id not in restricted,
+                    "allow_creation": s.allow_new_work_items and s.id not in restricted,
                 }
                 for s in states
             ],
@@ -251,6 +251,8 @@ class ProjectWorkflowListEndpoint(WorkflowBaseView):
         workflow.states.set(states)
         if data.get("initial_state_id"):
             workflow.initial_state = self.state(project, data["initial_state_id"], workflow)
+            if not workflow.initial_state.allow_new_work_items:
+                workflow_error("WORKFLOW_CREATION_NOT_ALLOWED")
             workflow.save()
         bump_policy(project)
         record_workflow_activity(
@@ -284,6 +286,8 @@ class ProjectWorkflowEndpoint(WorkflowBaseView):
         changes = []
         if "initial_state_id" in data:
             state = self.state(project, data["initial_state_id"], workflow) if data["initial_state_id"] else None
+            if state and not state.allow_new_work_items:
+                workflow_error("WORKFLOW_CREATION_NOT_ALLOWED")
             if workflow.initial_state_id != (state.pk if state else None):
                 before = {
                     "state": {"id": str(workflow.initial_state_id), "name": workflow.initial_state.name}
@@ -333,6 +337,7 @@ class ProjectWorkflowEndpoint(WorkflowBaseView):
                 workflow.enabled = project.workflow_enabled
         if (
             not workflow_states(project.pk, workflow)
+            .filter(allow_new_work_items=True)
             .exclude(pk__in=workflow.restricted_creation_states.values("id"))
             .exists()
         ):
@@ -348,6 +353,7 @@ class ProjectWorkflowEndpoint(WorkflowBaseView):
                 for target in targets:
                     if (
                         not workflow_states(project.pk, target)
+                        .filter(allow_new_work_items=True)
                         .exclude(pk__in=target.restricted_creation_states.values("id"))
                         .exists()
                     ):
@@ -404,6 +410,7 @@ class WorkflowCreationPolicyEndpoint(WorkflowBaseView):
             workflow.restricted_creation_states.add(state)
         if (
             not workflow_states(project.pk, workflow)
+            .filter(allow_new_work_items=True)
             .exclude(pk__in=workflow.restricted_creation_states.values("id"))
             .exists()
         ):

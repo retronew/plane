@@ -5,7 +5,9 @@ import { StateSummary } from "./state-summary";
  * See the LICENSE file for details.
  */
 
-import type { SetStateAction } from "react";
+import { useState, type SetStateAction } from "react";
+import { Switch } from "@makeplane/propel/components/switch";
+import { setToast } from "@plane/blocks/toast";
 import { observer } from "mobx-react";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -30,7 +32,7 @@ type TBaseStateItemTitleProps = {
 
 type TEnabledStateItemTitleProps = TBaseStateItemTitleProps & {
   disabled: false;
-  stateOperationsCallbacks: Pick<TStateOperationsCallbacks, "markStateAsDefault" | "deleteState">;
+  stateOperationsCallbacks: Pick<TStateOperationsCallbacks, "markStateAsDefault" | "deleteState" | "updateState">;
 };
 
 type TDisabledStateItemTitleProps = TBaseStateItemTitleProps & {
@@ -51,6 +53,7 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
   } = props;
   // plane hooks
   const { t } = useTranslation();
+  const [savingCreation, setSavingCreation] = useState(false);
   // store hooks
   const { getStatePercentageInGroup } = useProjectState();
   // derived values
@@ -97,10 +100,29 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
           description={shouldShowDescription ? state.description : undefined}
         />
       </button>
+      <label className="flex shrink-0 items-center gap-2 text-12 text-tertiary">
+        {t("web.allow_new_work_items")}
+        <Switch
+          size="sm"
+          checked={state.allow_new_work_items !== false}
+          disabled={disabled || savingCreation}
+          onCheckedChange={async (checked) => {
+            if (props.disabled || savingCreation) return;
+            setSavingCreation(true);
+            try {
+              await props.stateOperationsCallbacks.updateState(state.id, { allow_new_work_items: checked });
+            } catch {
+              setToast({ type: "error", title: t("error"), message: t("web.state_creation_update_error") });
+            } finally {
+              setSavingCreation(false);
+            }
+          }}
+        />
+      </label>
       {!disabled && (
         <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
           {/* state mark as default option */}
-          {!state.default && (
+          {!state.default && state.allow_new_work_items !== false && (
             <div className="flex-shrink-0 text-11 transition-all">
               <StateMarksAsDefault
                 stateId={state.id}

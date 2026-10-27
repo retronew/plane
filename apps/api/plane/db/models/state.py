@@ -11,6 +11,7 @@ from django.db.models import Q
 from .project import ProjectBaseModel
 from plane.db.mixins import SoftDeletionManager
 
+
 class StateGroup(models.TextChoices):
     BACKLOG = "backlog", "Backlog"
     UNSTARTED = "unstarted", "Unstarted"
@@ -89,6 +90,7 @@ class State(ProjectBaseModel):
     )
     is_triage = models.BooleanField(default=False)
     default = models.BooleanField(default=False)
+    allow_new_work_items = models.BooleanField(default=True)
     external_source = models.CharField(max_length=255, null=True, blank=True)
     external_id = models.CharField(max_length=255, blank=True, null=True)
 

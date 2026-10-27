@@ -28,7 +28,7 @@ export function useWorkFlowFDragNDrop(groupBy: TIssueGroupByOptions | undefined,
     getIsWorkflowWorkItemCreationDisabled: (groupId: string, subGroupId?: string, issueTypeId?: string | null) => {
       const stateId = getStateId(groupId, subGroupId);
       const state = stateId ? getStateById(stateId) : undefined;
-      return !!state && !workflowAllowsCreation(store.resolve(state.project_id, issueTypeId), state.id);
+      return !!state && !workflowAllowsCreation(store.resolve(state.project_id, issueTypeId), state.id, state);
     },
     handleWorkFlowState: (
       sourceGroupId: string,

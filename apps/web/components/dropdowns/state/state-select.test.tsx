@@ -8,9 +8,17 @@ const state = vi.hoisted(() => ({
   options: vi.fn(),
   toast: vi.fn(),
   states: [
-    { id: "a", name: "Backlog", project_id: "p", group: "backlog", color: "#555" },
-    { id: "b", name: "Todo", project_id: "p", group: "unstarted", color: "#555", order: 20000 },
-    { id: "c", name: "Done", project_id: "p", group: "completed", color: "#555" },
+    { id: "a", name: "Backlog", project_id: "p", allow_new_work_items: true, group: "backlog", color: "#555" },
+    {
+      id: "b",
+      name: "Todo",
+      project_id: "p",
+      allow_new_work_items: true,
+      group: "unstarted",
+      color: "#555",
+      order: 20000,
+    },
+    { id: "c", name: "Done", project_id: "p", allow_new_work_items: true, group: "completed", color: "#555" },
   ],
   workflow: {} as TProjectWorkflow,
 }));
@@ -59,6 +67,9 @@ vi.mock("@plane/blocks/property-select", () => ({
 }));
 
 beforeEach(() => {
+  state.states.forEach((item) => {
+    item.allow_new_work_items = true;
+  });
   state.workflow = {
     id: "default",
     enabled: true,
@@ -86,6 +97,20 @@ it("passes the group percentage rather than the sort order to state icons", asyn
   );
 });
 
+it("filters disabled creation states while the workflow is off", async () => {
+  state.workflow.enabled = false;
+  state.states[1].allow_new_work_items = false;
+  render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" isForWorkItemCreation />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a", "c"]));
+});
+it("keeps disabled creation states available for existing work item transitions", async () => {
+  state.workflow.enabled = false;
+  state.states[1].allow_new_work_items = false;
+  render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" />);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a", "b", "c"]));
+});
 it("filters creation states using the same project policy", async () => {
   render(<StateSelect projectId="p" value="a" onChange={() => undefined} variant="pill-md" isForWorkItemCreation />);
   fireEvent.click(screen.getByText("open"));

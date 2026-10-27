@@ -50,6 +50,32 @@ class TestProjectListCreateAPIEndpoint:
         return f"/api/v1/workspaces/{workspace_slug}/projects/"
 
     @pytest.mark.django_db
+    def test_workspace_default_state_template_is_used(self, api_key_client, workspace):
+        from plane.db.models import WorkspaceTemplate
+
+        WorkspaceTemplate.objects.create(
+            workspace=workspace,
+            kind="project",
+            name="Workspace states",
+            is_default_state_template=True,
+            configuration={
+                "states": [
+                    {"name": "Ready", "group": "unstarted", "color": "#123456", "default": True},
+                    {"name": "Done", "group": "completed", "color": "#654321", "allow_new_work_items": False},
+                ]
+            },
+        )
+        response = api_key_client.post(
+            self.get_url(workspace.slug), {"name": "Defaults", "identifier": "DFT"}, format="json"
+        )
+        assert response.status_code == 201, response.data
+        project = Project.objects.get(pk=response.data["id"])
+        assert State.objects.filter(project=project).count() == 2
+        assert State.objects.get(project=project, name="Ready").default
+        assert not State.objects.get(project=project, name="Done").allow_new_work_items
+        assert State.triage_objects.filter(project=project, is_triage=True).exists()
+
+    @pytest.mark.django_db
     def test_create_project_with_lead_as_creator(self, api_key_client, workspace, create_user):
         """Regression for the ghost-create bug.
 

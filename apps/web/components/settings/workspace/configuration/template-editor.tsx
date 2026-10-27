@@ -520,6 +520,7 @@ type TemplateKindFieldsProps = {
 };
 
 function TemplateKindFields({ kind, draft, config, options, update, configure }: TemplateKindFieldsProps) {
+  const { t } = useTranslation();
   return (
     <>
       {kind === "work_item" && (
@@ -527,6 +528,14 @@ function TemplateKindFields({ kind, draft, config, options, update, configure }:
       )}
       {kind === "project" && (
         <>
+          <label className="flex items-center justify-between gap-3 text-13">
+            <span>{t("web.default_state_template")}</span>
+            <Switch
+              size="md"
+              checked={draft.is_default_state_template ?? false}
+              onCheckedChange={(value) => update({ is_default_state_template: value })}
+            />
+          </label>
           <TemplateProjectFeatures config={config} configure={configure} />
           {(["states", "labels"] as const).map((key) => (
             <TemplateCategoryDetails key={key} fieldKey={key} config={config} configure={configure} />
@@ -821,6 +830,36 @@ function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCatego
                   }
                 />
               </div>
+            )}
+            {fieldKey === "states" && (
+              <>
+                <Checkbox
+                  label={t("web.template_default_state")}
+                  checked={config.states?.[index].default ?? false}
+                  onCheckedChange={(checked) =>
+                    configure({
+                      states: config.states?.map((state, i) => ({
+                        ...state,
+                        default: i === index ? !!checked : false,
+                      })),
+                    })
+                  }
+                />
+                <label className="flex items-center gap-2 text-12">
+                  {t("web.allow_new_work_items")}
+                  <Switch
+                    size="sm"
+                    checked={config.states?.[index].allow_new_work_items !== false}
+                    onCheckedChange={(checked) =>
+                      configure({
+                        states: config.states?.map((state, i) =>
+                          i === index ? { ...state, allow_new_work_items: checked } : state
+                        ),
+                      })
+                    }
+                  />
+                </label>
+              </>
             )}
             <Button
               stretch="auto"

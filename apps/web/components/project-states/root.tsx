@@ -5,6 +5,7 @@
  */
 
 import { useMemo } from "react";
+import { ApplyStateTemplate } from "./apply-template";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 // components
@@ -67,10 +68,20 @@ export const ProjectStateRoot = observer(function ProjectStateRoot(props: TProje
   if (!groupedProjectStates) return <ProjectStateLoader />;
 
   return (
-    <GroupList
-      groupedStates={groupedProjectStates}
-      stateOperationsCallbacks={stateOperationsCallbacks}
-      isEditable={isEditable}
-    />
+    <>
+      {isEditable && (
+        <ApplyStateTemplate
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          states={Object.values(groupedProjectStates).flat()}
+          onApplied={() => fetchProjectStates(workspaceSlug, projectId)}
+        />
+      )}
+      <GroupList
+        groupedStates={groupedProjectStates}
+        stateOperationsCallbacks={stateOperationsCallbacks}
+        isEditable={isEditable}
+      />
+    </>
   );
 });

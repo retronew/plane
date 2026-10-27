@@ -77,12 +77,14 @@ class StateListCreateAPIEndpoint(BaseAPIView):
             409: STATE_NAME_EXISTS_RESPONSE,
         },
     )
+    @transaction.atomic
     def post(self, request, slug, project_id):
         """Create state
 
         Create a new workflow state for a project with specified name, color, and group.
         Supports external ID tracking for integration purposes.
         """
+        Project.objects.select_for_update().get(pk=project_id)
         try:
             serializer = StateSerializer(data=request.data, context={"project_id": project_id})
             if serializer.is_valid():
@@ -110,7 +112,12 @@ class StateListCreateAPIEndpoint(BaseAPIView):
                         status=status.HTTP_409_CONFLICT,
                     )
 
+                if serializer.validated_data.get("default"):
+                    State.objects.filter(project_id=project_id).update(default=False)
                 serializer.save(project_id=project_id)
+                from plane.utils.workflow import validate_state_creation_settings
+
+                validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except IntegrityError:
@@ -251,6 +258,9 @@ class StateDetailAPIEndpoint(BaseAPIView):
             )
 
         state.delete()
+        from plane.utils.workflow import validate_state_creation_settings
+
+        validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @state_docs(
@@ -274,12 +284,14 @@ class StateDetailAPIEndpoint(BaseAPIView):
             409: EXTERNAL_ID_EXISTS_RESPONSE,
         },
     )
+    @transaction.atomic
     def patch(self, request, slug, project_id, state_id):
         """Update state
 
         Partially update an existing workflow state's properties like name, color, or group.
         Validates external ID uniqueness if provided.
         """
+        Project.objects.select_for_update().get(pk=project_id)
         state = State.objects.get(workspace__slug=slug, project_id=project_id, pk=state_id)
         serializer = StateSerializer(state, data=request.data, partial=True)
         if serializer.is_valid():
@@ -300,6 +312,11 @@ class StateDetailAPIEndpoint(BaseAPIView):
                     },
                     status=status.HTTP_409_CONFLICT,
                 )
+            if serializer.validated_data.get("default"):
+                State.objects.filter(project_id=project_id).exclude(pk=state_id).update(default=False)
             serializer.save()
+            from plane.utils.workflow import validate_state_creation_settings
+
+            validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

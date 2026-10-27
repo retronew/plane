@@ -31,7 +31,6 @@ from plane.db.models import (
     DeployBoard,
     ProjectMember,
     State,
-    DEFAULT_STATES,
     Workspace,
     UserFavorite,
     Label,
@@ -258,21 +257,9 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
                             role=20,
                         )
 
-                    State.objects.bulk_create(
-                        [
-                            State(
-                                name=state["name"],
-                                color=state["color"],
-                                project=serializer.instance,
-                                sequence=state["sequence"],
-                                workspace=serializer.instance.workspace,
-                                group=state["group"],
-                                default=state.get("default", False),
-                                created_by=request.user,
-                            )
-                            for state in DEFAULT_STATES
-                        ]
-                    )
+                    from plane.services.state_templates import initialize_project_states
+
+                    initialize_project_states(serializer.instance, request.user)
 
                     project = self.get_queryset().filter(pk=serializer.instance.id).first()
 

@@ -10,6 +10,7 @@ export interface IState {
   readonly id: string;
   color: string;
   default: boolean;
+  allow_new_work_items?: boolean;
   description: string;
   group: TStateGroups;
   name: string;

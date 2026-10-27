@@ -1,5 +1,16 @@
 {
   "web": {
+    "allow_new_work_items": "Allow new work items",
+    "state_creation_update_error": "Unable to update creation rules. Keep an allowed default state and a creation entry for every workflow.",
+    "default_state_template": "Default states for new projects",
+    "apply_state_template": "Apply workspace template",
+    "state_template_hint": "Preview changes before applying. Existing work items and project-specific states are retained.",
+    "state_template_matched": "Matched states",
+    "state_template_added": "New states",
+    "state_template_retained": "Retained states",
+    "state_template_preview": "Preview",
+    "state_template_apply": "Apply changes",
+    "state_template_error": "Unable to apply the template. Resolve conflicting state names or workflow settings, then preview again.",
     "change_skin_tone": "Change skin tone",
     "no_project_templates": "No project templates yet. Create one in workspace settings.",
     "project_quick_actions": {

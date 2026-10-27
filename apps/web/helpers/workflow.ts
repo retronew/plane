@@ -4,8 +4,15 @@ export function workflowIsActive(workflow?: TProjectWorkflow) {
   return !!workflow?.enabled && workflow.is_active;
 }
 
-export function workflowAllowsCreation(workflow: TProjectWorkflow | undefined, stateId: string) {
-  return !workflowIsActive(workflow) || workflow!.states.some((state) => state.id === stateId && state.allow_creation);
+export function workflowAllowsCreation(
+  workflow: TProjectWorkflow | undefined,
+  stateId: string,
+  state?: { allow_new_work_items?: boolean }
+) {
+  return (
+    state?.allow_new_work_items !== false &&
+    (!workflowIsActive(workflow) || workflow!.states.some((entry) => entry.id === stateId && entry.allow_creation))
+  );
 }
 
 export function workflowAllowsTransition(

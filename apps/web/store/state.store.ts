@@ -205,8 +205,8 @@ export class StateStore implements IStateStore {
   getProjectDefaultStateId = computedFn((projectId: string | null | undefined) => {
     const workflow = projectId ? this.rootStore.workflow.workflows[projectId] : undefined;
     if (workflowIsActive(workflow)) return workflow?.effective_initial_state_id ?? undefined;
-    const projectStates = this.getProjectStates(projectId);
-    return projectStates?.find((state) => state.default)?.id;
+    const projectStates = this.getProjectStates(projectId)?.filter((state) => state.allow_new_work_items !== false);
+    return (projectStates?.find((state) => state.default) ?? projectStates?.[0])?.id;
   });
 
   /**
