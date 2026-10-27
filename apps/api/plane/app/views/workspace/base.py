@@ -6,15 +6,16 @@
 import csv
 import io
 import os
-from datetime import date
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 import uuid
 
 from dateutil.relativedelta import relativedelta
 from django.db import IntegrityError
-from django.db.models import Count, F, Func, OuterRef, Prefetch, Q
+from django.db.models import Count, F, FloatField, Func, OuterRef, Prefetch, Q
 
 from django.db.models.fields import DateField
-from django.db.models.functions import Cast, ExtractDay, ExtractWeek
+from django.db.models.functions import Cast, Coalesce, Extract, ExtractDay, ExtractWeek
 
 
 # Django imports
@@ -348,44 +349,77 @@ class ExportWorkspaceUserActivityEndpoint(BaseAPIView):
         return csv_buffer
 
     def post(self, request, slug, user_id):
-        if not request.data.get("date"):
-            return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
+        workspace = Workspace.objects.get(slug=slug)
+        zone = ZoneInfo(workspace.timezone)
+        today = timezone.now().astimezone(zone).date()
+        period = request.data.get("period", "today")
+        try:
+            if request.data.get("date"):
+                start_date = end_date = date.fromisoformat(request.data["date"])
+            elif period == "today":
+                start_date = end_date = today
+            elif period == "yesterday":
+                start_date = end_date = today - timedelta(days=1)
+            elif period == "week":
+                start_date, end_date = today - timedelta(days=today.weekday()), today
+            elif period == "custom":
+                start_date = date.fromisoformat(request.data["start_date"])
+                end_date = date.fromisoformat(request.data["end_date"])
+            else:
+                raise ValueError("Invalid period")
+            if start_date > end_date:
+                raise ValueError("Invalid date range")
+            start = datetime.combine(start_date, time.min, zone)
+            end = datetime.combine(end_date + timedelta(days=1), time.min, zone)
+        except (ValueError, TypeError, KeyError, OverflowError):
+            return Response({"error": "Invalid date range"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_activities = IssueActivity.objects.filter(
-            ~Q(field__in=["comment", "vote", "reaction", "draft"]),
-            workspace__slug=slug,
-            created_at__date=request.data.get("date"),
-            project__project_projectmember__member=request.user,
-            project__project_projectmember__is_active=True,
-            actor_id=user_id,
-        ).select_related("actor", "workspace", "issue", "project")[:10000]
-
-        header = [
-            "Actor name",
-            "Issue ID",
-            "Project",
-            "Created at",
-            "Updated at",
-            "Action",
-            "Field",
-            "Old value",
-            "New value",
-        ]
+        # epoch records the original event time; created_at may reflect delayed Celery delivery.
+        activities = (
+            IssueActivity.objects.filter(
+                workspace=workspace,
+                field="state",
+                issue_id__isnull=False,
+                project__project_projectmember__member=request.user,
+                project__project_projectmember__is_active=True,
+                project__archived_at__isnull=True,
+            )
+            .annotate(event_epoch=Coalesce("epoch", Extract("created_at", "epoch"), output_field=FloatField()))
+            .filter(event_epoch__gte=start.timestamp(), event_epoch__lt=end.timestamp())
+        )
+        touched = activities.filter(actor_id=user_id).order_by().values("issue_id")
+        # Dedupe only after selecting globally latest changes, never truncate the activity stream.
+        final = (
+            activities.filter(issue_id__in=touched)
+            .order_by("issue_id", "-event_epoch", "-created_at", "-id")
+            .distinct("issue_id")
+            .select_related("issue", "project")
+        )
         rows = [
             (
-                activity.actor.display_name,
-                f"{activity.project.identifier} - {activity.issue.sequence_id if activity.issue else ''}",
                 activity.project.name,
-                activity.created_at,
-                activity.updated_at,
-                activity.verb,
-                activity.field,
-                activity.old_value,
-                activity.new_value,
+                f"{activity.project.identifier}-{activity.issue.sequence_id}",
+                activity.issue.name,
+                activity.new_value or "",
+                datetime.fromtimestamp(activity.event_epoch, zone).isoformat(),
             )
-            for activity in user_activities
+            for activity in final
         ]
-        csv_buffer = self.generate_csv_from_rows([header] + rows)
+        if request.data.get("preview"):
+            return Response(
+                {
+                    "count": len(rows),
+                    "timezone": workspace.timezone,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "results": [
+                        dict(zip(["project", "identifier", "name", "state", "changed_at"], row)) for row in rows
+                    ],
+                }
+            )
+        csv_buffer = self.generate_csv_from_rows(
+            [["Project", "Identifier", "Name", "Final state", f"Last state change ({workspace.timezone})"]] + rows
+        )
         response = HttpResponse(csv_buffer.getvalue(), content_type="text/csv")
         response["Content-Disposition"] = 'attachment; filename="workspace-user-activity.csv"'
         return response
