@@ -33,6 +33,17 @@ const makeStore = () => {
   });
   return s;
 };
+it("falls back to a creatable state when the stored default disallows creation", () => {
+  const s = makeStore();
+  runInAction(() => {
+    s.stateMap.a.allow_new_work_items = false;
+  });
+  expect(s.getProjectDefaultStateId("p")).toBe("b");
+  runInAction(() => {
+    s.stateMap.b.allow_new_work_items = false;
+  });
+  expect(s.getProjectDefaultStateId("p")).toBeUndefined();
+});
 it("calculates icon progress within the owning project independently of the current route", () => {
   const s = makeStore();
   runInAction(() => {

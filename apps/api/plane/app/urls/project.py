@@ -27,10 +27,19 @@ from plane.app.views.project.overview import (
     ProjectUpdateEndpoint,
     ProjectUpdateReactionEndpoint,
 )
-from plane.app.views.workspace.configuration import ProjectTemplateEndpoint, ProjectTemplateOptionsEndpoint
+from plane.app.views.workspace.configuration import (
+    ProjectTemplateEndpoint,
+    ProjectTemplateOptionsEndpoint,
+    ProjectStateTemplateEndpoint,
+)
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/state-template/",
+        ProjectStateTemplateEndpoint.as_view(),
+        name="project-state-template",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/links/",
         ProjectLinkEndpoint.as_view(),

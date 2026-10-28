@@ -84,6 +84,7 @@ export const StateItem = observer(function StateItem({
             stateOperationsCallbacks={{
               markStateAsDefault: stateOperationsCallbacks.markStateAsDefault,
               deleteState: stateOperationsCallbacks.deleteState,
+              updateState: stateOperationsCallbacks.updateState,
             }}
           />
         )

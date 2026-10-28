@@ -289,6 +289,27 @@ def test_actions_have_contiguous_indices_and_execution_wide_limit(sdk_ctx):
     assert exc.value.sdk_code == "ACTION_LIMIT"
 
 
+@pytest.mark.parametrize("enabled", [False, True])
+def test_sdk_creation_flag_blocks_creation_but_allows_moves(sdk_ctx, enabled):
+    ctx = sdk_ctx
+    Project.objects.filter(pk=ctx.project.pk).update(workflow_enabled=enabled)
+    workflow = ProjectWorkflow.objects.create(project=ctx.project, enabled=True, initial_state=ctx.todo)
+    State.objects.filter(pk=ctx.state.pk).update(allow_new_work_items=False, default=False)
+    State.objects.filter(pk=ctx.todo.pk).update(default=True)
+    assert_rejected(
+        ctx, "createWorkItem", [{"name": "Flag blocked", "state_id": str(ctx.state.pk)}],
+        "WORKFLOW_VALIDATION_FAILED"
+    )
+    assert not Issue.objects.filter(project=ctx.project, name="Flag blocked").exists()
+    result = call(ctx, "createWorkItem", [{"name": "Flag default"}], 2)
+    created = Issue.objects.get(pk=result["id"])
+    assert created.state_id == ctx.todo.pk
+    WorkflowTransition.objects.create(project=ctx.project, workflow=workflow, source=ctx.todo, destination=ctx.state)
+    call(ctx, "updateWorkItem", [str(created.pk), {"state_id": str(ctx.state.pk)}], 3)
+    created.refresh_from_db()
+    assert created.state_id == ctx.state.pk
+
+
 def test_create_and_update_use_public_workflow_rules(sdk_ctx):
     ctx = sdk_ctx
     workflow = ProjectWorkflow.objects.create(project=ctx.project, enabled=True, initial_state=ctx.todo)

@@ -78,7 +78,10 @@ function TemplateRow({
     <div className="flex items-center gap-3 border-b border-subtle px-4 py-3 last:border-0">
       <Glyph className="size-4 shrink-0 text-tertiary" />
       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onEdit(entry)}>
-        <span className="block truncate text-13 font-medium">{entry.name}</span>
+        <span className="block truncate text-13 font-medium">
+          {entry.name}
+          {entry.is_default_state_template ? ` · ${t("web.default_state_template")}` : ""}
+        </span>
         <span className="block truncate text-12 text-tertiary">
           {entry.short_description || t(`web.template_kind_${entry.kind}`)}
         </span>

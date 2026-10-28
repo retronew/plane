@@ -109,7 +109,7 @@ def effective_creation_state(project_id, workflow=None, type_id=None):
     if workflow is None:
         workflow = resolve_issue_workflow(project_id, type_id)
     enforced = workflow_is_enforced(project_id, workflow)
-    states = workflow_states(project_id, workflow if enforced else None)
+    states = workflow_states(project_id, workflow if enforced else None).filter(allow_new_work_items=True)
     if enforced:
         states = states.exclude(id__in=workflow.restricted_creation_states.values("id"))
         if workflow.initial_state_id:
@@ -121,6 +121,27 @@ def effective_creation_state(project_id, workflow=None, type_id=None):
 
 def intake_creation_state(project_id, type_id=None):
     return effective_creation_state(project_id, type_id=type_id)
+
+
+def validate_state_creation_settings(project_id, states):
+    """Validate a proposed complete state set while holding the project lock."""
+    available = {str(state.pk): state for state in states if state.allow_new_work_items and not state.is_triage}
+    if not available:
+        raise ValidationError({"allow_new_work_items": ["At least one state must allow new work items."]})
+    if any(state.default and not state.allow_new_work_items for state in states):
+        raise ValidationError({"default": ["The default state must allow new work items."]})
+    for workflow in ProjectWorkflow.objects.filter(project_id=project_id):
+        if workflow.initial_state_id and str(workflow.initial_state_id) not in available:
+            raise ValidationError({"allow_new_work_items": ["A workflow initial state must allow new work items."]})
+        if workflow_is_enforced(project_id, workflow):
+            members = (
+                set(available)
+                if workflow.is_default
+                else set(str(pk) for pk in workflow_states(project_id, workflow).values_list("pk", flat=True))
+            )
+            restricted = set(str(pk) for pk in workflow.restricted_creation_states.values_list("pk", flat=True))
+            if not (set(available) & members) - restricted:
+                workflow_error("WORKFLOW_NO_CREATION_STATE")
 
 
 def validate_workflow_state_deletion(state):
@@ -221,8 +242,8 @@ def validate_workflow_write(project_id, attrs, instance=None, actor=None, raw_da
         attrs["state"] = effective_creation_state(project_id, workflow)
     state = attrs.get("state", instance.state if instance else None)
     if not state:
-        if enforced:
-            workflow_error("WORKFLOW_NO_CREATION_STATE")
+        if creating:
+            raise ValidationError({"state": ["No state allows new work items."]})
         return attrs
     if state.project_id != project_id and str(state.project_id) != str(project_id):
         workflow_error("WORKFLOW_INVALID_STATE")
@@ -230,6 +251,8 @@ def validate_workflow_write(project_id, attrs, instance=None, actor=None, raw_da
         if instance and instance.state_id and instance.state.group != "triage" and not was_draft:
             workflow_error("WORKFLOW_INVALID_STATE")
         return attrs
+    if creating and not State.objects.filter(pk=state.pk, project_id=project_id, allow_new_work_items=True).exists():
+        raise ValidationError({"state": ["This state does not allow new work items."]})
     if enforced:
         if not workflow_states(project_id, workflow).filter(pk=state.pk).exists():
             workflow_error(
@@ -363,7 +386,8 @@ class WorkflowIntakeWriteMixin:
         if accepting:
             normalize_issue_type(project_id, attrs, issue)
             target_type = attrs.get("type", issue.type)
-            attrs["state"] = effective_creation_state(project_id, type_id=getattr(target_type, "pk", None))
+            if attrs.get("state") is None:
+                attrs["state"] = effective_creation_state(project_id, type_id=getattr(target_type, "pk", None))
         prepared = prepare_workflow_write(project_id, attrs, issue, actor) if accepting or attrs else None
         with transaction.atomic():
             Project.objects.select_for_update().get(pk=project_id)

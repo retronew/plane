@@ -90,18 +90,25 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const workflowStore = useProjectWorkflow(bypassWorkflow ? undefined : projectId);
   const { data: user } = useUser();
   const currentWorkflow = workflowStore.resolve(projectId ?? "", issueTypeId);
-  const allowedStateIds =
-    bypassWorkflow || !workflowIsActive(currentWorkflow)
-      ? null
-      : new Set(
-          currentWorkflow!.states
-            .filter((state) =>
-              isForWorkItemCreation || !value || getStateById(value) === undefined
-                ? workflowAllowsCreation(currentWorkflow, state.id)
-                : workflowAllowsTransition(currentWorkflow, value, state.id, user?.id)
-            )
-            .map((state) => state.id)
-        );
+  const allowedStateIds = bypassWorkflow
+    ? null
+    : isForWorkItemCreation
+      ? new Set(
+          (getProjectStateIds(projectId) ?? []).filter((id) =>
+            workflowAllowsCreation(currentWorkflow, id, getStateById(id))
+          )
+        )
+      : !workflowIsActive(currentWorkflow)
+        ? null
+        : new Set(
+            currentWorkflow!.states
+              .filter((state) =>
+                isForWorkItemCreation || !value || getStateById(value) === undefined
+                  ? workflowAllowsCreation(currentWorkflow, state.id)
+                  : workflowAllowsTransition(currentWorkflow, value, state.id, user?.id)
+              )
+              .map((state) => state.id)
+          );
   // translation
   const { t } = useTranslation();
   const resolvedTooltip = useMemo<SelectTooltipOverride | undefined>(() => {
@@ -138,7 +145,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
           (state) =>
             bypassWorkflow ||
             (isForWorkItemCreation || !value || getStateById(value) === undefined
-              ? workflowAllowsCreation(workflow, state.id)
+              ? workflowAllowsCreation(workflow, state.id, state)
               : workflowAllowsTransition(workflow, value, state.id, user?.id))
         )
         .filter((state) => !query || state.name.toLowerCase().includes(query))

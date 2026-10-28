@@ -23,6 +23,7 @@ class TemplateStateSerializer(serializers.Serializer):
         choices=["backlog", "unstarted", "started", "completed", "cancelled"], default="unstarted"
     )
     default = serializers.BooleanField(default=False)
+    allow_new_work_items = serializers.BooleanField(default=True)
 
 
 class TemplateLabelSerializer(serializers.Serializer):
@@ -50,6 +51,11 @@ class ProjectTemplateConfigurationSerializer(serializers.Serializer):
                 raise serializers.ValidationError({key: "Names must be unique."})
         if sum(entry["default"] for entry in data["states"]) > 1:
             raise serializers.ValidationError({"states": "Only one default state is allowed."})
+        states = data["states"]
+        if states and not any(state["allow_new_work_items"] for state in states):
+            raise serializers.ValidationError({"states": "At least one state must allow new work items."})
+        if any(state["default"] and not state["allow_new_work_items"] for state in states):
+            raise serializers.ValidationError({"states": "The default state must allow new work items."})
         return data
 
 
