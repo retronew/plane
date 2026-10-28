@@ -34,7 +34,11 @@ const create = vi.fn(),
   update = vi.fn();
 const fake = {
   rootIssueStore: {
-    rootStore: { workflow, user: { data: { id: "member" } } },
+    rootStore: {
+      workflow,
+      user: { data: { id: "member" } },
+      state: { getStateById: (id: string) => ({ id, is_creation_enabled: true }) },
+    },
     issues: { getIssueById: () => ({ id: "i", project_id: "p", state_id: "a", type_id: "bug" }), updateIssue: update },
   },
   issueService: { createIssue: create, patchIssue: patch },
