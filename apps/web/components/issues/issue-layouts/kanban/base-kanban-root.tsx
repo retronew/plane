@@ -70,17 +70,26 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
   } = useIssuesActions(storeType);
 
   const displayFilters = issuesFilter?.issueFilters?.displayFilters;
+  const appliedDisplayFilters = issues?.appliedDisplayFilters ?? displayFilters;
   const displayProperties = issuesFilter?.issueFilters?.displayProperties;
 
-  const sub_group_by = displayFilters?.sub_group_by;
-  const group_by = displayFilters?.group_by;
+  const sub_group_by = appliedDisplayFilters?.sub_group_by;
+  const group_by = appliedDisplayFilters?.group_by;
 
   const orderBy = displayFilters?.order_by;
 
   useEffect(() => {
     if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.KANBAN) return;
-    fetchIssues("init-loader", { canGroup: true, perPageCount: sub_group_by ? 10 : 30 }, viewId);
-  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, group_by, sub_group_by, viewId]);
+    fetchIssues("init-loader", { canGroup: true, perPageCount: displayFilters?.sub_group_by ? 10 : 30 }, viewId);
+  }, [
+    fetchIssues,
+    issuesFilter,
+    displayFilters?.layout,
+    storeType,
+    displayFilters?.group_by,
+    displayFilters?.sub_group_by,
+    viewId,
+  ]);
 
   const fetchMoreIssues = useCallback(
     (groupId?: string, subgroupId?: string) => {

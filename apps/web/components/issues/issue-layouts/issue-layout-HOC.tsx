@@ -18,7 +18,6 @@ import { SpreadsheetLayoutLoader } from "@/components/ui/loader/layouts/spreadsh
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 // local imports
 import { IssueLayoutEmptyState } from "./empty-states";
 
@@ -32,8 +31,6 @@ type IssueLayoutLoaderProps = {
 
 export const IssueLayoutLoader = observer(function IssueLayoutLoader(props: IssueLayoutLoaderProps) {
   const { layout } = props;
-  const showSkeleton = useDelayedLoading(true);
-  if (!showSkeleton) return <div className="size-full" aria-busy="true" />;
   return (
     <div className="size-full overflow-hidden" aria-busy="true" data-issue-loader={layout}>
       <IssueLayoutSkeleton {...props} />

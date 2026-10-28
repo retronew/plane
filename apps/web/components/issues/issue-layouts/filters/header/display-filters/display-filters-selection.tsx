@@ -231,7 +231,7 @@ const DisplayPropertiesGroup = observer(function DisplayPropertiesGroup({
   );
 });
 
-function DisplayExtras({
+const DisplayExtras = observer(function DisplayExtras({
   extras,
   displayFilters,
   onUpdate,
@@ -264,7 +264,7 @@ function DisplayExtras({
       )}
     </>
   );
-}
+});
 
 export const DisplayFiltersSelection = observer(function DisplayFiltersSelection(props: Props) {
   const {
