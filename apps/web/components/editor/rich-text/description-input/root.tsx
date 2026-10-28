@@ -172,6 +172,10 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
   // reset form values
   useEffect(() => {
     if (!entityId) return;
+    // Store updates can echo an optimistic save before its request completes.
+    // Keep this session's form/revision intact until its latest edit is saved;
+    // an older echo must not overwrite edits made while that request is pending.
+    if (getValues("id") === entityId && hasUnsavedChanges.current) return;
     // Update last saved content when entity/initialValue changes
     lastSavedContent.current = normalizedDescription;
     reset({
@@ -182,7 +186,7 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
     // Reset unsaved changes flag when form is reset
     hasUnsavedChanges.current = false;
     saveContext.revision += 1;
-  }, [entityId, normalizedDescription, reset, saveContext]);
+  }, [entityId, getValues, normalizedDescription, reset, saveContext]);
   const latestSave = useRef({ handleDescriptionFormSubmit, setIsSubmitting });
 
   const saveDescription = useCallback(() => {
