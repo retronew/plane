@@ -24,7 +24,22 @@ export default defineConfig(() => ({
   build: {
     assetsInlineLimit: 0,
   },
-  plugins: [reactRouter()],
+  plugins: [
+    {
+      name: "admin-base-path-redirect",
+      configureServer(server) {
+        const baseWithoutSlash = basePath.replace(/\/+$/, "");
+        if (!baseWithoutSlash) return;
+        server.middlewares.use((req, res, next) => {
+          const url = new URL(req.url ?? "/", "http://localhost");
+          if (url.pathname !== baseWithoutSlash) return next();
+          res.writeHead(302, { Location: `${basePath}${url.search}` });
+          res.end();
+        });
+      },
+    },
+    reactRouter(),
+  ],
   resolve: {
     // Native replacement for vite-tsconfig-paths; reads this app's tsconfig.json
     tsconfigPaths: true,
