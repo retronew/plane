@@ -196,7 +196,10 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
                   setValue("priority", template.priority ?? "none", { shouldDirty: true });
                   setValue("description", config.description ?? "", { shouldDirty: true });
                   setValue("description_html", null, { shouldDirty: true });
-                  setValue("description_text", null, { shouldDirty: true });
+                  // The template replaces the editor document. Reset its default too: RHF's
+                  // dirty comparison cannot traverse an old JSON object against null.
+                  methods.register("description_text");
+                  methods.resetField("description_text", { defaultValue: null });
                   setValue("network", config.network ?? 2, { shouldDirty: true });
                   setValue("project_lead", config.project_lead ?? null, { shouldDirty: true });
                   for (const field of ["cycle_view", "module_view", "page_view", "issue_views_view"] as const)
