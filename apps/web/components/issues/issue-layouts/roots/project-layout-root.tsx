@@ -10,7 +10,6 @@ import useSWR from "swr";
 // plane constants
 import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { EIssueLayoutTypes, EIssuesStoreType } from "@plane/types";
-import { Spinner } from "@plane/blocks/spinner";
 // components
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
@@ -48,7 +47,7 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
   const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug.toString() : undefined;
   const projectId = routerProjectId ? routerProjectId.toString() : undefined;
   // hooks
-  const { issues, issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
+  const { issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
   // derived values
   const workItemFilters = projectId ? issuesFilter?.getIssueFilters(projectId) : undefined;
   const activeLayout = workItemFilters?.displayFilters?.layout;
@@ -80,12 +79,6 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
           <div className="relative flex h-full w-full flex-col overflow-hidden">
             {projectWorkItemsFilter && <WorkItemFiltersRow filter={projectWorkItemsFilter} />}
             <div className="relative h-full w-full overflow-auto bg-surface-1">
-              {/* mutation loader */}
-              {issues?.getIssueLoader() === "mutation" && (
-                <div className="shadow-sm fixed top-[70px] right-[20px] z-50 flex h-[40px] w-[40px] items-center justify-center rounded-sm bg-layer-1">
-                  <Spinner className="h-4 w-4" />
-                </div>
-              )}
               <ProjectIssueLayout activeLayout={activeLayout} />
             </div>
             {/* peek overview */}

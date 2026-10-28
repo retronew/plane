@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
@@ -22,9 +21,9 @@ import { ControlLink } from "@plane/blocks/layout";
 import { DropIndicator } from "@plane/blocks/common";
 import { cn, generateWorkItemLink } from "@plane/utils";
 // components
-import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layouts/utils";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { KanbanParentIndicator } from "./parent-indicator";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
@@ -48,8 +47,6 @@ interface IssueBlockProps {
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
   quickActions: TRenderQuickActions;
   canEditProperties: (projectId: string | undefined) => boolean;
-  scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
-  shouldRenderByDefault?: boolean;
 }
 
 interface IssueDetailsBlockProps {
@@ -69,6 +66,10 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
   const [isMenuActive, setIsMenuActive] = useState(false);
   // hooks
   const { isMobile } = usePlatformOS();
+  const {
+    issue: { getIssueById },
+  } = useIssueDetail();
+  const parentIssue = issue.parent_id ? getIssueById(issue.parent_id) : undefined;
 
   const customActionButton = (
     // The quick-action menu grafts its trigger behaviour (and accessible name) onto this element via
@@ -95,7 +96,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
 
   return (
     <>
-      <div className="relative">
+      <div className="relative flex min-w-0 items-center gap-2 pr-8">
         {issue.project_id && (
           <IssueIdentifier
             issueId={issue.id}
@@ -105,6 +106,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
             displayProperties={displayProperties}
           />
         )}
+        {issue.parent_id && <KanbanParentIndicator parentName={parentIssue?.name} />}
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div
           className={cn("absolute -top-1 right-0", {
@@ -151,8 +153,6 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
     updateIssue,
     quickActions,
     canEditProperties,
-    scrollableContainerRef,
-    shouldRenderByDefault,
   } = props;
 
   const cardRef = useRef<HTMLAnchorElement | null>(null);
@@ -268,14 +268,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
           onClick={() => handleIssuePeekOverview(issue)}
           disabled={!!issue?.tempId}
         >
-          <RenderIfVisible
-            classNames="space-y-3"
-            root={scrollableContainerRef}
-            defaultHeight="100px"
-            horizontalOffset={100}
-            verticalOffset={200}
-            defaultValue={shouldRenderByDefault}
-          >
+          <div className="space-y-3">
             <KanbanIssueDetailsBlock
               cardRef={cardRef}
               issue={issue}
@@ -284,7 +277,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
               quickActions={quickActions}
               isReadOnly={!canEditIssueProperties}
             />
-          </RenderIfVisible>
+          </div>
         </ControlLink>
       </div>
     </>

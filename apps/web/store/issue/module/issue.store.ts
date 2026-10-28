@@ -139,25 +139,34 @@ export class ModuleIssues extends BaseIssuesStore implements IModuleIssues {
     moduleId: string,
     isExistingPaginationOptions: boolean = false
   ) => {
+    const request = this.beginIssueRequest(
+      JSON.stringify([workspaceSlug, projectId, moduleId]),
+      loadType,
+      isExistingPaginationOptions
+    );
     try {
-      // set loader and clear store
-      runInAction(() => {
-        this.setLoader(loadType);
-        this.clear(!isExistingPaginationOptions); // clear while fetching from server.
-      });
-
       // get params from pagination options
       const params = this.issueFilterStore?.getFilterParams(options, moduleId, undefined, undefined, undefined);
       // call the fetch issues API with the params
       const response = await this.issueService.getIssues(workspaceSlug, projectId, params, {
-        signal: this.controller.signal,
+        signal: request.controller.signal,
       });
 
       // after fetching issues, call the base method to process the response further
-      this.onfetchIssues(response, options, workspaceSlug, projectId, moduleId, !isExistingPaginationOptions);
+      if (request.controller !== this.controller || request.controller.signal.aborted) return;
+      this.applyIssueResponse(
+        request,
+        response,
+        options,
+        workspaceSlug,
+        projectId,
+        moduleId,
+        !isExistingPaginationOptions
+      );
       return response;
     } catch (error) {
       // set loader to undefined once errored out
+      if (request.controller !== this.controller || request.controller.signal.aborted) return;
       this.setLoader(undefined);
       throw error;
     }
@@ -181,6 +190,14 @@ export class ModuleIssues extends BaseIssuesStore implements IModuleIssues {
     groupId?: string,
     subGroupId?: string
   ) => {
+    if (
+      this.getIssueLoader() ||
+      (this.appliedDisplayFilters &&
+        (this.appliedDisplayFilters.group_by !== this.issueFilterStore.issueFilters?.displayFilters?.group_by ||
+          this.appliedDisplayFilters.sub_group_by !== this.issueFilterStore.issueFilters?.displayFilters?.sub_group_by))
+    )
+      return;
+    const controller = this.controller;
     const cursorObject = this.getPaginationData(groupId, subGroupId);
     // if there are no pagination options and the next page results do not exist the return
     if (!this.paginationOptions || (cursorObject && !cursorObject?.nextPageResults)) return;
@@ -200,10 +217,12 @@ export class ModuleIssues extends BaseIssuesStore implements IModuleIssues {
       const response = await this.issueService.getIssues(workspaceSlug, projectId, params);
 
       // after the next page of issues are fetched, call the base method to process the response
+      if (controller !== this.controller || controller.signal.aborted) return;
       this.onfetchNexIssues(response, groupId, subGroupId);
       return response;
     } catch (error) {
       // set Loader as undefined if errored out
+      if (controller !== this.controller || controller.signal.aborted) return;
       this.setLoader(undefined, groupId, subGroupId);
       throw error;
     }

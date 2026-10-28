@@ -39,6 +39,7 @@ import { KanbanIssueBlockLoader } from "@/components/ui/loader/layouts/kanban-la
 import { useWorkFlowFDragNDrop } from "@/components/workflow";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { useIssuesStore } from "@/hooks/use-issue-layout-store";
 // local imports
@@ -141,14 +142,17 @@ function KanbanGroupLoadMore(props: {
   const { t } = useTranslation();
   const { isPaginating, isSubGroup, onLoadMore, setIntersectionElement } = props;
 
+  const showSkeleton = useDelayedLoading(isPaginating);
+
   if (isSubGroup) {
-    if (isPaginating) return <KanbanIssueBlockLoader />;
+    if (showSkeleton) return <KanbanIssueBlockLoader />;
 
     return (
       <button
         type="button"
         className="sticky bottom-0 w-full cursor-pointer p-3 text-left text-13 font-medium text-accent-primary hover:text-accent-secondary hover:underline"
         onClick={onLoadMore}
+        disabled={isPaginating}
       >
         {t("common.load_more")} &darr;
       </button>
@@ -157,11 +161,12 @@ function KanbanGroupLoadMore(props: {
 
   return (
     <div className="flex flex-col gap-2">
-      {Array.from({ length: 2 }).map((_, index) => (
-        // oxlint-disable-next-line react/no-array-index-key
-        <KanbanIssueBlockLoader key={index} />
-      ))}
-      <KanbanIssueBlockLoader ref={setIntersectionElement} />
+      {showSkeleton &&
+        Array.from({ length: 2 }).map((_, index) => (
+          // oxlint-disable-next-line react/no-array-index-key
+          <KanbanIssueBlockLoader key={index} />
+        ))}
+      <span ref={setIntersectionElement} className="block h-px" aria-hidden="true" />
     </div>
   );
 }

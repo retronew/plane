@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { action, makeObservable, computed, runInAction, observableRef, actionBound } from "mobx";
+import { action, makeObservable, computed, observableRef, actionBound } from "mobx";
 // base class
 import type {
   TIssue,
@@ -127,13 +127,12 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
     view: TProfileViews,
     isExistingPaginationOptions: boolean = false
   ) => {
+    const request = this.beginIssueRequest(
+      JSON.stringify([workspaceSlug, userId, view]),
+      loadType,
+      isExistingPaginationOptions
+    );
     try {
-      // set loader and clear store
-      runInAction(() => {
-        this.setLoader(loadType);
-      });
-      this.clear(!isExistingPaginationOptions);
-
       // set ViewId
       this.setViewId(view);
 
@@ -152,14 +151,24 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
 
       // call the fetch issues API with the params
       const response = await this.userService.getUserProfileIssues(workspaceSlug, userId, params, {
-        signal: this.controller.signal,
+        signal: request.controller.signal,
       });
 
       // after fetching issues, call the base method to process the response further
-      this.onfetchIssues(response, options, workspaceSlug, undefined, undefined, !isExistingPaginationOptions);
+      if (request.controller !== this.controller || request.controller.signal.aborted) return;
+      this.applyIssueResponse(
+        request,
+        response,
+        options,
+        workspaceSlug,
+        undefined,
+        undefined,
+        !isExistingPaginationOptions
+      );
       return response;
     } catch (error) {
       // set loader to undefined if errored out
+      if (request.controller !== this.controller || request.controller.signal.aborted) return;
       this.setLoader(undefined);
       throw error;
     }
@@ -176,6 +185,14 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
    * @returns
    */
   fetchNextIssues = async (workspaceSlug: string, userId: string, groupId?: string, subGroupId?: string) => {
+    if (
+      this.getIssueLoader() ||
+      (this.appliedDisplayFilters &&
+        (this.appliedDisplayFilters.group_by !== this.issueFilterStore.issueFilters?.displayFilters?.group_by ||
+          this.appliedDisplayFilters.sub_group_by !== this.issueFilterStore.issueFilters?.displayFilters?.sub_group_by))
+    )
+      return;
+    const controller = this.controller;
     const cursorObject = this.getPaginationData(groupId, subGroupId);
     // if there are no pagination options and the next page results do not exist the return
     if (!this.paginationOptions || (cursorObject && !cursorObject?.nextPageResults)) return;
@@ -205,10 +222,12 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
       const response = await this.userService.getUserProfileIssues(workspaceSlug, userId, params);
 
       // after the next page of issues are fetched, call the base method to process the response
+      if (controller !== this.controller || controller.signal.aborted) return;
       this.onfetchNexIssues(response, groupId, subGroupId);
       return response;
     } catch (error) {
       // set Loader as undefined if errored out
+      if (controller !== this.controller || controller.signal.aborted) return;
       this.setLoader(undefined, groupId, subGroupId);
       throw error;
     }

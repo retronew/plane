@@ -5,7 +5,7 @@
  */
 
 import { isEqual, concat, get, indexOf, isEmpty, orderBy, pull, set, uniq, update, clone } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction, actionBound } from "mobx";
+import { action, computed, makeObservable, observable, observableRef, runInAction, actionBound } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane constants
 import { ALL_ISSUES, ISSUE_PRIORITIES } from "@plane/constants";
@@ -55,6 +55,7 @@ export enum EIssueGroupedAction {
   REORDER = "REORDER",
 }
 export interface IBaseIssuesStore {
+  appliedDisplayFilters?: NonNullable<IBaseIssueFilterStore["issueFilters"]>["displayFilters"];
   // observable
   loader: Record<string, TLoader>;
 
@@ -177,6 +178,8 @@ const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
 };
 
 export abstract class BaseIssuesStore implements IBaseIssuesStore {
+  appliedDisplayFilters: NonNullable<IBaseIssueFilterStore["issueFilters"]>["displayFilters"] | undefined;
+  private requestEntity: string | undefined;
   loader: Record<string, TLoader> = {};
   groupedIssueIds: TIssues | undefined = undefined;
   issuePaginationData: TIssuePaginationData = {};
@@ -207,6 +210,9 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     makeObservable(this, {
       // observable
       loader: observable,
+      appliedDisplayFilters: observableRef,
+      beginIssueRequest: actionBound,
+      applyIssueResponse: actionBound,
       groupedIssueIds: observable,
       issuePaginationData: observable,
       groupedIssueCount: observable,
@@ -286,9 +292,35 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     return displayFilters?.order_by;
   }
 
+  beginIssueRequest(entity: string, loadType: TLoader, existingPagination: boolean) {
+    const displayFilters = { ...this.issueFilterStore?.issueFilters?.displayFilters };
+    const keepData =
+      this.requestEntity === entity &&
+      this.groupedIssueIds !== undefined &&
+      this.appliedDisplayFilters?.layout === displayFilters.layout;
+    if (!keepData) this.clear(!existingPagination);
+    else {
+      this.controller.abort();
+      this.controller = new AbortController();
+    }
+    this.requestEntity = entity;
+    this.loader = {};
+    this.setLoader(keepData ? "mutation" : loadType);
+    return { controller: this.controller, displayFilters };
+  }
+
+  applyIssueResponse(
+    request: ReturnType<BaseIssuesStore["beginIssueRequest"]>,
+    ...args: Parameters<BaseIssuesStore["onfetchIssues"]>
+  ) {
+    if (request.controller !== this.controller || request.controller.signal.aborted) return;
+    this.onfetchIssues(...args);
+    this.appliedDisplayFilters = request.displayFilters;
+  }
+
   // current Group by value
   get groupBy() {
-    const displayFilters = this.issueFilterStore?.issueFilters?.displayFilters;
+    const displayFilters = this.appliedDisplayFilters ?? this.issueFilterStore?.issueFilters?.displayFilters;
     if (!displayFilters || !displayFilters?.layout) return;
 
     const layout = displayFilters?.layout;
@@ -302,7 +334,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
 
   // current Sub group by value
   get subGroupBy() {
-    const displayFilters = this.issueFilterStore?.issueFilters?.displayFilters;
+    const displayFilters = this.appliedDisplayFilters ?? this.issueFilterStore?.issueFilters?.displayFilters;
     if (!displayFilters || displayFilters.group_by === displayFilters.sub_group_by) return;
 
     return displayFilters?.layout === "kanban" ? displayFilters?.sub_group_by : undefined;
@@ -476,7 +508,9 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
 
     // Update all the GroupIds to this Store's groupedIssueIds and update Individual group issue counts
     runInAction(() => {
-      this.clear(shouldClearPaginationOptions);
+      this.clear(shouldClearPaginationOptions, false);
+      // An empty grouped response is loaded data too.
+      this.groupedIssueIds = {};
       this.updateGroupedIssueIds(groupedIssues, groupedIssueCount);
       this.loader[getGroupKey()] = undefined;
     });
@@ -1180,17 +1214,20 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
   /**
    * Method called to clear out the current store
    */
-  clear(shouldClearPaginationOptions = true) {
+  clear(shouldClearPaginationOptions = true, cancelRequest = true) {
     runInAction(() => {
       this.groupedIssueIds = undefined;
+      this.appliedDisplayFilters = undefined;
       this.issuePaginationData = {};
       this.groupedIssueCount = {};
       if (shouldClearPaginationOptions) {
         this.paginationOptions = undefined;
       }
     });
-    this.controller.abort();
-    this.controller = new AbortController();
+    if (cancelRequest) {
+      this.controller.abort();
+      this.controller = new AbortController();
+    }
   }
 
   /**
