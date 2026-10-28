@@ -44,12 +44,29 @@ def matches(members, app_id=None, tenant_key=None):
         if normalize(user.email):
             users[normalize(user.email)].append(str(user.pk))
     counts = Counter(normalize(member["email"]) for member in members if normalize(member["email"]))
+    names = defaultdict(set)
+    for user in eligible_users().only("id", "display_name", "username", "first_name", "last_name"):
+        for name in {user.display_name, user.username, user.full_name}:
+            if name and name.strip():
+                names[name.strip()].add(str(user.pk))
+    name_counts = Counter((member.get("name") or "").strip() for member in members)
+    # Count across all aliases and the complete directory, including members with
+    # stronger matches, so one Plane user never receives ambiguous name suggestions.
+    name_targets = Counter(
+        target for member in members for target in names.get((member.get("name") or "").strip(), set())
+    )
     rows = []
     for member in members:
         email = normalize(member["email"])
         candidates = users.get(email, [])
         unique = bool(email) and counts[email] == 1 and len(candidates) == 1
         target, basis = (candidates[0], "email") if unique else (None, "unmatched")
+        name = (member.get("name") or "").strip()
+        name_candidates = names.get(name, set())
+        if target is None and name and name_counts[name] == 1 and len(name_candidates) == 1:
+            candidate = next(iter(name_candidates))
+            if name_targets[candidate] == 1:
+                target, basis = candidate, "name"
         linked = set()
         conflict = False
         for account in identities:
@@ -96,7 +113,8 @@ def directory_rows(members, app_id, tenant_key, mode):
         binding = bindings.get(user_id)
         candidates = by_user[user_id]
         oidc = [m for m in candidates if m["match_basis"] == "oidc"]
-        candidates = oidc or candidates
+        email = [m for m in candidates if m["match_basis"] == "email"]
+        candidates = oidc or email or candidates
         member = candidates[0] if len(candidates) == 1 else None
         rows.append(
             {
@@ -288,6 +306,7 @@ def bind_preview(administrator, preview_id, selections, enable_notifications):
             if (
                 not member
                 or normalize(member["email"]) != normalize(row["email"])
+                or member.get("name", "") != row.get("name", "")
                 or member.get("union_id", "") != row.get("union_id", "")
             ):
                 row["result"] = "match_changed"

@@ -35,12 +35,14 @@ export function UserActionsMenu({
   currentUserId,
   admins,
   onEdit,
+  onNotifications,
   onAction,
 }: {
   user: IInstanceUser;
   currentUserId: string | undefined;
   admins: IInstanceAdmin[] | undefined;
   onEdit: () => void;
+  onNotifications: () => void;
   onAction: (action: AccountAction) => void;
 }) {
   const { t } = useTranslation();
@@ -59,6 +61,7 @@ export function UserActionsMenu({
       />
       <MenuContent side="bottom" align="end">
         <MenuItem label={t("admin.users.details.edit_profile")} onClick={onEdit} />
+        <MenuItem label={t("admin.users.notifications.title")} onClick={onNotifications} />
         {actions.length > 0 && <MenuSeparator />}
         {actions.map((action) => (
           <MenuItem

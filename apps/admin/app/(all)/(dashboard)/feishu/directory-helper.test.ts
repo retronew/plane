@@ -2,12 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { TFeishuDirectoryPreview } from "@/types/feishu";
 import {
+  directoryUserLabel,
   canBindDirectory,
   directorySelections,
   directoryRowStatus,
   directorySummary,
   validDirectoryBatch,
 } from "./directory-helper";
+
+test("directory user labels omit parentheses for empty email", () => {
+  assert.equal(directoryUserLabel({ display_name: "Alice", email: "" }), "Alice");
+  assert.equal(directoryUserLabel({ display_name: "Alice", email: "   " }), "Alice");
+  assert.equal(directoryUserLabel({ display_name: "Alice", email: "alice@example.com" }), "Alice (alice@example.com)");
+});
 
 const preview: TFeishuDirectoryPreview = {
   id: "preview",
@@ -106,4 +113,14 @@ test("full review keeps existing bindings read-only even with a manual override"
   assert.deepEqual(directorySelections(all, ["email"], { email: "replacement" }), []);
   assert.equal(directoryRowStatus(all.rows[0], true, true, "replacement"), "already_bound");
   assert.deepEqual(directorySummary(all, [], [], {}), { automatic: 0, manual: 0, pending: 1, skipped: 0, existing: 1 });
+});
+
+test("name suggestions count as suggested and allow explicit overrides", () => {
+  const named = { ...preview, rows: [{ ...preview.rows[0], match_basis: "name" as const }] };
+  assert.equal(directoryRowStatus(named.rows[0], true, false), "name");
+  assert.equal(directorySummary(named, ["email"], [], {}).automatic, 1);
+  assert.deepEqual(directorySelections(named, ["email"], {}), [{ row_id: "email" }]);
+  assert.deepEqual(directorySelections(named, ["email"], { email: "replacement" }), [
+    { row_id: "email", member_id: "replacement" },
+  ]);
 });

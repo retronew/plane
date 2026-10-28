@@ -328,3 +328,59 @@ class TestActivateUser:
         lookups["users"].return_value.first.return_value = None
         response = views.InstanceUserActivateEndpoint().post(_request(), pk=TARGET_ID)
         assert response.status_code == 404
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestUserNotificationPreferences:
+    def test_target_isolation_and_partial_merge(self, detail_client, detail_user):
+        from plane.utils.notification_preferences import preference_response, update_preferences
+
+        other = User.objects.create(email="notification-other@example.com", username="notification-other")
+        before = preference_response(other)
+        update_preferences(detail_user, None, None, {"events": {"email": {"mention": False}}})
+        url = f"{_detail_url(detail_user.pk)}notification-preferences/"
+        assert resolve(url).func.view_class is views.InstanceUserNotificationPreferencesEndpoint
+        response = detail_client.patch(url, {"events": {"email": {"comment": False}}}, format="json")
+        assert response.status_code == 200
+        assert response.data["events"]["email"]["comment"] is False
+        assert response.data["events"]["email"]["mention"] is False
+        assert detail_client.get(url).data == response.data
+        assert preference_response(other) == before
+        assert preference_response(detail_client.handler._force_user) == before
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"user": "someone"},
+            {"workspace_id": "anything"},
+            {"channels": {"feishu": 1}},
+            {"channels": {"unknown": True}},
+            {"events": {"email": {"comment": None}}},
+            {"events": {"email": {"unknown": True}}},
+            [],
+        ],
+    )
+    def test_invalid_payload_is_rejected(self, detail_client, detail_user, payload):
+        from plane.db.models.notification_preference import NotificationPreference
+
+        url = f"{_detail_url(detail_user.pk)}notification-preferences/"
+        assert detail_client.patch(url, payload, format="json").status_code == 400
+        assert not NotificationPreference.objects.filter(user=detail_user).exists()
+
+    def test_scope_and_missing_target(self, detail_client, detail_user):
+        url = f"{_detail_url(detail_user.pk)}notification-preferences/"
+        assert detail_client.get(url + "?workspace_id=anything").status_code == 400
+        assert detail_client.patch(url + "?project_id=anything", {}, format="json").status_code == 400
+        assert detail_client.get(f"{_detail_url(uuid4())}notification-preferences/").status_code == 404
+        detail_user.is_bot = True
+        detail_user.save()
+        assert detail_client.get(url).status_code == 404
+
+    def test_regular_user_cannot_read_or_write(self, detail_client, detail_user):
+        detail_client.force_authenticate(user=detail_user)
+        url = f"{_detail_url(detail_user.pk)}notification-preferences/"
+        assert detail_client.get(url).status_code == 403
+        assert detail_client.patch(url, {"channels": {"feishu": True}}, format="json").status_code == 403
+        detail_client.force_authenticate(user=None)
+        assert detail_client.get(url).status_code in (401, 403)

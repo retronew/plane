@@ -111,6 +111,34 @@ def serialize_user_detail(user):
     }
 
 
+class InstanceUserNotificationPreferencesEndpoint(BaseAPIView):
+    permission_classes = [InstanceAdminPermission]
+
+    def target(self, request, pk):
+        from rest_framework.exceptions import NotFound, ValidationError
+
+        if request.query_params:
+            raise ValidationError("This endpoint only supports global preferences")
+        user = _user_queryset().filter(pk=pk).first()
+        if user is None:
+            raise NotFound("User not found")
+        return user
+
+    def get(self, request, pk):
+        from plane.utils.notification_preferences import preference_response
+
+        return Response(preference_response(self.target(request, pk), None, None))
+
+    def patch(self, request, pk):
+        from plane.app.views.notification.preferences import validate_preferences
+        from plane.utils.notification_preferences import preference_response, update_preferences
+
+        user = self.target(request, pk)
+        data = validate_preferences(request.data, is_global=True)
+        update_preferences(user, None, None, data)
+        return Response(preference_response(user, None, None))
+
+
 class InstanceUserDetailEndpoint(BaseAPIView):
     permission_classes = [InstanceAdminPermission]
 

@@ -23,6 +23,8 @@ import type {
   TInstanceAIProviderPreset,
   TInstanceAITestResponse,
   TPage,
+  TNotificationPreferences,
+  TNotificationPreferencesPatch,
 } from "@plane/types";
 // api service
 import { APIService } from "../api.service";
@@ -102,6 +104,19 @@ export class InstanceService extends APIService {
       .catch((error) => {
         throw error?.response?.data;
       });
+  }
+
+  async getUserNotificationPreferences(userId: string): Promise<TNotificationPreferences> {
+    return this.get(`/api/instances/users/${userId}/notification-preferences/`).then((response) => response.data);
+  }
+
+  async updateUserNotificationPreferences(
+    userId: string,
+    data: TNotificationPreferencesPatch
+  ): Promise<TNotificationPreferences> {
+    return this.patch(`/api/instances/users/${userId}/notification-preferences/`, data).then(
+      (response) => response.data
+    );
   }
 
   async getUser(userId: string): Promise<IInstanceUserDetail> {

@@ -5,7 +5,7 @@ export type TFeishuDirectoryRow = {
   email: string;
   name: string;
   user_id: string | null;
-  match_basis: "email" | "oidc" | "unmatched" | "identity_conflict";
+  match_basis: "email" | "oidc" | "name" | "unmatched" | "identity_conflict";
   matched_user?: TFeishuDirectoryUser | null;
   member_id: string | null;
   binding_id?: string | null;

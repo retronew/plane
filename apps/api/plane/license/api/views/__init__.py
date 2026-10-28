@@ -16,6 +16,7 @@ from .user import (
     InstanceUserActivateEndpoint,
     InstanceUserDeactivateEndpoint,
     InstanceUserDetailEndpoint,
+    InstanceUserNotificationPreferencesEndpoint,
     InstanceUserEndpoint,
 )
 from .admin_sso import InstanceAdminOIDCCallbackEndpoint, InstanceAdminOIDCInitiateEndpoint

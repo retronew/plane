@@ -31,6 +31,7 @@ import type {
   TFeishuDirectoryUser,
 } from "@/types/feishu";
 import {
+  directoryUserLabel,
   canBindDirectory,
   directorySelections,
   directoryRowStatus,
@@ -72,7 +73,7 @@ function UserPicker({
       }}
     >
       <ComboboxTrigger id={id} size="md" placeholder={t("admin.feishu.directory.search")}>
-        {value ? `${value.display_name} (${value.email})` : undefined}
+        {value ? directoryUserLabel(value) : undefined}
       </ComboboxTrigger>
       <ComboboxContent
         aria-label={t("admin.feishu.directory.search")}
@@ -82,7 +83,7 @@ function UserPicker({
         <ComboboxList aria-label={t("admin.feishu.directory.search")}>
           {(userId: string) => {
             const user = users.find((item) => item.id === userId)!;
-            return <ComboboxItem key={userId} value={userId} label={`${user.display_name} (${user.email})`} />;
+            return <ComboboxItem key={userId} value={userId} label={directoryUserLabel(user)} />;
           }}
         </ComboboxList>
       </ComboboxContent>
@@ -96,7 +97,7 @@ function useDirectoryBinding(disabled: boolean) {
   const [skipped, setSkipped] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [manual, setManual] = useState<Record<string, TFeishuDirectoryUser>>({});
-  const [notifications, setNotifications] = useState(false);
+  const [notifications, setNotifications] = useState(true);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
