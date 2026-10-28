@@ -242,7 +242,19 @@
         "title": "最近活动",
         "empty": "未找到数据，请检查您的筛选条件",
         "button": "导出今日活动",
-        "button_loading": "正在导出"
+        "button_loading": "正在导出",
+        "more_dates": "按日期范围导出",
+        "yesterday": "昨天",
+        "week": "本周",
+        "custom": "自定义日期范围",
+        "period": "日期范围",
+        "preview": "预览",
+        "timezone_note": "日期包含首尾两天，按工作区时区 {timezone} 计算。本周从周一开始。",
+        "timezone_pending": "日期包含首尾两天，按工作区时区计算。本周从周一开始；预览将显示时区。",
+        "export_description": "汇总此人更改过状态的工作项，每项一行，显示所选期间任何人最后一次更改后的状态。",
+        "export_empty": "此日期范围内没有状态变化。",
+        "export_error": "无法导出活动，请重试。",
+        "export_count": "{count, plural, one {# 个工作项} other {# 个工作项}}"
       }
     },
     "actions": {

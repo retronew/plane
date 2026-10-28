@@ -197,7 +197,11 @@ export class UserService extends APIService {
     workspaceSlug: string,
     userId: string,
     data: {
-      date: string;
+      date?: string;
+      period?: string;
+      start_date?: string;
+      end_date?: string;
+      preview?: boolean;
     }
   ): Promise<any> {
     return this.post(`/api/workspaces/${workspaceSlug}/user-activity/${userId}/export/`, data)
