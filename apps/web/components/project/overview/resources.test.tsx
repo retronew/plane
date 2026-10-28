@@ -331,23 +331,29 @@ describe("project overview resources", () => {
     expect(await screen.findByRole("link", { name: "Design" })).toBeTruthy();
   });
 
-  it.each(["javascript:alert(1)", "ftp://example.com", "https://", ""])(
-    "rejects invalid URL %s without losing the draft",
-    async (url) => {
-      setup();
-      await openCreate();
-      fillLink("Draft", url);
-      submitLink();
-      const error = await screen.findByRole("alert");
-      expect(error).toHaveProperty("textContent", "web.project_overview.invalid_url");
-      const input = screen.getByRole("textbox", { name: "web.project_overview.link_url" });
-      expect(input.getAttribute("aria-describedby")).toBe(error.id);
-      expect(error.parentElement?.contains(input)).toBe(true);
-      expect(error.parentElement?.querySelector("input")?.id).toBe(input.id);
-      expect(mocks.createLink).not.toHaveBeenCalled();
-      expect(screen.getByRole("textbox", { name: "web.project_overview.link_title" })).toHaveProperty("value", "Draft");
-    }
-  );
+  it.each([
+    "javascript:alert(1)",
+    "ftp://example.com",
+    "https://",
+    "",
+    "【视频标题】 https://www.bilibili.com/video/test/",
+    "https://example.com/extra text",
+    "https://example.com/ https://other.example.com/",
+  ])("rejects invalid URL %s without losing the draft", async (url) => {
+    setup();
+    await openCreate();
+    fillLink("Draft", url);
+    submitLink();
+    const error = await screen.findByRole("alert");
+    expect(error).toHaveProperty("textContent", "web.project_overview.invalid_url");
+    const input = screen.getByRole("textbox", { name: "web.project_overview.link_url" });
+    expect(input.getAttribute("aria-describedby")).toBe(error.id);
+    expect(error.parentElement?.contains(input)).toBe(true);
+    expect(error.parentElement?.querySelector("input")?.id).toBe(input.id);
+    expect(mocks.createLink).not.toHaveBeenCalled();
+    expect(input).toHaveProperty("value", url.replace(/\n/g, ""));
+    expect(screen.getByRole("textbox", { name: "web.project_overview.link_title" })).toHaveProperty("value", "Draft");
+  });
 
   it("creates a URL-only link and adds the protocol for a bare domain", async () => {
     setup();
