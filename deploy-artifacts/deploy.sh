@@ -199,7 +199,7 @@ main() {
       dump_db "$RECORD/db-pre-migration.dump"
       (cd "$RECORD"; sha256sum db-pre-migration.dump >> SHA256SUMS; sha256sum -c SHA256SUMS)
       state migrating_schema_may_have_changed
-      compose run --rm --no-deps --no-build --pull never migrator
+      compose run --rm --no-deps --pull never -T migrator </dev/null
     fi
     state starting
     compose up -d --no-build --pull never --no-deps ${RUNTIME[@]+"${RUNTIME[@]}"}

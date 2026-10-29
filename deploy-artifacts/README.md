@@ -1,5 +1,9 @@
 # Plane Linux 部署脚本
 
+本目录保留原有的**服务器构建部署**流程，不被本地构建方案替换。另一条已验证的流程见 [本地构建镜像并更新线上 Plane](../docs/local-image-deployment.md)。两种方式共用线上数据、配置和部署锁，同一时刻只能执行一种。
+
+生产服务器现有入口为 `/opt/plane-deploy/deploy-production.sh deploy`，调用服务器专用构建 hook；仓库内的 `deploy.sh` 是通用基础脚本。服务器专用工具位于仓库外，未随 Git 跟踪，修改或重装前应备份。服务器构建所用的 npm 镜像源仅作用于服务器，不改变本地开发配置。切换方式前，确认上一轮成功、实际运行镜像与成功版本标记一致。
+
 适用本机 Docker Compose v2、Bash 4+、Python 3.9+、GNU coreutils/tar、git、curl、flock。默认仓库 `/opt/plane`，分支 `preview`，Compose project `plane`，备份 `/opt/plane-backups`。以能读取配置和 Docker 卷的账号执行（通常 root）。脚本不会连接远程服务器。
 
 ```bash
