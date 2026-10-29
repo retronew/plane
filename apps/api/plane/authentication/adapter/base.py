@@ -287,8 +287,9 @@ class Adapter:
         if not display_name:
             display_name = User.get_display_name(email)
 
-        # Set display name
-        user.display_name = display_name
+        # OIDC may refresh generated names until the user explicitly saves one.
+        if self.provider != "oidc" or not user.is_display_name_custom:
+            user.display_name = display_name
 
         # Download and upload avatar only if the avatar is different from the one in the storage
         avatar = self.user_data.get("user", {}).get("avatar", "")
@@ -370,6 +371,9 @@ class Adapter:
             last_name = self.user_data.get("user", {}).get("last_name", "")
             user.first_name = first_name if first_name else ""
             user.last_name = last_name if last_name else ""
+            if self.provider == "oidc":
+                user.display_name = self.user_data.get("user", {}).get("display_name") or User.get_display_name(email)
+                user.is_display_name_custom = False
 
             user.save()
 

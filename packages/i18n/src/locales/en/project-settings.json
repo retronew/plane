@@ -33,7 +33,10 @@
       "invite_members": {
         "title": "Invite members",
         "sub_heading": "Invite members to work on your project.",
-        "select_co_worker": "Select co-worker"
+        "select_co_worker": "Select co-worker",
+        "select_members": "Select members",
+        "selected_count": "{count, plural, one {# member selected} other {# members selected}}",
+        "remove_member": "Remove {name}"
       }
     },
     "states": {

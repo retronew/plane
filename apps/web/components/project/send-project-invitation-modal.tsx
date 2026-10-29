@@ -7,8 +7,12 @@
 import { observer } from "mobx-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 // plane imports
-import { ROLE, EUserPermissions } from "@plane/constants";
+import { ROLE, ROLE_DETAILS, EUserPermissions } from "@plane/constants";
 import { useTranslation, translate } from "@plane/i18n";
+import { Avatar } from "@makeplane/propel/components/avatar";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { getFileURL } from "@plane/utils";
+import { memberDisplayName, reconcileSelectedMembers } from "@/components/dropdowns/member/member-selection";
 import { Button } from "@makeplane/propel/components/button";
 import { ChevronDownOutline, CloseOutline } from "@makeplane/propel/icons";
 import { setToast } from "@plane/blocks/toast";
@@ -138,19 +142,18 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
   const getRoleOptions = (memberId: string): TRoleOption[] =>
     Object.entries(checkCurrentOptionWorkspaceRole(memberId))
       .filter(([key]) => parseInt(key) <= (currentProjectRole ?? EUserPermissions.GUEST))
-      .map(([key, label]) => ({ key: parseInt(key) as EUserPermissions, label }));
+      .map(([key]) => {
+        const role = parseInt(key) as EUserPermissions;
+        return { key: role, label: t(ROLE_DETAILS[role].i18n_title) };
+      });
 
   const selectedMembers = watch("members");
   const handleMembersChange = (ids: string[]) => {
-    const previous = new Map(selectedMembers.map((member) => [member.member_id, member]));
     replace(
-      ids.map(
-        (id) =>
-          previous.get(id) ?? {
-            member_id: id,
-            role: (getWorkspaceMemberDetails(id)?.role ?? EUserPermissions.GUEST) as EUserPermissions,
-          }
-      )
+      reconcileSelectedMembers(ids, selectedMembers, (id) => ({
+        member_id: id,
+        role: (getWorkspaceMemberDetails(id)?.role ?? EUserPermissions.GUEST) as EUserPermissions,
+      }))
     );
   };
 
@@ -179,75 +182,127 @@ export const SendProjectInvitationModal = observer(function SendProjectInvitatio
                   onChange={handleMembersChange}
                   variant="select-lg"
                   memberIds={uninvitedPeople}
-                  placeholder={t("web.select_co_worker")}
+                  placeholder={t("project_settings.members.invite_members.select_members")}
+                  className="w-full"
                   disabled={isSubmitting}
                 />
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center justify-between gap-4 text-13">
-                    <span className="truncate">{getWorkspaceMemberDetails(field.member_id)?.member.display_name}</span>
-                    <div className="flex shrink-0 items-center justify-between gap-2">
-                      <div className="flex flex-col gap-1">
-                        <Controller
-                          name={`members.${index}.role`}
-                          control={control}
-                          rules={{ required: t("web.select_role_2") }}
-                          render={({ field: { value, onChange } }) => {
-                            const roleOptions = getRoleOptions(watch(`members.${index}.member_id`));
-                            return (
-                              <div className="w-32">
-                                <Select<TRoleOption>
-                                  getValues={() => roleOptions}
-                                  value={roleOptions.find((role) => role.key === value) ?? null}
-                                  onChange={(key) => onChange(parseInt(key))}
-                                  getOptionValue={(role) => String(role.key)}
-                                  getOptionLabel={(role) => role.label}
-                                  placeholder={t("web.select_role")}
-                                  showSearch={false}
-                                  pinSelected={false}
-                                >
-                                  <Select.Trigger<TRoleOption>
-                                    variant="pill-md"
-                                    appendIcon={<ChevronDownOutline />}
-                                    tooltip={{ emptyContent: t("web.select_role") }}
-                                  >
-                                    <span className="min-w-0 grow truncate text-left capitalize">
-                                      {value ? ROLE[value] : t("web.select_role")}
-                                    </span>
-                                  </Select.Trigger>
-                                </Select>
-                              </div>
-                            );
-                          }}
-                        />
-                        {errors.members && errors.members[index]?.role && (
-                          <span className="px-1 text-13 text-danger-primary">
-                            {errors.members[index]?.role?.message}
-                          </span>
-                        )}
-                      </div>
-
-                      {fields.length > 0 && (
-                        <div className="flex-item flex w-6">
-                          <button
-                            type="button"
-                            aria-label={t("remove")}
-                            className="place-items-center self-center rounded-sm"
-                            onClick={() => remove(index)}
-                          >
-                            <CloseOutline className="h-4 w-4 text-secondary" />
-                          </button>
+                <div className="flex items-center justify-between gap-3 text-13" aria-live="polite">
+                  <span className="text-secondary">
+                    {t("project_settings.members.invite_members.selected_count", { count: fields.length })}
+                  </span>
+                  {fields.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="tertiary"
+                      stretch="auto"
+                      size="sm"
+                      label={t("issue.select.deselect_all")}
+                      disabled={isSubmitting}
+                      onClick={() => replace([])}
+                    />
+                  )}
+                </div>
+                {fields.length > 0 && (
+                  <div className="divide-y divide-subtle border-y border-subtle">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex items-center gap-4 py-3 text-13">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <Avatar
+                            size="sm"
+                            src={getFileURL(getWorkspaceMemberDetails(field.member_id)?.member.avatar_url ?? "")}
+                            alt={memberDisplayName(
+                              getWorkspaceMemberDetails(field.member_id)?.member,
+                              t("unknown_user")
+                            )}
+                          />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">
+                              {memberDisplayName(getWorkspaceMemberDetails(field.member_id)?.member, t("unknown_user"))}
+                            </div>
+                            {(() => {
+                              const user = getWorkspaceMemberDetails(field.member_id)?.member;
+                              const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ");
+                              return fullName && fullName !== memberDisplayName(user, t("unknown_user")) ? (
+                                <div className="truncate text-12 text-secondary">{fullName}</div>
+                              ) : null;
+                            })()}
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <div className="flex flex-col gap-1">
+                            <Controller
+                              name={`members.${index}.role`}
+                              control={control}
+                              rules={{ required: t("web.select_role_2") }}
+                              render={({ field: { value, onChange } }) => {
+                                const roleOptions = getRoleOptions(watch(`members.${index}.member_id`));
+                                return (
+                                  <div className="w-24">
+                                    <Select<TRoleOption>
+                                      getValues={() => roleOptions}
+                                      value={roleOptions.find((role) => role.key === value) ?? null}
+                                      onChange={(key) => onChange(parseInt(key))}
+                                      getOptionValue={(role) => String(role.key)}
+                                      getOptionLabel={(role) => role.label}
+                                      placeholder={t("web.select_role")}
+                                      showSearch={false}
+                                      pinSelected={false}
+                                    >
+                                      <Select.Trigger<TRoleOption>
+                                        variant="pill-md"
+                                        className="w-full"
+                                        appendIcon={<ChevronDownOutline />}
+                                        tooltip={{ emptyContent: t("web.select_role") }}
+                                      >
+                                        <span className="min-w-0 grow truncate text-left capitalize">
+                                          {value ? t(ROLE_DETAILS[value].i18n_title) : t("web.select_role")}
+                                        </span>
+                                      </Select.Trigger>
+                                    </Select>
+                                  </div>
+                                );
+                              }}
+                            />
+                            {errors.members && errors.members[index]?.role && (
+                              <span className="px-1 text-13 text-danger-primary">
+                                {errors.members[index]?.role?.message}
+                              </span>
+                            )}
+                          </div>
+
+                          <IconButton
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={t("project_settings.members.invite_members.remove_member", {
+                              name: memberDisplayName(
+                                getWorkspaceMemberDetails(field.member_id)?.member,
+                                t("unknown_user")
+                              ),
+                            })}
+                            disabled={isSubmitting}
+                            icon={<CloseOutline className="h-4 w-4" />}
+                            onClick={() => remove(index)}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex w-full items-center justify-end gap-2">
               <div className="flex items-center gap-2">
-                <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
+                <Button
+                  variant="secondary"
+                  size="md"
+                  stretch="auto"
+                  label={t("cancel")}
+                  disabled={isSubmitting}
+                  onClick={handleClose}
+                />
                 <Button
                   variant="primary"
                   size="md"
