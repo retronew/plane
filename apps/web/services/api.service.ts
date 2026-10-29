@@ -42,12 +42,17 @@ export abstract class APIService {
       (error) => {
         if (error.response && error.response.status === 401) {
           const currentPath = window.location.pathname;
-          // The entry page ("/") runs its own current-user request on mount;
-          // when the session is expired that request 401s too, and redirecting
-          // "/" to "/?next_path=/" reloads the page in an endless loop instead of
-          // letting the sign-in screen render. Only bounce away from private
-          // routes.
-          if (currentPath !== "/") {
+          // Public auth pages request the current user while signed out, so
+          // their expected 401s must not interrupt registration or email binding.
+          const publicAuthPaths = new Set([
+            "/",
+            "/sign-up",
+            "/accounts/forgot-password",
+            "/accounts/reset-password",
+            "/accounts/oidc/bind-email",
+          ]);
+          const normalizedPath = currentPath.replace(/\/+$/, "") || "/";
+          if (!publicAuthPaths.has(normalizedPath)) {
             window.location.replace(`/${currentPath ? `?next_path=${encodeURIComponent(currentPath)}` : ``}`);
           }
         }
