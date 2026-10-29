@@ -23,7 +23,7 @@ import { getFileURL } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
-import { getEligibleMemberIds, toggleEligibleMembers } from "./member-selection";
+import { getEligibleMemberIds, toggleEligibleMembers, memberDisplayName } from "./member-selection";
 
 type MemberSelectWebCommonProps = {
   /** value-agnostic e2e selector — forwarded to the block's trigger as data-testid */
@@ -149,7 +149,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
   const toOption = useCallback(
     (id: string): MemberOption => {
       const member = getUserDetails(id);
-      const name = member?.display_name ?? "";
+      const name = memberDisplayName(member, t("unknown_user"));
       return {
         id,
         display_name: id === currentUser?.id ? `${name} (${youLabel})` : name,
@@ -158,7 +158,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
         suspended: !!slug && isUserSuspended(id, slug),
       };
     },
-    [getUserDetails, currentUser?.id, youLabel, slug, isUserSuspended]
+    [getUserDetails, currentUser?.id, youLabel, slug, isUserSuspended, t]
   );
 
   const getValues = useCallback(
@@ -173,7 +173,8 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
       for (const id of rosterIds ?? []) {
         const member = getUserDetails(id);
         if (!member) continue;
-        const searchText = `${member.display_name} ${member.first_name} ${member.last_name}`.toLowerCase();
+        const searchText =
+          `${member.display_name} ${member.first_name} ${member.last_name} ${member.email ?? ""}`.toLowerCase();
         if (query && !searchText.includes(query)) continue;
         // Legacy CE ordering: the current user leads the roster (the block then pins the selected ones).
         if (id === currentUser?.id) results.unshift(toOption(id));
@@ -209,7 +210,8 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
                   const member = getUserDetails(id);
                   return {
                     id,
-                    searchText: `${member?.display_name} ${member?.first_name} ${member?.last_name}`.toLowerCase(),
+                    searchText:
+                      `${member?.display_name} ${member?.first_name} ${member?.last_name} ${member?.email ?? ""}`.toLowerCase(),
                     suspended: !!slug && isUserSuspended(id, slug),
                   };
                 })}

@@ -1,3 +1,24 @@
+export function memberDisplayName(
+  user: { display_name?: string; first_name?: string; last_name?: string; email?: string } | null | undefined,
+  unknownUser: string
+): string {
+  return (
+    user?.display_name?.trim() ||
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
+    user?.email ||
+    unknownUser
+  );
+}
+
+export function reconcileSelectedMembers<T extends { member_id: string }>(
+  ids: string[],
+  previous: T[],
+  create: (id: string) => T
+): T[] {
+  const existing = new Map(previous.map((member) => [member.member_id, member]));
+  return [...new Set(ids)].map((id) => existing.get(id) ?? create(id));
+}
+
 export type MemberSelectionCandidate = { id: string; searchText: string; suspended: boolean };
 
 export function getEligibleMemberIds(members: MemberSelectionCandidate[], query: string): string[] {
