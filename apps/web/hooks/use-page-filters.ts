@@ -21,7 +21,7 @@ const DEFAULT_PERSONALIZATION_VALUES: TPagesPersonalizationConfig = {
   full_width: false,
   font_size: "large-font",
   font_style: "sans-serif",
-  sticky_toolbar: true,
+  sticky_toolbar: false,
 };
 
 export const usePageFilters = () => {

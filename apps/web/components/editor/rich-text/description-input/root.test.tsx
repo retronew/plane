@@ -20,6 +20,7 @@ vi.mock("@/hooks/store/use-workspace", () => ({
 vi.mock("@/hooks/store/use-editor-asset", () => ({ useEditorAsset: () => ({}) }));
 vi.mock("@/services/workspace.service", () => ({ WorkspaceService: vi.fn() }));
 vi.mock("./loader", () => ({ DescriptionInputLoader: () => null }));
+vi.mock("./collaborative", () => ({ CollaborativeDescriptionInput: () => <div data-testid="shared-description" /> }));
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -35,6 +36,18 @@ function fixture(onSubmit = vi.fn().mockResolvedValue(undefined)) {
     setIsSubmitting: vi.fn(),
   };
 }
+it("routes existing project issue descriptions to collaboration without an HTML save timer", async () => {
+  vi.useFakeTimers();
+  const props = fixture();
+  const view = render(<DescriptionInput key="description" {...props} projectId="project" />);
+  expect(view.getByTestId("shared-description")).toBeTruthy();
+  view.unmount();
+  await act(async () => {
+    await vi.runAllTimersAsync();
+  });
+  expect(props.onSubmit).not.toHaveBeenCalled();
+});
+
 it("uses the latest submit callback without saving early or leaving a timer after unmount", async () => {
   vi.useFakeTimers();
   const props = fixture();

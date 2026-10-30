@@ -22,7 +22,11 @@ type Props = {
   editorRef: EditorRefApi | null;
 };
 
-const toolbarItems = TOOLBAR_ITEMS.lite;
+const toolbarItems: Record<string, ToolbarMenuItem[]> = {
+  attachments: Object.values(TOOLBAR_ITEMS.lite)
+    .flat()
+    .filter((item) => item.itemKey === "image"),
+};
 
 export function IssueCommentToolbar(props: Props) {
   const { executeCommand, handleSubmit, isCommentEmpty, editorRef, isSubmitting, showSubmitButton } = props;

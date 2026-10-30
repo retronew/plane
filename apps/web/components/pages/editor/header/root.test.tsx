@@ -47,7 +47,8 @@ function mount(editable = true) {
     page: page as unknown as TPageInstance,
     workspaceSlug: "workspace",
     projectId: "project",
-    titleEditorRef: { current: titleEditor } as never,
+    setTitle: titleEditor.setEditorValue,
+    titleReady: true,
   };
   const result = render(<PageEditorHeaderRoot {...props} />);
   return { ...result, page, editor, titleEditor, props };
@@ -63,12 +64,12 @@ it("keeps the icon action visible for a named page and scopes templates to the p
   expect(screen.getByRole("button", { name: "Apply template" }).getAttribute("data-project")).toBe("project");
 });
 
-it("applies metadata and replaces collaborative title/body with escaped plain-text title", async () => {
+it("applies metadata and replaces collaborative title/body with a plain-text collaborative title", async () => {
   const { page, editor, titleEditor } = mount();
   fireEvent.click(screen.getByRole("button", { name: "Apply template" }));
   await waitFor(() => expect(editor.setEditorValue).toHaveBeenCalledWith("<p>Template body</p>", true));
-  expect(page.update).toHaveBeenCalledWith({ name: "Title <template>" });
-  expect(titleEditor.setEditorValue).toHaveBeenCalledWith("<h1>Title &lt;template&gt;</h1>");
+  expect(page.update).toHaveBeenCalledWith({});
+  expect(titleEditor.setEditorValue).toHaveBeenCalledWith("Title <template>");
 });
 
 it("hides templates for read-only, locked or archived content", () => {

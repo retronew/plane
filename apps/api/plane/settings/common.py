@@ -412,6 +412,9 @@ if APP_BASE_URL and not is_valid_url(APP_BASE_URL):
     APP_BASE_URL = None
 APP_BASE_PATH = os.environ.get("APP_BASE_PATH", "/")
 
+# Internal live writes also require the authenticated user's session.
+LIVE_SERVER_SECRET_KEY = os.environ.get("LIVE_SERVER_SECRET_KEY", "")
+
 # Live Base URL
 LIVE_BASE_URL = os.environ.get("LIVE_BASE_URL", None)
 if LIVE_BASE_URL and not is_valid_url(LIVE_BASE_URL):

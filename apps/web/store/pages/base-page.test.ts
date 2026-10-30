@@ -36,3 +36,17 @@ it("rolls back labels and preserves false and null properties on failure", async
   expect(page.archived_at).toBeNull();
   page.cleanup();
 });
+
+it("does not persist a collaborative title projection through the legacy HTTP path", async () => {
+  vi.useFakeTimers();
+  const { page, update } = fixture();
+  try {
+    page.updateTitle("Collaborative title");
+    await vi.advanceTimersByTimeAsync(2500);
+    expect(page.name).toBe("Collaborative title");
+    expect(update).not.toHaveBeenCalled();
+  } finally {
+    page.cleanup();
+    vi.useRealTimers();
+  }
+});

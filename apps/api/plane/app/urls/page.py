@@ -4,6 +4,7 @@
 
 from django.urls import path
 from plane.app.views.page.move import PageMoveEndpoint
+from plane.app.views.page.collaboration import PageCollaborationEndpoint
 
 
 from plane.app.views import (
@@ -15,6 +16,11 @@ from plane.app.views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/collaboration/",
+        PageCollaborationEndpoint.as_view(),
+        name="page-collaboration",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/pages/<uuid:page_id>/move/",
         PageMoveEndpoint.as_view(),

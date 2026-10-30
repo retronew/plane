@@ -8,7 +8,7 @@ import React, { useState, useCallback } from "react";
 // plane constants
 import type { EIssueCommentAccessSpecifier } from "@plane/constants";
 // plane editor
-import { LiteTextEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, ILiteTextEditorProps, TFileHandler } from "@plane/editor";
 // components
 import type { TSticky } from "@plane/types";
@@ -92,7 +92,9 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
       onFocus={() => !showToolbarInitially && setIsFocused(true)}
       onBlur={() => !showToolbarInitially && setIsFocused(false)}
     >
-      <LiteTextEditorWithRef
+      <PlateEditorWithRef
+        mode="lite"
+        toolbar="floating"
         ref={setEditorRef}
         disabledExtensions={[...liteTextEditorExtensions.disabled, "enter-key"]}
         flaggedExtensions={liteTextEditorExtensions.flagged}
@@ -132,6 +134,7 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
             handleColorChange={handleColorChange}
             editorRef={editorApi}
             selectedColor={selectedColor}
+            showFormatting={false}
           />
         </div>
       )}

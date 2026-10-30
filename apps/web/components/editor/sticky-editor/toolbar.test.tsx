@@ -67,3 +67,21 @@ it("announces the selected color and preserves the saved color key", () => {
   expect(update).toHaveBeenCalledWith({ background_color: "green" });
   expect(close).toHaveBeenCalledOnce();
 });
+
+it("keeps color and delete actions when floating formatting is used", () => {
+  const remove = vi.fn();
+  const view = render(
+    <StickyEditorToolbar
+      editorRef={null}
+      executeCommand={vi.fn()}
+      handleColorChange={vi.fn()}
+      handleDelete={remove}
+      showFormatting={false}
+    />
+  );
+  expect(view.queryByRole("button", { name: "stickies.toolbar.bold" })).toBeNull();
+  expect(view.getByRole("button", { name: "web.background_color" })).toBeTruthy();
+  fireEvent.click(view.getByRole("button", { name: "stickies.delete" }));
+  expect(remove).toHaveBeenCalledOnce();
+  view.unmount();
+});

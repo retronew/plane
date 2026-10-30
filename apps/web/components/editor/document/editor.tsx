@@ -6,7 +6,7 @@
 
 import { forwardRef } from "react";
 // plane imports
-import { DocumentEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { IEditorPropsExtended, EditorRefApi, IDocumentEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional, TSearchEntityRequestPayload, TSearchResponse } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -46,6 +46,7 @@ export const DocumentEditor = forwardRef(function DocumentEditor(
     containerClassName,
     editable,
     extendedEditorProps,
+    value,
     workspaceSlug,
     workspaceId,
     projectId,
@@ -73,7 +74,9 @@ export const DocumentEditor = forwardRef(function DocumentEditor(
   const { getEditorFileHandlers } = useEditorConfig();
 
   return (
-    <DocumentEditorWithRef
+    <PlateEditorWithRef
+      mode="document"
+      toolbar="floating"
       ref={ref}
       disabledExtensions={[...documentEditorExtensions.disabled, ...(additionalDisabledExtensions ?? [])]}
       editable={editable}
@@ -95,7 +98,10 @@ export const DocumentEditor = forwardRef(function DocumentEditor(
         renderComponent: EditorMentionsRoot,
         getMentionedEntityDetails: (id: string) => ({ display_name: getUserDetails(id)?.display_name ?? "" }),
       }}
-      extendedEditorProps={extendedEditorProps}
+      initialValue={typeof value === "string" ? value : ""}
+      documentValue={typeof value === "string" ? undefined : value}
+      value={typeof value === "string" ? value : undefined}
+      extendedEditorProps={extendedEditorProps ?? {}}
       {...rest}
       containerClassName={cn("relative pb-3 pl-3", containerClassName)}
     />

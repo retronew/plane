@@ -55,7 +55,7 @@ export const PageVersionsMainContent = observer(function PageVersionsMainContent
   );
 
   const handleRestoreVersion = async () => {
-    if (!restoreEnabled) return;
+    if (!restoreEnabled || !versionDetails || isRestoring) return;
     setIsRestoring(true);
     await handleRestore(versionDetails?.description_html ?? "<p></p>")
       .then(() => {

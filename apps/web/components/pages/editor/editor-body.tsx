@@ -4,21 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
 // plane imports
-import { LIVE_BASE_PATH, LIVE_BASE_URL } from "@plane/constants";
-import { CollaborativeDocumentEditorWithRef } from "@plane/editor";
-import type {
-  CollaborationState,
-  EditorRefApi,
-  EditorTitleRefApi,
-  TAIMenuProps,
-  TDisplayConfig,
-  TFileHandler,
-  TRealtimeConfig,
-  TServerHandler,
-} from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
+import { usePageCollaboration } from "./use-page-collaboration";
+import { Button } from "@makeplane/propel/components/button";
+import { CollaborativePageTitle, updateCollaborativeTitle } from "./collaborative-title";
+import type { EditorRefApi, TAIMenuProps, TDisplayConfig, TFileHandler } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
 import type { TSearchEntityRequestPayload, TSearchResponse, TWebhookConnectionQueryParams } from "@plane/types";
 import { ERowVariant, Row } from "@plane/blocks/layout";
@@ -70,40 +63,7 @@ type Props = {
   storeType: EPageStoreType;
   customRealtimeEventHandlers?: TCustomEventHandlers;
   extendedEditorProps: TExtendedEditorExtensionsConfig;
-  isFetchingFallbackBinary?: boolean;
-  onCollaborationStateChange?: (state: CollaborationState) => void;
 };
-
-/**
- * Builds the collaboration WebSocket config from `window.location`. Web is a client-only app
- * (`ssr: false` in react-router.config.ts), so this never runs without a window, and the first
- * render already gets the config instead of switching to it after mount.
- */
-function buildRealtimeConfig(webhookConnectionParams: TWebhookConnectionQueryParams): TRealtimeConfig | undefined {
-  // Construct the WebSocket Collaboration URL
-  try {
-    const LIVE_SERVER_BASE_URL = LIVE_BASE_URL?.trim() || window.location.origin;
-    const WS_LIVE_URL = new URL(LIVE_SERVER_BASE_URL);
-    const isSecureEnvironment = window.location.protocol === "https:";
-    WS_LIVE_URL.protocol = isSecureEnvironment ? "wss" : "ws";
-    WS_LIVE_URL.pathname = `${LIVE_BASE_PATH}/collaboration`;
-
-    // Append query parameters to the URL
-    Object.entries(webhookConnectionParams)
-      .filter(([_, value]) => value !== undefined && value !== null)
-      .forEach(([key, value]) => {
-        WS_LIVE_URL.searchParams.set(key, String(value));
-      });
-
-    // Construct realtime config
-    return {
-      url: WS_LIVE_URL.toString(),
-    };
-  } catch (error) {
-    console.error("Error creating realtime config", error);
-    return undefined;
-  }
-}
 
 export const PageEditorBody = observer(function PageEditorBody(props: Props) {
   const {
@@ -115,15 +75,11 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     isNavigationPaneOpen,
     page,
     storeType,
-    webhookConnectionParams,
     projectId,
     workspaceSlug,
     extendedEditorProps,
-    isFetchingFallbackBinary,
-    onCollaborationStateChange,
   } = props;
   // refs
-  const titleEditorRef = useRef<EditorTitleRefApi>(null);
   // store hooks
   const { data: currentUser } = useUser();
   const { getWorkspaceBySlug } = useWorkspace();
@@ -172,17 +128,13 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     page,
     getUserDetails,
     handlers,
+    customRealtimeEventHandlers: props.customRealtimeEventHandlers,
   });
 
   // Set syncing status when page changes and reset collaboration state
   useEffect(() => {
     setSyncingStatus("syncing");
-    onCollaborationStateChange?.({
-      stage: { kind: "connecting" },
-      isServerSynced: false,
-      isServerDisconnected: false,
-    });
-  }, [pageId, setSyncingStatus, onCollaborationStateChange]);
+  }, [pageId, setSyncingStatus]);
 
   const getAIMenu = useCallback(
     ({ isOpen, onClose }: TAIMenuProps) => (
@@ -198,29 +150,6 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     [editorRef, workspaceId, workspaceSlug, page.name]
   );
 
-  const serverHandler: TServerHandler = useMemo(
-    () => ({
-      onStateChange: (state) => {
-        // Pass full state to parent
-        onCollaborationStateChange?.(state);
-
-        // Map collaboration stage to UI syncing status
-        // Stage → UI mapping: disconnected → error | synced → synced | all others → syncing
-        if (state.stage.kind === "disconnected") {
-          setSyncingStatus("error");
-        } else if (state.stage.kind === "synced") {
-          setSyncingStatus("synced");
-        } else {
-          // initial, connecting, awaiting-sync, reconnecting → show as syncing
-          setSyncingStatus("syncing");
-        }
-      },
-    }),
-    [setSyncingStatus, onCollaborationStateChange]
-  );
-
-  const realtimeConfig = useMemo(() => buildRealtimeConfig(webhookConnectionParams), [webhookConnectionParams]);
-
   const userConfig = useMemo(
     () => ({
       id: currentUser?.id ?? "",
@@ -231,13 +160,28 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     [currentUser?.display_name, currentUser?.id, currentUser?.avatar_url]
   );
 
+  const {
+    reconnecting,
+    provider,
+    fenced,
+    saveError,
+    generation,
+    copyError,
+    snapshot,
+    loadError,
+    mutate,
+    collaboration,
+    reconnect,
+  } = usePageCollaboration({ page, projectId, workspaceSlug, editorForwardRef, userConfig, updatePageProperties });
+  const updateTitle = useCallback((title: string) => page.updateTitle(title), [page]);
+
   const blockWidthClassName = cn("mx-auto block w-full max-w-[720px] bg-transparent", {
     "max-w-[1152px]": isFullWidth,
   });
 
-  const isPageLoading = pageId === undefined || !realtimeConfig;
-
-  if (isPageLoading) return <PageContentLoader className={blockWidthClassName} />;
+  if (loadError && !snapshot) return <PageLoadError retry={() => void mutate()} />;
+  if (pageId === undefined || !collaboration || !snapshot) return <PageContentLoader className={blockWidthClassName} />;
+  const canEdit = isContentEditable && snapshot.can_edit && !fenced && !reconnecting;
 
   return (
     <Row
@@ -246,25 +190,11 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
     >
       <div id="page-content-container" className="relative w-full flex-shrink-0">
         {/* table of content */}
-        {!isNavigationPaneOpen && (
-          <div className="page-summary-container absolute top-[64px] right-0 z-[5] h-full">
-            <div className="sticky top-[72px]">
-              <div className="group/page-toc relative px-page-x">
-                <button
-                  type="button"
-                  className="max-h-[50vh] !cursor-pointer overflow-hidden"
-                  aria-label={t("page_navigation_pane.outline_floating_button")}
-                  onClick={handleOpenNavigationPane}
-                >
-                  <PageContentBrowser className="overflow-y-auto" editorRef={editorRef} showOutline />
-                </button>
-                <div className="vertical-scrollbar pointer-events-none absolute top-0 right-0 scrollbar-sm max-h-[70vh] w-52 translate-x-1/2 overflow-y-auto rounded-sm bg-surface-2 p-4 whitespace-nowrap opacity-0 transition-all duration-300 group-hover/page-toc:pointer-events-auto group-hover/page-toc:-translate-x-1/4 group-hover/page-toc:opacity-100">
-                  <PageContentBrowser className="overflow-y-auto" editorRef={editorRef} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <PageOutline
+          isNavigationPaneOpen={isNavigationPaneOpen}
+          editorRef={editorRef}
+          handleOpenNavigationPane={handleOpenNavigationPane}
+        />
         <div>
           <div className={cn("page-header-container group/page-header", { "wide-layout": isFullWidth })}>
             <div className={blockWidthClassName}>
@@ -272,45 +202,157 @@ export const PageEditorBody = observer(function PageEditorBody(props: Props) {
                 page={page}
                 projectId={projectId}
                 workspaceSlug={workspaceSlug}
-                titleEditorRef={titleEditorRef}
+                setTitle={(title) => {
+                  if (provider) updateCollaborativeTitle(provider.document.getText("title"), title);
+                }}
+                titleReady={!!provider && !fenced && !reconnecting}
+              />
+              <CollaborativePageTitle
+                key={`${pageId}:${generation}`}
+                provider={provider}
+                editable={canEdit}
+                initialValue={snapshot.name}
+                onTitleChange={updateTitle}
               />
             </div>
           </div>
-          <CollaborativeDocumentEditorWithRef
-            editable={isContentEditable}
-            id={pageId}
-            fileHandler={config.fileHandler}
-            handleEditorReady={handleEditorReady}
-            ref={editorForwardRef}
-            titleRef={titleEditorRef}
-            containerClassName="h-full p-0 pb-64"
-            displayConfig={displayConfig}
-            getEditorMetaData={getEditorMetaData}
-            mentionHandler={{
-              searchCallback: async (query) => {
-                const res = await fetchMentions(query);
-                if (!res) throw new Error("Failed in fetching mentions");
-                return res;
-              },
-              // oxlint-disable-next-line no-shadow
-              renderComponent: (props) => <EditorMentionsRoot {...props} />,
-              getMentionedEntityDetails: (id: string) => ({ display_name: getUserDetails(id)?.display_name ?? "" }),
+          <div
+            className={cn("page-header-container min-h-screen cursor-text", { "wide-layout": isFullWidth })}
+            role="presentation"
+            onMouseDown={(event) => {
+              if (!canEdit || event.button !== 0 || event.target !== event.currentTarget) return;
+              event.preventDefault();
+              editorForwardRef.current?.focus("end");
             }}
-            updatePageProperties={updatePageProperties}
-            realtimeConfig={realtimeConfig}
-            serverHandler={serverHandler}
-            user={userConfig}
-            disabledExtensions={documentEditorExtensions.disabled}
-            flaggedExtensions={documentEditorExtensions.flagged}
-            aiHandler={{
-              menu: getAIMenu,
-            }}
-            onAssetChange={updateAssetsList}
-            extendedEditorProps={extendedEditorProps}
-            isFetchingFallbackBinary={isFetchingFallbackBinary}
-          />
+          >
+            <div className={blockWidthClassName}>
+              <PlateEditorWithRef
+                key={`${pageId}:${snapshot.epoch}:${generation}`}
+                mode="document"
+                placeholder={canEdit ? t("web.runtime.editor_commands") : ""}
+                toolbar="floating"
+                initialValue={snapshot.description_html}
+                collaboration={collaboration}
+                editable={canEdit}
+                id={pageId}
+                fileHandler={config.fileHandler}
+                handleEditorReady={handleEditorReady}
+                ref={editorForwardRef}
+                containerClassName="h-full p-0"
+                displayConfig={displayConfig}
+                getEditorMetaData={getEditorMetaData}
+                mentionHandler={{
+                  searchCallback: async (query) => {
+                    const res = await fetchMentions(query);
+                    if (!res) throw new Error("Failed in fetching mentions");
+                    return res;
+                  },
+                  // oxlint-disable-next-line no-shadow
+                  renderComponent: (props) => <EditorMentionsRoot {...props} />,
+                  getMentionedEntityDetails: (id: string) => ({ display_name: getUserDetails(id)?.display_name ?? "" }),
+                }}
+                disabledExtensions={documentEditorExtensions.disabled}
+                flaggedExtensions={documentEditorExtensions.flagged}
+                aiHandler={{
+                  menu: getAIMenu,
+                }}
+                onAssetChange={updateAssetsList}
+                extendedEditorProps={extendedEditorProps}
+              />
+            </div>
+          </div>
         </div>
       </div>
+      <PageSaveNotice saveError={saveError} fenced={fenced} copyError={copyError} reconnect={reconnect} />
     </Row>
   );
 });
+
+function PageSaveNotice({
+  saveError,
+  fenced,
+  copyError,
+  reconnect,
+}: {
+  saveError: boolean;
+  fenced: boolean;
+  copyError: boolean;
+  reconnect: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  if (!saveError && !fenced && !copyError) return null;
+  return (
+    <div className="sticky bottom-4 z-10 w-full shrink-0 px-4">
+      <div className="mx-auto max-w-[720px] rounded-lg border border-subtle-1 bg-surface-1 p-3 text-13 text-danger-primary shadow-raised-100">
+        {(saveError || fenced) && (
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3">
+            <p>{t(fenced ? "editor_collaboration.conflict" : "editor_collaboration.save_error")}</p>
+            <Button
+              size="sm"
+              stretch="auto"
+              variant="secondary"
+              label={t("editor_collaboration.copy_reconnect")}
+              onClick={() => void reconnect()}
+            />
+          </div>
+        )}
+        {copyError && (
+          <p role="alert" className="mt-2">
+            {t("editor_collaboration.copy_error")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PageLoadError({ retry }: { retry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div role="alert">
+      <p>{t("editor_collaboration.load_error")}</p>
+      <Button
+        size="sm"
+        stretch="auto"
+        variant="secondary"
+        label={t("editor_comparison.retryConnection")}
+        onClick={retry}
+      />
+    </div>
+  );
+}
+function PageOutline({
+  isNavigationPaneOpen,
+  editorRef,
+  handleOpenNavigationPane,
+}: {
+  isNavigationPaneOpen: boolean;
+  editorRef: EditorRefApi | null;
+  handleOpenNavigationPane: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {" "}
+      {!isNavigationPaneOpen && (
+        <div className="page-summary-container absolute top-[64px] right-0 z-[5] h-full">
+          <div className="sticky top-[72px]">
+            <div className="group/page-toc relative px-page-x">
+              <button
+                type="button"
+                className="max-h-[50vh] !cursor-pointer overflow-hidden"
+                aria-label={t("page_navigation_pane.outline_floating_button")}
+                onClick={handleOpenNavigationPane}
+              >
+                <PageContentBrowser className="overflow-y-auto" editorRef={editorRef} showOutline />
+              </button>
+              <div className="vertical-scrollbar pointer-events-none absolute top-0 right-0 scrollbar-sm max-h-[70vh] w-52 translate-x-1/2 overflow-y-auto rounded-sm bg-surface-2 p-4 whitespace-nowrap opacity-0 transition-all duration-300 group-hover/page-toc:pointer-events-auto group-hover/page-toc:-translate-x-1/4 group-hover/page-toc:opacity-100">
+                <PageContentBrowser className="overflow-y-auto" editorRef={editorRef} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

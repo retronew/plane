@@ -8,7 +8,7 @@ import React, { useState } from "react";
 // plane constants
 import type { EIssueCommentAccessSpecifier } from "@plane/constants";
 // plane imports
-import { LiteTextEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, ILiteTextEditorProps, TFileHandler } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
 import type { MakeOptional } from "@plane/types";
@@ -56,10 +56,6 @@ type LiteTextEditorWrapperProps = MakeOptional<
         duplicateFile: TFileHandler["duplicate"];
       }
   );
-
-function isMutableRefObject<T>(value: React.ForwardedRef<T>): value is React.MutableRefObject<T | null> {
-  return !!value && typeof value === "object" && "current" in value;
-}
 
 function FullCommentToolbar({
   isFocused,
@@ -117,6 +113,14 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   const isFullVariant = variant === "full";
   const [isFocused, setIsFocused] = useState(isFullVariant ? showToolbarInitially : true);
   const [editorRef, setEditorRef] = useState<EditorRefApi | null>(null);
+  const attachEditor = React.useCallback(
+    (instance: EditorRefApi | null) => {
+      setEditorRef(instance);
+      if (typeof ref === "function") ref(instance);
+      else if (ref) ref.current = instance;
+    },
+    [ref]
+  );
   // editor flaggings
   const { liteText: liteTextEditorExtensions } = useEditorFlagging({
     workspaceSlug,
@@ -160,8 +164,10 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
       <div className={cn(isLiteVariant && editable ? "flex items-end gap-1" : "")}>
         {/* Main Editor - always rendered once */}
         <div className={cn(isLiteVariant && editable ? "min-w-0 flex-1" : "", commentClasses.editor)}>
-          <LiteTextEditorWithRef
-            ref={ref}
+          <PlateEditorWithRef
+            mode="lite"
+            toolbar="floating"
+            ref={attachEditor}
             disabledExtensions={[...liteTextEditorExtensions.disabled, ...additionalDisabledExtensions]}
             editable={editable}
             flaggedExtensions={liteTextEditorExtensions.flagged}
@@ -176,11 +182,6 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
               showImageDeleteAction: true,
             }}
             getEditorMetaData={getEditorMetaData}
-            handleEditorReady={(ready) => {
-              if (ready) {
-                setEditorRef(isMutableRefObject<EditorRefApi>(ref) ? ref.current : null);
-              }
-            }}
             mentionHandler={{
               searchCallback: async (query) => {
                 const res = await fetchMentions(query);
@@ -244,6 +245,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
           showSubmitButton={showSubmitButton}
           submitButtonText={submitButtonText}
           compact={compactCommentToolbar}
+          showFormatting={false}
         />
       )}
     </div>

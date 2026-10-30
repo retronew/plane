@@ -18,7 +18,7 @@ from django import apps
 # Module imports
 from plane.utils.html_processor import strip_tags
 from plane.utils.path_validator import sanitize_filename
-from plane.db.mixins import SoftDeletionManager, ChangeTrackerMixin
+from plane.db.mixins import SoftDeletionQuerySet, ChangeTrackerMixin
 from plane.utils.exception_logger import log_exception
 from .project import ProjectBaseModel
 from plane.utils.uuid import convert_uuid_to_integer
@@ -89,7 +89,38 @@ def get_default_display_properties():
 
 
 # TODO: Handle identifiers for Bulk Inserts - nk
-class IssueManager(SoftDeletionManager):
+class IssueDescriptionQuerySet(SoftDeletionQuerySet):
+    def update(self, **kwargs):
+        if "description_html" not in kwargs:
+            return super().update(**kwargs)
+        from plane.services.issue_description import collaboration_projection
+        from .issue_description_document import IssueDescriptionDocument
+
+        if collaboration_projection.get():
+            return super().update(**kwargs)
+        with transaction.atomic():
+            issue_ids = list(self.select_for_update().values_list("pk", flat=True))
+            result = super().update(**kwargs)
+            IssueDescriptionDocument.objects.filter(issue_id__in=issue_ids).update(
+                epoch=models.F("epoch") + 1,
+                revision=models.F("revision") + 1,
+                state=None,
+                source_hash="",
+                contributors=[],
+            )
+            return result
+
+
+class IssueAllManager(models.Manager.from_queryset(IssueDescriptionQuerySet)):
+    pass
+
+
+class IssueSoftManager(IssueAllManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
+class IssueManager(IssueSoftManager):
     def get_queryset(self):
         return (
             super()
@@ -170,7 +201,10 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         blank=True,
     )
 
+    # Keep the pre-existing default manager (issue_objects) ordering.
     issue_objects = IssueManager()
+    objects = IssueSoftManager()
+    all_objects = IssueAllManager()
 
     class Meta:
         verbose_name = "Issue"
@@ -214,13 +248,23 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
 
                 IssueSequence.objects.create(issue=self, sequence=self.sequence_id, project=self.project)
         else:
-            # Strip the html tags using html parser
-            self.description_stripped = (
-                None
-                if (self.description_html == "" or self.description_html is None)
-                else strip_tags(self.description_html)
-            )
-            super(Issue, self).save(*args, **kwargs)
+            # Serialize description replacements against collaboration CAS saves, including
+            # direct model writes from workflows/imports (not only REST serializers).
+            from plane.services.issue_description import invalidate_description
+
+            with transaction.atomic():
+                previous = Issue.all_objects.select_for_update().get(pk=self.pk)
+                writes_description = (
+                    kwargs.get("update_fields") is None or "description_html" in kwargs["update_fields"]
+                )
+                self.description_stripped = (
+                    None
+                    if (self.description_html == "" or self.description_html is None)
+                    else strip_tags(self.description_html)
+                )
+                super(Issue, self).save(*args, **kwargs)
+                if writes_description:
+                    invalidate_description(self, previous.description_html)
 
     def __str__(self):
         """Return name of the issue"""
