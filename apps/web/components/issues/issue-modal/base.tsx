@@ -88,7 +88,9 @@ const buildComposerDraftState = (args: {
           composerDraftContext(args.projectId, args.data?.parent_id, args.isDraft)
         )
       : undefined;
-  const cachedDraft = cacheKey ? readComposerDraft(cacheKey) : undefined;
+  const savedDraft = cacheKey ? readComposerDraft(cacheKey) : undefined;
+  // A saved composer belongs to its project; another entry point must not inherit its properties or assets.
+  const cachedDraft = savedDraft?.values.project_id === args.projectId ? savedDraft : undefined;
   const clearCachedDraft = () => {
     if (cacheKey) saveComposerDraft(cacheKey);
   };
@@ -419,19 +421,15 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   }, [isOpen, workspaceSlugValue, projectId, issueIdToFetch, fetchIssueDetails, fetchIssue, descriptionFallback]);
 
   const dataProjectId = data?.project_id;
-  const cachedProjectId = cachedDraft?.values.project_id;
-  const fallbackProjectId =
-    cachedProjectId && allowedProjectIds?.includes(cachedProjectId)
-      ? cachedProjectId
-      : (projectId?.toString() ?? allowedProjectIds?.[0]);
+  const fallbackProjectId = projectId && allowedProjectIds?.includes(projectId) ? projectId : "";
   useEffect(() => {
     // Preserve the current project and description while the dialog exits.
     if (!isOpen) return;
     setActiveProjectId((current) => {
       // If data is present, the issue's project wins over the project in the url.
       if (dataProjectId) return dataProjectId;
-      // Otherwise keep the current project, or fall back to the first allowed project.
-      if (allowedProjectIds && allowedProjectIds.length > 0 && !current) return fallbackProjectId ?? null;
+      // Project routes supply the default; workspace and personal entry points require a choice.
+      if (allowedProjectIds && allowedProjectIds.length > 0 && current === null) return fallbackProjectId;
       return current;
     });
   }, [dataProjectId, fallbackProjectId, isOpen, allowedProjectIds]);
@@ -624,7 +622,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const handleDuplicateIssueModal = (value: boolean) => setIsDuplicateModalOpen(value);
 
   // don't open the modal if there are no projects
-  if (!allowedProjectIds || allowedProjectIds.length === 0 || !activeProjectId) return null;
+  if (!allowedProjectIds || allowedProjectIds.length === 0 || activeProjectId === null) return null;
 
   const commonIssueModalProps: IssueFormProps = {
     issueTitleRef: issueTitleRef,
