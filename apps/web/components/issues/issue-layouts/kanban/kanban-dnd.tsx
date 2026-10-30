@@ -107,21 +107,30 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
     };
   }, []);
 
-  // Lean of the lifted card: a fixed angle toward the side of its start point it is on. Written as a
-  // CSS variable on the root because the dragged card remounts each time it changes columns.
-  const tiltRef = useRef<{ startX: number; direction: 1 | -1 }>({ startX: 0, direction: 1 });
+  // Lean of the lifted card: level while it is still over its own column, then a fixed angle toward
+  // the side of its start point once it leaves. Written as a CSS variable on the root because the
+  // dragged card remounts each time it changes columns.
+  const tiltRef = useRef<{ startX: number; direction: 1 | -1; applied: number | null }>({
+    startX: 0,
+    direction: 1,
+    applied: null,
+  });
   const updateTilt = (x: number, isStart = false) => {
     const tilt = tiltRef.current;
     if (isStart) tilt.startX = x;
-    const direction = getKanbanDragTilt(x - tilt.startX, tilt.direction);
-    // only touch the style when the side flips, so the card never re-transitions mid-drag
-    if (!isStart && direction === tilt.direction) return;
-    tilt.direction = direction;
-    applyTilt(direction * KANBAN_DRAG_TILT_DEG);
+    tilt.direction = getKanbanDragTilt(x - tilt.startX, tilt.direction);
+    const current = activeRef.current;
+    const isHome = !current || current.columnId === current.sourceColumnId;
+    const deg = isHome ? 0 : tilt.direction * KANBAN_DRAG_TILT_DEG;
+    // only touch the style when the angle changes, so the card never re-transitions mid-drag
+    if (deg === tilt.applied) return;
+    tilt.applied = deg;
+    applyTilt(deg);
   };
 
   const resetDrag = useCallback(() => {
     tiltRef.current.direction = 1;
+    tiltRef.current.applied = null;
     document.documentElement.style.removeProperty(KANBAN_DRAG_TILT_VAR);
     activeRef.current = null;
     setActive(null);
@@ -171,6 +180,9 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
           const columnId = targetData.columnId;
           const column = columnsRef.current.get(columnId);
           if (!column) return;
+          // a column sorted by a rule (not by hand) re-sorts the card on drop, so its cards never make
+          // room for it: stop dnd-kit's own optimistic sorting there; only the source gap closes
+          if (!column.canReorder) event.preventDefault();
           setOverColumnId(columnId);
 
           // a column that only accepts the card (not a position) takes it at the end
@@ -179,6 +191,7 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
           if (next === order) return;
           current.columnId = columnId;
           setPreviewOrder(next);
+          updateTilt(event.operation.position.current.x);
         }}
         onDragEnd={(event) => {
           const current = activeRef.current;

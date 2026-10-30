@@ -21,7 +21,6 @@ import { cn, generateWorkItemLink } from "@plane/utils";
 // components
 import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layouts/utils";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
-import { IssueHierarchyIndicator } from "../hierarchy-indicator";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
@@ -32,6 +31,7 @@ import type { TRenderQuickActions } from "../list/list-view-types";
 import { StateSelect } from "@/components/dropdowns/state/state-select";
 import { IssueProperties } from "../properties/all-properties";
 import { IssuePropertyLabels } from "../properties/labels";
+import { IssueHierarchyIndicator } from "../hierarchy-indicator";
 import { splitKanbanCardProperties } from "./card-layout";
 import { KanbanCardProgress, getSubWorkItemProgress } from "./card-progress";
 import { useKanbanSortableCard } from "./kanban-dnd";
@@ -141,7 +141,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
             // click copies the identifier (with a toast) instead of opening the card
             // oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions
             <span
-              className="inline-flex h-5 max-w-full items-center rounded-lg px-1.5 transition-colors hover:bg-layer-3 [&_*]:text-caption-md-medium"
+              className="inline-flex h-5 max-w-full shrink-0 items-center rounded-lg px-1.5 transition-colors hover:bg-layer-3 [&_*]:text-caption-md-medium"
               onClick={handleEventPropagation}
             >
               <IssueIdentifier
@@ -157,7 +157,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
           {showPriority && (
             <IssueProperties
               className={cn(
-                "flex items-center",
+                "flex shrink-0 items-center",
                 PRIORITY_CHIP_CLASSNAME,
                 PRIORITY_PILL_CLASSNAME[issue.priority ?? ""]
               )}
@@ -168,7 +168,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
               isReadOnly={isReadOnly}
             />
           )}
-          {/* the parent it rolls up to; its own children show in the progress row below instead */}
+          {/* the parent it rolls up to; its own sub-work items show in the progress row */}
           <IssueHierarchyIndicator parentId={issue.parent_id} parentName={parentIssue?.name ?? issue.parent?.name} />
         </div>
         <div className="flex shrink-0 items-center gap-1">
