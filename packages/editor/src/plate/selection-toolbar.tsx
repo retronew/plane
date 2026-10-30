@@ -9,8 +9,6 @@ import {
   StrikethroughIcon,
   Code2Icon,
   LinkIcon,
-  BaselineIcon,
-  PaintBucketIcon,
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
@@ -20,7 +18,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { Input } from "@makeplane/propel/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { Select, SelectContent, SelectItem, SelectList, SelectTrigger } from "@makeplane/propel/components/select";
-import { ColorSwatchPicker } from "@plane/blocks/common";
+import { FontColorToolbarButton } from "./font-color-toolbar-button";
 import { useTranslation } from "@plane/i18n";
 import { useFloatingToolbar, useFloatingToolbarState, offset, flip, shift } from "@platejs/floating";
 import { upsertLink, unwrapLink } from "@platejs/link";
@@ -212,95 +210,6 @@ function LinkSelector({ labels }: { labels: Labels }) {
   );
 }
 
-function FontColorSelector({ mark, labels }: { mark: "color" | "backgroundColor"; labels: Labels }) {
-  const editor = useEditorRef();
-  const [open, setOpen] = useState(false);
-  const [colors, setColors] = useState<string[]>([]);
-  const color = useEditorSelector((current) => current.api.mark(mark) as string | undefined, [mark]);
-  const label = mark === "color" ? labels.textColor : labels.backgroundColor;
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        if (next) {
-          const used = [...editor.api.nodes({ at: [], match: (node) => typeof node[mark] === "string", mode: "all" })]
-            .map(([node]) => String(node[mark]).toLowerCase())
-            .filter((value) => /^#[\da-f]{6}$/i.test(value));
-          setColors([...new Set(used)].slice(0, 19));
-        }
-        setOpen(next);
-      }}
-    >
-      <PopoverTrigger
-        render={
-          <IconButton
-            type="button"
-            size="md"
-            variant={open ? "tertiary" : "ghost"}
-            aria-label={label}
-            aria-pressed={open}
-            icon={
-              mark === "color" ? (
-                <BaselineIcon className="size-4" style={{ color }} />
-              ) : (
-                <PaintBucketIcon className="size-4" style={{ color }} />
-              )
-            }
-            onMouseDown={(event) => event.preventDefault()}
-          />
-        }
-      />
-      <PopoverContent
-        side="bottom"
-        align="start"
-        finalFocus={() => {
-          editor.tf.focus();
-          return false;
-        }}
-      >
-        <div className={`${popupClass} flex flex-col gap-3`}>
-          <ColorSwatchPicker
-            continuous
-            value={color}
-            onChange={(value) => {
-              if (editor.selection) editor.tf.addMarks({ [mark]: value });
-            }}
-          />
-          {colors.length > 0 && (
-            <div className="flex max-w-56 flex-wrap gap-1">
-              {colors.map((value) => (
-                <Button
-                  key={value}
-                  stretch="auto"
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  label={value}
-                  aria-label={value}
-                  aria-pressed={color === value}
-                  icon={<span className="size-4 rounded-sm" style={{ backgroundColor: value }} />}
-                  onClick={() => editor.tf.addMarks({ [mark]: value })}
-                />
-              ))}
-            </div>
-          )}
-          <Button
-            type="button"
-            size="sm"
-            stretch="auto"
-            variant="ghost"
-            label={labels.clearColor}
-            onClick={() => {
-              editor.tf.removeMarks(mark);
-              setOpen(false);
-            }}
-          />
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function AlignmentSelector({ labels }: { labels: Labels }) {
   const editor = useEditorRef();
   const [open, setOpen] = useState(false);
@@ -371,8 +280,16 @@ export function SelectionToolbarControls({ labels: providedLabels }: { labels: P
       </div>
       <div className="flex shrink-0 gap-0.5 px-1">
         {!disabled("link") && <LinkSelector labels={labels} />}
-        {!disabled("color") && <FontColorSelector mark="color" labels={labels} />}
-        {!disabled("backgroundColor") && <FontColorSelector mark="backgroundColor" labels={labels} />}
+        {!disabled("color") && (
+          <FontColorToolbarButton mark="color" label={labels.textColor} clearLabel={labels.clearColor} />
+        )}
+        {!disabled("backgroundColor") && (
+          <FontColorToolbarButton
+            mark="backgroundColor"
+            label={labels.backgroundColor}
+            clearLabel={labels.clearColor}
+          />
+        )}
       </div>
       <div className="flex shrink-0 px-1">{!disabled("alignment") && <AlignmentSelector labels={labels} />}</div>
     </>
