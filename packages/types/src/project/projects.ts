@@ -67,6 +67,8 @@ export interface IProject extends IPartialProject {
   description_html?: string | null;
   description_text?: object | null;
   estimate?: string | null;
+  /** State groups (backlog, unstarted, ...) that do not accept new work items. */
+  disabled_state_groups?: TStateGroups[];
   anchor?: string | null;
   is_favorite?: boolean;
   members?: string[];

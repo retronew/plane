@@ -361,6 +361,10 @@ class ProjectViewSet(BaseViewSet):
             partial=True,
         )
         serializer.is_valid(raise_exception=True)
+        if "disabled_state_groups" in serializer.validated_data:
+            from plane.utils.workflow import validate_disabled_state_groups
+
+            validate_disabled_state_groups(project.pk, serializer.validated_data["disabled_state_groups"])
         serializer.save()
         record_project_field_changes(project, request.user, before)
         if intake_view:

@@ -66,6 +66,32 @@ def test_state_creation_switch_does_not_block_existing_transitions(session_clien
         validate_workflow_write(ctx.project.pk, {"is_draft": False, "state": ctx.done}, draft)
 
 
+def test_disabling_a_state_group_blocks_only_creation_in_that_group(session_client, ctx):
+    from plane.utils.workflow import effective_creation_state, validate_disabled_state_groups, validate_workflow_write
+
+    endpoint = f"/api/workspaces/{ctx.workspace.slug}/projects/{ctx.project.id}/"
+    response = session_client.patch(endpoint, {"disabled_state_groups": ["completed"]}, format="json")
+    assert response.status_code == 200
+    assert response.data["disabled_state_groups"] == ["completed"]
+
+    with pytest.raises(ValidationError):
+        validate_workflow_write(ctx.project.pk, {"name": "Blocked", "state": ctx.done})
+    # Existing work items can still move into the disabled group; only creation is blocked.
+    validate_workflow_write(ctx.project.pk, {"state": ctx.todo}, ctx.issue)
+    assert effective_creation_state(ctx.project.pk).pk == ctx.backlog.pk
+
+    with pytest.raises(ValidationError):
+        validate_disabled_state_groups(ctx.project.pk, ["backlog", "unstarted", "completed"])
+    response = session_client.patch(
+        endpoint, {"disabled_state_groups": ["backlog", "unstarted", "completed"]}, format="json"
+    )
+    assert response.status_code == 400
+    ctx.project.refresh_from_db()
+    assert ctx.project.disabled_state_groups == ["completed"]
+
+    assert session_client.patch(endpoint, {"disabled_state_groups": ["made-up"]}, format="json").status_code == 400
+
+
 def test_state_creation_settings_protect_default_and_last_entry(session_client, ctx):
     endpoint = ctx.base + "states/"
     response = session_client.patch(

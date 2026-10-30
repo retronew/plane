@@ -111,6 +111,8 @@ class Project(BaseModel):
     is_issue_type_enabled = models.BooleanField(default=False)
     workflow_enabled = models.BooleanField(default=False)
     workflow_version = models.PositiveIntegerField(default=0)
+    # State groups (backlog, unstarted, ...) in which new work items cannot be created.
+    disabled_state_groups = models.JSONField(default=list, blank=True)
     hierarchy_enabled = models.BooleanField(default=False)
     hierarchy_default_level = models.PositiveIntegerField(default=0)
     guest_view_all_features = models.BooleanField(default=False)

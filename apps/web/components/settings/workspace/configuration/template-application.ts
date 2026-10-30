@@ -18,7 +18,8 @@ export function getWorkItemTemplatePatch(
   template: WorkspaceTemplate,
   current: Pick<TIssue, "type_id" | "state_id">,
   workflow?: TProjectWorkflow,
-  getState?: (id: string) => IState | undefined
+  getState?: (id: string) => IState | undefined,
+  disabledGroups?: string[]
 ) {
   const configuration = template.configuration;
   const stateId = configuration?.state_id ?? current.state_id;
@@ -30,7 +31,7 @@ export function getWorkItemTemplatePatch(
     ...(configuration?.type_id !== undefined ? { type_id: configuration.type_id } : {}),
     state_id:
       (!stateId && workflowIsActive(workflow)) ||
-      (stateId && !workflowAllowsCreation(workflow, stateId, getState?.(stateId)))
+      (stateId && !workflowAllowsCreation(workflow, stateId, getState?.(stateId), disabledGroups))
         ? (workflow?.effective_initial_state_id ?? null)
         : stateId,
     assignee_ids: configuration?.assignee_ids ?? [],

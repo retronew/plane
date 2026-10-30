@@ -576,7 +576,12 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     const workflow = workflowStore.resolve(projectId, data.type_id);
     if (
       data.state_id &&
-      !workflowAllowsCreation(workflow, data.state_id, this.rootIssueStore.rootStore.state.getStateById(data.state_id))
+      !workflowAllowsCreation(
+        workflow,
+        data.state_id,
+        this.rootIssueStore.rootStore.state.getStateById(data.state_id),
+        this.rootIssueStore.rootStore.projectRoot.project.getProjectById(projectId)?.disabled_state_groups
+      )
     )
       throw { workflow: ["WORKFLOW_CREATION_NOT_ALLOWED"] };
     const response = await this.issueService.createIssue(workspaceSlug, projectId, data);

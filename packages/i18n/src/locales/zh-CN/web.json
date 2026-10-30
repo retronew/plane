@@ -1,6 +1,7 @@
 {
   "web": {
     "allow_new_work_items": "允许新建工作项",
+    "state_group_update_error": "无法更新该状态分组。请至少保留一个允许新建工作项的分组，且默认状态所在分组不能关闭。",
     "state_creation_update_error": "无法更新创建规则。请保留允许创建的默认状态及每个工作流的创建入口。",
     "default_state_template": "新项目默认状态模板",
     "apply_state_template": "应用工作区模板",

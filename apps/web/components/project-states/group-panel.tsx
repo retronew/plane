@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Switch } from "@makeplane/propel/components/switch";
 import { Plus } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 
@@ -8,11 +9,14 @@ export function StateGroupPanel({
   title,
   onAdd,
   addDisabled,
+  allowNewWorkItems,
   children,
 }: {
   title: string;
   onAdd: () => void;
   addDisabled?: boolean;
+  /** When provided, the group heading shows a switch for creating new work items in the group. */
+  allowNewWorkItems?: { checked: boolean; disabled?: boolean; onChange: (checked: boolean) => void };
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -20,6 +24,17 @@ export function StateGroupPanel({
     <section className="min-w-0">
       <div className="flex h-9 items-center gap-2 rounded-md bg-layer-1-hover px-2">
         <h4 className="min-w-0 flex-1 truncate px-2 text-13 font-medium text-secondary capitalize">{title}</h4>
+        {allowNewWorkItems && (
+          <label className="flex shrink-0 items-center gap-2 text-12 text-tertiary">
+            {t("web.allow_new_work_items")}
+            <Switch
+              size="sm"
+              checked={allowNewWorkItems.checked}
+              disabled={allowNewWorkItems.disabled}
+              onCheckedChange={allowNewWorkItems.onChange}
+            />
+          </label>
+        )}
         <IconButton
           type="button"
           variant="ghost"

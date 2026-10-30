@@ -20,6 +20,11 @@ type TGroupList = {
   groupedStates: Record<string, IState[]>;
   stateOperationsCallbacks: TStateOperationsCallbacks;
   isEditable: boolean;
+  /** State groups that currently refuse new work items, plus the setter that persists a toggle. */
+  disabledStateGroups?: {
+    groups: string[];
+    onChange: (group: TStateGroups, enabled: boolean) => Promise<void>;
+  };
   groupListClassName?: string;
   groupItemClassName?: string;
   stateItemClassName?: string;
@@ -30,6 +35,7 @@ export const GroupList = observer(function GroupList(props: TGroupList) {
     groupedStates,
     stateOperationsCallbacks,
     isEditable,
+    disabledStateGroups,
     groupListClassName,
     groupItemClassName,
     stateItemClassName,
@@ -64,6 +70,14 @@ export const GroupList = observer(function GroupList(props: TGroupList) {
               groupedStates={groupedStates}
               stateOperationsCallbacks={stateOperationsCallbacks}
               isEditable={isEditable && !saving}
+              allowNewWorkItems={
+                disabledStateGroups
+                  ? {
+                      checked: !disabledStateGroups.groups.includes(groupKey),
+                      onChange: (checked) => disabledStateGroups.onChange(groupKey, checked),
+                    }
+                  : undefined
+              }
               groupItemClassName={groupItemClassName}
               stateItemClassName={stateItemClassName}
             />

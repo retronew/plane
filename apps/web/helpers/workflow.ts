@@ -7,10 +7,12 @@ export function workflowIsActive(workflow?: TProjectWorkflow) {
 export function workflowAllowsCreation(
   workflow: TProjectWorkflow | undefined,
   stateId: string,
-  state?: { allow_new_work_items?: boolean }
+  state?: { allow_new_work_items?: boolean; group?: string },
+  disabledGroups?: string[]
 ) {
   return (
     state?.allow_new_work_items !== false &&
+    (!state?.group || !disabledGroups?.includes(state.group)) &&
     (!workflowIsActive(workflow) || workflow!.states.some((entry) => entry.id === stateId && entry.allow_creation))
   );
 }

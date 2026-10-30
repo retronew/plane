@@ -124,8 +124,10 @@ function applyWorkItemTemplate({
   resolveWorkflow,
   onApplied,
   getState,
+  disabledGroups,
 }: {
   getState: Parameters<typeof getWorkItemTemplatePatch>[3];
+  disabledGroups?: string[];
   template: WorkspaceTemplate;
   getValues: UseFormGetValues<TIssue>;
   setValue: UseFormSetValue<TIssue>;
@@ -136,7 +138,13 @@ function applyWorkItemTemplate({
 }) {
   const current = getValues();
   const typeId = template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
-  const patch = getWorkItemTemplatePatch(template, current, resolveWorkflow(projectId ?? "", typeId), getState);
+  const patch = getWorkItemTemplatePatch(
+    template,
+    current,
+    resolveWorkflow(projectId ?? "", typeId),
+    getState,
+    disabledGroups
+  );
   setValue("name", patch.name, { shouldDirty: true });
   setValue("description_html", patch.description_html, { shouldDirty: true });
   setValue("priority", patch.priority, { shouldDirty: true });
@@ -237,6 +245,7 @@ function IssueFormSetup({
   setSelectedParentIssue: React.Dispatch<React.SetStateAction<ISearchIssueResponse | null>>;
 }) {
   const { getStateById } = useProjectState();
+  const { getProjectById } = useProject();
   return (
     <div className="flex shrink-0 flex-col gap-3 pt-2">
       {!data?.id && (
@@ -255,6 +264,7 @@ function IssueFormSetup({
               resolveWorkflow,
               onApplied: handleFormChange,
               getState: getStateById,
+              disabledGroups: projectId ? getProjectById(projectId)?.disabled_state_groups : undefined,
             })
           }
         />
