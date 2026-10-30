@@ -204,11 +204,20 @@ export const ProjectOverviewDescription = observer(function ProjectOverviewDescr
             type="button"
             size="sm"
             variant="secondary"
+            stretch="auto"
             label={t("cancel")}
             disabled={busy}
             onClick={() => setEditing(false)}
           />
-          <Button type="button" size="sm" label={t("save")} disabled={busy} onClick={() => void save()} />
+          <Button
+            type="button"
+            size="sm"
+            variant="primary"
+            stretch="auto"
+            label={t("save")}
+            disabled={busy}
+            onClick={() => void save()}
+          />
         </div>
       </div>
     );

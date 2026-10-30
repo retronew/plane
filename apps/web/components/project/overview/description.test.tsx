@@ -14,6 +14,31 @@ const mocks = vi.hoisted(() => ({ updateProject: vi.fn(), toast: vi.fn(), refres
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@/hooks/store/use-project", () => ({ useProject: () => ({ updateProject: mocks.updateProject }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: mocks.toast }));
+vi.mock("@/hooks/store/use-workspace", () => ({
+  useWorkspace: () => ({ getWorkspaceBySlug: () => ({ id: "workspace-1" }) }),
+}));
+vi.mock("@/components/editor/rich-text", () => ({
+  RichTextEditor: ({
+    editable,
+    initialValue,
+    value,
+    onChange,
+  }: {
+    editable: boolean;
+    initialValue: string;
+    value?: string;
+    onChange?: (json: object, html: string) => void;
+  }) =>
+    editable ? (
+      <textarea
+        aria-label="Rich description"
+        defaultValue={initialValue}
+        onChange={(event) => onChange?.({ type: "doc", content: [] }, event.target.value)}
+      />
+    ) : (
+      <div data-testid="rich-description">{value ?? initialValue}</div>
+    ),
+}));
 vi.mock("./use-refresh-activities", () => ({ useRefreshProjectActivities: () => mocks.refreshActivities }));
 
 const project = { id: "project-1", description: "Original description" } as IProject;
@@ -60,7 +85,8 @@ it("renders safe CommonMark with semantic headings, lists, code, quotes and link
   const link = screen.getByRole("link", { name: "Docs" });
   expect(link.getAttribute("href")).toBe("https://example.com");
   expect(link.getAttribute("rel")).toBe("noopener noreferrer");
-  expect(link.closest("button, [role=button]")).toBeNull();
+  expect(link.closest("button")).toBeNull();
+  expect(link.closest('[role="button"]')).toBe(screen.getByRole("button", { name: "edit" }));
 });
 
 it("preserves paragraph soft breaks around inline Markdown", () => {
@@ -102,15 +128,22 @@ it("keeps links usable without entering edit mode, including read-only descripti
       disabled
     />
   );
-  expect(screen.getByRole("link").getAttribute("href")).toBe("https://example.com");
-  expect(screen.queryByRole("button")).toBeNull();
+  const readOnlyLink = screen.getByRole("link");
+  expect(readOnlyLink.getAttribute("href")).toBe("https://example.com");
+  expect(readOnlyLink.closest("button")).toBeNull();
+  expect(screen.getByRole("button").getAttribute("aria-disabled")).toBe("true");
+  fireEvent.click(readOnlyLink);
+  expect(screen.queryByRole("textbox")).toBeNull();
 });
 
-it("provides a separate native button for keyboard editing", () => {
+it.each(["Enter", " "])("opens the editor with %j from the non-native button container", (key) => {
   setup();
   const button = screen.getByRole("button", { name: "edit" });
+  expect(button.tagName).not.toBe("BUTTON");
+  expect(button.tabIndex).toBe(0);
+  expect(button.getAttribute("aria-disabled")).toBe("false");
   button.focus();
-  fireEvent.click(button);
+  fireEvent.keyDown(button, { key });
   expect(screen.getByRole("textbox")).toBe(document.activeElement);
 });
 
@@ -170,7 +203,11 @@ it("retains Enter as a newline and saves whitespace and blank lines only on blur
   expect(mocks.updateProject).not.toHaveBeenCalled();
   fireEvent.blur(textarea);
   await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
-  expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", { description });
+  expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", {
+    description,
+    description_html: null,
+    description_text: null,
+  });
   expect(mocks.refreshActivities).toHaveBeenCalledOnce();
   rerender(
     <ProjectOverviewDescription project={{ ...project, description }} workspaceSlug="workspace" disabled={false} />
@@ -184,7 +221,11 @@ it("allows clearing the description and persists the empty string on blur", asyn
   setup();
   fireEvent.blur(edit(""));
   await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
-  expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", { description: "" });
+  expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", {
+    description: "",
+    description_html: null,
+    description_text: null,
+  });
 });
 
 it.each([false, true])(
@@ -218,7 +259,11 @@ it.each([false, true])(
     fireEvent.blur(textarea);
     await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
     expect(mocks.updateProject).toHaveBeenCalledTimes(2);
-    expect(mocks.updateProject).toHaveBeenLastCalledWith("workspace", "project-1", { description });
+    expect(mocks.updateProject).toHaveBeenLastCalledWith("workspace", "project-1", {
+      description,
+      description_html: null,
+      description_text: null,
+    });
     expect(mocks.refreshActivities).toHaveBeenCalledOnce();
   }
 );
@@ -241,9 +286,14 @@ it("starts a new edit with the current project value after saving", async () => 
 
 it.each(["", "Read-only description"])("is read-only when disabled (description: %j)", (description) => {
   setup(description, true);
-  expect(screen.queryByRole("button")).toBeNull();
+  const container = screen.getByRole("button");
+  expect(container.tagName).not.toBe("BUTTON");
+  expect(container.getAttribute("aria-disabled")).toBe("true");
+  expect(container.tabIndex).toBe(-1);
   const body = screen.getByText(description || placeholder);
-  fireEvent.pointerUp(body, { button: 0 });
+  fireEvent.click(body);
+  fireEvent.keyDown(container, { key: "Enter" });
+  fireEvent.keyDown(container, { key: " " });
   expect(screen.queryByRole("textbox")).toBeNull();
   expect(mocks.updateProject).not.toHaveBeenCalled();
 });
@@ -254,8 +304,54 @@ it("prevents saving when permissions are withdrawn from an open editor", () => {
   rerender(<ProjectOverviewDescription project={project} workspaceSlug="workspace" disabled />);
   fireEvent.blur(textarea);
   expect(screen.queryByRole("textbox")).toBeNull();
-  expect(screen.queryByRole("button")).toBeNull();
+  expect(screen.getByRole("button").getAttribute("aria-disabled")).toBe("true");
+  expect(screen.getByRole("button").tagName).not.toBe("BUTTON");
   expect(mocks.updateProject).not.toHaveBeenCalled();
+});
+
+it("saves rich descriptions explicitly with HTML, JSON and derived Markdown", async () => {
+  render(
+    <ProjectOverviewDescription
+      project={{ ...project, description_html: "<p>Original rich description</p>" }}
+      workspaceSlug="workspace"
+      disabled={false}
+    />
+  );
+  expect(screen.getByTestId("rich-description").textContent).toBe("<p>Original rich description</p>");
+  fireEvent.click(screen.getByRole("button", { name: "edit" }));
+  const editor = screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Rich description" });
+  expect(editor.value).toBe("<p>Original rich description</p>");
+  fireEvent.change(editor, { target: { value: "<p>Updated <strong>description</strong></p>" } });
+  fireEvent.blur(editor);
+  expect(mocks.updateProject).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "save" }));
+  await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
+  expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", {
+    description: "Updated **description**\n",
+    description_html: "<p>Updated <strong>description</strong></p>",
+    description_text: { type: "doc", content: [] },
+  });
+  expect(mocks.refreshActivities).toHaveBeenCalledOnce();
+});
+
+it("discards a rich draft on cancel and closes unchanged rich descriptions without saving", () => {
+  render(
+    <ProjectOverviewDescription
+      project={{ ...project, description_html: "<p>Original rich description</p>" }}
+      workspaceSlug="workspace"
+      disabled={false}
+    />
+  );
+  fireEvent.click(screen.getByRole("button", { name: "edit" }));
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "<p>Discard this draft</p>" } });
+  fireEvent.click(screen.getByRole("button", { name: "cancel" }));
+  expect(screen.queryByRole("textbox")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "edit" }));
+  expect(screen.getByRole<HTMLTextAreaElement>("textbox").value).toBe("<p>Original rich description</p>");
+  fireEvent.click(screen.getByRole("button", { name: "save" }));
+  expect(screen.queryByRole("textbox")).toBeNull();
+  expect(mocks.updateProject).not.toHaveBeenCalled();
+  expect(mocks.refreshActivities).not.toHaveBeenCalled();
 });
 
 it("prevents saving without a workspace", () => {
@@ -281,6 +377,8 @@ it("locks the editor during saving and prevents duplicate blur submissions synch
   fireEvent.blur(textarea);
   expect(mocks.updateProject).toHaveBeenCalledExactlyOnceWith("workspace", "project-1", {
     description: "Pending description",
+    description_html: null,
+    description_text: null,
   });
   expect(screen.getByRole("textbox")).toBe(textarea);
   await act(async () => resolveSave());

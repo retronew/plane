@@ -13,7 +13,10 @@ vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn() }));
 vi.mock("@/components/project/create/header", () => ({
   default: ({ templatePicker }: { templatePicker: ReactNode }) => <div>{templatePicker}</div>,
 }));
-vi.mock("@/components/project/create/common-attributes", () => ({ default: () => null }));
+vi.mock("@/components/project/create/common-attributes", () => ({
+  default: () => null,
+  ProjectCreateDescription: () => null,
+}));
 vi.mock("@/components/project/create/project-create-buttons", () => ({
   default: () => <button type="submit">Create</button>,
 }));
@@ -48,14 +51,24 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.create.mockResolvedValue({ id: "created-project" });
 });
-it("applies a template, generates the identifier, and submits all project properties and template children", async () => {
+it.each([
+  null,
+  { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Previous description" }] }] },
+])("applies a template over description JSON %j and submits all properties and children", async (descriptionText) => {
   render(
     <CreateProjectForm
       workspaceSlug="workspace"
       onClose={vi.fn()}
       handleNextStep={state.next}
       updateCoverImageStatus={vi.fn()}
-      data={{ start_date: "2026-10-15", target_date: "2026-10-20", member_ids: ["member-1"] }}
+      data={{
+        start_date: "2026-10-15",
+        target_date: "2026-10-20",
+        member_ids: ["member-1"],
+        description: "Previous description",
+        description_html: "<p>Previous description</p>",
+        description_text: descriptionText,
+      }}
     />
   );
   fireEvent.click(screen.getByRole("button", { name: "Apply template" }));
@@ -67,6 +80,8 @@ it("applies a template, generates the identifier, and submits all project proper
         name: "Starter project",
         identifier: "STARTERPRO",
         description: "From template",
+        description_html: null,
+        description_text: null,
         network: 0,
         priority: "high",
         cycle_view: true,

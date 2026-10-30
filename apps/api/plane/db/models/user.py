@@ -62,6 +62,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # identity
     display_name = models.CharField(max_length=255, default="")
+    # Existing accounts and non-OIDC signups keep ownership of their names.
+    is_display_name_custom = models.BooleanField(default=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     # avatar

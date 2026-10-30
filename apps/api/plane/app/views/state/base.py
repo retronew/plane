@@ -20,7 +20,8 @@ from plane.app.serializers import StateSerializer
 from plane.app.permissions import ROLE, allow_permission
 from plane.db.models import State, Issue, Project
 from plane.utils.cache import invalidate_cache
-from plane.utils.workflow import validate_workflow_state_deletion
+from plane.utils.workflow import validate_workflow_state_deletion, validate_state_creation_settings
+from rest_framework.exceptions import ValidationError
 
 
 class StateViewSet(BaseViewSet):
@@ -46,11 +47,16 @@ class StateViewSet(BaseViewSet):
 
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
     @allow_permission([ROLE.ADMIN])
+    @transaction.atomic
     def create(self, request, slug, project_id):
+        Project.objects.select_for_update().get(pk=project_id)
         try:
             serializer = StateSerializer(data=request.data)
             if serializer.is_valid():
+                if serializer.validated_data.get("default"):
+                    State.objects.filter(project_id=project_id).update(default=False)
                 serializer.save(project_id=project_id)
+                validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except IntegrityError as e:
@@ -60,13 +66,18 @@ class StateViewSet(BaseViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @allow_permission([ROLE.ADMIN])
+    @transaction.atomic
     def partial_update(self, request, slug, project_id, pk):
         try:
+            Project.objects.select_for_update().get(pk=project_id)
             state = State.objects.get(pk=pk, project_id=project_id, workspace__slug=slug)
             serializer = StateSerializer(state, data=request.data, partial=True)
             if serializer.is_valid():
+                if serializer.validated_data.get("default"):
+                    State.objects.filter(project_id=project_id).exclude(pk=pk).update(default=False)
                 serializer.save()
+                validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except IntegrityError as e:
@@ -105,10 +116,16 @@ class StateViewSet(BaseViewSet):
 
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
     @allow_permission([ROLE.ADMIN])
+    @transaction.atomic
     def mark_as_default(self, request, slug, project_id, pk):
+        Project.objects.select_for_update().get(pk=project_id)
+        state = State.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        if not state.allow_new_work_items:
+            raise ValidationError({"default": "The default state must allow new work items."})
         # Select all the states which are marked as default
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, default=True).update(default=False)
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, pk=pk).update(default=True)
+        validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
@@ -135,6 +152,7 @@ class StateViewSet(BaseViewSet):
             )
 
         state.delete()
+        validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

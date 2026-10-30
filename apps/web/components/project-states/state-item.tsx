@@ -18,6 +18,7 @@ type TStateItem = {
   state: IState;
   stateOperationsCallbacks: TStateOperationsCallbacks;
   disabled?: boolean;
+  groupClosed?: boolean;
   stateItemClassName?: string;
 };
 export const StateItem = observer(function StateItem({
@@ -27,6 +28,7 @@ export const StateItem = observer(function StateItem({
   state,
   stateOperationsCallbacks,
   disabled = false,
+  groupClosed = false,
   stateItemClassName,
 }: TStateItem) {
   const [editing, setEditing] = useState(false);
@@ -66,6 +68,7 @@ export const StateItem = observer(function StateItem({
             }}
             dragHandleRef={handleRef}
             disabled
+            groupClosed={groupClosed}
           />
         ) : (
           <StateItemTitle
@@ -80,10 +83,12 @@ export const StateItem = observer(function StateItem({
               setEditing(true);
             }}
             disabled={false}
+            groupClosed={groupClosed}
             dragHandleRef={handleRef}
             stateOperationsCallbacks={{
               markStateAsDefault: stateOperationsCallbacks.markStateAsDefault,
               deleteState: stateOperationsCallbacks.deleteState,
+              updateState: stateOperationsCallbacks.updateState,
             }}
           />
         )

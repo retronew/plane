@@ -4,6 +4,7 @@
   "trailingComma": "es5",
   "ignorePatterns": [
     ".agents/skills/**",
+    ".claude/skills/design-taste-frontend/**",
     "plugins/plane-workflow-openai/**",
     "plugins/plane-workflow/portable/plane-workflow/**",
     "apps/web/public/skills/**"

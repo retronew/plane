@@ -5,9 +5,10 @@
  */
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Tag } from "lucide-react";
-import { StateGroupIcon } from "@plane/blocks/icons";
+import { STATE_GROUP_COLORS, StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
 import { StateIconFrame } from "../state-icon-frame";
+import { STATE_ICON_PRESETS, stateIconLabel } from "../icon-presets";
 import { Field } from "@makeplane/propel/components/field";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
@@ -27,6 +28,7 @@ type TStateForm = {
   buttonTitle: string;
   focusNameOnOpen?: boolean;
   colorPickerInitiallyOpen?: boolean;
+  allowIconSelection?: boolean;
 };
 
 export function StateForm({
@@ -40,6 +42,7 @@ export function StateForm({
   buttonTitle,
   focusNameOnOpen = false,
   colorPickerInitiallyOpen = false,
+  allowIconSelection = true,
 }: TStateForm) {
   const { t } = useTranslation();
   const nameId = useId();
@@ -48,7 +51,8 @@ export function StateForm({
   const [submitting, setSubmitting] = useState(false);
   const inFlight = useRef(false);
   const disabled = buttonDisabled || submitting;
-  const color = formData.color || "#60646C";
+  const defaultColor = kind === "state" ? STATE_GROUP_COLORS[stateGroup] : "#60646C";
+  const color = formData.color || defaultColor;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (buttonDisabled || inFlight.current) return;
@@ -100,19 +104,62 @@ export function StateForm({
                   {kind === "label" ? (
                     <Tag className="size-4" style={{ color }} />
                   ) : (
-                    <StateGroupIcon stateGroup={stateGroup} color={color} size={EIconSize.XL} percentage={percentage} />
+                    <StateGroupIcon
+                      stateGroup={stateGroup}
+                      icon={formData.icon}
+                      color={color}
+                      size={EIconSize.XL}
+                      percentage={percentage}
+                    />
                   )}
                 </StateIconFrame>
               </button>
             }
           />
           <PopoverContent variant="rich" side="bottom" align="start" data-category-color-picker="" initialFocus={false}>
+            {kind === "state" && allowIconSelection && (
+              <fieldset className="mb-3 w-72">
+                <legend className="mb-2 text-12 font-medium text-secondary">{t("web.state_icon")}</legend>
+                <div className="grid grid-cols-5 gap-2">
+                  {STATE_ICON_PRESETS.map((icon) => (
+                    <button
+                      key={icon ?? "auto"}
+                      type="button"
+                      title={t(stateIconLabel(icon))}
+                      aria-label={t(stateIconLabel(icon))}
+                      aria-pressed={(formData.icon ?? null) === icon}
+                      className="flex h-9 items-center justify-center rounded-md border border-transparent hover:bg-layer-1-hover focus-visible:outline-2 focus-visible:outline-accent-strong aria-pressed:border-accent-strong aria-pressed:bg-layer-1-hover"
+                      onClick={() => setFormData((previous) => ({ ...previous, icon }))}
+                    >
+                      {icon === null ? (
+                        <span className="text-11">{t("web.state_icon_auto")}</span>
+                      ) : (
+                        <StateIconFrame color={color}>
+                          <StateGroupIcon stateGroup={stateGroup} icon={icon} color={color} size={EIconSize.XL} />
+                        </StateIconFrame>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             <ColorSwatchPicker
               continuous
               className="w-72 gap-1 [&_fieldset]:gap-1.5"
               value={color}
+              onClear={() => setFormData((previous) => ({ ...previous, color: defaultColor }))}
               onChange={(hex) => setFormData((previous) => ({ ...previous, color: hex }))}
             />
+            <div className="mt-3 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                stretch="auto"
+                label={t("web.state_color_reset")}
+                onClick={() => setFormData((previous) => ({ ...previous, color: defaultColor }))}
+              />
+            </div>
           </PopoverContent>
         </Popover>
         <div className={kind === "label" ? "min-w-0 flex-1" : "min-w-0 flex-1 sm:w-36 sm:flex-none"}>

@@ -1,0 +1,6 @@
+/* Keep short state actions comfortable to target; longer translations can still expand. */
+@layer base {
+  :has(> * > * > [data-state-actions-menu]) {
+    --popup-width-min: 7rem;
+  }
+}

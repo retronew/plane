@@ -6,10 +6,36 @@
 
 export type TStateGroups = "backlog" | "unstarted" | "started" | "completed" | "cancelled";
 
+export type TStateIcon =
+  | "backlog"
+  | "unstarted"
+  | "started-25"
+  | "started-50"
+  | "started-75"
+  | "started-100"
+  | "completed"
+  | "cancelled"
+  | "queued"
+  | "paused"
+  | "blocked"
+  | "review"
+  | "planned"
+  | "ready"
+  | "active"
+  | "feedback"
+  | "testing"
+  | "verifying"
+  | "approval"
+  | "rework"
+  | "skipped"
+  | "archived";
+
 export interface IState {
+  icon?: TStateIcon | null;
   readonly id: string;
   color: string;
   default: boolean;
+  allow_new_work_items?: boolean;
   description: string;
   group: TStateGroups;
   name: string;
@@ -20,6 +46,7 @@ export interface IState {
 }
 
 export interface IStateLite {
+  icon?: TStateIcon | null;
   color: string;
   group: TStateGroups;
   id: string;

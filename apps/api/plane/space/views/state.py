@@ -27,6 +27,6 @@ class ProjectStatesEndpoint(BaseAPIView):
             ~Q(name="Triage"),
             workspace__slug=deploy_board.workspace.slug,
             project_id=deploy_board.project_id,
-        ).values("name", "group", "color", "id", "sequence")
+        ).values("name", "group", "color", "icon", "id", "sequence")
 
         return Response(states, status=status.HTTP_200_OK)

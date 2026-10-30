@@ -6,7 +6,7 @@
 
 import React from "react";
 // plane imports
-import { LiteTextEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, ILiteTextEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional } from "@plane/types";
 import { cn, isCommentEmpty } from "@plane/utils";
@@ -71,7 +71,9 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
 
   return (
     <div className="space-y-3 rounded-sm border border-subtle p-3">
-      <LiteTextEditorWithRef
+      <PlateEditorWithRef
+        mode="lite"
+        toolbar="floating"
         ref={attachEditor}
         disabledExtensions={[...liteTextEditorExtensions.disabled, ...additionalDisabledExtensions]}
         flaggedExtensions={liteTextEditorExtensions.flagged}

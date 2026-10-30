@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { AvatarGroup } from "@makeplane/propel/components/avatar-group";
 import type { AvatarGroupSize } from "@makeplane/propel/components/avatar-group";
@@ -144,6 +144,8 @@ type MemberSelectCommonProps = {
   filterOption?: (member: MemberOption) => boolean;
   /** Badge text on a {@link MemberOption.suspended} row. Defaults to "Suspended". */
   suspendedLabel?: string;
+  /** Optional sticky controls below the member search. */
+  header?: ReactNode;
 };
 
 export type MemberSelectProps = MemberSelectCommonProps &
@@ -433,6 +435,7 @@ export function MemberSelect(props: MemberSelectProps) {
     getOptionTrailing: renderMemberTrailing,
     renderChip: renderMemberChip,
     headerItems: clearable ? [clearOption] : undefined,
+    header: props.header,
   };
 
   const trigger = (

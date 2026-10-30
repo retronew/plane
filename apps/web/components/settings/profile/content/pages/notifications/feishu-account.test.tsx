@@ -2,23 +2,13 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SWRConfig } from "swr";
 import { FeishuAccount } from "./feishu-account";
-const state = vi.hoisted(() => ({
-  feishuStatus: vi.fn(),
-  testFeishu: vi.fn(),
-}));
+const state = vi.hoisted(() => ({ feishuStatus: vi.fn(), testFeishu: vi.fn() }));
 vi.mock("@plane/services", () => ({
   NotificationPreferencesService: vi.fn(function () {
     return state;
   }),
 }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock("@makeplane/propel/components/button", () => ({
-  Button: ({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) => (
-    <button disabled={disabled} onClick={onClick}>
-      {label}
-    </button>
-  ),
-}));
 const linked = { enabled: true, binding: { display_name: "Person", app_id: "app", created_at: "2026-10-22" } };
 function mount() {
   return render(
@@ -30,50 +20,43 @@ function mount() {
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
-  window.history.replaceState({}, "", "/");
   state.feishuStatus.mockResolvedValue(linked);
-  state.testFeishu.mockResolvedValue({ status: "pending" });
 });
-it("queues a test while exposing no personal binding controls", async () => {
+it("keeps binding status and administrator guidance inside the Feishu box without testing controls", async () => {
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "notification_preferences.feishu_test" }));
-  expect(await screen.findByText("notification_preferences.feishu_queued")).toBeTruthy();
-  expect(state.testFeishu).toHaveBeenCalledOnce();
-  expect(screen.queryByRole("button", { name: "notification_preferences.feishu_unlink" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "notification_preferences.feishu_link" })).toBeNull();
+  const status = await screen.findByText("notification_preferences.feishu_linked");
+  const box = screen.getByRole("heading", { name: /notification_preferences.channels.feishu/ }).parentElement!
+    .parentElement!;
+  expect(box.contains(status)).toBe(true);
+  expect(box.contains(screen.getByText("notification_preferences.feishu_description"))).toBe(true);
+  expect(screen.queryByRole("button")).toBeNull();
+  expect(state.testFeishu).not.toHaveBeenCalled();
 });
 it("shows an unbound account as read-only", async () => {
   state.feishuStatus.mockResolvedValue({ enabled: true, binding: null });
   mount();
   expect(await screen.findByText("notification_preferences.feishu_unlinked")).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
-  expect(screen.getByText("notification_preferences.feishu_description")).toBeTruthy();
 });
-it("disables testing when instance delivery is disabled", async () => {
+it("keeps disabled information inside the box", async () => {
   state.feishuStatus.mockResolvedValue({ ...linked, enabled: false });
   mount();
-  expect(
-    (await screen.findByRole("button", { name: "notification_preferences.feishu_test" })).hasAttribute("disabled")
-  ).toBe(true);
+  const disabled = await screen.findByText("notification_preferences.feishu_disabled");
+  const box = screen.getByRole("heading").parentElement!.parentElement!;
+  expect(box.contains(disabled)).toBe(true);
 });
-it("shows test failures without losing the binding", async () => {
-  state.testFeishu.mockRejectedValue(new Error("network"));
+it("allows retrying a status load failure", async () => {
+  state.feishuStatus.mockRejectedValueOnce(new Error("network"));
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "notification_preferences.feishu_test" }));
   expect(await screen.findByRole("alert")).toBeTruthy();
-  expect(screen.getByText("notification_preferences.feishu_linked")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "notification_preferences.retry" }));
+  expect(await screen.findByText("notification_preferences.feishu_linked")).toBeTruthy();
 });
-it.each(["connected", "identity_in_use", "error"])("ignores legacy OAuth callback result %s", async (result) => {
-  window.history.replaceState({}, "", `/?feishu=${result}`);
-  mount();
-  await screen.findByText("notification_preferences.feishu_linked");
-  expect(screen.queryByRole("alert")).toBeNull();
-  expect(screen.queryByRole("status")).toBeNull();
-  expect(screen.queryByText("notification_preferences.feishu_connected")).toBeNull();
-});
-it.each(["pending", "retry", "sent", "failed", "cancelled"])("shows the latest %s delivery state", async (status) => {
+it.each(["pending", "retry", "sent", "failed", "cancelled"])("hides the latest %s delivery state", async (status) => {
   state.feishuStatus.mockResolvedValue({ ...linked, last_delivery: { status, error: "internal error details" } });
   mount();
-  expect(await screen.findByText(`notification_preferences.delivery.${status}`)).toBeTruthy();
+  await screen.findByText("notification_preferences.feishu_linked");
+  expect(screen.queryByText(`notification_preferences.delivery.${status}`)).toBeNull();
   expect(screen.queryByText("internal error details")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
 });

@@ -7,10 +7,12 @@
 import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { Controller, useForm } from "react-hook-form";
+import type { Control, FieldError } from "react-hook-form";
 import { ImageOutline } from "@makeplane/propel/icons";
 // plane imports
 import { E_PASSWORD_STRENGTH } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
+import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { setToast } from "@plane/blocks/toast";
 import type { IUser } from "@plane/types";
 import { EOnboardingSteps } from "@plane/types";
@@ -34,6 +36,7 @@ type Props = {
 };
 
 export type TProfileSetupFormValues = {
+  display_name: string;
   first_name: string;
   last_name: string;
   avatar_url?: string | null;
@@ -46,7 +49,13 @@ export type TProfileSetupFormValues = {
 
 const authService = new AuthService();
 
+const validateProfileDisplayName = (value: string) => !!value.trim() || translate("web.display_name_is_required");
+
+const isProfilePasswordValid = (password: string | undefined, confirmation: string | undefined) =>
+  !password || (password === confirmation && getPasswordStrength(password) === E_PASSWORD_STRENGTH.STRENGTH_VALID);
+
 const defaultValues: Partial<TProfileSetupFormValues> = {
+  display_name: "",
   first_name: "",
   last_name: "",
   avatar_url: "",
@@ -59,6 +68,44 @@ const handleSetPassword = async (password: string) => {
   const token = await authService.requestCSRFToken().then((data) => data?.csrf_token);
   await authService.setPassword(token, { password });
 };
+
+function ProfileDisplayNameField({
+  control,
+  error,
+}: {
+  control: Control<TProfileSetupFormValues>;
+  error?: FieldError;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor="display_name" className="text-13 font-medium text-tertiary">
+        {translate("display_name")}
+      </label>
+      <Controller
+        control={control}
+        name="display_name"
+        rules={{
+          required: translate("web.display_name_is_required"),
+          validate: validateProfileDisplayName,
+          maxLength: 255,
+        }}
+        render={({ field }) => (
+          <InputGroup size="lg">
+            <Input
+              {...field}
+              id="display_name"
+              type="text"
+              size="lg"
+              maxLength={255}
+              placeholder={translate("web.enter_your_display_name")}
+            />
+          </InputGroup>
+        )}
+      />
+      {error && <span className="text-13 text-danger-primary">{error.message}</span>}
+    </div>
+  );
+}
 
 export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepChange }: Props) {
   // states
@@ -79,6 +126,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
   } = useForm<TProfileSetupFormValues>({
     defaultValues: {
       ...defaultValues,
+      display_name: user?.display_name ?? "",
       first_name: user?.first_name,
       last_name: user?.last_name,
       avatar_url: user?.avatar_url,
@@ -90,6 +138,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
 
   const handleSubmitUserDetail = async (formData: TProfileSetupFormValues) => {
     const userDetailsPayload: Partial<IUser> = {
+      display_name: formData.display_name,
       first_name: formData.first_name,
       last_name: formData.last_name,
       avatar_url: formData.avatar_url ?? undefined,
@@ -99,21 +148,23 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
         updateCurrentUser(userDetailsPayload),
         formData.password && handleSetPassword(formData.password),
       ]);
+      return true;
     } catch {
       setToast({
         type: "error",
         title: translate("web.error"),
         message: translate("web.user_details_update_failed_please_try_again"),
       });
+      return false;
     }
   };
 
   const onSubmit = async (formData: TProfileSetupFormValues) => {
     if (!user) return;
-    updateUserProfile({
+    if (!(await handleSubmitUserDetail(formData))) return;
+    await updateUserProfile({
       has_marketing_email_consent: formData.has_marketing_email_consent,
     });
-    await handleSubmitUserDetail(formData);
     handleStepChange(EOnboardingSteps.PROFILE_SETUP);
   };
 
@@ -127,20 +178,10 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
   const currentPassword = watch("password") || undefined;
   const currentConfirmPassword = watch("confirm_password") || undefined;
 
-  const isValidPassword = useMemo(() => {
-    if (currentPassword) {
-      if (
-        currentPassword === currentConfirmPassword &&
-        getPasswordStrength(currentPassword) === E_PASSWORD_STRENGTH.STRENGTH_VALID
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }, [currentPassword, currentConfirmPassword]);
+  const isValidPassword = useMemo(
+    () => isProfilePasswordValid(currentPassword, currentConfirmPassword),
+    [currentPassword, currentConfirmPassword]
+  );
 
   // Check for all available fields validation and if password field is available, then checks for password validation (strength + confirmation).
   // Also handles the condition for optional password i.e if password field is optional it only checks for above validation if it's not empty.
@@ -249,6 +290,8 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
           />
           {errors.first_name && <span className="text-13 text-danger-primary">{errors.first_name.message}</span>}
         </div>
+
+        <ProfileDisplayNameField control={control} error={errors.display_name} />
 
         {/* setting up password for the first time */}
         {!isPasswordAlreadySetup && canManagePassword && (

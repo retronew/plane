@@ -17,12 +17,16 @@ class TemplateChildSerializer(serializers.Serializer):
 
 
 class TemplateStateSerializer(serializers.Serializer):
+    from plane.db.models import State
+
+    icon = serializers.ChoiceField(choices=State._meta.get_field("icon").choices, allow_null=True, required=False)
     name = serializers.CharField(max_length=100)
     color = serializers.RegexField(r"^#[0-9a-fA-F]{6}$", default="#60646C")
     group = serializers.ChoiceField(
         choices=["backlog", "unstarted", "started", "completed", "cancelled"], default="unstarted"
     )
     default = serializers.BooleanField(default=False)
+    allow_new_work_items = serializers.BooleanField(default=True)
 
 
 class TemplateLabelSerializer(serializers.Serializer):
@@ -39,6 +43,11 @@ class ProjectTemplateConfigurationSerializer(serializers.Serializer):
     page_view = serializers.BooleanField(default=True)
     issue_views_view = serializers.BooleanField(default=False)
     intake_view = serializers.BooleanField(default=False)
+    disabled_state_groups = serializers.ListField(
+        child=serializers.ChoiceField(choices=["backlog", "unstarted", "started", "completed", "cancelled"]),
+        required=False,
+        max_length=5,
+    )
     states = TemplateStateSerializer(many=True, default=list, max_length=50)
     labels = TemplateLabelSerializer(many=True, default=list, max_length=100)
     work_items = TemplateChildSerializer(many=True, default=list, max_length=50)
@@ -50,6 +59,19 @@ class ProjectTemplateConfigurationSerializer(serializers.Serializer):
                 raise serializers.ValidationError({key: "Names must be unique."})
         if sum(entry["default"] for entry in data["states"]) > 1:
             raise serializers.ValidationError({"states": "Only one default state is allowed."})
+        from plane.db.models.state import DEFAULT_STATES
+
+        states = data["states"] or [state for state in DEFAULT_STATES if state["group"] != "triage"]
+        disabled = set(data.get("disabled_state_groups", []))
+        if states and not any(
+            state.get("allow_new_work_items", True) and state["group"] not in disabled for state in states
+        ):
+            raise serializers.ValidationError({"states": "At least one state must allow new work items."})
+        if any(
+            state.get("default", False) and (not state.get("allow_new_work_items", True) or state["group"] in disabled)
+            for state in states
+        ):
+            raise serializers.ValidationError({"states": "The default state must allow new work items."})
         return data
 
 

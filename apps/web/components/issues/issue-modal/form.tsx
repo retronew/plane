@@ -123,7 +123,11 @@ function applyWorkItemTemplate({
   projectId,
   resolveWorkflow,
   onApplied,
+  getState,
+  disabledGroups,
 }: {
+  getState: Parameters<typeof getWorkItemTemplatePatch>[3];
+  disabledGroups?: string[];
   template: WorkspaceTemplate;
   getValues: UseFormGetValues<TIssue>;
   setValue: UseFormSetValue<TIssue>;
@@ -134,7 +138,13 @@ function applyWorkItemTemplate({
 }) {
   const current = getValues();
   const typeId = template.configuration?.type_id !== undefined ? template.configuration.type_id : current.type_id;
-  const patch = getWorkItemTemplatePatch(template, current, resolveWorkflow(projectId ?? "", typeId));
+  const patch = getWorkItemTemplatePatch(
+    template,
+    current,
+    resolveWorkflow(projectId ?? "", typeId),
+    getState,
+    disabledGroups
+  );
   setValue("name", patch.name, { shouldDirty: true });
   setValue("description_html", patch.description_html, { shouldDirty: true });
   setValue("priority", patch.priority, { shouldDirty: true });
@@ -234,6 +244,8 @@ function IssueFormSetup({
   handleFormChange: () => void;
   setSelectedParentIssue: React.Dispatch<React.SetStateAction<ISearchIssueResponse | null>>;
 }) {
+  const { getStateById } = useProjectState();
+  const { getProjectById } = useProject();
   return (
     <div className="flex shrink-0 flex-col gap-3 pt-2">
       {!data?.id && (
@@ -251,6 +263,8 @@ function IssueFormSetup({
               projectId,
               resolveWorkflow,
               onApplied: handleFormChange,
+              getState: getStateById,
+              disabledGroups: projectId ? getProjectById(projectId)?.disabled_state_groups : undefined,
             })
           }
         />
@@ -922,20 +936,22 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               handleFormChange={handleFormChange}
               setSelectedParentIssue={setSelectedParentIssue}
             />
-            <IssueCustomPropertiesFields
-              error={customPropertiesError}
-              loading={customPropertiesLoading}
-              context={customPropertyContext}
-              expectedContext={`${slug}:${projectId}:${typeId ?? ""}`}
-              properties={customProperties}
-              values={customPropertyValues}
-              projectId={projectId!}
-              disabled={isDisabled}
-              errors={customPropertyErrors}
-              onRetry={retryCustomProperties}
-              onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
-              t={t}
-            />
+            {projectId && (
+              <IssueCustomPropertiesFields
+                error={customPropertiesError}
+                loading={customPropertiesLoading}
+                context={customPropertyContext}
+                expectedContext={`${slug}:${projectId}:${typeId ?? ""}`}
+                properties={customProperties}
+                values={customPropertyValues}
+                projectId={projectId!}
+                disabled={isDisabled}
+                errors={customPropertyErrors}
+                onRetry={retryCustomProperties}
+                onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
+                t={t}
+              />
+            )}
           </DialogMain>
           {showActionButtons && (
             <IssueFormActions

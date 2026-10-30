@@ -54,7 +54,7 @@ def update_default_display_properties(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("db", "0160_feishu_preview_members")]
+    dependencies = [("db", "0167_state_icon")]
     operations = [
         migrations.AddField(
             model_name="issue", name="started_at", field=models.DateTimeField(blank=True, null=True)

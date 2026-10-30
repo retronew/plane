@@ -43,6 +43,7 @@ class WorkspaceTemplate(BaseModel):
         "db.Project", null=True, blank=True, on_delete=models.CASCADE, related_name="workspace_templates"
     )
     configuration = models.JSONField(default=dict)
+    is_default_state_template = models.BooleanField(default=False)
     title = models.CharField(max_length=255, blank=True)
     description_html = models.TextField(default="<p></p>", blank=True)
     priority = models.CharField(
@@ -67,5 +68,14 @@ class WorkspaceTemplate(BaseModel):
                 "kind",
                 condition=Q(deleted_at__isnull=True, project__isnull=False),
                 name="unique_project_template",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["workspace"],
+                condition=Q(deleted_at__isnull=True, is_default_state_template=True),
+                name="unique_workspace_default_state_template",
+            ),
+            models.CheckConstraint(
+                condition=Q(is_default_state_template=False) | Q(kind="project", project__isnull=True),
+                name="default_state_template_workspace_project_kind",
+            ),
         ]

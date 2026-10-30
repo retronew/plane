@@ -1,6 +1,7 @@
 import { AxiosHeaders } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APIService } from "../api.service";
+import { InstanceService } from "../instance/instance.service";
 import { NotificationPreferencesService } from "./notification-preferences.service";
 const response = (data: unknown) => ({
   data,
@@ -11,6 +12,16 @@ const response = (data: unknown) => ({
 });
 afterEach(() => vi.restoreAllMocks());
 describe("notification preference API contract", () => {
+  it("targets each admin-selected user and preserves sparse global patches", async () => {
+    const get = vi.spyOn(APIService.prototype, "get").mockResolvedValue(response({}));
+    const patch = vi.spyOn(APIService.prototype, "patch").mockResolvedValue(response({}));
+    const service = new InstanceService();
+    const data = { events: { feishu: { mention: false } } };
+    await service.getUserNotificationPreferences("alice");
+    await service.updateUserNotificationPreferences("bob", data);
+    expect(get).toHaveBeenCalledWith("/api/instances/users/alice/notification-preferences/");
+    expect(patch).toHaveBeenCalledWith("/api/instances/users/bob/notification-preferences/", data);
+  });
   it("passes workspace and project IDs as query parameters", async () => {
     const scope = { workspace_id: "workspace", project_id: "project" };
     const get = vi.spyOn(APIService.prototype, "get").mockResolvedValue(response({ scope }));

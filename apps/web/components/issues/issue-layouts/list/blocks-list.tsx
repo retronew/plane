@@ -5,8 +5,9 @@
  */
 
 import { Fragment, useCallback, useLayoutEffect, useRef } from "react";
-import type { MutableRefObject } from "react";
+import type { CSSProperties, MutableRefObject } from "react";
 import { observer } from "mobx-react";
+import { useProject } from "@/hooks/store/use-project";
 import { useMultipleSelectStore } from "@/hooks/store/use-multiple-select-store";
 import { useWindowedRows } from "@plane/blocks/virtual-list";
 // components
@@ -15,6 +16,7 @@ import type { TIssue, IIssueDisplayProperties, TIssueMap } from "@plane/types";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 // types
 import { IssueBlockRoot } from "./block-root";
+import { buildIssueHierarchy } from "./hierarchy";
 import type { TRenderQuickActions } from "./list-view-types";
 
 interface Props {
@@ -46,12 +48,21 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
     canDropOverIssue,
   } = props;
 
+  const { getProjectIdentifierById } = useProject();
+  const identifierWidth = Math.max(
+    50,
+    ...issueIds.map((id) => {
+      const issue = issuesMap[id];
+      return issue ? `${getProjectIdentifierById(issue.project_id) ?? ""}-${issue.sequence_id}`.length * 8 + 4 : 0;
+    })
+  );
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const virtualized = issueIds.length > 100;
-  const getItemKey = useCallback((index: number) => issueIds[index], [issueIds]);
+  const rows = buildIssueHierarchy(issueIds, issuesMap);
+  const virtualized = rows.length > 100;
+  const getItemKey = useCallback((index: number) => rows[index].id, [rows]);
   const { virtualizer, scrollMargin } = useWindowedRows({
-    count: issueIds.length,
-    estimateSize: 49,
+    count: rows.length,
+    estimateSize: 44,
     getItemKey,
     scrollRef: containerRef,
     contentRef,
@@ -59,7 +70,7 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
   });
   const { getActiveEntityDetails } = useMultipleSelectStore();
   const active = getActiveEntityDetails();
-  const activeIndex = active?.groupID === groupId ? issueIds.indexOf(active.entityID) : -1;
+  const activeIndex = active?.groupID === groupId ? rows.findIndex((row) => row.id === active.entityID) : -1;
   useLayoutEffect(() => {
     if (virtualized && activeIndex >= 0) virtualizer.scrollToIndex(activeIndex, { align: "auto" });
   }, [virtualized, activeIndex, virtualizer]);
@@ -72,12 +83,14 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
       quickActions={quickActions}
       displayProperties={displayProperties}
       canEditProperties={canEditProperties}
-      nestingLevel={0}
-      spacingLeft={0}
+      treeBranches={rows[index].branches}
+      hasTreeChildren={(rows[index + 1]?.level ?? 0) > rows[index].level}
+      nestingLevel={rows[index].level}
+      spacingLeft={rows[index].level * 24}
       containerRef={containerRef}
       selectionHelpers={selectionHelpers}
       groupId={groupId}
-      isLastChild={index === issueIds.length - 1}
+      isLastChild={index === rows.length - 1}
       isDragAllowed={isDragAllowed}
       canDropOverIssue={canDropOverIssue}
       virtualized={virtualized}
@@ -88,7 +101,12 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
       ref={contentRef}
       data-virtual-list={virtualized || undefined}
       className="relative w-full"
-      style={virtualized ? { height: virtualizer.getTotalSize() } : undefined}
+      style={
+        {
+          "--issue-list-identifier-width": `${identifierWidth}px`,
+          ...(virtualized ? { height: virtualizer.getTotalSize() } : {}),
+        } as CSSProperties
+      }
     >
       {virtualized
         ? virtualizer.getVirtualItems().map((row) => (
@@ -100,11 +118,11 @@ export const IssueBlocksList = observer(function IssueBlocksList(props: Props) {
                 className="absolute top-0 left-0 w-full"
                 style={{ transform: `translateY(${row.start - scrollMargin}px)` }}
               >
-                {renderRow(issueIds[row.index], row.index)}
+                {renderRow(rows[row.index].id, row.index)}
               </div>
             </Fragment>
           ))
-        : issueIds.map(renderRow)}
+        : rows.map((row, index) => renderRow(row.id, index))}
     </div>
   );
 });

@@ -4,13 +4,16 @@
  * See the LICENSE file for details.
  */
 
-import type { Dispatch, MouseEvent, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 import { useEffect, useRef } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
 import { draggable } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { ChevronRightOutline } from "@makeplane/propel/icons";
+import { IssueTreeLines } from "./tree-lines";
+import { PrioritySelect } from "@/components/dropdowns/priority/priority-select";
+import { StateSelect } from "@/components/dropdowns/state/state-select";
+import { SubIssuesProgress } from "./sub-issues-progress";
 // types
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -33,6 +36,8 @@ import type { TRenderQuickActions } from "./list-view-types";
 import { ListIssueIdentifier } from "../identifier";
 import { translate } from "@plane/i18n";
 
+const EMPTY_TREE_BRANCHES: boolean[] = [];
+
 interface IssueBlockProps {
   issueId: string;
   issuesMap: TIssueMap;
@@ -41,10 +46,10 @@ interface IssueBlockProps {
   quickActions: TRenderQuickActions;
   displayProperties: IIssueDisplayProperties | undefined;
   canEditProperties: (projectId: string | undefined) => boolean;
+  treeBranches?: boolean[];
+  hasTreeChildren?: boolean;
   nestingLevel: number;
   spacingLeft?: number;
-  isExpanded: boolean;
-  setExpanded: Dispatch<SetStateAction<boolean>>;
   selectionHelpers: TSelectionHelper;
   isCurrentBlockDragging: boolean;
   setIsCurrentBlockDragging: React.Dispatch<React.SetStateAction<boolean>>;
@@ -80,39 +85,6 @@ function openIssuePeek({ issue, workspaceSlug, nestingLevel, getIsIssuePeeked, s
   });
 }
 
-type TToggleIssueExpandArgs = {
-  event: MouseEvent<HTMLButtonElement>;
-  issue: TIssue;
-  nestingLevel: number;
-  workspaceSlug: string | undefined;
-  setExpanded: Dispatch<SetStateAction<boolean>>;
-  fetchSubIssues: (workspaceSlug: string, projectId: string, issueId: string) => unknown;
-  onOpenPeek: (issue: TIssue) => void;
-};
-
-function toggleIssueExpand({
-  event,
-  issue,
-  nestingLevel,
-  workspaceSlug,
-  setExpanded,
-  fetchSubIssues,
-  onOpenPeek,
-}: TToggleIssueExpandArgs) {
-  event.stopPropagation();
-  event.preventDefault();
-  if (nestingLevel >= 3) {
-    onOpenPeek(issue);
-    return;
-  }
-  setExpanded((prevState) => {
-    if (!prevState && workspaceSlug && issue.project_id) {
-      fetchSubIssues(workspaceSlug, issue.project_id, issue.id);
-    }
-    return !prevState;
-  });
-}
-
 type TRowClassNameArgs = {
   isIssuePeeked: boolean;
   isIssuePeekedHere: boolean;
@@ -131,7 +103,7 @@ function getRowClassName({
   isSidebarCollapsed,
 }: TRowClassNameArgs) {
   return cn(
-    "group/list-block relative flex min-h-11 flex-col gap-3 bg-layer-transparent py-3 text-13 transition-colors hover:bg-layer-transparent-hover",
+    "group/list-block relative flex min-h-11 flex-col gap-2 bg-layer-transparent py-1 text-13 transition-colors hover:bg-layer-transparent-hover",
     {
       "border-accent-strong": isIssuePeekedHere,
       "border-strong-1": isIssueActive,
@@ -223,32 +195,6 @@ const IssueBlockSelection = observer(function IssueBlockSelection({
   );
 });
 
-type TIssueBlockSubIssuesToggleProps = {
-  subIssuesCount: number;
-  isExpanded: boolean;
-  onToggleExpand: (event: MouseEvent<HTMLButtonElement>) => void;
-};
-
-function IssueBlockSubIssuesToggle({ subIssuesCount, isExpanded, onToggleExpand }: TIssueBlockSubIssuesToggleProps) {
-  return (
-    <div className="grid size-4 flex-shrink-0 place-items-center">
-      {subIssuesCount > 0 && (
-        <button
-          type="button"
-          className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
-          onClick={onToggleExpand}
-        >
-          <ChevronRightOutline
-            className={cn("size-4", {
-              "rotate-90": isExpanded,
-            })}
-          />
-        </button>
-      )}
-    </div>
-  );
-}
-
 type TIssueBlockLeftProps = {
   issue: TIssue;
   projectId: string | undefined;
@@ -259,10 +205,11 @@ type TIssueBlockLeftProps = {
   displayProperties: IIssueDisplayProperties | undefined;
   projectIdentifier: string | undefined;
   subIssuesCount: number;
-  isExpanded: boolean;
-  onToggleExpand: (event: MouseEvent<HTMLButtonElement>) => void;
-  isSubIssue: boolean;
-  marginLeft: string;
+  treeBranches: boolean[];
+  hasTreeChildren: boolean;
+  workspaceSlug?: string;
+  updateIssue: IssueBlockProps["updateIssue"];
+  canEdit: boolean;
   isCurrentBlockDragging: boolean;
   isMobile: boolean;
 };
@@ -277,16 +224,28 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
   displayProperties,
   projectIdentifier,
   subIssuesCount,
-  isExpanded,
-  onToggleExpand,
-  isSubIssue,
-  marginLeft,
+  treeBranches,
+  hasTreeChildren,
+  workspaceSlug,
+  updateIssue,
+  canEdit,
   isCurrentBlockDragging,
   isMobile,
 }: TIssueBlockLeftProps) {
   return (
-    <div className="flex flex-grow items-center gap-0.5 truncate">
-      <div className="flex items-center gap-1" style={isSubIssue ? { marginLeft } : {}}>
+    <div className="relative flex min-h-9 min-w-0 flex-grow items-center gap-2 [&_[data-list-identifier]]:w-[var(--issue-list-identifier-width)] [&_[data-list-identifier]]:text-[13px]">
+      <div className="flex shrink-0 items-center gap-2 self-stretch">
+        <IssueTreeLines branches={treeBranches} hasChildren={hasTreeChildren} />
+        <PrioritySelect
+          value={issue.priority}
+          variant="icon-sm"
+          className="h-9 w-4 min-w-4 rounded-sm p-0"
+          tooltip
+          disabled={!canEdit || !!issue.tempId}
+          onChange={(priority) => {
+            void updateIssue?.(issue.project_id, issue.id, { priority });
+          }}
+        />
         {/* select checkbox */}
         <IssueBlockSelection
           issue={issue}
@@ -300,11 +259,16 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
           <ListIssueIdentifier identifier={`${projectIdentifier}-${issue.sequence_id}`} />
         )}
 
-        {/* sub-issues chevron */}
-        <IssueBlockSubIssuesToggle
-          subIssuesCount={subIssuesCount}
-          isExpanded={isExpanded}
-          onToggleExpand={onToggleExpand}
+        <StateSelect
+          value={issue.state_id}
+          projectId={issue.project_id ?? undefined}
+          variant="icon-sm"
+          className="h-9 w-4 min-w-4 rounded-sm p-0"
+          tooltip
+          disabled={!canEdit || !!issue.tempId}
+          onChange={(state_id) => {
+            void updateIssue?.(issue.project_id, issue.id, { state_id });
+          }}
         />
 
         {issue.tempId !== undefined && (
@@ -315,6 +279,12 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
       <Tooltip label={issue.name} layout="stacked" align="start" disabled={isCurrentBlockDragging || isMobile}>
         <p className="cursor-pointer truncate text-body-xs-medium text-primary">{issue.name}</p>
       </Tooltip>
+      <SubIssuesProgress
+        issueId={issue.id}
+        projectId={issue.project_id}
+        workspaceSlug={workspaceSlug}
+        total={subIssuesCount}
+      />
     </div>
   );
 });
@@ -375,7 +345,11 @@ const IssueBlockPropertiesSection = observer(function IssueBlockPropertiesSectio
             issue={issue}
             isReadOnly={!canEditIssueProperties}
             updateIssue={updateIssue}
-            displayProperties={displayProperties}
+            displayProperties={
+              displayProperties
+                ? { ...displayProperties, priority: false, state: false, sub_issue_count: false }
+                : displayProperties
+            }
             activeLayout="List"
           />
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
@@ -414,9 +388,6 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     displayProperties,
     canEditProperties,
     nestingLevel,
-    spacingLeft = 14,
-    isExpanded,
-    setExpanded,
     selectionHelpers,
     isCurrentBlockDragging,
     setIsCurrentBlockDragging,
@@ -431,7 +402,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   // hooks
   const { sidebarCollapsed: isSidebarCollapsed } = useAppTheme();
   const { getProjectIdentifierById } = useProject();
-  const { getIsIssuePeeked, peekIssue, setPeekIssue, subIssues: subIssuesStore } = useIssueDetail();
+  const { getIsIssuePeeked, peekIssue, setPeekIssue } = useIssueDetail();
 
   // derived values
   const issue = issuesMap[issueId];
@@ -453,26 +424,12 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   const projectIdentifier = getProjectIdentifierById(issue.project_id);
   const isIssueSelected = selectionHelpers.getIsEntitySelected(issue.id);
   const isIssueActive = selectionHelpers.getIsEntityActive(issue.id);
-  const isSubIssue = nestingLevel !== 0;
   const canSelectIssues = canEditIssueProperties && !selectionHelpers.isSelectionDisabled;
   const isIssuePeeked = getIsIssuePeeked(issue.id);
   const isIssuePeekedHere = isIssuePeeked && peekIssue?.nestingLevel === nestingLevel;
 
-  const marginLeft = `${spacingLeft}px`;
-
   const handleIssuePeekOverview = (targetIssue: TIssue) =>
     openIssuePeek({ issue: targetIssue, workspaceSlug, nestingLevel, getIsIssuePeeked, setPeekIssue });
-
-  const handleToggleExpand = (event: MouseEvent<HTMLButtonElement>) =>
-    toggleIssueExpand({
-      event,
-      issue,
-      nestingLevel,
-      workspaceSlug,
-      setExpanded,
-      fetchSubIssues: subIssuesStore.fetchSubIssues,
-      onOpenPeek: handleIssuePeekOverview,
-    });
 
   const workItemLink = generateWorkItemLink({
     workspaceSlug,
@@ -507,7 +464,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
           }
         }}
       >
-        <div className="flex w-full gap-2 truncate">
+        <div className="flex w-full min-w-0 gap-2 self-stretch">
           <IssueBlockLeft
             issue={issue}
             projectId={projectId}
@@ -518,10 +475,11 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
             displayProperties={displayProperties}
             projectIdentifier={projectIdentifier}
             subIssuesCount={issue.sub_issues_count ?? 0}
-            isExpanded={isExpanded}
-            onToggleExpand={handleToggleExpand}
-            isSubIssue={isSubIssue}
-            marginLeft={marginLeft}
+            treeBranches={props.treeBranches ?? EMPTY_TREE_BRANCHES}
+            hasTreeChildren={props.hasTreeChildren ?? false}
+            workspaceSlug={workspaceSlug}
+            updateIssue={updateIssue}
+            canEdit={canEditIssueProperties}
             isCurrentBlockDragging={isCurrentBlockDragging}
             isMobile={isMobile}
           />

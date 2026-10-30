@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 // plane ui
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import type { TStateGroups } from "@plane/types";
+import type { TStateGroups, TStateIcon } from "@plane/types";
 // plane utils
 import { cn } from "@plane/utils";
 //hooks
@@ -23,6 +23,8 @@ type Props = {
       stateDetails: {
         name: string;
         group: TStateGroups;
+        color?: string;
+        icon?: TStateIcon | null;
       };
     }
   | {
@@ -46,7 +48,7 @@ export const IssueBlockState = observer(function IssueBlockState(props: Props) {
         })}
       >
         <div className="flex w-full items-center gap-1.5">
-          <StateGroupIcon stateGroup={state.group} />
+          <StateGroupIcon stateGroup={state.group} color={state.color} icon={state.icon} />
           <div className="text-11">{state.name}</div>
         </div>
       </div>

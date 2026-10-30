@@ -67,10 +67,12 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
   const { issueMap } = useIssues();
 
   const displayFilters = issuesFilter?.issueFilters?.displayFilters;
+  const appliedDisplayFilters =
+    ("appliedDisplayFilters" in issues ? issues.appliedDisplayFilters : undefined) ?? displayFilters;
   const displayProperties = issuesFilter?.issueFilters?.displayProperties;
   const orderBy = displayFilters?.order_by || undefined;
 
-  const group_by = (displayFilters?.group_by || null) as GroupByColumnTypes | null;
+  const group_by = (appliedDisplayFilters?.group_by || null) as GroupByColumnTypes | null;
   const showEmptyGroup = displayFilters?.show_empty_groups ?? false;
 
   const { workspaceSlug, projectId } = useParams();
@@ -80,8 +82,8 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
 
   useEffect(() => {
     if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.LIST) return;
-    fetchIssues("init-loader", { canGroup: true, perPageCount: group_by ? 50 : 100 }, viewId);
-  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, group_by, viewId]);
+    fetchIssues("init-loader", { canGroup: true, perPageCount: displayFilters?.group_by ? 50 : 100 }, viewId);
+  }, [fetchIssues, issuesFilter, displayFilters?.layout, storeType, displayFilters?.group_by, viewId]);
 
   const groupedIssueIds = issues?.groupedIssueIds as TGroupedIssues | undefined;
   // auth

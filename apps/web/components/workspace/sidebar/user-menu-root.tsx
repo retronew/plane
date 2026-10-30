@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
-import { Blocks, Plug, type LucideIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import { Blocks, Plug, Shield, type LucideIcon } from "lucide-react";
 import {
   KeyOutline,
   LockOutline,
@@ -19,7 +19,14 @@ import {
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import {
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuLinkItem,
+  MenuSeparator,
+  MenuTrigger,
+} from "@makeplane/propel/components/menu";
 import {
   GOD_MODE_URL,
   GROUPED_PROFILE_SETTINGS,
@@ -39,6 +46,9 @@ import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useUser } from "@/hooks/store/user";
 import { usePasswordManagement } from "@/hooks/use-password-management";
+import { UserService } from "@/services/user.service";
+
+const userService = new UserService();
 
 // Mirrors the icons used by the profile settings sidebar.
 const PROFILE_SETTINGS_ICONS: Record<TProfileSettingsTabs, typeof SettingsOutline | LucideIcon> = {
@@ -60,8 +70,6 @@ const MENU_TABS = PROFILE_SETTINGS_CATEGORIES.flatMap((category) =>
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  // router
-  const router = useRouter();
   // store hooks
   const { toggleAnySidebarDropdown } = useAppTheme();
   const { data: currentUser } = useUser();
@@ -69,7 +77,12 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
   const { toggleProfileSettingsModal } = useCommandPalette();
   const { canManagePassword } = usePasswordManagement();
   // derived values
-  const isUserInstanceAdmin = false;
+  const { data: adminStatus } = useSWR(
+    currentUser?.id ? "CURRENT_USER_INSTANCE_ADMIN_STATUS" : null,
+    () => userService.currentUserInstanceAdminStatus(),
+    { revalidateOnFocus: false, shouldRetryOnError: false }
+  );
+  const isUserInstanceAdmin = adminStatus?.is_instance_admin === true;
   // translation
   const { t } = useTranslation();
 
@@ -155,6 +168,15 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                 />
               ))}
             </div>
+            {isUserInstanceAdmin && (
+              <MenuLinkItem
+                variant="neutral"
+                icon={<Icon icon={Shield} />}
+                label={t("enter_god_mode")}
+                href={GOD_MODE_URL}
+                external
+              />
+            )}
             <MenuSeparator />
             <div>
               <MenuItem
@@ -163,9 +185,6 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                 label={t("sign_out")}
                 onClick={handleSignOut}
               />
-              {isUserInstanceAdmin && (
-                <MenuItem variant="accent" label={t("enter_god_mode")} onClick={() => router.push(GOD_MODE_URL)} />
-              )}
             </div>
           </div>
         </MenuContent>

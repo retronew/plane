@@ -86,7 +86,7 @@ export const PeekOverviewIssueProperties = observer(function PeekOverviewIssuePr
             <span>{t("web.state")}</span>
           </div>
           <div className="flex w-3/4 items-center gap-1.5 py-0.5 text-13">
-            <StateGroupIcon stateGroup={state?.group ?? "backlog"} color={state?.color} />
+            <StateGroupIcon stateGroup={state?.group ?? "backlog"} color={state?.color} icon={state?.icon} />
             {addSpaceIfCamelCase(state?.name ?? "")}
           </div>
         </div>

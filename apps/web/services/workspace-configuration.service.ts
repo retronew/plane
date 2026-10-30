@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@plane/constants";
-import type { TLogoProps } from "@plane/types";
+import type { TLogoProps, TStateIcon } from "@plane/types";
 import { APIService } from "@/services/api.service";
 
 export type ProjectCategory = {
@@ -16,6 +16,7 @@ export type WorkspaceTemplate = {
   id: string;
   kind: "project" | "work_item" | "page";
   short_description: string;
+  is_default_state_template?: boolean;
   project: string | null;
   configuration: TemplateConfiguration;
   name: string;
@@ -42,7 +43,16 @@ export type TemplateConfiguration = {
   page_view?: boolean;
   issue_views_view?: boolean;
   intake_view?: boolean;
-  states?: { client_id?: string; name: string; color: string; group: string; default: boolean }[];
+  disabled_state_groups?: string[];
+  states?: {
+    client_id?: string;
+    icon?: TStateIcon | null;
+    name: string;
+    color: string;
+    group: string;
+    default: boolean;
+    allow_new_work_items?: boolean;
+  }[];
   labels?: { client_id?: string; name: string; color: string }[];
   work_items?: TemplateWorkItemChild[];
   type_id?: string | null;
@@ -60,6 +70,27 @@ export type TemplateOptions = {
   labels?: { id: string; name: string }[];
   modules?: { id: string; name: string }[];
   assignees?: { member_id: string; member__display_name: string }[];
+};
+export type StateTemplateValues = {
+  icon?: TStateIcon | null;
+  name: string;
+  group: string;
+  color: string;
+  default: boolean;
+  allow_new_work_items: boolean;
+};
+export type StateTemplatePreview = {
+  template: string;
+  token: string;
+  disabled_state_groups?: { before: string[]; after: string[] };
+  matched: {
+    index: number;
+    id: string;
+    values: StateTemplateValues;
+    changes: Record<string, { before: unknown; after: unknown }>;
+  }[];
+  added: { index: number; id: null; values: StateTemplateValues }[];
+  retained: { id: string; name: string; group: string; changes: Record<string, { before: unknown; after: unknown }> }[];
 };
 export type ConfigurationResource = "templates" | "project-categories/status" | "project-categories/label";
 export const configurationKey = (slug: string, resource: ConfigurationResource) =>
@@ -115,6 +146,13 @@ export class WorkspaceConfigurationService extends APIService {
   }
   async projectTemplateOptions(slug: string, projectId: string): Promise<TemplateOptions> {
     return (await this.get(`/api/workspaces/${slug}/projects/${projectId}/template-options/`)).data;
+  }
+  async stateTemplate(
+    slug: string,
+    projectId: string,
+    data: { mapping: Record<string, string>; token?: string; apply?: boolean }
+  ): Promise<StateTemplatePreview> {
+    return (await this.post(`/api/workspaces/${slug}/projects/${projectId}/state-template/`, data)).data;
   }
   async stateSettings(slug: string): Promise<{ enabled: boolean }> {
     return (await this.get(`/api/workspaces/${slug}/project-state-settings/`)).data;

@@ -58,7 +58,7 @@ export function WorkflowStateRules({
                 <ChevronRight
                   className={cn("size-3 shrink-0 text-tertiary transition-transform duration-200", open && "rotate-90")}
                 />
-                <StateGroupIcon stateGroup={state.group} color={state.color} className="size-4" />
+                <StateGroupIcon stateGroup={state.group} color={state.color} icon={state.icon} className="size-4" />
                 <span className="truncate">{state.name}</span>
               </button>
               {rules.length > 0 && (

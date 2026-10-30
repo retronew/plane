@@ -44,7 +44,6 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
     updateIssue,
     quickActions,
     canEditProperties,
-    scrollableContainerRef,
   } = props;
 
   return (
@@ -64,7 +63,6 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
                 issueId={issueId}
                 groupId={groupId}
                 subGroupId={sub_group_id}
-                shouldRenderByDefault={index <= 10}
                 issuesMap={issuesMap}
                 displayProperties={displayProperties}
                 updateIssue={updateIssue}
@@ -74,7 +72,6 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
                 columnId={columnId}
                 canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
                 canEditProperties={canEditProperties}
-                scrollableContainerRef={scrollableContainerRef}
               />
             );
           })}

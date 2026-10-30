@@ -69,7 +69,13 @@ export function UserDetailsDialog({ userId, isOpen, onClose }: Props) {
           </DialogHeader>
           <DialogBody tabIndex={0}>
             {data ? (
-              <UserDetailsForm user={data} refresh={() => mutate()} ref={formRef} onBusyChange={setBusy} />
+              <UserDetailsForm
+                key={data.id}
+                user={data}
+                refresh={() => mutate()}
+                ref={formRef}
+                onBusyChange={setBusy}
+              />
             ) : (
               <div className="space-y-3 py-6 text-13 text-secondary" aria-live="polite">
                 {t(error ? "admin.users.errors.default" : "admin.users.details.loading")}

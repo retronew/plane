@@ -21,8 +21,6 @@ import type {
 import { ContentWrapper } from "@plane/blocks/layout";
 import { cn } from "@plane/utils";
 // components
-import RenderIfVisible from "@/components/core/render-if-visible-HOC";
-import { KanbanColumnLoader } from "@/components/ui/loader/layouts/kanban-layout-loader";
 // hooks
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
@@ -30,7 +28,7 @@ import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 // parent components
 import { useWorkFlowFDragNDrop } from "@/components/workflow";
 import type { TRenderQuickActions } from "../list/list-view-types";
-import { getGroupByColumns, isWorkspaceLevel, getApproximateCardHeight } from "../utils";
+import { getGroupByColumns, isWorkspaceLevel } from "../utils";
 // components
 import { HeaderGroupByCard } from "./headers/group-by-card";
 import { KanbanGroup } from "./kanban-group";
@@ -86,7 +84,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
     orderBy,
     isDropDisabled,
     dropErrorMessage,
-    subGroupIndex = 0,
   } = props;
   // i18n
   // store hooks
@@ -106,21 +103,13 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
   if (!list) return null;
 
   const isGroupByCreatedBy = group_by === "created_by";
-  const approximateCardHeight = getApproximateCardHeight(displayProperties);
-  const isSubGroup = !!sub_group_id && sub_group_id !== "null";
 
   return (
     <ContentWrapper className={`relative flex-row gap-4 !p-4`}>
       {list &&
         list.length > 0 &&
-        list.map((subList: IGroupByColumn, groupIndex) => {
+        list.map((subList: IGroupByColumn) => {
           if (!showEmptyGroup && (getGroupIssueCount(subList.id, undefined, false) ?? 0) <= 0) return null;
-
-          const issueIds = isSubGroup
-            ? ((groupedIssueIds as TSubGroupedIssues)?.[subList.id]?.[sub_group_id] ?? [])
-            : ((groupedIssueIds as TGroupedIssues)?.[subList.id] ?? []);
-          const issueLength = issueIds?.length;
-          const groupHeight = issueLength * approximateCardHeight;
 
           return (
             <div
@@ -150,23 +139,7 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                 </div>
               )}
 
-              <RenderIfVisible
-                verticalOffset={100}
-                horizontalOffset={100}
-                root={scrollableContainerRef}
-                classNames={sub_group_by ? "h-full min-h-[120px]" : "min-h-0 flex-1"}
-                defaultHeight={`${groupHeight}px`}
-                placeholderChildren={
-                  <KanbanColumnLoader
-                    ignoreHeader
-                    cardHeight={approximateCardHeight}
-                    cardsInColumn={issueLength !== undefined && issueLength < 3 ? issueLength : 3}
-                    shouldAnimate={false}
-                  />
-                }
-                defaultValue={groupIndex < 5 && subGroupIndex < 2}
-                useIdleTime
-              >
+              <div className={sub_group_by ? "h-full min-h-[120px]" : "min-h-0 flex-1"}>
                 <KanbanGroup
                   groupId={subList.id}
                   issuesMap={issuesMap}
@@ -188,7 +161,7 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                   scrollableContainerRef={scrollableContainerRef}
                   loadMoreIssues={loadMoreIssues}
                 />
-              </RenderIfVisible>
+              </div>
             </div>
           );
         })}

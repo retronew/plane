@@ -1,6 +1,8 @@
 @import "./date-picker.css";
+@import "./state-menu.css";
 @import "@plane/tailwind-config/index.css";
 @import "@plane/editor/styles";
+@import "@plane/editor/plate.css";
 @import "./power-k.css";
 @import "./emoji.css";
 @import "./dialogs.css";

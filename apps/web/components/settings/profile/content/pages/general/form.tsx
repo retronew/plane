@@ -31,7 +31,7 @@ import { getCoverImagePayload } from "@/helpers/cover-image.helper";
 import { useInstance } from "@/hooks/store/use-instance";
 import { useUser, useUserProfile } from "@/hooks/store/user";
 // utils
-import { validatePersonName, validateDisplayName } from "@plane/utils";
+import { validatePersonName } from "@plane/utils";
 
 type TUserProfileForm = {
   avatar_url: string;
@@ -284,7 +284,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   control={control}
                   name="last_name"
                   rules={{
-                    validate: validatePersonName,
+                    validate: (value) => value === "" || validatePersonName(value),
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <Field name="last_name" invalid={Boolean(errors.last_name)}>
@@ -317,7 +317,8 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                   name="display_name"
                   rules={{
                     required: t("web.display_name_is_required"),
-                    validate: validateDisplayName,
+                    validate: (value) => !!value.trim() || t("web.display_name_is_required"),
+                    maxLength: 255,
                   }}
                   render={({ field: { value, onChange, ref } }) => (
                     <Field name="display_name" invalid={Boolean(errors?.display_name)}>
@@ -331,7 +332,7 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
                           onChange={onChange}
                           ref={ref}
                           placeholder={t("web.enter_your_display_name")}
-                          maxLength={50}
+                          maxLength={255}
                         />
                       </InputGroup>
                     </Field>

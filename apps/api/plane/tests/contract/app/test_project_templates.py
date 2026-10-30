@@ -73,6 +73,178 @@ def ctx(workspace, create_user, monkeypatch):
     )
 
 
+def test_state_template_preview_apply_retains_ids_and_rejects_stale(session_client, ctx):
+    from plane.services.state_templates import initialize_project_states
+
+    template = WorkspaceTemplate.objects.create(
+        workspace=ctx.workspace,
+        kind="project",
+        name="Default states",
+        is_default_state_template=True,
+        configuration={
+            "states": [
+                {"name": "Ready", "group": "unstarted", "color": "#60646C", "default": True},
+                {
+                    "name": "Done",
+                    "group": "completed",
+                    "color": "#46A758",
+                    "allow_new_work_items": False,
+                    "icon": "started-75",
+                },
+            ]
+        },
+    )
+    unique = State.objects.create(project=ctx.project, name="Custom", group="started", color="#112233")
+    issue = Issue.objects.create(project=ctx.project, name="Keep state", state=unique)
+    endpoint = ctx.base + "state-template/"
+    response = session_client.post(endpoint, {}, format="json")
+    assert response.status_code == 200, response.data
+    assert response.data["matched"][0]["id"] == str(ctx.state.pk)
+    assert response.data["retained"][0]["id"] == str(unique.pk)
+    token = response.data["token"]
+    unique.color = "#445566"
+    unique.save()
+    stale = session_client.post(endpoint, {"apply": True, "token": token}, format="json")
+    assert stale.status_code == 409
+    fresh = session_client.post(endpoint, {}, format="json")
+    applied = session_client.post(endpoint, {"apply": True, "token": fresh.data["token"]}, format="json")
+    assert applied.status_code == 200, applied.data
+    issue.refresh_from_db()
+    assert issue.state_id == unique.pk
+    assert State.objects.filter(pk=ctx.state.pk).exists()
+    assert State.objects.filter(pk=unique.pk).exists()
+    assert not State.objects.get(project=ctx.project, name="Done").allow_new_work_items
+    assert State.objects.get(project=ctx.project, name="Done").icon == "started-75"
+    count = State.objects.filter(project=ctx.project).count()
+    fresh = session_client.post(endpoint, {}, format="json")
+    assert not fresh.data["added"]
+    assert (
+        session_client.post(endpoint, {"apply": True, "token": fresh.data["token"]}, format="json").status_code == 200
+    )
+    assert State.objects.filter(project=ctx.project).count() == count
+    new_project = Project.objects.create(workspace=ctx.workspace, name="New", identifier="NEW")
+    initialize_project_states(new_project, ctx.user)
+    assert State.objects.filter(project=new_project, name="Ready", default=True).exists()
+    assert State.objects.get(project=new_project, name="Done").icon == "started-75"
+    assert State.triage_objects.filter(project=new_project, is_triage=True).exists()
+    explicit = Project.objects.create(workspace=ctx.workspace, name="Explicit", identifier="EXP")
+    initialize_project_states(
+        explicit, ctx.user, {"states": [{"name": "Explicit", "color": "#123456", "group": "backlog"}]}
+    )
+    assert State.objects.get(project=explicit).name == "Explicit"
+    template.delete(soft=False)
+    fallback = Project.objects.create(workspace=ctx.workspace, name="Fallback", identifier="FAL")
+    initialize_project_states(fallback, ctx.user)
+    assert State.objects.filter(project=fallback, name="Backlog", default=True).exists()
+
+
+def test_state_template_preview_expires_when_group_creation_settings_change(session_client, ctx):
+    WorkspaceTemplate.objects.create(
+        workspace=ctx.workspace,
+        kind="project",
+        name="States",
+        is_default_state_template=True,
+        configuration={"states": [{"name": "Ready", "group": "unstarted", "color": "#123456", "default": True}]},
+    )
+    endpoint = ctx.base + "state-template/"
+    preview = session_client.post(endpoint, {}, format="json")
+    assert preview.status_code == 200, preview.data
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    response = session_client.post(endpoint, {"apply": True, "token": preview.data["token"]}, format="json")
+    assert response.status_code == 409, response.data
+    ctx.state.refresh_from_db()
+    assert ctx.state.color != "#123456"
+
+
+def test_state_template_group_settings_round_trip_and_inheritance(session_client, ctx):
+    from plane.services.state_templates import initialize_project_states
+
+    url = f"/api/workspaces/{ctx.workspace.slug}/templates/"
+    response = session_client.post(
+        url,
+        {
+            "kind": "project",
+            "name": "Group defaults",
+            "is_default_state_template": True,
+            "configuration": {
+                "disabled_state_groups": ["completed"],
+                "states": [
+                    {"name": "Ready", "group": "unstarted", "color": "#123456", "default": True},
+                    {"name": "Done", "group": "completed", "color": "#46A758"},
+                ],
+            },
+        },
+        format="json",
+    )
+    assert response.status_code == 201, response.data
+    assert response.data["configuration"]["disabled_state_groups"] == ["completed"]
+    new_project = Project.objects.create(workspace=ctx.workspace, name="Inherited", identifier="INH")
+    initialize_project_states(new_project, ctx.user)
+    new_project.refresh_from_db()
+    assert new_project.disabled_state_groups == ["completed"]
+    endpoint = ctx.base + "state-template/"
+    preview = session_client.post(endpoint, {}, format="json")
+    assert preview.status_code == 200, preview.data
+    assert preview.data["disabled_state_groups"] == {"before": [], "after": ["completed"]}
+    applied = session_client.post(endpoint, {"apply": True, "token": preview.data["token"]}, format="json")
+    assert applied.status_code == 200, applied.data
+    ctx.project.refresh_from_db()
+    assert ctx.project.disabled_state_groups == ["completed"]
+    invalid = session_client.patch(
+        url + str(response.data["id"]) + "/",
+        {
+            "configuration": {
+                "states": [{"name": "Ready", "group": "unstarted", "default": True}],
+                "disabled_state_groups": ["unstarted"],
+            },
+        },
+        format="json",
+    )
+    assert invalid.status_code == 400, invalid.data
+
+
+def test_state_template_same_group_mapping_and_permissions(session_client, ctx):
+    WorkspaceTemplate.objects.create(
+        workspace=ctx.workspace,
+        kind="project",
+        name="States",
+        is_default_state_template=True,
+        configuration={"states": [{"name": "Renamed", "group": "unstarted", "color": "#123456", "default": True}]},
+    )
+    previous_updated_at = ctx.state.updated_at
+    endpoint = ctx.base + "state-template/"
+    mapping = {"0": str(ctx.state.pk)}
+    preview = session_client.post(endpoint, {"mapping": mapping}, format="json")
+    assert preview.status_code == 200, preview.data
+    assert preview.data["matched"][0]["changes"]["name"] == {"before": "Ready", "after": "Renamed"}
+    assert (
+        session_client.post(
+            endpoint, {"mapping": mapping, "apply": True, "token": preview.data["token"]}, format="json"
+        ).status_code
+        == 200
+    )
+    ctx.state.refresh_from_db()
+    assert ctx.state.name == "Renamed"
+    assert ctx.state.slug == "renamed"
+    assert ctx.state.updated_by_id == ctx.user.pk
+    assert ctx.state.updated_at > previous_updated_at
+    unchanged_updated_at = ctx.state.updated_at
+    fresh = session_client.post(endpoint, {"mapping": mapping}, format="json")
+    assert (
+        session_client.post(
+            endpoint, {"mapping": mapping, "apply": True, "token": fresh.data["token"]}, format="json"
+        ).status_code
+        == 200
+    )
+    ctx.state.refresh_from_db()
+    assert ctx.state.updated_at == unchanged_updated_at
+    wrong = State.objects.create(project=ctx.project, name="Wrong group", group="started")
+    assert session_client.post(endpoint, {"mapping": {"0": str(wrong.pk)}}, format="json").status_code == 400
+    ProjectMember.objects.filter(pk=ctx.membership.pk).update(role=15)
+    WorkspaceMember.objects.filter(workspace=ctx.workspace, member=ctx.user).update(role=15)
+    assert session_client.post(endpoint, {}, format="json").status_code == 403
+
+
 def create_template(client, ctx, **overrides):
     return client.post(ctx.url, {"kind": "work_item", "name": "Starter", **overrides}, format="json")
 

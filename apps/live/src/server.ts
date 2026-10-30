@@ -11,7 +11,11 @@ import cors from "cors";
 import type { Express, Request, Response, Router } from "express";
 import express from "express";
 import expressWs from "express-ws";
+import { COMPARISON_PATH, createComparisonServer, comparisonEnabled } from "@/editor-comparison";
+import { registerComparisonAssets } from "@/editor-comparison-assets";
+import { createIssueDescriptionServer, ISSUE_DESCRIPTION_PATH } from "@/issue-description";
 import helmet from "helmet";
+import { createPageDescriptionServer, PAGE_DESCRIPTION_PATH } from "@/page-description";
 // plane imports
 import { registerController } from "@plane/decorators";
 import { logger, loggerMiddleware } from "@plane/logger";
@@ -29,6 +33,9 @@ export class Server {
   private router: Router;
   private hocuspocusServer: Hocuspocus | undefined;
   private httpServer: HttpServer | undefined;
+  private comparisonServer: Hocuspocus | undefined;
+  private issueDescriptionServer: Hocuspocus | undefined;
+  private pageDescriptionServer: Hocuspocus | undefined;
 
   constructor() {
     this.app = express();
@@ -70,14 +77,17 @@ export class Server {
 
   private setupCors() {
     const allowedOrigins = env.CORS_ALLOWED_ORIGINS.split(",").map((s) => s.trim());
-    this.app.use(
-      cors({
-        origin: allowedOrigins.length > 0 ? allowedOrigins : false,
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
-      })
-    );
+    const middleware = cors({
+      origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+    });
+    this.app.use((request, response, next) => {
+      if (comparisonEnabled() && request.path.startsWith(`${env.LIVE_BASE_PATH}/editor-comparison/assets`)) {
+        next();
+      } else middleware(request, response, next);
+    });
   }
 
   private setupNotFoundHandler() {
@@ -90,6 +100,24 @@ export class Server {
 
   private setupRoutes(hocuspocusServer: Hocuspocus) {
     CONTROLLERS.forEach((controller) => registerController(this.router, controller, [hocuspocusServer]));
+    this.issueDescriptionServer = createIssueDescriptionServer();
+    const issueDescriptionServer = this.issueDescriptionServer;
+    (this.router as expressWs.Router).ws(ISSUE_DESCRIPTION_PATH, (socket, request) => {
+      issueDescriptionServer.handleConnection(socket, request);
+    });
+    this.pageDescriptionServer = createPageDescriptionServer();
+    const pageDescriptionServer = this.pageDescriptionServer;
+    (this.router as expressWs.Router).ws(PAGE_DESCRIPTION_PATH, (socket, request) => {
+      pageDescriptionServer.handleConnection(socket, request);
+    });
+    registerComparisonAssets(this.router);
+    this.comparisonServer = createComparisonServer();
+    if (this.comparisonServer) {
+      const comparisonServer = this.comparisonServer;
+      (this.router as expressWs.Router).ws(COMPARISON_PATH, (socket, request) => {
+        comparisonServer.handleConnection(socket, request);
+      });
+    }
   }
 
   public listen() {
@@ -104,6 +132,9 @@ export class Server {
   }
 
   public async destroy() {
+    await this.pageDescriptionServer?.destroy();
+    await this.issueDescriptionServer?.destroy();
+    await this.comparisonServer?.destroy();
     if (this.hocuspocusServer) {
       this.hocuspocusServer.closeConnections();
       logger.info("SERVER: HocusPocus connections closed gracefully.");

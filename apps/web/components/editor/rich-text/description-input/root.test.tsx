@@ -2,7 +2,9 @@ import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { DescriptionInput } from "./root";
 
-const editor = vi.hoisted(() => ({ change: undefined as undefined | ((json: object, html: string) => void) }));
+const editor = vi.hoisted(() => ({
+  change: undefined as undefined | ((json: object, html: string, options?: { isMigrationUpdate: boolean }) => void),
+}));
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/utils", () => ({ getDescriptionPlaceholderI18n: () => "placeholder" }));
@@ -18,6 +20,7 @@ vi.mock("@/hooks/store/use-workspace", () => ({
 vi.mock("@/hooks/store/use-editor-asset", () => ({ useEditorAsset: () => ({}) }));
 vi.mock("@/services/workspace.service", () => ({ WorkspaceService: vi.fn() }));
 vi.mock("./loader", () => ({ DescriptionInputLoader: () => null }));
+vi.mock("./collaborative", () => ({ CollaborativeDescriptionInput: () => <div data-testid="shared-description" /> }));
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -33,6 +36,18 @@ function fixture(onSubmit = vi.fn().mockResolvedValue(undefined)) {
     setIsSubmitting: vi.fn(),
   };
 }
+it("routes existing project issue descriptions to collaboration without an HTML save timer", async () => {
+  vi.useFakeTimers();
+  const props = fixture();
+  const view = render(<DescriptionInput key="description" {...props} projectId="project" />);
+  expect(view.getByTestId("shared-description")).toBeTruthy();
+  view.unmount();
+  await act(async () => {
+    await vi.runAllTimersAsync();
+  });
+  expect(props.onSubmit).not.toHaveBeenCalled();
+});
+
 it("uses the latest submit callback without saving early or leaving a timer after unmount", async () => {
   vi.useFakeTimers();
   const props = fixture();
@@ -133,4 +148,75 @@ it("keeps newer edits pending when an earlier save completes", async () => {
   await act(async () => {});
   expect(props.onSubmit).toHaveBeenCalledTimes(2);
   expect(props.onSubmit.mock.calls[1]?.[0]).toEqual({ description_html: "<p>second</p>", description_json: {} });
+});
+
+it.each([false, true])("completes a save after its optimistic prop echo (migration: %s)", async (isMigrationUpdate) => {
+  vi.useFakeTimers();
+  let finish = () => {};
+  const props = fixture(
+    vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+    )
+  );
+  const view = render(<DescriptionInput key="description" {...props} />);
+  act(() => editor.change?.({}, '<p data-id="block">initial</p>', { isMigrationUpdate }));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500);
+  });
+  view.rerender(<DescriptionInput key="description" {...props} initialValue={'<p data-id="block">initial</p>'} />);
+  expect(props.setIsSubmitting).not.toHaveBeenCalledWith("submitted");
+  await act(async () => finish());
+  expect(props.setIsSubmitting).toHaveBeenLastCalledWith("submitted");
+  expect(props.onSubmit).toHaveBeenCalledExactlyOnceWith(
+    { description_html: '<p data-id="block">initial</p>', description_json: {} },
+    isMigrationUpdate
+  );
+  view.unmount();
+  expect(props.onSubmit).toHaveBeenCalledTimes(1);
+});
+it("preserves newer edits when an older save echoes through props", async () => {
+  vi.useFakeTimers();
+  let finish = () => {};
+  const props = fixture(
+    vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+    )
+  );
+  const view = render(<DescriptionInput key="description" {...props} />);
+  act(() => editor.change?.({}, "<p>first</p>"));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500);
+  });
+  act(() => editor.change?.({}, "<p>second</p>"));
+  view.rerender(<DescriptionInput key="description" {...props} initialValue="<p>first</p>" />);
+  await act(async () => finish());
+  expect(props.setIsSubmitting).not.toHaveBeenCalledWith("submitted");
+  view.unmount();
+  expect(props.onSubmit.mock.calls[1]?.[0]).toEqual({ description_html: "<p>second</p>", description_json: {} });
+});
+it("ignores a previous entity's save completion after switching entities", async () => {
+  vi.useFakeTimers();
+  let finish = () => {};
+  const props = fixture(
+    vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+    )
+  );
+  const view = render(<DescriptionInput key="description" {...props} />);
+  act(() => editor.change?.({}, "<p>first</p>"));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500);
+  });
+  view.rerender(<DescriptionInput key="description" {...props} entityId="two" initialValue="<p>next</p>" />);
+  await act(async () => finish());
+  expect(props.setIsSubmitting).not.toHaveBeenCalledWith("submitted");
 });

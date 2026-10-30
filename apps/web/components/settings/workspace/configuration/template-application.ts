@@ -1,4 +1,4 @@
-import type { TIssue, TProjectWorkflow } from "@plane/types";
+import type { IState, TIssue, TProjectWorkflow } from "@plane/types";
 import type { WorkspaceTemplate } from "@/services/workspace-configuration.service";
 import { workflowAllowsCreation, workflowIsActive } from "@/helpers/workflow";
 
@@ -17,7 +17,9 @@ export function getPageTemplatePatch(template: WorkspaceTemplate) {
 export function getWorkItemTemplatePatch(
   template: WorkspaceTemplate,
   current: Pick<TIssue, "type_id" | "state_id">,
-  workflow?: TProjectWorkflow
+  workflow?: TProjectWorkflow,
+  getState?: (id: string) => IState | undefined,
+  disabledGroups?: string[]
 ) {
   const configuration = template.configuration;
   const stateId = configuration?.state_id ?? current.state_id;
@@ -28,7 +30,8 @@ export function getWorkItemTemplatePatch(
     // Older workspace templates omit the type; keep the form's existing/default type in that case.
     ...(configuration?.type_id !== undefined ? { type_id: configuration.type_id } : {}),
     state_id:
-      workflowIsActive(workflow) && (!stateId || !workflowAllowsCreation(workflow, stateId))
+      (!stateId && workflowIsActive(workflow)) ||
+      (stateId && !workflowAllowsCreation(workflow, stateId, getState?.(stateId), disabledGroups))
         ? (workflow?.effective_initial_state_id ?? null)
         : stateId,
     assignee_ids: configuration?.assignee_ids ?? [],

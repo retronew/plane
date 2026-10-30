@@ -1,5 +1,10 @@
 import type { TFeishuDirectoryPreview, TFeishuDirectoryRow, TFeishuDirectorySelection } from "@/types/feishu";
 
+export function directoryUserLabel(user: { display_name: string; email: string }): string {
+  const email = user.email.trim();
+  return email ? `${user.display_name} (${email})` : user.display_name;
+}
+
 export function canBindDirectory(preview: TFeishuDirectoryPreview, now = Date.now()): boolean {
   return preview.status === "complete" && Date.parse(preview.expires_at) > now;
 }
@@ -56,7 +61,7 @@ export function directorySummary(
     else if (status === "pending" || status === "unmatched") counts.pending++;
     else if (status === "skipped") counts.skipped++;
     else if (status === "manual") counts.manual++;
-    else if (status === "email" || status === "oidc") counts.automatic++;
+    else if (status === "email" || status === "oidc" || status === "name") counts.automatic++;
   }
   return counts;
 }

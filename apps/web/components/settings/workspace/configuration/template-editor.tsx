@@ -1,3 +1,5 @@
+import { STATE_ICON_PRESETS, stateIconLabel } from "@/components/project-states/icon-presets";
+import type { TStateIcon } from "@plane/types";
 import { CategoryColorPicker } from "./category-color-picker";
 import { useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -520,6 +522,7 @@ type TemplateKindFieldsProps = {
 };
 
 function TemplateKindFields({ kind, draft, config, options, update, configure }: TemplateKindFieldsProps) {
+  const { t } = useTranslation();
   return (
     <>
       {kind === "work_item" && (
@@ -527,6 +530,14 @@ function TemplateKindFields({ kind, draft, config, options, update, configure }:
       )}
       {kind === "project" && (
         <>
+          <label className="flex items-center justify-between gap-3 text-13">
+            <span>{t("web.default_state_template")}</span>
+            <Switch
+              size="md"
+              checked={draft.is_default_state_template ?? false}
+              onCheckedChange={(value) => update({ is_default_state_template: value })}
+            />
+          </label>
           <TemplateProjectFeatures config={config} configure={configure} />
           {(["states", "labels"] as const).map((key) => (
             <TemplateCategoryDetails key={key} fieldKey={key} config={config} configure={configure} />
@@ -773,6 +784,27 @@ function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCatego
         {t(fieldKey === "states" ? "web.template_states" : "labels")}
       </summary>
       <div className="mt-4 flex flex-col gap-3">
+        {fieldKey === "states" && (
+          <div className="flex flex-col gap-2">
+            {["backlog", "unstarted", "started", "completed", "cancelled"].map((group) => (
+              <label key={group} className="flex items-center justify-between gap-3 text-13">
+                {t(`web.template_state_${group}`)}
+                <Switch
+                  size="sm"
+                  aria-label={`${t("web.allow_new_work_items")} · ${t(`web.template_state_${group}`)}`}
+                  checked={!config.disabled_state_groups?.includes(group)}
+                  onCheckedChange={(checked) =>
+                    configure({
+                      disabled_state_groups: checked
+                        ? (config.disabled_state_groups ?? []).filter((value) => value !== group)
+                        : [...(config.disabled_state_groups ?? []), group],
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        )}
         {(config[fieldKey] ?? []).map((entry, index) => (
           <div key={entry.client_id} className="flex flex-wrap items-center gap-2">
             <CategoryColorPicker
@@ -821,6 +853,53 @@ function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCatego
                   }
                 />
               </div>
+            )}
+            {fieldKey === "states" && (
+              <>
+                <div className="w-36">
+                  <ConfigurationSelect
+                    value={config.states?.[index].icon ?? "auto"}
+                    placeholder={t("web.state_icon")}
+                    options={STATE_ICON_PRESETS.map((icon) => ({
+                      value: icon ?? "auto",
+                      label: t(stateIconLabel(icon)),
+                    }))}
+                    onChange={(value) =>
+                      configure({
+                        states: config.states?.map((item, i) =>
+                          i === index ? { ...item, icon: value === "auto" ? null : (value as TStateIcon) } : item
+                        ),
+                      })
+                    }
+                  />
+                </div>
+                <Checkbox
+                  label={t("web.template_default_state")}
+                  checked={config.states?.[index].default ?? false}
+                  onCheckedChange={(checked) =>
+                    configure({
+                      states: config.states?.map((state, i) => ({
+                        ...state,
+                        default: i === index ? !!checked : false,
+                      })),
+                    })
+                  }
+                />
+                <label className="flex items-center gap-2 text-12">
+                  {t("web.allow_new_work_items")}
+                  <Switch
+                    size="sm"
+                    checked={config.states?.[index].allow_new_work_items !== false}
+                    onCheckedChange={(checked) =>
+                      configure({
+                        states: config.states?.map((state, i) =>
+                          i === index ? { ...state, allow_new_work_items: checked } : state
+                        ),
+                      })
+                    }
+                  />
+                </label>
+              </>
             )}
             <Button
               stretch="auto"

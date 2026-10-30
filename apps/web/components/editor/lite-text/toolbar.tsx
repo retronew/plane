@@ -36,6 +36,7 @@ type Props = {
   editorRef: EditorRefApi | null;
   submitButtonText?: string;
   compact?: boolean;
+  showFormatting?: boolean;
 };
 
 type TCommentAccessType = {
@@ -61,7 +62,12 @@ const COMMENT_ACCESS_SPECIFIERS: TCommentAccessType[] = [
   },
 ];
 
-const toolbarItems = TOOLBAR_ITEMS.lite;
+const formattingToolbarItems = TOOLBAR_ITEMS.lite;
+const attachmentToolbarItems: Record<string, ToolbarMenuItem[]> = {
+  attachments: Object.values(formattingToolbarItems)
+    .flat()
+    .filter((item) => item.itemKey === "image"),
+};
 const getServerSnapshot = () => "";
 
 export function IssueCommentToolbar(props: Props) {
@@ -78,7 +84,9 @@ export function IssueCommentToolbar(props: Props) {
     editorRef,
     submitButtonText = "common.comment",
     compact = false,
+    showFormatting = true,
   } = props;
+  const toolbarItems = showFormatting ? formattingToolbarItems : attachmentToolbarItems;
   const subscribe = useCallback(
     (onStoreChange: () => void) => editorRef?.onStateChange(onStoreChange) ?? (() => undefined),
     [editorRef]
@@ -96,7 +104,7 @@ export function IssueCommentToolbar(props: Props) {
       .map((item) => item.renderKey);
     if (editorRef.isEditorReadyToDiscard()) activeKeys.push("ready-to-discard");
     return activeKeys.join(",");
-  }, [editorRef]);
+  }, [editorRef, toolbarItems]);
   const activeKeys = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const activeStates = new Set(activeKeys.split(","));
 

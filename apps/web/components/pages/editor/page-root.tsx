@@ -7,11 +7,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
-import type { CollaborationState, EditorRefApi } from "@plane/editor";
+import type { EditorRefApi } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
 import type { TDocumentPayload, TPage, TPageVersion, TWebhookConnectionQueryParams } from "@plane/types";
 // hooks
-import { usePageFallback } from "@/hooks/use-page-fallback";
 import type { PageUpdateHandler, TCustomEventHandlers } from "@/hooks/use-realtime-page-events";
 import { usePagesPaneExtensions, useExtendedEditorProps } from "@/hooks/pages";
 import type { EPageStoreType } from "@/hooks/store";
@@ -62,7 +61,6 @@ export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
   } = props;
   // states
   const [editorReady, setEditorReady] = useState(false);
-  const [collaborationState, setCollaborationState] = useState<CollaborationState | null>(null);
   const [showContentTooLargeBanner, setShowContentTooLargeBanner] = useState(false);
   // translation
   const { t } = useTranslation();
@@ -73,23 +71,12 @@ export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
     isContentEditable,
     editor: { setEditorRef },
   } = page;
-  // page fallback
-  const { isFetchingFallbackBinary } = usePageFallback({
-    editorRef,
-    fetchPageDescription: handlers.fetchDescriptionBinary,
-    page,
-    collaborationState,
-    updatePageDescription: handlers.updateDescription,
-  });
-
   const handleEditorReady = useCallback(
     (status: boolean) => {
       setEditorReady(status);
-      if (editorRef.current && !page.editor.editorRef) {
-        setEditorRef(editorRef.current);
-      }
+      setEditorRef(status ? editorRef.current : null);
     },
-    [page.editor.editorRef, setEditorRef]
+    [setEditorRef]
   );
 
   useEffect(() => {
@@ -140,10 +127,10 @@ export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
 
   const handleRestoreVersion = useCallback(
     async (descriptionHTML: string) => {
-      editorRef.current?.clearEditor();
-      editorRef.current?.setEditorValue(descriptionHTML);
+      if (!page.isContentEditable || !editorRef.current) throw new Error("Page is not ready to restore");
+      editorRef.current.setEditorValue(descriptionHTML, true);
     },
-    [editorRef]
+    [page]
   );
 
   // reset editor ref on unmount
@@ -188,8 +175,6 @@ export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
           webhookConnectionParams={webhookConnectionParams}
           workspaceSlug={workspaceSlug}
           extendedEditorProps={extendedEditorProps}
-          isFetchingFallbackBinary={isFetchingFallbackBinary}
-          onCollaborationStateChange={setCollaborationState}
         />
       </div>
       <PageNavigationPaneRoot

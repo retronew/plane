@@ -9,6 +9,7 @@ import { useParams } from "react-router";
 import { useTranslation } from "@plane/i18n";
 import type { TIssueGroupByOptions } from "@plane/types";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUser } from "@/hooks/store/user";
 import { workflowAllowsCreation, workflowAllowsTransition } from "@/helpers/workflow";
@@ -17,6 +18,7 @@ export function useWorkFlowFDragNDrop(groupBy: TIssueGroupByOptions | undefined,
   const { projectId } = useParams();
   const store = useProjectWorkflow(projectId);
   const { getStateById } = useProjectState();
+  const { getProjectById } = useProject();
   const { data: user } = useUser();
   const { t } = useTranslation();
   const [blocked, setBlocked] = useState(false);
@@ -28,7 +30,15 @@ export function useWorkFlowFDragNDrop(groupBy: TIssueGroupByOptions | undefined,
     getIsWorkflowWorkItemCreationDisabled: (groupId: string, subGroupId?: string, issueTypeId?: string | null) => {
       const stateId = getStateId(groupId, subGroupId);
       const state = stateId ? getStateById(stateId) : undefined;
-      return !!state && !workflowAllowsCreation(store.resolve(state.project_id, issueTypeId), state.id);
+      return (
+        !!state &&
+        !workflowAllowsCreation(
+          store.resolve(state.project_id, issueTypeId),
+          state.id,
+          state,
+          getProjectById(state.project_id)?.disabled_state_groups
+        )
+      );
     },
     handleWorkFlowState: (
       sourceGroupId: string,

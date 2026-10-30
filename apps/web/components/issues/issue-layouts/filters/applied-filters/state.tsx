@@ -35,6 +35,7 @@ export const AppliedStateFilters = observer(function AppliedStateFilters(props: 
           <div key={stateId} className="flex items-center gap-1 rounded-sm bg-layer-1 p-1 text-11">
             <StateGroupIcon
               color={stateDetails.color}
+              icon={stateDetails.icon}
               stateGroup={stateDetails.group}
               size={EIconSize.SM}
               percentage={getStatePercentageInGroup(stateDetails.id)}

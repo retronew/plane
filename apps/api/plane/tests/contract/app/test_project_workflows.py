@@ -43,6 +43,189 @@ def ctx(workspace, create_user, monkeypatch):
     )
 
 
+@pytest.mark.parametrize("enabled", [True, False])
+def test_state_creation_switch_does_not_block_existing_transitions(session_client, ctx, enabled):
+    from plane.utils.workflow import validate_workflow_write, effective_creation_state
+
+    Project.objects.filter(pk=ctx.project.pk).update(workflow_enabled=enabled)
+    ctx.done.allow_new_work_items = False
+    ctx.done.save()
+    with pytest.raises(ValidationError) as error:
+        validate_workflow_write(ctx.project.pk, {"name": "Blocked", "state": ctx.done})
+    assert "state" in error.value.detail
+    validate_workflow_write(ctx.project.pk, {"state": ctx.done}, Issue(project=ctx.project, state=ctx.todo))
+    validate_workflow_write(ctx.project.pk, {"state": ctx.todo}, Issue(project=ctx.project, state=ctx.done))
+    assert effective_creation_state(ctx.project.pk).pk == ctx.backlog.pk
+    attrs = {"name": "Default"}
+    validate_workflow_write(ctx.project.pk, attrs)
+    assert attrs["state"].pk == ctx.backlog.pk
+    attrs = {"name": "Draft", "state": ctx.done, "is_draft": True}
+    validate_workflow_write(ctx.project.pk, attrs)
+    draft = Issue.objects.create(project=ctx.project, state=ctx.done, name="Draft", is_draft=True)
+    with pytest.raises(ValidationError):
+        validate_workflow_write(ctx.project.pk, {"is_draft": False, "state": ctx.done}, draft)
+
+
+def test_disabling_a_state_group_blocks_only_creation_in_that_group(session_client, ctx):
+    from plane.utils.workflow import effective_creation_state, validate_disabled_state_groups, validate_workflow_write
+
+    endpoint = f"/api/workspaces/{ctx.workspace.slug}/projects/{ctx.project.id}/"
+    response = session_client.patch(endpoint, {"disabled_state_groups": ["completed"]}, format="json")
+    assert response.status_code == 200
+    assert response.data["disabled_state_groups"] == ["completed"]
+
+    with pytest.raises(ValidationError):
+        validate_workflow_write(ctx.project.pk, {"name": "Blocked", "state": ctx.done})
+    # Existing work items can still move into the disabled group; only creation is blocked.
+    validate_workflow_write(ctx.project.pk, {"state": ctx.todo}, ctx.issue)
+    assert effective_creation_state(ctx.project.pk).pk == ctx.backlog.pk
+
+    with pytest.raises(ValidationError):
+        validate_disabled_state_groups(ctx.project.pk, ["backlog", "unstarted", "completed"])
+    response = session_client.patch(
+        endpoint, {"disabled_state_groups": ["backlog", "unstarted", "completed"]}, format="json"
+    )
+    assert response.status_code == 400
+    ctx.project.refresh_from_db()
+    assert ctx.project.disabled_state_groups == ["completed"]
+
+    assert session_client.patch(endpoint, {"disabled_state_groups": ["made-up"]}, format="json").status_code == 400
+
+
+def test_state_creation_settings_protect_default_and_last_entry(session_client, ctx):
+    endpoint = ctx.base + "states/"
+    response = session_client.patch(
+        endpoint + str(ctx.backlog.pk) + "/", {"allow_new_work_items": False}, format="json"
+    )
+    assert response.status_code == 400
+    ctx.backlog.refresh_from_db()
+    assert ctx.backlog.allow_new_work_items
+    assert (
+        session_client.patch(
+            endpoint + str(ctx.done.pk) + "/", {"allow_new_work_items": False}, format="json"
+        ).status_code
+        == 200
+    )
+    assert session_client.post(endpoint + str(ctx.done.pk) + "/mark-default/", {}, format="json").status_code in (
+        400,
+        405,
+    )
+    from plane.utils.workflow import validate_state_creation_settings
+
+    ctx.backlog.default = False
+    ctx.backlog.allow_new_work_items = False
+    ctx.todo.allow_new_work_items = False
+    ctx.done.allow_new_work_items = False
+    with pytest.raises(ValidationError):
+        validate_state_creation_settings(ctx.project.pk, [ctx.backlog, ctx.todo, ctx.done])
+
+
+@pytest.mark.parametrize("action", ["mark-default", "update", "create"])
+def test_disabled_group_cannot_supply_default_state(session_client, ctx, action):
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    endpoint = ctx.base + "states/"
+    if action == "mark-default":
+        response = session_client.post(endpoint + str(ctx.done.pk) + "/mark-default/", {}, format="json")
+    elif action == "update":
+        response = session_client.patch(endpoint + str(ctx.done.pk) + "/", {"default": True}, format="json")
+    else:
+        response = session_client.post(
+            endpoint, {"name": "Disabled default", "group": "completed", "default": True}, format="json"
+        )
+    assert response.status_code == 400, response.data
+    ctx.backlog.refresh_from_db()
+    ctx.done.refresh_from_db()
+    assert ctx.backlog.default
+    assert not ctx.done.default
+    assert not State.objects.filter(project=ctx.project, name="Disabled default").exists()
+
+
+def test_closed_groups_do_not_count_toward_remaining_creation_states(ctx):
+    from plane.utils.workflow import validate_state_creation_settings
+
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["unstarted", "completed"])
+    ctx.backlog.default = False
+    ctx.backlog.allow_new_work_items = False
+    with pytest.raises(ValidationError):
+        validate_state_creation_settings(ctx.project.pk, [ctx.backlog, ctx.todo, ctx.done])
+
+
+def test_project_creation_rejects_closed_default_group(session_client, ctx):
+    response = session_client.post(
+        f"/api/workspaces/{ctx.workspace.slug}/projects/",
+        {"name": "Invalid states", "identifier": "INVALID", "disabled_state_groups": ["backlog"]},
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    assert not Project.objects.filter(workspace=ctx.workspace, identifier="INVALID").exists()
+
+
+@pytest.mark.parametrize(
+    "icon",
+    [
+        "backlog",
+        "unstarted",
+        "started-25",
+        "started-50",
+        "started-75",
+        "started-100",
+        "completed",
+        "cancelled",
+        "queued",
+        "paused",
+        "blocked",
+        "review",
+        "planned",
+        "ready",
+        "active",
+        "feedback",
+        "testing",
+        "verifying",
+        "approval",
+        "rework",
+        "skipped",
+        "archived",
+        None,
+    ],
+)
+def test_state_progress_icon_presets_round_trip_without_changing_group(session_client, ctx, icon):
+    endpoint = ctx.base + "states/" + str(ctx.todo.pk) + "/"
+    response = session_client.patch(endpoint, {"icon": icon, "color": "#123456"}, format="json")
+    assert response.status_code == 200, response.data
+    ctx.todo.refresh_from_db()
+    assert ctx.todo.icon == icon
+    assert ctx.todo.group == "unstarted"
+    assert ctx.todo.color == "#123456"
+    assert response.data["icon"] == icon
+    listed = session_client.get(ctx.base + "states/")
+    assert next(state for state in listed.data if str(state["id"]) == str(ctx.todo.pk))["icon"] == icon
+
+
+def test_public_state_list_includes_custom_icon_and_color(ctx):
+    from rest_framework.test import APIRequestFactory
+    from plane.db.models import DeployBoard
+    from plane.space.views.state import ProjectStatesEndpoint
+
+    ctx.todo.icon = "testing"
+    ctx.todo.color = "#663399"
+    ctx.todo.save()
+    board = DeployBoard.objects.create(
+        workspace=ctx.workspace, project=ctx.project, entity_name="project", entity_identifier=ctx.project.pk
+    )
+    response = ProjectStatesEndpoint.as_view()(APIRequestFactory().get("/"), anchor=board.anchor)
+    assert response.status_code == 200
+    state = next(entry for entry in response.data if entry["id"] == ctx.todo.pk)
+    assert state["icon"] == "testing"
+    assert state["color"] == "#663399"
+
+
+def test_state_rejects_arbitrary_icons(session_client, ctx):
+    response = session_client.patch(ctx.base + "states/" + str(ctx.todo.pk) + "/", {"icon": "rocket"}, format="json")
+    assert response.status_code == 400, response.data
+    ctx.todo.refresh_from_db()
+    assert ctx.todo.icon is None
+
+
 def test_unconfigured_read_is_side_effect_free(session_client, ctx):
     ctx.workflow.delete(soft=False)
     response = session_client.get(ctx.config)
@@ -147,6 +330,25 @@ def test_member_restrictions_cannot_be_bypassed_even_by_admin(request, client_na
     assert response.status_code in [200, 204], response.data
     ctx.issue.refresh_from_db()
     assert ctx.issue.state_id == ctx.todo.id
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_public_api_creation_flag_blocks_creation_but_allows_moves(api_key_client, ctx, enabled):
+    Project.objects.filter(pk=ctx.project.pk).update(workflow_enabled=enabled)
+    State.objects.filter(pk=ctx.done.pk).update(allow_new_work_items=False)
+    WorkflowTransition.objects.create(
+        project=ctx.project, workflow=ctx.workflow, source=ctx.backlog, destination=ctx.done
+    )
+    url = ctx.base.replace("/api/", "/api/v1/") + "work-items/"
+    assert (
+        api_key_client.post(url, {"name": "Flag blocked", "state": str(ctx.done.pk)}, format="json").status_code == 400
+    )
+    assert not Issue.objects.filter(project=ctx.project, name="Flag blocked").exists()
+    response = api_key_client.post(url, {"name": "Flag default"}, format="json")
+    assert response.status_code == 201, response.data
+    assert Issue.objects.get(pk=response.data["id"]).state_id == ctx.backlog.pk
+    moved = api_key_client.patch(url + f"{ctx.issue.pk}/", {"state": str(ctx.done.pk)}, format="json")
+    assert moved.status_code == 200, moved.data
 
 
 def test_api_key_create_and_update_use_the_same_policy(api_key_client, ctx):
@@ -276,6 +478,27 @@ def test_template_children_use_workflow_default(session_client, ctx):
     )
     assert response.status_code == 201, response.data
     assert Issue.objects.get(name="Child").state_id == ctx.todo.id
+
+
+@pytest.mark.parametrize("use_api", [False, True])
+@pytest.mark.parametrize("enabled", [False, True])
+def test_accepting_intake_respects_state_creation_flag(request, ctx, use_api, enabled):
+    from plane.db.models import Intake, IntakeIssue
+
+    Project.objects.filter(pk=ctx.project.pk).update(workflow_enabled=enabled)
+    State.objects.filter(pk=ctx.done.pk).update(allow_new_work_items=False)
+    triage = State.objects.create(project=ctx.project, name="Triage", group="triage", is_triage=True)
+    issue = Issue.objects.create(project=ctx.project, name="Flag intake", state=triage)
+    intake = Intake.objects.create(project=ctx.project, name="Intake")
+    IntakeIssue.objects.create(project=ctx.project, issue=issue, intake=intake)
+    client = request.getfixturevalue("api_key_client" if use_api else "session_client")
+    url = ctx.base.replace("/api/", "/api/v1/") if use_api else ctx.base
+    response = client.patch(
+        url + f"intake-issues/{issue.pk}/", {"status": 1, "issue": {"state": str(ctx.done.pk)}}, format="json"
+    )
+    assert response.status_code == 400, response.data
+    issue.refresh_from_db()
+    assert issue.state_id == triage.pk
 
 
 @pytest.mark.parametrize("use_api", [False, True])

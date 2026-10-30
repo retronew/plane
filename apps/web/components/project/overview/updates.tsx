@@ -275,7 +275,7 @@ function UpdateEditorForm({
   onSubmit: () => void;
 }) {
   const { t } = useTranslation();
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   return (
     // Blank-space clicks focus the textarea, which already provides keyboard access.
     // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
@@ -284,7 +284,7 @@ function UpdateEditorForm({
       aria-label={t(`${key}.${editor.id ? "edit_update" : "post_update"}`)}
       onClick={(event) => {
         if (event.target instanceof Element && !event.target.closest("button, textarea, [role=menuitem]")) {
-          inputRef.current?.focus();
+          editorRef.current?.querySelector("textarea")?.focus();
         }
       }}
       onSubmit={(event) => {
@@ -297,7 +297,19 @@ function UpdateEditorForm({
           <MenuTrigger
             disabled={pending}
             aria-label={`${t(`${key}.health`)}: ${t(`${key}.${editor.health}`)}`}
-            render={<Pill size="xs" variant="outline" className="-mt-1 -ml-1 h-auto rounded-lg! px-1! py-1" />}
+            render={
+              <Pill
+                size="xs"
+                variant="outline"
+                render={
+                  <button
+                    type="button"
+                    aria-label={`${t(`${key}.health`)}: ${t(`${key}.${editor.health}`)}`}
+                    className="-mt-1 -ml-1 h-auto rounded-lg! px-1! py-1"
+                  />
+                }
+              />
+            }
           >
             <HealthIcon health={editor.health} compact />
             <PillLabel title={t(`${key}.${editor.health}`)}>{t(`${key}.${editor.health}`)}</PillLabel>
@@ -318,9 +330,8 @@ function UpdateEditorForm({
             </div>
           </ActionMenuContent>
         </Menu>
-        <div className="flex w-full">
+        <div ref={editorRef} className="flex w-full">
           <TextArea
-            ref={inputRef}
             size="xl"
             surface="inline"
             autoResize

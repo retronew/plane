@@ -242,7 +242,19 @@
         "title": "Recent activity",
         "empty": "We couldn't find data. Kindly view your inputs",
         "button": "Export today's activity",
-        "button_loading": "Exporting"
+        "button_loading": "Exporting",
+        "more_dates": "Export date range",
+        "yesterday": "Yesterday",
+        "week": "This week",
+        "custom": "Custom date range",
+        "period": "Date range",
+        "preview": "Preview",
+        "timezone_note": "Dates include both ends, using workspace timezone {timezone}. This week starts Monday.",
+        "timezone_pending": "Dates include both ends in the workspace timezone. This week starts Monday; preview shows the timezone.",
+        "export_description": "Work items whose state this person changed, once each, with the last state change by anyone in the selected period.",
+        "export_empty": "No state changes found in this date range.",
+        "export_error": "Could not export activity. Please try again.",
+        "export_count": "{count, plural, one {# work item} other {# work items}}"
       }
     },
     "actions": {

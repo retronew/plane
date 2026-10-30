@@ -69,6 +69,7 @@ export const useCollaborativePageActions = (props: Props) => {
       const isPerformedByCurrentUser = event.type === "sendMessageToServer";
       const clientAction = isPerformedByCurrentUser ? DocumentCollaborativeEvents[event.message].client : event.message;
       const actionDetails = actionHandlerMap[clientAction];
+      if (!actionDetails) return;
       try {
         await actionDetails.execute(isPerformedByCurrentUser, isPerformedByCurrentUser ? event?.recursive : undefined);
         if (isPerformedByCurrentUser) {

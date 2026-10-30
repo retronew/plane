@@ -239,6 +239,7 @@ const getStateColumns = ({ projectId }: TGetColumns): IGroupByColumn[] | undefin
         <StateGroupIcon
           stateGroup={state.group}
           color={state.color}
+          icon={state.icon}
           size={EIconSize.LG}
           percentage={getStatePercentageInGroup(state.id)}
         />

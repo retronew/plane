@@ -124,6 +124,11 @@ class TemplateSerializer(serializers.ModelSerializer):
                 validate_work_item_template_references(config, project)
             except serializers.ValidationError as exc:
                 raise serializers.ValidationError({"configuration": exc.detail}) from exc
+        is_default = attrs.get("is_default_state_template", getattr(self.instance, "is_default_state_template", False))
+        if is_default and (kind != "project" or project or not config.get("states")):
+            raise serializers.ValidationError(
+                {"is_default_state_template": "Select a workspace project template with states."}
+            )
         attrs["configuration"] = json.loads(json.dumps(config, cls=DjangoJSONEncoder))
         return attrs
 
@@ -140,6 +145,7 @@ class TemplateSerializer(serializers.ModelSerializer):
             "short_description",
             "project",
             "configuration",
+            "is_default_state_template",
         ]
         read_only_fields = ["id", "updated_at"]
 
@@ -200,6 +206,8 @@ class WorkspaceConfigurationEndpoint(BaseAPIView):
                         )["value"]
                         or 0
                     ) + 1000
+                if self.model is WorkspaceTemplate and serializer.validated_data.get("is_default_state_template"):
+                    WorkspaceTemplate.objects.filter(workspace__slug=slug).update(is_default_state_template=False)
                 serializer.save(**kwargs)
         except IntegrityError:
             return Response({"name": ["A name already exists in this category."]}, status=400)
@@ -217,6 +225,10 @@ class WorkspaceConfigurationEndpoint(BaseAPIView):
                 Workspace.objects.select_for_update().get(slug=slug)
                 if self.model is ProjectCategory and kind == "status" and serializer.validated_data.get("is_default"):
                     ProjectCategory.objects.filter(workspace__slug=slug, kind="status").update(is_default=False)
+                if self.model is WorkspaceTemplate and serializer.validated_data.get("is_default_state_template"):
+                    WorkspaceTemplate.objects.filter(workspace__slug=slug).exclude(pk=obj.pk).update(
+                        is_default_state_template=False
+                    )
                 serializer.save()
         except IntegrityError:
             return Response({"name": ["A name already exists in this category."]}, status=400)
@@ -301,6 +313,25 @@ class ProjectTemplateEndpoint(BaseAPIView):
         obj = get_object_or_404(self.objects_for(slug, project_id), pk=pk)
         obj.delete()
         return Response(status=204)
+
+
+class ProjectStateTemplateEndpoint(BaseAPIView):
+    @allow_permission([ROLE.ADMIN])
+    @transaction.atomic
+    def post(self, request, slug, project_id):
+        from plane.services.state_templates import preview_state_template, apply_state_template
+        from plane.utils.cache import invalidate_cache_directly
+
+        get_object_or_404(Workspace.objects.select_for_update(), slug=slug)
+        project = get_object_or_404(Project.objects.select_for_update(), workspace__slug=slug, pk=project_id)
+        if request.data.get("apply") is True:
+            result = apply_state_template(project, request.data, request.user)
+            transaction.on_commit(
+                lambda: invalidate_cache_directly(path=f"workspaces/{slug}/states/", user=False, request=request)
+            )
+        else:
+            result = preview_state_template(project, request.data)
+        return Response(result)
 
 
 class ProjectTemplateOptionsEndpoint(BaseAPIView):

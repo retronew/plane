@@ -5,14 +5,16 @@
  */
 
 import { useMemo } from "react";
+import { ApplyStateTemplate } from "./apply-template";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 // components
 import { EUserPermissionsLevel } from "@plane/constants";
-import type { IState, TStateOperationsCallbacks } from "@plane/types";
+import type { IState, TStateGroups, TStateOperationsCallbacks } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 import { ProjectStateLoader, GroupList } from "@/components/project-states";
 // hooks
+import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
 
@@ -33,6 +35,7 @@ export const ProjectStateRoot = observer(function ProjectStateRoot(props: TProje
     deleteState,
     markStateAsDefault,
   } = useProjectState();
+  const { getProjectById, updateProject } = useProject();
   const { allowPermissions } = useUserPermissions();
   // derived values
   const isEditable = allowPermissions(
@@ -67,10 +70,28 @@ export const ProjectStateRoot = observer(function ProjectStateRoot(props: TProje
   if (!groupedProjectStates) return <ProjectStateLoader />;
 
   return (
-    <GroupList
-      groupedStates={groupedProjectStates}
-      stateOperationsCallbacks={stateOperationsCallbacks}
-      isEditable={isEditable}
-    />
+    <>
+      {isEditable && (
+        <ApplyStateTemplate
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          states={Object.values(groupedProjectStates).flat()}
+          onApplied={() => fetchProjectStates(workspaceSlug, projectId)}
+        />
+      )}
+      <GroupList
+        groupedStates={groupedProjectStates}
+        stateOperationsCallbacks={stateOperationsCallbacks}
+        isEditable={isEditable}
+        disabledStateGroups={{
+          groups: getProjectById(projectId)?.disabled_state_groups ?? [],
+          onChange: async (group: TStateGroups, enabled: boolean) => {
+            const current = getProjectById(projectId)?.disabled_state_groups ?? [];
+            const next = enabled ? current.filter((entry) => entry !== group) : [...new Set([...current, group])];
+            await updateProject(workspaceSlug, projectId, { disabled_state_groups: next });
+          },
+        }}
+      />
+    </>
   );
 });

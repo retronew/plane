@@ -20,8 +20,10 @@ class StateSerializer(BaseSerializer):
             "workspace_id",
             "name",
             "color",
+            "icon",
             "group",
             "default",
+            "allow_new_work_items",
             "description",
             "sequence",
             "order",
@@ -37,5 +39,5 @@ class StateSerializer(BaseSerializer):
 class StateLiteSerializer(BaseSerializer):
     class Meta:
         model = State
-        fields = ["id", "name", "color", "group"]
+        fields = ["id", "name", "color", "group", "icon"]
         read_only_fields = fields

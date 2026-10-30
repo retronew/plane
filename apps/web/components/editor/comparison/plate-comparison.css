@@ -1,0 +1,173 @@
+/* Keep the handle gutter inside the block's native drop target. */
+.comparison-draggable::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: -24px;
+  width: 24px;
+}
+
+.comparison-drop-gap {
+  position: absolute;
+  left: -24px;
+  right: 0;
+}
+
+.comparison-drop-gap-before {
+  bottom: 100%;
+  height: var(--drop-gap-before, 0px);
+}
+
+.comparison-drop-gap-after {
+  top: 100%;
+  height: var(--drop-gap-after, 0px);
+}
+
+.comparison-drag-handle {
+  top: 6px;
+}
+
+.comparison-drag-handle button {
+  width: 16px;
+  height: 16px;
+  min-width: 0;
+  padding: 0;
+  cursor: grab;
+}
+
+.comparison-drag-handle button:active {
+  cursor: grabbing;
+}
+
+.comparison-draggable[data-block-type="h1"] {
+  --block-heading-padding: var(--heading-1-padding-top);
+}
+.comparison-draggable[data-block-type="h2"] {
+  --block-heading-padding: var(--heading-2-padding-top);
+}
+.comparison-draggable[data-block-type="h3"] {
+  --block-heading-padding: var(--heading-3-padding-top);
+}
+.comparison-draggable[data-block-type="h4"] {
+  --block-heading-padding: var(--heading-4-padding-top);
+}
+.comparison-draggable[data-block-type="h5"] {
+  --block-heading-padding: var(--heading-5-padding-top);
+}
+.comparison-draggable[data-block-type="h6"] {
+  --block-heading-padding: var(--heading-6-padding-top);
+}
+
+.editor-container
+  .plate-comparison-content
+  > .comparison-draggable:has(> .editor-heading-block)
+  > .comparison-drag-handle {
+  top: calc(var(--block-heading-padding) + 6px);
+}
+
+.editor-container .plate-comparison-content > .comparison-draggable:first-child > .editor-heading-block {
+  padding-top: 0;
+}
+
+.editor-container .plate-comparison-content > .comparison-draggable:first-child > .comparison-drag-handle {
+  top: 6px;
+}
+
+.plate-comparison-content {
+  font-family: var(--font-style);
+  font-size: var(--font-size-regular);
+  font-weight: 400;
+  overflow-wrap: break-word;
+  tab-size: 4;
+}
+
+.editor-container .plate-comparison-content > .comparison-draggable > p.editor-paragraph-block {
+  padding-top: var(--paragraph-padding-top);
+  padding-bottom: var(--paragraph-padding-between);
+}
+
+.editor-container .plate-comparison-content > .comparison-draggable:first-child > p.editor-paragraph-block {
+  padding-top: 0;
+}
+
+.editor-container .plate-comparison-content > .comparison-draggable:last-child > p.editor-paragraph-block {
+  padding-bottom: var(--paragraph-padding-bottom);
+}
+
+.editor-container
+  .plate-comparison-content
+  > .comparison-draggable[data-block-type="p"]
+  + .comparison-draggable
+  > p.editor-paragraph-block {
+  padding-top: var(--paragraph-padding-between);
+}
+
+.plate-comparison-content blockquote {
+  margin-block: 1.6em;
+  font-size: inherit;
+  font-style: normal;
+  font-weight: 400;
+  border-left-width: 3px;
+  padding-inline-start: 1em;
+}
+
+.plate-comparison-content blockquote p::before,
+.plate-comparison-content blockquote p::after,
+.plate-comparison-content code::before,
+.plate-comparison-content code::after {
+  display: none;
+}
+
+.plate-comparison-content pre {
+  font-family: JetBrainsMono, monospace;
+  padding: 16px;
+  tab-size: 2;
+  margin-block: 1.5em;
+  font-size: 0.875em;
+  line-height: 1.7142857;
+  border-radius: 8px;
+}
+
+.plate-comparison-content .comparison-code-block[data-language]::before {
+  content: attr(data-language);
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-style);
+  font-size: 12px;
+  color: var(--text-color-tertiary);
+}
+
+.plate-comparison-content .comparison-table-cell {
+  position: relative;
+}
+
+.plate-comparison-content .comparison-table-actions {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: min(420px, 65vw);
+  font-family: var(--font-style);
+  font-weight: 400;
+  text-align: start;
+}
+
+.plate-comparison-content code {
+  font-size: var(--font-size-code);
+}
+
+.plate-comparison-content pre code {
+  font-family: inherit;
+  white-space: pre-wrap;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.plate-comparison-content td,
+.plate-comparison-content th {
+  padding: 7px 10px;
+}

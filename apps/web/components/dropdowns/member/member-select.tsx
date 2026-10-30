@@ -10,17 +10,26 @@ import { useParams } from "next/navigation";
 // plane imports
 import { MemberSelect as MemberSelectBlock } from "@plane/blocks/property-select";
 import type { MemberOption, MemberSelectVariant } from "@plane/blocks/property-select";
-import type { SelectPaginationParams, SelectTooltip, SelectTooltipOverride } from "@plane/blocks/select";
+import {
+  useSelectContext,
+  type SelectPaginationParams,
+  type SelectTooltip,
+  type SelectTooltipOverride,
+} from "@plane/blocks/select";
+import { Button } from "@makeplane/propel/components/button";
 import { useTranslation } from "@plane/i18n";
 import type { TPaginatedResponse } from "@plane/types";
 import { getFileURL } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
+import { getEligibleMemberIds, toggleEligibleMembers, memberDisplayName } from "./member-selection";
 
 type MemberSelectWebCommonProps = {
   /** value-agnostic e2e selector — forwarded to the block's trigger as data-testid */
   testId?: string;
+  /** Select all eligible members matching the current search (explicit roster only). */
+  showSelectAll?: boolean;
   /** Project whose members are offered. Omit it for the workspace roster. */
   projectId?: string;
   /**
@@ -48,6 +57,36 @@ type MemberSelectWebCommonProps = {
   /** Strict cap on trigger faces before the rest collapse into a "+N" chip. */
   maxAvatars?: number;
 };
+
+function MemberSelectAll({
+  memberIds,
+  selectedIds,
+  onChange,
+}: {
+  memberIds: { id: string; searchText: string; suspended: boolean }[];
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const { search } = useSelectContext();
+  const { t } = useTranslation();
+  const query = search?.query.trim().toLowerCase() ?? "";
+  const eligibleIds = getEligibleMemberIds(memberIds, query);
+  const selectedSet = new Set(selectedIds);
+  const allSelected = eligibleIds.length > 0 && eligibleIds.every((id) => selectedSet.has(id));
+  return (
+    <div className="border-b border-subtle p-1">
+      <Button
+        variant="tertiary"
+        stretch="auto"
+        type="button"
+        size="sm"
+        label={t(allSelected ? "issue.select.deselect_all" : "issue.select.select_all")}
+        disabled={eligibleIds.length === 0}
+        onClick={() => onChange(toggleEligibleMembers(selectedIds, eligibleIds))}
+      />
+    </div>
+  );
+}
 
 export type MemberSelectWebProps = MemberSelectWebCommonProps &
   (
@@ -113,7 +152,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
   const toOption = useCallback(
     (id: string): MemberOption => {
       const member = getUserDetails(id);
-      const name = member?.display_name ?? "";
+      const name = memberDisplayName(member, t("unknown_user"));
       return {
         id,
         display_name: id === currentUser?.id ? `${name} (${youLabel})` : name,
@@ -122,7 +161,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
         suspended: !!slug && isUserSuspended(id, slug),
       };
     },
-    [getUserDetails, currentUser?.id, youLabel, slug, isUserSuspended]
+    [getUserDetails, currentUser?.id, youLabel, slug, isUserSuspended, t]
   );
 
   const getValues = useCallback(
@@ -137,7 +176,8 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
       for (const id of rosterIds ?? []) {
         const member = getUserDetails(id);
         if (!member) continue;
-        const searchText = `${member.display_name} ${member.first_name} ${member.last_name}`.toLowerCase();
+        const searchText =
+          `${member.display_name} ${member.first_name} ${member.last_name} ${member.email ?? ""}`.toLowerCase();
         if (query && !searchText.includes(query)) continue;
         // Legacy CE ordering: the current user leads the roster (the block then pins the selected ones).
         if (id === currentUser?.id) results.unshift(toOption(id));
@@ -164,6 +204,25 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
     return (
       <MemberSelectBlock
         multiple
+        header={
+          props.showSelectAll && memberIds ? (
+            <MemberSelectAll
+              memberIds={memberIds
+                .filter((id) => !excludeSet?.has(id) && !!getUserDetails(id))
+                .map((id) => {
+                  const member = getUserDetails(id);
+                  return {
+                    id,
+                    searchText:
+                      `${member?.display_name} ${member?.first_name} ${member?.last_name} ${member?.email ?? ""}`.toLowerCase(),
+                    suspended: !!slug && isUserSuspended(id, slug),
+                  };
+                })}
+              selectedIds={props.value}
+              onChange={props.onChange}
+            />
+          ) : undefined
+        }
         testId={testId}
         getValues={getValues}
         // Resolved in the observer render so MobX re-renders once the members load.

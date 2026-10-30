@@ -19,10 +19,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   refreshWorkflow.mockResolvedValue(undefined);
 });
+const disabledGroups: Record<string, string[]> = {};
 const makeStore = () => {
   const s = new StateStore({
     router: { workspaceSlug: "test", projectId: "p" },
     workflow: { workflows: {}, refreshAfterStateChange: refreshWorkflow },
+    projectRoot: { project: { getProjectById: (id: string) => ({ disabled_state_groups: disabledGroups[id] ?? [] }) } },
   } as unknown as RootStore);
   runInAction(() => {
     s.fetchedMap.p = true;
@@ -33,6 +35,25 @@ const makeStore = () => {
   });
   return s;
 };
+it("skips states whose group is disabled when picking the default creation state", () => {
+  const s = makeStore();
+  disabledGroups.p = ["backlog"];
+  expect(s.getProjectDefaultStateId("p")).toBe("b");
+  disabledGroups.p = ["backlog", "started"];
+  expect(s.getProjectDefaultStateId("p")).toBeUndefined();
+  disabledGroups.p = [];
+});
+it("falls back to a creatable state when the stored default disallows creation", () => {
+  const s = makeStore();
+  runInAction(() => {
+    s.stateMap.a.allow_new_work_items = false;
+  });
+  expect(s.getProjectDefaultStateId("p")).toBe("b");
+  runInAction(() => {
+    s.stateMap.b.allow_new_work_items = false;
+  });
+  expect(s.getProjectDefaultStateId("p")).toBeUndefined();
+});
 it("calculates icon progress within the owning project independently of the current route", () => {
   const s = makeStore();
   runInAction(() => {

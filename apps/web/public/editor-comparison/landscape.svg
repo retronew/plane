@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480">
+  <title>Mountains and lake at sunset</title>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1">
+      <stop stop-color="#e6e7fa"/>
+      <stop offset="1" stop-color="#fae2ce"/>
+    </linearGradient>
+    <linearGradient id="water" x2="0" y2="1">
+      <stop stop-color="#96bdcb"/>
+      <stop offset="1" stop-color="#d3e4e7"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h960v480H0z"/>
+  <circle cx="695" cy="134" r="58" fill="#efb175"/>
+  <path fill="#a2aec4" d="m0 285 150-151 143 143 172-182 200 188 135-102 160 116v183H0z"/>
+  <path fill="#637f94" d="m0 327 196-144 163 151 151-149 185 161 146-102 119 73v163H0z"/>
+  <path fill="url(#water)" d="M0 327h960v153H0z"/>
+  <path fill="#71959e" opacity=".4" d="m0 327 196 91 163-76 151 80 185-79 146 60 119-76z"/>
+  <g fill="none" stroke="#e8f1ee" stroke-linecap="round" stroke-width="3" opacity=".7">
+    <path d="M601 367h120m-154 18h182m-600 39h215m237 28h173"/>
+  </g>
+  <path fill="#426b71" d="m0 420 65-15 69 21 94 54H0zm960-32-83 19-69 73h152z"/>
+</svg>

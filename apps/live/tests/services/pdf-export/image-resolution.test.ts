@@ -10,6 +10,25 @@ import { PdfExportService } from "@/services/pdf-export/pdf-export.service";
 import type { getPageService } from "@/services/page/handler";
 
 describe("PDF image URL resolution", () => {
+  it("exports current HTML/title projection without decoding legacy binary", async () => {
+    const fetchDetails = vi.fn(async () => ({
+      name: "Current <title>",
+      description_html: "<p>Current Slate projection</p>",
+    }));
+    const fetchDescriptionBinary = vi.fn(() => {
+      throw new Error("Legacy binary must not be read");
+    });
+    const pageService = { fetchDetails, fetchDescriptionBinary } as unknown as ReturnType<typeof getPageService>;
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const service = yield* PdfExportService;
+        return yield* service.fetchPageContent(pageService, "page", "request");
+      }).pipe(Effect.provide(PdfExportService.Default))
+    );
+    expect(JSON.stringify(result.contentJSON)).toContain("Current Slate projection");
+    expect(result.titleHTML).toBe("Current &lt;title&gt;");
+    expect(fetchDescriptionBinary).not.toHaveBeenCalled();
+  });
   it("resolves every asset with at most four concurrent requests", async () => {
     let active = 0;
     let maximum = 0;

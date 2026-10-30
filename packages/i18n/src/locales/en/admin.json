@@ -74,6 +74,7 @@
         "select_person": "Select {name}",
         "unnamed": "Unnamed member",
         "no_email": "No email address",
+        "name": "Exact name match; review before binding",
         "email": "Matched by email",
         "oidc": "Matched by OIDC identity",
         "unmatched": "Awaiting account selection",
@@ -649,6 +650,10 @@
         "workspaces": "Workspaces",
         "last_login": "Last sign-in",
         "actions": "Actions"
+      },
+      "notifications": {
+        "title": "Notification settings",
+        "description": "Manage this user's global notification preferences. Each change is saved immediately."
       },
       "details": {
         "edit_profile": "Edit profile",

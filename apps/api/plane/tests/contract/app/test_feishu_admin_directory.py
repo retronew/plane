@@ -128,7 +128,7 @@ def test_duplicate_member_selection_rejected(create_user, directory):
     assert not FeishuBinding.objects.exists()
 
 
-@pytest.mark.parametrize("change", ["email", "union_id", "missing", "duplicate"])
+@pytest.mark.parametrize("change", ["email", "name", "union_id", "missing", "duplicate"])
 def test_stale_directory_revalidated(create_user, directory, member, change):
     preview = create_preview(create_user)
     if change == "missing":
@@ -280,3 +280,80 @@ def test_oidc_complete_userinfo_login_and_link_paths(create_user):
         with patch.object(provider, "set_token_data"):
             assert provider.fetch_identity() == ("open", create_user.email.lower())
         assert provider.token_data["metadata"]["feishu_identity"]["open_id"] == "open"
+
+
+@pytest.mark.parametrize("field", ["display_name", "username", "full_name"])
+def test_unique_exact_name_suggestion_and_audit(create_user, directory, field):
+    User.objects.filter(pk=create_user.pk).update(
+        display_name="Display", username="Username", first_name="First", last_name="Last", is_email_verified=False
+    )
+    create_user.refresh_from_db()
+    name = getattr(create_user, field)
+    directory.return_value = ("tenant", [{"open_id": "open", "email": "", "name": f" {name} "}])
+    preview = create_preview(create_user)
+    row = row_for(preview, create_user)
+    assert row["match_basis"] == "name"
+    result = submit(create_user, preview, row)
+    assert row_for(result, create_user)["result"] == "bound"
+    assert FeishuAdminBindingAudit.objects.get().match_basis == "name"
+    create_user.refresh_from_db()
+    assert not create_user.is_email_verified
+
+
+@pytest.mark.parametrize("ambiguity", ["plane", "feishu", "alias", "case", "blank"])
+def test_name_suggestions_require_both_sides_unique(create_user, ambiguity):
+    User.objects.filter(pk=create_user.pk).update(display_name="Exact", username="Alias")
+    members = [{"open_id": "open", "email": "", "name": "Exact"}]
+    if ambiguity == "plane":
+        User.objects.create(email="duplicate@example.com", username="other", display_name="Exact")
+    elif ambiguity == "feishu":
+        members.append({**members[0], "open_id": "second"})
+    elif ambiguity == "alias":
+        members.append({**members[0], "open_id": "second", "name": "Alias"})
+    else:
+        members[0]["name"] = "exact" if ambiguity == "case" else "   "
+    assert all(row["match_basis"] == "unmatched" for row in matches(members))
+
+
+@pytest.mark.parametrize("change", ["plane_name", "plane_duplicate", "feishu_duplicate", "feishu_name"])
+def test_name_suggestion_revalidated_at_submission(create_user, directory, change):
+    User.objects.filter(pk=create_user.pk).update(display_name="Exact", username="Alias")
+    member = {"open_id": "open", "email": "", "name": "Exact"}
+    directory.return_value = ("tenant", [member])
+    preview = create_preview(create_user)
+    row = row_for(preview, create_user)
+    assert row["match_basis"] == "name"
+    if change == "plane_name":
+        User.objects.filter(pk=create_user.pk).update(display_name="Changed")
+    elif change == "plane_duplicate":
+        User.objects.create(email="duplicate@example.com", username="other", display_name="Exact")
+    elif change == "feishu_duplicate":
+        directory.return_value = ("tenant", [member, {**member, "open_id": "second"}])
+    else:
+        directory.return_value = ("tenant", [{**member, "name": "Alias"}])
+    result = submit(create_user, preview, row)
+    assert row_for(result, create_user)["result"] == "match_changed"
+    assert not FeishuBinding.objects.exists()
+
+
+def test_email_and_oidc_take_priority_over_name(create_user, member):
+    other = User.objects.create(email="name@example.com", username="named", display_name=member["name"])
+    assert matches([member], "app", "tenant")[0]["match_basis"] == "email"
+    Account.objects.create(
+        user=create_user,
+        provider="oidc",
+        provider_account_id="name-priority",
+        access_token="",
+        metadata={
+            "feishu_identity": {
+                "endpoint": "https://open.feishu.cn/open-apis/authen/v1/user_info",
+                "client_id": "app",
+                "tenant_key": "tenant",
+                "open_id": "open",
+            }
+        },
+    )
+    without_email = {**member, "email": ""}
+    assert matches([without_email], "app", "tenant")[0]["match_basis"] == "oidc"
+    assert matches([without_email], "app", "wrong-tenant")[0]["match_basis"] == "identity_conflict"
+    assert matches([without_email])[0]["user_id"] == str(other.pk)

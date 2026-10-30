@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/common/skeleton";
 import type { AccountAction } from "@/components/users/profile";
 import { UserActionsMenu, UserActionConfirmation } from "@/components/users/user-actions-menu";
 import { allowedAccountActions, LOGIN_MEDIUM_KEYS } from "@/components/users/profile";
+import { UserNotificationPreferencesDialog } from "@/components/users/notification-preferences-dialog";
 import { UserDetailsDialog } from "@/components/users/user-details-dialog";
 import { UserAvatar } from "@/components/common/user-avatar";
 // hooks
@@ -75,6 +76,8 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
   const [statusFilter, setStatusFilter] = useState<TInstanceUserStatus | "all">("all");
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [selectedUser, setSelectedUser] = useState<{ id: string; session: number } | null>(null);
+  const [notificationUser, setNotificationUser] = useState<{ id: string; email: string; session: number } | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const openUser = (id: string) => {
     setSelectedUser((previous) => ({ id, session: (previous?.session ?? 0) + 1 }));
@@ -316,6 +319,14 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
                           currentUserId={currentUser?.id}
                           admins={admins}
                           onEdit={() => openUser(user.id)}
+                          onNotifications={() => {
+                            setNotificationUser((previous) => ({
+                              id: user.id,
+                              email: user.email,
+                              session: (previous?.session ?? 0) + 1,
+                            }));
+                            setNotificationsOpen(true);
+                          }}
                           onAction={onAction}
                         />
                       </td>
@@ -366,6 +377,15 @@ const InstanceUsersPage = observer(function InstanceUsersPage(_props: Route.Comp
           action={confirmation.action}
           isOpen={confirmationOpen}
           onClose={() => setConfirmationOpen(false)}
+        />
+      )}
+      {notificationUser && (
+        <UserNotificationPreferencesDialog
+          key={`${notificationUser.id}-${notificationUser.session}`}
+          userId={notificationUser.id}
+          email={notificationUser.email}
+          isOpen={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
         />
       )}
       {selectedUser && (

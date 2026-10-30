@@ -218,8 +218,9 @@ export const AccountTypeColumn = observer(function AccountTypeColumn(props: Acco
                   <Select.Trigger<TRoleOption>
                     variant="select-ghost-md"
                     className={[
+                      "bg-layer-1 hover:bg-layer-1-hover disabled:bg-layer-1",
                       errors.role ? "border border-danger-strong" : "",
-                      !isRoleEditable ? "[&_svg]:visible" : "",
+                      "[&_svg]:visible",
                     ].join(" ")}
                   >
                     <span className="min-w-0 grow truncate text-left">{roleLabel}</span>

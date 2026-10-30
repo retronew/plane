@@ -17,9 +17,10 @@ class StateSerializer(BaseSerializer):
     """
 
     def validate(self, data):
-        # If the default is being provided then make all other states default False
-        if data.get("default", False):
-            State.objects.filter(project_id=self.context.get("project_id")).update(default=False)
+        if data.get("default", getattr(self.instance, "default", False)) and not data.get(
+            "allow_new_work_items", getattr(self.instance, "allow_new_work_items", True)
+        ):
+            raise serializers.ValidationError({"default": "The default state must allow new work items."})
 
         if data.get("group", None) == StateGroup.TRIAGE.value:
             raise serializers.ValidationError("Cannot create triage state")
@@ -51,5 +52,5 @@ class StateLiteSerializer(BaseSerializer):
 
     class Meta:
         model = State
-        fields = ["id", "name", "color", "group"]
+        fields = ["id", "name", "color", "group", "icon"]
         read_only_fields = fields

@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
+import { observable, runInAction } from "mobx";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { setLanguage } from "@plane/i18n";
 import type { ILayoutDisplayFiltersOptions, IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
@@ -74,6 +75,58 @@ it("toggles properties and extra options in place without closing the menu", asy
   await waitFor(() => expect(changes).toHaveBeenLastCalledWith({ sub_issue: true }));
   expect(screen.getByRole("menu")).toBeTruthy();
   expect(screen.queryByRole("menuitemcheckbox", { name: "周期" })).toBeNull();
+});
+it.each(["ID", "标签"])("reacts to in-place observable updates when toggling %s repeatedly", async (name) => {
+  const properties = observable<IIssueDisplayProperties>({ key: true, labels: false });
+  render(
+    <FiltersDropdown displayMenu title="显示">
+      <DisplayFiltersSelection
+        layoutDisplayFiltersOptions={configuration}
+        displayFilters={{ layout: "list" }}
+        displayProperties={properties}
+        handleDisplayFiltersUpdate={() => {}}
+        handleDisplayPropertiesUpdate={(next) => {
+          runInAction(() => Object.assign(properties, next));
+        }}
+      />
+    </FiltersDropdown>
+  );
+  fireEvent.click(screen.getByRole("button", { name: "显示" }));
+  const property = await screen.findByRole("menuitemcheckbox", { name });
+  const initial = property.getAttribute("aria-checked") === "true";
+  fireEvent.click(property);
+  await waitFor(() => expect(property.getAttribute("aria-checked")).toBe(String(!initial)));
+  expect(property.hasAttribute("data-pressed")).toBe(!initial);
+  fireEvent.click(property);
+  await waitFor(() => expect(property.getAttribute("aria-checked")).toBe(String(initial)));
+  expect(property.hasAttribute("data-pressed")).toBe(initial);
+});
+it.each([
+  ["显示子工作项", "sub_issue"],
+  ["显示空组", "show_empty_groups"],
+] as const)("reacts to observable filter updates when toggling %s repeatedly", async (name, key) => {
+  const filters = observable<IIssueDisplayFilterOptions>({ layout: "list", sub_issue: true, show_empty_groups: true });
+  render(
+    <FiltersDropdown displayMenu title="显示">
+      <DisplayFiltersSelection
+        layoutDisplayFiltersOptions={configuration}
+        displayFilters={filters}
+        displayProperties={{}}
+        handleDisplayPropertiesUpdate={() => {}}
+        handleDisplayFiltersUpdate={(next) => {
+          runInAction(() => Object.assign(filters, next));
+        }}
+      />
+    </FiltersDropdown>
+  );
+  fireEvent.click(screen.getByRole("button", { name: "显示" }));
+  const option = await screen.findByRole("menuitemcheckbox", { name });
+  fireEvent.click(option);
+  expect(filters[key]).toBe(false);
+  await waitFor(() => expect(option.getAttribute("aria-checked")).toBe("false"));
+  fireEvent.click(option);
+  expect(filters[key]).toBe(true);
+  await waitFor(() => expect(option.getAttribute("aria-checked")).toBe("true"));
 });
 it("uses submenus for grouping and sorting, preserving the allowed option order and source config", async () => {
   const before = JSON.stringify(configuration);

@@ -13,6 +13,19 @@ from .base import BaseSerializer
 
 
 class UserSerializer(BaseSerializer):
+    def update(self, instance, validated_data):
+        # Presence signals explicit ownership, including saving the same value.
+        if "display_name" in validated_data:
+            validated_data["is_display_name_custom"] = True
+        return super().update(instance, validated_data)
+
+    def validate_display_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Display name is required.")
+        if contains_url(value):
+            raise serializers.ValidationError("Display name cannot contain a URL.")
+        return value
+
     def validate_first_name(self, value):
         if contains_url(value):
             raise serializers.ValidationError("First name cannot contain a URL.")
@@ -53,6 +66,7 @@ class UserSerializer(BaseSerializer):
             "is_email_verified",
             "is_active",
             "token_updated_at",
+            "is_display_name_custom",
         ]
 
         # If the user has already filled first name or last name then he is onboarded

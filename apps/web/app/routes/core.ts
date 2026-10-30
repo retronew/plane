@@ -13,6 +13,7 @@ export const coreRoutes: RouteConfigEntry[] = [
   // ========================================================================
 
   route("mcp-connect", "./mcp-connect.tsx"),
+  ...(process.env.NODE_ENV === "development" ? [route("editor-comparison", "./editor-comparison.tsx")] : []),
 
   // Home - Sign In
   layout("./(home)/layout.tsx", [index("./(home)/page.tsx")]),

@@ -78,7 +78,12 @@ export const AutoCloseAutomation = observer(function AutoCloseAutomation({
                 placeholder={t("state")}
                 icon={
                   selected ? (
-                    <StateGroupIcon stateGroup={selected.group} color={selected.color} size={EIconSize.LG} />
+                    <StateGroupIcon
+                      stateGroup={selected.group}
+                      color={selected.color}
+                      icon={selected.icon}
+                      size={EIconSize.LG}
+                    />
                   ) : undefined
                 }
               />
@@ -89,7 +94,14 @@ export const AutoCloseAutomation = observer(function AutoCloseAutomation({
                       key={state.id}
                       value={state.id}
                       label={state.name}
-                      icon={<StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.LG} />}
+                      icon={
+                        <StateGroupIcon
+                          stateGroup={state.group}
+                          color={state.color}
+                          icon={state.icon}
+                          size={EIconSize.LG}
+                        />
+                      }
                     />
                   ))}
                 </SelectList>

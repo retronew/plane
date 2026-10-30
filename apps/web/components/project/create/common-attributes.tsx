@@ -80,11 +80,15 @@ function ProjectCommonAttributes(props: Props) {
               <Field name="name" invalid={Boolean(errors.name)}>
                 <InputGroup
                   size="lg"
-                  className="h-10! shrink-0 rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!"
+                  render={
+                    <div className="h-10! shrink-0 rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!" />
+                  }
                 >
                   <Input
                     size="2xl"
-                    className="h-full! w-full border-0! bg-transparent! p-0! text-18! leading-7! font-semibold! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!"
+                    render={
+                      <input className="h-full! w-full border-0! bg-transparent! p-0! text-18! leading-7! font-semibold! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!" />
+                    }
                     aria-label={t("project_name")}
                     ref={ref}
                     aria-invalid={Boolean(errors.name)}
@@ -123,12 +127,16 @@ function ProjectCommonAttributes(props: Props) {
           render={({ field: { value, onChange, ref } }) => (
             <Field name="identifier" invalid={Boolean(errors.identifier)}>
               <InputGroup
-                size="sm"
-                className="h-10! rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!"
+                size="md"
+                render={
+                  <div className="h-10! rounded-lg! border-0! bg-layer-1! px-3! shadow-none! ring-0! outline-none! focus-within:border-0! focus-within:ring-0!" />
+                }
               >
                 <Input
-                  size="sm"
-                  className="border-0! bg-transparent! p-0! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!"
+                  size="md"
+                  render={
+                    <input className="border-0! bg-transparent! p-0! shadow-none! ring-0! outline-none! placeholder:text-[lch(66_1_282)]! focus:ring-0! focus-visible:ring-0!" />
+                  }
                   aria-label={t("project_id")}
                   ref={ref}
                   aria-invalid={Boolean(errors.identifier)}

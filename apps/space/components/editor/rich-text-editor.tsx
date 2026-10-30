@@ -6,7 +6,7 @@
 
 import { forwardRef } from "react";
 // plane imports
-import { RichTextEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, IRichTextEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional } from "@plane/types";
 // helpers
@@ -57,7 +57,9 @@ export const RichTextEditor = forwardRef(function RichTextEditor(
   const { richText: richTextEditorExtensions } = useEditorFlagging(anchor);
 
   return (
-    <RichTextEditorWithRef
+    <PlateEditorWithRef
+      mode="rich"
+      toolbar="floating"
       mentionHandler={{
         renderComponent: (mentionProps) => <EditorMentionsRoot {...mentionProps} />,
         getMentionedEntityDetails: (id: string) => ({

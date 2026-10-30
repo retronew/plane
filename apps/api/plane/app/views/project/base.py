@@ -42,8 +42,6 @@ from plane.db.models import (
     ProjectMember,
     ProjectNetwork,
     ProjectUserProperty,
-    State,
-    DEFAULT_STATES,
     Workspace,
     WorkspaceMember,
 )
@@ -311,22 +309,9 @@ class ProjectViewSet(BaseViewSet):
             )
 
             template_configuration = getattr(serializer.instance, "template_configuration", None) or {}
-            state_definitions = template_configuration.get("states") or DEFAULT_STATES
-            State.objects.bulk_create(
-                [
-                    State(
-                        name=state["name"],
-                        color=state["color"],
-                        project=serializer.instance,
-                        sequence=state.get("sequence", index * 10000),
-                        workspace=serializer.instance.workspace,
-                        group=state["group"],
-                        default=state.get("default", False),
-                        created_by=request.user,
-                    )
-                    for index, state in enumerate(state_definitions)
-                ]
-            )
+            from plane.services.state_templates import initialize_project_states
+
+            initialize_project_states(serializer.instance, request.user, template_configuration)
 
             from plane.db.models import Label, Issue
 
@@ -376,6 +361,10 @@ class ProjectViewSet(BaseViewSet):
             partial=True,
         )
         serializer.is_valid(raise_exception=True)
+        if "disabled_state_groups" in serializer.validated_data:
+            from plane.utils.workflow import validate_disabled_state_groups
+
+            validate_disabled_state_groups(project.pk, serializer.validated_data["disabled_state_groups"])
         serializer.save()
         record_project_field_changes(project, request.user, before)
         if intake_view:

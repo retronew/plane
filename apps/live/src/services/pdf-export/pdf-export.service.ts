@@ -6,7 +6,7 @@
 
 import { Effect } from "effect";
 import sharp from "sharp";
-import { getAllDocumentFormatsFromDocumentEditorBinaryData } from "@plane/editor/lib";
+import { convertHTMLDocumentToAllFormats } from "@plane/editor/lib";
 import type { PDFExportMetadata, TipTapDocument } from "@/lib/pdf";
 import { renderPlaneDocToPdfBuffer } from "@/lib/pdf";
 import { getPageService } from "@/services/page/handler";
@@ -69,7 +69,7 @@ export class PdfExportService extends Effect.Service<PdfExportService>()("PdfExp
     },
 
     /**
-     * Fetches page content (description binary) and parses it
+     * Fetches the canonical HTML and title projection; legacy binaries remain historical data.
      */
     fetchPageContent: (
       pageService: ReturnType<typeof getPageService>,
@@ -79,8 +79,8 @@ export class PdfExportService extends Effect.Service<PdfExportService>()("PdfExp
       Effect.gen(function* () {
         yield* Effect.logDebug("PDF_EXPORT: Fetching page content", { requestId, pageId });
 
-        const descriptionBinary = yield* tryAsync(
-          () => pageService.fetchDescriptionBinary(pageId),
+        const page = yield* tryAsync(
+          () => pageService.fetchDetails(pageId),
           (cause) =>
             new PdfContentFetchError({
               message: "Failed to fetch page content",
@@ -93,7 +93,7 @@ export class PdfExportService extends Effect.Service<PdfExportService>()("PdfExp
           })
         );
 
-        if (!descriptionBinary) {
+        if (!page) {
           return yield* Effect.fail(
             new PdfContentFetchError({
               message: "Page content not found",
@@ -101,13 +101,19 @@ export class PdfExportService extends Effect.Service<PdfExportService>()("PdfExp
           );
         }
 
-        const binaryData = new Uint8Array(descriptionBinary);
-        const { contentJSON, titleHTML } = getAllDocumentFormatsFromDocumentEditorBinaryData(binaryData, true);
+        const { description_json: contentJSON } = convertHTMLDocumentToAllFormats({
+          document_html: page.description_html ?? "<p></p>",
+          variant: "rich",
+        });
+        const titleHTML = (page.name ?? "").replace(
+          /[&<>"']/g,
+          (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!
+        );
 
         return {
           contentJSON: contentJSON as TipTapDocument,
           titleHTML: titleHTML || null,
-          descriptionBinary,
+          descriptionBinary: Buffer.alloc(0),
         };
       }),
 

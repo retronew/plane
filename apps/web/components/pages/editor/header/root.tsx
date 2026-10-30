@@ -7,7 +7,6 @@
 import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
-import type { EditorTitleRefApi } from "@plane/editor";
 import { setToast } from "@plane/blocks/toast";
 import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
 import { getPageTemplatePatch } from "@/components/settings/workspace/configuration/template-application";
@@ -22,11 +21,12 @@ type Props = {
   page: TPageInstance;
   projectId?: string;
   workspaceSlug: string;
-  titleEditorRef: React.RefObject<EditorTitleRefApi | null>;
+  setTitle: (title: string) => void;
+  titleReady: boolean;
 };
 
 export const PageEditorHeaderRoot = observer(function PageEditorHeaderRoot(props: Props) {
-  const { page, projectId, workspaceSlug, titleEditorRef } = props;
+  const { page, projectId, workspaceSlug, setTitle, titleReady } = props;
   // states
   const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
   const applyingTemplate = useRef(false);
@@ -35,18 +35,15 @@ export const PageEditorHeaderRoot = observer(function PageEditorHeaderRoot(props
 
   const applyTemplate = async (template: WorkspaceTemplate) => {
     const editor = page.editor.editorRef;
-    const titleEditor = titleEditorRef.current;
-    if (!page.isContentEditable || !editor || !titleEditor || applyingTemplate.current) return;
+    if (!page.isContentEditable || !editor || !titleReady || applyingTemplate.current) return;
     applyingTemplate.current = true;
     setIsApplyingTemplate(true);
     try {
       const { description_html, ...properties } = getPageTemplatePatch(template);
-      await page.update(properties);
+      const { name: _name, ...metadata } = properties;
+      await page.update(metadata);
       if (!page.isContentEditable) return;
-      // Title templates are plain text; escape them before passing HTML to Tiptap.
-      const title = document.createElement("span");
-      title.textContent = properties.name;
-      titleEditor.setEditorValue(`<h1>${title.innerHTML}</h1>`);
+      setTitle(properties.name);
       editor.setEditorValue(description_html, true);
     } catch (error) {
       console.error("Failed to apply page template", error);

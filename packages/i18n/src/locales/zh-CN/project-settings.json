@@ -33,7 +33,10 @@
       "invite_members": {
         "title": "邀请成员",
         "sub_heading": "邀请成员加入您的项目。",
-        "select_co_worker": "选择同事"
+        "select_co_worker": "选择同事",
+        "select_members": "选择成员",
+        "selected_count": "{count, plural, one {已选择 # 位成员} other {已选择 # 位成员}}",
+        "remove_member": "移除 {name}"
       }
     },
     "states": {

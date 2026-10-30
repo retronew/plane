@@ -55,9 +55,11 @@ from .issue import (
     IssueVersion,
     IssueDescriptionVersion,
 )
+from .issue_description_document import IssueDescriptionDocument
 from .module import Module, ModuleIssue, ModuleLink, ModuleMember, ModuleUserProperties
 from .notification import EmailNotificationLog, IssueDueReminder, Notification, UserNotificationPreference
 from .page import Page, PageLabel, PageLog, ProjectPage, PageVersion
+from .page_description_document import PageDescriptionDocument
 from .project import (
     Project,
     ProjectBaseModel,

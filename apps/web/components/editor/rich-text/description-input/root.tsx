@@ -11,7 +11,7 @@ import { Controller, useForm } from "react-hook-form";
 // plane imports
 import type { EditorRefApi, TExtensions } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
-import type { EFileAssetType, TNameDescriptionLoader } from "@plane/types";
+import { EFileAssetType, type TNameDescriptionLoader } from "@plane/types";
 import { getDescriptionPlaceholderI18n } from "@plane/utils";
 // components
 import { RichTextEditor } from "@/components/editor/rich-text";
@@ -22,6 +22,7 @@ import { useWorkspace } from "@/hooks/store/use-workspace";
 import { WorkspaceService } from "@/services/workspace.service";
 // local imports
 import { DescriptionInputLoader } from "./loader";
+import { CollaborativeDescriptionInput } from "./collaborative";
 // services init
 const workspaceService = new WorkspaceService();
 
@@ -35,7 +36,7 @@ type TFormData = {
 // The editor's initial content is a pure function of the incoming description.
 const normalizeDescription = (value: string | undefined) => (value?.trim() === "" ? "<p></p>" : (value ?? "<p></p>"));
 
-type Props = {
+export type DescriptionInputProps = {
   /**
    * @description Container class name, this will be used to add custom styles to the editor container
    */
@@ -108,7 +109,20 @@ type Props = {
  * @description DescriptionInput component for rich text editor with autosave functionality using debounce
  * The component also makes an API call to save the description on unmount
  */
-export const DescriptionInput = observer(function DescriptionInput(props: Props) {
+export const DescriptionInput = observer(function DescriptionInput(props: DescriptionInputProps) {
+  if (props.projectId && props.fileAssetType === EFileAssetType.ISSUE_DESCRIPTION) {
+    return (
+      <CollaborativeDescriptionInput
+        {...props}
+        key={`${props.workspaceSlug}:${props.projectId}:${props.entityId}`}
+        projectId={props.projectId}
+      />
+    );
+  }
+  return <LocalDescriptionInput {...props} />;
+});
+
+const LocalDescriptionInput = observer(function LocalDescriptionInput(props: DescriptionInputProps) {
   const {
     containerClassName,
     disabled,
@@ -172,6 +186,10 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
   // reset form values
   useEffect(() => {
     if (!entityId) return;
+    // Store updates can echo an optimistic save before its request completes.
+    // Keep this session's form/revision intact until its latest edit is saved;
+    // an older echo must not overwrite edits made while that request is pending.
+    if (getValues("id") === entityId && hasUnsavedChanges.current) return;
     // Update last saved content when entity/initialValue changes
     lastSavedContent.current = normalizedDescription;
     reset({
@@ -182,7 +200,7 @@ export const DescriptionInput = observer(function DescriptionInput(props: Props)
     // Reset unsaved changes flag when form is reset
     hasUnsavedChanges.current = false;
     saveContext.revision += 1;
-  }, [entityId, normalizedDescription, reset, saveContext]);
+  }, [entityId, getValues, normalizedDescription, reset, saveContext]);
   const latestSave = useRef({ handleDescriptionFormSubmit, setIsSubmitting });
 
   const saveDescription = useCallback(() => {

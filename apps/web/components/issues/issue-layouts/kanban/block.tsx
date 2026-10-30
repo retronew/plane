@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import type { MutableRefObject } from "react";
 import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -20,9 +19,9 @@ import type { TIssue, IIssueDisplayProperties, IIssueMap } from "@plane/types";
 import { ControlLink } from "@plane/blocks/layout";
 import { cn, generateWorkItemLink } from "@plane/utils";
 // components
-import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layouts/utils";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { IssueHierarchyIndicator } from "../hierarchy-indicator";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
@@ -77,8 +76,6 @@ interface IssueBlockProps {
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
   quickActions: TRenderQuickActions;
   canEditProperties: (projectId: string | undefined) => boolean;
-  scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
-  shouldRenderByDefault?: boolean;
 }
 
 interface IssueDetailsBlockProps {
@@ -99,6 +96,10 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
   // hooks
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
+  const {
+    issue: { getIssueById },
+  } = useIssueDetail();
+  const parentIssue = issue.parent_id ? getIssueById(issue.parent_id) : undefined;
 
   const customActionButton = (
     // The quick-action menu grafts its trigger behaviour (and accessible name) onto this element via
@@ -167,6 +168,8 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
               isReadOnly={isReadOnly}
             />
           )}
+          {/* the parent it rolls up to; its own children show in the progress row below instead */}
+          <IssueHierarchyIndicator parentId={issue.parent_id} parentName={parentIssue?.name ?? issue.parent?.name} />
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
@@ -310,8 +313,6 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
     updateIssue,
     quickActions,
     canEditProperties,
-    scrollableContainerRef,
-    shouldRenderByDefault,
   } = props;
 
   const cardRef = useRef<HTMLAnchorElement | null>(null);
@@ -419,16 +420,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
           onClick={() => handleIssuePeekOverview(issue)}
           disabled={!!issue?.tempId}
         >
-          <RenderIfVisible
-            classNames="space-y-2"
-            root={scrollableContainerRef}
-            defaultHeight="100px"
-            horizontalOffset={100}
-            verticalOffset={200}
-            defaultValue={shouldRenderByDefault}
-            // dnd-kit lifts the dragged card out of the scroll area; keep its content while it travels
-            forceRender={isDragSource}
-          >
+          <div className="space-y-2">
             <KanbanIssueDetailsBlock
               cardRef={cardRef}
               issue={issue}
@@ -437,7 +429,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
               quickActions={quickActions}
               isReadOnly={!canEditIssueProperties}
             />
-          </RenderIfVisible>
+          </div>
         </ControlLink>
       </div>
     </>

@@ -1,3 +1,4 @@
+import { workflowDisplayName } from "./display-name";
 import { useState } from "react";
 import { Menu, MenuContent, MenuLinkItem, MenuSearch, MenuTrigger } from "@makeplane/propel/components/menu";
 import { ChevronDownOutline, TickOutline, WorkflowsOutline } from "@makeplane/propel/icons";
@@ -17,10 +18,10 @@ export function WorkflowSwitcher({ workflows, currentId, base }: WorkflowSwitche
   const current =
     workflows.find((workflow) => (workflow.workflow_id ?? workflow.id) === currentId) ??
     workflows.find((workflow) => workflow.id === currentId);
-  const name = current?.name || t("web.workflow_ui.default_name");
+  const name = workflowDisplayName(current, t("web.workflow_ui.default_name"));
   const query = search.trim().toLowerCase();
   const filtered = workflows.filter((workflow) =>
-    (workflow.name || t("web.workflow_ui.default_name")).toLowerCase().includes(query)
+    workflowDisplayName(workflow, t("web.workflow_ui.default_name")).toLowerCase().includes(query)
   );
 
   return (
@@ -58,7 +59,7 @@ export function WorkflowSwitcher({ workflows, currentId, base }: WorkflowSwitche
           <MenuLinkItem
             key={workflow.workflow_id ?? workflow.id}
             href={base + (workflow.workflow_id ?? workflow.id)}
-            label={workflow.name || t("web.workflow_ui.default_name")}
+            label={workflowDisplayName(workflow, t("web.workflow_ui.default_name"))}
             icon={<WorkflowsOutline className="size-4" />}
             aria-current={workflow === current ? "page" : undefined}
             trailing={workflow === current ? <TickOutline className="size-3.5" /> : undefined}

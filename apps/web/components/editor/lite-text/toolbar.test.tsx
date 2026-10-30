@@ -153,3 +153,13 @@ it.each([true, false])("keeps submit disabled/loading semantics with compact=%s"
   rerender(<IssueCommentToolbar {...props} isCommentEmpty={false} editorRef={null} />);
   expect(submit.disabled).toBe(true);
 });
+
+it("keeps attachment and submit actions without a fixed formatting toolbar", () => {
+  const { props } = fixture({ showFormatting: false, showSubmitButton: true });
+  expect(screen.queryByRole("button", { name: "Bold" })).toBeNull();
+  expect(screen.getAllByRole("button")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("button", { name: "Image" }));
+  expect(pickCommentImage).toHaveBeenCalledExactlyOnceWith(props.editorRef);
+  fireEvent.click(screen.getByRole("button", { name: "Comment" }));
+  expect(props.handleSubmit).toHaveBeenCalledOnce();
+});
