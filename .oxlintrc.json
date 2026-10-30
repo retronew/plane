@@ -21,6 +21,7 @@
   },
   "ignorePatterns": [
     ".agents/skills/**",
+    ".claude/skills/design-taste-frontend/**",
     ".cache/**",
     ".next/**",
     ".react-router/**",
