@@ -1,0 +1,169 @@
+/* highlight.js 11.12.0 GitHub themes (BSD-3-Clause), scoped to the Plate comparison. */
+.plate-github-code {
+  color: #24292e;
+  background: #ffffff;
+}
+.plate-github-code .hljs-doctag,
+.plate-github-code .hljs-keyword,
+.plate-github-code .hljs-meta .hljs-keyword,
+.plate-github-code .hljs-template-tag,
+.plate-github-code .hljs-template-variable,
+.plate-github-code .hljs-type,
+.plate-github-code .hljs-variable.language_ {
+  color: #d73a49;
+}
+.plate-github-code .hljs-title,
+.plate-github-code .hljs-title.class_,
+.plate-github-code .hljs-title.class_.inherited__,
+.plate-github-code .hljs-title.function_ {
+  color: #6f42c1;
+}
+.plate-github-code .hljs-attr,
+.plate-github-code .hljs-attribute,
+.plate-github-code .hljs-literal,
+.plate-github-code .hljs-meta,
+.plate-github-code .hljs-number,
+.plate-github-code .hljs-operator,
+.plate-github-code .hljs-variable,
+.plate-github-code .hljs-selector-attr,
+.plate-github-code .hljs-selector-class,
+.plate-github-code .hljs-selector-id {
+  color: #005cc5;
+}
+.plate-github-code .hljs-regexp,
+.plate-github-code .hljs-string,
+.plate-github-code .hljs-meta .hljs-string {
+  color: #032f62;
+}
+.plate-github-code .hljs-built_in,
+.plate-github-code .hljs-symbol {
+  color: #e36209;
+}
+.plate-github-code .hljs-comment,
+.plate-github-code .hljs-code,
+.plate-github-code .hljs-formula {
+  color: #6a737d;
+}
+.plate-github-code .hljs-name,
+.plate-github-code .hljs-quote,
+.plate-github-code .hljs-selector-tag,
+.plate-github-code .hljs-selector-pseudo {
+  color: #22863a;
+}
+.plate-github-code .hljs-subst {
+  color: #24292e;
+}
+.plate-github-code .hljs-section {
+  color: #005cc5;
+  font-weight: bold;
+}
+.plate-github-code .hljs-bullet {
+  color: #735c0f;
+}
+.plate-github-code .hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+.plate-github-code .hljs-strong {
+  color: #24292e;
+  font-weight: bold;
+}
+.plate-github-code .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.plate-github-code .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+.plate-github-code .hljs-char.escape_,
+.plate-github-code .hljs-link,
+.plate-github-code .hljs-params,
+.plate-github-code .hljs-property,
+.plate-github-code .hljs-punctuation,
+.plate-github-code .hljs-tag {
+}
+:is(.dark, .dark-contrast) .plate-github-code {
+  color: #c9d1d9;
+  background: #0d1117;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-doctag,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-keyword,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-meta .hljs-keyword,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-template-tag,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-template-variable,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-type,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-variable.language_ {
+  color: #ff7b72;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-title,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-title.class_,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-title.class_.inherited__,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-title.function_ {
+  color: #d2a8ff;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-attr,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-attribute,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-literal,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-meta,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-number,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-operator,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-variable,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-attr,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-class,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-id {
+  color: #79c0ff;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-regexp,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-string,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-built_in,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-symbol {
+  color: #ffa657;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-comment,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-code,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-formula {
+  color: #8b949e;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-name,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-quote,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-tag,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-pseudo {
+  color: #7ee787;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-subst {
+  color: #c9d1d9;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-section {
+  color: #1f6feb;
+  font-weight: bold;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-bullet {
+  color: #f2cc60;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-strong {
+  color: #c9d1d9;
+  font-weight: bold;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+:is(.dark, .dark-contrast) .plate-github-code .hljs-char.escape_,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-link,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-params,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-property,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-punctuation,
+:is(.dark, .dark-contrast) .plate-github-code .hljs-tag {
+}

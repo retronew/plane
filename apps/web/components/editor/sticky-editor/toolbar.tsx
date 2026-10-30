@@ -26,6 +26,7 @@ type Props = {
   handleColorChange: (data: Partial<TSticky>) => Promise<void>;
   handleDelete: () => void;
   selectedColor?: string;
+  showFormatting?: boolean;
 };
 
 const toolbarItems = TOOLBAR_ITEMS.sticky;
@@ -33,7 +34,7 @@ const formattingItems = Object.values(toolbarItems).flat();
 const getServerSnapshot = () => "";
 
 export function StickyEditorToolbar(props: Props) {
-  const { executeCommand, editorRef, handleColorChange, handleDelete, selectedColor } = props;
+  const { executeCommand, editorRef, handleColorChange, handleDelete, selectedColor, showFormatting = true } = props;
 
   const [showColorPalette, setShowColorPalette] = useState(false);
   const { t } = useTranslation();
@@ -90,19 +91,24 @@ export function StickyEditorToolbar(props: Props) {
             />
           </PopoverContent>
         </Popover>
-        {formattingItems.map((item, index) => (
-          <Tooltip key={item.renderKey} label={labels[item.itemKey] ?? item.name} shortcut={item.shortcut?.join(" + ")}>
-            <IconButton
-              variant={activeStates[index] === "1" ? "tertiary" : "ghost"}
-              size="sm"
-              aria-label={labels[item.itemKey] ?? item.name}
-              aria-pressed={activeStates[index] === "1"}
-              showTooltip={false}
-              onClick={() => executeCommand(item)}
-              icon={<item.icon />}
-            />
-          </Tooltip>
-        ))}
+        {showFormatting &&
+          formattingItems.map((item, index) => (
+            <Tooltip
+              key={item.renderKey}
+              label={labels[item.itemKey] ?? item.name}
+              shortcut={item.shortcut?.join(" + ")}
+            >
+              <IconButton
+                variant={activeStates[index] === "1" ? "tertiary" : "ghost"}
+                size="sm"
+                aria-label={labels[item.itemKey] ?? item.name}
+                aria-pressed={activeStates[index] === "1"}
+                showTooltip={false}
+                onClick={() => executeCommand(item)}
+                icon={<item.icon />}
+              />
+            </Tooltip>
+          ))}
       </div>
       <IconButton
         variant="ghost"

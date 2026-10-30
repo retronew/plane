@@ -8,8 +8,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
 import type { TDisplayConfig } from "@plane/editor";
-import type { JSONContent, TPageVersion } from "@plane/types";
-import { isJSONContentEmpty } from "@plane/utils";
+import type { TPageVersion } from "@plane/types";
 // components
 import { PageEditorSkeleton } from "@/components/pages/loaders/page-editor-skeleton";
 import { DocumentEditor } from "@/components/editor/document/editor";
@@ -49,11 +48,7 @@ export const PagesVersionEditor = observer(function PagesVersionEditor(props: TV
       </div>
     );
 
-  const description = isJSONContentEmpty(versionDetails?.description_json as JSONContent)
-    ? versionDetails?.description_html
-    : versionDetails?.description_json;
-
-  if (!description) return null;
+  const description = versionDetails.description_html ?? "<p></p>";
 
   return (
     <DocumentEditor

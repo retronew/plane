@@ -5,7 +5,7 @@
  */
 
 import { set } from "lodash-es";
-import { action, computed, makeObservable, observable, reaction, runInAction, observableRef } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, observableRef } from "mobx";
 // plane imports
 import { EPageAccess } from "@plane/constants";
 import type { ChangeHandlerPayload } from "@plane/blocks/emoji-icon-picker";
@@ -194,28 +194,8 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
     this.rootStore = store;
     this.editor = new PageEditorInstance();
 
-    const titleDisposer = reaction(
-      () => this.name,
-      (name) => {
-        this.isSubmitting = "submitting";
-        this.services
-          .update({
-            name,
-          })
-          .catch(() =>
-            runInAction(() => {
-              this.name = this.oldName;
-            })
-          )
-          .finally(() =>
-            runInAction(() => {
-              this.isSubmitting = "submitted";
-            })
-          );
-      },
-      { delay: 2000 }
-    );
-    this.disposers.push(titleDisposer);
+    // Collaborative title persistence belongs to the same CAS document as the body.
+    // Remote title projections must never trigger an independent HTTP write.
   }
 
   // computed

@@ -6,7 +6,8 @@
 
 import { forwardRef } from "react";
 // plane imports
-import { RichTextEditorWithRef } from "@plane/editor";
+import { PlateEditorWithRef } from "@plane/editor/plate";
+import type { PlateCollaborationConfig } from "@plane/editor/plate";
 import type { EditorRefApi, IRichTextEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional, TSearchEntityRequestPayload, TSearchResponse } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -27,6 +28,7 @@ type RichTextEditorWrapperProps = MakeOptional<
   workspaceId: string;
   projectId?: string;
   issueSequenceId?: number;
+  collaboration?: PlateCollaborationConfig;
 } & (
     | {
         editable: false;
@@ -72,9 +74,16 @@ export const RichTextEditor = forwardRef(function RichTextEditor(
   });
 
   return (
-    <RichTextEditorWithRef
+    <PlateEditorWithRef
+      mode="rich"
+      toolbar="floating"
       ref={ref}
-      disabledExtensions={[...richTextEditorExtensions.disabled, ...(additionalDisabledExtensions ?? [])]}
+      disabledExtensions={[
+        ...richTextEditorExtensions.disabled.filter(
+          (feature) => !props.collaboration || feature !== "collaboration-cursor"
+        ),
+        ...(additionalDisabledExtensions ?? []),
+      ]}
       editable={editable}
       flaggedExtensions={richTextEditorExtensions.flagged}
       fileHandler={getEditorFileHandlers({

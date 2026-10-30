@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.issue.collaboration import IssueCollaborationEndpoint
 
 from plane.app.views import (
     BulkCreateIssueLabelsEndpoint,
@@ -34,6 +35,11 @@ from plane.app.views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/collaboration/",
+        IssueCollaborationEndpoint.as_view(),
+        name="issue-collaboration",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/list/",
         IssueListEndpoint.as_view(),

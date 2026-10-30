@@ -8,7 +8,8 @@ from django.conf import settings
 from django.utils import timezone
 
 # Django imports
-from django.db import models
+from django.db import models, transaction
+from plane.db.mixins import SoftDeletionQuerySet
 
 # Module imports
 from plane.utils.html_processor import strip_tags
@@ -20,7 +21,41 @@ def get_view_props():
     return {"full_width": False}
 
 
+class PageDescriptionQuerySet(SoftDeletionQuerySet):
+    def update(self, **kwargs):
+        if not {"description_html", "name"}.intersection(kwargs):
+            return super().update(**kwargs)
+        from plane.services.issue_description import collaboration_projection
+        from .page_description_document import PageDescriptionDocument
+
+        if collaboration_projection.get():
+            return super().update(**kwargs)
+        with transaction.atomic():
+            page_ids = list(self.select_for_update().values_list("pk", flat=True))
+            result = super().update(**kwargs)
+            PageDescriptionDocument.objects.filter(page_id__in=page_ids).update(
+                epoch=models.F("epoch") + 1,
+                revision=models.F("revision") + 1,
+                state=None,
+                source_hash="",
+                contributors=[],
+            )
+            return result
+
+
+class PageAllManager(models.Manager.from_queryset(PageDescriptionQuerySet)):
+    pass
+
+
+class PageSoftManager(PageAllManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
 class Page(BaseModel):
+    objects = PageSoftManager()
+    all_objects = PageAllManager()
+
     PRIVATE_ACCESS = 1
     PUBLIC_ACCESS = 0
     DEFAULT_SORT_ORDER = 65535
@@ -74,7 +109,19 @@ class Page(BaseModel):
             if (self.description_html == "" or self.description_html is None)
             else strip_tags(self.description_html)
         )
-        super(Page, self).save(*args, **kwargs)
+        if self._state.adding:
+            super(Page, self).save(*args, **kwargs)
+            return
+        from plane.services.page_description import invalidate_page_description
+
+        with transaction.atomic():
+            previous = Page.all_objects.select_for_update().get(pk=self.pk)
+            fields = kwargs.get("update_fields")
+            super(Page, self).save(*args, **kwargs)
+            if fields is None or {"name", "description_html"}.intersection(fields):
+                # Compare persisted values so a partial save cannot invalidate on stale fields.
+                current = Page.all_objects.get(pk=self.pk)
+                invalidate_page_description(current, (previous.name, previous.description_html))
 
 
 class PageLog(BaseModel):
