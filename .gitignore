@@ -112,6 +112,7 @@ temp/
 scripts/
 !packages/i18n/scripts/
 !.agents/skills/technical-drawing/scripts/
+!.claude/skills/design-taste-frontend/scripts/
 
 # Local browser verification screenshots
 /.artifacts/
