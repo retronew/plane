@@ -16,8 +16,9 @@ import type { TIssueOrderByOptions } from "@plane/types";
 // hooks
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
 // local imports
+import scrollIntoView from "smooth-scroll-into-view-if-needed";
 import type { GroupDropLocation } from "../utils";
-import { getIssueBlockId, highlightIssueOnDrop } from "../utils";
+import { getIssueBlockId } from "../utils";
 import type { TKanbanColumnOrder } from "./kanban-dnd-utils";
 import {
   KANBAN_DRAG_TILT_DEG,
@@ -240,10 +241,15 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
           // keep showing the preview until the store has the new order, so the card doesn't snap back
           void handleOnDrop(source, destination).finally(() => {
             resetDrag();
-            highlightIssueOnDrop(
-              getIssueBlockId(current.issueId, destinationColumn.groupId, destinationColumn.subGroupId),
-              orderBy !== "sort_order"
-            );
+            // no landing flash: the drop animation already shows where the card went. A column sorted by
+            // a rule may have moved it out of view, so follow it there.
+            if (orderBy !== "sort_order") {
+              const blockId = getIssueBlockId(current.issueId, destinationColumn.groupId, destinationColumn.subGroupId);
+              setTimeout(() => {
+                const element = document.getElementById(blockId);
+                if (element) void scrollIntoView(element, { behavior: "smooth", block: "center", duration: 1500 });
+              }, 200);
+            }
           });
         }}
       >
