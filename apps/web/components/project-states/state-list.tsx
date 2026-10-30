@@ -15,11 +15,21 @@ type TStateList = {
   states: IState[];
   stateOperationsCallbacks: TStateOperationsCallbacks;
   disabled?: boolean;
+  /** The group's own switch is off, so none of its states can accept new work items. */
+  groupClosed?: boolean;
   stateItemClassName?: string;
 };
 
 export const StateList = observer(function StateList(props: TStateList) {
-  const { groupKey, groupedStates, states, stateOperationsCallbacks, disabled = false, stateItemClassName } = props;
+  const {
+    groupKey,
+    groupedStates,
+    states,
+    stateOperationsCallbacks,
+    disabled = false,
+    groupClosed = false,
+    stateItemClassName,
+  } = props;
 
   return (
     <>
@@ -31,6 +41,7 @@ export const StateList = observer(function StateList(props: TStateList) {
           totalStates={states.length || 0}
           state={state}
           disabled={disabled}
+          groupClosed={groupClosed}
           stateOperationsCallbacks={stateOperationsCallbacks}
           stateItemClassName={stateItemClassName}
         />

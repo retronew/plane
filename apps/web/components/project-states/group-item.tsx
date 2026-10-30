@@ -91,6 +91,7 @@ export const GroupItem = observer(function GroupItem(props: TGroupItem) {
             groupedStates={groupedStates}
             states={states}
             disabled={!isEditable}
+            groupClosed={allowNewWorkItems ? !allowNewWorkItems.checked : false}
             stateOperationsCallbacks={stateOperationsCallbacks}
             stateItemClassName={stateItemClassName}
           />
