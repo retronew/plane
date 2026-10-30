@@ -59,7 +59,8 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
 
             return (
               <KanbanIssueBlock
-                key={draggableId}
+                // keyed by the work item alone: the sortable id changes column on drop, the card must not remount
+                key={issueId}
                 issueId={issueId}
                 groupId={groupId}
                 subGroupId={sub_group_id}

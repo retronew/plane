@@ -413,7 +413,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
             // lifted while dragged: it leans toward the side it moved to (see KanbanDndProvider) with a deeper shadow
             "transition-[box-shadow,border-color,rotate,scale] duration-200 ease-[cubic-bezier(0.2,0,0,1)]",
             {
-              "scale-[1.02] rotate-(--kanban-drag-tilt,3deg) cursor-grabbing shadow-raised-300 hover:shadow-raised-300":
+              "scale-[1.02] rotate-(--kanban-drag-tilt,0deg) cursor-grabbing shadow-raised-300 hover:shadow-raised-300":
                 isDragSource,
             }
           )}
