@@ -14,21 +14,47 @@ from plane.db.models.workflow import ProjectWorkflow
 from plane.utils.workflow import WorkflowConflict, validate_state_creation_settings
 
 
-def state_definitions(project, explicit=None):
+def state_configuration(project, explicit=None):
     template = WorkspaceTemplate.objects.filter(
         workspace_id=project.workspace_id, is_default_state_template=True, kind="project", project__isnull=True
     ).first()
-    definitions = (explicit or {}).get("states") or (template.configuration.get("states") if template else None)
-    definitions = [dict(entry) for entry in (definitions or DEFAULT_STATES) if entry["group"] != "triage"]
+    if explicit and explicit.get("states"):
+        return explicit
+    configuration = dict(template.configuration) if template else {}
+    if explicit and "disabled_state_groups" in explicit:
+        configuration["disabled_state_groups"] = explicit["disabled_state_groups"]
+    return configuration
+
+
+def state_definitions(project, explicit=None):
+    configuration = state_configuration(project, explicit)
+    disabled = configuration.get("disabled_state_groups", project.disabled_state_groups) or []
+    definitions = [
+        dict(entry) for entry in (configuration.get("states") or DEFAULT_STATES) if entry["group"] != "triage"
+    ]
     if not any(entry.get("default") for entry in definitions):
-        next(entry for entry in definitions if entry.get("allow_new_work_items", True))["default"] = True
+        available = next(
+            (
+                entry
+                for entry in definitions
+                if entry.get("allow_new_work_items", True) and entry["group"] not in disabled
+            ),
+            None,
+        )
+        if available is None:
+            raise ValidationError({"states": "At least one state must allow new work items."})
+        available["default"] = True
     return definitions
 
 
 def initialize_project_states(project, actor=None, explicit=None):
+    configuration = state_configuration(project, explicit)
+    if "disabled_state_groups" in configuration:
+        project.disabled_state_groups = configuration["disabled_state_groups"]
+        project.save(update_fields=["disabled_state_groups"])
     definitions = state_definitions(project, explicit)
     definitions.append(next(dict(entry) for entry in DEFAULT_STATES if entry["group"] == "triage"))
-    return State.objects.bulk_create(
+    states = State.objects.bulk_create(
         [
             State(
                 project=project,
@@ -45,6 +71,8 @@ def initialize_project_states(project, actor=None, explicit=None):
             for index, entry in enumerate(definitions)
         ]
     )
+    validate_state_creation_settings(project.pk, states)
+    return states
 
 
 def preview_state_template(project, data):
@@ -129,7 +157,8 @@ def preview_state_template(project, data):
         raise ValidationError(
             {"mapping": "A retained state has the same name. Map it in the same group or rename it first."}
         )
-    validate_state_creation_settings(project.pk, proposed)
+    disabled_groups = template.configuration.get("disabled_state_groups", project.disabled_state_groups) or []
+    validate_state_creation_settings(project.pk, proposed, disabled_groups=disabled_groups)
     snapshot = {
         "project": str(project.pk),
         "template": str(template.pk),
@@ -149,6 +178,7 @@ def preview_state_template(project, data):
             for workflow in ProjectWorkflow.objects.filter(project=project).order_by("id")
         ],
         "enabled": project.workflow_enabled,
+        "disabled_state_groups": project.disabled_state_groups,
     }
     fingerprint = hashlib.sha256(json.dumps(snapshot, sort_keys=True, cls=DjangoJSONEncoder).encode()).hexdigest()
     return {
@@ -156,6 +186,7 @@ def preview_state_template(project, data):
         "matched": matched,
         "added": added,
         "retained": retained,
+        "disabled_state_groups": {"before": project.disabled_state_groups, "after": disabled_groups},
         "token": signing.dumps({"project": str(project.pk), "fingerprint": fingerprint}, salt="state-template-preview"),
     }
 
@@ -183,4 +214,8 @@ def apply_state_template(project, data, actor=None):
     for row in preview["added"]:
         state = State(project=project, workspace_id=project.workspace_id, created_by=actor, **row["values"])
         state.save(disable_auto_set_user=True)
+    disabled_groups = preview["disabled_state_groups"]["after"]
+    if project.disabled_state_groups != disabled_groups:
+        project.disabled_state_groups = disabled_groups
+        project.save(update_fields=["disabled_state_groups"])
     return preview

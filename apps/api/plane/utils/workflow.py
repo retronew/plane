@@ -109,9 +109,7 @@ def validate_disabled_state_groups(project_id, disabled_groups):
     disabled = set(disabled_groups or [])
     states = list(State.objects.filter(project_id=project_id))
     remaining = [
-        state
-        for state in states
-        if state.allow_new_work_items and not state.is_triage and state.group not in disabled
+        state for state in states if state.allow_new_work_items and not state.is_triage and state.group not in disabled
     ]
     if not remaining:
         raise ValidationError({"disabled_state_groups": ["At least one state must allow new work items."]})
@@ -157,12 +155,18 @@ def intake_creation_state(project_id, type_id=None):
     return effective_creation_state(project_id, type_id=type_id)
 
 
-def validate_state_creation_settings(project_id, states):
+def validate_state_creation_settings(project_id, states, disabled_groups=None):
     """Validate a proposed complete state set while holding the project lock."""
-    available = {str(state.pk): state for state in states if state.allow_new_work_items and not state.is_triage}
+    if disabled_groups is None:
+        disabled_groups = Project.objects.values_list("disabled_state_groups", flat=True).get(pk=project_id) or []
+    available = {
+        str(state.pk): state
+        for state in states
+        if state.allow_new_work_items and not state.is_triage and state.group not in disabled_groups
+    }
     if not available:
         raise ValidationError({"allow_new_work_items": ["At least one state must allow new work items."]})
-    if any(state.default and not state.allow_new_work_items for state in states):
+    if any(state.default and str(state.pk) not in available for state in states):
         raise ValidationError({"default": ["The default state must allow new work items."]})
     for workflow in ProjectWorkflow.objects.filter(project_id=project_id):
         if workflow.initial_state_id and str(workflow.initial_state_id) not in available:

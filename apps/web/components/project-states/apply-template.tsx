@@ -120,6 +120,17 @@ export function ApplyStateTemplate({
               {preview && (
                 <div className="flex flex-col gap-4">
                   <p className="text-14 font-medium">{preview.template}</p>
+                  {preview.disabled_state_groups &&
+                    ["backlog", "unstarted", "started", "completed", "cancelled"].map((group) => {
+                      const before = !preview.disabled_state_groups!.before.includes(group);
+                      const after = !preview.disabled_state_groups!.after.includes(group);
+                      return before !== after ? (
+                        <p key={group} className="text-13 text-secondary">
+                          {t(`web.template_state_${group}`)} · {t("web.allow_new_work_items")}:{" "}
+                          {fieldValue(group, before)} → {fieldValue(group, after)}
+                        </p>
+                      ) : null;
+                    })}
                   {(["matched", "added"] as const).map((kind) => (
                     <section key={kind}>
                       <h3 className="mb-2 text-13 font-medium">

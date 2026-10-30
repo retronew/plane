@@ -31,6 +31,7 @@ vi.mock("@/services/workspace-configuration.service", () => ({ workspaceConfigur
 it("shows all added attributes and localized changes before applying the preview token", async () => {
   const preview = {
     template: "Team states",
+    disabled_state_groups: { before: [], after: ["completed"] },
     token: "signed-preview",
     matched: [
       {
@@ -60,6 +61,9 @@ it("shows all added attributes and localized changes before applying the preview
   await screen.findByText("Team states");
   expect(screen.getByText("web.allow_new_work_items: web.disabled → web.enabled")).toBeTruthy();
   expect(screen.getByText("web.default: web.enabled → web.disabled")).toBeTruthy();
+  expect(
+    screen.getByText("web.template_state_completed · web.allow_new_work_items: web.enabled → web.disabled")
+  ).toBeTruthy();
   for (const text of [
     "web.name: Done",
     "state: web.template_state_completed",

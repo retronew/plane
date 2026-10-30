@@ -9,7 +9,7 @@ it("shows a switch that enables or disables new work items for the whole group",
       <p>Todo</p>
     </StateGroupPanel>
   );
-  const toggle = screen.getByRole("switch", { name: "web.allow_new_work_items" });
+  const toggle = screen.getByRole("switch", { name: "web.allow_new_work_items · Backlog" });
   expect(toggle.getAttribute("aria-checked")).toBe("true");
   // jsdom has no PointerEvent, which the switch requires to register a click.
   class TestPointerEvent extends MouseEvent {

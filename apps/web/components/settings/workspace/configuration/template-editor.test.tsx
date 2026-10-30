@@ -29,8 +29,17 @@ vi.mock("@/components/settings/heading", () => ({ SettingsHeading: () => null })
 vi.mock("./category-color-picker", () => ({ CategoryColorPicker: () => null }));
 vi.mock("./select", () => ({ ConfigurationSelect: () => null }));
 vi.mock("@makeplane/propel/components/switch", () => ({
-  Switch: ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (value: boolean) => void }) => (
+  Switch: ({
+    checked,
+    onCheckedChange,
+    "aria-label": ariaLabel,
+  }: {
+    checked: boolean;
+    onCheckedChange: (value: boolean) => void;
+    "aria-label"?: string;
+  }) => (
     <input
+      aria-label={ariaLabel}
       role="switch"
       aria-checked={checked}
       type="checkbox"
@@ -103,6 +112,7 @@ it("persists independent default-template and creation switches, including legac
   const templateSwitch = screen.getByLabelText("web.default_state_template");
   const creationSwitch = screen.getByLabelText("web.allow_new_work_items");
   expect((creationSwitch as HTMLInputElement).checked).toBe(true);
+  fireEvent.click(screen.getByRole("switch", { name: "web.allow_new_work_items · web.template_state_completed" }));
   fireEvent.click(templateSwitch);
   expect((creationSwitch as HTMLInputElement).checked).toBe(true);
   fireEvent.click(creationSwitch);
@@ -111,7 +121,10 @@ it("persists independent default-template and creation switches, including legac
   await waitFor(() => expect(mocks.save).toHaveBeenCalled());
   expect(mocks.save.mock.calls[0][2]).toMatchObject({
     is_default_state_template: true,
-    configuration: { states: [{ name: "Ready", default: true, allow_new_work_items: false }] },
+    configuration: {
+      disabled_state_groups: ["completed"],
+      states: [{ name: "Ready", default: true, allow_new_work_items: false }],
+    },
   });
   unmount();
   mocks.projectTemplate = false;

@@ -125,6 +125,7 @@ class StateViewSet(BaseViewSet):
         # Select all the states which are marked as default
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, default=True).update(default=False)
         _ = State.objects.filter(workspace__slug=slug, project_id=project_id, pk=pk).update(default=True)
+        validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)

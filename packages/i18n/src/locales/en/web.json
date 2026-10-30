@@ -1,6 +1,9 @@
 {
   "web": {
     "allow_new_work_items": "Allow new work items",
+    "allow_new_work_items_hint": "New work items can be created in this state",
+    "allow_new_work_items_group_hint": "New work items can be created in this group",
+    "allow_new_work_items_locked_hint": "Turn the group switch on first",
     "state_group_update_error": "Couldn't update this state group. Keep at least one group that allows new work items, including the default state's group.",
     "state_creation_update_error": "Unable to update creation rules. Keep an allowed default state and a creation entry for every workflow.",
     "default_state_template": "Default states for new projects",
