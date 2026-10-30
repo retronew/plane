@@ -17,6 +17,7 @@ export type StateOption = {
   id: string;
   name: string;
   color: string;
+  icon?: string | null;
   group: TStateGroups;
   /** Position within the state group, expressed as a percentage (0–100). */
   percentage?: number;
@@ -58,6 +59,7 @@ function renderStateIcon(state: StateOption) {
     <StateGroupIcon
       stateGroup={state.group}
       color={state.color}
+      icon={state.icon}
       className="size-4 shrink-0"
       percentage={state.percentage}
     />
@@ -73,6 +75,7 @@ function renderSelectedStateIcon(states: StateOption[]) {
     <StateGroupIcon
       stateGroup={states[0]?.group ?? "backlog"}
       color={states[0]?.color ?? "currentColor"}
+      icon={states[0]?.icon}
       percentage={states[0]?.percentage}
       size="md"
     />

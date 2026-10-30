@@ -70,6 +70,7 @@ export const FilterState = observer(function FilterState(props: Props) {
                     icon={
                       <StateGroupIcon
                         color={state.color}
+                        icon={state.icon}
                         stateGroup={state.group}
                         size={EIconSize.SM}
                         percentage={getStatePercentageInGroup(state.id)}

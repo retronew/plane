@@ -1,6 +1,6 @@
 import type { IState } from "../state";
 
-export type TWorkflowState = Pick<IState, "id" | "name" | "color" | "group"> & {
+export type TWorkflowState = Pick<IState, "id" | "name" | "color" | "group" | "icon"> & {
   sequence?: number;
   allow_creation: boolean;
 };

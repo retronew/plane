@@ -11,7 +11,8 @@ import {
   DialogActions,
 } from "@makeplane/propel/components/dialog";
 import { useTranslation } from "@plane/i18n";
-import type { IState } from "@plane/types";
+import { stateIconLabel } from "./icon-presets";
+import type { IState, TStateIcon } from "@plane/types";
 import { ConfigurationSelect } from "@/components/settings/workspace/configuration/select";
 import {
   workspaceConfigurationService as service,
@@ -40,6 +41,8 @@ export function ApplyStateTemplate({
     switch (key) {
       case "name":
         return t("web.name");
+      case "icon":
+        return t("web.state_icon");
       case "color":
         return t("web.color");
       case "group":
@@ -53,6 +56,7 @@ export function ApplyStateTemplate({
     }
   };
   const fieldValue = (key: string, value: unknown) => {
+    if (key === "icon") return t(stateIconLabel(value as TStateIcon | null));
     if (typeof value === "boolean") return t(value ? "web.enabled" : "web.disabled");
     if (key === "group") return t(`web.template_state_${value as IState["group"]}`);
     return String(value);

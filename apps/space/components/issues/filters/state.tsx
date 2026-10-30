@@ -61,7 +61,14 @@ export const FilterState = observer(function FilterState(props: Props) {
                     key={state.id}
                     isChecked={appliedFiltersSet.has(state.id)}
                     onClick={() => handleUpdate(state.id)}
-                    icon={<StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.MD} />}
+                    icon={
+                      <StateGroupIcon
+                        stateGroup={state.group}
+                        color={state.color}
+                        icon={state.icon}
+                        size={EIconSize.MD}
+                      />
+                    }
                     title={state.name}
                   />
                 ))}

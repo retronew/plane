@@ -62,6 +62,7 @@ def initialize_project_states(project, actor=None, explicit=None):
                 created_by=actor,
                 name=entry["name"],
                 color=entry["color"],
+                icon=entry.get("icon"),
                 group=entry["group"],
                 default=entry.get("default", False),
                 allow_new_work_items=entry.get("allow_new_work_items", True),
@@ -111,6 +112,7 @@ def preview_state_template(project, data):
             key: entry.get(key, True if key == "allow_new_work_items" else False)
             for key in ("name", "color", "group", "default", "allow_new_work_items")
         }
+        values["icon"] = entry.get("icon")
         row = {"index": index, "id": str(existing.pk) if existing else None, "values": values}
         if existing:
             used.add(str(existing.pk))
@@ -140,6 +142,7 @@ def preview_state_template(project, data):
             workspace_id=project.workspace_id,
             name=state.name,
             color=state.color,
+            icon=state.icon,
             group=state.group,
             default=False,
             allow_new_work_items=state.allow_new_work_items,

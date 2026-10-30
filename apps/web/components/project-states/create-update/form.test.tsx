@@ -3,6 +3,67 @@ import { afterEach, expect, it, vi } from "vitest";
 import { StateForm } from "./form";
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 afterEach(() => vi.unstubAllGlobals());
+it("saves only a progress preset, preserves the group and can restore automatic icons", async () => {
+  const submit = vi.fn().mockResolvedValue({ status: "success" });
+  render(
+    <StateForm
+      colorPickerInitiallyOpen
+      data={{ name: "Review", group: "started", color: "#60646c" }}
+      onSubmit={submit}
+      onCancel={vi.fn()}
+      buttonDisabled={false}
+      buttonTitle="Save"
+    />
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "web.state_icon_started_25" }));
+  expect(screen.queryByRole("textbox", { name: "Search icons" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(submit).toHaveBeenCalledWith(expect.objectContaining({ icon: "started-25", group: "started" }))
+  );
+  fireEvent.click(screen.getByRole("button", { name: "aria_labels.color_picker.open" }));
+  fireEvent.click(await screen.findByRole("button", { name: "web.state_icon_auto" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(submit).toHaveBeenLastCalledWith(expect.objectContaining({ icon: null, group: "started" }))
+  );
+});
+
+it("resets a selected swatch to the stronger group default", async () => {
+  const submit = vi.fn().mockResolvedValue({ status: "success" });
+  render(
+    <StateForm
+      colorPickerInitiallyOpen
+      data={{ name: "Review", group: "started", color: "#0693e3" }}
+      onSubmit={submit}
+      onCancel={vi.fn()}
+      buttonDisabled={false}
+      buttonTitle="Save"
+    />
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "#0693e3" }));
+  expect(screen.getByRole("button", { name: "#0693e3" }).getAttribute("aria-pressed")).toBe("false");
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ color: "#B77900" })));
+});
+
+it("resets a custom hex color from the explicit reset action", async () => {
+  const submit = vi.fn().mockResolvedValue({ status: "success" });
+  render(
+    <StateForm
+      colorPickerInitiallyOpen
+      data={{ name: "Review", group: "started", color: "#663399" }}
+      onSubmit={submit}
+      onCancel={vi.fn()}
+      buttonDisabled={false}
+      buttonTitle="Save"
+    />
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "web.state_color_reset" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ color: "#B77900" })));
+});
+
 it("validates blank names and submits a trimmed name with the description", async () => {
   vi.stubGlobal(
     "ResizeObserver",

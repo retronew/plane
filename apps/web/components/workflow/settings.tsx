@@ -1,3 +1,4 @@
+import { workflowDisplayName } from "./display-name";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { observer } from "mobx-react";
@@ -92,7 +93,7 @@ const filterAndSortWorkflows = (
     [...workflows]
       .filter(
         (item) =>
-          (item.name || defaultName).toLowerCase().includes(query) &&
+          workflowDisplayName(item, defaultName).toLowerCase().includes(query) &&
           (!filters.stateFilter || item.states.some((state) => state.id === filters.stateFilter)) &&
           (!filters.typeFilter || item.issue_type_ids?.includes(filters.typeFilter))
       )
@@ -101,7 +102,8 @@ const filterAndSortWorkflows = (
       .sort((a, b) =>
         filters.sort === "status"
           ? Number(b.is_active) - Number(a.is_active) || a.id.localeCompare(b.id)
-          : (a.name ?? "").localeCompare(b.name ?? "") * (filters.sort === "-name" ? -1 : 1) || a.id.localeCompare(b.id)
+          : workflowDisplayName(a, defaultName).localeCompare(workflowDisplayName(b, defaultName)) *
+              (filters.sort === "-name" ? -1 : 1) || a.id.localeCompare(b.id)
       )
   );
 };
@@ -115,7 +117,7 @@ const buildStateFilterOptions = (workflows: TProjectWorkflow[], t: Translate): W
   ...[...new Map(workflows.flatMap((item) => item.states).map((state) => [state.id, state])).values()].map((state) => ({
     value: state.id,
     label: state.name,
-    icon: <StateGroupIcon stateGroup={state.group} color={state.color} className="size-3.5" />,
+    icon: <StateGroupIcon stateGroup={state.group} color={state.color} icon={state.icon} className="size-3.5" />,
   })),
 ];
 
@@ -228,7 +230,7 @@ function WorkflowSettingsTitles(props: {
   t: Translate;
 }) {
   const { detail, workflow, label, defaultName, t } = props;
-  const name = workflow?.name || defaultName;
+  const name = workflowDisplayName(workflow, defaultName);
   return (
     <>
       <PageHead title={`${detail ? name : label} - ${t("settings")}`} />
@@ -343,7 +345,7 @@ function WorkflowRowActions(props: {
             variant="ghost"
             size="sm"
             icon={<MoreHorizontal className="size-4" />}
-            aria-label={`${t("aria_labels.common.more_actions")} ${item.name || t("web.workflow_ui.default_name")}`}
+            aria-label={`${t("aria_labels.common.more_actions")} ${workflowDisplayName(item, t("web.workflow_ui.default_name"))}`}
           />
         }
       />
@@ -400,7 +402,7 @@ function WorkflowRow(props: {
     <tr className="border-t border-subtle hover:bg-layer-1">
       <td className="px-4 py-3">
         <Link to={`${base}${item.workflow_id ?? item.id}/`} className="font-medium hover:underline">
-          {item.name || t("web.workflow_ui.default_name")}
+          {workflowDisplayName(item, t("web.workflow_ui.default_name"))}
         </Link>
       </td>
       <td className="px-4 py-3">

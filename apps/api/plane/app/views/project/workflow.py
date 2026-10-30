@@ -158,6 +158,7 @@ class WorkflowBaseView(BaseAPIView):
                     "id": s.id,
                     "name": s.name,
                     "color": s.color,
+                    "icon": s.icon,
                     "group": s.group,
                     "sequence": s.sequence,
                     "allow_creation": s.allow_new_work_items and s.id not in restricted,

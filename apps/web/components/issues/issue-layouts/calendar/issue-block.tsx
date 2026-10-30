@@ -127,6 +127,7 @@ export const CalendarIssueBlock = observer(
                     <StateGroupIcon
                       stateGroup={stateDetails?.group ?? "backlog"}
                       color={stateDetails?.color}
+                      icon={stateDetails?.icon}
                       className="size-3.5 shrink-0"
                     />
                     {issue.project_id && (

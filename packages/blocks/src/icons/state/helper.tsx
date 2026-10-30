@@ -15,9 +15,9 @@ export const STATE_GROUP_COLORS: {
 } = {
   backlog: "#60646C",
   unstarted: "#60646C",
-  started: "#F59E0B",
-  completed: "#46A758",
-  cancelled: "#9AA4BC",
+  started: "#B77900",
+  completed: "#27834A",
+  cancelled: "#667085",
 };
 
 export const INTAKE_STATE_GROUP_COLORS: { [key in IntakeStateGroup]: string } = { triage: "#4E5355" };

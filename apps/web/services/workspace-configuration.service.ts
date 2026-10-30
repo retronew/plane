@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@plane/constants";
-import type { TLogoProps } from "@plane/types";
+import type { TLogoProps, TStateIcon } from "@plane/types";
 import { APIService } from "@/services/api.service";
 
 export type ProjectCategory = {
@@ -46,6 +46,7 @@ export type TemplateConfiguration = {
   disabled_state_groups?: string[];
   states?: {
     client_id?: string;
+    icon?: TStateIcon | null;
     name: string;
     color: string;
     group: string;
@@ -71,6 +72,7 @@ export type TemplateOptions = {
   assignees?: { member_id: string; member__display_name: string }[];
 };
 export type StateTemplateValues = {
+  icon?: TStateIcon | null;
   name: string;
   group: string;
   color: string;

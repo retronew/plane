@@ -160,6 +160,72 @@ def test_project_creation_rejects_closed_default_group(session_client, ctx):
     assert not Project.objects.filter(workspace=ctx.workspace, identifier="INVALID").exists()
 
 
+@pytest.mark.parametrize(
+    "icon",
+    [
+        "backlog",
+        "unstarted",
+        "started-25",
+        "started-50",
+        "started-75",
+        "started-100",
+        "completed",
+        "cancelled",
+        "queued",
+        "paused",
+        "blocked",
+        "review",
+        "planned",
+        "ready",
+        "active",
+        "feedback",
+        "testing",
+        "verifying",
+        "approval",
+        "rework",
+        "skipped",
+        "archived",
+        None,
+    ],
+)
+def test_state_progress_icon_presets_round_trip_without_changing_group(session_client, ctx, icon):
+    endpoint = ctx.base + "states/" + str(ctx.todo.pk) + "/"
+    response = session_client.patch(endpoint, {"icon": icon, "color": "#123456"}, format="json")
+    assert response.status_code == 200, response.data
+    ctx.todo.refresh_from_db()
+    assert ctx.todo.icon == icon
+    assert ctx.todo.group == "unstarted"
+    assert ctx.todo.color == "#123456"
+    assert response.data["icon"] == icon
+    listed = session_client.get(ctx.base + "states/")
+    assert next(state for state in listed.data if str(state["id"]) == str(ctx.todo.pk))["icon"] == icon
+
+
+def test_public_state_list_includes_custom_icon_and_color(ctx):
+    from rest_framework.test import APIRequestFactory
+    from plane.db.models import DeployBoard
+    from plane.space.views.state import ProjectStatesEndpoint
+
+    ctx.todo.icon = "testing"
+    ctx.todo.color = "#663399"
+    ctx.todo.save()
+    board = DeployBoard.objects.create(
+        workspace=ctx.workspace, project=ctx.project, entity_name="project", entity_identifier=ctx.project.pk
+    )
+    response = ProjectStatesEndpoint.as_view()(APIRequestFactory().get("/"), anchor=board.anchor)
+    assert response.status_code == 200
+    state = next(entry for entry in response.data if entry["id"] == ctx.todo.pk)
+    assert state["icon"] == "testing"
+    assert state["color"] == "#663399"
+
+
+def test_state_rejects_arbitrary_icons(session_client, ctx):
+    response = session_client.patch(ctx.base + "states/" + str(ctx.todo.pk) + "/", {"icon": "rocket"}, format="json")
+    assert response.status_code == 400, response.data
+    ctx.todo.refresh_from_db()
+    assert ctx.todo.icon is None
+
+
 def test_unconfigured_read_is_side_effect_free(session_client, ctx):
     ctx.workflow.delete(soft=False)
     response = session_client.get(ctx.config)

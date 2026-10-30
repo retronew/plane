@@ -132,7 +132,7 @@ const getStateColumns = (projectState: IStateStore): IGroupByColumn[] | undefine
     name: state.name,
     icon: (
       <div className="h-3.5 w-3.5 rounded-full">
-        <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.MD} />
+        <StateGroupIcon stateGroup={state.group} color={state.color} icon={state.icon} size={EIconSize.MD} />
       </div>
     ),
     payload: { state_id: state.id },

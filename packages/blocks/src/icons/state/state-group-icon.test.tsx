@@ -13,6 +13,44 @@ function getPaints(container: HTMLElement) {
 }
 
 describe("StateGroupIcon", () => {
+  it.each([
+    "queued",
+    "paused",
+    "blocked",
+    "review",
+    "planned",
+    "ready",
+    "active",
+    "feedback",
+    "testing",
+    "verifying",
+    "approval",
+    "rework",
+    "skipped",
+    "archived",
+  ])("renders the %s workflow preset with its chosen color", (icon) => {
+    const { container } = render(<StateGroupIcon stateGroup="started" icon={icon} color="#663399" />);
+    expect(container.querySelector("svg")?.getAttribute("stroke")).toBe("#663399");
+    expect(
+      container.querySelector("svg")?.classList.contains(`lucide-${icon}`) ||
+        container.querySelector("svg")?.classList.contains("lucide")
+    ).toBe(true);
+  });
+  it("uses a fixed progress preset regardless of group order", () => {
+    const { container, rerender } = render(<StateGroupIcon stateGroup="started" icon="started-25" percentage={0.5} />);
+    const markup = container.innerHTML;
+    rerender(<StateGroupIcon stateGroup="started" icon="started-25" percentage={1} />);
+    expect(container.innerHTML).toBe(markup);
+    rerender(<StateGroupIcon stateGroup="started" icon={null} percentage={1} />);
+    expect(container.innerHTML).not.toBe(markup);
+  });
+
+  it("changes only appearance and keeps the chosen color", () => {
+    const { container, rerender } = render(<StateGroupIcon stateGroup="started" icon="completed" color="#8B5CF6" />);
+    const markup = container.innerHTML;
+    rerender(<StateGroupIcon stateGroup="completed" color="#8B5CF6" />);
+    expect(container.innerHTML).toBe(markup);
+  });
   it.each(groups)("preserves custom colors for %s", (stateGroup) => {
     const { container } = render(<StateGroupIcon stateGroup={stateGroup} color="#8B5CF6" />);
     expect(getPaints(container).length).toBeGreaterThan(0);

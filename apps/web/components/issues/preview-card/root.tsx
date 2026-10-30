@@ -22,6 +22,8 @@ type Props = {
     group?: TStateGroups;
     id?: string;
     name?: string;
+    icon?: string | null;
+    color?: string;
   };
   workItem: Pick<TIssue, "id" | "name" | "sequence_id" | "priority" | "start_date" | "target_date" | "type_id">;
 };
@@ -36,6 +38,7 @@ export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: 
   const fallbackStateDetails = stateDetails.id ? getStateById(stateDetails.id) : undefined;
   const stateGroup = stateDetails?.group ?? fallbackStateDetails?.group ?? "backlog";
   const stateName = stateDetails?.name ?? fallbackStateDetails?.name;
+  const stateIcon = stateDetails.icon === undefined ? fallbackStateDetails?.icon : stateDetails.icon;
 
   return (
     <div className="w-72 space-y-2">
@@ -49,7 +52,12 @@ export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: 
           issueTypeId={workItem.type_id}
         />
         <div className="flex shrink-0 items-center gap-1">
-          <StateGroupIcon stateGroup={stateGroup} className="size-3 shrink-0" />
+          <StateGroupIcon
+            stateGroup={stateGroup}
+            icon={stateIcon}
+            color={stateDetails.color ?? fallbackStateDetails?.color}
+            className="size-3 shrink-0"
+          />
           <p className="text-11 font-medium">{stateName}</p>
         </div>
       </div>

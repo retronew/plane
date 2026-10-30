@@ -31,7 +31,12 @@ export const AppliedStateFilters = observer(function AppliedStateFilters(props: 
 
         return (
           <div key={stateId} className="flex items-center gap-1 rounded-sm bg-layer-3 p-1 text-11">
-            <StateGroupIcon color={stateDetails.color} stateGroup={stateDetails.group} size={EIconSize.SM} />
+            <StateGroupIcon
+              color={stateDetails.color}
+              stateGroup={stateDetails.group}
+              icon={stateDetails.icon}
+              size={EIconSize.SM}
+            />
             {stateDetails.name}
             <button
               type="button"

@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { STATE_GROUPS } from "@plane/constants";
+import { STATE_GROUP_COLORS } from "@plane/blocks/icons";
 import { setToast } from "@plane/blocks/toast";
 import type { IState, TStateGroups, TStateOperationsCallbacks } from "@plane/types";
 // components
@@ -66,7 +66,7 @@ export const StateCreate = observer(function StateCreate(props: TStateCreate) {
   return (
     <StateForm
       focusNameOnOpen
-      data={{ name: "", description: "", color: STATE_GROUPS[groupKey].color }}
+      data={{ name: "", description: "", color: STATE_GROUP_COLORS[groupKey] }}
       stateGroup={groupKey}
       onSubmit={onSubmit}
       onCancel={onCancel}

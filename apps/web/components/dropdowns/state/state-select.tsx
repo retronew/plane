@@ -52,6 +52,7 @@ const toOption = (state: IState, percentage?: number): StateOption => ({
   id: state.id,
   name: state.name,
   color: state.color,
+  icon: state.icon,
   group: state.group,
   percentage,
 });

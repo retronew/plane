@@ -72,6 +72,7 @@ export const ReadonlyState = observer(function ReadonlyState(props: TReadonlySta
           stateGroup={state?.group ?? "backlog"}
           className={cn(iconSize, "flex-shrink-0")}
           color={state?.color}
+          icon={state?.icon}
         />
       )}
       <span className="flex-grow truncate">{state?.name ?? placeholder ?? t("common.none")}</span>

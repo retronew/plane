@@ -39,7 +39,14 @@ export function WorkflowRulePreview({
           rule.kind === "approval" ? "web.workflow_ui.approve_to" : "workflows.workflow_states.state_changes.move_to"
         )}
       >
-        {destination && <StateGroupIcon stateGroup={destination.group} color={destination.color} className="size-4" />}
+        {destination && (
+          <StateGroupIcon
+            stateGroup={destination.group}
+            color={destination.color}
+            icon={destination.icon}
+            className="size-4"
+          />
+        )}
         <span className="truncate">{destination?.name || t("web.workflow_ui.select_destination")}</span>
       </RuleCell>
       <RuleCell label={t(rule.kind === "approval" ? "web.workflow_ui.approvers" : "web.workflow_ui.by")}>
@@ -48,7 +55,14 @@ export function WorkflowRulePreview({
       </RuleCell>
       {rule.kind === "approval" && (
         <RuleCell label={t("web.workflow_ui.reject_to")}>
-          {rejected && <StateGroupIcon stateGroup={rejected.group} color={rejected.color} className="size-4" />}
+          {rejected && (
+            <StateGroupIcon
+              stateGroup={rejected.group}
+              color={rejected.color}
+              icon={rejected.icon}
+              className="size-4"
+            />
+          )}
           <span className="truncate">{rejected?.name || t("web.workflow_ui.select_destination")}</span>
         </RuleCell>
       )}
