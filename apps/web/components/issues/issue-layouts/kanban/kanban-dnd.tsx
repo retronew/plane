@@ -21,9 +21,9 @@ import type { GroupDropLocation } from "../utils";
 import { getIssueBlockId } from "../utils";
 import type { TKanbanColumnOrder } from "./kanban-dnd-utils";
 import {
-  KANBAN_DRAG_TILT_DEG,
   KANBAN_TRASH_ID,
-  getKanbanDragTilt,
+  getKanbanDragTiltTarget,
+  stepKanbanDragTilt,
   getKanbanDropDestination,
   moveIssueInOrder,
 } from "./kanban-dnd-utils";
@@ -35,7 +35,7 @@ const applyTilt = (deg: number) =>
   document.documentElement.style.setProperty(KANBAN_DRAG_TILT_VAR, `${deg.toFixed(2)}deg`);
 
 /** Card and column motion: the slide siblings make while a card passes, shared with the drop settle. */
-const KANBAN_SORT_TRANSITION = { duration: 240, easing: "cubic-bezier(0.2, 0, 0, 1)", idle: true } as const;
+const KANBAN_SORT_TRANSITION = { duration: 200, easing: "cubic-bezier(0.2, 0, 0, 1)", idle: true } as const;
 
 type TKanbanCardData = { kind: "card"; issueId: string; columnId: string };
 type TKanbanColumnData = { kind: "column"; columnId: string };
@@ -108,37 +108,55 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
     };
   }, []);
 
-  // Lean of the lifted card: level while it is still over its own column, then a fixed angle toward
-  // the side of its start point once it leaves. Written as a CSS variable on the root because the
-  // dragged card remounts each time it changes columns.
-  const tiltRef = useRef<{ startX: number; direction: 1 | -1; applied: number | null }>({
-    startX: 0,
-    direction: 1,
-    applied: null,
-  });
-  const updateTilt = (x: number, isStart = false) => {
+  // Lean of the lifted card, driven by its sideways speed: it trails the motion up to a few degrees
+  // and eases back to level as the pointer slows or stops. Eased every animation frame and written as
+  // a CSS variable on the root, because the dragged card remounts each time it changes columns.
+  const tiltRef = useRef({ x: 0, time: 0, velocity: 0, angle: 0, frame: 0 });
+  const stopTilt = useCallback(() => {
+    cancelAnimationFrame(tiltRef.current.frame);
+    tiltRef.current.frame = 0;
+    tiltRef.current.angle = 0;
+  }, []);
+  const trackTilt = (x: number, isStart = false) => {
     const tilt = tiltRef.current;
-    if (isStart) tilt.startX = x;
-    tilt.direction = getKanbanDragTilt(x - tilt.startX, tilt.direction);
-    const current = activeRef.current;
-    const isHome = !current || current.columnId === current.sourceColumnId;
-    const deg = isHome ? 0 : tilt.direction * KANBAN_DRAG_TILT_DEG;
-    // only touch the style when the angle changes, so the card never re-transitions mid-drag
-    if (deg === tilt.applied) return;
-    tilt.applied = deg;
-    applyTilt(deg);
+    const now = performance.now();
+    if (isStart) {
+      stopTilt();
+      Object.assign(tilt, { x, time: now, velocity: 0 });
+      applyTilt(0);
+      let last = now;
+      const tick = (frameTime: number) => {
+        // a pointer that has stopped moving has no speed, so the card settles level
+        if (frameTime - tilt.time > 50) tilt.velocity = 0;
+        const next = stepKanbanDragTilt(tilt.angle, getKanbanDragTiltTarget(tilt.velocity), frameTime - last);
+        last = frameTime;
+        if (next !== tilt.angle) {
+          tilt.angle = next;
+          applyTilt(next);
+        }
+        tilt.frame = requestAnimationFrame(tick);
+      };
+      tilt.frame = requestAnimationFrame(tick);
+      return;
+    }
+    const elapsed = now - tilt.time;
+    if (elapsed <= 0) return;
+    // smooth the raw speed a little, so one jittery pointer event cannot jerk the card
+    tilt.velocity = tilt.velocity * 0.6 + ((x - tilt.x) / elapsed) * 0.4;
+    tilt.x = x;
+    tilt.time = now;
   };
+  useEffect(() => stopTilt, [stopTilt]);
 
   const resetDrag = useCallback(() => {
-    tiltRef.current.direction = 1;
-    tiltRef.current.applied = null;
+    stopTilt();
     document.documentElement.style.removeProperty(KANBAN_DRAG_TILT_VAR);
     activeRef.current = null;
     setActive(null);
     setOverColumnId(null);
     setPreviewOrder(null);
     setIsDragging(false);
-  }, [setIsDragging, setPreviewOrder]);
+  }, [setIsDragging, setPreviewOrder, stopTilt]);
 
   const context = useMemo<TKanbanDndContext>(
     () => ({
@@ -165,9 +183,9 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
           setOverColumnId(data.columnId);
           setPreviewOrder(order);
           setIsDragging(true);
-          updateTilt(event.operation.position.current.x, true);
+          trackTilt(event.operation.position.current.x, true);
         }}
-        onDragMove={(event) => updateTilt(event.operation.position.current.x)}
+        onDragMove={(event) => trackTilt(event.operation.position.current.x)}
         onDragOver={(event) => {
           // the preview order below moves the card; dnd-kit sees React re-index the sortables and skips
           // its own optimistic DOM move, so React keeps owning the nodes across columns
@@ -192,9 +210,11 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
           if (next === order) return;
           current.columnId = columnId;
           setPreviewOrder(next);
-          updateTilt(event.operation.position.current.x);
         }}
         onDragEnd={(event) => {
+          // level the card as it lands; the card's rotate transition carries it there
+          stopTilt();
+          applyTilt(0);
           const current = activeRef.current;
           const order = previewRef.current;
           const target = event.operation.target;

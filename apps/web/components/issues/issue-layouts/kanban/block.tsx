@@ -195,7 +195,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
             {/* the state as a bare icon before the title: changeable in place, without a pill of its own */}
             {cardProperties.showStateIcon && (
               // oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions
-              <span className="flex h-5 shrink-0 items-center" onClick={handleEventPropagation}>
+              <span className="flex h-[1lh] shrink-0 items-center" onClick={handleEventPropagation}>
                 <StateSelect
                   issueTypeId={issue.type_id}
                   value={issue.state_id}
@@ -410,10 +410,11 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
               "bg-[color-mix(in_oklab,var(--background-color-accent-primary)_5%,var(--background-color-layer-2))]! shadow-raised-200 before:scale-y-100":
                 getIsIssuePeeked(issue.id),
             },
-            // lifted while dragged: it leans toward the side it moved to (see KanbanDndProvider) with a deeper shadow
-            "transition-[box-shadow,border-color,rotate,scale] duration-200 ease-[cubic-bezier(0.2,0,0,1)]",
+            // lifted while dragged: it grows ~3% with a deeper shadow over ~120ms and trails its motion with a
+            // speed-driven lean (eased per frame in KanbanDndProvider); on drop it settles level in ~100ms
+            "transition-[box-shadow,border-color,scale,rotate] duration-[200ms,200ms,120ms,100ms] ease-[cubic-bezier(0.2,0,0,1)]",
             {
-              "scale-[1.02] rotate-(--kanban-drag-tilt,0deg) cursor-grabbing shadow-raised-300 hover:shadow-raised-300":
+              "scale-[1.03] rotate-(--kanban-drag-tilt,0deg) cursor-grabbing shadow-raised-300 hover:shadow-raised-300":
                 isDragSource,
             }
           )}

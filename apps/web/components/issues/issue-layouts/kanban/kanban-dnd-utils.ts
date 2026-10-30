@@ -81,18 +81,25 @@ export function getKanbanDropDestination(
   };
 }
 
-/** Fixed lean of a lifted card, in degrees; the side is picked by `getKanbanDragTilt`. */
-export const KANBAN_DRAG_TILT_DEG = 3;
-
-/** Sideways distance from the start point before the card picks a side, so it can't flicker at 0. */
-const KANBAN_DRAG_TILT_DEAD_ZONE_PX = 8;
+/** Largest lean of a lifted card, in degrees, reached on a quick sideways fling. */
+export const KANBAN_DRAG_TILT_MAX_DEG = 3;
+/** Degrees of lean per px/ms of sideways speed: an ordinary drag (~1 px/ms) leans about 2.5°. */
+const KANBAN_DRAG_TILT_PER_VELOCITY = 2.5;
+/** Time constant of the lean easing toward its target, in ms (~23% of the way per 60fps frame). */
+const KANBAN_DRAG_TILT_EASE_MS = 60;
 
 /**
- * Which way a dragged card leans: right of where it was picked up leans clockwise (`1`), left leans
- * counter-clockwise (`-1`). Inside the dead zone around the start it keeps its current side.
+ * The lean a dragged card is heading for at a given sideways speed (px/ms). It trails the motion like
+ * a card held by its top edge: moving right lifts its right side (counter-clockwise, negative), moving
+ * left lifts its left side; standing still is level.
  */
-export function getKanbanDragTilt(offsetX: number, current: 1 | -1): 1 | -1 {
-  if (offsetX > KANBAN_DRAG_TILT_DEAD_ZONE_PX) return 1;
-  if (offsetX < -KANBAN_DRAG_TILT_DEAD_ZONE_PX) return -1;
-  return current;
+export function getKanbanDragTiltTarget(velocityX: number): number {
+  const deg = -velocityX * KANBAN_DRAG_TILT_PER_VELOCITY;
+  return Math.max(-KANBAN_DRAG_TILT_MAX_DEG, Math.min(KANBAN_DRAG_TILT_MAX_DEG, deg)) || 0;
+}
+
+/** One frame of the lean easing from `current` toward `target`, `elapsedMs` after the last frame. */
+export function stepKanbanDragTilt(current: number, target: number, elapsedMs: number): number {
+  const next = current + (target - current) * (1 - Math.exp(-Math.max(elapsedMs, 0) / KANBAN_DRAG_TILT_EASE_MS));
+  return Math.abs(next - target) < 0.02 ? target : next;
 }
