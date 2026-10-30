@@ -74,6 +74,7 @@
         "select_person": "选择 {name}",
         "unnamed": "未命名成员",
         "no_email": "无邮箱地址",
+        "name": "姓名精确匹配，请核对后绑定",
         "email": "邮箱匹配",
         "oidc": "OIDC 身份匹配",
         "unmatched": "待选择账号",
@@ -649,6 +650,10 @@
         "workspaces": "工作区",
         "last_login": "最近登录",
         "actions": "操作"
+      },
+      "notifications": {
+        "title": "通知设置",
+        "description": "管理该用户的全局通知偏好，每项更改都会立即保存。"
       },
       "details": {
         "edit_profile": "编辑资料",
