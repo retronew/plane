@@ -167,7 +167,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       getStateFilterConfig<TWorkItemFilterProperty>("state_id")({
         isEnabled: isFilterEnabled("state_id") && workItemStates !== undefined,
         filterIcon: StateOutline,
-        getOptionIcon: (state) => <StateGroupIcon stateGroup={state.group} color={state.color} />,
+        getOptionIcon: (state) => <StateGroupIcon stateGroup={state.group} color={state.color} icon={state.icon} />,
         states: workItemStates ?? [],
         ...operatorConfigs,
       }),

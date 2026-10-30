@@ -23,6 +23,8 @@ export type ColorSwatchPickerLabels = {
 
 export type ColorSwatchPickerProps = {
   continuous?: boolean;
+  /** Reset an already selected swatch without changing other color input behavior. */
+  onClear?: () => void;
   /** The current colour as a hex string (with or without the leading `#`). */
   value?: string;
   /** Optional layout width for wider settings palettes. */
@@ -43,7 +45,15 @@ export type ColorSwatchPickerProps = {
  * Propel `Popover` (or inline in a form) and let that own the surface.
  */
 export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
-  const { value = "", colors = DEFAULT_SWATCH_COLORS, onChange, labels, className, continuous = false } = props;
+  const {
+    value = "",
+    colors = DEFAULT_SWATCH_COLORS,
+    onChange,
+    onClear,
+    labels,
+    className,
+    continuous = false,
+  } = props;
   // plane hooks
   const { t } = useTranslation();
   const swatchesLabel = labels?.swatches ?? t("aria_labels.color_picker.swatches");
@@ -109,7 +119,7 @@ export function ColorSwatchPicker(props: ColorSwatchPickerProps) {
               type="button"
               aria-label={hex}
               aria-pressed={isSelected}
-              onClick={() => onChange(hex)}
+              onClick={() => (isSelected && onClear ? onClear() : onChange(hex))}
               className={cn(
                 "shrink-0 cursor-pointer rounded-md transition-transform outline-none",
                 continuous ? "size-5" : "size-7",

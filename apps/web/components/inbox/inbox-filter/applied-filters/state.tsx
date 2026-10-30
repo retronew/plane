@@ -36,7 +36,12 @@ export const InboxIssueAppliedFiltersState = observer(function InboxIssueApplied
         return (
           <div key={value} className="relative flex items-center gap-1 rounded-sm bg-layer-1 p-1 text-11">
             <div className="relative flex h-3 w-3 flex-shrink-0 items-center justify-center overflow-hidden">
-              <StateGroupIcon color={optionDetail.color} stateGroup={optionDetail.group} size={EIconSize.SM} />
+              <StateGroupIcon
+                color={optionDetail.color}
+                icon={optionDetail.icon}
+                stateGroup={optionDetail.group}
+                size={EIconSize.SM}
+              />
             </div>
             <div className="truncate text-11">{optionDetail?.name}</div>
 

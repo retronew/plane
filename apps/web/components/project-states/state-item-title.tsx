@@ -97,7 +97,13 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
       >
         <StateSummary
           icon={
-            <StateGroupIcon stateGroup={state.group} color={state.color} size={EIconSize.XL} percentage={percentage} />
+            <StateGroupIcon
+              icon={state.icon}
+              stateGroup={state.group}
+              color={state.color}
+              size={EIconSize.XL}
+              percentage={percentage}
+            />
           }
           color={state.color}
           name={state.name}

@@ -1,3 +1,4 @@
+import { workflowDisplayName } from "./display-name";
 import { observer } from "mobx-react";
 import { useParams, useSearchParams } from "react-router";
 import { Code2 } from "lucide-react";
@@ -26,8 +27,7 @@ function resolveWorkflowName(
   workflowId: string,
   t: (key: string, params?: Record<string, unknown>) => string
 ): string {
-  if (workflow?.name) return workflow.name;
-  if (workflow?.is_default) return t("web.workflow_ui.default_name");
+  if (workflow?.name || workflow?.is_default) return workflowDisplayName(workflow, t("web.workflow_ui.default_name"));
   return workflowId;
 }
 

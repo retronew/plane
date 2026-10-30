@@ -1,3 +1,5 @@
+import { STATE_ICON_PRESETS, stateIconLabel } from "@/components/project-states/icon-presets";
+import type { TStateIcon } from "@plane/types";
 import { CategoryColorPicker } from "./category-color-picker";
 import { useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -854,6 +856,23 @@ function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCatego
             )}
             {fieldKey === "states" && (
               <>
+                <div className="w-36">
+                  <ConfigurationSelect
+                    value={config.states?.[index].icon ?? "auto"}
+                    placeholder={t("web.state_icon")}
+                    options={STATE_ICON_PRESETS.map((icon) => ({
+                      value: icon ?? "auto",
+                      label: t(stateIconLabel(icon)),
+                    }))}
+                    onChange={(value) =>
+                      configure({
+                        states: config.states?.map((item, i) =>
+                          i === index ? { ...item, icon: value === "auto" ? null : (value as TStateIcon) } : item
+                        ),
+                      })
+                    }
+                  />
+                </div>
                 <Checkbox
                   label={t("web.template_default_state")}
                   checked={config.states?.[index].default ?? false}

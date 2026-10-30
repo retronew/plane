@@ -52,5 +52,5 @@ class StateLiteSerializer(BaseSerializer):
 
     class Meta:
         model = State
-        fields = ["id", "name", "color", "group"]
+        fields = ["id", "name", "color", "group", "icon"]
         read_only_fields = fields

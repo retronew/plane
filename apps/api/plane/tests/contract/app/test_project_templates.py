@@ -84,7 +84,13 @@ def test_state_template_preview_apply_retains_ids_and_rejects_stale(session_clie
         configuration={
             "states": [
                 {"name": "Ready", "group": "unstarted", "color": "#60646C", "default": True},
-                {"name": "Done", "group": "completed", "color": "#46A758", "allow_new_work_items": False},
+                {
+                    "name": "Done",
+                    "group": "completed",
+                    "color": "#46A758",
+                    "allow_new_work_items": False,
+                    "icon": "started-75",
+                },
             ]
         },
     )
@@ -108,6 +114,7 @@ def test_state_template_preview_apply_retains_ids_and_rejects_stale(session_clie
     assert State.objects.filter(pk=ctx.state.pk).exists()
     assert State.objects.filter(pk=unique.pk).exists()
     assert not State.objects.get(project=ctx.project, name="Done").allow_new_work_items
+    assert State.objects.get(project=ctx.project, name="Done").icon == "started-75"
     count = State.objects.filter(project=ctx.project).count()
     fresh = session_client.post(endpoint, {}, format="json")
     assert not fresh.data["added"]
@@ -118,6 +125,7 @@ def test_state_template_preview_apply_retains_ids_and_rejects_stale(session_clie
     new_project = Project.objects.create(workspace=ctx.workspace, name="New", identifier="NEW")
     initialize_project_states(new_project, ctx.user)
     assert State.objects.filter(project=new_project, name="Ready", default=True).exists()
+    assert State.objects.get(project=new_project, name="Done").icon == "started-75"
     assert State.triage_objects.filter(project=new_project, is_triage=True).exists()
     explicit = Project.objects.create(workspace=ctx.workspace, name="Explicit", identifier="EXP")
     initialize_project_states(

@@ -17,6 +17,9 @@ class TemplateChildSerializer(serializers.Serializer):
 
 
 class TemplateStateSerializer(serializers.Serializer):
+    from plane.db.models import State
+
+    icon = serializers.ChoiceField(choices=State._meta.get_field("icon").choices, allow_null=True, required=False)
     name = serializers.CharField(max_length=100)
     color = serializers.RegexField(r"^#[0-9a-fA-F]{6}$", default="#60646C")
     group = serializers.ChoiceField(

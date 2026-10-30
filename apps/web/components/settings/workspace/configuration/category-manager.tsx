@@ -516,6 +516,7 @@ function CategoryEditorPanel({
   const { t } = useTranslation();
   return kind === "status" ? (
     <StateForm
+      allowIconSelection={false}
       focusNameOnOpen={!draft.id}
       colorPickerInitiallyOpen={colorPickerInitiallyOpen}
       key={draft.id ?? "new"}
