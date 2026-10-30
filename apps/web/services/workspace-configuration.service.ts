@@ -43,6 +43,7 @@ export type TemplateConfiguration = {
   page_view?: boolean;
   issue_views_view?: boolean;
   intake_view?: boolean;
+  disabled_state_groups?: string[];
   states?: {
     client_id?: string;
     name: string;
@@ -79,6 +80,7 @@ export type StateTemplateValues = {
 export type StateTemplatePreview = {
   template: string;
   token: string;
+  disabled_state_groups?: { before: string[]; after: string[] };
   matched: {
     index: number;
     id: string;

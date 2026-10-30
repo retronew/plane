@@ -53,6 +53,17 @@ class ProjectSerializer(BaseSerializer):
             "is_issue_type_enabled",
         ]
 
+    def validate_disabled_state_groups(self, groups):
+        from plane.db.models.state import StateGroup
+
+        if not isinstance(groups, list) or any(not isinstance(group, str) for group in groups):
+            raise serializers.ValidationError("State groups must be a list of group keys.")
+        valid = {choice.value for choice in StateGroup}
+        unknown = sorted({group for group in groups if group not in valid})
+        if unknown:
+            raise serializers.ValidationError(f"Unknown state groups: {', '.join(unknown)}.")
+        return sorted(set(groups))
+
     def validate_name(self, name):
         project_id = self.instance.id if self.instance else None
         workspace_id = self.context["workspace_id"]

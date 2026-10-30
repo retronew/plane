@@ -782,6 +782,27 @@ function TemplateCategoryDetails({ fieldKey, config, configure }: TemplateCatego
         {t(fieldKey === "states" ? "web.template_states" : "labels")}
       </summary>
       <div className="mt-4 flex flex-col gap-3">
+        {fieldKey === "states" && (
+          <div className="flex flex-col gap-2">
+            {["backlog", "unstarted", "started", "completed", "cancelled"].map((group) => (
+              <label key={group} className="flex items-center justify-between gap-3 text-13">
+                {t(`web.template_state_${group}`)}
+                <Switch
+                  size="sm"
+                  aria-label={`${t("web.allow_new_work_items")} · ${t(`web.template_state_${group}`)}`}
+                  checked={!config.disabled_state_groups?.includes(group)}
+                  onCheckedChange={(checked) =>
+                    configure({
+                      disabled_state_groups: checked
+                        ? (config.disabled_state_groups ?? []).filter((value) => value !== group)
+                        : [...(config.disabled_state_groups ?? []), group],
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        )}
         {(config[fieldKey] ?? []).map((entry, index) => (
           <div key={entry.client_id} className="flex flex-wrap items-center gap-2">
             <CategoryColorPicker

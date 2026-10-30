@@ -130,6 +130,71 @@ def test_state_template_preview_apply_retains_ids_and_rejects_stale(session_clie
     assert State.objects.filter(project=fallback, name="Backlog", default=True).exists()
 
 
+def test_state_template_preview_expires_when_group_creation_settings_change(session_client, ctx):
+    WorkspaceTemplate.objects.create(
+        workspace=ctx.workspace,
+        kind="project",
+        name="States",
+        is_default_state_template=True,
+        configuration={"states": [{"name": "Ready", "group": "unstarted", "color": "#123456", "default": True}]},
+    )
+    endpoint = ctx.base + "state-template/"
+    preview = session_client.post(endpoint, {}, format="json")
+    assert preview.status_code == 200, preview.data
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    response = session_client.post(endpoint, {"apply": True, "token": preview.data["token"]}, format="json")
+    assert response.status_code == 409, response.data
+    ctx.state.refresh_from_db()
+    assert ctx.state.color != "#123456"
+
+
+def test_state_template_group_settings_round_trip_and_inheritance(session_client, ctx):
+    from plane.services.state_templates import initialize_project_states
+
+    url = f"/api/workspaces/{ctx.workspace.slug}/templates/"
+    response = session_client.post(
+        url,
+        {
+            "kind": "project",
+            "name": "Group defaults",
+            "is_default_state_template": True,
+            "configuration": {
+                "disabled_state_groups": ["completed"],
+                "states": [
+                    {"name": "Ready", "group": "unstarted", "color": "#123456", "default": True},
+                    {"name": "Done", "group": "completed", "color": "#46A758"},
+                ],
+            },
+        },
+        format="json",
+    )
+    assert response.status_code == 201, response.data
+    assert response.data["configuration"]["disabled_state_groups"] == ["completed"]
+    new_project = Project.objects.create(workspace=ctx.workspace, name="Inherited", identifier="INH")
+    initialize_project_states(new_project, ctx.user)
+    new_project.refresh_from_db()
+    assert new_project.disabled_state_groups == ["completed"]
+    endpoint = ctx.base + "state-template/"
+    preview = session_client.post(endpoint, {}, format="json")
+    assert preview.status_code == 200, preview.data
+    assert preview.data["disabled_state_groups"] == {"before": [], "after": ["completed"]}
+    applied = session_client.post(endpoint, {"apply": True, "token": preview.data["token"]}, format="json")
+    assert applied.status_code == 200, applied.data
+    ctx.project.refresh_from_db()
+    assert ctx.project.disabled_state_groups == ["completed"]
+    invalid = session_client.patch(
+        url + str(response.data["id"]) + "/",
+        {
+            "configuration": {
+                "states": [{"name": "Ready", "group": "unstarted", "default": True}],
+                "disabled_state_groups": ["unstarted"],
+            },
+        },
+        format="json",
+    )
+    assert invalid.status_code == 400, invalid.data
+
+
 def test_state_template_same_group_mapping_and_permissions(session_client, ctx):
     WorkspaceTemplate.objects.create(
         workspace=ctx.workspace,
@@ -157,9 +222,12 @@ def test_state_template_same_group_mapping_and_permissions(session_client, ctx):
     assert ctx.state.updated_at > previous_updated_at
     unchanged_updated_at = ctx.state.updated_at
     fresh = session_client.post(endpoint, {"mapping": mapping}, format="json")
-    assert session_client.post(
-        endpoint, {"mapping": mapping, "apply": True, "token": fresh.data["token"]}, format="json"
-    ).status_code == 200
+    assert (
+        session_client.post(
+            endpoint, {"mapping": mapping, "apply": True, "token": fresh.data["token"]}, format="json"
+        ).status_code
+        == 200
+    )
     ctx.state.refresh_from_db()
     assert ctx.state.updated_at == unchanged_updated_at
     wrong = State.objects.create(project=ctx.project, name="Wrong group", group="started")

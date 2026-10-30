@@ -7,11 +7,13 @@ import { StateSummary } from "./state-summary";
 
 import { useState, type SetStateAction } from "react";
 import { Switch } from "@makeplane/propel/components/switch";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { setToast } from "@plane/blocks/toast";
 import { observer } from "mobx-react";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
-import { DragDropOutline, EditOutline } from "@makeplane/propel/icons";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { DragDropOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { StateGroupIcon } from "@plane/blocks/icons";
 import { EIconSize } from "@plane/constants";
@@ -19,7 +21,9 @@ import { useTranslation } from "@plane/i18n";
 import type { IState, TStateOperationsCallbacks } from "@plane/types";
 // local imports
 import { useProjectState } from "@/hooks/store/use-project-state";
-import { StateDelete, StateMarksAsDefault } from "./options";
+import { usePlatformOS } from "@/hooks/use-platform-os";
+import { StateDelete } from "./options";
+import { STATE_SWITCH_SLOT_CLASS_NAME } from "./row-layout";
 
 type TBaseStateItemTitleProps = {
   stateCount: number;
@@ -27,6 +31,8 @@ type TBaseStateItemTitleProps = {
   dragHandleRef?: (element: Element | null) => void;
   state: IState;
   shouldShowDescription?: boolean;
+  /** The state group is switched off, so this state's own switch follows it and cannot be changed. */
+  groupClosed?: boolean;
   setUpdateStateModal: (value: SetStateAction<boolean>) => void;
 };
 
@@ -50,10 +56,13 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
     disabled,
     state,
     shouldShowDescription = true,
+    groupClosed = false,
   } = props;
   // plane hooks
   const { t } = useTranslation();
+  const { isMobile } = usePlatformOS();
   const [savingCreation, setSavingCreation] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   // store hooks
   const { getStatePercentageInGroup } = useProjectState();
   // derived values
@@ -100,58 +109,69 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
           description={shouldShowDescription ? state.description : undefined}
         />
       </button>
-      <label className="flex shrink-0 items-center gap-2 text-12 text-tertiary">
-        {t("web.allow_new_work_items")}
-        <Switch
-          size="sm"
-          checked={state.allow_new_work_items !== false}
-          disabled={disabled || savingCreation}
-          onCheckedChange={async (checked) => {
-            if (props.disabled || savingCreation) return;
-            setSavingCreation(true);
-            try {
-              await props.stateOperationsCallbacks.updateState(state.id, { allow_new_work_items: checked });
-            } catch {
-              setToast({ type: "error", title: t("error"), message: t("web.state_creation_update_error") });
-            } finally {
-              setSavingCreation(false);
-            }
-          }}
-        />
-      </label>
-      {!disabled && (
-        <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
-          {/* state mark as default option */}
-          {!state.default && state.allow_new_work_items !== false && (
-            <div className="flex-shrink-0 text-11 transition-all">
-              <StateMarksAsDefault
-                stateId={state.id}
-                isDefault={Boolean(state.default)}
-                markStateAsDefaultCallback={props.stateOperationsCallbacks.markStateAsDefault}
-              />
-            </div>
-          )}
-          {/* state edit options */}
-          <div className="flex items-center gap-1 transition-all">
-            <IconButton
-              type="button"
-              variant="ghost"
-              size="xs"
-              aria-label={t("common.actions.edit")}
-              onClick={(event) => {
-                if (onEditColor && event.target instanceof Element && event.target.closest("[data-state-color-target]"))
-                  onEditColor();
-                else setUpdateStateModal(true);
+      <span className={STATE_SWITCH_SLOT_CLASS_NAME}>
+        <Tooltip
+          label={groupClosed ? t("web.allow_new_work_items_locked_hint") : t("web.allow_new_work_items_hint")}
+          disabled={isMobile}
+        >
+          <span className="flex">
+            <Switch
+              size="sm"
+              aria-label={t("web.allow_new_work_items")}
+              checked={!groupClosed && state.allow_new_work_items !== false}
+              disabled={disabled || savingCreation || groupClosed}
+              onCheckedChange={async (checked) => {
+                if (props.disabled || savingCreation) return;
+                setSavingCreation(true);
+                try {
+                  await props.stateOperationsCallbacks.updateState(state.id, { allow_new_work_items: checked });
+                } catch {
+                  setToast({ type: "error", title: t("error"), message: t("web.state_creation_update_error") });
+                } finally {
+                  setSavingCreation(false);
+                }
               }}
-              icon={<Icon icon={EditOutline} />}
             />
-            <StateDelete
-              totalStates={stateCount}
-              state={state}
-              deleteStateCallback={props.stateOperationsCallbacks.deleteState}
-            />
-          </div>
-        </div>
+          </span>
+        </Tooltip>
+      </span>
+      {!disabled && (
+        <StateDelete
+          totalStates={stateCount}
+          state={state}
+          deleteStateCallback={props.stateOperationsCallbacks.deleteState}
+          renderMenu={(deleteAction) => (
+            <Menu open={menuOpen} onOpenChange={setMenuOpen}>
+              <MenuTrigger
+                render={
+                  <IconButton
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("common.actions.edit")}
+                    icon={<Icon icon={MoreHorizontalOutline} />}
+                  />
+                }
+              />
+              <MenuContent align="end" data-state-actions-menu="" sizing="auto">
+                {!state.default && state.allow_new_work_items !== false && !groupClosed && (
+                  <MenuItem
+                    label={t("web.mark_as_default")}
+                    onClick={() => props.stateOperationsCallbacks.markStateAsDefault(state.id).catch(() => undefined)}
+                  />
+                )}
+                <MenuItem
+                  label={t("common.actions.edit")}
+                  onClick={() => {
+                    setUpdateStateModal(true);
+                  }}
+                />
+                <MenuSeparator />
+                {deleteAction}
+              </MenuContent>
+            </Menu>
+          )}
+        />
       )}
     </div>
   );

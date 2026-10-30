@@ -34,6 +34,11 @@ it("intersects state creation flags with workflow rules even when paused", () =>
   expect(workflowAllowsCreation(workflow, "done", { allow_new_work_items: true })).toBe(false);
   expect(workflowAllowsTransition(undefined, "todo", "done")).toBe(true);
 });
+it("blocks creation in a disabled state group without affecting transitions", () => {
+  expect(workflowAllowsCreation(undefined, "todo", { group: "unstarted" }, ["unstarted"])).toBe(false);
+  expect(workflowAllowsCreation(undefined, "done", { group: "completed" }, ["unstarted"])).toBe(true);
+  expect(workflowAllowsTransition(undefined, "todo", "done")).toBe(true);
+});
 it("uses creation policy independently from transition policy", () => {
   expect(workflowAllowsCreation(workflow, "todo")).toBe(true);
   expect(workflowAllowsCreation(workflow, "done")).toBe(false);

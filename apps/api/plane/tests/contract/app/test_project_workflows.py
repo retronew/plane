@@ -66,6 +66,32 @@ def test_state_creation_switch_does_not_block_existing_transitions(session_clien
         validate_workflow_write(ctx.project.pk, {"is_draft": False, "state": ctx.done}, draft)
 
 
+def test_disabling_a_state_group_blocks_only_creation_in_that_group(session_client, ctx):
+    from plane.utils.workflow import effective_creation_state, validate_disabled_state_groups, validate_workflow_write
+
+    endpoint = f"/api/workspaces/{ctx.workspace.slug}/projects/{ctx.project.id}/"
+    response = session_client.patch(endpoint, {"disabled_state_groups": ["completed"]}, format="json")
+    assert response.status_code == 200
+    assert response.data["disabled_state_groups"] == ["completed"]
+
+    with pytest.raises(ValidationError):
+        validate_workflow_write(ctx.project.pk, {"name": "Blocked", "state": ctx.done})
+    # Existing work items can still move into the disabled group; only creation is blocked.
+    validate_workflow_write(ctx.project.pk, {"state": ctx.todo}, ctx.issue)
+    assert effective_creation_state(ctx.project.pk).pk == ctx.backlog.pk
+
+    with pytest.raises(ValidationError):
+        validate_disabled_state_groups(ctx.project.pk, ["backlog", "unstarted", "completed"])
+    response = session_client.patch(
+        endpoint, {"disabled_state_groups": ["backlog", "unstarted", "completed"]}, format="json"
+    )
+    assert response.status_code == 400
+    ctx.project.refresh_from_db()
+    assert ctx.project.disabled_state_groups == ["completed"]
+
+    assert session_client.patch(endpoint, {"disabled_state_groups": ["made-up"]}, format="json").status_code == 400
+
+
 def test_state_creation_settings_protect_default_and_last_entry(session_client, ctx):
     endpoint = ctx.base + "states/"
     response = session_client.patch(
@@ -92,6 +118,46 @@ def test_state_creation_settings_protect_default_and_last_entry(session_client, 
     ctx.done.allow_new_work_items = False
     with pytest.raises(ValidationError):
         validate_state_creation_settings(ctx.project.pk, [ctx.backlog, ctx.todo, ctx.done])
+
+
+@pytest.mark.parametrize("action", ["mark-default", "update", "create"])
+def test_disabled_group_cannot_supply_default_state(session_client, ctx, action):
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    endpoint = ctx.base + "states/"
+    if action == "mark-default":
+        response = session_client.post(endpoint + str(ctx.done.pk) + "/mark-default/", {}, format="json")
+    elif action == "update":
+        response = session_client.patch(endpoint + str(ctx.done.pk) + "/", {"default": True}, format="json")
+    else:
+        response = session_client.post(
+            endpoint, {"name": "Disabled default", "group": "completed", "default": True}, format="json"
+        )
+    assert response.status_code == 400, response.data
+    ctx.backlog.refresh_from_db()
+    ctx.done.refresh_from_db()
+    assert ctx.backlog.default
+    assert not ctx.done.default
+    assert not State.objects.filter(project=ctx.project, name="Disabled default").exists()
+
+
+def test_closed_groups_do_not_count_toward_remaining_creation_states(ctx):
+    from plane.utils.workflow import validate_state_creation_settings
+
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["unstarted", "completed"])
+    ctx.backlog.default = False
+    ctx.backlog.allow_new_work_items = False
+    with pytest.raises(ValidationError):
+        validate_state_creation_settings(ctx.project.pk, [ctx.backlog, ctx.todo, ctx.done])
+
+
+def test_project_creation_rejects_closed_default_group(session_client, ctx):
+    response = session_client.post(
+        f"/api/workspaces/{ctx.workspace.slug}/projects/",
+        {"name": "Invalid states", "identifier": "INVALID", "disabled_state_groups": ["backlog"]},
+        format="json",
+    )
+    assert response.status_code == 400, response.data
+    assert not Project.objects.filter(workspace=ctx.workspace, identifier="INVALID").exists()
 
 
 def test_unconfigured_read_is_side_effect_free(session_client, ctx):
@@ -208,9 +274,9 @@ def test_public_api_creation_flag_blocks_creation_but_allows_moves(api_key_clien
         project=ctx.project, workflow=ctx.workflow, source=ctx.backlog, destination=ctx.done
     )
     url = ctx.base.replace("/api/", "/api/v1/") + "work-items/"
-    assert api_key_client.post(
-        url, {"name": "Flag blocked", "state": str(ctx.done.pk)}, format="json"
-    ).status_code == 400
+    assert (
+        api_key_client.post(url, {"name": "Flag blocked", "state": str(ctx.done.pk)}, format="json").status_code == 400
+    )
     assert not Issue.objects.filter(project=ctx.project, name="Flag blocked").exists()
     response = api_key_client.post(url, {"name": "Flag default"}, format="json")
     assert response.status_code == 201, response.data
