@@ -20,12 +20,10 @@ import { DropIndicator } from "@plane/blocks/common";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { ListLoaderItemRow } from "@/components/ui/loader/layouts/list-layout-loader";
 // hooks
-import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
 import { HIGHLIGHT_CLASS, getIssueBlockId, isIssueNew } from "../utils";
-import { useIssueRowExpansion } from "../row-expansion";
 import { IssueBlock } from "./block";
 import type { TRenderQuickActions } from "./list-view-types";
 
@@ -36,6 +34,8 @@ type Props = {
   quickActions: TRenderQuickActions;
   canEditProperties: (projectId: string | undefined) => boolean;
   displayProperties: IIssueDisplayProperties | undefined;
+  treeBranches?: boolean[];
+  hasTreeChildren?: boolean;
   nestingLevel: number;
   spacingLeft?: number;
   containerRef: MutableRefObject<HTMLDivElement | null>;
@@ -70,7 +70,6 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
     virtualized = false,
   } = props;
   // states
-  const [isExpanded, setExpanded] = useIssueRowExpansion(`${groupId}:${issueId}`);
   const [instruction, setInstruction] = useState<"DRAG_OVER" | "DRAG_BELOW" | undefined>(undefined);
   const [isCurrentBlockDragging, setIsCurrentBlockDragging] = useState(false);
   // ref
@@ -78,7 +77,6 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
   // hooks
   const { isMobile } = usePlatformOS();
   // store hooks
-  const { subIssues: subIssuesStore } = useIssueDetail();
 
   const isSubIssue = nestingLevel !== 0;
 
@@ -130,7 +128,6 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
 
   if (!issueId || !issuesMap[issueId]?.created_at) return null;
 
-  const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
   return (
     <div
       className="relative"
@@ -145,7 +142,7 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
         preserveWhenCollapsed
         key={`${issueId}`}
         root={containerRef}
-        classNames={`relative ${isLastChild && !isExpanded ? "" : "border-b border-b-subtle"}`}
+        classNames="relative"
         verticalOffset={100}
         defaultValue={shouldRenderByDefault || (issuesMap[issueId] ? isIssueNew(issuesMap[issueId]) : false)}
         placeholderChildren={<ListLoaderItemRow shouldAnimate={false} renderForPlaceHolder defaultPropertyCount={4} />}
@@ -159,8 +156,8 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
           quickActions={quickActions}
           canEditProperties={canEditProperties}
           displayProperties={displayProperties}
-          isExpanded={isExpanded}
-          setExpanded={setExpanded}
+          treeBranches={props.treeBranches}
+          hasTreeChildren={props.hasTreeChildren}
           nestingLevel={nestingLevel}
           spacingLeft={spacingLeft}
           selectionHelpers={selectionHelpers}
@@ -170,28 +167,6 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
         />
       </RenderIfVisible>
 
-      {isExpanded &&
-        subIssues?.map((subIssueId) => (
-          <IssueBlockRoot
-            key={`${subIssueId}`}
-            issueId={subIssueId}
-            issuesMap={issuesMap}
-            updateIssue={updateIssue}
-            quickActions={quickActions}
-            canEditProperties={canEditProperties}
-            displayProperties={displayProperties}
-            nestingLevel={nestingLevel + 1}
-            spacingLeft={spacingLeft + 12}
-            containerRef={containerRef}
-            selectionHelpers={selectionHelpers}
-            groupId={groupId}
-            isDragAllowed={isDragAllowed}
-            canDropOverIssue={canDropOverIssue}
-            isParentIssueBeingDragged={isParentIssueBeingDragged || isCurrentBlockDragging}
-            shouldRenderByDefault={isExpanded}
-            virtualized={virtualized}
-          />
-        ))}
       {isLastChild && <DropIndicator classNames={"absolute z-[2]"} isVisible={instruction === "DRAG_BELOW"} />}
     </div>
   );

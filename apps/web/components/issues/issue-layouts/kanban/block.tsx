@@ -23,7 +23,7 @@ import { cn, generateWorkItemLink } from "@plane/utils";
 // components
 import { HIGHLIGHT_CLASS, getIssueBlockId } from "@/components/issues/issue-layouts/utils";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
-import { KanbanParentIndicator } from "./parent-indicator";
+import { IssueHierarchyIndicator } from "../hierarchy-indicator";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
@@ -106,7 +106,11 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
             displayProperties={displayProperties}
           />
         )}
-        {issue.parent_id && <KanbanParentIndicator parentName={parentIssue?.name} />}
+        <IssueHierarchyIndicator
+          parentId={issue.parent_id}
+          parentName={parentIssue?.name ?? issue.parent?.name}
+          subIssuesCount={issue.sub_issues_count}
+        />
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div
           className={cn("absolute -top-1 right-0", {
