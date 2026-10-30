@@ -237,6 +237,27 @@ export const getPreviousIssuesState = (issues: TIssue[]) => {
 };
 
 /**
+ * Mirrors the server bookkeeping of a state change so "time in status" updates without a refetch:
+ * the patch endpoint answers 204, so the store never sees the timestamps the server just wrote.
+ * Entering a started state keeps the first start; going back to backlog/unstarted clears it.
+ */
+export const getStateChangeTimestamps = (
+  issue: Pick<TIssue, "started_at">,
+  nextStateGroup: string | undefined,
+  now: Date = new Date()
+): Pick<TIssue, "state_changed_at" | "started_at" | "completed_at"> => {
+  const at = now.toISOString();
+  let startedAt = issue.started_at ?? null;
+  if (nextStateGroup === "started") startedAt = startedAt ?? at;
+  else if (nextStateGroup !== "completed" && nextStateGroup !== "cancelled") startedAt = null;
+  return {
+    state_changed_at: at,
+    started_at: startedAt,
+    completed_at: nextStateGroup === "completed" ? at : null,
+  };
+};
+
+/**
  * Filters the given work items based on the provided filters and display filters.
  * @param work items - The array of work items to be filtered.
  * @param filters - The filters to be applied to the issues.

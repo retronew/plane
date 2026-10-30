@@ -4,7 +4,7 @@ import { ProjectWorkflowStore } from "@/store/project-workflow.store";
 vi.mock("@/services/issue", () => ({ IssueService: vi.fn(), IssueArchiveService: vi.fn() }));
 vi.mock("@/services/cycle.service", () => ({ CycleService: vi.fn() }));
 vi.mock("@/services/module.service", () => ({ ModuleService: vi.fn() }));
-vi.mock("./base-issues-utils", () => ({}));
+vi.mock("./base-issues-utils", () => ({ getStateChangeTimestamps: () => ({}) }));
 
 const defaultWorkflow = {
   id: "default",
@@ -34,7 +34,7 @@ const create = vi.fn(),
   update = vi.fn();
 const fake = {
   rootIssueStore: {
-    rootStore: { workflow, user: { data: { id: "member" } } },
+    rootStore: { workflow, user: { data: { id: "member" } }, state: { getStateById: () => undefined } },
     issues: { getIssueById: () => ({ id: "i", project_id: "p", state_id: "a", type_id: "bug" }), updateIssue: update },
   },
   issueService: { createIssue: create, patchIssue: patch },

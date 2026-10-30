@@ -60,6 +60,8 @@
         "sub_issue_count": "Кількість похідних",
         "attachment_count": "Кількість вкладень",
         "created_on": "Створено",
+        "time_in_status": "Час у статусі",
+        "started_at": "Розпочато {date}",
         "sub_issue": "Похідна одиниця",
         "work_item_count": "Кількість робочих одиниць"
       },

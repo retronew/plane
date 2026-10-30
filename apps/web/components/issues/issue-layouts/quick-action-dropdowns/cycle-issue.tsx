@@ -26,6 +26,7 @@ import type { IQuickActionProps } from "../list/list-view-types";
 import type { MenuItemFactoryProps } from "./helper";
 import { useCycleIssueMenuItems } from "./helper";
 import { IssueQuickActionMenu } from "./quick-action-menu";
+import { useRelatedMenuItems } from "./related-menu-items";
 
 export const CycleIssueQuickActions = observer(function CycleIssueQuickActions(props: IQuickActionProps) {
   const {
@@ -73,7 +74,10 @@ export const CycleIssueQuickActions = observer(function CycleIssueQuickActions(p
   );
 
   // Menu items and modals using helper
+  const related = useRelatedMenuItems({ issue, workspaceSlug: workspaceSlug?.toString(), isEditingAllowed });
+
   const menuItemProps: MenuItemFactoryProps = {
+    relatedMenuItems: related.menuItems,
     issue,
     workspaceSlug: workspaceSlug?.toString(),
     projectIdentifier,
@@ -100,6 +104,7 @@ export const CycleIssueQuickActions = observer(function CycleIssueQuickActions(p
   return (
     <>
       {/* Modals */}
+      {related.modals}
       <ArchiveIssueModal
         data={issue}
         isOpen={archiveIssueModal}

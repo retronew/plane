@@ -7,6 +7,7 @@
 
 import { translate } from "@plane/i18n";
 import type { CSSProperties } from "react";
+import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item/extract-instruction";
 import { clone, isNil, pull, uniq, concat } from "lodash-es";
 import scrollIntoView from "smooth-scroll-into-view-if-needed";
@@ -69,6 +70,8 @@ export type GroupDropLocation = {
   subGroupId?: string;
   id: string | undefined;
   canAddIssueBelow?: boolean;
+  /** drop lands right after `id` (kanban cards report the closest edge) instead of before it */
+  insertAfter?: boolean;
 };
 
 export type IssueUpdates = {
@@ -446,6 +449,7 @@ export const getDestinationFromDropPayload = (payload: IPragmaticDropPayload): G
 
   // extract instruction from destination issue
   const extractedInstruction = destinationIssueData ? extractInstruction(destinationIssueData)?.type : "";
+  const closestEdge = destinationIssueData ? extractClosestEdge(destinationIssueData) : null;
 
   return {
     groupId: destinationColumnData.groupId as string,
@@ -453,6 +457,7 @@ export const getDestinationFromDropPayload = (payload: IPragmaticDropPayload): G
     columnId: destinationColumnData.columnId as string,
     id: destinationIssueData?.id as string | undefined,
     canAddIssueBelow: extractedInstruction === "reorder-below",
+    insertAfter: closestEdge === "bottom",
   };
 };
 
@@ -468,7 +473,8 @@ const handleSortOrder = (
   destinationIssueId: string | undefined,
   getIssueById: (issueId: string) => TIssue | undefined,
   shouldAddIssueAtTop = false,
-  canAddIssueBelow = false
+  canAddIssueBelow = false,
+  insertAfter = false
 ) => {
   const sortOrderDefaultValue = 65535;
   let currentIssueState = {};
@@ -478,6 +484,8 @@ const handleSortOrder = (
     : shouldAddIssueAtTop
       ? 0
       : destinationIssues.length;
+
+  if (insertAfter && destinationIndex >= 0 && destinationIssueId) destinationIndex += 1;
 
   const isDestinationLastChild = destinationIndex === destinationIssues.length - 1;
 
@@ -574,7 +582,8 @@ export const handleGroupDragDrop = async (
       destination.id,
       getIssueById,
       shouldAddIssueAtTop,
-      !!destination.canAddIssueBelow
+      !!destination.canAddIssueBelow,
+      !!destination.insertAfter
     ),
   };
 

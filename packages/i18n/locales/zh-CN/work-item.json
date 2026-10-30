@@ -1,0 +1,419 @@
+{
+  "issue": {
+    "label": "{count, plural, one {工作项} other {工作项}}",
+    "all": "所有工作项",
+    "edit": "编辑工作项",
+    "title": {
+      "label": "工作项标题",
+      "required": "请输入工作项标题。"
+    },
+    "add": {
+      "press_enter": "按 Enter 继续添加工作项",
+      "label": "添加工作项",
+      "cycle": {
+        "failed": "无法将工作项添加到周期，请重试。",
+        "success": "{count, plural, one {工作项} other {工作项}}已添加到周期。",
+        "loading": "正在将{count, plural, one {工作项} other {工作项}}添加到周期"
+      },
+      "assignee": "添加负责人",
+      "start_date": "添加开始日期",
+      "due_date": "添加截止日期",
+      "parent": "添加父工作项",
+      "sub_issue": "添加子工作项",
+      "dependency": "添加依赖",
+      "relation": "添加关系",
+      "link": "添加链接",
+      "existing": "添加现有工作项"
+    },
+    "remove": {
+      "label": "移除工作项",
+      "cycle": {
+        "loading": "正在从周期中移除工作项",
+        "success": "已将工作项从周期中移除。",
+        "failed": "无法将工作项从周期中移除，请重试。"
+      },
+      "module": {
+        "loading": "正在从模块中移除工作项",
+        "success": "已将工作项从模块中移除。",
+        "failed": "无法将工作项从模块中移除，请重试。"
+      },
+      "parent": {
+        "label": "移除父工作项"
+      }
+    },
+    "new": "新建工作项",
+    "adding": "正在添加工作项",
+    "create": {
+      "success": "工作项已创建"
+    },
+    "priority": {
+      "urgent": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "display": {
+      "properties": {
+        "label": "显示属性",
+        "more_count": "{count, plural, one {还有 # 个属性} other {还有 # 个属性}}",
+        "id": "ID",
+        "issue_type": "工作项类型",
+        "sub_issue_count": "子工作项数量",
+        "attachment_count": "附件数量",
+        "created_on": "创建时间",
+        "time_in_status": "状态停留时长",
+        "started_at": "开始于 {date}",
+        "sub_issue": "子工作项",
+        "work_item_count": "工作项数量"
+      },
+      "extra": {
+        "show_sub_issues": "显示子工作项",
+        "show_empty_groups": "显示空组"
+      }
+    },
+    "layouts": {
+      "ordered_by_label": "此布局的排序方式为",
+      "list": "列表",
+      "kanban": "看板",
+      "calendar": "日历",
+      "spreadsheet": "表格",
+      "gantt": "时间线",
+      "title": {
+        "list": "列表布局",
+        "kanban": "看板布局",
+        "calendar": "日历布局",
+        "spreadsheet": "表格布局",
+        "gantt": "时间线布局"
+      }
+    },
+    "states": {
+      "active": "进行中",
+      "backlog": "待办"
+    },
+    "comments": {
+      "placeholder": "添加评论",
+      "switch": {
+        "private": "切换为私有评论",
+        "public": "切换为公开评论"
+      },
+      "create": {
+        "success": "评论已发布",
+        "error": "发布评论失败，请稍后重试。"
+      },
+      "update": {
+        "success": "评论已更新",
+        "error": "更新评论失败，请稍后重试。"
+      },
+      "remove": {
+        "success": "评论已删除",
+        "error": "删除评论失败，请稍后重试。"
+      },
+      "upload": {
+        "error": "文件上传失败，请稍后重试。"
+      },
+      "copy_link": {
+        "success": "评论链接已复制到剪贴板",
+        "error": "复制评论链接失败，请稍后重试。"
+      },
+      "replies": {
+        "create": {
+          "submit_button": "添加回复",
+          "placeholder": "添加回复"
+        },
+        "toast": {
+          "fetch": {
+            "error": {
+              "message": "获取回复失败"
+            }
+          },
+          "create": {
+            "success": {
+              "message": "回复已发布"
+            },
+            "error": {
+              "message": "发布回复失败"
+            }
+          },
+          "update": {
+            "success": {
+              "message": "回复已更新"
+            },
+            "error": {
+              "message": "更新回复失败"
+            }
+          },
+          "delete": {
+            "success": {
+              "message": "回复已删除"
+            },
+            "error": {
+              "message": "删除回复失败"
+            }
+          }
+        }
+      }
+    },
+    "empty_state": {
+      "issue_detail": {
+        "title": "工作项不存在",
+        "description": "您查找的工作项不存在、已归档或已删除。",
+        "primary_button": {
+          "text": "查看其他工作项"
+        }
+      }
+    },
+    "sibling": {
+      "label": "同级工作项"
+    },
+    "archive": {
+      "description": "仅已完成或已取消的工作项可归档",
+      "label": "归档工作项",
+      "confirm_message": "确定要归档此工作项吗？已归档的工作项之后可以恢复。",
+      "success": {
+        "label": "归档成功",
+        "message": "可以在项目归档中找到已归档的内容。"
+      },
+      "failed": {
+        "message": "无法归档工作项，请重试。"
+      },
+      "banner_message": "此工作项已归档。前往“归档”即可恢复。",
+      "go_to_archives": "前往归档"
+    },
+    "restore": {
+      "success": {
+        "title": "恢复成功",
+        "message": "可以在项目工作项中找到此工作项。"
+      },
+      "failed": {
+        "message": "无法恢复工作项，请重试。"
+      }
+    },
+    "relation": {
+      "relates_to": "相关于",
+      "duplicate": "重复项",
+      "blocked_by": "被阻塞",
+      "blocking": "阻塞",
+      "start_before": "早于其开始",
+      "start_after": "晚于其开始",
+      "finish_before": "早于其结束",
+      "finish_after": "晚于其结束",
+      "implements": "实现",
+      "implemented_by": "被实现于"
+    },
+    "copy_link": "复制工作项链接",
+    "delete": {
+      "label": "删除工作项",
+      "error": "删除工作项时出错"
+    },
+    "subscription": {
+      "actions": {
+        "subscribed": "已订阅此工作项",
+        "unsubscribed": "已取消订阅此工作项"
+      }
+    },
+    "select": {
+      "error": "请至少选择一个工作项",
+      "empty": "未选择工作项",
+      "add_selected": "添加所选工作项",
+      "select_all": "全选",
+      "deselect_all": "取消全选"
+    },
+    "open_in_full_screen": "全屏打开工作项",
+    "duplicate": {
+      "modal": {
+        "title": "复制到其他项目",
+        "description1": "这会创建工作项的副本。",
+        "description2": "复制时不会保留属性数据。",
+        "placeholder": "选择一个项目"
+      }
+    },
+    "toast": {
+      "duplicate": {
+        "success": {
+          "message": "工作项已复制"
+        },
+        "error": {
+          "message": "复制工作项失败"
+        }
+      }
+    },
+    "pages": {
+      "link_pages": "关联页面",
+      "show_wiki_pages": "显示 Wiki 页面",
+      "link_pages_to": "将页面关联到",
+      "linked_pages": "已关联的页面",
+      "no_description": "这是一个空页面。在其中写点内容，它就会像这段占位文字一样显示在这里",
+      "toasts": {
+        "link": {
+          "success": {
+            "title": "页面已更新",
+            "message": "页面已成功更新"
+          },
+          "error": {
+            "title": "页面更新失败",
+            "message": "页面更新失败"
+          }
+        },
+        "remove": {
+          "success": {
+            "title": "页面已移除",
+            "message": "页面已成功移除"
+          },
+          "error": {
+            "title": "移除页面失败",
+            "message": "移除页面失败"
+          }
+        }
+      }
+    },
+    "vote": {
+      "click_to_upvote": "点击赞同",
+      "click_to_downvote": "点击反对",
+      "click_to_view_upvotes": "点击查看赞同",
+      "click_to_view_downvotes": "点击查看反对"
+    }
+  },
+  "sub_work_item": {
+    "update": {
+      "success": "子工作项已更新",
+      "error": "更新子工作项时出错"
+    },
+    "remove": {
+      "success": "子工作项已移除",
+      "error": "移除子工作项时出错"
+    },
+    "empty_state": {
+      "sub_list_filters": {
+        "title": "没有符合当前筛选条件的子工作项。",
+        "description": "清除所有筛选条件即可查看全部子工作项。",
+        "action": "清除筛选条件"
+      },
+      "list_filters": {
+        "title": "没有符合当前筛选条件的工作项。",
+        "description": "清除所有筛选条件即可查看全部工作项。",
+        "action": "清除筛选条件"
+      }
+    }
+  },
+  "issue_relation": {
+    "empty_state": {
+      "search": {
+        "title": "未找到匹配的工作项"
+      },
+      "no_issues": {
+        "title": "未找到工作项"
+      }
+    }
+  },
+  "issue_comment": {
+    "empty_state": {
+      "general": {
+        "title": "暂无评论",
+        "description": "可以在评论中讨论和跟进工作项"
+      }
+    }
+  },
+  "bulk_operations": {
+    "error_details": {
+      "invalid_archive_state_group": {
+        "title": "无法归档工作项",
+        "message": "只有处于“已完成”或“已取消”状态组的工作项才能归档。"
+      },
+      "invalid_issue_start_date": {
+        "title": "无法更新工作项",
+        "message": "所选开始日期晚于部分工作项的截止日期，请确保开始日期早于截止日期。"
+      },
+      "invalid_issue_target_date": {
+        "title": "无法更新工作项",
+        "message": "所选截止日期早于部分工作项的开始日期，请确保截止日期晚于开始日期。"
+      },
+      "invalid_state_transition": {
+        "title": "无法更新工作项",
+        "message": "部分工作项不允许变更为该状态，请确认状态变更是否被允许。"
+      }
+    },
+    "upgrade_banner": {
+      "message": "一次性更改多个工作项的状态、优先级等，平均每次操作可节省三分钟。",
+      "cta": "升级到 One"
+    }
+  },
+  "recurring_work_items": {
+    "settings": {
+      "heading": "重复工作项",
+      "description": "只需设置一次重复工作，之后会按计划自动生成，到时都会显示在这里。",
+      "new_recurring_work_item": "新建重复工作项",
+      "update_recurring_work_item": "更新重复工作项",
+      "form": {
+        "interval": {
+          "title": "计划",
+          "start_date": {
+            "validation": {
+              "required": "请选择开始日期"
+            }
+          },
+          "interval_type": {
+            "validation": {
+              "required": "请选择重复间隔"
+            }
+          }
+        },
+        "button": {
+          "create": "创建重复工作项",
+          "update": "更新重复工作项"
+        }
+      },
+      "create_button": {
+        "label": "创建重复工作项",
+        "no_permission": "请联系项目管理员创建重复工作项"
+      }
+    },
+    "empty_state": {
+      "upgrade": {
+        "title": "让工作自动运转",
+        "description": "只需设置一次，到期时会自动为您生成。升级到 Business，让重复工作轻松无忧。"
+      },
+      "no_templates": {
+        "button": "创建第一个重复工作项"
+      }
+    },
+    "toasts": {
+      "create": {
+        "success": {
+          "title": "重复工作项已创建",
+          "message": "重复工作项“{name}”现已在工作区中可用。"
+        },
+        "error": {
+          "title": "暂时无法创建该重复工作项。",
+          "message": "请重新保存，或将内容复制到新的重复工作项中（建议在另一个标签页中操作）。"
+        }
+      },
+      "update": {
+        "success": {
+          "title": "重复工作项已更新",
+          "message": "重复工作项“{name}”已更新。"
+        },
+        "error": {
+          "title": "无法保存该重复工作项的更改。",
+          "message": "请重新保存，或稍后再试。如果仍有问题，请联系我们。"
+        }
+      },
+      "delete": {
+        "success": {
+          "title": "重复工作项已删除",
+          "message": "重复工作项“{name}”已从工作区中删除。"
+        },
+        "error": {
+          "title": "暂时无法删除该重复工作项。",
+          "message": "请重试删除，或稍后再试。如果仍无法删除，请联系我们。"
+        }
+      }
+    },
+    "delete_confirmation": {
+      "title": "删除重复工作项",
+      "description": {
+        "prefix": "确定要删除重复工作项 ",
+        "suffix": " 吗？与该重复工作项相关的所有数据都将被永久删除，此操作无法撤销。"
+      }
+    }
+  }
+}

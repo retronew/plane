@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Editează",
+      "copy": "Copiază",
       "make_a_copy": "Fă o copie",
       "open_in_new_tab": "Deschide într-un nou tab",
       "copy_link": "Copiază link-ul",

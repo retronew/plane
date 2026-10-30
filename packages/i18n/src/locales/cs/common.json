@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Upravit",
+      "copy": "Kopírovat",
       "make_a_copy": "Vytvořit kopii",
       "open_in_new_tab": "Otevřít v nové záložce",
       "copy_link": "Kopírovat odkaz",

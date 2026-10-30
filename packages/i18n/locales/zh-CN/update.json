@@ -1,0 +1,69 @@
+{
+  "updates": {
+    "progress": {
+      "title": "进度",
+      "since_last_update": "自上次更新以来",
+      "comments": "{count, plural, one{# 条评论} other{# 条评论}}"
+    },
+    "add_update": "添加进展",
+    "add_update_placeholder": "在此填写进展",
+    "empty": {
+      "title": "暂无进展",
+      "description": "进展更新会显示在这里。"
+    },
+    "reaction": {
+      "create": {
+        "success": {
+          "title": "已添加表情回应",
+          "message": "表情回应已添加"
+        },
+        "error": {
+          "title": "添加表情回应失败",
+          "message": "无法添加表情回应"
+        }
+      },
+      "remove": {
+        "success": {
+          "title": "已移除表情回应",
+          "message": "表情回应已移除"
+        },
+        "error": {
+          "title": "移除表情回应失败",
+          "message": "无法移除表情回应"
+        }
+      }
+    },
+    "create": {
+      "success": {
+        "title": "进展已发布",
+        "message": "进展已成功发布"
+      },
+      "error": {
+        "title": "发布进展失败",
+        "message": "无法发布进展"
+      }
+    },
+    "delete": {
+      "title": "删除进展",
+      "confirmation": "确定要删除这条进展吗？此操作无法撤销。",
+      "success": {
+        "title": "进展已删除",
+        "message": "进展已成功删除"
+      },
+      "error": {
+        "title": "删除进展失败",
+        "message": "无法删除进展"
+      }
+    },
+    "update": {
+      "success": {
+        "title": "已更新",
+        "message": "进展已成功更新"
+      },
+      "error": {
+        "title": "更新进展失败",
+        "message": "无法更新进展"
+      }
+    }
+  }
+}

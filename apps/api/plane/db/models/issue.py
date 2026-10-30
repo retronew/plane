@@ -29,7 +29,7 @@ from .state import StateGroup
 def get_default_properties():
     return {
         "assignee": True,
-        "start_date": True,
+        "start_date": False,
         "due_date": True,
         "labels": True,
         "key": True,
@@ -41,6 +41,7 @@ def get_default_properties():
         "estimate": True,
         "created_on": True,
         "updated_on": True,
+        "time_in_status": True,
     }
 
 
@@ -81,9 +82,10 @@ def get_default_display_properties():
         "labels": True,
         "link": True,
         "priority": True,
-        "start_date": True,
+        "start_date": False,
         "state": True,
         "sub_issue_count": True,
+        "time_in_status": True,
         "updated_on": True,
     }
 
@@ -158,6 +160,11 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
     labels = models.ManyToManyField("db.Label", blank=True, related_name="labels", through="IssueLabel")
     sort_order = models.FloatField(default=65535)
     completed_at = models.DateTimeField(null=True)
+    # When work actually began: set on the first move into a started state, cleared on a move back
+    # to backlog/unstarted. Recorded automatically, unlike the planned `start_date`.
+    started_at = models.DateTimeField(null=True, blank=True)
+    # When the issue entered its current state, for "time in status".
+    state_changed_at = models.DateTimeField(null=True, blank=True)
     archived_at = models.DateField(null=True)
     is_draft = models.BooleanField(default=False)
     external_source = models.CharField(max_length=255, null=True, blank=True)
@@ -180,7 +187,7 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
 
     def save(self, *args, **kwargs):
         self._ensure_default_state()
-        kwargs = self._sync_completed_at(kwargs)
+        kwargs = self._sync_state_timestamps(kwargs)
 
         if self._state.adding:
             with transaction.atomic():
@@ -238,21 +245,31 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         except ImportError as e:
             log_exception(e)
 
-    def _sync_completed_at(self, kwargs):
-        """Update completed_at when state changes. Returns kwargs."""
+    def _sync_state_timestamps(self, kwargs):
+        """Update completed_at, started_at and state_changed_at when state changes. Returns kwargs."""
         if not self.state:
             return kwargs
         if not self._state.adding and not self.has_changed("state_id"):
             return kwargs
 
-        if self.state.group == StateGroup.COMPLETED.value:
-            self.completed_at = timezone.now()
+        now = timezone.now()
+        group = self.state.group
+        self.state_changed_at = now
+
+        if group == StateGroup.COMPLETED.value:
+            self.completed_at = now
         else:
             self.completed_at = None
 
+        # Keep the first start through completion or cancellation; going back to the queue resets it.
+        if group == StateGroup.STARTED.value:
+            self.started_at = self.started_at or now
+        elif group not in (StateGroup.COMPLETED.value, StateGroup.CANCELLED.value):
+            self.started_at = None
+
         update_fields = kwargs.get("update_fields")
         if update_fields is not None:
-            kwargs["update_fields"] = list(set(update_fields) | {"completed_at"})
+            kwargs["update_fields"] = list(set(update_fields) | {"completed_at", "started_at", "state_changed_at"})
         return kwargs
 
 

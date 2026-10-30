@@ -613,6 +613,7 @@
     },
     "actions": {
       "edit": "编辑",
+      "copy": "复制",
       "make_a_copy": "创建副本",
       "open_in_new_tab": "在新标签页中打开",
       "copy_link": "复制链接",

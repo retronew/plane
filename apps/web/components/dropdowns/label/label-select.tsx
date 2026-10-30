@@ -33,6 +33,8 @@ type LabelSelectWebProps = {
   placeholder?: string;
   onClose?: () => void;
   className?: string;
+  /** Show every label as its own chip instead of a name or count. */
+  showAllLabels?: boolean;
   tooltip?: SelectTooltip;
   /** Tab order of the trigger, for forms that sequence focus explicitly (`ETabIndices`). */
   tabIndex?: number;
@@ -49,8 +51,20 @@ const toOption = (label: IIssueLabel): LabelOption => ({ id: label.id, name: lab
  * label catalog; CE only has project work-item labels, so the binding takes a `projectId` instead.
  */
 export const LabelSelect = observer(function LabelSelect(props: LabelSelectWebProps) {
-  const { projectId, value, onChange, variant, disabled, placeholder, onClose, className, tooltip, testId, tabIndex } =
-    props;
+  const {
+    projectId,
+    value,
+    onChange,
+    variant,
+    disabled,
+    placeholder,
+    onClose,
+    className,
+    showAllLabels,
+    tooltip,
+    testId,
+    tabIndex,
+  } = props;
   // router params
   const { workspaceSlug } = useParams();
   // store hooks
@@ -116,6 +130,7 @@ export const LabelSelect = observer(function LabelSelect(props: LabelSelectWebPr
         onCreate: handleCreateLabel,
       }}
       className={className}
+      showAllLabels={showAllLabels}
       tooltip={resolvedTooltip}
       tabIndex={tabIndex}
     />

@@ -1,7 +1,7 @@
 import { autorun, observable, runInAction } from "mobx";
 import { describe, expect, it, vi } from "vitest";
 import type { IIssueFilterOptions, TIssue } from "@plane/types";
-import { getDifference, getFilteredWorkItems } from "./base-issues-utils";
+import { getDifference, getFilteredWorkItems, getStateChangeTimestamps } from "./base-issues-utils";
 
 vi.mock("@/lib/store-context", () => ({ store: {} }));
 vi.mock("./base-issues.store", () => ({
@@ -44,5 +44,31 @@ describe("indexed issue lookups", () => {
     runInAction(() => items[0].label_ids.push("y"));
     dispose();
     expect(seen).toEqual([1, 0, 1]);
+  });
+});
+
+describe("getStateChangeTimestamps", () => {
+  const now = new Date("2026-10-28T12:00:00Z");
+  const at = now.toISOString();
+  const earlier = "2026-10-20T08:00:00.000Z";
+
+  it("stamps the first start and keeps it through completion", () => {
+    expect(getStateChangeTimestamps({ started_at: null }, "started", now)).toEqual({
+      state_changed_at: at,
+      started_at: at,
+      completed_at: null,
+    });
+    expect(getStateChangeTimestamps({ started_at: earlier }, "started", now).started_at).toBe(earlier);
+    expect(getStateChangeTimestamps({ started_at: earlier }, "completed", now)).toEqual({
+      state_changed_at: at,
+      started_at: earlier,
+      completed_at: at,
+    });
+  });
+
+  it("clears the start when the item goes back to the queue", () => {
+    expect(getStateChangeTimestamps({ started_at: earlier }, "unstarted", now).started_at).toBeNull();
+    expect(getStateChangeTimestamps({ started_at: earlier }, "backlog", now).started_at).toBeNull();
+    expect(getStateChangeTimestamps({ started_at: earlier }, "cancelled", now).started_at).toBe(earlier);
   });
 });

@@ -43,6 +43,7 @@ import {
   getGroupKey,
   getIssueIds,
   getSortOrderToFilterEmptyValues,
+  getStateChangeTimestamps,
   getSubGroupIssueKeyActions,
 } from "./base-issues-utils";
 import type { IBaseIssueFilterStore } from "./issue-filter-helper.store";
@@ -582,10 +583,21 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       if (!workflowAllowsTransition(workflow, issueBeforeUpdate.state_id, data.state_id, root.user.data?.id))
         throw { workflow: ["WORKFLOW_TRANSITION_NOT_ALLOWED"] };
     }
+    // A state change also moves the server-kept timestamps; apply them locally, never send them.
+    const localData =
+      data.state_id && issueBeforeUpdate && data.state_id !== issueBeforeUpdate.state_id
+        ? {
+            ...data,
+            ...getStateChangeTimestamps(
+              issueBeforeUpdate,
+              this.rootIssueStore.rootStore.state.getStateById(data.state_id)?.group
+            ),
+          }
+        : data;
     try {
       // Update the Respective Stores
-      this.rootIssueStore.issues.updateIssue(issueId, data);
-      this.updateIssueList({ ...issueBeforeUpdate, ...data } as TIssue, issueBeforeUpdate);
+      this.rootIssueStore.issues.updateIssue(issueId, localData);
+      this.updateIssueList({ ...issueBeforeUpdate, ...localData } as TIssue, issueBeforeUpdate);
 
       // Check if should Sync
       if (!shouldSync) return;

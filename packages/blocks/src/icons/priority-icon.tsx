@@ -6,7 +6,13 @@
 
 import * as React from "react";
 import { cn } from "@plane/utils";
-import { PriorityUrgent, PriorityNone, PriorityHigh, PriorityLow, PriorityMedium } from "@makeplane/propel/icons";
+import {
+  WarningTriangleFilled,
+  PriorityNone,
+  PriorityHigh,
+  PriorityLow,
+  PriorityMedium,
+} from "@makeplane/propel/icons";
 
 export type IssuePriority = "urgent" | "high" | "medium" | "low" | "none";
 
@@ -26,7 +32,8 @@ export function PriorityIcon(props: PriorityIconProps) {
 
   // get priority icon
   const icons = {
-    urgent: PriorityUrgent,
+    // a filled warning triangle reads as "act now" at a glance, unlike the boxed exclamation
+    urgent: WarningTriangleFilled,
     high: PriorityHigh,
     medium: PriorityMedium,
     low: PriorityLow,

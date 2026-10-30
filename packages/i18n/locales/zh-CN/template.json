@@ -1,0 +1,333 @@
+{
+  "templates": {
+    "settings": {
+      "title": "模板",
+      "description": "使用模板，创建项目、工作项和页面的时间可节省 80%。",
+      "new_project_template": "新建项目模板",
+      "new_work_item_template": "新建工作项模板",
+      "new_page_template": "新建页面模板",
+      "options": {
+        "project": {
+          "label": "项目模板"
+        },
+        "work_item": {
+          "label": "工作项模板"
+        },
+        "page": {
+          "label": "页面模板"
+        }
+      },
+      "create_template": {
+        "label": "创建模板",
+        "no_permission": {
+          "project": "请联系项目管理员创建模板",
+          "workspace": "请联系工作区管理员创建模板"
+        }
+      },
+      "use_template": {
+        "button": {
+          "default": "使用模板",
+          "loading": "正在应用"
+        }
+      },
+      "template_source": {
+        "workspace": {
+          "info": "来自工作区"
+        },
+        "project": {
+          "info": "来自项目"
+        }
+      },
+      "form": {
+        "project": {
+          "template": {
+            "name": {
+              "placeholder": "为项目模板命名。",
+              "validation": {
+                "required": "请输入模板名称",
+                "maxLength": "模板名称应少于 255 个字符"
+              }
+            },
+            "description": {
+              "placeholder": "说明何时以及如何使用此模板。"
+            }
+          },
+          "name": {
+            "placeholder": "为项目命名。",
+            "validation": {
+              "required": "请输入项目名称",
+              "maxLength": "项目名称应少于 255 个字符"
+            }
+          },
+          "description": {
+            "placeholder": "描述此项目的目的和目标。"
+          },
+          "button": {
+            "create": "创建项目模板",
+            "update": "更新项目模板"
+          }
+        },
+        "work_item": {
+          "template": {
+            "name": {
+              "placeholder": "为工作项模板命名。",
+              "validation": {
+                "required": "请输入模板名称",
+                "maxLength": "模板名称应少于 255 个字符"
+              }
+            },
+            "description": {
+              "placeholder": "说明何时以及如何使用此模板。"
+            }
+          },
+          "name": {
+            "placeholder": "为此工作项输入标题。",
+            "validation": {
+              "required": "请输入工作项标题",
+              "maxLength": "工作项标题应少于 255 个字符"
+            }
+          },
+          "description": {
+            "placeholder": "描述此工作项，说明完成后要达成什么。"
+          },
+          "button": {
+            "create": "创建工作项模板",
+            "update": "更新工作项模板"
+          }
+        },
+        "page": {
+          "template": {
+            "name": {
+              "placeholder": "为页面模板命名。",
+              "validation": {
+                "required": "请输入模板名称",
+                "maxLength": "模板名称应少于 255 个字符"
+              }
+            },
+            "description": {
+              "placeholder": "说明何时以及如何使用此模板。"
+            }
+          },
+          "name": {
+            "placeholder": "未命名页面",
+            "validation": {
+              "maxLength": "页面名称应少于 255 个字符"
+            }
+          },
+          "button": {
+            "create": "创建页面模板",
+            "update": "更新页面模板"
+          }
+        },
+        "publish": {
+          "action": "{isPublished, select, true {发布设置} other {发布到市场}}",
+          "unpublish_action": "从市场下架",
+          "title": "让您的模板更容易被发现和识别。",
+          "name": {
+            "label": "模板名称",
+            "placeholder": "为模板命名",
+            "validation": {
+              "required": "请输入模板名称",
+              "maxLength": "模板名称应少于 255 个字符"
+            }
+          },
+          "short_description": {
+            "label": "简短描述",
+            "placeholder": "此模板非常适合同时管理多个项目的项目经理。",
+            "validation": {
+              "required": "请输入简短描述"
+            }
+          },
+          "description": {
+            "label": "描述",
+            "placeholder": "借助语音转文字集成，提升效率、简化沟通。\n• 实时转写：将语音即时转换为准确的文字。\n• 创建任务和评论：通过语音指令添加任务、描述和评论。",
+            "validation": {
+              "required": "请输入描述"
+            }
+          },
+          "category": {
+            "label": "类别",
+            "placeholder": "选择最合适的类别，可多选。",
+            "validation": {
+              "required": "至少需要一个类别"
+            }
+          },
+          "keywords": {
+            "label": "关键词",
+            "placeholder": "输入用户查找此模板时可能会搜索的词语。",
+            "helperText": "输入以逗号分隔的关键词，帮助用户通过搜索找到此模板。",
+            "validation": {
+              "required": "至少需要一个关键词"
+            }
+          },
+          "website": {
+            "label": "网站 URL",
+            "placeholder": "https://plane.so",
+            "validation": {
+              "invalid": "无效的 URL",
+              "maxLength": "URL 应少于 800 个字符"
+            }
+          },
+          "company_name": {
+            "label": "公司名称",
+            "placeholder": "Plane",
+            "validation": {
+              "required": "请输入公司名称",
+              "maxLength": "公司名称应少于 255 个字符"
+            }
+          },
+          "contact_email": {
+            "label": "联系邮箱",
+            "placeholder": "help@plane.so",
+            "validation": {
+              "invalid": "无效的邮箱地址",
+              "maxLength": "联系邮箱应少于 255 个字符"
+            }
+          },
+          "privacy_policy_url": {
+            "label": "隐私政策链接",
+            "placeholder": "https://planes.so/privacy-policy",
+            "validation": {
+              "invalid": "无效的 URL",
+              "maxLength": "URL 应少于 800 个字符"
+            }
+          },
+          "terms_of_service_url": {
+            "label": "使用条款链接",
+            "placeholder": "https://planes.so/terms-of-use",
+            "validation": {
+              "invalid": "无效的 URL",
+              "maxLength": "URL 应少于 800 个字符"
+            }
+          },
+          "cover_image": {
+            "label": "添加在市场中展示的封面图片",
+            "upload_title": "上传封面图片",
+            "upload_placeholder": "点击或拖放以上传封面图片",
+            "drop_here": "拖放到这里",
+            "click_to_upload": "点击上传",
+            "invalid_file_or_exceeds_size_limit": "文件无效或超出大小限制，请重试。",
+            "upload_and_save": "上传并保存",
+            "uploading": "正在上传",
+            "remove": "移除",
+            "removing": "正在移除",
+            "validation": {
+              "required": "请上传封面图片"
+            }
+          },
+          "attach_screenshots": {
+            "label": "添加有助于用户了解此模板的图片。",
+            "validation": {
+              "required": "至少需要一张截图"
+            }
+          }
+        }
+      }
+    },
+    "empty_state": {
+      "upgrade": {
+        "title": "模板",
+        "description": "借助 Plane 的项目、工作项和页面模板，您无需从零创建项目，也无需手动设置工作项属性。",
+        "sub_description": "使用模板，可节省 80% 的管理时间。"
+      },
+      "no_templates": {
+        "button": "创建第一个模板"
+      },
+      "no_labels": {
+        "description": "暂无标签。创建标签，帮助整理和筛选项目中的工作项。"
+      },
+      "no_modules": {
+        "description": "暂无模块。将工作组织为子项目，并指定负责人和成员。"
+      },
+      "no_work_items": {
+        "description": "暂无工作项。添加工作项，更好地组织工作。"
+      },
+      "no_sub_work_items": {
+        "description": "暂无子工作项。添加子工作项，更好地组织工作。"
+      },
+      "page": {
+        "no_templates": {
+          "title": "没有您可以访问的模板。",
+          "description": "请创建一个模板"
+        },
+        "no_results": {
+          "title": "没有匹配的模板。",
+          "description": "请尝试其他关键词。"
+        }
+      }
+    },
+    "toasts": {
+      "create": {
+        "success": {
+          "title": "模板已创建",
+          "message": "{templateType}模板“{templateName}”现已可在工作区中使用。"
+        },
+        "error": {
+          "title": "暂时无法创建该模板。",
+          "message": "请重新保存，或将内容复制到新模板中（建议在另一个标签页中操作）。"
+        }
+      },
+      "update": {
+        "success": {
+          "title": "模板已更新",
+          "message": "{templateType}模板“{templateName}”已更新。"
+        },
+        "error": {
+          "title": "无法保存对此模板的更改。",
+          "message": "请重新保存，或稍后再试。如果仍有问题，请联系我们。"
+        }
+      },
+      "delete": {
+        "success": {
+          "title": "模板已删除",
+          "message": "{templateType}模板“{templateName}”已从工作区中删除。"
+        },
+        "error": {
+          "title": "暂时无法删除该模板。",
+          "message": "请重试或稍后再试。如果仍无法删除，请联系我们。"
+        }
+      },
+      "unpublish": {
+        "success": {
+          "title": "模板已下架",
+          "message": "{templateType}模板“{templateName}”已下架。"
+        },
+        "error": {
+          "title": "暂时无法下架该模板。",
+          "message": "请重试或稍后再试。如果仍无法下架，请联系我们。"
+        }
+      }
+    },
+    "delete_confirmation": {
+      "title": "删除模板",
+      "description": {
+        "prefix": "确定要删除模板 ",
+        "suffix": " 吗？与该模板相关的所有数据都将被永久删除，此操作无法撤销。"
+      }
+    },
+    "unpublish_confirmation": {
+      "title": "下架模板",
+      "description": {
+        "prefix": "确定要下架模板 ",
+        "suffix": " 吗？下架后，用户将无法在市场中使用此模板。"
+      }
+    },
+    "dropdown": {
+      "add": {
+        "work_item": "添加新模板",
+        "project": "添加新模板"
+      },
+      "label": {
+        "project": "选择项目模板",
+        "page": "从模板中选择"
+      },
+      "tooltip": {
+        "work_item": "选择工作项模板"
+      },
+      "no_results": {
+        "work_item": "未找到模板。",
+        "project": "未找到模板。"
+      }
+    }
+  }
+}

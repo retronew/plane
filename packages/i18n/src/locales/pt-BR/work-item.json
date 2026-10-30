@@ -60,6 +60,8 @@
         "sub_issue_count": "Contagem de sub-itens de trabalho",
         "attachment_count": "Contagem de anexos",
         "created_on": "Criado em",
+        "time_in_status": "Tempo no status",
+        "started_at": "Iniciado em {date}",
         "sub_issue": "Sub-item de trabalho",
         "work_item_count": "Contagem de itens de trabalho"
       },

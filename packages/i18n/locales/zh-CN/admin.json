@@ -1,0 +1,715 @@
+{
+  "admin": {
+    "feishu": {
+      "last_delivery": "发往我的账号的最近一条通知",
+      "refresh_status": "刷新投递状态",
+      "no_delivery": "暂无发往您的账号的通知记录。",
+      "delivery_pending": "已加入发送队列",
+      "delivery_retry": "等待重试",
+      "delivery_sent": "已发送至飞书",
+      "delivery_failed": "投递失败",
+      "delivery_cancelled": "投递已取消",
+      "delivery_unknown": "暂无投递状态",
+      "delivery_created": "入队时间：{date, date, medium} {date, time, medium}",
+      "delivery_sent_at": "发送时间：{date, date, medium} {date, time, medium}",
+      "delivery_disabled_or_unbound": "通知已关闭或账号已解除绑定。",
+      "delivery_no_longer_eligible": "此通知已不符合发送条件，请检查通知偏好和访问权限。",
+      "delivery_transport_error": "无法连接飞书，请检查服务端网络连接。",
+      "delivery_rate_limited": "飞书正在限制请求频率。如果仍有重试次数，系统将再次尝试投递。",
+      "delivery_permission_error": "飞书应用没有发送此消息的权限。",
+      "delivery_error": "飞书未能投递此通知，请检查应用配置和账号绑定。",
+      "title": "飞书通知",
+      "description": "连接飞书应用，向已绑定账号发送通知。",
+      "enable": "启用飞书通知",
+      "enable_description": "保存更改后生效。关闭后，服务端将停止发送飞书通知。",
+      "enabled": "飞书通知已启用。",
+      "disabled": "飞书通知已关闭。",
+      "managed_by_env": "此配置由环境变量管理，请在服务端修改。",
+      "verification_token_configured": "Verification token 已配置",
+      "verification_token_not_configured": "Verification token 未配置",
+      "encrypt_key_configured": "Encrypt key 已配置",
+      "encrypt_key_not_configured": "Encrypt key 未配置",
+      "card_callback_url": "卡片回调 URL",
+      "card_callback_description": "请先复制飞书应用事件与回调设置中的 Verification Token 和 Encrypt Key，在此保存。然后返回飞书，将此 URL 设为卡片回调地址，并订阅 card.action.trigger。卡片内审批和修改状态还需要部署回调服务并发布飞书应用。",
+      "personal_message_permissions": "个人通知不需要群权限，可关闭“允许被其他机器人邀请进群”。",
+      "check_scope": "此检查仅验证已保存的 App ID 和 App Secret，不验证卡片回调地址、回调密钥或事件订阅。",
+      "secret_configured": "App secret 已配置",
+      "secret_not_configured": "App secret 未配置",
+      "secret_description": "留空可保留已保存的密钥，仅在需要替换时输入新密钥。",
+      "callback_url": "回调 URL",
+      "callback_description": "请将此完整 URL 添加到飞书应用设置的重定向 URL 中。",
+      "saved_config_actions": "配置检查和测试通知使用已保存的设置，请先保存更改。",
+      "bind_first": "请先在实例飞书设置中通过账号同步绑定您的账号，再发送测试通知。",
+      "enable_first": "请先启用并保存飞书通知，再发送测试。",
+      "check": "检查配置",
+      "test": "向我的绑定账号发送测试",
+      "check_success": "已保存的飞书应用凭证有效。",
+      "test_queued": "测试通知已加入发送队列，目标为您已绑定的飞书账号。请在飞书中确认是否收到。",
+      "saved": "飞书配置已保存。",
+      "request_failed": "请求失败，请检查已保存的应用凭证、应用权限和账号绑定后重试。",
+      "load_failed": "无法加载飞书配置。",
+      "retry": "重试",
+      "directory": {
+        "restore": "恢复待处理",
+        "already_bound": "已绑定",
+        "pending": "待处理 · 请选择账号",
+        "mode_all_help": "核对系统用户及已有绑定，绑定错误时可先解绑再重新选择。",
+        "mode_unbound_help": "显示系统中所有符合绑定条件的未绑定 Plane 用户；没有可用飞书成员时仍保留为待处理。",
+        "mode_all": "全量核对",
+        "mode_unbound": "仅未绑定",
+        "mode": "同步范围",
+        "title": "通讯录账号绑定",
+        "description": "获取应用可见的飞书通讯录并核对建议匹配结果。同步不会自动绑定账号。请先保存配置更改。",
+        "sync": "同步通讯录",
+        "search": "搜索飞书成员",
+        "search_failed": "无法搜索用户，请重试。",
+        "loading": "正在加载用户…",
+        "no_users": "没有可用的飞书成员，请检查应用通讯录权限范围。",
+        "failed": "请求失败。请刷新通讯录，检查应用权限和配置后重试。",
+        "partial": "通讯录同步不完整，暂时无法绑定。请检查通讯录权限后重新同步。",
+        "expired": "此预览已过期，请重新同步通讯录。",
+        "expires": "预览过期时间：{date, date, medium} {date, time, medium}",
+        "empty": "没有符合当前筛选条件的 Plane 用户。",
+        "select_matches": "选择前 20 个匹配账号",
+        "select_person": "选择 {name}",
+        "unnamed": "未命名成员",
+        "no_email": "无邮箱地址",
+        "email": "邮箱匹配",
+        "oidc": "OIDC 身份匹配",
+        "unmatched": "待选择账号",
+        "bound": "绑定成功",
+        "conflict": "已存在绑定，保留原绑定",
+        "user_ineligible": "用户已不符合绑定条件",
+        "match_changed": "匹配已变化，请重新同步",
+        "notifications": "为新绑定用户开启飞书通知渠道",
+        "selection_count": "{count, plural, one {已选择 # 个账号} other {已选择 # 个账号}}",
+        "duplicates": "请为每个选中成员选择不同的 Plane 用户。",
+        "bind": "绑定所选账号",
+        "confirm_title": "确认账号绑定",
+        "confirm_description": "{count, plural, one {是否绑定所选的 # 个账号？已有绑定将保留。} other {是否绑定所选的 # 个账号？已有绑定将保留。}}",
+        "notifications_on": "将为新绑定用户开启飞书通知渠道。",
+        "notifications_off": "通知偏好将保持不变。",
+        "limit": "每批最多选择 20 个账号。",
+        "identity_conflict": "身份存在冲突，无法自动或手动绑定",
+        "permission_required": "飞书应用缺少权限。请开启 tenant:tenant:readonly 及所需通讯录权限，发布应用后重新同步。",
+        "result_summary": "当前列表共 {total} 名 Plane 用户，已绑定 {bound} 人",
+        "reopen": "查看匹配",
+        "review_title": "核对并绑定通讯录账号",
+        "oidc_locked": "已验证的 OIDC 身份，无法更改目标用户；您可以跳过此成员。",
+        "skip": "跳过",
+        "include": "加入绑定",
+        "skipped": "已跳过",
+        "review_summary": "建议匹配：{automatic} · 手动匹配：{manual} · 待处理：{pending} · 已跳过：{skipped} · 已绑定：{existing}。每次最多提交 20 个账号。",
+        "bind_count": "绑定 {count} 个账号",
+        "manual": "手动匹配",
+        "selection": "绑定",
+        "feishu_member": "飞书成员",
+        "plane_account": "Plane 账号",
+        "match_status": "匹配方式 / 状态",
+        "table_help": "为 Plane 用户选择对应的飞书成员，勾选后点击下方按钮确认绑定。取消勾选即跳过。",
+        "unbind": "解绑",
+        "unbind_title": "解除飞书账号绑定",
+        "unbind_help": "确认解除 Plane 用户 {user} 与飞书账号 {member} 的绑定？解除后可重新选择，不影响 OIDC 登录。"
+      },
+      "tabs": {
+        "settings": "应用设置",
+        "directory": "账号同步"
+      }
+    },
+    "common": {
+      "error": "错误",
+      "error_exclamation": "错误！",
+      "success": "成功",
+      "success_exclamation": "成功！",
+      "something_went_wrong": "出了点问题，请重试。",
+      "email": "邮箱",
+      "password": "密码",
+      "show_password": "显示密码",
+      "hide_password": "隐藏密码",
+      "dismiss_banner": "关闭提示",
+      "save_changes": "保存更改",
+      "saving": "正在保存",
+      "cancel": "取消",
+      "go_back": "返回",
+      "learn_more": "了解更多",
+      "close": "关闭"
+    },
+    "auth_errors": {
+      "sign_in": "登录",
+      "now": "。",
+      "administrator": "管理员",
+      "admin_already_exist": {
+        "title": "管理员已存在",
+        "message": "管理员已存在，请重试。"
+      },
+      "required_email_password_first_name": {
+        "title": "需要填写邮箱、密码和名字",
+        "message": "需要填写邮箱、密码和名字，请重试。"
+      },
+      "invalid_admin_email": {
+        "title": "管理员邮箱无效",
+        "message": "管理员邮箱无效，请重试。"
+      },
+      "invalid_admin_password": {
+        "title": "管理员密码无效",
+        "message": "管理员密码错误，请重试。"
+      },
+      "required_email_password": {
+        "title": "需要填写邮箱和密码",
+        "message": "需要填写邮箱和密码，请重试。"
+      },
+      "authentication_failed": {
+        "title": "认证失败",
+        "message": "认证失败，请重试。"
+      },
+      "admin_user_already_exist": {
+        "title": "管理员用户已存在",
+        "message": "管理员用户已存在，请"
+      },
+      "admin_user_does_not_exist": {
+        "title": "管理员用户不存在",
+        "message": "管理员用户不存在，请"
+      },
+      "admin_user_deactivated": {
+        "title": "用户账号已停用",
+        "message": "用户账号已停用，请联系{contact}。"
+      },
+      "sso_not_admin": {
+        "title": "不是管理员",
+        "message": "该账号不是实例管理员，请联系现有管理员在「管理员」中添加你。"
+      },
+      "sso_failed": {
+        "title": "单点登录失败",
+        "message": "单点登录未成功，请重试或使用密码登录。"
+      }
+    },
+    "sign_in": {
+      "heading": "管理您的 Plane 实例",
+      "sub_heading": "配置实例级设置，保障实例安全",
+      "password_placeholder": "请输入密码",
+      "submit": "登录",
+      "sso": "使用 {provider} 登录",
+      "sso_divider": "或使用密码登录"
+    },
+    "setup": {
+      "heading": "设置您的 Plane 实例",
+      "sub_heading": "设置完成后，您就可以管理此 Plane 实例。",
+      "first_name": "名字",
+      "last_name": "姓氏",
+      "first_name_placeholder": "三",
+      "last_name_placeholder": "张",
+      "company_name": "公司名称",
+      "set_password": "设置密码",
+      "new_password": "新密码",
+      "confirm_password": "确认密码",
+      "passwords_dont_match": "两次输入的密码不一致",
+      "continue": "继续",
+      "errors": {
+        "instance_not_configured": "实例尚未配置，请重试。",
+        "password_too_weak": "密码强度不足，请确保满足下方的所有要求。",
+        "admin_already_exist": "管理员已存在，请直接登录。",
+        "required_fields": "邮箱、密码和名字为必填项。",
+        "invalid_email": "请输入有效的邮箱地址。",
+        "admin_user_already_exist": "使用此邮箱的管理员用户已存在。",
+        "unknown_with_detail": "出了点问题（{detail}），请重试。"
+      }
+    },
+    "password_strength": {
+      "empty": "请输入密码",
+      "too_short": "密码太短",
+      "weak": "密码强度较弱",
+      "strong": "密码强度较强",
+      "criteria": {
+        "length": "至少 8 个字符",
+        "uppercase": "至少 1 个大写字母",
+        "lowercase": "至少 1 个小写字母",
+        "number": "至少 1 个数字",
+        "special": "至少 1 个特殊字符"
+      }
+    },
+    "instance_failure": {
+      "image_alt": "实例加载失败插图",
+      "title": "无法获取实例信息。",
+      "description": "暂时无法获取实例信息。别担心，可能只是网络连接问题。",
+      "retry": "重试"
+    },
+    "not_found": {
+      "image_alt": "404 - 页面不存在",
+      "title": "糟糕，出了点问题。",
+      "description": "抱歉，找不到您要访问的页面。它可能已被删除、更名，或暂时不可用。",
+      "go_to_general": "前往常规设置"
+    },
+    "header": {
+      "general": "基本信息",
+      "ai": "AI",
+      "email": "邮件服务",
+      "authentication": "登录方式",
+      "workspace": "工作区",
+      "create": "创建",
+      "settings": "设置",
+      "toggle_sidebar": "切换侧边栏",
+      "breadcrumb": "面包屑导航",
+      "admins": "管理员",
+      "users": "用户"
+    },
+    "sidebar": {
+      "general": {
+        "name": "基本信息",
+        "description": "实例名称与管理员信息"
+      },
+      "email": {
+        "name": "邮件服务",
+        "description": "配置 SMTP，用于发送通知和登录邮件"
+      },
+      "workspace": {
+        "name": "工作区",
+        "description": "查看和管理所有工作区"
+      },
+      "authentication": {
+        "name": "登录方式",
+        "description": "邮箱、OAuth 与单点登录"
+      },
+      "ai": {
+        "name": "AI",
+        "description": "接入大模型服务"
+      },
+      "switch_to_light": "切换到浅色模式",
+      "switch_to_dark": "切换到深色模式",
+      "appearance": "外观",
+      "light": "浅色",
+      "dark": "深色",
+      "follow_system": "跟随系统",
+      "sign_out": "退出登录",
+      "instance_admin_menu": "实例管理员菜单",
+      "instance_admin": "实例管理员",
+      "account_menu": "账号菜单",
+      "admin_user": "管理员用户",
+      "admins": {
+        "name": "管理员",
+        "description": "可以管理本实例的人员"
+      },
+      "users": {
+        "name": "用户",
+        "description": "本实例的所有账号"
+      }
+    },
+    "help": {
+      "documentation": "文档",
+      "forum": "加入社区论坛",
+      "report_bug": "报告问题",
+      "redirect_to_plane": "前往 Plane",
+      "help": "帮助",
+      "version": "版本：v{version}"
+    },
+    "general": {
+      "title": "基本信息",
+      "description": "修改实例名称，查看管理员和实例 ID。",
+      "toast_updated": "设置已更新",
+      "instance_details": "实例信息",
+      "instance_name": "实例名称",
+      "instance_name_placeholder": "实例名称",
+      "admin_email": "管理员邮箱",
+      "admin_email_description": "管理员的登录邮箱，可在 Plane 的个人资料设置中修改。",
+      "admin_email_change_link": "前往修改",
+      "instance_id": "实例 ID"
+    },
+    "email": {
+      "toast_disabled": {
+        "title": "邮件功能已关闭",
+        "message": "邮件功能已关闭"
+      },
+      "toast_disable_error": {
+        "title": "关闭邮件功能失败",
+        "message": "关闭邮件功能失败，请重试。"
+      },
+      "title": "邮件服务",
+      "description": "配置 SMTP 服务器后，Plane 可以发送通知、邀请和登录验证码等邮件。",
+      "test_before_save": "请在下方完成设置，并在保存前进行测试。",
+      "misconfig_warning": "配置错误可能导致邮件退信或发送失败。",
+      "enable_smtp": "启用 SMTP 邮件",
+      "form": {
+        "no_security": "不加密",
+        "host": "主机",
+        "port": "端口",
+        "sender": "发件人邮箱地址",
+        "sender_description": "用户收到此实例发送的邮件时看到的发件地址，您需要验证此地址。",
+        "username": "用户名",
+        "toast_updated": "邮件设置已更新",
+        "security": "邮件加密方式",
+        "select_security": "选择邮件加密方式",
+        "authentication": "身份验证",
+        "authentication_description": "此项为选填，但建议为 SMTP 服务器设置用户名和密码。",
+        "send_test_email": "发送测试邮件"
+      },
+      "test": {
+        "failed_to_send": "发送邮件失败",
+        "sent": "邮件已发送",
+        "failed": "发送失败",
+        "receiver_email": "收件人邮箱",
+        "sent_description": "测试邮件已发送至 {email}。如果没有收到，请检查垃圾邮件文件夹。",
+        "recheck": "如果仍未收到，请检查 SMTP 配置并重新发送测试邮件。",
+        "sending": "正在发送",
+        "send": "发送邮件"
+      }
+    },
+    "authentication": {
+      "cannot_disable": {
+        "title": "无法停用此认证方式",
+        "message": "至少需要保留一种已启用的认证方式。请先启用其他方式，再停用此方式。"
+      },
+      "saving_configuration": "正在保存配置",
+      "configuration_saved": "配置已保存",
+      "configuration_save_failed": "保存配置失败",
+      "title": "登录方式",
+      "description": "设置成员可以通过哪些方式登录，以及是否只允许受邀用户注册。",
+      "allow_signup": "允许任何人无需邀请即可注册",
+      "allow_signup_description": "关闭后，只有受邀用户才能注册。",
+      "available_modes": "可用的认证方式",
+      "modes": {
+        "unique_codes": {
+          "name": "邮箱验证码",
+          "description": "使用发送到邮箱的验证码登录或注册 Plane。使用此方式需要先配置 SMTP。"
+        },
+        "passwords": {
+          "name": "密码",
+          "description": "允许成员设置密码创建账号，并使用邮箱和密码登录。"
+        },
+        "google": {
+          "description": "允许成员使用 Google 账号登录或注册 Plane。"
+        },
+        "github": {
+          "description": "允许成员使用 GitHub 账号登录或注册 Plane。"
+        },
+        "gitlab": {
+          "description": "允许成员使用 GitLab 账号登录或注册 Plane。"
+        },
+        "gitea": {
+          "description": "允许成员使用 Gitea 账号登录或注册 Plane。"
+        },
+        "oidc": {
+          "description": "允许成员使用任意 OpenID Connect 身份提供商（如 Casdoor、Keycloak 或 Authentik）登录或注册 Plane。"
+        }
+      },
+      "edit": "编辑",
+      "configure": "配置",
+      "enable_provider": "启用 {provider}",
+      "enable_passwords": "启用密码登录",
+      "enable_email_codes": "启用邮箱验证码登录",
+      "provider": {
+        "configuration_saved": "配置已保存",
+        "now_active": "{provider} 登录现已启用。",
+        "now_disabled": "{provider} 登录现已停用。"
+      },
+      "oauth": {
+        "client_id": "客户端 ID",
+        "client_secret": "客户端密钥",
+        "get_from_your": "可以在以下位置获取：",
+        "secret_also_in_your": "客户端密钥同样可以在以下位置找到：",
+        "app_settings": "{provider} OAuth 应用设置。",
+        "organization_id": "组织 ID",
+        "organization_id_description": "GitHub 组织的 ID。",
+        "origin_url": "来源 URL",
+        "callback_uri": "回调 URI",
+        "callback_url": "回调 URL",
+        "auto_generated_paste_into": "此项由系统自动生成，请将其粘贴到",
+        "authorized_origin_url": "已授权的来源 URL",
+        "authorized_callback_uri": "已授权的回调 URI",
+        "field": "字段中，",
+        "here": "点此前往。",
+        "done": "完成！",
+        "configured": "{provider} 登录已配置完成，建议立即测试。",
+        "provider_details_for_plane": "{provider} 提供给 Plane 的信息",
+        "plane_details_for_provider": "Plane 提供给 {provider} 的信息",
+        "web": "Web",
+        "learn_more": "了解更多",
+        "gitlab_host_prefix": "填写 https://gitlab.com，或您托管 GitLab 的",
+        "gitlab_host_suffix": "域名。",
+        "application_id": "应用 ID",
+        "secret": "密钥",
+        "redirect_uri": "重定向 URI",
+        "field_of_your": "字段中，位于",
+        "oauth_application": "{provider} OAuth 应用",
+        "app_settings_no_period": "{provider} OAuth 应用设置",
+        "google_client_id_description": "客户端 ID 可以在 Google API 控制台中找到。",
+        "google_client_secret_description": "客户端密钥同样可以在 Google API 控制台中找到。",
+        "google_client_id_docs": "Google OAuth 客户端 ID 文档",
+        "google_client_secret_docs": "Google OAuth 客户端密钥文档",
+        "authorized_js_origins": "已获授权的 JavaScript 来源",
+        "authorized_redirect_uri": "已获授权的重定向 URI",
+        "field_for_this_client": "字段中。前往此 OAuth 客户端：",
+        "google_console_credentials": "Google Cloud 控制台 OAuth 客户端凭据",
+        "gitea_host": "Gitea 主机",
+        "gitea_host_description": "填写您的 Gitea 实例 URL。如使用官方 Gitea，请填写“https://gitea.com”。",
+        "oidc_provider_name": "按钮名称",
+        "oidc_provider_name_description": "显示在登录按钮上，例如“使用 Casdoor 登录”。",
+        "oidc_provider_icon_url": "图标地址",
+        "oidc_provider_icon_url_description": "可选。显示在登录按钮上的图片地址，例如身份提供商的 Logo。留空则使用默认图标。",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_description": "身份提供商的 OIDC Issuer 地址。Plane 会读取 <issuer>/.well-known/openid-configuration 自动获取各接口地址。",
+        "oidc_client_description": "可在身份提供商的 OAuth/OIDC 应用中获取。",
+        "oidc_redirect_uri_suffix": "字段（位于身份提供商的 OAuth/OIDC 应用中）。",
+        "oidc_trust_email": "信任此提供商返回的邮箱",
+        "oidc_trust_email_description": "即使提供商未将邮箱标记为已验证也予以接受。仅在您完全掌控该身份提供商时启用，否则任何能在其中设置邮箱的人都可能接管已有的 Plane 账号。",
+        "refresh_attributes": "登录时从 {provider} 同步用户属性"
+      },
+      "session": {
+        "title": "会话",
+        "description": "控制用户需要重新登录前保持登录状态的时长。",
+        "user_session": "成员会话时长",
+        "user_session_description": "成员在 Web 应用中保持登录的时长。",
+        "admin_session": "God mode 会话时长",
+        "admin_session_description": "实例管理员在 God mode 中保持登录的时长。",
+        "extend_on_activity": "活动时延长会话",
+        "extend_on_activity_description": "每次请求都会重新计时，活跃用户不会被登出。关闭后，用户将在登录后的固定时间被登出。",
+        "minutes": "{count, plural, one {# 分钟} other {# 分钟}}",
+        "hours": "{count, plural, one {# 小时} other {# 小时}}",
+        "days": "{count, plural, one {# 天} other {# 天}}"
+      },
+      "configure_provider": "配置 {provider}"
+    },
+    "meta": {
+      "create_workspace": "创建工作区 - God Mode",
+      "general": "基本信息 - God Mode",
+      "authentication": "登录方式 - God Mode",
+      "workspace": "工作区 - God Mode",
+      "ai": "AI 设置 - God Mode",
+      "email": "邮件服务 - God Mode",
+      "home": "管理后台 - 实例设置与登录",
+      "home_description": "配置您的 Plane 实例，或登录管理后台。",
+      "app_title": "Plane | 简单、可扩展的开源项目管理工具",
+      "app_description": "开源项目管理工具，轻松管理工作项、迭代和产品路线图。",
+      "admins": "管理员 - God Mode",
+      "users": "用户 - God Mode"
+    },
+    "ai": {
+      "title": "AI 模型服务",
+      "description": "接入大模型服务，为所有工作区开启 AI 功能。支持 OpenAI、Anthropic、Gemini 以及任何 OpenAI 兼容服务。",
+      "provider": "服务商",
+      "provider_description": "选择预设会自动填写接口协议和 API 地址，之后仍可手动修改。",
+      "custom_provider": "自定义",
+      "search_provider": "搜索服务商",
+      "no_matching_providers": "没有匹配的服务商",
+      "provider_names": {
+        "dashscope": "阿里云百炼（通义千问）",
+        "deepseek": "深度求索 DeepSeek",
+        "minimax": "MiniMax 稀宇科技",
+        "moonshot": "月之暗面 Kimi（国际站）",
+        "moonshot-cn": "月之暗面 Kimi",
+        "qiniu": "七牛云",
+        "siliconflow": "硅基流动 SiliconFlow",
+        "volcengine": "火山引擎方舟（豆包）",
+        "zai": "智谱 Z.ai（国际站）",
+        "zhipu": "智谱 AI（GLM）"
+      },
+      "protocol": "接口协议",
+      "protocol_description": "大多数第三方和自部署服务（DeepSeek、通义千问、Kimi、Ollama、vLLM 等）都使用 OpenAI 兼容（Chat Completions）协议。只支持新版 Responses API 的模型请选择 OpenAI Responses。",
+      "protocols": {
+        "openai": "OpenAI 兼容（Chat Completions）",
+        "openai_responses": "OpenAI Responses",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini"
+      },
+      "base_url": "API 地址",
+      "base_url_description": "留空则使用官方地址。只填域名时会自动补全版本路径（/v1）；以 # 结尾则按原样使用，不做补全。",
+      "base_url_preview": "实际请求地址：",
+      "api_key": "API 密钥",
+      "api_key_description": "模型服务商提供的密钥，将加密保存。",
+      "api_key_saved_description": "已保存密钥（{key}）。留空则保持不变，填写新密钥将替换原密钥。",
+      "llm_model": "模型",
+      "llm_model_description": "手动填写模型 ID，或从服务商获取模型列表。",
+      "fetch_models": "获取模型",
+      "models_available": "{count, plural, one {共 # 个可用模型} other {共 # 个可用模型}}",
+      "models_fetched": "{count, plural, one {已获取 # 个模型。} other {已获取 # 个模型。}}",
+      "models_fetch_failed": "获取模型失败",
+      "no_matching_models": "没有匹配的模型",
+      "search_model": "搜索或输入模型 ID",
+      "type_model_id": "输入模型 ID，或先获取模型列表",
+      "use_custom_model": "使用“{model}”",
+      "test_connection": "测试连接",
+      "test_succeeded": "连接正常",
+      "test_failed": "连接失败",
+      "test_result": "{model} 已响应，耗时 {latency} 毫秒。",
+      "request_failed": "请求失败，请检查 API 地址和 API 密钥。",
+      "toast_updated": "AI 设置已更新"
+    },
+    "workspace": {
+      "title": "工作区",
+      "description": "查看实例中的所有工作区，并设置谁可以创建工作区。",
+      "restrict_creation": "禁止其他人创建工作区。",
+      "restrict_creation_description": "开启后只有您可以创建工作区，新工作区需要由您邀请用户加入。",
+      "all_workspaces": "此实例上的所有工作区",
+      "list_note": "目前还不能删除工作区；只有您是工作区的管理员或成员时才能进入该工作区。",
+      "create": "创建工作区",
+      "load_more": "加载更多",
+      "create_page": {
+        "title": "创建新工作区",
+        "description": "创建工作区后，需要在工作区设置中邀请用户。",
+        "toast_created": "工作区已创建。",
+        "toast_create_failed": "无法创建工作区，请重试。",
+        "toast_create_error": "创建工作区时出错，请重试。",
+        "name": "工作区名称",
+        "name_placeholder": "例如：公司或团队名称",
+        "url": "工作区 URL",
+        "url_taken": "这个 URL 已被使用，换一个试试。",
+        "url_invalid": "URL 只能包含“-”、“_”和字母数字字符。",
+        "creating": "正在创建工作区"
+      },
+      "item": {
+        "logo": "工作区 Logo",
+        "unique_url": "工作区的唯一 URL",
+        "owned_by": "所有者：",
+        "total_projects": "项目总数：",
+        "total_members": "成员总数："
+      }
+    },
+    "discard": {
+      "title": "您有未保存的更改",
+      "keep_editing": "继续编辑",
+      "close_content": "关闭窗口后，您所做的修改将会丢失。",
+      "discard": "放弃修改"
+    },
+    "copy": {
+      "title": "已复制到剪贴板",
+      "message": "{label} 已复制到剪贴板",
+      "aria_label": "复制{label}"
+    },
+    "new_user": {
+      "description": "实例设置完成！欢迎使用 Plane 实例管理后台。从创建第一个工作区开始吧。",
+      "plane_icon": "Plane 图标"
+    },
+    "admins": {
+      "title": "实例管理员",
+      "description": "管理员可以登录 God Mode 并管理本实例的各项设置。",
+      "add_label": "添加管理员",
+      "add_button": "设为管理员",
+      "add_hint": "这里只列出已有 Plane 账号的用户（例如用单点登录登录过一次）。如需登录 God Mode，请对方在 Web 端「个人设置 → 安全」中设置密码。",
+      "list_title": "管理员",
+      "you": "（你）",
+      "remove": "撤销管理员权限",
+      "confirm_remove": "确认撤销",
+      "cancel": "取消",
+      "added": "已添加管理员。",
+      "removed": "已移除管理员。",
+      "errors": {
+        "invalid_email": "请输入有效的邮箱地址。",
+        "user_not_found": "没有使用该邮箱的有效 Plane 账号，请先让对方登录一次。",
+        "already_admin": "该用户已经是管理员。",
+        "cannot_remove_self": "不能移除你自己。",
+        "last_admin": "至少需要保留一名管理员。",
+        "default": "出了点问题，请重试。"
+      },
+      "search_placeholder": "按姓名或邮箱搜索用户",
+      "no_users": "没有匹配的用户。",
+      "already_admin": "已是管理员"
+    },
+    "users": {
+      "title": "用户",
+      "description": "管理本实例中的账号及管理员权限。已停用的用户无法登录。",
+      "admin_hint": "实例管理员可以管理 God Mode 设置。撤销管理员权限会保留账号和工作区成员身份；如需停用管理员账号，请先撤销其管理员权限。",
+      "search_placeholder": "按姓名或邮箱搜索",
+      "total": "{count, plural, other{共 # 名用户}}",
+      "empty": "没有匹配的用户。",
+      "filters": {
+        "label": "状态",
+        "all": "全部",
+        "active": "正常",
+        "deactivated": "已停用"
+      },
+      "account_types": {
+        "label": "账号类型",
+        "all": "全部账号",
+        "user": "普通用户",
+        "admin": "实例管理员"
+      },
+      "badges": {
+        "admin": "管理员",
+        "deactivated": "已停用"
+      },
+      "never_signed_in": "从未登录",
+      "login_medium": {
+        "oidc": "单点登录",
+        "email": "密码",
+        "magic_code": "邮箱验证码"
+      },
+      "deactivate": "停用",
+      "confirm_deactivate": "确认停用",
+      "activate": "恢复",
+      "deactivated": "已停用该用户，并已让其在所有设备上退出登录。",
+      "activated": "已恢复该用户。",
+      "previous_page": "上一页",
+      "next_page": "下一页",
+      "deactivate_hint": "停用后会立即让该用户在所有设备上退出登录，并阻止其通过密码、单点登录和 API 令牌访问。工作区成员身份会保留，恢复后即可照常使用。如需将其彻底移出某个工作区，请在该工作区的成员设置中操作。",
+      "errors": {
+        "cannot_deactivate_self": "不能停用你自己。",
+        "user_is_admin": "该用户是管理员，请先在「管理员」页面移除其管理员权限。",
+        "default": "出了点问题，请重试。"
+      },
+      "columns": {
+        "user": "用户",
+        "workspaces": "工作区",
+        "last_login": "最近登录",
+        "actions": "操作"
+      },
+      "details": {
+        "edit_profile": "编辑资料",
+        "menu_label": "{email} 的操作菜单",
+        "processing": "正在处理…",
+        "title": "用户资料与账号管理",
+        "manage": "详情 / 管理",
+        "loading": "正在加载用户资料…",
+        "retry": "重试",
+        "refresh_failed": "更改已保存，但部分资料刷新失败。请重新打开弹窗以加载最新数据。",
+        "saved": "个人资料已更新。",
+        "none": "无",
+        "linked": "已关联",
+        "not_linked": "未关联",
+        "email": "邮箱",
+        "id": "用户 ID",
+        "date_joined": "注册时间",
+        "last_login": "最近登录",
+        "login_medium": "最近登录方式",
+        "sso": "SSO 身份",
+        "status": "状态",
+        "role": "账号类型",
+        "profile": "个人资料",
+        "first_name": "名",
+        "last_name": "姓",
+        "display_name": "显示名称",
+        "no_workspaces": "该用户尚未加入任何工作区。",
+        "account": "账号管理",
+        "self_protection": "您不能停用自己的账号或撤销自己的管理员权限。",
+        "confirm_action": "确认",
+        "validation": {
+          "required": "请输入显示名称。",
+          "too_long": "最多输入 255 个字符。",
+          "url": "姓名不能包含 URL。"
+        },
+        "roles": {
+          "guest": "访客",
+          "viewer": "查看者",
+          "member": "成员",
+          "admin": "管理员",
+          "unknown": "未知角色"
+        },
+        "actions": {
+          "activate": "恢复账号",
+          "deactivate": "停用账号",
+          "promote": "授予管理员权限",
+          "revoke": "撤销管理员权限"
+        },
+        "confirm": {
+          "activate": "确认恢复 {email}？该用户将可以重新登录并访问原有工作区。",
+          "deactivate": "确认停用 {email}？该用户将在所有设备上退出登录，并无法通过密码、SSO 和 API 令牌访问。工作区成员身份将保留。",
+          "promote": "确认授予 {email} 管理员权限？该用户将可以管理 God Mode 中的所有实例设置和用户。",
+          "revoke": "确认撤销 {email} 的管理员权限？该用户将无法访问 God Mode，账号和工作区成员身份将保留。"
+        },
+        "success": {
+          "activate": "账号已恢复。",
+          "deactivate": "账号已停用，并已在所有设备上退出登录。",
+          "promote": "已授予管理员权限。",
+          "revoke": "已撤销管理员权限。"
+        }
+      }
+    }
+  }
+}

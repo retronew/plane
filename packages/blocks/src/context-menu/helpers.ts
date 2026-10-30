@@ -27,6 +27,21 @@ export function resolveItemVariant(item: TContextMenuItem): TContextMenuItemVari
   return "neutral";
 }
 
+/** Rows whose title contains the query, case-insensitively; an empty query keeps every row. */
+export function filterMenuItemsByQuery(items: TContextMenuItem[], query: string): TContextMenuItem[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return items;
+  return items.filter((item) => item.title?.toLowerCase().includes(needle));
+}
+
+/**
+ * A disabled row's `description` explains why it is unavailable. Like Linear, the menu keeps such a
+ * row to one compact line and moves the explanation into a hover tooltip instead of a second line.
+ */
+export function getDisabledReason(item: TContextMenuItem): string | undefined {
+  return item.disabled && item.description ? item.description : undefined;
+}
+
 /**
  * The popup is portalled, but React events still bubble through the consumer's tree — a card `Link`
  * or `ControlLink` wrapping the menu would otherwise act on every click inside the surface.

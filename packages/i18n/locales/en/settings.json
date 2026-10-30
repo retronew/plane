@@ -1,0 +1,306 @@
+{
+  "account_settings": {
+    "profile": {
+      "change_email_modal": {
+        "title": "Change email",
+        "description": "Enter a new email address to receive a verification link.",
+        "toasts": {
+          "success_title": "Success!",
+          "success_message": "Email updated successfully. Please sign in again."
+        },
+        "form": {
+          "email": {
+            "label": "New email",
+            "placeholder": "Enter your email",
+            "errors": {
+              "required": "Email is required",
+              "invalid": "Email is invalid",
+              "exists": "Email already exists. Please use a different one.",
+              "validation_failed": "Email validation failed. Please try again."
+            }
+          },
+          "code": {
+            "label": "Unique code",
+            "placeholder": "123456",
+            "helper_text": "Verification code sent to your new email.",
+            "errors": {
+              "required": "Unique code is required",
+              "invalid": "Invalid verification code. Please try again."
+            }
+          }
+        },
+        "actions": {
+          "continue": "Continue",
+          "confirm": "Confirm",
+          "cancel": "Cancel"
+        },
+        "states": {
+          "sending": "Sending"
+        }
+      }
+    },
+    "preferences": {
+      "heading": "Preferences",
+      "description": "Customize your app experience the way you work"
+    },
+    "notifications": {
+      "heading": "Email notifications",
+      "description": "Stay in the loop on Work items you are subscribed to. Enable this to get notified.",
+      "select_default_view": "Select default view",
+      "compact": "Compact",
+      "full": "Full Screen"
+    },
+    "security": {
+      "heading": "Security"
+    },
+    "api_tokens": {
+      "title": "Personal Access Tokens",
+      "description": "Generate secure API tokens to integrate your data with external systems and applications."
+    },
+    "mcp": {
+      "title": "MCP",
+      "description": "Connect AI tools to Plane with Model Context Protocol (MCP).",
+      "token_hint": "Paste an API token to connect. It is not saved here.",
+      "manage_connections": "Manage OAuth connections",
+      "manage_tokens": "Manage personal tokens",
+      "server_url": "Server URL",
+      "token_label": "Personal access token",
+      "token_placeholder": "Paste your personal access token",
+      "workspace_auto_hint": "No workspace setup needed; your account permissions apply.",
+      "add": "Add to app",
+      "guide": "Setup guide",
+      "more_tools": "More tools",
+      "fewer_tools": "Show fewer tools",
+      "chatgpt_hint": "Add this server URL through your client’s remote MCP connection settings, then sign in with OAuth. Availability depends on your client version and account.",
+      "agent_prompt": "Agent setup",
+      "agent_prompt_label": "Copy {name} MCP configuration prompt",
+      "agent_hint": "Copy the agent setup prompt to configure the server URL and verify the connection.",
+      "download_skill": "Download {name} Skill",
+      "chatgpt_skill_hint": "Install the OpenAI plugin with MCP included. Uploading a standalone Skill does not create an OAuth connection.",
+      "codex_skill_hint": "Save SKILL.md to ~/.agents/skills/plane-workflow/SKILL.md. Merge the MCP configuration into ~/.codex/config.toml and provide PLANE_API_TOKEN to the Codex process.",
+      "openai_config_hint": "Merge this into ~/.codex/config.toml. Set PLANE_API_TOKEN in the environment of the client process; the configuration references it without storing your token.",
+      "copy_command": "Copy install command",
+      "download": "Download JSON",
+      "view_code": "View {name} configuration",
+      "copy_config": "Copy configuration",
+      "copy_failed": "Could not copy. Select and copy the configuration manually.",
+      "code_description": "Copy this configuration into your client.",
+      "template_hint": "Replace {token} with your personal access token before connecting.",
+      "oauth_description": "View expiry dates and revoke access in Authorizations.",
+      "oauth_load_error": "Unable to load connections.",
+      "oauth_retry": "Retry",
+      "oauth_loading": "Loading connections…",
+      "oauth_empty": "No authorized connections.",
+      "oauth_write": "Read and write",
+      "oauth_read": "Read only",
+      "oauth_expires": "Expires:",
+      "oauth_confirm": "The client will lose access to this workspace. Revoke this authorization?",
+      "oauth_confirm_revoke": "Confirm revoke",
+      "oauth_cancel": "Cancel",
+      "oauth_revoke_error": "Unable to revoke. Please retry.",
+      "oauth_revoke": "Revoke authorization"
+    },
+    "skills": {
+      "title": "Skills and plugins",
+      "description": "Install all 8 Plane workflow skills for planning work, breaking down requirements, and preparing updates.",
+      "configure_mcp": "Configure MCP",
+      "agent_prompt_label": "Copy {name} Skill installation prompt",
+      "connection_hint": "Install workflow skills using the command or ZIP. To connect to Plane data, open MCP.",
+      "agent_title": "Install with an agent",
+      "agent_description": "Copy a prompt to your client's AI agent. It checks the environment, installs, and verifies the result.",
+      "manual_title": "Manual setup",
+      "manual_description": "Install through each client's plugin or skills entry. Values you need to enter can be copied.",
+      "view_steps": "View {name} setup steps",
+      "copy_value": "Copy {value}",
+      "mode_plugin": "Plugin",
+      "mode_skills": "Skills",
+      "field_repo": "Repository",
+      "field_branch": "Branch",
+      "field_marketplace": "Marketplace",
+      "field_plugin": "Plugin",
+      "field_setting": "Setting",
+      "generic_title": "Other clients",
+      "chatgpt_step_1": "In the ChatGPT desktop app, open Settings → Plugins, then select Add → Add plugin marketplace.",
+      "chatgpt_step_2": "Enter the repository and branch below, leave the subdirectory empty, and add the marketplace.",
+      "chatgpt_step_3": "Install the plugin, click Connect, and sign in to Plane to confirm account access and permissions.",
+      "codex_step_1": "Run these commands in a terminal:",
+      "codex_step_2": "Reload Codex and confirm all 8 skills are loaded. The ChatGPT desktop app on the same machine also lists this marketplace.",
+      "desktop_step_1": "In Claude Desktop, open Customize → Plugins, then select Add → Add marketplace.",
+      "desktop_step_2": "Enter the repository below.",
+      "desktop_step_3": "Install the plugin or upload its ZIP. In Code mode, open a local session, then use Connectors → Manage connectors → Connect. Sign-in requires HTTPS.",
+      "claude_step_1": "Run these commands in a terminal:",
+      "claude_step_2": "Run /plugin to check all 8 skills, then /mcp to connect Plane and authorize access.",
+      "copilot_step_1": "Run these commands in a terminal:",
+      "copilot_step_2": "Restart Copilot CLI and confirm all 8 skills are loaded.",
+      "vscode_step_1": "Turn on this setting. Agent plugins are experimental in VS Code.",
+      "vscode_step_2": "Enter these commands in Copilot Chat:",
+      "vscode_step_3": "Confirm all 8 skills are loaded. You can also browse it under Chat: Open Customizations → Plugins.",
+      "generic_step_1": "Run this command in a terminal, then choose your client and install scope:",
+      "generic_step_2": "If your client can't run commands, download the skills ZIP and upload each of the 8 skill folders the way your client supports.",
+      "download_plugin": "Download plugin ZIP",
+      "download": "Download skills ZIP"
+    },
+    "activity": {
+      "heading": "Activity",
+      "description": "Track your recent actions and changes across all projects and work items."
+    },
+    "connections": {
+      "title": "Connections",
+      "heading": "Connections",
+      "description": "Manage your workspace connections settings."
+    },
+    "oauth": {
+      "title": "Authorizations",
+      "description": "Manage the access granted to applications.",
+      "search": "Search clients",
+      "refresh": "Refresh",
+      "client": "Client / access",
+      "permissions": "Permissions",
+      "status": "Status",
+      "created": "Authorized",
+      "expires": "Expires",
+      "actions": "Connection actions",
+      "active": "Active",
+      "pending": "Awaiting client",
+      "expired": "Expired",
+      "account_scope": "Workspaces you can access",
+      "read": "Read only",
+      "write": "Read and write",
+      "scope_hint": "Clients only have your existing permissions. Older workspace-specific grants keep their original scope until you reconnect.",
+      "empty": "No authorized apps yet",
+      "empty_hint": "Connect Plane from a client to see its authorization here.",
+      "no_matches": "No matching clients",
+      "table_hint": "Authorized apps. Scroll horizontally to see all columns on smaller screens.",
+      "loading": "Loading connections…",
+      "load_error": "Unable to load this page",
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "revoke": "Revoke access",
+      "revoking": "Revoking…",
+      "revoke_confirm": "This client will lose access immediately. Other client connections will keep working.",
+      "revoke_error": "Could not revoke access. Try again.",
+      "revoked": "Access revoked. This connection can no longer access Plane.",
+      "reconnect": "Reauthorize",
+      "reconnect_action": "Revoke and reconnect",
+      "reconnect_confirm": "First revoke this authorization, then return to the client and connect Plane again to choose new permissions. Plane cannot start a login on behalf of the client. Other connections are unaffected.",
+      "reconnect_next": "Access revoked. Return to the client, disconnect its saved Plane connection if needed, then connect again to authorize.",
+      "language": "Language",
+      "connect_title": "Connect {client} to Plane",
+      "consent_scope": "Access follows your account, including workspaces you join later. Your membership and project permissions are checked on every request.",
+      "read_hint": "Read projects, work items and pages that you have permission to view.",
+      "allow_write": "Also allow changes",
+      "write_hint": "Create, update and delete content within your existing permissions. Optional; off by default.",
+      "details": "Connection details",
+      "unverified_client": "The client supplies its own name. Only continue if you started this connection. Return address:",
+      "consent_expiry": "Access lasts {days} days. You can revoke it at any time in Authorizations.",
+      "allow": "Authorize",
+      "submit_error": "Could not complete this request. Try once more; if it persists, start a new connection from your client.",
+      "expired_title": "Start a new connection",
+      "expired_hint": "This request is invalid, expired or already used. Return to your client and connect Plane again.",
+      "network_hint": "Check your connection and retry.",
+      "loading_consent": "Preparing your connection…",
+      "returning": "Returning to your client",
+      "returning_hint": "Your authorization was saved. Your client will finish connecting. If it did not open, use the button below.",
+      "cancelled": "Connection cancelled",
+      "cancelled_hint": "No access was granted. Return to the client to dismiss its connection request.",
+      "return_client": "Return to client",
+      "close": "Close this page",
+      "close_hint": "Your browser did not close this tab. You can close it manually.",
+      "return_home": "Back to Plane",
+      "consent_expiry_unknown": "You can revoke access at any time in Authorizations."
+    },
+    "plugins": {
+      "title": "Plugins",
+      "authorizations": "Authorizations",
+      "description": "Choose a plugin for your client. View and revoke access in Authorizations.",
+      "manual_description": "Install through your client’s plugin settings using the commands and values below."
+    }
+  },
+  "profile": {
+    "label": "Profile",
+    "page_label": "Your work",
+    "work": "Work",
+    "details": {
+      "joined_on": "Joined on",
+      "time_zone": "Timezone"
+    },
+    "stats": {
+      "workload": "Workload",
+      "overview": "Overview",
+      "created": "Work items created",
+      "assigned": "Work items assigned",
+      "subscribed": "Work items subscribed",
+      "state_distribution": {
+        "title": "Work items by state",
+        "empty": "Create work items to view the them by states in the graph for better analysis."
+      },
+      "priority_distribution": {
+        "title": "Work items by Priority",
+        "empty": "Create work items to view the them by priority in the graph for better analysis."
+      },
+      "recent_activity": {
+        "title": "Recent activity",
+        "empty": "We couldn't find data. Kindly view your inputs",
+        "button": "Export today's activity",
+        "button_loading": "Exporting"
+      }
+    },
+    "actions": {
+      "profile": "Profile",
+      "security": "Security",
+      "activity": "Activity",
+      "preferences": "Preferences",
+      "notifications": "Notifications",
+      "api-tokens": "Personal Access Tokens",
+      "connections": "Connections"
+    },
+    "tabs": {
+      "summary": "Summary",
+      "assigned": "Assigned",
+      "created": "Created",
+      "subscribed": "Subscribed",
+      "activity": "Activity"
+    },
+    "empty_state": {
+      "activity": {
+        "title": "No activities yet",
+        "description": "Get started by creating a new work item! Add details and properties to it. Explore more in Plane to see your activity."
+      },
+      "assigned": {
+        "title": "No work items are assigned to you",
+        "description": "Work items assigned to you can be tracked from here."
+      },
+      "created": {
+        "title": "No work items yet",
+        "description": "All work items created by you come here, track them here directly."
+      },
+      "subscribed": {
+        "title": "No work items yet",
+        "description": "Subscribe to work items you are interested in, track all of them here."
+      }
+    },
+    "page_title": "My work - {tab}"
+  },
+  "themes": {
+    "theme_options": {
+      "system_preference": {
+        "label": "System preference"
+      },
+      "light": {
+        "label": "Light"
+      },
+      "dark": {
+        "label": "Dark"
+      },
+      "light_contrast": {
+        "label": "Light high contrast"
+      },
+      "dark_contrast": {
+        "label": "Dark high contrast"
+      },
+      "custom": {
+        "label": "Custom theme"
+      }
+    }
+  }
+}

@@ -4,7 +4,6 @@
  * See the LICENSE file for details.
  */
 
-import { useRef } from "react";
 import { WarningCircleOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ISSUE_ORDER_BY_OPTIONS } from "@plane/constants";
@@ -23,6 +22,10 @@ type Props = {
   isDraggingOverColumn: boolean;
 };
 
+/**
+ * Explains why a dragged work item can't be placed at a precise position in this group.
+ * Purely visual: it never takes pointer events or space, so the content under it doesn't move.
+ */
 export function GroupDragOverlay(props: Props) {
   const {
     dragColumnOrientation,
@@ -35,51 +38,35 @@ export function GroupDragOverlay(props: Props) {
   } = props;
   // hooks
   const { t } = useTranslation();
-  // refs
-  const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const shouldOverlayBeVisible = isDraggingOverColumn && canOverlayBeVisible;
-  const readableOrderBy = t(
-    ISSUE_ORDER_BY_OPTIONS.find((orderByObj) => orderByObj.key === orderBy)?.titleTranslationKey || ""
-  );
+  if (!shouldOverlayBeVisible) return null;
+
+  const orderByTranslationKey = ISSUE_ORDER_BY_OPTIONS.find(
+    (orderByObj) => orderByObj.key === orderBy
+  )?.titleTranslationKey;
+  const message = workflowDisabledSource || dropErrorMessage;
 
   return (
     <div
-      ref={messageContainerRef}
+      data-testid="group-drag-overlay"
       className={cn(
-        `absolute top-0 left-0 h-full w-full items-center rounded-sm bg-layer-1/85 text-13 font-medium text-tertiary ${dragColumnOrientation}`,
-        {
-          "z-2 flex flex-col border-[1px] border-strong": shouldOverlayBeVisible,
-          "bg-danger-subtle": workflowDisabledSource && isDropDisabled,
-        },
-        { hidden: !shouldOverlayBeVisible }
+        "pointer-events-none absolute inset-0 z-[3] flex flex-col items-center rounded-lg bg-surface-2/80 p-6 text-13 font-medium text-primary",
+        dragColumnOrientation,
+        { "bg-danger-subtle/80 text-danger-secondary": isDropDisabled && !!message }
       )}
     >
-      {workflowDisabledSource ? (
-        <span className="p-3 text-danger-secondary">{workflowDisabledSource}</span>
+      {message ? (
+        <span className="flex items-center gap-1.5 text-center">
+          <WarningCircleOutline width={14} height={14} className="shrink-0" />
+          {message}
+        </span>
       ) : (
-        <div
-          className={cn("my-8 flex flex-col items-center rounded-sm p-3", {
-            "text-secondary": shouldOverlayBeVisible,
-            "text-danger-secondary": isDropDisabled,
-          })}
-        >
-          {dropErrorMessage ? (
-            <div className="flex items-center">
-              <WarningCircleOutline width={13} height={13} /> &nbsp;
-              <span>{dropErrorMessage}</span>
-            </div>
-          ) : (
-            <>
-              {readableOrderBy && (
-                <span>
-                  {t("issue.layouts.ordered_by_label")} <span className="font-semibold">{t(readableOrderBy)}</span>.
-                </span>
-              )}
-              <span>{t("entity.drop_here_to_move", { entity: "work item" })}</span>
-            </>
-          )}
-        </div>
+        orderByTranslationKey && (
+          <span className="text-center">
+            {t("issue.layouts.ordered_by_label")} {t(orderByTranslationKey)}
+          </span>
+        )
       )}
     </div>
   );

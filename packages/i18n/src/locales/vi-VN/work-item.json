@@ -60,6 +60,8 @@
         "sub_issue_count": "Số lượng mục công việc con",
         "attachment_count": "Số lượng tệp đính kèm",
         "created_on": "Được tạo vào",
+        "time_in_status": "Thời gian ở trạng thái",
+        "started_at": "Bắt đầu {date}",
         "sub_issue": "Mục công việc con",
         "work_item_count": "Số lượng mục công việc"
       },

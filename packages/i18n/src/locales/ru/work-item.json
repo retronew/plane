@@ -60,6 +60,8 @@
         "sub_issue_count": "Количество подэлементов",
         "attachment_count": "Количество вложений",
         "created_on": "Дата создания",
+        "time_in_status": "Время в статусе",
+        "started_at": "Начато {date}",
         "sub_issue": "Подэлемент",
         "work_item_count": "Количество рабочих элементов"
       },

@@ -1,0 +1,634 @@
+{
+  "workspace_creation": {
+    "heading": "创建工作区",
+    "subheading": "使用 Plane 前，需要先创建或加入一个工作区。",
+    "form": {
+      "name": {
+        "label": "工作区名称",
+        "placeholder": "例如：公司或团队名称"
+      },
+      "url": {
+        "label": "工作区 URL",
+        "placeholder": "my-team",
+        "edit_slug": "只能修改 URL 的路径部分",
+        "ai_suggest": "使用 AI 建议 URL",
+        "ai_error": "暂时无法建议 URL，请重试或手动输入。",
+        "ai_taken": "建议的 URL 已被使用，请重试或手动输入。"
+      }
+    },
+    "errors": {
+      "creation_disabled": {
+        "title": "只有实例管理员可以创建工作区",
+        "description": "可以点击下方按钮，联系实例管理员为您创建。",
+        "request_button": "联系实例管理员"
+      },
+      "validation": {
+        "name_alphanumeric": "工作区名称只能包含空格、“-”、“_”和字母数字字符。",
+        "name_length": "名称不能超过 80 个字符。",
+        "url_alphanumeric": "URL 只能包含英文字母、数字、连字符（-）和下划线（_）。",
+        "url_required": "请填写工作区 URL，只能使用英文字母、数字、连字符（-）或下划线（_）。",
+        "url_length": "URL 不能超过 48 个字符。",
+        "url_already_taken": "这个 URL 已被使用，换一个试试。"
+      }
+    },
+    "request_email": {
+      "subject": "请求新工作区",
+      "body": "您好，实例管理员：\n\n请为 [创建工作区的目的] 创建一个 URL 为 [/workspace-name] 的新工作区。\n\n谢谢，\n{firstName} {lastName}\n{email}"
+    },
+    "button": {
+      "default": "创建工作区",
+      "loading": "正在创建工作区"
+    },
+    "toast": {
+      "success": {
+        "title": "成功",
+        "message": "工作区已创建"
+      },
+      "error": {
+        "title": "错误",
+        "message": "工作区创建失败，请稍后重试。"
+      }
+    }
+  },
+  "workspace_dashboard": {
+    "empty_state": {
+      "general": {
+        "title": "项目、活动和指标概览",
+        "description": "欢迎使用 Plane！创建第一个项目并跟踪工作项后，此页面会成为帮助您推进工作的空间。管理员还会看到有助于团队推进的内容。",
+        "primary_button": {
+          "text": "创建第一个项目",
+          "comic": {
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
+          }
+        }
+      }
+    }
+  },
+  "workspace_analytics": {
+    "label": "分析",
+    "page_label": "{workspace} - 分析",
+    "open_tasks": "未完成任务总数",
+    "error": "获取数据时出错。",
+    "work_items_closed_in": "已关闭工作项的时间范围",
+    "selected_projects": "已选择的项目",
+    "total_members": "成员总数",
+    "total_cycles": "周期总数",
+    "total_modules": "模块总数",
+    "pending_work_items": {
+      "title": "待处理工作项",
+      "empty_state": "成员待处理工作项的分析会显示在这里。"
+    },
+    "work_items_closed_in_a_year": {
+      "title": "近一年关闭的工作项",
+      "empty_state": "关闭工作项后，即可在图表中查看相关分析。"
+    },
+    "most_work_items_created": {
+      "title": "创建工作项最多的成员",
+      "empty_state": "成员及其创建的工作项数量会显示在这里。"
+    },
+    "most_work_items_closed": {
+      "title": "关闭工作项最多的成员",
+      "empty_state": "成员及其关闭的工作项数量会显示在这里。"
+    },
+    "tabs": {
+      "scope_and_demand": "范围与需求",
+      "custom": "自定义分析"
+    },
+    "total": "{entity}总数",
+    "started_work_items": "进行中的{entity}",
+    "backlog_work_items": "待办的{entity}",
+    "un_started_work_items": "未开始的{entity}",
+    "completed_work_items": "已完成的{entity}",
+    "project_insights": "项目洞察",
+    "summary_of_projects": "项目概览",
+    "all_projects": "所有项目",
+    "trend_on_charts": "图表趋势",
+    "active_projects": "活跃项目",
+    "customized_insights": "自定义洞察",
+    "created_vs_resolved": "创建与解决对比",
+    "empty_state": {
+      "project_insights": {
+        "title": "暂无数据",
+        "description": "分配给您的工作项会按状态分类显示在这里。"
+      },
+      "created_vs_resolved": {
+        "title": "暂无数据",
+        "description": "工作项随时间的创建和解决情况会显示在这里。"
+      },
+      "customized_insights": {
+        "title": "暂无数据",
+        "description": "分配给您的工作项会按状态分类显示在这里。"
+      },
+      "general": {
+        "title": "跟踪进度、工作量和任务分配。发现趋势、消除阻碍，让工作推进得更快",
+        "description": "查看范围与需求、估算和范围蔓延情况，了解成员和团队的表现，确保项目按时推进。",
+        "primary_button": {
+          "text": "创建第一个项目",
+          "comic": {
+            "title": "分析功能搭配周期和模块效果最佳",
+            "description": "首先把工作项放入周期进行时间盒管理；如有跨越多个周期的工作项，再将它们归入模块。两者都可以在左侧导航中找到。"
+          }
+        }
+      },
+      "cycle_progress": {
+        "title": "暂无数据",
+        "description": "周期进度分析会显示在这里。将工作项添加到周期即可开始跟踪进度。"
+      },
+      "module_progress": {
+        "title": "暂无数据",
+        "description": "模块进度分析会显示在这里。将工作项添加到模块即可开始跟踪进度。"
+      },
+      "intake_trends": {
+        "title": "暂无数据",
+        "description": "需求收集趋势分析会显示在这里。向需求收集添加工作项即可开始跟踪趋势。"
+      }
+    },
+    "upgrade_to_plan": "升级到 {plan} 以解锁 {tab}",
+    "workitem_resolved_vs_pending": "已解决与待处理工作项对比",
+    "projects_by_status": "按状态分类的项目",
+    "active_users": "活跃用户",
+    "intake_trends": "需求收集趋势",
+    "details": {
+      "tabs": {
+        "projects": "项目",
+        "users": "用户",
+        "cycles": "周期",
+        "modules": "模块",
+        "intake": "需求收集"
+      },
+      "charts": {
+        "projects": "按状态分类的项目",
+        "users": "按负责人分类的工作项",
+        "cycles": "周期工作项分布",
+        "modules": "模块工作项分布",
+        "intake": "各月新增收件的当前状态"
+      },
+      "empty": {
+        "projects": "创建项目后即可查看状态分布",
+        "users": "分配工作项后即可查看成员工作量",
+        "cycles": "将工作项加入周期以跟踪进度",
+        "modules": "将工作项加入模块以跟踪进度",
+        "intake": "收集工作项后即可查看处理趋势"
+      },
+      "statuses": {
+        "backlog": "待办",
+        "planned": "已计划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "draft": "待处理",
+        "planning": "规划中",
+        "execution": "进行中",
+        "monitoring": "待验收",
+        "current": "当前",
+        "upcoming": "即将开始",
+        "unscheduled": "未安排"
+      },
+      "fields": {
+        "name": "名称",
+        "members": "成员",
+        "work_items": "工作项",
+        "cycles": "周期",
+        "modules": "模块",
+        "pages": "页面",
+        "views": "视图",
+        "intake": "需求收集",
+        "completion": "完成率",
+        "project": "项目",
+        "lead": "负责人",
+        "start_date": "开始日期",
+        "end_date": "结束日期",
+        "status": "状态",
+        "started": "进行中",
+        "unstarted": "未开始",
+        "completed": "已完成",
+        "pending": "待处理",
+        "accepted": "已接受",
+        "rejected": "已拒绝",
+        "duplicate": "重复",
+        "total": "总数",
+        "count": "数量",
+        "total_projects": "项目总数",
+        "total_users": "用户总数",
+        "total_admins": "管理员总数",
+        "total_members": "成员总数",
+        "total_guests": "访客总数",
+        "total_cycles": "周期总数",
+        "total_modules": "模块总数",
+        "total_intake": "收集总数",
+        "current": "当前周期",
+        "upcoming": "即将开始",
+        "in-progress": "进行中",
+        "planned": "已计划",
+        "paused": "已暂停",
+        "cancelled": "已取消",
+        "snoozed": "已延后",
+        "unique_work_items": "去重工作项"
+      },
+      "load_error": "暂时无法加载分析数据，请重试",
+      "previous": "上一页",
+      "next": "下一页",
+      "export_csv": "导出为 CSV",
+      "records": "{count} 条记录"
+    },
+    "dashboard": {
+      "project_progress": "项目进展",
+      "monthly": "按月统计",
+      "custom_range": "自定义范围",
+      "project_progress_hint": "已完成 {completed} / {total} 个工作项 · 完成率 {percentage}%",
+      "all_time": "全部时间",
+      "periods": {
+        "yesterday": "昨天",
+        "last_7_days": "最近 7 天",
+        "last_30_days": "最近 30 天",
+        "last_3_months": "最近 3 个月"
+      },
+      "empty_project": "0 个工作项",
+      "open_details": "查看{entity}明细",
+      "show_series": "显示{series}",
+      "hide_series": "隐藏{series}"
+    },
+    "methodology": {
+      "completion": "完成率 = 已完成 ÷（全部 − 已取消）；全部取消或无工作项时为 0%。",
+      "intake": "按收件创建月份分组，展示这些收件当前的状态，不代表当月处理次数。",
+      "duplicates": "同一工作项可属于多人或多个标签，各组数量不能相加作为去重总数。",
+      "trend": "按创建日期和当前已完成工作项的完成日期分别计数；重开会改变历史值，不代表状态变更次数。",
+      "cycle": "按当前有效范围回算，非历史快照；当前范围排除取消，范围调整或重开会改变曲线。进行中仅展示今天的数量。",
+      "cohort": "时间筛选按创建日期限定工作项，状态及归属展示当前值。",
+      "range": "统计区间：{start} 至 {end}",
+      "current_completed": "当前已完成",
+      "remaining": "剩余{entity}",
+      "reconstructed": "按当前范围和完成日期回算，排除取消；并非历史快照。缺少完成日期时历史曲线留空，不推测日期。",
+      "no_effective": "全部已取消",
+      "daily": "按日统计"
+    },
+    "project_summary_hints": {
+      "total_projects": "当前项目筛选范围内的项目数量。时间筛选仅限定工作项，不筛除项目。 点击查看下方项目明细。",
+      "work_items": "当前项目中、在所选时间范围内创建的工作项总数，包含已取消工作项。 点击查看工作项分析。",
+      "completed": "上述工作项中当前状态为已完成的数量。 点击查看工作项分析。",
+      "distribution": "按项目当前状态统计项目数量，与工作项状态及完成率无关。",
+      "completion": "已完成工作项 ÷（全部工作项 − 已取消），按工作项数量加权，不是各项目完成率的平均值。点击查看项目明细。"
+    },
+    "users_summary_hints": {
+      "total_users": "当前项目范围内的活跃用户，不含机器人；时间筛选不改变用户数量。点击查看用户明细。",
+      "total_admins": "当前范围内工作区角色为管理员的用户数。点击查看用户明细。",
+      "total_members": "当前范围内工作区角色为成员的用户数。点击查看用户明细。",
+      "total_guests": "当前范围内工作区角色为访客的用户数。点击查看用户明细。",
+      "unique_work_items": "所选项目和时间范围内的去重工作项数，包含未分配工作项。点击查看工作项分析。",
+      "distribution": "按当前负责人统计工作项，待处理包含未开始与进行中。多人共同负责的工作项会计入各人，不能将各行相加作为去重总数。"
+    },
+    "cycles_summary_hints": {
+      "total_cycles": "当前项目范围内未归档的周期总数，包含未安排日期的周期。点击查看周期明细。",
+      "current": "今天处于开始日期和结束日期之间的周期，包含起止当天。点击查看周期明细。",
+      "upcoming": "开始日期晚于今天的周期。点击查看周期明细。",
+      "completed": "结束日期早于今天的周期，不代表其中的工作项全部完成。点击查看周期明细。",
+      "distribution": "按周期展示工作项当前状态，待处理包含未开始与进行中。周期是否已结束按日期判断，与工作项是否全部完成无关。"
+    },
+    "cycles_ended": "已结束周期",
+    "detail_titles": {
+      "users": "用户工作量",
+      "cycles": "周期进展",
+      "modules": "模块进展",
+      "intake": "收集明细"
+    },
+    "modules_summary_hints": {
+      "total_modules": "当前项目范围内未归档的模块总数，包含所有模块状态。点击查看模块明细。",
+      "completed": "当前状态为已完成的模块，不代表模块内工作项全部完成。点击查看模块明细。",
+      "in-progress": "当前状态为进行中的模块。点击查看模块明细。",
+      "planned": "当前状态为已计划的模块。点击查看模块明细。",
+      "paused": "当前状态为已暂停的模块。点击查看模块明细。",
+      "distribution": "按模块展示工作项当前状态，待处理包含未开始与进行中。模块状态独立设置，与工作项完成率不同。"
+    },
+    "work_item_breakdown": "工作项明细",
+    "intake_summary_hints": {
+      "total_intake": "所选时间范围内创建的收件总数，包含所有处理状态。点击查看项目收集明细。",
+      "pending": "所选时间范围内创建、当前状态为待处理的收件数量。点击查看项目收集明细。",
+      "snoozed": "所选时间范围内创建、当前状态为已延后的收件数量。点击查看项目收集明细。",
+      "accepted": "所选时间范围内创建、当前状态为已接受的收件数量。点击查看项目收集明细。",
+      "rejected": "所选时间范围内创建、当前状态为已拒绝的收件数量。点击查看项目收集明细。",
+      "duplicate": "所选时间范围内创建、当前状态为重复的收件数量。点击查看项目收集明细。",
+      "distribution": "按收件创建月份分组，展示当前处理状态。"
+    },
+    "work_item_summary_hints": {
+      "total_work_items": "所选范围内创建的工作项总数，包含已取消工作项。点击查看下方明细。",
+      "started_work_items": "所选范围内创建、当前为“进行中”的工作项数量。点击查看下方明细。",
+      "backlog_work_items": "所选范围内创建、当前为“待办”的工作项数量。点击查看下方明细。",
+      "un_started_work_items": "所选范围内创建、当前为“未开始”的工作项数量。点击查看下方明细。",
+      "completed_work_items": "所选范围内创建、当前为“已完成”的工作项数量。点击查看下方明细。"
+    },
+    "group_breakdown": "分组明细",
+    "project_analysis": {
+      "title": "项目分析",
+      "mode": "分析方式",
+      "comparison": "项目对比",
+      "hint": "按数值从高到低排列。点击柱条筛选下方明细，再次点击取消；点击图例显示或隐藏项目。顶部统计和趋势始终展示全局筛选范围。",
+      "selected": "当前明细：{name}",
+      "metric": "统计指标",
+      "show_all": "显示全部"
+    },
+    "insights": {
+      "title": "洞察",
+      "scope": {
+        "work-items": "按创建日期筛选工作项；多人负责或多标签可能重复计入不同分组。",
+        "projects": "统计当前可访问的未归档项目，每个项目只计一次；时间筛选不影响项目数。",
+        "users": "统计当前有效成员，排除机器人和“未分配”；项目筛选按项目成员关系，时间筛选不影响人数。",
+        "cycles": "统计当前可访问项目中的未归档周期，每个周期只计一次；状态按周期日期确定，时间筛选不影响周期数。",
+        "modules": "统计当前可访问项目中的未归档模块，每个模块只计一次；状态为当前状态，时间筛选不影响模块数。",
+        "intake": "按条目创建日期筛选收集条目，展示当前处理状态。"
+      },
+      "created_by": "创建人",
+      "dimension": "分组维度",
+      "group": "细分维度",
+      "metrics": {
+        "work-items": "工作项数",
+        "projects": "项目数",
+        "users": "成员数",
+        "cycles": "周期数",
+        "modules": "模块数",
+        "intake": "收集条目数"
+      },
+      "axes": {
+        "PROJECTS": "项目",
+        "STATE_GROUPS": "状态",
+        "ASSIGNEES": "负责人",
+        "CYCLES": "周期",
+        "MODULES": "模块",
+        "ROLE": "角色"
+      },
+      "roles": {
+        "5": "访客",
+        "15": "成员",
+        "20": "管理员"
+      },
+      "project_statuses": {
+        "backlog": "待办",
+        "planned": "已计划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "draft": "待处理",
+        "planning": "规划中",
+        "execution": "进行中",
+        "monitoring": "待验收",
+        "current": "当前",
+        "upcoming": "即将开始",
+        "unscheduled": "未安排"
+      },
+      "cycle_statuses": {
+        "current": "进行中",
+        "upcoming": "未开始",
+        "completed": "已结束",
+        "unscheduled": "未排期"
+      },
+      "module_statuses": {
+        "backlog": "待规划",
+        "planned": "已规划",
+        "in-progress": "进行中",
+        "paused": "已暂停",
+        "completed": "已完成",
+        "cancelled": "已取消"
+      },
+      "intake_statuses": {
+        "pending": "待处理",
+        "snoozed": "已延后",
+        "accepted": "已接受",
+        "rejected": "已拒绝",
+        "duplicate": "重复"
+      },
+      "add_group": "添加细分"
+    }
+  },
+  "workspace_projects": {
+    "label": "{count, plural, one {项目} other {项目}}",
+    "create": {
+      "label": "添加项目"
+    },
+    "network": {
+      "label": "可见性",
+      "private": {
+        "title": "私有",
+        "description": "仅限邀请访问"
+      },
+      "public": {
+        "title": "公开",
+        "description": "工作区中除访客外的任何人都可以加入"
+      }
+    },
+    "error": {
+      "permission": "您没有执行此操作的权限。",
+      "cycle_delete": "删除周期失败",
+      "module_delete": "删除模块失败",
+      "issue_delete": "删除工作项失败"
+    },
+    "state": {
+      "backlog": "待办",
+      "unstarted": "未开始",
+      "started": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "sort": {
+      "manual": "手动",
+      "name": "名称",
+      "created_at": "创建日期",
+      "members_length": "成员数量"
+    },
+    "scope": {
+      "my_projects": "我的项目",
+      "archived_projects": "已归档"
+    },
+    "common": {
+      "months_count": "{months, plural, one{# 个月} other{# 个月}}",
+      "days_count": "{days, plural, one{# 天} other{# 天}}"
+    },
+    "empty_state": {
+      "general": {
+        "title": "没有进行中的项目",
+        "description": "每个项目都是一组目标导向工作的上级。工作项、周期和模块都位于项目中，与同事一起帮助您达成目标。您可以创建新项目，或筛选查看已归档的项目。",
+        "primary_button": {
+          "text": "创建第一个项目",
+          "comic": {
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
+          }
+        }
+      },
+      "no_projects": {
+        "title": "暂无项目",
+        "description": "要创建工作项或管理工作，您需要创建一个项目或加入一个项目。",
+        "primary_button": {
+          "text": "创建第一个项目",
+          "comic": {
+            "title": "在 Plane 中，一切都从项目开始",
+            "description": "项目可以是一个产品路线图、一次营销活动，或者一款新车的发布。"
+          }
+        }
+      },
+      "filter": {
+        "title": "没有匹配的项目",
+        "description": "没有符合条件的项目。\n您可以创建一个新项目。"
+      },
+      "search": {
+        "description": "没有符合条件的项目。\n您可以创建一个新项目"
+      }
+    }
+  },
+  "workspace_views": {
+    "export_description": "导出完成后，可在工作区设置的导出页面下载。",
+    "export_history": "查看导出记录",
+    "add_view": "添加视图",
+    "empty_state": {
+      "all-issues": {
+        "title": "项目中没有工作项",
+        "description": "第一个项目已创建！现在，用工作项把工作拆分为可跟踪的部分吧。",
+        "primary_button": {
+          "text": "创建新工作项"
+        }
+      },
+      "assigned": {
+        "title": "暂无工作项",
+        "description": "分配给您的工作项可以在这里跟踪。",
+        "primary_button": {
+          "text": "创建新工作项"
+        }
+      },
+      "created": {
+        "title": "暂无工作项",
+        "description": "您创建的所有工作项都会显示在这里，可直接跟踪。",
+        "primary_button": {
+          "text": "创建新工作项"
+        }
+      },
+      "subscribed": {
+        "title": "暂无工作项",
+        "description": "订阅您关注的工作项，即可在这里统一跟踪。"
+      },
+      "custom-view": {
+        "title": "暂无工作项",
+        "description": "符合筛选条件的工作项会显示在这里，可统一跟踪。"
+      }
+    },
+    "delete_view": {
+      "title": "确定要删除此视图吗？",
+      "content": "确认后，您为此视图设置的所有排序、筛选、显示选项和布局都将被永久删除，且无法恢复。"
+    }
+  },
+  "workspace_draft_issues": {
+    "draft_an_issue": "新建草稿",
+    "temporarily_saved": "有暂存的草稿内容",
+    "empty_state": {
+      "title": "暂无工作项草稿",
+      "description": "将待完善的工作项保存为草稿，准备好后再发布到项目。",
+      "primary_button": {
+        "text": "新建草稿"
+      }
+    },
+    "delete_modal": {
+      "title": "删除草稿",
+      "description": "确定要删除此草稿吗？此操作无法撤销。"
+    },
+    "toasts": {
+      "created": {
+        "success": "草稿已创建",
+        "error": "无法创建工作项，请重试。"
+      },
+      "deleted": {
+        "success": "草稿已删除"
+      }
+    }
+  },
+  "workspace_pages": {
+    "empty_state": {
+      "general": {
+        "title": "写笔记、写文档，甚至搭建完整的知识库。让 Plane 的 AI 助手 Galileo 帮您起步",
+        "description": "页面是您在 Plane 中记录想法的地方：记录会议纪要、轻松排版、嵌入工作项、用组件库布局，并让它们都与项目保持关联。通过快捷键或按钮唤起 Plane 的 AI 助手 Galileo，快速完成任何文档。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "private": {
+        "title": "暂无私有页面",
+        "description": "在这里记录您的私人想法。准备好分享时，一键即可与团队共享。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "public": {
+        "title": "暂无工作区页面",
+        "description": "与工作区所有成员共享的页面会显示在这里。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "archived": {
+        "title": "暂无已归档的页面",
+        "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
+      },
+      "shared": {
+        "title": "尚无共享页面",
+        "description": "其他人与您共享的页面会显示在这里。"
+      }
+    }
+  },
+  "workspace_cycles": {
+    "empty_state": {
+      "active": {
+        "title": "没有进行中的周期",
+        "description": "日期范围包含今天的项目周期会显示在这里，您可以查看所有进行中周期的进度和详情。"
+      }
+    },
+    "scope": "有效范围",
+    "started": "进行中"
+  },
+  "workspace": {
+    "members_import": {
+      "title": "从 CSV 导入成员",
+      "description": "上传包含以下列的 CSV：Email、Display Name、First Name、Last Name、Role（5、15 或 20）",
+      "dropzone": {
+        "active": "将 CSV 文件拖放到此处",
+        "inactive": "拖放或点击上传",
+        "file_type": "仅支持 .csv 文件"
+      },
+      "buttons": {
+        "cancel": "取消",
+        "import": "导入",
+        "try_again": "重试",
+        "close": "关闭",
+        "done": "完成"
+      },
+      "progress": {
+        "uploading": "正在上传…",
+        "importing": "正在导入…"
+      },
+      "summary": {
+        "title": {
+          "failed": "导入失败",
+          "complete": "导入完成"
+        },
+        "message": {
+          "seat_limit": "由于席位限制，无法导入成员。",
+          "success": "成功将 {count} 名成员添加到工作区。",
+          "no_imports": "CSV 文件中没有导入任何成员。"
+        },
+        "stats": {
+          "successful": "成功",
+          "failed": "失败"
+        },
+        "download_errors": "下载错误明细"
+      },
+      "toast": {
+        "invalid_file": {
+          "title": "无效文件",
+          "message": "仅支持 CSV 文件。"
+        },
+        "import_failed": {
+          "title": "导入失败",
+          "message": "出了点问题。"
+        }
+      }
+    }
+  }
+}

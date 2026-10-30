@@ -1,0 +1,229 @@
+{
+  "account_settings": {
+    "profile": {
+      "change_email_modal": {
+        "title": "變更電子郵件",
+        "description": "請輸入新的電子郵件地址以接收驗證連結。",
+        "toasts": {
+          "success_title": "成功！",
+          "success_message": "電子郵件已更新，請重新登入。"
+        },
+        "form": {
+          "email": {
+            "label": "新電子郵件",
+            "placeholder": "請輸入電子郵件",
+            "errors": {
+              "required": "電子郵件為必填",
+              "invalid": "電子郵件格式無效",
+              "exists": "電子郵件已存在，請使用其他信箱。",
+              "validation_failed": "電子郵件驗證失敗，請再試一次。"
+            }
+          },
+          "code": {
+            "label": "驗證碼",
+            "placeholder": "123456",
+            "helper_text": "驗證碼已傳送到你的新電子郵件。",
+            "errors": {
+              "required": "驗證碼為必填",
+              "invalid": "驗證碼無效，請再試一次。"
+            }
+          }
+        },
+        "actions": {
+          "continue": "繼續",
+          "confirm": "確認",
+          "cancel": "取消"
+        },
+        "states": {
+          "sending": "傳送中…"
+        }
+      }
+    },
+    "preferences": {
+      "heading": "偏好設定",
+      "description": "以您工作的方式自訂您的應用程式體驗"
+    },
+    "notifications": {
+      "heading": "電子郵件通知",
+      "description": "隨時掌握您訂閱的工作事項。啟用此功能以接收通知。",
+      "select_default_view": "選擇預設檢視",
+      "compact": "緊湊",
+      "full": "全螢幕"
+    },
+    "security": {
+      "heading": "安全性"
+    },
+    "api_tokens": {
+      "title": "個人存取權杖",
+      "description": "產生安全的 API 權杖，以將您的資料與外部系統和應用程式整合。"
+    },
+    "activity": {
+      "heading": "活動",
+      "description": "追蹤您在所有專案和工作事項中的近期操作和變更。"
+    },
+    "connections": {
+      "title": "連接",
+      "heading": "連接",
+      "description": "管理您的工作區連接設定。"
+    },
+    "oauth": {
+      "title": "授權連線",
+      "description": "管理已連線到 Plane 帳號的用戶端，每筆授權相互獨立。",
+      "search": "搜尋用戶端",
+      "refresh": "重新整理",
+      "client": "用戶端 / 存取範圍",
+      "permissions": "權限",
+      "status": "狀態",
+      "created": "授權時間",
+      "expires": "到期時間",
+      "actions": "連線操作",
+      "active": "有效",
+      "pending": "等待用戶端完成",
+      "expired": "已過期",
+      "account_scope": "你有權限的工作區",
+      "read": "唯讀",
+      "write": "讀寫",
+      "scope_hint": "用戶端僅擁有你現有的權限。舊的單一工作區授權保留原範圍，重新連線後才可授權帳號範圍。",
+      "empty": "尚無授權連線",
+      "empty_hint": "在用戶端連線 Plane 後，授權紀錄會顯示在這裡。",
+      "no_matches": "沒有符合的用戶端",
+      "table_hint": "授權連線表格；窄螢幕可橫向捲動查看完整欄位。",
+      "loading": "正在載入連線…",
+      "load_error": "無法載入頁面",
+      "retry": "重試",
+      "cancel": "取消",
+      "revoke": "撤銷授權",
+      "revoking": "正在撤銷…",
+      "revoke_confirm": "此連線將立即失效，其他用戶端的連線不受影響。",
+      "revoke_error": "撤銷失敗，請重試。",
+      "revoked": "已撤銷授權，此連線無法再存取 Plane。",
+      "reconnect": "重新授權",
+      "reconnect_action": "撤銷並重新連線",
+      "reconnect_confirm": "先撤銷此授權，再回到用戶端重新連線 Plane，確認新的權限。Plane 無法代替用戶端發起登入，其他連線不受影響。",
+      "reconnect_next": "已撤銷。請回到用戶端，必要時先中斷已儲存的 Plane 連線，再點選連線重新授權。",
+      "language": "語言",
+      "connect_title": "將 {client} 連線至 Plane",
+      "consent_scope": "存取範圍跟隨你的帳號，包括日後加入的工作區。每次請求都會檢查成員資格與專案權限。",
+      "read_hint": "讀取你有權限檢視的專案、工作項與頁面。",
+      "allow_write": "同時允許修改內容",
+      "write_hint": "允許在你的權限範圍內建立、修改與刪除內容。選填，預設關閉。",
+      "details": "連線詳情",
+      "unverified_client": "用戶端名稱由其自行提供，請確認是你剛剛發起的連線。返回位址：",
+      "consent_expiry": "授權有效期為 {days} 天，可隨時在「授權連線」中撤銷。",
+      "allow": "授權連線",
+      "submit_error": "未能完成請求。請重試；若仍失敗，請從用戶端重新發起連線。",
+      "expired_title": "請重新發起連線",
+      "expired_hint": "此請求無效、已過期或已經使用。請回到用戶端重新連線 Plane。",
+      "network_hint": "請檢查網路連線後重試。",
+      "loading_consent": "正在準備連線…",
+      "returning": "正在返回用戶端",
+      "returning_hint": "已儲存你的授權，用戶端將完成連線。若沒有自動返回，請使用下方按鈕。",
+      "cancelled": "已取消連線",
+      "cancelled_hint": "未授予存取權限。請返回用戶端結束此次連線請求。",
+      "return_client": "返回用戶端",
+      "close": "關閉此頁面",
+      "close_hint": "瀏覽器未關閉此分頁，你可以手動關閉。",
+      "return_home": "返回 Plane",
+      "consent_expiry_unknown": "可隨時在「授權連線」中查看有效期或撤銷授權。"
+    },
+    "mcp": {
+      "workspace_auto_hint": "無需設定工作區，存取範圍取決於帳號權限。",
+      "oauth_description": "在「授權連線」中查看到期時間或撤銷授權。",
+      "token_hint": "貼上 API 權杖即可連線，此處不儲存權杖。",
+      "agent_hint": "複製「Agent 安裝」提示詞交給 AI 助手；Claude 與 OpenAI 外掛使用 OAuth。",
+      "chatgpt_hint": "安裝目前實例的 Plane Workflow OpenAI 外掛，連線並授權帳號，無需填寫 API 權杖。下方 TOML 供手動權杖接入使用。"
+    },
+    "skills": {
+      "chatgpt_step_3": "從市集安裝外掛，點選連線，登入 Plane 並確認帳號存取範圍及權限。",
+      "connection_hint": "Claude 與 OpenAI 外掛內建實例 MCP 位址，連線後登入授權；支援手動設定的用戶端也可使用 API Token。",
+      "desktop_step_3": "安裝外掛或上傳 ZIP。Code 模式先開啟本機對話，再從 Connectors → Manage connectors → Connect 授權；登入位址須使用 HTTPS。",
+      "claude_step_2": "執行 /plugin 確認 8 個技能已載入，再執行 /mcp 連線 Plane 並授權。"
+    }
+  },
+  "profile": {
+    "label": "個人資料",
+    "page_label": "您的工作",
+    "work": "工作",
+    "details": {
+      "joined_on": "加入於",
+      "time_zone": "時區"
+    },
+    "stats": {
+      "workload": "工作量",
+      "overview": "概覽",
+      "created": "已建立的工作事項",
+      "assigned": "已指派的工作事項",
+      "subscribed": "已訂閱的工作事項",
+      "state_distribution": {
+        "title": "依狀態分類的工作事項",
+        "empty": "建立工作事項以在圖表中檢視依狀態分類的工作事項，以便進行更好的分析。"
+      },
+      "priority_distribution": {
+        "title": "依優先順序分類的工作事項",
+        "empty": "建立工作事項以在圖表中檢視依優先順序分類的工作事項，以便進行更好的分析。"
+      },
+      "recent_activity": {
+        "title": "最近活動",
+        "empty": "我們找不到資料。請檢查您的輸入",
+        "button": "下載今天的活動",
+        "button_loading": "下載中"
+      }
+    },
+    "actions": {
+      "profile": "個人資料",
+      "security": "安全性",
+      "activity": "活動",
+      "preferences": "偏好設定",
+      "notifications": "通知",
+      "api-tokens": "個人存取權杖",
+      "connections": "連接"
+    },
+    "tabs": {
+      "summary": "摘要",
+      "assigned": "已指派",
+      "created": "已建立",
+      "subscribed": "已訂閱",
+      "activity": "活動"
+    },
+    "empty_state": {
+      "activity": {
+        "title": "尚無活動",
+        "description": "開始建立新工作事項！為其新增詳細資訊和屬性。探索更多 Plane 功能以檢視您的活動。"
+      },
+      "assigned": {
+        "title": "沒有指派給您的工作事項",
+        "description": "從這裡可以追蹤指派給您的工作事項。"
+      },
+      "created": {
+        "title": "尚無工作事項",
+        "description": "您建立的所有工作事項都會出現在這裡，直接在這裡追蹤它們。"
+      },
+      "subscribed": {
+        "title": "尚無工作事項",
+        "description": "訂閱您感興趣的工作事項，在這裡追蹤它們。"
+      }
+    }
+  },
+  "themes": {
+    "theme_options": {
+      "system_preference": {
+        "label": "系統偏好設定"
+      },
+      "light": {
+        "label": "淺色"
+      },
+      "dark": {
+        "label": "深色"
+      },
+      "light_contrast": {
+        "label": "高對比淺色"
+      },
+      "dark_contrast": {
+        "label": "高對比深色"
+      },
+      "custom": {
+        "label": "自訂主題"
+      }
+    }
+  }
+}

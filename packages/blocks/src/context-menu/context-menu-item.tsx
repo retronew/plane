@@ -15,6 +15,7 @@
 import type * as React from "react";
 // plane imports
 import {
+  ContextMenuCheckboxItem,
   ContextMenuItem as PropelContextMenuItem,
   ContextMenuSubmenu,
   ContextMenuSubmenuContent,
@@ -22,8 +23,10 @@ import {
 } from "@makeplane/propel/components/context-menu";
 import type { ContextMenuItemVariant } from "@makeplane/propel/components/context-menu";
 import { Icon } from "@makeplane/propel/components/icon";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 // local imports
-import { getRenderableItems, resolveItemVariant, stopClickPropagation } from "./helpers";
+import { getDisabledReason, getRenderableItems, resolveItemVariant, stopClickPropagation } from "./helpers";
+import { SubmenuSearchList } from "./submenu-search";
 import type { TContextMenuItem } from "./types";
 
 type ContextMenuItemProps = {
@@ -52,6 +55,10 @@ function getLeadingSlot(item: TContextMenuItem): React.ReactNode {
   return <Icon icon={Glyph} />;
 }
 
+function renderNestedItems(items: TContextMenuItem[]) {
+  return items.map((nestedItem) => <ContextMenuItem key={nestedItem.key} item={nestedItem} />);
+}
+
 /**
  * One `TContextMenuItem` rendered as a Propel row — a submenu when it carries renderable
  * `nestedMenuItems`, a plain action row otherwise.
@@ -64,6 +71,7 @@ export function ContextMenuItem(props: ContextMenuItemProps) {
   const trailing = getTrailingSlot(item);
   const variant = toPropelVariant(item);
   const label = item.title ?? "";
+  const disabledReason = getDisabledReason(item);
 
   if (item.shouldRender === false) return null;
 
@@ -74,24 +82,45 @@ export function ContextMenuItem(props: ContextMenuItemProps) {
           variant={variant}
           label={label}
           icon={leading}
-          trailing={trailing}
+          trailing={disabledReason ? undefined : trailing}
           disabled={item.disabled}
         />
         <ContextMenuSubmenuContent sizing="auto" onClick={stopClickPropagation}>
-          {nestedItems.map((nestedItem) => (
-            <ContextMenuItem key={nestedItem.key} item={nestedItem} />
-          ))}
+          {item.searchable ? (
+            <SubmenuSearchList item={item} items={nestedItems} renderItems={renderNestedItems} />
+          ) : (
+            renderNestedItems(nestedItems)
+          )}
         </ContextMenuSubmenuContent>
       </ContextMenuSubmenu>
     );
   }
 
-  return (
+  if (item.checked !== undefined) {
+    return (
+      <ContextMenuCheckboxItem
+        label={label}
+        icon={leading}
+        checked={item.checked}
+        disabled={item.disabled}
+        onCheckedChange={() => item.action()}
+        onClick={(e) => {
+          // Parity with the action rows: a pick must not also fire a wrapping `Link`'s click.
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      />
+    );
+  }
+
+  const row = (
     <PropelContextMenuItem
       variant={variant}
       label={label}
       icon={leading}
-      description={item.description || undefined}
+      // a disabled row stays one line; its reason moves to the tooltip below
+      description={disabledReason ? undefined : item.description || undefined}
+      selected={item.selected}
       disabled={item.disabled}
       closeOnClick={item.closeOnClick !== false}
       onClick={(e) => {
@@ -101,6 +130,15 @@ export function ContextMenuItem(props: ContextMenuItemProps) {
         item.action();
       }}
     />
+  );
+
+  if (!disabledReason) return row;
+
+  return (
+    <Tooltip label={disabledReason} side="right" layout="stacked">
+      {/* Propel's disabled row sets `pointer-events: none`, so the wrapper takes the hover instead */}
+      <span className="block">{row}</span>
+    </Tooltip>
   );
 }
 

@@ -60,6 +60,8 @@
         "sub_issue_count": "Numero di sotto-elementi di lavoro",
         "attachment_count": "Numero di allegati",
         "created_on": "Creato il",
+        "time_in_status": "Tempo nello stato",
+        "started_at": "Iniziato il {date}",
         "sub_issue": "Sotto-elemento di lavoro",
         "work_item_count": "Conteggio degli elementi di lavoro"
       },

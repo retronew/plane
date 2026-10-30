@@ -69,32 +69,35 @@ function show(start: string | null, end: string | null, activeLayout = "List") {
   );
 }
 it.each([
-  ["2026-10-15", "2026-10-20", "10/15–20"],
-  ["2026-10-30", "2026-11-02", "10/30–11/02"],
-  ["2026-12-31", "2027-01-02", "2026/12/31–2027/01/02"],
-  ["2026-10-15", null, "10/15"],
-  ["2025-10-15", null, "2025/10/15"],
-  [null, "2027-10-20", "2027/10/20"],
-  ["2025-10-15", "2025-10-20", "2025/10/15–20"],
-  ["2027-10-30", "2027-11-02", "2027/10/30–11/02"],
-  ["2025-12-31", "2026-01-02", "2025/12/31–2026/01/02"],
-  [null, "2026-10-20", "10/20"],
-])("uses compact labels for list dates (%s, %s)", (from, to, label) => {
+  ["2026-10-15", "2026-10-20", ["10/15", "10/20"]],
+  ["2026-10-30", "2026-11-02", ["10/30", "11/02"]],
+  ["2026-12-31", "2027-01-02", ["12/31", "2027/01/02"]],
+  ["2026-10-15", null, ["10/15", "截止日期"]],
+  ["2025-10-15", null, ["2025/10/15", "截止日期"]],
+  [null, "2027-10-20", ["开始日期", "2027/10/20"]],
+  [null, "2026-10-20", ["开始日期", "10/20"]],
+])("keeps start and due dates as separate compact chips (%s, %s)", (from, to, labels) => {
   show(from, to);
-  expect(screen.getByRole("button", { name: label })).toBeTruthy();
+  for (const label of labels) expect(screen.getByRole("button", { name: label })).toBeTruthy();
 });
-it("keeps empty placeholders and existing board date formatting", () => {
-  const { unmount } = show(null, null);
+it("keeps empty placeholders", () => {
+  show(null, null);
   expect(screen.getByRole("button", { name: "开始日期" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "截止日期" })).toBeTruthy();
-  unmount();
+});
+it("uses the same compact labels on board cards", () => {
   show("2026-10-15", "2026-10-20", "Kanban");
-  expect(screen.getByRole("button", { name: "2026年10月15日 – 2026年10月20日" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "10/15" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "10/20" })).toBeTruthy();
+});
+it("keeps full dates in the spreadsheet layout", () => {
+  show("2026-10-15", "2026-10-20", "Spreadsheet");
+  expect(screen.getByRole("button", { name: "2026年10月15日" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "2026年10月20日" })).toBeTruthy();
 });
 it.each([
   ["2026-10-15", null, "10/15", "开始日期: 2026年10月15日"],
   [null, "2026-10-20", "10/20", "截止日期: 2026年10月20日"],
-  ["2026-10-15", "2026-10-20", "10/15–20", "日期范围: 2026年10月15日 - 2026年10月20日"],
 ])("preserves the full date in tooltips (%s, %s)", async (from, to, label, tooltip) => {
   show(from, to);
   const trigger = screen.getByRole("button", { name: label }).closest("[data-base-ui-tooltip-trigger]")!;
@@ -105,13 +108,12 @@ it.each([
   fireEvent.mouseMove(trigger);
   expect((await screen.findByRole("tooltip")).textContent).toBe(tooltip);
 });
-it("still clears a compact range through the real calendar", async () => {
+it("clears only the start date when both are set", async () => {
   show("2026-10-15", "2026-10-20");
-  fireEvent.click(screen.getByRole("button", { name: "10/15–20" }));
+  fireEvent.click(screen.getByRole("button", { name: "10/15" }));
   fireEvent.click(await screen.findByRole("button", { name: "清除" }));
-  await waitFor(() =>
-    expect(mocks.update).toHaveBeenCalledWith("project", "issue", { start_date: null, target_date: null })
-  );
+  await waitFor(() => expect(mocks.update).toHaveBeenCalledWith("project", "issue", { start_date: null }));
+  expect(mocks.update).not.toHaveBeenCalledWith("project", "issue", expect.objectContaining({ target_date: null }));
 });
 it("returns an empty compact label when both dates are absent", () => {
   expect(formatCompactDateRange({ from: null, to: null })).toBe("");

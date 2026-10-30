@@ -60,6 +60,8 @@
         "sub_issue_count": "Jumlah sub-item kerja",
         "attachment_count": "Jumlah lampiran",
         "created_on": "Dibuat pada",
+        "time_in_status": "Waktu dalam status",
+        "started_at": "Dimulai {date}",
         "sub_issue": "Sub-item kerja",
         "work_item_count": "Jumlah item kerja"
       },

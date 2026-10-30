@@ -25,7 +25,6 @@ import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useWorkFlowFDragNDrop } from "@/components/workflow";
 // local imports
 import type { TRenderQuickActions } from "../list/list-view-types";
-import type { GroupDropLocation } from "../utils";
 import { getGroupByColumns, isWorkspaceLevel } from "../utils";
 import { KanBan } from "./default";
 import { HeaderGroupByCard } from "./headers/group-by-card";
@@ -106,7 +105,6 @@ interface ISubGroupSwimlane extends ISubGroupSwimlaneHeader {
     isSubGroupCumulative: boolean
   ) => number | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
-  handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   issuesMap: IIssueMap;
   loadMoreIssues: (groupId?: string, subGroupId?: string) => void;
   orderBy: TIssueOrderByOptions | undefined;
@@ -127,7 +125,6 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
     getGroupIssueCount,
     group_by,
     groupedIssueIds,
-    handleOnDrop,
     issuesMap,
     list,
     loadMoreIssues,
@@ -181,7 +178,6 @@ const SubGroupSwimlane = observer(function SubGroupSwimlane(props: ISubGroupSwim
                   quickAddCallback={quickAddCallback}
                   scrollableContainerRef={scrollableContainerRef}
                   loadMoreIssues={loadMoreIssues}
-                  handleOnDrop={handleOnDrop}
                   orderBy={orderBy}
                   isDropDisabled={_list.isDropDisabled}
                   dropErrorMessage={_list.dropErrorMessage}
@@ -207,7 +203,6 @@ export interface IKanBanSwimLanes {
   ) => number | undefined;
   group_by: TIssueGroupByOptions | undefined;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
-  handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   issuesMap: IIssueMap;
   loadMoreIssues: (groupId?: string, subGroupId?: string) => void;
   orderBy: TIssueOrderByOptions | undefined;
@@ -232,7 +227,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
     quickActions,
     loadMoreIssues,
     showEmptyGroup,
-    handleOnDrop,
     disableIssueCreation,
     enableQuickIssueCreate,
     canEditProperties,
@@ -282,7 +276,6 @@ export const KanBanSwimLanes = observer(function KanBanSwimLanes(props: IKanBanS
           quickActions={quickActions}
           loadMoreIssues={loadMoreIssues}
           showEmptyGroup={showEmptyGroup}
-          handleOnDrop={handleOnDrop}
           disableIssueCreation={disableIssueCreation}
           enableQuickIssueCreate={enableQuickIssueCreate}
           addIssuesToView={addIssuesToView}

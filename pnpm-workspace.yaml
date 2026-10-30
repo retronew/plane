@@ -350,4 +350,5 @@ peerDependencyRules:
     "mobx-utils>mobx": "7"
 
 patchedDependencies:
+  '@makeplane/propel@0.9.7': patches/@makeplane__propel@0.9.7.patch
   is-emoji-supported@0.0.5: patches/is-emoji-supported@0.0.5.patch

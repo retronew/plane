@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Upraviť",
+      "copy": "Kopírovať",
       "make_a_copy": "Vytvoriť kópiu",
       "open_in_new_tab": "Otvoriť na novej karte",
       "copy_link": "Kopírovať odkaz",

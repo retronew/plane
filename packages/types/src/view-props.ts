@@ -177,6 +177,7 @@ export interface IIssueDisplayProperties {
   created_by?: boolean;
   created_on?: boolean;
   updated_on?: boolean;
+  time_in_status?: boolean;
   modules?: boolean;
   cycle?: boolean;
   issue_type?: boolean;

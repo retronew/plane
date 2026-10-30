@@ -138,6 +138,8 @@ type MemberSelectCommonProps = {
   testId?: string;
   /** Tab order of the trigger, for forms that sequence focus explicitly (e.g. the work item create modal). */
   tabIndex?: number;
+  /** Strict cap on trigger faces: past it the rest collapse into one "+N" chip, never an extra face. */
+  maxAvatars?: number;
   /** Re-filters the rendered list every render — unlike `getValues`, also catches an already-fetched, still-open list. */
   filterOption?: (member: MemberOption) => boolean;
   /** Badge text on a {@link MemberOption.suspended} row. Defaults to "Suspended". */
@@ -251,10 +253,11 @@ type MemberTriggerContentsProps = {
   showCountOnMultiple: boolean;
   placeholder: string;
   countLabel: string;
+  maxAvatars?: number;
 };
 
 function MemberTriggerContents(props: MemberTriggerContentsProps) {
-  const { members, avatarSize, showLabel, showCountOnMultiple, placeholder, countLabel } = props;
+  const { members, avatarSize, showLabel, showCountOnMultiple, placeholder, countLabel, maxAvatars } = props;
   const showLabelText = showLabel && (members.length > 0 || !!placeholder);
 
   return (
@@ -266,10 +269,11 @@ function MemberTriggerContents(props: MemberTriggerContentsProps) {
             !showLabelText && "grow"
           )}
         >
-          {/* Resolve one more than `MAX_TRIGGER_AVATARS` so `AvatarGroup` can render the real extra face
-              instead of a "+1" chip when `total` is exactly `max + 1`; `total` covers the rest. */}
-          <AvatarGroup size={avatarSize} max={MAX_TRIGGER_AVATARS} total={members.length}>
-            {members.slice(0, MAX_TRIGGER_AVATARS + 1).map((member) => (
+          {/* By default resolve one more than `MAX_TRIGGER_AVATARS` so `AvatarGroup` can render the real extra
+              face instead of a "+1" chip when `total` is exactly `max + 1`; a `maxAvatars` cap hands over
+              only that many faces so the rest always become the chip. `total` covers the rest. */}
+          <AvatarGroup size={avatarSize} max={maxAvatars ?? MAX_TRIGGER_AVATARS} total={members.length}>
+            {members.slice(0, maxAvatars ?? MAX_TRIGGER_AVATARS + 1).map((member) => (
               <Avatar key={member.id} alt={memberAvatarAlt(member)} src={member.avatar_url ?? ""} />
             ))}
           </AvatarGroup>
@@ -298,6 +302,7 @@ type MemberSelectTriggerProps = {
   tooltip?: SelectTooltip;
   testId?: string;
   tabIndex?: number;
+  maxAvatars?: number;
 };
 
 function MemberSelectTrigger(props: MemberSelectTriggerProps) {
@@ -316,6 +321,7 @@ function MemberSelectTrigger(props: MemberSelectTriggerProps) {
     tooltip,
     testId,
     tabIndex,
+    maxAvatars,
   } = props;
 
   const prependMemberIcon = useCallback(
@@ -346,6 +352,7 @@ function MemberSelectTrigger(props: MemberSelectTriggerProps) {
           showCountOnMultiple={showCountOnMultiple}
           placeholder={placeholder}
           countLabel={t("member", { count: members.length })}
+          maxAvatars={maxAvatars}
         />
       )}
     </Select.Trigger>
@@ -374,6 +381,7 @@ export function MemberSelect(props: MemberSelectProps) {
     filterOption,
     testId,
     tabIndex,
+    maxAvatars,
     suspendedLabel = t("web.suspended"),
   } = props;
   const clearable = isMemberSelectClearable(props);
@@ -442,6 +450,7 @@ export function MemberSelect(props: MemberSelectProps) {
       tooltip={tooltip}
       testId={testId}
       tabIndex={tabIndex}
+      maxAvatars={maxAvatars}
     />
   );
 

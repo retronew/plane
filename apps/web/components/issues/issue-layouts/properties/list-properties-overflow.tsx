@@ -15,8 +15,8 @@ const PROPERTY_LABEL_KEYS = new Map(
   ISSUE_DISPLAY_PROPERTIES.map(({ key, titleTranslationKey }) => [key, titleTranslationKey])
 );
 
-// Resolve the existing display filters before counting or measuring properties. A merged date
-// range is one property; disabled filters and absent count badges consume no space.
+// Resolve the existing display filters before counting or measuring properties. Disabled filters
+// and absent count badges consume no space.
 function collectProperties(children: ReactNode): Property[] {
   return Children.toArray(children).flatMap((child): Property[] => {
     if (!isValidElement(child)) return [];
@@ -35,10 +35,7 @@ function collectProperties(children: ReactNode): Property[] {
           {
             key: `${child.key}:${keys.join(",")}`,
             content,
-            labelKey:
-              keys.includes("start_date") && keys.includes("due_date")
-                ? "project_cycles.date_range"
-                : PROPERTY_LABEL_KEYS.get(keys[0]),
+            labelKey: PROPERTY_LABEL_KEYS.get(keys[0]),
           },
         ]
       : [];

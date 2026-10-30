@@ -60,6 +60,8 @@
         "sub_issue_count": "Počet podriadených položiek",
         "attachment_count": "Počet príloh",
         "created_on": "Vytvorené dňa",
+        "time_in_status": "Čas v stave",
+        "started_at": "Začaté {date}",
         "sub_issue": "Podriadená položka",
         "work_item_count": "Počet pracovných položiek"
       },

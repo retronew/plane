@@ -31,12 +31,16 @@ export interface IIssuePropertyLabels {
   /** @deprecated The trigger shows the name of a single label and a count for several. */
   maxRender?: number;
   noLabelBorder?: boolean;
+  /** Pill size; defaults to the compact list size. */
+  pillVariant?: "pill-sm" | "pill-md";
   placeholderText?: string;
   onClose?: () => void;
   /** @deprecated The Select renders its trigger eagerly. */
   renderByDefault?: boolean;
   fullWidth?: boolean;
   fullHeight?: boolean;
+  /** Every label as its own wrapping chip (board cards); clicking any of them opens the picker. */
+  showAllLabels?: boolean;
 }
 
 /**
@@ -65,14 +69,21 @@ export const IssuePropertyLabels = observer(function IssuePropertyLabels(props: 
     placeholderText,
     fullWidth = false,
     fullHeight = false,
+    pillVariant = "pill-sm",
+    showAllLabels = false,
   } = props;
+  const showChips = showAllLabels && (value?.length ?? 0) > 0;
 
   const isTableCell = fullWidth && noLabelBorder;
 
   return (
     <div
       role="presentation"
-      className={cn(fullHeight ? "h-full" : "h-5", { "w-full": fullWidth }, className)}
+      className={cn(
+        fullHeight ? "h-full" : showChips ? "contents" : pillVariant === "pill-md" ? "h-6" : "h-5",
+        { "w-full": fullWidth },
+        className
+      )}
       onClick={swallowEvent}
     >
       <LabelSelect
@@ -82,10 +93,13 @@ export const IssuePropertyLabels = observer(function IssuePropertyLabels(props: 
         disabled={disabled}
         placeholder={placeholderText}
         onClose={onClose}
-        variant={isTableCell ? "table-cell" : "pill-sm"}
+        variant={isTableCell ? "table-cell" : pillVariant}
         // `.clickable` is what the spreadsheet's keyboard navigation clicks on Enter / Space in a focused cell.
-        className={isTableCell ? "clickable" : undefined}
-        tooltip
+        // chips: the wrapper, trigger and chip row all dissolve (display: contents) so each chip wraps on its own in the card row
+        className={isTableCell ? "clickable" : showChips ? "contents! [&>div]:contents!" : undefined}
+        showAllLabels={showChips}
+        // chips already name every label, so the aggregated tooltip would only repeat them
+        tooltip={!showChips}
       />
     </div>
   );

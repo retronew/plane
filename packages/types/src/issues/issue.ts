@@ -53,8 +53,12 @@ export type TBaseIssue = {
   estimate_point: string | null;
 
   sub_issues_count: number;
+  /** Sub-work items in a completed state; list rows only (paired with `sub_issues_count` for progress). */
+  completed_sub_issues_count?: number;
   attachment_count: number;
   link_count: number;
+  /** First characters of the plain-text description; list rows only, for card previews. */
+  description_excerpt?: string | null;
 
   project_id: string | null;
   parent_id: string | null;
@@ -67,6 +71,10 @@ export type TBaseIssue = {
   start_date: string | null;
   target_date: string | null;
   completed_at: string | null;
+  /** When work actually began: first move into a started state; cleared when moved back. */
+  started_at?: string | null;
+  /** When the work item entered its current state. */
+  state_changed_at?: string | null;
   archived_at: string | null;
 
   created_by: string;

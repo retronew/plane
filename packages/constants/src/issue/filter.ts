@@ -114,7 +114,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
     filters: ["priority", "state_group", "label_id", "start_date", "target_date"],
     layoutOptions: {
       list: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state_detail.group", "priority", "project", "labels", null],
           order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
@@ -126,7 +126,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
         },
       },
       kanban: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state_detail.group", "priority", "project", "labels"],
           order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
@@ -167,7 +167,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
     ],
     layoutOptions: {
       list: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state", "cycle", "module", "priority", "labels", "assignees", "created_by", null],
           order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority"],
@@ -196,7 +196,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
     ],
     layoutOptions: {
       list: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state_detail.group", "priority", "project", "labels", "assignees", "created_by", null],
           order_by: ["-created_at", "-updated_at", "start_date", "-priority", "target_date"],
@@ -205,7 +205,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
         extra_options: { access: true, values: ["show_empty_groups", "sub_issue"] },
       },
       kanban: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state_detail.group", "priority", "project", "labels", "assignees", "created_by"],
           sub_group_by: ["state_detail.group", "priority", "project", "labels", "assignees", "created_by", null],
@@ -264,7 +264,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
         },
       },
       list: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           type: ["active", "backlog"],
         },
@@ -292,7 +292,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
     ],
     layoutOptions: {
       list: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", null],
           order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "target_date"],
@@ -304,7 +304,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
         },
       },
       kanban: {
-        display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
+        display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
         display_filters: {
           group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by"],
           sub_group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", null],

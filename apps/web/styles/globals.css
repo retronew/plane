@@ -176,3 +176,11 @@
 /* Scroll locking belongs to Base UI. Keep scrollbar geometry unchanged when
  * overlays open: presentation popups also include tooltips, and hiding their
  * background scrollbars changes the available content width. */
+
+/* Checkbox theming. Propel's checkbox reads these optional tokens through
+ * patches/@makeplane__propel@0.9.7.patch; unset ones fall back to Propel's defaults (the checked
+ * fill keeps the theme accent). The resting stroke drops from the icon-tertiary ink to the
+ * theme's strong border, which reads lighter in both light and dark themes. */
+:root {
+  --checkbox-border: var(--border-color-strong);
+}

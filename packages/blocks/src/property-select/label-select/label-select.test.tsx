@@ -74,3 +74,21 @@ it("keeps the tag glyph visible in icon mode after selecting a label", () => {
   );
   expect(screen.getByRole("button", { name: /Backend/ }).querySelector("svg")).not.toBeNull();
 });
+
+it("names each chip on hover when every label is shown", async () => {
+  render(
+    <LabelSelect
+      variant="pill-md"
+      showAllLabels
+      value={[
+        { id: "a", name: "Backend", color: "#123456" },
+        { id: "b", name: "Frontend", color: "#654321" },
+      ]}
+      getValues={getValues}
+      onChange={vi.fn()}
+    />
+  );
+  await userEvent.setup().hover(screen.getByText("Frontend"));
+  expect(await screen.findByRole("tooltip")).toBeDefined();
+  expect(within(screen.getByRole("tooltip")).getByText("Labels")).toBeDefined();
+});

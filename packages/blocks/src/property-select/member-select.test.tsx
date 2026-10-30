@@ -107,3 +107,35 @@ describe("MemberSelect suspended members", () => {
     expect(onChange).toHaveBeenCalledWith([]);
   });
 });
+
+describe("MemberSelect maxAvatars", () => {
+  afterEach(cleanup);
+
+  const DEE: MemberOption = { id: "dee", display_name: "Dee" };
+  const renderTrigger = (maxAvatars?: number) =>
+    render(
+      <MemberSelect
+        getValues={getValues}
+        multiple
+        value={[ADA, CY, DEE]}
+        onChange={vi.fn()}
+        variant="avatar-group-sm"
+        showLabel={false}
+        maxAvatars={maxAvatars}
+      />
+    );
+
+  it("collapses everything past the cap into a +N chip", () => {
+    renderTrigger(2);
+    expect(screen.getByRole("img", { name: "Ada" })).toBeDefined();
+    expect(screen.getByRole("img", { name: "Cy" })).toBeDefined();
+    expect(screen.queryByRole("img", { name: "Dee" })).toBeNull();
+    expect(screen.getByText("+1")).toBeDefined();
+  });
+
+  it("shows the real extra face without a cap", () => {
+    renderTrigger();
+    expect(screen.getByRole("img", { name: "Dee" })).toBeDefined();
+    expect(screen.queryByText("+1")).toBeNull();
+  });
+});

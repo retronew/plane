@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Bewerken",
+      "copy": "Kopiëren",
       "make_a_copy": "Een kopie maken",
       "open_in_new_tab": "Openen in nieuw tabblad",
       "copy_link": "Koppeling kopiëren",

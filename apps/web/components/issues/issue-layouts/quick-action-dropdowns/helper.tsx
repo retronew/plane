@@ -20,8 +20,9 @@ import { useTranslation, translate } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import type { EIssuesStoreType, TIssue } from "@plane/types";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
-import { copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
+import { copyTextToClipboard, copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
 import { createCopyMenuWithDuplication } from "./copy-menu-helper";
+import { usePropertyMenuItems } from "./property-menu-items";
 
 /**
  * The quick-action menus sit inside clickable rows (ControlLink anchors, row `onClick`s). The legacy
@@ -110,11 +111,18 @@ export interface MenuItemFactoryProps {
   handleDelete?: () => Promise<void>;
   handleUpdate?: (data: TIssue) => Promise<void>;
   handleArchive?: () => Promise<void>;
+  /** "Create related" and subscription rows from `useRelatedMenuItems`; the caller renders their modals. */
+  relatedMenuItems?: TContextMenuItem[];
   // Context-specific data
   cycleId?: string;
   moduleId?: string;
   storeType?: EIssuesStoreType;
 }
+
+const copyWithToast = (text: string, successKey: string, errorKey: string) =>
+  copyTextToClipboard(text)
+    .then(() => setToast({ type: "success", title: translate(successKey) }))
+    .catch(() => setToast({ type: "error", title: translate(errorKey) }));
 
 // Common action handlers hook
 export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
@@ -139,6 +147,20 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
         title: translate("web.link_copied_acf8"),
         message: translate("web.work_item_link_copied_to_clipboard"),
       })
+    );
+
+  const handleCopyIssueId = () =>
+    copyWithToast(
+      `${projectIdentifier}-${issue?.sequence_id}`,
+      "power_k.contextual_actions.work_item.copy_id_toast_success",
+      "power_k.contextual_actions.work_item.copy_id_toast_error"
+    );
+
+  const handleCopyIssueTitle = () =>
+    copyWithToast(
+      issue?.name ?? "",
+      "power_k.contextual_actions.work_item.copy_title_toast_success",
+      "power_k.contextual_actions.work_item.copy_title_toast_error"
     );
 
   const handleOpenInNewTab = () => window.open(workItemLink, "_blank", "noopener");
@@ -169,6 +191,8 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
   return {
     workItemLink,
     handleCopyIssueLink,
+    handleCopyIssueId,
+    handleCopyIssueTitle,
     handleOpenInNewTab,
     handleIssueRestore,
   };
@@ -177,6 +201,13 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
 export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
   const { t } = useTranslation();
   const actionHandlers = useIssueActionHandlers(props);
+  // the board/list handlers forward this straight to `updateIssue`, which takes a partial payload
+  const { handleUpdate } = props;
+  const propertyMenuItems = usePropertyMenuItems({
+    issue: props.issue,
+    isEditingAllowed: props.isEditingAllowed,
+    onUpdate: handleUpdate ? (data) => handleUpdate(data as TIssue) : undefined,
+  });
 
   const {
     issue,
@@ -197,6 +228,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createEditMenuItem = (customEditAction?: () => void): TContextMenuItem => ({
     key: "edit",
+    section: "edit",
     title: t("common.actions.edit"),
     icon: EditOutline,
     action:
@@ -211,6 +243,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
   const createCopyMenuItem = (workspaceSlug?: string): TContextMenuItem => {
     const baseItem = {
       key: "make-a-copy",
+      section: "share",
       title: t("common.actions.make_a_copy"),
       icon: CopyOutline,
       action: () => {
@@ -230,6 +263,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createOpenInNewTabMenuItem = (): TContextMenuItem => ({
     key: "open-in-new-tab",
+    section: "share",
     title: t("common.actions.open_in_new_tab"),
     icon: NewTabOutline,
     action: actionHandlers.handleOpenInNewTab,
@@ -237,13 +271,38 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createCopyLinkMenuItem = (): TContextMenuItem => ({
     key: "copy-link",
+    section: "share",
     title: t("common.actions.copy_link"),
     icon: LinkOutline,
     action: actionHandlers.handleCopyIssueLink,
   });
 
+  /** Linear's "Copy" submenu: link, ID and title of the work item. */
+  const createCopySubmenuItem = (): TContextMenuItem => ({
+    key: "copy",
+    section: "share",
+    title: t("common.actions.copy"),
+    icon: CopyOutline,
+    action: () => {},
+    nestedMenuItems: [
+      createCopyLinkMenuItem(),
+      {
+        key: "copy-id",
+        title: t("power_k.contextual_actions.work_item.copy_id"),
+        action: actionHandlers.handleCopyIssueId,
+        shouldRender: !!props.projectIdentifier && issue?.sequence_id !== undefined,
+      },
+      {
+        key: "copy-title",
+        title: t("power_k.contextual_actions.work_item.copy_title"),
+        action: actionHandlers.handleCopyIssueTitle,
+      },
+    ],
+  });
+
   const createRemoveFromCycleMenuItem = (): TContextMenuItem => ({
     key: "remove-from-cycle",
+    section: "membership",
     title: t("web.remove_from_cycle"),
     icon: CloseCircleOutline,
     action: () => handleOptionalAction(handleRemoveFromView, translate("web.runtime.action_remove_from_cycle")),
@@ -252,6 +311,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createRemoveFromModuleMenuItem = (): TContextMenuItem => ({
     key: "remove-from-module",
+    section: "membership",
     title: t("web.remove_from_module"),
     icon: CloseCircleOutline,
     action: () => handleOptionalAction(handleRemoveFromView, translate("web.runtime.action_remove_from_module")),
@@ -271,6 +331,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createRestoreMenuItem = (): TContextMenuItem => ({
     key: "restore",
+    section: "lifecycle",
     title: t("web.restore"),
     icon: RestoreOutline,
     action: actionHandlers.handleIssueRestore,
@@ -279,7 +340,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   const createDeleteMenuItem = (): TContextMenuItem => ({
     key: "delete",
-    section: "lifecycle",
+    section: "danger",
     variant: "danger",
     title: t("common.actions.delete"),
     icon: DeleteOutline,
@@ -291,10 +352,15 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 
   return {
     ...actionHandlers,
+    propertyMenuItems,
+    relatedMenuItems: (props.relatedMenuItems ?? []).filter((item) => item.section !== "notify"),
+    // Linear keeps subscribe/unsubscribe in its own group near the bottom, above the lifecycle rows
+    subscriptionMenuItems: (props.relatedMenuItems ?? []).filter((item) => item.section === "notify"),
     createEditMenuItem,
     createCopyMenuItem,
     createOpenInNewTabMenuItem,
     createCopyLinkMenuItem,
+    createCopySubmenuItem,
     createRemoveFromCycleMenuItem,
     createRemoveFromModuleMenuItem,
     createArchiveMenuItem,
@@ -309,10 +375,13 @@ export const useProjectIssueMenuItems = (props: MenuItemFactoryProps): TContextM
 
   return useMemo(
     () => [
+      ...factory.propertyMenuItems,
       factory.createEditMenuItem(),
-      factory.createCopyMenuItem(),
+      ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
-      factory.createCopyLinkMenuItem(),
+      factory.createCopySubmenuItem(),
+      factory.createCopyMenuItem(),
+      ...factory.subscriptionMenuItems,
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
@@ -341,10 +410,13 @@ export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuI
 
   return useMemo(
     () => [
+      ...factory.propertyMenuItems,
       factory.createEditMenuItem(),
-      factory.createCopyMenuItem(),
+      ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
-      factory.createCopyLinkMenuItem(),
+      factory.createCopySubmenuItem(),
+      factory.createCopyMenuItem(),
+      ...factory.subscriptionMenuItems,
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
@@ -366,11 +438,14 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
 
   return useMemo(
     () => [
+      ...factory.propertyMenuItems,
       factory.createEditMenuItem(customEditAction),
-      factory.createCopyMenuItem(),
+      ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
-      factory.createCopyLinkMenuItem(),
+      factory.createCopySubmenuItem(),
+      factory.createCopyMenuItem(),
       factory.createRemoveFromCycleMenuItem(),
+      ...factory.subscriptionMenuItems,
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
@@ -393,11 +468,14 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
 
   return useMemo(
     () => [
+      ...factory.propertyMenuItems,
       factory.createEditMenuItem(customEditAction),
-      factory.createCopyMenuItem(),
+      ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
-      factory.createCopyLinkMenuItem(),
+      factory.createCopySubmenuItem(),
+      factory.createCopyMenuItem(),
       factory.createRemoveFromModuleMenuItem(),
+      ...factory.subscriptionMenuItems,
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],

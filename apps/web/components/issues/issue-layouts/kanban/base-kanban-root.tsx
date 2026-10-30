@@ -6,8 +6,6 @@
 
 import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { EIssuesStoreType } from "@plane/types";
@@ -28,6 +26,7 @@ import type { IQuickActionProps, TRenderQuickActions } from "../list/list-view-t
 //components
 import { KanBan } from "./default";
 import { KanbanDeleteDropZone } from "./kanban-delete-drop-zone";
+import { KanbanDndProvider } from "./kanban-dnd";
 import { KanBanSwimLanes } from "./swimlanes";
 
 export type KanbanStoreType =
@@ -112,7 +111,7 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
 
   const handleOnDrop = useGroupIssuesDragNDrop(storeType, orderBy, group_by, sub_group_by);
 
-  const handleRequestDelete = useCallback((workItemId: string | undefined) => {
+  const handleRequestDelete = useCallback((workItemId: string) => {
     setDraggedIssueId(workItemId);
     setDeleteIssueModal(true);
   }, []);
@@ -128,19 +127,6 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
     },
     [canEditPropertiesBasedOnProject, enableInlineEditing, isEditingAllowed]
   );
-
-  // Enable Auto Scroll for Main Kanban
-  useEffect(() => {
-    const element = scrollableContainerRef.current;
-
-    if (!element) return;
-
-    return combine(
-      autoScrollForElements({
-        element,
-      })
-    );
-  }, []);
 
   const renderQuickActions: TRenderQuickActions = useCallback(
     ({ issue, parentRef, customActionButton }) => (
@@ -183,38 +169,40 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
         handleClose={() => setDeleteIssueModal(false)}
         onSubmit={handleDeleteIssue}
       />
-      <KanbanDeleteDropZone onRequestDelete={handleRequestDelete} />
-      <IssueLayoutHOC layout={EIssueLayoutTypes.KANBAN}>
-        <div
-          className={`horizontal-scrollbar relative scrollbar-lg flex h-full w-full bg-surface-2 ${sub_group_by ? "vertical-scrollbar overflow-y-auto" : "overflow-x-auto overflow-y-hidden"}`}
-          ref={scrollableContainerRef}
-        >
-          <div className="relative h-full w-max min-w-full bg-surface-2">
-            <div className="h-full w-max">
-              <KanBanView
-                issuesMap={issueMap}
-                groupedIssueIds={groupedIssueIds ?? {}}
-                getGroupIssueCount={issues.getGroupIssueCount}
-                displayProperties={displayProperties}
-                sub_group_by={sub_group_by}
-                group_by={group_by}
-                orderBy={orderBy}
-                updateIssue={updateIssue}
-                quickActions={renderQuickActions}
-                enableQuickIssueCreate={enableQuickAdd}
-                showEmptyGroup={userDisplayFilters?.show_empty_groups ?? true}
-                quickAddCallback={quickAddIssue}
-                disableIssueCreation={!enableIssueCreation || !isEditingAllowed || isCompletedCycle}
-                canEditProperties={canEditProperties}
-                addIssuesToView={addIssuesToView}
-                scrollableContainerRef={scrollableContainerRef}
-                handleOnDrop={handleOnDrop}
-                loadMoreIssues={fetchMoreIssues}
-              />
+      {/* dnd-kit board: the delete zone is a target too, so it lives inside the provider */}
+      <KanbanDndProvider orderBy={orderBy} handleOnDrop={handleOnDrop} onRequestDelete={handleRequestDelete}>
+        <KanbanDeleteDropZone />
+        <IssueLayoutHOC layout={EIssueLayoutTypes.KANBAN}>
+          <div
+            className={`horizontal-scrollbar relative scrollbar-md flex h-full w-full bg-surface-2 ${sub_group_by ? "vertical-scrollbar overflow-y-auto" : "overflow-x-auto overflow-y-hidden"}`}
+            ref={scrollableContainerRef}
+          >
+            <div className="relative h-full w-max min-w-full bg-surface-2">
+              <div className="h-full w-max">
+                <KanBanView
+                  issuesMap={issueMap}
+                  groupedIssueIds={groupedIssueIds ?? {}}
+                  getGroupIssueCount={issues.getGroupIssueCount}
+                  displayProperties={displayProperties}
+                  sub_group_by={sub_group_by}
+                  group_by={group_by}
+                  orderBy={orderBy}
+                  updateIssue={updateIssue}
+                  quickActions={renderQuickActions}
+                  enableQuickIssueCreate={enableQuickAdd}
+                  showEmptyGroup={userDisplayFilters?.show_empty_groups ?? true}
+                  quickAddCallback={quickAddIssue}
+                  disableIssueCreation={!enableIssueCreation || !isEditingAllowed || isCompletedCycle}
+                  canEditProperties={canEditProperties}
+                  addIssuesToView={addIssuesToView}
+                  scrollableContainerRef={scrollableContainerRef}
+                  loadMoreIssues={fetchMoreIssues}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </IssueLayoutHOC>
+        </IssueLayoutHOC>
+      </KanbanDndProvider>
     </>
   );
 });

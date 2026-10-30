@@ -1,0 +1,634 @@
+{
+  "workspace_creation": {
+    "heading": "Create your workspace",
+    "subheading": "To start using Plane, you need to create or join a workspace.",
+    "form": {
+      "name": {
+        "label": "Name your workspace",
+        "placeholder": "Something familiar and recognizable is always best."
+      },
+      "url": {
+        "label": "Set your workspace's URL",
+        "placeholder": "Type or paste a URL",
+        "edit_slug": "You can only edit the slug of the URL",
+        "ai_suggest": "Suggest a URL with AI",
+        "ai_error": "Could not suggest a URL. Please try again or enter one manually.",
+        "ai_taken": "The suggested URL is already taken. Please try again or enter one manually."
+      }
+    },
+    "errors": {
+      "creation_disabled": {
+        "title": "Only your instance admin can create workspaces",
+        "description": "If you know your instance admin's email address, click the button below to get in touch with them.",
+        "request_button": "Request instance admin"
+      },
+      "validation": {
+        "name_alphanumeric": "Workspaces names can contain only (' '), ('-'), ('_') and alphanumeric characters.",
+        "name_length": "Limit your name to 80 characters.",
+        "url_alphanumeric": "Use only English letters, numbers, hyphens (-), and underscores (_) in the URL.",
+        "url_required": "Enter a workspace URL using English letters, numbers, hyphens (-), or underscores (_).",
+        "url_length": "Limit your URL to 48 characters.",
+        "url_already_taken": "Workspace URL is already taken!"
+      }
+    },
+    "request_email": {
+      "subject": "Requesting a new workspace",
+      "body": "Hi instance admin(s),\n\nPlease create a new workspace with the URL [/workspace-name] for [purpose of creating the workspace].\n\nThanks,\n{firstName} {lastName}\n{email}"
+    },
+    "button": {
+      "default": "Create workspace",
+      "loading": "Creating workspace"
+    },
+    "toast": {
+      "success": {
+        "title": "Success",
+        "message": "Workspace created successfully"
+      },
+      "error": {
+        "title": "Error",
+        "message": "Workspace could not be created. Please try again."
+      }
+    }
+  },
+  "workspace_dashboard": {
+    "empty_state": {
+      "general": {
+        "title": "Overview of your projects, activity, and metrics",
+        "description": "Welcome to Plane, we are excited to have you here. Create your first project and track your work items, and this page will transform into a space that helps you progress. Admins will also see items which help their team progress.",
+        "primary_button": {
+          "text": "Build your first project",
+          "comic": {
+            "title": "Everything starts with a project in Plane",
+            "description": "A project could be a product's roadmap, a marketing campaign, or launching a new car."
+          }
+        }
+      }
+    }
+  },
+  "workspace_analytics": {
+    "label": "Analytics",
+    "page_label": "{workspace} - Analytics",
+    "open_tasks": "Total open tasks",
+    "error": "There was some error in fetching the data.",
+    "work_items_closed_in": "Work items closed in",
+    "selected_projects": "Selected projects",
+    "total_members": "Total members",
+    "total_cycles": "Total cycles",
+    "total_modules": "Total modules",
+    "pending_work_items": {
+      "title": "Pending work items",
+      "empty_state": "Analysis of pending work items by co-workers appears here."
+    },
+    "work_items_closed_in_a_year": {
+      "title": "Work items closed in a year",
+      "empty_state": "Close work items to view analysis of the same in the form of a graph."
+    },
+    "most_work_items_created": {
+      "title": "Most work items created",
+      "empty_state": "Co-workers and the number of work items created by them appears here."
+    },
+    "most_work_items_closed": {
+      "title": "Most work items closed",
+      "empty_state": "Co-workers and the number of work items closed by them appears here."
+    },
+    "tabs": {
+      "scope_and_demand": "Scope and Demand",
+      "custom": "Custom Analytics"
+    },
+    "total": "Total {entity}",
+    "started_work_items": "Started {entity}",
+    "backlog_work_items": "Backlog {entity}",
+    "un_started_work_items": "Unstarted {entity}",
+    "completed_work_items": "Completed {entity}",
+    "project_insights": "Project Insights",
+    "summary_of_projects": "Summary of Projects",
+    "all_projects": "All Projects",
+    "trend_on_charts": "Trend on charts",
+    "active_projects": "Active Projects",
+    "customized_insights": "Customized Insights",
+    "created_vs_resolved": "Created vs Resolved",
+    "empty_state": {
+      "project_insights": {
+        "title": "No data yet",
+        "description": "Work items assigned to you, broken down by state, will show up here."
+      },
+      "created_vs_resolved": {
+        "title": "No data yet",
+        "description": "Work items created and resolved over time will show up here."
+      },
+      "customized_insights": {
+        "title": "No data yet",
+        "description": "Work items assigned to you, broken down by state, will show up here."
+      },
+      "general": {
+        "title": "Track progress, workloads, and allocations. Spot trends, remove blockers, and move work faster",
+        "description": "See scope versus demand, estimates, and scope creep. Get performance by team members and teams, and make sure your project runs on time.",
+        "primary_button": {
+          "text": "Start your first project",
+          "comic": {
+            "title": "Analytics works best with Cycles + Modules",
+            "description": "First, timebox your issues into Cycles and, if you can, group issues that span more than a cycle into Modules. Check out both on the left nav."
+          }
+        }
+      },
+      "cycle_progress": {
+        "title": "No data yet",
+        "description": "Cycle progress analytics will appear here. Add work items to cycles to start tracking progress."
+      },
+      "module_progress": {
+        "title": "No data yet",
+        "description": "Module progress analytics will appear here. Add work items to modules to start tracking progress."
+      },
+      "intake_trends": {
+        "title": "No data yet",
+        "description": "Intake trends analytics will appear here. Add work items to intake to start tracking trends."
+      }
+    },
+    "upgrade_to_plan": "Upgrade to {plan} to unlock {tab}",
+    "workitem_resolved_vs_pending": "Work items resolved vs pending",
+    "projects_by_status": "Projects by status",
+    "active_users": "Active users",
+    "intake_trends": "Intake Trends",
+    "details": {
+      "tabs": {
+        "projects": "Projects",
+        "users": "Users",
+        "cycles": "Cycles",
+        "modules": "Modules",
+        "intake": "Intake"
+      },
+      "charts": {
+        "projects": "Projects by status",
+        "users": "Work items by assignee",
+        "cycles": "Work items by cycle",
+        "modules": "Work items by module",
+        "intake": "Current status of intake created each month"
+      },
+      "empty": {
+        "projects": "Create projects to see their status distribution",
+        "users": "Assign work items to see member workloads",
+        "cycles": "Add work items to cycles to track progress",
+        "modules": "Add work items to modules to track progress",
+        "intake": "Collect work items to see intake trends"
+      },
+      "statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "planning": "Planning",
+        "execution": "In progress",
+        "monitoring": "In review",
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "unscheduled": "Unscheduled"
+      },
+      "fields": {
+        "name": "Name",
+        "members": "Members",
+        "work_items": "Work items",
+        "cycles": "Cycles",
+        "modules": "Modules",
+        "pages": "Pages",
+        "views": "Views",
+        "intake": "Intake",
+        "completion": "Completion",
+        "project": "Project",
+        "lead": "Lead",
+        "start_date": "Start date",
+        "end_date": "End date",
+        "status": "Status",
+        "started": "In progress",
+        "unstarted": "Not started",
+        "completed": "Completed",
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "duplicate": "Duplicate",
+        "total": "Total",
+        "count": "Count",
+        "total_projects": "Total projects",
+        "total_users": "Total users",
+        "total_admins": "Total admins",
+        "total_members": "Total members",
+        "total_guests": "Total guests",
+        "total_cycles": "Total cycles",
+        "total_modules": "Total modules",
+        "total_intake": "Total intake",
+        "current": "Current cycles",
+        "upcoming": "Upcoming",
+        "in-progress": "In progress",
+        "planned": "Planned",
+        "paused": "Paused",
+        "cancelled": "Cancelled",
+        "snoozed": "Snoozed",
+        "unique_work_items": "Distinct work items"
+      },
+      "load_error": "Unable to load analytics. Please retry.",
+      "previous": "Previous",
+      "next": "Next",
+      "export_csv": "Export as CSV",
+      "records": "{count, plural, one {# record} other {# records}}"
+    },
+    "dashboard": {
+      "project_progress": "Project progress",
+      "monthly": "Monthly",
+      "custom_range": "Custom range",
+      "project_progress_hint": "{completed} of {total} work items completed · {percentage}%",
+      "all_time": "All time",
+      "periods": {
+        "yesterday": "Yesterday",
+        "last_7_days": "Last 7 days",
+        "last_30_days": "Last 30 days",
+        "last_3_months": "Last 3 months"
+      },
+      "empty_project": "0 work items",
+      "open_details": "View {entity} details",
+      "show_series": "Show {series}",
+      "hide_series": "Hide {series}"
+    },
+    "methodology": {
+      "completion": "Completion = completed ÷ (total − cancelled); 0% for empty or fully cancelled scopes.",
+      "intake": "Grouped by intake creation month and current status, not the number of processing events that month.",
+      "duplicates": "Work items may belong to multiple people or labels. Group counts cannot be summed as a distinct total.",
+      "trend": "Counts by creation date and completion date of currently completed items. Reopening can change past values; these are not transition counts.",
+      "cycle": "Reconstructed from the current scope, not historical snapshots. Cancelled items are excluded; scope changes and reopening can change the curve. In progress is shown only for today.",
+      "cohort": "Time filters select work items by creation date; status and membership reflect their current values.",
+      "range": "Reporting period: {start} – {end}",
+      "current_completed": "Currently completed",
+      "remaining": "Remaining {entity}",
+      "reconstructed": "Reconstructed from current scope and completion dates, excluding cancellations; not historical snapshots. History is left blank when completion dates are missing.",
+      "no_effective": "All cancelled",
+      "daily": "Daily"
+    },
+    "project_summary_hints": {
+      "total_projects": "Projects matching the project filter. The date filter limits work items, not projects. Click to view the project details below.",
+      "work_items": "Work items created during the selected period in these projects, including cancelled items. Click to view work item analytics.",
+      "completed": "Work items in this scope that are currently completed. Click to view work item analytics.",
+      "distribution": "Project counts grouped by current project status, independently of work item status or completion rate.",
+      "completion": "Completed work items divided by all non-cancelled work items, weighted by work item count rather than averaging project percentages. View project details."
+    },
+    "users_summary_hints": {
+      "total_users": "Active users in the selected project scope, excluding bots. The date filter does not change this count. View user details.",
+      "total_admins": "Users with the workspace admin role in this scope. View user details.",
+      "total_members": "Users with the workspace member role in this scope. View user details.",
+      "total_guests": "Users with the workspace guest role in this scope. View user details.",
+      "unique_work_items": "Distinct work items in the selected projects and period, including unassigned items. View work item analytics.",
+      "distribution": "Work items grouped by current assignee. Pending includes unstarted and started items. Shared assignments count for each assignee; row totals are not a distinct total."
+    },
+    "cycles_summary_hints": {
+      "total_cycles": "Non-archived cycles in the selected projects, including unscheduled cycles. View cycle details.",
+      "current": "Cycles whose start and end dates include today. View cycle details.",
+      "upcoming": "Cycles starting after today. View cycle details.",
+      "completed": "Cycles ending before today, regardless of whether all work items are completed. View cycle details.",
+      "distribution": "Current work item states by cycle. Pending includes unstarted and started items. A cycle ends based on its dates, independently of work item completion."
+    },
+    "cycles_ended": "Ended cycles",
+    "detail_titles": {
+      "users": "User workload",
+      "cycles": "Cycle progress",
+      "modules": "Module progress",
+      "intake": "Intake details"
+    },
+    "modules_summary_hints": {
+      "total_modules": "Non-archived modules in the selected projects, across all module statuses. View module details.",
+      "completed": "Modules currently marked completed, regardless of work item completion. View module details.",
+      "in-progress": "Modules currently in progress. View module details.",
+      "planned": "Modules currently planned. View module details.",
+      "paused": "Modules currently paused. View module details.",
+      "distribution": "Current work item states by module. Pending includes unstarted and started items. Module status is set independently of work item completion."
+    },
+    "work_item_breakdown": "Work item details",
+    "intake_summary_hints": {
+      "total_intake": "Intake items created in the selected period (total intake). Status is current. View intake details by project.",
+      "pending": "Intake items created in the selected period (pending). Status is current. View intake details by project.",
+      "snoozed": "Intake items created in the selected period (snoozed). Status is current. View intake details by project.",
+      "accepted": "Intake items created in the selected period (accepted). Status is current. View intake details by project.",
+      "rejected": "Intake items created in the selected period (rejected). Status is current. View intake details by project.",
+      "duplicate": "Intake items created in the selected period (duplicate). Status is current. View intake details by project.",
+      "distribution": "Grouped by creation month, showing current intake status."
+    },
+    "work_item_summary_hints": {
+      "total_work_items": "All work items created in the selected scope, including cancelled items. View details below.",
+      "started_work_items": "Work items created in the selected scope (started work items), using current status. View details below.",
+      "backlog_work_items": "Work items created in the selected scope (backlog work items), using current status. View details below.",
+      "un_started_work_items": "Work items created in the selected scope (un started work items), using current status. View details below.",
+      "completed_work_items": "Work items created in the selected scope (completed work items), using current status. View details below."
+    },
+    "group_breakdown": "Group details",
+    "project_analysis": {
+      "title": "Project analysis",
+      "mode": "Analysis mode",
+      "comparison": "Compare projects",
+      "hint": "Sorted from highest to lowest. Select a bar to filter the table; select again to clear. Toggle legend items to show or hide projects. Summary and trends retain the global filter scope.",
+      "selected": "Showing: {name}",
+      "metric": "Metric",
+      "show_all": "Show all"
+    },
+    "insights": {
+      "title": "Insights",
+      "scope": {
+        "work-items": "Work items are filtered by creation date. Multiple assignees or labels may count in multiple groups.",
+        "projects": "Counts accessible, unarchived projects once each. Dates do not filter project counts.",
+        "users": "Counts active members, excluding bots and unassigned. Projects filter membership; dates do not filter member counts.",
+        "cycles": "Counts unarchived cycles once each. Status follows cycle dates; dates do not filter cycle counts.",
+        "modules": "Counts unarchived modules once each with current statuses. Dates do not filter module counts.",
+        "intake": "Filters intake entries by creation date and shows current processing status."
+      },
+      "created_by": "Created by",
+      "dimension": "Dimension",
+      "group": "Break down by",
+      "metrics": {
+        "work-items": "Work item count",
+        "projects": "Project count",
+        "users": "Member count",
+        "cycles": "Cycle count",
+        "modules": "Module count",
+        "intake": "Intake entry count"
+      },
+      "axes": {
+        "PROJECTS": "Project",
+        "STATE_GROUPS": "Status",
+        "ASSIGNEES": "Owner",
+        "CYCLES": "Cycle",
+        "MODULES": "Module",
+        "ROLE": "Role"
+      },
+      "roles": {
+        "5": "Guest",
+        "15": "Member",
+        "20": "Admin"
+      },
+      "project_statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "planning": "Planning",
+        "execution": "In progress",
+        "monitoring": "In review",
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "unscheduled": "Unscheduled"
+      },
+      "cycle_statuses": {
+        "current": "Current",
+        "upcoming": "Upcoming",
+        "completed": "Ended",
+        "unscheduled": "Unscheduled"
+      },
+      "module_statuses": {
+        "backlog": "Backlog",
+        "planned": "Planned",
+        "in-progress": "In progress",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "intake_statuses": {
+        "pending": "Pending",
+        "snoozed": "Snoozed",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "duplicate": "Duplicate"
+      },
+      "add_group": "Add breakdown"
+    }
+  },
+  "workspace_projects": {
+    "label": "{count, plural, one {Project} other {Projects}}",
+    "create": {
+      "label": "Add Project"
+    },
+    "network": {
+      "label": "Visibility",
+      "private": {
+        "title": "Private",
+        "description": "Accessible only by invite"
+      },
+      "public": {
+        "title": "Public",
+        "description": "Anyone in the workspace except Guests can join"
+      }
+    },
+    "error": {
+      "permission": "You don't have permission to perform this action.",
+      "cycle_delete": "Failed to delete cycle",
+      "module_delete": "Failed to delete module",
+      "issue_delete": "Failed to delete work item"
+    },
+    "state": {
+      "backlog": "Backlog",
+      "unstarted": "Unstarted",
+      "started": "Started",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sort": {
+      "manual": "Manual",
+      "name": "Name",
+      "created_at": "Created date",
+      "members_length": "Number of members"
+    },
+    "scope": {
+      "my_projects": "My projects",
+      "archived_projects": "Archived"
+    },
+    "common": {
+      "months_count": "{months, plural, one{# month} other{# months}}",
+      "days_count": "{days, plural, one{# day} other{# days}}"
+    },
+    "empty_state": {
+      "general": {
+        "title": "No active projects",
+        "description": "Think of each project as the parent for goal-oriented work. Projects are where Jobs, Cycles, and Modules live and, along with your colleagues, help you achieve that goal. Create a new project or filter for archived projects.",
+        "primary_button": {
+          "text": "Start your first project",
+          "comic": {
+            "title": "Everything starts with a project in Plane",
+            "description": "A project could be a product's roadmap, a marketing campaign, or launching a new car."
+          }
+        }
+      },
+      "no_projects": {
+        "title": "No project",
+        "description": "To create work items or manage your work, you need to create a project or be a part of one.",
+        "primary_button": {
+          "text": "Start your first project",
+          "comic": {
+            "title": "Everything starts with a project in Plane",
+            "description": "A project could be a product's roadmap, a marketing campaign, or launching a new car."
+          }
+        }
+      },
+      "filter": {
+        "title": "No matching projects",
+        "description": "No projects detected with the matching criteria.\n Create a new project instead."
+      },
+      "search": {
+        "description": "No projects detected with the matching criteria.\nCreate a new project instead"
+      }
+    }
+  },
+  "workspace_views": {
+    "export_description": "Once ready, download the export from Workspace settings → Exports.",
+    "export_history": "View export history",
+    "add_view": "Add view",
+    "empty_state": {
+      "all-issues": {
+        "title": "No work items in the project",
+        "description": "First project done! Now, slice your work into trackable pieces with work items. Let's go!",
+        "primary_button": {
+          "text": "Create new work item"
+        }
+      },
+      "assigned": {
+        "title": "No work items yet",
+        "description": "Work items assigned to you can be tracked from here.",
+        "primary_button": {
+          "text": "Create new work item"
+        }
+      },
+      "created": {
+        "title": "No work items yet",
+        "description": "All work items created by you come here, track them here directly.",
+        "primary_button": {
+          "text": "Create new work item"
+        }
+      },
+      "subscribed": {
+        "title": "No work items yet",
+        "description": "Subscribe to work items you are interested in, track all of them here."
+      },
+      "custom-view": {
+        "title": "No work items yet",
+        "description": "Work items that applies to the filters, track all of them here."
+      }
+    },
+    "delete_view": {
+      "title": "Are you sure you want to delete this view?",
+      "content": "If you confirm, all the sort, filter, and display options + the layout you have chosen for this view will be permanently deleted without any way to restore them."
+    }
+  },
+  "workspace_draft_issues": {
+    "temporarily_saved": "Unfinished draft saved temporarily",
+    "draft_an_issue": "Draft a work item",
+    "empty_state": {
+      "title": "Half-written work items, and soon, comments will show up here.",
+      "description": "To try this out, start adding a work item and leave it mid-way or create your first draft below. 😉",
+      "primary_button": {
+        "text": "Create your first draft"
+      }
+    },
+    "delete_modal": {
+      "title": "Delete draft",
+      "description": "Are you sure you want to delete this draft? This can't be undone."
+    },
+    "toasts": {
+      "created": {
+        "success": "Draft created",
+        "error": "Work item could not be created. Please try again."
+      },
+      "deleted": {
+        "success": "Draft deleted"
+      }
+    }
+  },
+  "workspace_pages": {
+    "empty_state": {
+      "general": {
+        "title": "Write a note, a doc, or a full knowledge base. Get Galileo, Plane's AI assistant, to help you get started",
+        "description": "Pages are thoughts potting space in Plane. Take down meeting notes, format them easily, embed work items, lay them out using a library of components, and keep them all in your project's context. To make short work of any doc, invoke Galileo, Plane's AI, with a shortcut or the click of a button.",
+        "primary_button": {
+          "text": "Create your first page"
+        }
+      },
+      "private": {
+        "title": "No private pages yet",
+        "description": "Keep your private thoughts here. When you're ready to share, the team's just a click away.",
+        "primary_button": {
+          "text": "Create your first page"
+        }
+      },
+      "public": {
+        "title": "No workspace pages yet",
+        "description": "See pages shared with everyone in your workspace right here.",
+        "primary_button": {
+          "text": "Create your first page"
+        }
+      },
+      "archived": {
+        "title": "No archived pages yet",
+        "description": "Archive pages not on your radar. Access them here when needed."
+      },
+      "shared": {
+        "title": "No shared pages yet",
+        "description": "Pages that others have shared with you will appear here."
+      }
+    }
+  },
+  "workspace_cycles": {
+    "empty_state": {
+      "active": {
+        "title": "No active cycles",
+        "description": "Cycles of your projects that includes any period that encompasses today's date within its range. Find the progress and details of all your active cycle here."
+      }
+    },
+    "scope": "Scope",
+    "started": "Started"
+  },
+  "workspace": {
+    "members_import": {
+      "title": "Import Members from CSV",
+      "description": "Upload a CSV with columns: Email, Display Name, First Name, Last Name, Role (5, 15, or 20)",
+      "dropzone": {
+        "active": "Drop CSV file here",
+        "inactive": "Drag & drop or click to upload",
+        "file_type": "Only .csv files supported"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "import": "Import",
+        "try_again": "Try Again",
+        "close": "Close",
+        "done": "Done"
+      },
+      "progress": {
+        "uploading": "Uploading...",
+        "importing": "Importing..."
+      },
+      "summary": {
+        "title": {
+          "failed": "Import Failed",
+          "complete": "Import Complete"
+        },
+        "message": {
+          "seat_limit": "Unable to import members due to seat limit restrictions.",
+          "success": "Successfully added {count} member{plural} to the workspace.",
+          "no_imports": "No members were imported from the CSV file."
+        },
+        "stats": {
+          "successful": "Successful",
+          "failed": "Failed"
+        },
+        "download_errors": "Download errors"
+      },
+      "toast": {
+        "invalid_file": {
+          "title": "Invalid file",
+          "message": "Only CSV files are supported."
+        },
+        "import_failed": {
+          "title": "Import failed",
+          "message": "Something went wrong."
+        }
+      }
+    }
+  }
+}

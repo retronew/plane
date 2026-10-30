@@ -60,6 +60,8 @@
         "sub_issue_count": "Liczba elementów podrzędnych",
         "attachment_count": "Liczba załączników",
         "created_on": "Utworzono dnia",
+        "time_in_status": "Czas w statusie",
+        "started_at": "Rozpoczęto {date}",
         "sub_issue": "Element podrzędny",
         "work_item_count": "Liczba elementów pracy"
       },

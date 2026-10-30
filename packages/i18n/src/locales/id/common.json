@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Edit",
+      "copy": "Salin",
       "make_a_copy": "Buat salinan",
       "open_in_new_tab": "Buka di tab baru",
       "copy_link": "Salin tautan",

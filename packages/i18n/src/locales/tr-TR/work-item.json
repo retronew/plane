@@ -60,6 +60,8 @@
         "sub_issue_count": "Alt iş öğesi sayısı",
         "attachment_count": "Ek sayısı",
         "created_on": "Oluşturulma tarihi",
+        "time_in_status": "Durumda geçen süre",
+        "started_at": "{date} tarihinde başladı",
         "sub_issue": "Alt iş öğesi",
         "work_item_count": "İş öğesi sayısı"
       },

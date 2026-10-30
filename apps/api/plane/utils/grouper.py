@@ -5,8 +5,11 @@
 # Django imports
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
-from django.db.models import Q, UUIDField, Value, QuerySet, OuterRef, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models import Count, IntegerField, Q, UUIDField, Value, QuerySet, OuterRef, Subquery
+from django.db.models.functions import Coalesce, Substr
+
+# Characters of the plain-text description sent with list rows: enough for a two-line card excerpt.
+DESCRIPTION_EXCERPT_LENGTH = 200
 
 # Module imports
 from plane.db.models import (
@@ -110,6 +113,8 @@ def issue_on_results(
         "type_id",
         "sort_order",
         "completed_at",
+        "started_at",
+        "state_changed_at",
         "estimate_point",
         "priority",
         "start_date",
@@ -128,6 +133,8 @@ def issue_on_results(
         "is_draft",
         "archived_at",
         "state__group",
+        "description_excerpt",
+        "completed_sub_issues_count",
     ]
 
     if group_by in FIELD_MAPPER:
@@ -139,6 +146,22 @@ def issue_on_results(
         original_list.append(sub_group_by)
 
     required_fields.extend(original_list)
+    # Card extras for the board: a short plain-text excerpt (never the whole description) and how many
+    # sub-work items are done, which with `sub_issues_count` gives the card its progress.
+    issues = issues.annotate(
+        description_excerpt=Substr("description_stripped", 1, DESCRIPTION_EXCERPT_LENGTH),
+        completed_sub_issues_count=Coalesce(
+            Subquery(
+                Issue.issue_objects.filter(parent=OuterRef("id"), state__group="completed")
+                .order_by()
+                .values("parent")
+                .annotate(count=Count("id"))
+                .values("count"),
+                output_field=IntegerField(),
+            ),
+            Value(0),
+        ),
+    )
     return list(issues.values(*required_fields))
 
 

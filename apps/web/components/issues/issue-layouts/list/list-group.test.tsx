@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   count: 1,
   workflow: vi.fn(),
   toast: vi.fn(),
+  column: vi.fn(),
   translate: (key: string) => key,
 }));
 vi.mock("@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter", () => ({ dropTargetForElements: mocks.register }));
@@ -38,6 +39,18 @@ vi.mock("../utils", () => ({
 }));
 vi.mock("@atlaskit/pragmatic-drag-and-drop-auto-scroll/element", () => ({ autoScrollForElements: () => () => {} }));
 vi.mock("../kanban/blocks-list", () => ({ KanbanIssueBlocksList: () => null }));
+vi.mock("../kanban/kanban-dnd", () => ({
+  useKanbanColumnDnd: (input: { issueIds: string[] }) => {
+    mocks.column(input);
+    return {
+      ref: () => {},
+      issueIds: input.issueIds,
+      activeIssueId: null,
+      activeSourceColumnId: null,
+      isDraggingOverColumn: false,
+    };
+  },
+}));
 vi.mock("./blocks-list", () => ({ IssueBlocksList: () => null }));
 vi.mock("./headers/group-by-card", () => ({ HeaderGroupByCard: () => null }));
 vi.mock("../group-drag-overlay", () => ({ GroupDragOverlay: () => null }));
@@ -122,22 +135,20 @@ it("uses the current translation and rejects a newly disabled drop without re-re
   expect(mocks.register).toHaveBeenCalledOnce();
 });
 
-it("rejects disabled Kanban drops even without an error message", () => {
-  const handleOnDrop = vi.fn();
+it("refuses Kanban drops into a disabled column, silently without an error message", () => {
   const props = {
     groupId: "g",
     sub_group_id: "null",
     issuesMap: {},
     groupedIssueIds: {},
     isDropDisabled: true,
-    handleOnDrop,
   } as unknown as ComponentProps<typeof KanbanGroup>;
   const view = render(<KanbanGroup {...props} />);
-  const target = mocks.register.mock.calls[0][0];
-  act(() => target.onDrop({}));
-  expect(handleOnDrop).not.toHaveBeenCalled();
+  const getDropError = () => mocks.column.mock.lastCall?.[0].getDropError();
+  expect(mocks.column.mock.lastCall?.[0]).toMatchObject({ columnId: "g__null", groupId: "g", subGroupId: "null" });
+  expect(getDropError()).toBeNull();
+  view.rerender(<KanbanGroup {...props} dropErrorMessage="blocked" />);
+  expect(getDropError()).toBe("blocked");
   view.rerender(<KanbanGroup {...props} isDropDisabled={false} />);
-  act(() => target.onDrop({}));
-  expect(handleOnDrop).toHaveBeenCalledOnce();
-  expect(mocks.register).toHaveBeenCalledOnce();
+  expect(getDropError()).toBeUndefined();
 });

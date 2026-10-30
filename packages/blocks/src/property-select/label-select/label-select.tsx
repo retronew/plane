@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { useTranslation } from "@plane/i18n";
 import { LabelPropertyIcon } from "../../icons/properties/label-icon";
 import type { TPaginatedResponse } from "@plane/types";
@@ -45,6 +46,8 @@ export type LabelSelectProps = {
     canCreate?: boolean;
   };
   className?: string;
+  /** Render every selected label as its own chip (wrapping), whatever the variant; any chip opens the picker. */
+  showAllLabels?: boolean;
   showIdentifier?: boolean;
   tooltip?: SelectTooltip;
   /** Tab order of the trigger, for forms that sequence focus explicitly (e.g. the work item create modal). */
@@ -79,6 +82,7 @@ export function LabelSelect(props: LabelSelectProps) {
     onClose,
     createLabel,
     className,
+    showAllLabels = false,
     showIdentifier = false,
     tooltip,
     testId,
@@ -142,18 +146,18 @@ export function LabelSelect(props: LabelSelectProps) {
           if (labels.length === 0) {
             return !!placeholder && <span className="min-w-0 grow truncate text-left">{placeholder}</span>;
           }
-          // select / select-ghost variants show individual label pills matching the legacy chip style
-          if (isSelectKind) {
+          // select / select-ghost variants (and showAllLabels) show individual label pills matching the legacy chip style
+          if (isSelectKind || showAllLabels) {
             return (
               <div className="flex min-w-0 grow flex-wrap items-center gap-1">
                 {labels.map((label) => (
-                  <span
-                    key={label.id}
-                    className="flex h-6 shrink-0 items-center gap-1 rounded-md bg-label-grey-bg px-2 text-body-xs-medium text-label-grey-text"
-                  >
-                    <LabelDot color={label.color} />
-                    <span className="truncate">{label.name}</span>
-                  </span>
+                  // each chip names its own label on hover (the aggregated trigger tooltip is off for chip rows)
+                  <Tooltip key={label.id} label={t("common.labels")} layout="stacked" disabled={!showAllLabels}>
+                    <span className="flex h-6 shrink-0 items-center gap-1 rounded-md bg-label-grey-bg px-2 text-body-xs-medium text-label-grey-text">
+                      <LabelDot color={label.color} />
+                      <span className="truncate">{label.name}</span>
+                    </span>
+                  </Tooltip>
                 ))}
               </div>
             );

@@ -26,8 +26,7 @@ it.each(["horizontal", "vertical"] as const)(
     });
     expect(instance.options().scrollbars).toMatchObject({
       theme: "os-theme-plane",
-      autoHide: "leave",
-      autoHideDelay: 500,
+      autoHide: "never",
       visibility: "auto",
       dragScroll: true,
     });

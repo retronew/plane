@@ -60,6 +60,8 @@
         "sub_issue_count": "Număr de sub-activități",
         "attachment_count": "Număr de atașamente",
         "created_on": "Creată la",
+        "time_in_status": "Timp în stare",
+        "started_at": "Început pe {date}",
         "sub_issue": "Sub-activitate",
         "work_item_count": "Număr de activități"
       },

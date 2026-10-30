@@ -27,6 +27,10 @@ type Props = {
  */
 export function IssueQuickActionMenu({ parentRef, menuItems, placements, customActionButton }: Props) {
   const { t } = useTranslation();
+  // rows that load their state lazily (e.g. the subscription) fetch it whenever either menu opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) menuItems.forEach((item) => item.onMenuOpen?.());
+  };
   const contextMenuItems = useMemo(
     () => menuItems.map((item) => ({ ...item, onClick: () => item.action() })),
     [menuItems]
@@ -34,8 +38,8 @@ export function IssueQuickActionMenu({ parentRef, menuItems, placements, customA
 
   return (
     <>
-      <ContextMenu parentRef={parentRef} items={contextMenuItems} />
-      <Menu>
+      <ContextMenu parentRef={parentRef} items={contextMenuItems} onOpenChange={handleOpenChange} />
+      <Menu onOpenChange={handleOpenChange}>
         <MenuTrigger
           {...quickActionTriggerGuard}
           nativeButton={isNativeQuickActionTrigger(customActionButton)}

@@ -60,6 +60,8 @@
         "sub_issue_count": "Aantal subwerkitems",
         "attachment_count": "Aantal bijlagen",
         "created_on": "Aangemaakt op",
+        "time_in_status": "Tijd in status",
+        "started_at": "Gestart op {date}",
         "sub_issue": "Subwerkitem",
         "work_item_count": "Aantal werkitems"
       },

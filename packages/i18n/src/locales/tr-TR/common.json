@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Düzenle",
+      "copy": "Kopyala",
       "make_a_copy": "Kopyasını oluştur",
       "open_in_new_tab": "Yeni sekmede aç",
       "copy_link": "Bağlantıyı kopyala",

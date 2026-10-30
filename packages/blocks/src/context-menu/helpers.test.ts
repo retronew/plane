@@ -5,7 +5,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { getRenderableItems, hasMenuSeparatorBefore, resolveItemVariant } from "./helpers";
+import {
+  filterMenuItemsByQuery,
+  getDisabledReason,
+  getRenderableItems,
+  hasMenuSeparatorBefore,
+  resolveItemVariant,
+} from "./helpers";
 import type { TContextMenuItem } from "./types";
 
 const noop = () => {};
@@ -81,5 +87,25 @@ describe("resolveItemVariant", () => {
     expect(resolveItemVariant(item({ key: "both-accent", variant: "accent", className: "text-danger" }))).toBe(
       "accent"
     );
+  });
+});
+
+describe("getDisabledReason", () => {
+  it("returns the description only for a disabled row", () => {
+    expect(getDisabledReason({ key: "a", action: () => {}, disabled: true, description: "Why" })).toBe("Why");
+    expect(getDisabledReason({ key: "a", action: () => {}, description: "Why" })).toBeUndefined();
+    expect(getDisabledReason({ key: "a", action: () => {}, disabled: true })).toBeUndefined();
+  });
+});
+
+describe("filterMenuItemsByQuery", () => {
+  const items = [
+    { key: "a", title: "In Progress", action: () => {} },
+    { key: "b", title: "Done", action: () => {} },
+  ];
+  it("matches titles case-insensitively and keeps everything for a blank query", () => {
+    expect(filterMenuItemsByQuery(items, " ").map((entry) => entry.key)).toEqual(["a", "b"]);
+    expect(filterMenuItemsByQuery(items, "PROG").map((entry) => entry.key)).toEqual(["a"]);
+    expect(filterMenuItemsByQuery(items, "zzz")).toEqual([]);
   });
 });

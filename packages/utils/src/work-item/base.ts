@@ -296,7 +296,8 @@ export const getComputedDisplayProperties = (
   displayProperties: IIssueDisplayProperties = {}
 ): IIssueDisplayProperties => ({
   assignee: displayProperties?.assignee ?? true,
-  start_date: displayProperties?.start_date ?? true,
+  // the planned start date is opt-in; time in status shows progress without anyone filling it in
+  start_date: displayProperties?.start_date ?? false,
   due_date: displayProperties?.due_date ?? true,
   labels: displayProperties?.labels ?? true,
   priority: displayProperties?.priority ?? true,
@@ -309,6 +310,7 @@ export const getComputedDisplayProperties = (
   created_by: displayProperties?.created_by ?? false,
   created_on: displayProperties?.created_on ?? true,
   updated_on: displayProperties?.updated_on ?? true,
+  time_in_status: displayProperties?.time_in_status ?? true,
   modules: displayProperties?.modules ?? true,
   cycle: displayProperties?.cycle ?? true,
   issue_type: displayProperties?.issue_type ?? true,

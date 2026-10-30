@@ -1,0 +1,715 @@
+{
+  "admin": {
+    "feishu": {
+      "last_delivery": "Latest notification to my account",
+      "refresh_status": "Refresh delivery status",
+      "no_delivery": "No notifications have been queued for your account yet.",
+      "delivery_pending": "Queued for delivery",
+      "delivery_retry": "Waiting to retry",
+      "delivery_sent": "Sent to Feishu",
+      "delivery_failed": "Delivery failed",
+      "delivery_cancelled": "Delivery cancelled",
+      "delivery_unknown": "Delivery status unavailable",
+      "delivery_created": "Queued: {date, date, medium} {date, time, medium}",
+      "delivery_sent_at": "Sent: {date, date, medium} {date, time, medium}",
+      "delivery_disabled_or_unbound": "Notifications are disabled or the account is no longer linked.",
+      "delivery_no_longer_eligible": "This notification is no longer eligible for delivery. Check notification preferences and access.",
+      "delivery_transport_error": "Unable to connect to Feishu. Check the server connection.",
+      "delivery_rate_limited": "Feishu is limiting requests. Delivery will be retried if retries remain.",
+      "delivery_permission_error": "The Feishu app does not have permission to send this message.",
+      "delivery_error": "Feishu could not deliver this notification. Check app configuration and account binding.",
+      "title": "Feishu notifications",
+      "description": "Connect a Feishu app to deliver notifications to linked accounts.",
+      "enable": "Enable Feishu notifications",
+      "enable_description": "Save changes to apply this setting. Disabling stops Feishu notifications on the server.",
+      "enabled": "Feishu notifications are enabled.",
+      "disabled": "Feishu notifications are disabled.",
+      "managed_by_env": "This configuration is managed by environment variables. Update it on the server.",
+      "verification_token_configured": "Verification token is configured",
+      "verification_token_not_configured": "Verification token is not configured",
+      "encrypt_key_configured": "Encrypt key is configured",
+      "encrypt_key_not_configured": "Encrypt key is not configured",
+      "card_callback_url": "Card callback URL",
+      "card_callback_description": "First copy the Verification Token and Encrypt Key from your Feishu app's event and callback settings and save them here. Then return to Feishu, set this URL as the card callback URL, and subscribe to card.action.trigger. Approvals and status changes from cards also require deploying the callback service and publishing the Feishu app.",
+      "personal_message_permissions": "Personal notifications do not need group permissions. You can turn off the option that allows other bots to invite this bot into groups.",
+      "check_scope": "This check only validates the saved App ID and App Secret. It does not verify the card callback URL, callback secrets, or event subscription.",
+      "secret_configured": "App secret is configured",
+      "secret_not_configured": "App secret is not configured",
+      "secret_description": "Leave blank to keep the saved secret. Enter a new secret only to replace it.",
+      "callback_url": "Callback URL",
+      "callback_description": "Add this exact URL to the redirect URLs in your Feishu app settings.",
+      "saved_config_actions": "Checks and test notifications use saved settings. Save any changes first.",
+      "bind_first": "Use account sync in the instance Feishu settings to link your account before sending a test notification.",
+      "enable_first": "Enable and save Feishu notifications before sending a test.",
+      "check": "Check configuration",
+      "test": "Send test to my linked account",
+      "check_success": "The saved Feishu app credentials are valid.",
+      "test_queued": "The test notification is queued for your linked Feishu account. Check Feishu for delivery.",
+      "saved": "Feishu configuration saved.",
+      "request_failed": "The request failed. Check the saved app credentials, app permissions, and account binding, then try again.",
+      "load_failed": "Unable to load Feishu configuration.",
+      "retry": "Retry",
+      "directory": {
+        "restore": "Return to pending",
+        "already_bound": "Bound",
+        "pending": "Pending · choose an account",
+        "mode_all_help": "Review system users and existing bindings. Unbind an incorrect account before selecting another.",
+        "mode_unbound_help": "Show all eligible unbound Plane users, including users without an available Feishu match.",
+        "mode_all": "Review all",
+        "mode_unbound": "Unbound only",
+        "mode": "Sync scope",
+        "title": "Directory account binding",
+        "description": "Fetch the app-visible Feishu directory and review suggested account matches. Syncing does not bind accounts automatically. Save configuration changes first.",
+        "sync": "Sync directory",
+        "search": "Search Feishu members",
+        "search_failed": "Unable to search users. Try again.",
+        "loading": "Loading users…",
+        "no_users": "No available Feishu members. Check the app directory access scope.",
+        "failed": "The request failed. Refresh the directory and check app permissions and configuration before retrying.",
+        "partial": "Directory sync is incomplete. Binding is disabled. Check directory permissions and sync again.",
+        "expired": "This preview has expired. Sync the directory again.",
+        "expires": "Preview expires: {date, date, medium} {date, time, medium}",
+        "empty": "No Plane users match this filter.",
+        "select_matches": "Select first 20 matches",
+        "select_person": "Select {name}",
+        "unnamed": "Unnamed member",
+        "no_email": "No email address",
+        "email": "Matched by email",
+        "oidc": "Matched by OIDC identity",
+        "unmatched": "Awaiting account selection",
+        "bound": "Bound successfully",
+        "conflict": "Already bound; existing binding preserved",
+        "user_ineligible": "User is no longer eligible",
+        "match_changed": "Match changed; sync again",
+        "notifications": "Enable Feishu notifications for newly bound users",
+        "selection_count": "{count, plural, one {# account selected} other {# accounts selected}}",
+        "duplicates": "Choose a different Plane user for each selected member.",
+        "bind": "Bind selected accounts",
+        "confirm_title": "Confirm account binding",
+        "confirm_description": "{count, plural, one {Link # selected account? Existing bindings will be preserved.} other {Link # selected accounts? Existing bindings will be preserved.}}",
+        "notifications_on": "Feishu notifications will be enabled for newly bound users.",
+        "notifications_off": "Notification preferences will remain unchanged.",
+        "limit": "Select up to 20 accounts per batch.",
+        "identity_conflict": "Identity conflict; automatic and manual binding are unavailable",
+        "permission_required": "The Feishu app is missing permissions. Enable tenant:tenant:readonly and the required directory permissions, publish the app, then sync again.",
+        "result_summary": "{total} Plane users in this list, {bound} bound",
+        "reopen": "Review matching",
+        "review_title": "Review and bind directory accounts",
+        "oidc_locked": "Verified OIDC identity. The target cannot be changed; you can skip this member.",
+        "skip": "Skip",
+        "include": "Include",
+        "skipped": "Skipped",
+        "review_summary": "Suggested: {automatic} · Manual: {manual} · Pending: {pending} · Skipped: {skipped} · Already bound: {existing}. Up to 20 accounts per submission.",
+        "bind_count": "Bind {count} accounts",
+        "manual": "Manual match",
+        "selection": "Bind",
+        "feishu_member": "Feishu member",
+        "plane_account": "Plane account",
+        "match_status": "Match / status",
+        "table_help": "Select a Feishu member for each Plane user, then confirm the checked rows below. Uncheck a row to skip it.",
+        "unbind": "Unbind",
+        "unbind_title": "Unbind Feishu account",
+        "unbind_help": "Unbind Plane user {user} from Feishu account {member}? You can select another account afterwards. OIDC sign-in is unchanged."
+      },
+      "tabs": {
+        "settings": "App settings",
+        "directory": "Account sync"
+      }
+    },
+    "common": {
+      "error": "Error",
+      "error_exclamation": "Error!",
+      "success": "Success",
+      "success_exclamation": "Success!",
+      "something_went_wrong": "Something went wrong. Please try again.",
+      "email": "Email",
+      "password": "Password",
+      "show_password": "Show password",
+      "hide_password": "Hide password",
+      "dismiss_banner": "Dismiss banner",
+      "save_changes": "Save changes",
+      "saving": "Saving",
+      "cancel": "Cancel",
+      "go_back": "Go back",
+      "learn_more": "Learn more",
+      "close": "Close"
+    },
+    "auth_errors": {
+      "sign_in": "Sign In",
+      "now": "now.",
+      "administrator": "administrator",
+      "admin_already_exist": {
+        "title": "Admin already exists",
+        "message": "Admin already exists. Please try again."
+      },
+      "required_email_password_first_name": {
+        "title": "Email, password and first name required",
+        "message": "Email, password and first name required. Please try again."
+      },
+      "invalid_admin_email": {
+        "title": "Invalid admin email",
+        "message": "Invalid admin email. Please try again."
+      },
+      "invalid_admin_password": {
+        "title": "Invalid admin password",
+        "message": "Invalid admin password. Please try again."
+      },
+      "required_email_password": {
+        "title": "Email and password required",
+        "message": "Email and password required. Please try again."
+      },
+      "authentication_failed": {
+        "title": "Authentication failed",
+        "message": "Authentication failed. Please try again."
+      },
+      "admin_user_already_exist": {
+        "title": "Admin user already exists",
+        "message": "Admin user already exists."
+      },
+      "admin_user_does_not_exist": {
+        "title": "Admin user does not exist",
+        "message": "Admin user does not exist."
+      },
+      "admin_user_deactivated": {
+        "title": "User account deactivated",
+        "message": "User account deactivated. Please contact {contact}."
+      },
+      "sso_not_admin": {
+        "title": "Not an admin",
+        "message": "This account is not an instance admin. Ask an existing admin to add you under Admins."
+      },
+      "sso_failed": {
+        "title": "Single sign-on failed",
+        "message": "Could not sign in with single sign-on. Please try again or use your password."
+      }
+    },
+    "sign_in": {
+      "heading": "Manage your Plane instance",
+      "sub_heading": "Configure instance-wide settings to secure your instance",
+      "password_placeholder": "Enter your password",
+      "submit": "Sign in",
+      "sso": "Sign in with {provider}",
+      "sso_divider": "or use your password"
+    },
+    "setup": {
+      "heading": "Setup your Plane Instance",
+      "sub_heading": "Post setup you will be able to manage this Plane instance.",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "first_name_placeholder": "Wilber",
+      "last_name_placeholder": "Wright",
+      "company_name": "Company name",
+      "set_password": "Set a password",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "passwords_dont_match": "Passwords don't match",
+      "continue": "Continue",
+      "errors": {
+        "instance_not_configured": "Instance is not configured. Please try again.",
+        "password_too_weak": "Password is too weak. Make sure it meets all the criteria below.",
+        "admin_already_exist": "Admin already exists. Please sign in instead.",
+        "required_fields": "Email, password and first name are required.",
+        "invalid_email": "Please enter a valid email address.",
+        "admin_user_already_exist": "An admin user with this email already exists.",
+        "unknown_with_detail": "Something went wrong ({detail}). Please try again."
+      }
+    },
+    "password_strength": {
+      "empty": "Please enter your password",
+      "too_short": "Password is too short",
+      "weak": "Password is weak",
+      "strong": "Password is strong",
+      "criteria": {
+        "length": "Min 8 characters",
+        "uppercase": "Min 1 upper-case letter",
+        "lowercase": "Min 1 lower-case letter",
+        "number": "Min 1 number",
+        "special": "Min 1 special character"
+      }
+    },
+    "instance_failure": {
+      "image_alt": "Instance failure illustration",
+      "title": "Unable to fetch instance details.",
+      "description": "We were unable to fetch the details of the instance. Fret not, it might just be a connectivity issue.",
+      "retry": "Retry"
+    },
+    "not_found": {
+      "image_alt": "404 - Page not found",
+      "title": "Oops! Something went wrong.",
+      "description": "Sorry, the page you are looking for cannot be found. It may have been removed, had its name changed, or is temporarily unavailable.",
+      "go_to_general": "Go to general settings"
+    },
+    "header": {
+      "general": "General",
+      "ai": "AI",
+      "email": "Email",
+      "authentication": "Authentication",
+      "workspace": "Workspace",
+      "create": "Create",
+      "settings": "Settings",
+      "toggle_sidebar": "Toggle sidebar",
+      "breadcrumb": "Breadcrumb",
+      "admins": "Admins",
+      "users": "Users"
+    },
+    "sidebar": {
+      "general": {
+        "name": "General",
+        "description": "Identify your instances and get key details."
+      },
+      "email": {
+        "name": "Email",
+        "description": "Configure your SMTP controls."
+      },
+      "workspace": {
+        "name": "Workspaces",
+        "description": "Manage all workspaces on this instance."
+      },
+      "authentication": {
+        "name": "Authentication",
+        "description": "Configure authentication modes."
+      },
+      "ai": {
+        "name": "AI",
+        "description": "Connect a model provider."
+      },
+      "switch_to_light": "Switch to light mode",
+      "switch_to_dark": "Switch to dark mode",
+      "appearance": "Appearance",
+      "light": "Light",
+      "dark": "Dark",
+      "follow_system": "Follow system",
+      "sign_out": "Sign out",
+      "instance_admin_menu": "Instance admin menu",
+      "instance_admin": "Instance admin",
+      "account_menu": "Account menu",
+      "admin_user": "Admin user",
+      "admins": {
+        "name": "Admins",
+        "description": "Who can manage this instance"
+      },
+      "users": {
+        "name": "Users",
+        "description": "Everyone with an account on this instance"
+      }
+    },
+    "help": {
+      "documentation": "Documentation",
+      "forum": "Join our Forum",
+      "report_bug": "Report a bug",
+      "redirect_to_plane": "Redirect to Plane",
+      "help": "Help",
+      "version": "Version: v{version}"
+    },
+    "general": {
+      "title": "General settings",
+      "description": "Change your instance name and view its admin and instance ID.",
+      "toast_updated": "Settings updated successfully",
+      "instance_details": "Instance details",
+      "instance_name": "Name of instance",
+      "instance_name_placeholder": "Instance name",
+      "admin_email": "Admin email",
+      "admin_email_description": "The admin's sign-in email. Change it in your Plane profile settings.",
+      "admin_email_change_link": "Go to profile",
+      "instance_id": "Instance ID"
+    },
+    "email": {
+      "toast_disabled": {
+        "title": "Email feature disabled",
+        "message": "Email feature has been disabled"
+      },
+      "toast_disable_error": {
+        "title": "Error disabling email",
+        "message": "Failed to disable email feature. Please try again."
+      },
+      "title": "Secure emails from your own instance",
+      "description": "Plane can send useful emails to you and your users from your own instance without talking to the Internet.",
+      "test_before_save": "Set it up below and please test your settings before you save them.",
+      "misconfig_warning": "Misconfigs can lead to email bounces and errors.",
+      "enable_smtp": "Enable SMTP email",
+      "form": {
+        "no_security": "No email security",
+        "host": "Host",
+        "port": "Port",
+        "sender": "Sender's email address",
+        "sender_description": "This is the email address your users will see when getting emails from this instance. You will need to verify this address.",
+        "username": "Username",
+        "toast_updated": "Email Settings updated successfully",
+        "security": "Email security",
+        "select_security": "Select email security",
+        "authentication": "Authentication",
+        "authentication_description": "This is optional, but we recommend setting up a username and a password for your SMTP server.",
+        "send_test_email": "Send test email"
+      },
+      "test": {
+        "failed_to_send": "Failed to send email",
+        "sent": "Email send",
+        "failed": "Failed",
+        "receiver_email": "Receiver email",
+        "sent_description": "We have sent the test email to {email}. Please check your spam folder if you cannot find it.",
+        "recheck": "If you still cannot find it, recheck your SMTP configuration and trigger a new test email.",
+        "sending": "Sending email",
+        "send": "Send email"
+      }
+    },
+    "authentication": {
+      "cannot_disable": {
+        "title": "Cannot disable authentication",
+        "message": "At least one authentication method must remain enabled. Please enable another method before disabling this one."
+      },
+      "saving_configuration": "Saving configuration",
+      "configuration_saved": "Configuration saved successfully",
+      "configuration_save_failed": "Failed to save configuration",
+      "title": "Manage authentication modes for your instance",
+      "description": "Configure authentication modes for your team and restrict sign-ups to be invite only.",
+      "allow_signup": "Allow anyone to sign up even without an invite",
+      "allow_signup_description": "Toggling this off will only let users sign up when they are invited.",
+      "available_modes": "Available authentication modes",
+      "modes": {
+        "unique_codes": {
+          "name": "Unique codes",
+          "description": "Log in or sign up for Plane using codes sent via email. You need to have set up SMTP to use this method."
+        },
+        "passwords": {
+          "name": "Passwords",
+          "description": "Allow members to create accounts with passwords and use it with their email addresses to sign in."
+        },
+        "google": {
+          "description": "Allow members to log in or sign up for Plane with their Google accounts."
+        },
+        "github": {
+          "description": "Allow members to log in or sign up for Plane with their GitHub accounts."
+        },
+        "gitlab": {
+          "description": "Allow members to log in or sign up to plane with their GitLab accounts."
+        },
+        "gitea": {
+          "description": "Allow members to log in or sign up to plane with their Gitea accounts."
+        },
+        "oidc": {
+          "description": "Allow members to log in or sign up to Plane with any OpenID Connect provider, such as Casdoor, Keycloak or Authentik."
+        }
+      },
+      "edit": "Edit",
+      "configure": "Configure",
+      "enable_provider": "Enable {provider}",
+      "enable_passwords": "Enable login with passwords",
+      "enable_email_codes": "Enable login with email codes",
+      "provider": {
+        "configuration_saved": "Configuration saved",
+        "now_active": "{provider} authentication is now active.",
+        "now_disabled": "{provider} authentication is now disabled."
+      },
+      "oauth": {
+        "client_id": "Client ID",
+        "client_secret": "Client secret",
+        "get_from_your": "You will get this from your",
+        "secret_also_in_your": "Your client secret is also found in your",
+        "app_settings": "{provider} OAuth application settings.",
+        "organization_id": "Organization ID",
+        "organization_id_description": "The organization github ID.",
+        "origin_url": "Origin URL",
+        "callback_uri": "Callback URI",
+        "callback_url": "Callback URL",
+        "auto_generated_paste_into": "We will auto-generate this. Paste this into the",
+        "authorized_origin_url": "Authorized origin URL",
+        "authorized_callback_uri": "Authorized Callback URI",
+        "field": "field",
+        "here": "here.",
+        "done": "Done!",
+        "configured": "Your {provider} authentication is configured. You should test it now.",
+        "provider_details_for_plane": "{provider}-provided details for Plane",
+        "plane_details_for_provider": "Plane-provided details for {provider}",
+        "web": "Web",
+        "learn_more": "Learn more",
+        "gitlab_host_prefix": "This is either https://gitlab.com or the",
+        "gitlab_host_suffix": "where you host GitLab.",
+        "application_id": "Application ID",
+        "secret": "Secret",
+        "redirect_uri": "Redirect URI",
+        "field_of_your": "field of your",
+        "oauth_application": "{provider} OAuth application",
+        "app_settings_no_period": "{provider} OAuth application settings",
+        "google_client_id_description": "Your client ID lives in your Google API Console.",
+        "google_client_secret_description": "Your client secret should also be in your Google API Console.",
+        "google_client_id_docs": "Google OAuth client ID documentation",
+        "google_client_secret_docs": "Google OAuth client secret documentation",
+        "authorized_js_origins": "Authorized JavaScript origins",
+        "authorized_redirect_uri": "Authorized Redirect URI",
+        "field_for_this_client": "field. For this OAuth client",
+        "google_console_credentials": "Google Cloud Console OAuth client credentials",
+        "gitea_host": "Gitea Host",
+        "gitea_host_description": "Use the URL of your Gitea instance. For the official Gitea instance, use \"https://gitea.com\".",
+        "oidc_provider_name": "Button label",
+        "oidc_provider_name_description": "Shown on the login button, e.g. \"Log in with Casdoor\".",
+        "oidc_provider_icon_url": "Icon URL",
+        "oidc_provider_icon_url_description": "Optional. Image shown on the login button, e.g. your identity provider's logo. Leave empty to use the default icon.",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_description": "The OIDC issuer URL of your identity provider. Plane reads <issuer>/.well-known/openid-configuration to find the endpoints.",
+        "oidc_client_description": "You will get this from the OAuth/OIDC application in your identity provider.",
+        "oidc_redirect_uri_suffix": "field of the OAuth/OIDC application in your identity provider.",
+        "oidc_trust_email": "Trust emails from this provider",
+        "oidc_trust_email_description": "Accept emails even when the provider does not mark them as verified. Only enable this if you fully control the identity provider; otherwise anyone who can set an email there could take over an existing Plane account.",
+        "refresh_attributes": "Refresh user attributes from {provider} during sign in"
+      },
+      "session": {
+        "title": "Session",
+        "description": "Control how long users stay signed in before they need to log in again.",
+        "user_session": "Member session duration",
+        "user_session_description": "How long a member stays signed in to the web app.",
+        "admin_session": "God mode session duration",
+        "admin_session_description": "How long an instance admin stays signed in to God mode.",
+        "extend_on_activity": "Extend sessions on activity",
+        "extend_on_activity_description": "Restart the session timer on every request so active users are not signed out. Turn off to sign users out at a fixed time after login.",
+        "minutes": "{count, plural, one {# minute} other {# minutes}}",
+        "hours": "{count, plural, one {# hour} other {# hours}}",
+        "days": "{count, plural, one {# day} other {# days}}"
+      },
+      "configure_provider": "Configure {provider}"
+    },
+    "meta": {
+      "create_workspace": "Create Workspace - God Mode",
+      "general": "General Settings - God Mode",
+      "authentication": "Authentication Settings - God Mode",
+      "workspace": "Workspace Management - God Mode",
+      "ai": "AI Settings - God Mode",
+      "email": "Email Settings - God Mode",
+      "home": "Admin – Instance Setup & Sign-In",
+      "home_description": "Configure your Plane instance or sign in to the admin portal.",
+      "app_title": "Plane | Simple, extensible, open-source project management tool.",
+      "app_description": "Open-source project management tool to manage work items, sprints, and product roadmaps with peace of mind.",
+      "admins": "Admins - God Mode",
+      "users": "Users - God Mode"
+    },
+    "ai": {
+      "title": "AI model provider",
+      "description": "Connect a large language model provider to turn on AI features for all your workspaces. Works with OpenAI, Anthropic, Gemini and any OpenAI-compatible service.",
+      "provider": "Provider",
+      "provider_description": "Pick a preset to fill in the protocol and base URL, then adjust them if needed.",
+      "custom_provider": "Custom",
+      "search_provider": "Search providers",
+      "no_matching_providers": "No matching providers",
+      "provider_names": {
+        "dashscope": "Alibaba Cloud Model Studio (DashScope)",
+        "deepseek": "DeepSeek",
+        "minimax": "MiniMax",
+        "moonshot": "Moonshot AI (Kimi)",
+        "moonshot-cn": "Moonshot AI (Kimi, China)",
+        "qiniu": "Qiniu",
+        "siliconflow": "SiliconFlow",
+        "volcengine": "Volcengine Ark",
+        "zai": "Z.ai (GLM)",
+        "zhipu": "Zhipu AI (BigModel)"
+      },
+      "protocol": "API protocol",
+      "protocol_description": "Most third-party and self-hosted services (DeepSeek, Qwen, Moonshot, Ollama, vLLM, etc.) use the OpenAI-compatible (Chat Completions) protocol. Choose OpenAI Responses for models that only support the newer Responses API.",
+      "protocols": {
+        "openai": "OpenAI-compatible (Chat Completions)",
+        "openai_responses": "OpenAI Responses",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini"
+      },
+      "base_url": "API base URL",
+      "base_url_description": "Leave empty to use the official endpoint. A bare host gets the version path (/v1) appended automatically; end the URL with # to use it exactly as typed.",
+      "base_url_preview": "Requests go to:",
+      "api_key": "API key",
+      "api_key_description": "The key issued by your model provider. Stored encrypted.",
+      "api_key_saved_description": "A key is saved ({key}). Leave empty to keep it, or enter a new key to replace it.",
+      "llm_model": "Model",
+      "llm_model_description": "Type a model ID, or fetch the list from the provider.",
+      "fetch_models": "Fetch models",
+      "models_available": "{count, plural, one {# model available} other {# models available}}",
+      "models_fetched": "{count, plural, one {Fetched # model.} other {Fetched # models.}}",
+      "models_fetch_failed": "Couldn't fetch models",
+      "no_matching_models": "No matching models",
+      "search_model": "Search or type a model ID",
+      "type_model_id": "Type a model ID, or fetch the list first",
+      "use_custom_model": "Use \"{model}\"",
+      "test_connection": "Test connection",
+      "test_succeeded": "Connection works",
+      "test_failed": "Connection failed",
+      "test_result": "{model} replied in {latency} ms.",
+      "request_failed": "The request failed. Check the base URL and API key.",
+      "toast_updated": "AI settings updated"
+    },
+    "workspace": {
+      "title": "Workspaces on this instance",
+      "description": "See all workspaces and control who can create them.",
+      "restrict_creation": "Prevent anyone else from creating a workspace.",
+      "restrict_creation_description": "Toggling this on will let only you create workspaces. You will have to invite users to new workspaces.",
+      "all_workspaces": "All workspaces on this instance",
+      "list_note": "You can't yet delete workspaces and you can only go to the workspace if you are an Admin or a Member.",
+      "create": "Create workspace",
+      "load_more": "Load more",
+      "create_page": {
+        "title": "Create a new workspace on this instance.",
+        "description": "You will need to invite users from Workspace Settings after you create this workspace.",
+        "toast_created": "Workspace created successfully.",
+        "toast_create_failed": "Workspace could not be created. Please try again.",
+        "toast_create_error": "Some error occurred while creating workspace. Please try again.",
+        "name": "Name your workspace",
+        "name_placeholder": "Something familiar and recognizable is always best.",
+        "url": "Set your workspace's URL",
+        "url_taken": "This URL is taken. Try something else.",
+        "url_invalid": "URLs can contain only ( - ), ( _ ) and alphanumeric characters.",
+        "creating": "Creating workspace"
+      },
+      "item": {
+        "logo": "Workspace Logo",
+        "unique_url": "The unique URL of your workspace",
+        "owned_by": "Owned by:",
+        "total_projects": "Total projects:",
+        "total_members": "Total members:"
+      }
+    },
+    "discard": {
+      "title": "You have unsaved changes",
+      "keep_editing": "Keep editing",
+      "close_content": "Changes you made will be lost if you close this window.",
+      "discard": "Discard"
+    },
+    "copy": {
+      "title": "Copied to clipboard",
+      "message": "The {label} has been successfully copied to your clipboard",
+      "aria_label": "Copy {label}"
+    },
+    "new_user": {
+      "description": "Instance setup done! Welcome to Plane instance portal. Start your journey by creating your first workspace.",
+      "plane_icon": "Plane icon"
+    },
+    "admins": {
+      "title": "Instance admins",
+      "description": "Admins can sign in to God mode and manage this instance's settings.",
+      "add_label": "Add an admin",
+      "add_button": "Make admin",
+      "add_hint": "Only people who already have a Plane account are listed (e.g. after signing in once with SSO). To sign in to God mode they set a password under Profile settings → Security in the web app.",
+      "list_title": "Admins",
+      "you": "(you)",
+      "remove": "Revoke admin access",
+      "confirm_remove": "Confirm revoke",
+      "cancel": "Cancel",
+      "added": "Admin added.",
+      "removed": "Admin removed.",
+      "errors": {
+        "invalid_email": "Enter a valid email address.",
+        "user_not_found": "No active Plane account uses this email. Ask the person to sign in once first.",
+        "already_admin": "This person is already an admin.",
+        "cannot_remove_self": "You cannot remove yourself.",
+        "last_admin": "At least one admin is required.",
+        "default": "Something went wrong. Please try again."
+      },
+      "search_placeholder": "Search users by name or email",
+      "no_users": "No matching users.",
+      "already_admin": "Admin"
+    },
+    "users": {
+      "title": "Users",
+      "description": "Manage accounts and admin access on this instance. Deactivated users cannot sign in.",
+      "admin_hint": "Instance admins can manage God Mode settings. Revoking admin access keeps the account and workspace memberships. Revoke admin access before deactivating an admin account.",
+      "search_placeholder": "Search by name or email",
+      "total": "{count, plural, one{# user} other{# users}}",
+      "empty": "No matching users.",
+      "filters": {
+        "label": "Status",
+        "all": "All",
+        "active": "Active",
+        "deactivated": "Deactivated"
+      },
+      "account_types": {
+        "label": "Account type",
+        "all": "All accounts",
+        "user": "Regular users",
+        "admin": "Instance admins"
+      },
+      "badges": {
+        "admin": "Admin",
+        "deactivated": "Deactivated"
+      },
+      "never_signed_in": "Never signed in",
+      "login_medium": {
+        "oidc": "SSO",
+        "email": "Password",
+        "magic_code": "Email code"
+      },
+      "deactivate": "Deactivate",
+      "confirm_deactivate": "Confirm deactivate",
+      "activate": "Reactivate",
+      "deactivated": "User deactivated. They have been signed out everywhere.",
+      "activated": "User reactivated.",
+      "previous_page": "Previous",
+      "next_page": "Next",
+      "deactivate_hint": "Deactivating signs the user out everywhere and blocks password, SSO and API token access. Workspace memberships are kept, so reactivating restores their access. To fully remove someone from a workspace, use that workspace's member settings.",
+      "errors": {
+        "cannot_deactivate_self": "You cannot deactivate yourself.",
+        "user_is_admin": "This user is an admin. Remove their admin access on the Admins page first.",
+        "default": "Something went wrong. Please try again."
+      },
+      "columns": {
+        "user": "User",
+        "workspaces": "Workspaces",
+        "last_login": "Last sign-in",
+        "actions": "Actions"
+      },
+      "details": {
+        "edit_profile": "Edit profile",
+        "menu_label": "Actions for {email}",
+        "processing": "Processing…",
+        "title": "User details and account",
+        "manage": "Details / manage",
+        "loading": "Loading user details…",
+        "retry": "Retry",
+        "refresh_failed": "Changes were saved, but some details could not be refreshed. Reopen this dialog to load the latest data.",
+        "saved": "Profile updated.",
+        "none": "None",
+        "linked": "Linked",
+        "not_linked": "Not linked",
+        "email": "Email",
+        "id": "User ID",
+        "date_joined": "Joined",
+        "last_login": "Last sign-in",
+        "login_medium": "Last sign-in method",
+        "sso": "SSO identity",
+        "status": "Status",
+        "role": "Account type",
+        "profile": "Personal profile",
+        "first_name": "First name",
+        "last_name": "Last name",
+        "display_name": "Display name",
+        "no_workspaces": "This user has not joined any workspaces.",
+        "account": "Account management",
+        "self_protection": "You cannot deactivate your own account or revoke your own admin access.",
+        "confirm_action": "Confirm",
+        "validation": {
+          "required": "Enter a display name.",
+          "too_long": "Use at most 255 characters.",
+          "url": "Names cannot contain URLs."
+        },
+        "roles": {
+          "guest": "Guest",
+          "viewer": "Viewer",
+          "member": "Member",
+          "admin": "Admin",
+          "unknown": "Unknown role"
+        },
+        "actions": {
+          "activate": "Reactivate account",
+          "deactivate": "Deactivate account",
+          "promote": "Grant admin access",
+          "revoke": "Revoke admin access"
+        },
+        "confirm": {
+          "activate": "Reactivate {email}? They will be able to sign in and access their existing workspaces again.",
+          "deactivate": "Deactivate {email}? They will be signed out everywhere, and password, SSO and API token access will be blocked. Their workspace memberships will be kept.",
+          "promote": "Grant admin access to {email}? They will be able to manage all God Mode instance settings and users.",
+          "revoke": "Revoke admin access from {email}? They will lose access to God Mode. Their account and workspace memberships will be kept."
+        },
+        "success": {
+          "activate": "Account reactivated.",
+          "deactivate": "Account deactivated and signed out everywhere.",
+          "promote": "Admin access granted.",
+          "revoke": "Admin access revoked."
+        }
+      }
+    }
+  }
+}

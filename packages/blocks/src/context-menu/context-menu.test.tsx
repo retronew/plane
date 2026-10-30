@@ -105,6 +105,54 @@ describe("ContextMenu opening and anchoring", () => {
     rightClick(screen.getByTestId("target"), 300, 45);
     const next = surface.props.at(-1)?.anchor as TVirtualAnchor;
     expect(next.getBoundingClientRect()).toMatchObject({ x: 300, y: 45, width: 0, height: 0 });
+    // a new anchor object, so Base UI re-positions the already open popup
+    expect(next).not.toBe(anchor);
+  });
+
+  it("reports open state changes to onOpenChange", async () => {
+    const onOpenChange = vi.fn();
+    const parent = document.createElement("div");
+    document.body.append(parent);
+    const parentRef = { current: parent };
+    render(
+      <ContextMenu
+        parentRef={parentRef}
+        items={[{ key: "copy", title: "Copy link", action: vi.fn() }]}
+        onOpenChange={onOpenChange}
+      />
+    );
+    fireEvent.contextMenu(parent, { clientX: 10, clientY: 10 });
+    await screen.findByRole("menu");
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+    await waitFor(() => expect(onOpenChange).toHaveBeenLastCalledWith(false));
+    parent.remove();
+  });
+
+  it("opens a pill's own picker on right click instead of the card menu", () => {
+    const openPicker = vi.fn();
+    const parent = document.createElement("div");
+    const pill = document.createElement("button");
+    pill.setAttribute("aria-haspopup", "listbox");
+    pill.innerHTML = "<span>2 labels</span>";
+    pill.addEventListener("click", openPicker);
+    const disabledPill = document.createElement("button");
+    disabledPill.setAttribute("aria-haspopup", "listbox");
+    disabledPill.disabled = true;
+    parent.append(pill, disabledPill);
+    document.body.append(parent);
+    render(
+      <ContextMenu parentRef={{ current: parent }} items={[{ key: "copy", title: "Copy link", action: vi.fn() }]} />
+    );
+
+    expect(fireEvent.contextMenu(pill.firstElementChild!, { clientX: 5, clientY: 5 })).toBe(false);
+    expect(openPicker).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    // a disabled pill has no picker to open, so the card menu still shows
+    fireEvent.contextMenu(disabledPill, { clientX: 5, clientY: 5 });
+    expect(openPicker).toHaveBeenCalledTimes(1);
+    parent.remove();
   });
 
   it("detaches its listener from parentRef on unmount", () => {
@@ -201,7 +249,7 @@ describe("ContextMenu rows", () => {
     expect(archive).not.toHaveBeenCalled();
   });
 
-  it("renders the description as a second line under the label", async () => {
+  it("keeps a disabled row to one line and moves its reason into a tooltip", async () => {
     render(
       <Harness
         items={[
@@ -210,6 +258,25 @@ describe("ContextMenu rows", () => {
             title: "Archive",
             description: "Only completed cycles can be archived",
             disabled: true,
+            action: vi.fn(),
+          },
+        ]}
+      />
+    );
+    await openMenu();
+    const archiveRow = row(/Archive/);
+    expect(archiveRow.textContent).toBe("Archive");
+    expect(screen.queryByText("Only completed cycles can be archived")).toBeNull();
+  });
+
+  it("renders the description of an enabled row as a second line under the label", async () => {
+    render(
+      <Harness
+        items={[
+          {
+            key: "archive",
+            title: "Archive",
+            description: "Only completed cycles can be archived",
             action: vi.fn(),
           },
         ]}
@@ -329,6 +396,43 @@ describe("ContextMenu nested rows", () => {
     expect(onOuterClick).not.toHaveBeenCalled();
   });
 
+  it("puts a focused filter field at the top of a searchable submenu", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never, delay: null });
+    const items = nested(vi.fn());
+    items[1] = { ...items[1], searchable: true, searchPlaceholder: "Change status…" };
+    render(<Harness items={items} />);
+    await openMenu();
+    await user.click(row("Move to"));
+    const search = await screen.findByPlaceholderText("Change status…");
+    await waitFor(() => expect(document.activeElement).toBe(search));
+
+    await user.keyboard("don");
+    expect(row("Done")).toBeDefined();
+    expect(screen.queryByRole("menuitem", { name: "Backlog" })).toBeNull();
+    // typing stays in the field instead of driving the menu's typeahead or closing it
+    expect(screen.getAllByRole("menu")).toHaveLength(2);
+  });
+
+  it("renders checked rows as multi-select checkboxes that toggle without closing", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never, delay: null });
+    const toggle = vi.fn();
+    render(
+      <Harness
+        items={[
+          { key: "ann", title: "Ann", checked: true, action: toggle },
+          { key: "bob", title: "Bob", checked: false, action: toggle },
+        ]}
+      />
+    );
+    await openMenu();
+    const [ann, bob] = screen.getAllByRole("menuitemcheckbox");
+    expect(ann.getAttribute("aria-checked")).toBe("true");
+    expect(bob.getAttribute("aria-checked")).toBe("false");
+    await user.click(bob);
+    expect(toggle).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("menu")).toBeDefined();
+  });
+
   it("renders a plain row when every nested row is hidden", async () => {
     const user = userEvent.setup();
     const move = vi.fn();
@@ -359,10 +463,43 @@ describe("ContextMenu nested rows", () => {
     await openMenu();
     const trigger = row(/Move to/);
     expect(trigger.getAttribute("aria-disabled")).toBe("true");
-    // the trigger has no second line, so the description rides at its inline end
-    expect(trigger.textContent).toContain("No other states");
+    // a disabled trigger stays compact; its reason lives in a tooltip
+    expect(trigger.textContent).not.toContain("No other states");
     await user.click(trigger);
     expect(screen.getAllByRole("menu")).toHaveLength(1);
     expect(screen.queryByRole("menuitem", { name: "Backlog" })).toBeNull();
+  });
+});
+
+describe("ContextMenu repeated right clicks", () => {
+  it("re-positions the open menu when the same target is right-clicked again", async () => {
+    render(<Harness items={[{ key: "copy", title: "Copy link", action: vi.fn() }]} />);
+    const menu = await openMenu(120, 80);
+    const target = screen.getByTestId("target-child");
+    // with the menu open, the click lands on the backdrop/menu and is handed back to the card
+    document.elementsFromPoint = vi.fn(() => [menu, target]);
+    fireEvent.contextMenu(menu, { clientX: 260, clientY: 140 });
+    await waitFor(() =>
+      expect((surface.props.at(-1)!.anchor as TVirtualAnchor).getBoundingClientRect()).toMatchObject({
+        x: 260,
+        y: 140,
+      })
+    );
+    expect(await screen.findByRole("menu")).toBeTruthy();
+  });
+
+  const items: TContextMenuItem[] = [{ key: "copy", title: "Copy link", action: vi.fn() }];
+
+  it("never lets the browser menu show when right-clicking the open menu, and hands the click on", async () => {
+    render(<Harness items={items} />);
+    const menu = await openMenu();
+    const under = screen.getByTestId("target-child");
+    document.elementsFromPoint = vi.fn(() => [menu, under]);
+    const reopened = vi.fn();
+    under.addEventListener("contextmenu", reopened);
+
+    expect(fireEvent.contextMenu(menu, { clientX: 200, clientY: 90 })).toBe(false);
+    await waitFor(() => expect(reopened).toHaveBeenCalledTimes(1));
+    expect(reopened.mock.calls[0][0]).toMatchObject({ clientX: 200, clientY: 90 });
   });
 });

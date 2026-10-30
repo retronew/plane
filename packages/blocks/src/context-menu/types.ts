@@ -50,10 +50,26 @@ export type TContextMenuItem = {
    * @default "neutral"
    */
   variant?: TContextMenuItemVariant;
+  /**
+   * Called whenever the menu holding this row opens, even while the row is hidden — lets a row
+   * whose state is fetched lazily (e.g. a subscription) load it and then render.
+   */
+  onMenuOpen?: () => void;
   /** Set `false` to drop the row entirely. */
   shouldRender?: boolean;
   /** Set `false` to keep the menu open after the row is pressed. @default true */
   closeOnClick?: boolean;
+  /**
+   * Marks the row as the current value of a pick list (e.g. a state submenu) with a trailing check.
+   * Set it on every row of that list, `true` or `false`, so the rows share one check gutter.
+   */
+  selected?: boolean;
+  /**
+   * Makes the row a multi-select checkbox (leading tick) in a pick list where several values can be
+   * on at once, e.g. assignees or labels. Pressing it keeps the menu open. Use `selected` for
+   * single-value lists instead.
+   */
+  checked?: boolean;
   /** Whether the row ignores interaction. */
   disabled?: boolean;
   /**
@@ -63,6 +79,10 @@ export type TContextMenuItem = {
    * until they migrate. Every other class in the string is dropped.
    */
   className?: string;
+  /** Puts a filter field, focused on open, at the top of this row's submenu. */
+  searchable?: boolean;
+  /** Placeholder for the `searchable` submenu's field; defaults to the row title. */
+  searchPlaceholder?: string;
   /** Rows nested under this one. A non-empty list turns the row into a submenu trigger. */
   nestedMenuItems?: TContextMenuItem[];
 };

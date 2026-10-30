@@ -4,63 +4,49 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/utils/combine";
-import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter";
 import { observer } from "mobx-react";
+import { DeleteOutline } from "@makeplane/propel/icons";
+import { cn } from "@plane/utils";
 // hooks
 import { useKanbanView } from "@/hooks/store/use-kanban-view";
-// helpers
-import { getSourceFromDropPayload } from "../utils";
+// local imports
+import { useKanbanTrashDroppable } from "./kanban-dnd";
 import { translate } from "@plane/i18n";
 
-type Props = {
-  onRequestDelete: (workItemId: string | undefined) => void;
-};
-
 // Isolated from BaseKanBanRoot so a drag start/end re-renders only this banner, not the whole board.
-export const KanbanDeleteDropZone = observer(function KanbanDeleteDropZone({ onRequestDelete }: Props) {
-  // refs
-  const deleteAreaRef = useRef<HTMLDivElement | null>(null);
-  // states
-  const [isDragOverDelete, setIsDragOverDelete] = useState(false);
+// The drop itself is handled by the board's dnd provider, which asks to delete the dropped card.
+export const KanbanDeleteDropZone = observer(function KanbanDeleteDropZone() {
   // store hooks
   const { isDragging } = useKanbanView();
-
-  useEffect(() => {
-    const element = deleteAreaRef.current;
-    if (!element) return;
-
-    return combine(
-      dropTargetForElements({
-        element,
-        getData: () => ({ columnId: "issue-trash-box", groupId: "issue-trash-box", type: "DELETE" }),
-        onDragEnter: () => setIsDragOverDelete(true),
-        onDragLeave: () => setIsDragOverDelete(false),
-        onDrop: (payload) => {
-          setIsDragOverDelete(false);
-          const source = getSourceFromDropPayload(payload);
-          if (!source) return;
-          onRequestDelete(source.id);
-        },
-      })
-    );
-  }, [onRequestDelete]);
+  // dnd-kit target
+  const { ref: deleteAreaRef, isDropTarget: isDragOverDelete } = useKanbanTrashDroppable();
 
   return (
+    // A floating pill that slides in while a card is dragged and turns solid red once the card is
+    // over it, so the destructive target reads clearly without shouting at rest.
     <div
-      className={`fixed left-1/2 -translate-x-1/2 ${
-        isDragging ? "z-40" : ""
-      } top-3 mx-3 flex w-72 items-center justify-center`}
       ref={deleteAreaRef}
+      className={cn(
+        "fixed top-3 left-1/2 flex -translate-x-1/2 justify-center p-2 transition-[opacity,translate] duration-200 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:duration-100",
+        isDragging ? "z-40 translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+      )}
     >
       <div
-        className={`${
-          isDragging ? `opacity-100` : `opacity-0`
-        } flex w-full items-center justify-center rounded-sm border-2 border-danger-strong/20 bg-surface-1 px-3 py-5 text-11 font-medium text-danger-primary italic ${
-          isDragOverDelete ? "bg-danger-primary blur-2xl" : ""
-        } transition duration-300`}
+        className={cn(
+          "flex items-center gap-2.5 rounded-full border py-2 ps-2 pe-4 text-body-sm-medium shadow-raised-300 transition-[background-color,border-color,color,scale] duration-150 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:duration-75",
+          isDragOverDelete
+            ? "scale-105 border-transparent bg-danger-primary text-on-color"
+            : "border-subtle bg-layer-2 text-secondary"
+        )}
       >
+        <span
+          className={cn(
+            "flex size-7 items-center justify-center rounded-full",
+            isDragOverDelete ? "bg-white/20 text-on-color" : "bg-danger-subtle text-danger-primary"
+          )}
+        >
+          <DeleteOutline className="size-4" />
+        </span>
         {translate("web.drop_here_to_delete")}
       </div>
     </div>

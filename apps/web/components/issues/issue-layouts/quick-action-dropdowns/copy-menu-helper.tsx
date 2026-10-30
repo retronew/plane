@@ -10,6 +10,7 @@ import type { TContextMenuItem } from "@plane/blocks/context-menu";
 export interface CopyMenuHelperProps {
   baseItem: {
     key: string;
+    section?: string;
     title: string;
     icon: React.FC<ISvgIcons>;
     action: () => void;

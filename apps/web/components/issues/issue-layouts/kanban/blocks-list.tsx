@@ -15,13 +15,17 @@ import { KanbanIssueBlock } from "./block";
 interface IssueBlocksListProps {
   sub_group_id: string;
   groupId: string;
+  /** dnd-kit column id of this list. */
+  columnId: string;
+  /** The card being dragged and the column it came from: it keeps that column's sortable id here. */
+  activeIssueId: string | null;
+  activeSourceColumnId: string | null;
   issuesMap: IIssueMap;
   issueIds: string[];
   displayProperties: IIssueDisplayProperties | undefined;
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
   quickActions: TRenderQuickActions;
   canEditProperties: (projectId: string | undefined) => boolean;
-  canDropOverIssue: boolean;
   canDragIssuesInCurrentGrouping: boolean;
   scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
 }
@@ -30,10 +34,12 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
   const {
     sub_group_id,
     groupId,
+    columnId,
+    activeIssueId,
+    activeSourceColumnId,
     issuesMap,
     issueIds,
     displayProperties,
-    canDropOverIssue,
     canDragIssuesInCurrentGrouping,
     updateIssue,
     quickActions,
@@ -48,9 +54,9 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
           {issueIds.map((issueId, index) => {
             if (!issueId) return null;
 
-            let draggableId = issueId;
-            if (groupId) draggableId = `${draggableId}__${groupId}`;
-            if (sub_group_id) draggableId = `${draggableId}__${sub_group_id}`;
+            // the dragged card renders in the column it is passing through, but stays the same sortable
+            const homeColumnId = issueId === activeIssueId && activeSourceColumnId ? activeSourceColumnId : columnId;
+            const draggableId = `${issueId}__${homeColumnId}`;
 
             return (
               <KanbanIssueBlock
@@ -64,7 +70,8 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
                 updateIssue={updateIssue}
                 quickActions={quickActions}
                 draggableId={draggableId}
-                canDropOverIssue={canDropOverIssue}
+                index={index}
+                columnId={columnId}
                 canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
                 canEditProperties={canEditProperties}
                 scrollableContainerRef={scrollableContainerRef}

@@ -214,6 +214,7 @@ export const ISSUE_DISPLAY_PROPERTIES: {
   { key: "created_by", titleTranslationKey: "common.created_by" },
   { key: "created_on", titleTranslationKey: "common.sort.created_on" },
   { key: "updated_on", titleTranslationKey: "common.sort.updated_on" },
+  { key: "time_in_status", titleTranslationKey: "issue.display.properties.time_in_status" },
   { key: "link", titleTranslationKey: "common.link" },
   {
     key: "estimate",

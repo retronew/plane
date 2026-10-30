@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "編集",
+      "copy": "コピー",
       "make_a_copy": "コピーを作成",
       "open_in_new_tab": "新しいタブで開く",
       "copy_link": "リンクをコピー",

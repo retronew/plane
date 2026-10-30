@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "편집",
+      "copy": "복사",
       "make_a_copy": "복사본 만들기",
       "open_in_new_tab": "새 탭에서 열기",
       "copy_link": "링크 복사",

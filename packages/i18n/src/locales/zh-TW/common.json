@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "編輯",
+      "copy": "複製",
       "make_a_copy": "複製一份",
       "open_in_new_tab": "在新分頁中開啟",
       "copy_link": "複製連結",

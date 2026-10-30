@@ -598,6 +598,7 @@
     },
     "actions": {
       "edit": "Edytuj",
+      "copy": "Kopiuj",
       "make_a_copy": "Utwórz kopię",
       "open_in_new_tab": "Otwórz w nowej karcie",
       "copy_link": "Kopiuj link",

@@ -613,6 +613,7 @@
     },
     "actions": {
       "edit": "Edit",
+      "copy": "Copy",
       "make_a_copy": "Make a copy",
       "open_in_new_tab": "Open in new tab",
       "copy_link": "Copy link",

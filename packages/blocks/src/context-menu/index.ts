@@ -7,5 +7,12 @@
 export { ContextMenu } from "./context-menu";
 export type { ContextMenuProps } from "./context-menu";
 export { ContextMenuItem } from "./context-menu-item";
-export { getRenderableItems, hasMenuSeparatorBefore, resolveItemVariant } from "./helpers";
+export { SubmenuSearchList } from "./submenu-search";
+export {
+  filterMenuItemsByQuery,
+  getDisabledReason,
+  getRenderableItems,
+  hasMenuSeparatorBefore,
+  resolveItemVariant,
+} from "./helpers";
 export type { TContextMenuItem, TContextMenuItemVariant } from "./types";

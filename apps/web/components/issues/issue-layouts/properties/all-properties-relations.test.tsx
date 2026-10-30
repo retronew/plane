@@ -125,12 +125,13 @@ it("counts only enabled relations and excludes dates, disabled estimates and zer
   expect(screen.getAllByRole("button", { name: "Module control" })).toHaveLength(1);
   expect(screen.getAllByRole("button", { name: "Cycle control" })).toHaveLength(1);
 });
-it("counts a merged date once and labels the range and labels picker", async () => {
+it("counts both set dates separately and labels the labels picker", async () => {
   show({ start_date: true, due_date: true, labels: true }, true);
-  fireEvent.click(screen.getByText("+2"));
-  expect(await screen.findByText("日期范围", { selector: "dt" })).toBeTruthy();
+  fireEvent.click(screen.getByText("+3"));
+  expect(await screen.findByText("开始日期", { selector: "dt" })).toBeTruthy();
+  expect(screen.getByText("截止日期", { selector: "dt" })).toBeTruthy();
   expect(screen.getByText("标签", { selector: "dt" })).toBeTruthy();
-  expect(document.querySelectorAll("dt")).toHaveLength(2);
+  expect(document.querySelectorAll("dt")).toHaveLength(3);
 });
 it("counts separate dates and an enabled estimate independently", async () => {
   mocks.estimate = true;

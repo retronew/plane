@@ -20,8 +20,8 @@ export function LayoutScrollArea({ axis, children, className, contentClassName, 
       overflow: { x: axis === "horizontal" ? "scroll" : "hidden", y: axis === "vertical" ? "scroll" : "hidden" },
       scrollbars: {
         theme: "os-theme-plane",
-        autoHide: "leave",
-        autoHideDelay: 500,
+        autoHide: "never",
+        // shown whenever the content overflows, like the native board scrollbars
         visibility: "auto",
         dragScroll: true,
       },

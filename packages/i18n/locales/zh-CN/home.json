@@ -1,0 +1,77 @@
+{
+  "home": {
+    "empty": {
+      "quickstart_guide": "快速上手",
+      "not_right_now": "以后再说",
+      "create_project": {
+        "title": "创建项目",
+        "description": "在 Plane 里，一切工作都从项目开始。",
+        "cta": "立即创建"
+      },
+      "invite_team": {
+        "title": "邀请团队成员",
+        "description": "和同事一起规划、推进和交付工作。",
+        "cta": "去邀请"
+      },
+      "configure_workspace": {
+        "title": "配置工作区",
+        "description": "按需开启或关闭功能，打造适合团队的工作区。",
+        "cta": "去配置"
+      },
+      "personalize_account": {
+        "title": "个性化设置",
+        "description": "设置头像、主题配色等，让 Plane 更顺手。",
+        "cta": "去设置"
+      },
+      "widgets": {
+        "title": "小组件都关掉了",
+        "description": "您关闭了所有小组件。开启后，首页能展示更多有用的信息。",
+        "primary_button": {
+          "text": "管理小组件"
+        }
+      }
+    },
+    "quick_links": {
+      "empty": "把常用的工作链接放在这里，随时一键打开。",
+      "add": "添加快捷链接",
+      "title": "快捷链接",
+      "title_plural": "快捷链接"
+    },
+    "recents": {
+      "title": "最近使用",
+      "empty": {
+        "project": "访问项目后，最近访问的项目会显示在这里。",
+        "page": "访问页面后，最近访问的页面会显示在这里。",
+        "issue": "访问工作项后，最近访问的工作项会显示在这里。",
+        "default": "您还没有最近访问的内容。"
+      },
+      "filters": {
+        "all": "全部",
+        "projects": "项目",
+        "pages": "页面",
+        "issues": "工作项"
+      }
+    },
+    "new_at_plane": {
+      "title": "Plane 新功能"
+    },
+    "quick_tutorial": {
+      "title": "快速教程"
+    },
+    "widget": {
+      "reordered_successfully": "小组件排序已更新。",
+      "reordering_failed": "调整小组件顺序时出错。"
+    },
+    "manage_widgets": "管理小组件",
+    "title": "首页",
+    "star_us_on_github": "在 GitHub 上为我们加星",
+    "business_trial_banner": {
+      "title": "您的 14 天 Business 套餐试用已开始！",
+      "description": "探索所有 Business 功能。准备好后再选择订阅，系统不会自动扣费。",
+      "trial_ends_today": "试用今天到期",
+      "trial_ends_in_days": "试用将在 {days, plural, one {# 天} other {# 天}}后到期",
+      "start_subscription": "开始订阅",
+      "explore_business_features": "探索 Business 功能"
+    }
+  }
+}

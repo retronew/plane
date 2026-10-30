@@ -61,6 +61,8 @@
         "sub_issue_count": "Sub-work item count",
         "attachment_count": "Attachment count",
         "created_on": "Created on",
+        "time_in_status": "Time in status",
+        "started_at": "Started {date}",
         "sub_issue": "Sub-work item",
         "work_item_count": "Work item count"
       },

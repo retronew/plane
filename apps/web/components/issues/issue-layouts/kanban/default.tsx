@@ -30,7 +30,6 @@ import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 // parent components
 import { useWorkFlowFDragNDrop } from "@/components/workflow";
 import type { TRenderQuickActions } from "../list/list-view-types";
-import type { GroupDropLocation } from "../utils";
 import { getGroupByColumns, isWorkspaceLevel, getApproximateCardHeight } from "../utils";
 // components
 import { HeaderGroupByCard } from "./headers/group-by-card";
@@ -61,7 +60,6 @@ export interface IKanBan {
   addIssuesToView?: (issueIds: string[]) => Promise<TIssue>;
   canEditProperties: (projectId: string | undefined) => boolean;
   scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
-  handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
   showEmptyGroup?: boolean;
   subGroupIndex?: number;
 }
@@ -84,7 +82,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
     addIssuesToView,
     canEditProperties,
     scrollableContainerRef,
-    handleOnDrop,
     showEmptyGroup = true,
     orderBy,
     isDropDisabled,
@@ -129,11 +126,12 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
             <div
               key={subList.id}
               className={cn("group relative flex w-[336px] flex-shrink-0 flex-col", {
-                "h-full rounded-xl bg-layer-1 p-2": sub_group_by === null,
+                // no inline padding here: it lives inside the scroll area, so the scrollbar sits at the column edge
+                "h-full rounded-xl bg-layer-1 py-2": sub_group_by === null,
               })}
             >
               {sub_group_by === null && (
-                <div className="sticky top-0 z-[2] w-full flex-shrink-0 bg-layer-1 px-1">
+                <div className="sticky top-0 z-[2] w-full flex-shrink-0 bg-layer-1 px-3">
                   <HeaderGroupByCard
                     sub_group_by={sub_group_by}
                     group_by={group_by}
@@ -189,7 +187,6 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                   canEditProperties={canEditProperties}
                   scrollableContainerRef={scrollableContainerRef}
                   loadMoreIssues={loadMoreIssues}
-                  handleOnDrop={handleOnDrop}
                 />
               </RenderIfVisible>
             </div>

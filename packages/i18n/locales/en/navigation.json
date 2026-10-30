@@ -1,0 +1,63 @@
+{
+  "command_k": {
+    "empty_state": {
+      "search": {
+        "title": "No results found"
+      }
+    }
+  },
+  "sidebar": {
+    "stickies": "Stickies",
+    "your_work": "Your work",
+    "projects": "Projects",
+    "pages": "Pages",
+    "new_work_item": "New work item",
+    "home": "Home",
+    "inbox": "Inbox",
+    "workspace": "Workspace",
+    "views": "Views",
+    "analytics": "Analytics",
+    "work_items": "Work items",
+    "cycles": "Cycles",
+    "modules": "Modules",
+    "intake": "Intake",
+    "drafts": "Drafts",
+    "favorites": "Favorites",
+    "pro": "Pro",
+    "upgrade": "Upgrade",
+    "pi_chat": "Plane AI",
+    "upgrade_plan": "Upgrade plan",
+    "plane_pro": "Plane Pro",
+    "business": "Business"
+  },
+  "workspace_cycles": {
+    "title": "Active cycles",
+    "days_remaining": "{count, plural, one {# day left} other {# days left}}",
+    "view_cycle": "View cycle",
+    "chart_type": "Chart type",
+    "burndown_description": "Tracks remaining work over time. A lower line means less work remains; compare it with the ideal line to assess progress.",
+    "burnup_description": "Tracks completed work over time. A higher line means more work is complete; use the scope line to see scope changes.",
+    "breakdown": "Breakdown of this cycle’s work items",
+    "pending": "Pending",
+    "completed": "Done",
+    "unstarted": "Unstarted",
+    "backlog": "Backlog",
+    "cancelled_excluded": "{count, plural, one {# cancelled work item excluded} other {# cancelled work items excluded}}",
+    "permission_denied": "Only workspace members and admins can view active cycles.",
+    "load_error": "Unable to load active cycles. Please retry.",
+    "empty_title": "No active cycles",
+    "empty_description": "Active cycles whose date range includes today will appear here. Only enabled projects you have joined are included.",
+    "ideal_pending": "Today's ideal pending",
+    "other_states": "Other state groups",
+    "by_states": "Work items by state groups on chart",
+    "leading": "Leading by {count} work items",
+    "lagging": "Lagging by {count} work items",
+    "for": "for",
+    "end": "End",
+    "today": "Today",
+    "ideal_completed": "Today's ideal completed",
+    "on_track": "On track",
+    "ideal_pending_series": "Ideal pending",
+    "ideal_completed_series": "Ideal completed"
+  }
+}

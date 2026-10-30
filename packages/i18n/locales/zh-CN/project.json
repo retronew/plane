@@ -1,0 +1,439 @@
+{
+  "project_view": {
+    "sort_by": {
+      "created_at": "创建时间",
+      "updated_at": "更新时间",
+      "name": "名称"
+    }
+  },
+  "project_cycles": {
+    "add_cycle": "添加周期",
+    "more_details": "更多详情",
+    "cancelled_count": "（已取消 {count} 个）",
+    "cycle": "周期",
+    "update_cycle": "更新周期",
+    "create_cycle": "创建周期",
+    "no_matching_cycles": "没有匹配的周期",
+    "remove_filters_to_see_all_cycles": "清除筛选条件以查看所有周期",
+    "remove_search_criteria_to_see_all_cycles": "清除搜索条件以查看所有周期",
+    "only_completed_cycles_can_be_archived": "只能归档已完成的周期",
+    "start_date": "开始日期",
+    "end_date": "结束日期",
+    "in_your_timezone": "按您的时区",
+    "complete": {
+      "action": "完成周期",
+      "title": "选择未完成工作项的处理方式。",
+      "incomplete_count": "此周期中有 {count} 个未完成的工作项，您可以将其移至即将到来的周期，或保持原样。",
+      "options": "未完成工作项",
+      "keep": "将待处理的工作项留在此周期中。",
+      "transfer": "将待处理的工作项转移到即将到来的周期。",
+      "target_placeholder": "选择周期",
+      "no_incomplete": "没有未完成工作项。确认后即可完成此周期。",
+      "success": "周期已完成",
+      "error": "无法完成周期，请重试。"
+    },
+    "transfer_work_items": "转移 {count} 个工作项",
+    "transfer": {
+      "no_cycles_available": "没有其他可以接收工作项的周期。"
+    },
+    "date_range": "日期范围",
+    "add_date": "添加日期",
+    "active_cycle": {
+      "label": "进行中的周期",
+      "progress": "进度",
+      "chart": "燃尽图",
+      "priority_issue": "高优先级工作项",
+      "assignees": "负责人",
+      "issue_burndown": "工作项燃尽",
+      "ideal": "理想",
+      "current": "当前",
+      "labels": "标签",
+      "trailing": "落后",
+      "leading": "领先"
+    },
+    "upcoming_cycle": {
+      "label": "即将开始的周期"
+    },
+    "completed_cycle": {
+      "label": "已完成的周期"
+    },
+    "status": {
+      "days_left": "剩余天数",
+      "completed": "已完成",
+      "yet_to_start": "即将开始",
+      "in_progress": "进行中",
+      "draft": "草稿"
+    },
+    "action": {
+      "restore": {
+        "title": "恢复周期",
+        "success": {
+          "title": "周期已恢复",
+          "description": "周期已恢复。"
+        },
+        "failed": {
+          "title": "周期恢复失败",
+          "description": "无法恢复周期，请重试。"
+        }
+      },
+      "favorite": {
+        "loading": "正在将周期添加到收藏",
+        "success": {
+          "description": "周期已添加到收藏。",
+          "title": "成功！"
+        },
+        "failed": {
+          "description": "无法将周期添加到收藏，请重试。",
+          "title": "错误！"
+        }
+      },
+      "unfavorite": {
+        "loading": "正在从收藏中移除周期",
+        "success": {
+          "description": "周期已从收藏中移除。",
+          "title": "成功！"
+        },
+        "failed": {
+          "description": "无法从收藏中移除周期，请重试。",
+          "title": "错误！"
+        }
+      },
+      "update": {
+        "loading": "正在更新周期",
+        "success": {
+          "description": "周期已更新。",
+          "title": "成功！"
+        },
+        "failed": {
+          "description": "更新周期时出错，请重试。",
+          "title": "错误！"
+        },
+        "error": {
+          "already_exists": "所选日期范围内已有周期。如需创建草稿周期，请清除开始和结束日期。"
+        }
+      }
+    },
+    "empty_state": {
+      "general": {
+        "title": "用周期对工作进行分组和时间盒管理。",
+        "description": "按固定时间段拆分工作，从项目截止日期倒推安排日期，让团队取得切实进展。",
+        "primary_button": {
+          "text": "创建第一个周期",
+          "comic": {
+            "title": "周期是循环往复的时间盒。",
+            "description": "冲刺、迭代，或任何您用来按周或双周跟踪工作的叫法，都是周期。"
+          }
+        }
+      },
+      "no_issues": {
+        "title": "周期中还没有工作项",
+        "description": "添加或创建要在此周期内交付的工作项",
+        "primary_button": {
+          "text": "创建新工作项"
+        },
+        "secondary_button": {
+          "text": "添加现有工作项"
+        }
+      },
+      "completed_no_issues": {
+        "title": "周期中没有工作项",
+        "description": "周期中没有工作项，工作项可能已被转移或隐藏。如需查看隐藏的工作项，请调整显示属性。"
+      },
+      "active": {
+        "title": "暂无进行中的周期",
+        "description": "创建并安排周期，开始跟踪团队的工作进度。"
+      },
+      "upcoming": {
+        "title": "暂无即将到来的周期",
+        "description": "暂无已安排的即将到来的周期。创建新周期以规划团队的下一个工作阶段。"
+      },
+      "completed": {
+        "title": "暂无已完成的周期",
+        "description": "已完成和已归档的周期将在此处显示，并附有其绩效指标。"
+      },
+      "archived": {
+        "title": "暂无已归档的周期",
+        "description": "归档已完成的周期，让项目保持整洁。归档后可在这里找到。"
+      }
+    }
+  },
+  "project_views": {
+    "empty_state": {
+      "general": {
+        "title": "为项目保存筛选视图，数量不限",
+        "description": "视图是一组保存下来的常用筛选条件。项目中的所有成员都能看到彼此的视图，并选择最适合自己的。",
+        "primary_button": {
+          "text": "创建第一个视图",
+          "comic": {
+            "title": "视图基于工作项属性。",
+            "description": "您可以在这里创建视图，并按需使用任意属性作为筛选条件。"
+          }
+        },
+        "filter": {
+          "title": "没有匹配的视图",
+          "description": "没有符合搜索条件的视图。\n您可以创建一个新视图。"
+        }
+      },
+      "no_archived_issues": {
+        "title": "暂无已归档的工作项",
+        "description": "您可以手动或通过自动化归档已完成或已取消的工作项，归档后可在这里找到。",
+        "primary_button": {
+          "text": "设置自动化"
+        }
+      },
+      "issues_empty_filter": {
+        "title": "未找到符合筛选条件的工作项",
+        "secondary_button": {
+          "text": "清除所有筛选条件"
+        }
+      },
+      "public": {
+        "title": "暂无公开页面",
+        "description": "与项目所有成员共享的页面会显示在这里。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "archived": {
+        "title": "暂无已归档的页面",
+        "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
+      },
+      "shared": {
+        "title": "暂无共享页面",
+        "description": "其他人与您共享的页面会显示在这里。"
+      }
+    },
+    "delete_view": {
+      "title": "确定要删除此视图吗？",
+      "content": "确认后，您为此视图设置的所有排序、筛选、显示选项和布局都将被永久删除，且无法恢复。"
+    }
+  },
+  "project_issues": {
+    "empty_state": {
+      "no_issues": {
+        "title": "创建工作项并分配给他人，或者分配给自己",
+        "description": "工作项就是任务、工作或待办事项。工作项及其子工作项通常是有时间要求、分配给团队成员的可执行事项。团队通过创建、分配和完成工作项，推动项目达成目标。",
+        "primary_button": {
+          "text": "创建第一个工作项",
+          "comic": {
+            "title": "工作项是 Plane 的基本单元。",
+            "description": "“重新设计 Plane 界面”“公司品牌升级”“上线新的燃油喷射系统”都是可能包含子工作项的工作项示例。"
+          }
+        }
+      },
+      "no_archived_issues": {
+        "title": "暂无已归档的工作项",
+        "description": "您可以手动或通过自动化归档已完成或已取消的工作项，归档后可在这里找到。",
+        "primary_button": {
+          "text": "设置自动化"
+        }
+      },
+      "issues_empty_filter": {
+        "title": "未找到符合筛选条件的工作项",
+        "secondary_button": {
+          "text": "清除所有筛选条件"
+        }
+      }
+    }
+  },
+  "project_module": {
+    "add_module": "添加模块",
+    "update_module": "更新模块",
+    "create_module": "创建模块",
+    "archive_module": "归档模块",
+    "restore_module": "恢复模块",
+    "delete_module": "删除模块",
+    "empty_state": {
+      "general": {
+        "title": "将项目里程碑拆分为模块，轻松跟踪整体进展。",
+        "description": "一组属于同一逻辑父级的工作项构成一个模块，可以把它理解为按项目里程碑跟踪工作的方式。模块有自己的时间范围、截止日期和分析数据，帮助您了解离里程碑还有多远。",
+        "primary_button": {
+          "text": "创建第一个模块",
+          "comic": {
+            "title": "模块帮助按层级对工作进行分组。",
+            "description": "购物车模块、底盘模块、仓储模块都是这类分组的典型例子。"
+          }
+        }
+      },
+      "no_issues": {
+        "title": "模块中没有工作项",
+        "description": "创建或添加属于此模块的工作项",
+        "primary_button": {
+          "text": "创建新工作项"
+        },
+        "secondary_button": {
+          "text": "添加现有工作项"
+        }
+      },
+      "archived": {
+        "title": "暂无已归档的模块",
+        "description": "归档已完成或已取消的模块，让项目保持整洁。归档后可在这里找到。"
+      },
+      "sidebar": {
+        "in_active": "此模块尚未开始。",
+        "invalid_date": "日期无效，请输入有效日期。"
+      }
+    },
+    "quick_actions": {
+      "archive_module": "归档模块",
+      "archive_module_description": "仅已完成或已取消的模块可归档",
+      "delete_module": "删除模块"
+    },
+    "toast": {
+      "copy": {
+        "success": "模块链接已复制到剪贴板"
+      },
+      "delete": {
+        "success": "模块已删除",
+        "error": "删除模块失败"
+      }
+    }
+  },
+  "project_page": {
+    "empty_state": {
+      "general": {
+        "title": "写笔记、写文档，甚至搭建完整的知识库。让 Plane 的 AI 助手 Galileo 帮您起步",
+        "description": "页面是您在 Plane 中记录想法的地方：记录会议纪要、轻松排版、嵌入工作项、用组件库布局，并让它们都与项目保持关联。通过快捷键或按钮唤起 Plane 的 AI 助手 Galileo，快速完成任何文档。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "private": {
+        "title": "暂无私有页面",
+        "description": "在这里记录您的私人想法。准备好分享时，一键即可与团队共享。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "public": {
+        "title": "暂无公开页面",
+        "description": "与项目所有成员共享的页面会显示在这里。",
+        "primary_button": {
+          "text": "创建第一个页面"
+        }
+      },
+      "archived": {
+        "title": "暂无已归档的页面",
+        "description": "归档暂时不需要关注的页面，需要时可在这里找到。"
+      }
+    }
+  },
+  "disabled_project": {
+    "empty_state": {
+      "inbox": {
+        "title": "此项目未启用需求收集。",
+        "description": "需求收集帮助您管理项目收到的外部请求，并将其作为工作项纳入工作流。在项目设置中启用需求收集即可开始管理请求。",
+        "primary_button": {
+          "text": "管理功能"
+        }
+      },
+      "cycle": {
+        "title": "此项目未启用周期。",
+        "description": "按固定时间段拆分工作，从项目截止日期倒推安排日期，让团队取得切实进展。为项目启用周期功能即可开始使用。",
+        "primary_button": {
+          "text": "管理功能"
+        }
+      },
+      "module": {
+        "title": "此项目未启用模块。",
+        "description": "模块是项目的基本组成部分。在项目设置中启用模块即可开始使用。",
+        "primary_button": {
+          "text": "管理功能"
+        }
+      },
+      "page": {
+        "title": "此项目未启用页面。",
+        "description": "页面是项目的基本组成部分。在项目设置中启用页面即可开始使用。",
+        "primary_button": {
+          "text": "管理功能"
+        }
+      },
+      "view": {
+        "title": "此项目未启用视图。",
+        "description": "视图是项目的基本组成部分。在项目设置中启用视图即可开始使用。",
+        "primary_button": {
+          "text": "管理功能"
+        }
+      }
+    }
+  },
+  "project_modules": {
+    "status": {
+      "backlog": "待办",
+      "planned": "已计划",
+      "in_progress": "进行中",
+      "paused": "已暂停",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "layout": {
+      "list": "列表布局",
+      "board": "卡片视图",
+      "timeline": "时间线布局"
+    },
+    "order_by": {
+      "name": "名称",
+      "progress": "进度",
+      "issues": "工作项数量",
+      "due_date": "截止日期",
+      "created_at": "创建日期",
+      "manual": "手动"
+    }
+  },
+  "project_members": {
+    "full_name": "姓名",
+    "display_name": "显示名称",
+    "email": "邮箱",
+    "joining_date": "加入日期",
+    "role": "角色"
+  },
+  "project": {
+    "members_import": {
+      "title": "从 CSV 导入成员",
+      "description": "上传包含以下列的 CSV：Email 和 Role（5 = 访客，15 = 成员，20 = 管理员）。用户必须已是工作区成员。",
+      "download_sample": "下载示例 CSV",
+      "dropzone": {
+        "active": "将 CSV 文件拖放到此处",
+        "inactive": "拖放或点击上传",
+        "file_type": "仅支持 .csv 文件"
+      },
+      "buttons": {
+        "cancel": "取消",
+        "import": "导入",
+        "try_again": "重试",
+        "close": "关闭",
+        "done": "完成"
+      },
+      "progress": {
+        "uploading": "正在上传…",
+        "importing": "正在导入…"
+      },
+      "summary": {
+        "title": {
+          "complete": "导入完成"
+        },
+        "message": {
+          "success": "成功将 {count} 名成员导入到项目。",
+          "no_imports": "CSV 文件中没有可导入的新成员。"
+        },
+        "stats": {
+          "added": "已添加",
+          "reactivated": "已重新激活",
+          "already_members": "已是成员",
+          "skipped": "已跳过"
+        },
+        "download_errors": "下载跳过明细"
+      },
+      "toast": {
+        "invalid_file": {
+          "title": "无效文件",
+          "message": "仅支持 CSV 文件。"
+        },
+        "import_failed": {
+          "title": "导入失败",
+          "message": "出了点问题。"
+        }
+      }
+    }
+  }
+}

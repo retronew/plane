@@ -45,6 +45,8 @@ type MemberSelectWebCommonProps = {
   tooltip?: SelectTooltip;
   /** Tab order of the trigger, for forms that sequence focus explicitly (`ETabIndices`). */
   tabIndex?: number;
+  /** Strict cap on trigger faces before the rest collapse into a "+N" chip. */
+  maxAvatars?: number;
 };
 
 export type MemberSelectWebProps = MemberSelectWebCommonProps &
@@ -81,6 +83,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
     tooltip,
     testId,
     tabIndex,
+    maxAvatars,
   } = props;
   // router params
   const { workspaceSlug } = useParams();
@@ -176,6 +179,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
         tooltip={resolvedTooltip}
         filterOption={excludeSet ? filterOption : undefined}
         tabIndex={tabIndex}
+        maxAvatars={maxAvatars}
       />
     );
   }
@@ -198,6 +202,7 @@ export const MemberSelect = observer(function MemberSelect(props: MemberSelectWe
       tooltip={resolvedTooltip}
       filterOption={excludeSet ? filterOption : undefined}
       tabIndex={tabIndex}
+      maxAvatars={maxAvatars}
     />
   );
 });

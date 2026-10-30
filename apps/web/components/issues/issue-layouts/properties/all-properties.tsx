@@ -14,14 +14,13 @@ import { AttachOutline, DueDateOutline, LinkOutline, StartDateOutline, ViewsOutl
 // i18n
 import { useTranslation, translate } from "@plane/i18n";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import type { DateRangeValue } from "@plane/blocks/property-select";
-import { DateRangeSelect, DateSelect } from "@plane/blocks/property-select";
+import { DateSelect } from "@plane/blocks/property-select";
+import { getPillButtonClassName } from "@plane/blocks/pill-button";
 import type { TIssue, IIssueDisplayProperties, TIssuePriorities } from "@plane/types";
 // ui
 import {
   cn,
   formatCompactDate,
-  formatCompactDateRange,
   getDate,
   renderFormattedPayloadDate,
   generateWorkItemLink,
@@ -48,6 +47,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { IssuePropertyLabels } from "./labels";
 import { WithDisplayPropertiesHOC } from "./with-display-properties-HOC";
 import { ListPropertiesOverflow } from "./list-properties-overflow";
+import { TimeInStatusProperty } from "./time-in-status";
 
 export interface IIssueProperties {
   issue: TIssue;
@@ -97,10 +97,6 @@ function applyCycleChange(cycleId: string | null, issue: TIssue, operations: Iss
   else void operations.removeIssueFromCycle();
 }
 
-function getIsDateRangeEnabled(issue: TIssue, displayProperties: IIssueDisplayProperties) {
-  return Boolean(issue.start_date && issue.target_date && displayProperties.start_date && displayProperties.due_date);
-}
-
 function getDefaultLabelOptions<T>(labelIds: string[] | undefined, labelMap: Record<string, T>) {
   return (
     labelIds?.flatMap((id) => {
@@ -110,12 +106,19 @@ function getDefaultLabelOptions<T>(labelIds: string[] | undefined, labelMap: Rec
   );
 }
 
+const LEGACY_COUNT_CHIP_CLASSNAME =
+  "flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1";
+
 function getLayoutMetrics(activeLayout: string) {
   const isKanban = activeLayout === "Kanban";
   return {
     pillVariant: isKanban ? ("pill-md" as const) : ("pill-sm" as const),
     avatarVariant: isKanban ? ("avatar-group-md" as const) : ("avatar-group-sm" as const),
     propertyHeight: isKanban ? "h-6" : "h-5",
+    // board cards render count badges as the same pill as every other property
+    countChipClassName: isKanban ? getPillButtonClassName("md") : LEGACY_COUNT_CHIP_CLASSNAME,
+    // board cards show the assignee as the avatar in their header instead
+    showAssignee: !isKanban,
   };
 }
 
@@ -133,11 +136,6 @@ function createUpdateHandlers(issue: TIssue, updateIssue: UpdateIssueFn | undefi
     handleStartDate: (date: Date | null) => void update({ start_date: date ? renderFormattedPayloadDate(date) : null }),
     handleTargetDate: (date: Date | null) =>
       void update({ target_date: date ? renderFormattedPayloadDate(date) : null }),
-    handleDateRangeUpdate: (range: DateRangeValue) =>
-      void update({
-        start_date: range.from ? renderFormattedPayloadDate(range.from) : null,
-        target_date: range.to ? renderFormattedPayloadDate(range.to) : null,
-      }),
     handleEstimate: (value: string | null) => void update({ estimate_point: value }),
   };
 }
@@ -180,11 +178,13 @@ function renderSubIssuesProperty({
   displayProperties,
   subIssueCount,
   isMobile,
+  chipClassName,
   onOpen,
 }: {
   displayProperties: IIssueDisplayProperties;
   subIssueCount: number;
   isMobile: boolean;
+  chipClassName: string;
   onOpen: () => void;
 }) {
   const label = translate("web.runtime.sub_items_count", { count: subIssueCount ?? 0 });
@@ -205,12 +205,7 @@ function renderSubIssuesProperty({
             e.preventDefault();
             if (subIssueCount) onOpen();
           }}
-          className={cn(
-            "flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1",
-            {
-              "cursor-pointer hover:bg-layer-1": subIssueCount,
-            }
-          )}
+          className={cn(chipClassName, "flex-shrink-0", { "cursor-pointer": subIssueCount })}
         >
           <ViewsOutline className="h-3 w-3 flex-shrink-0" />
           <div className="text-caption-sm-regular">{subIssueCount}</div>
@@ -227,6 +222,7 @@ function renderCountBadgeProperty({
   label,
   icon,
   isMobile,
+  chipClassName,
   onEvent,
 }: {
   displayProperties: IIssueDisplayProperties;
@@ -235,6 +231,7 @@ function renderCountBadgeProperty({
   label: string;
   icon: ReactNode;
   isMobile: boolean;
+  chipClassName: string;
   onEvent: (event: SyntheticEvent<HTMLDivElement>) => void;
 }) {
   return (
@@ -247,7 +244,7 @@ function renderCountBadgeProperty({
         {/* oxlint-disable jsx_a11y/click-events-have-key-events, jsx_a11y/no-static-element-interactions */}
         <div
           role="presentation"
-          className="flex h-5 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm border-[0.5px] border-strong px-2.5 py-1"
+          className={cn(chipClassName, "flex-shrink-0")}
           onFocus={onEvent}
           onClick={onEvent}
           onKeyDown={onEvent}
@@ -295,7 +292,6 @@ function getWorkItemLink(workspaceSlug: string | undefined, issue: TIssue, proje
 function renderIssueDateProperties({
   issue,
   displayProperties,
-  isDateRangeEnabled,
   activeLayout,
   pillVariant,
   propertyHeight,
@@ -303,70 +299,36 @@ function renderIssueDateProperties({
   weekStartsOn,
   stateDetails,
   onEvent,
-  onChangeRange,
   onChangeStart,
   onChangeDue,
   t,
 }: {
   issue: TIssue;
   displayProperties: IIssueDisplayProperties;
-  isDateRangeEnabled: boolean;
   activeLayout: string;
   pillVariant: "pill-md" | "pill-sm";
   propertyHeight: string;
   isReadOnly: boolean;
-  weekStartsOn: ComponentProps<typeof DateRangeSelect>["weekStartsOn"];
+  weekStartsOn: ComponentProps<typeof DateSelect>["weekStartsOn"];
   stateDetails: StateDetails;
   onEvent: (event: SyntheticEvent<HTMLDivElement>) => void;
-  onChangeRange: (range: DateRangeValue) => void;
   onChangeStart: (date: Date | null) => void;
   onChangeDue: (date: Date | null) => void;
   t: Translate;
 }) {
-  const rangeLabelFormat = activeLayout === "List" ? formatCompactDateRange : undefined;
-  const dateLabelFormat = activeLayout === "List" ? formatCompactDate : undefined;
+  const dateLabelFormat = activeLayout === "List" || activeLayout === "Kanban" ? formatCompactDate : undefined;
   const highlightDueDateClassName = shouldHighlightIssueDueDate(issue.target_date, stateDetails?.group)
     ? { "text-danger-primary": true }
     : undefined;
   const minDate = getDate(issue.start_date);
   const maxDate = getDate(issue.target_date);
 
+  // Start and due dates stay two chips even when both are set, so each can be changed or cleared on
+  // its own instead of through a merged range.
   return (
     <>
-      {/* merged dates */}
-      <WithDisplayPropertiesHOC
-        displayProperties={displayProperties}
-        displayPropertyKey={["start_date", "due_date"]}
-        shouldRenderProperty={() => isDateRangeEnabled}
-      >
-        {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
-        <div role="presentation" className={propertyHeight} onFocus={onEvent} onClick={onEvent} onKeyDown={onEvent}>
-          <DateRangeSelect
-            value={{
-              from: getDate(issue.start_date) ?? null,
-              to: getDate(issue.target_date) ?? null,
-            }}
-            onChange={onChangeRange}
-            icon={<StartDateOutline />}
-            clearable
-            mergeDates
-            formatLabel={rangeLabelFormat}
-            className={cn(highlightDueDateClassName)}
-            disabled={isReadOnly}
-            showTooltip
-            tooltipHeading={t("project_cycles.date_range")}
-            weekStartsOn={weekStartsOn}
-            variant={pillVariant}
-          />
-        </div>
-      </WithDisplayPropertiesHOC>
-
       {/* start date */}
-      <WithDisplayPropertiesHOC
-        displayProperties={displayProperties}
-        displayPropertyKey="start_date"
-        shouldRenderProperty={() => !isDateRangeEnabled}
-      >
+      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="start_date">
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div role="presentation" className={propertyHeight} onFocus={onEvent} onClick={onEvent} onKeyDown={onEvent}>
           <DateSelect
@@ -387,11 +349,7 @@ function renderIssueDateProperties({
       </WithDisplayPropertiesHOC>
 
       {/* target/due date */}
-      <WithDisplayPropertiesHOC
-        displayProperties={displayProperties}
-        displayPropertyKey="due_date"
-        shouldRenderProperty={() => !isDateRangeEnabled}
-      >
+      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="due_date">
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div role="presentation" className={propertyHeight} onFocus={onEvent} onClick={onEvent} onKeyDown={onEvent}>
           <DateSelect
@@ -518,7 +476,8 @@ function renderEstimateProperty({
 
 export const IssueProperties = observer(function IssueProperties(props: IIssueProperties) {
   const { issue, updateIssue, displayProperties, isReadOnly, className, activeLayout } = props;
-  const { pillVariant, avatarVariant, propertyHeight } = getLayoutMetrics(activeLayout);
+  const { pillVariant, avatarVariant, propertyHeight, countChipClassName, showAssignee } =
+    getLayoutMetrics(activeLayout);
   // i18n
   const { t } = useTranslation();
   // store hooks
@@ -559,7 +518,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     handleAssignee,
     handleStartDate,
     handleTargetDate,
-    handleDateRangeUpdate,
     handleEstimate,
   } = createUpdateHandlers(issue, updateIssue);
 
@@ -585,8 +543,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
 
   if (!displayProperties || !issue.project_id) return null;
 
-  // date range is enabled only when both dates are available and both dates are enabled
-  const isDateRangeEnabled = getIsDateRangeEnabled(issue, displayProperties);
   const defaultLabelOptions = getDefaultLabelOptions(issue?.label_ids, labelMap);
   const showEstimate = isEstimateVisible(projectId, areEstimateEnabledByProjectId);
 
@@ -632,7 +588,6 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
       {renderIssueDateProperties({
         issue: issue,
         displayProperties: displayProperties,
-        isDateRangeEnabled: isDateRangeEnabled,
         activeLayout: activeLayout,
         pillVariant: pillVariant,
         propertyHeight: propertyHeight,
@@ -640,14 +595,17 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         weekStartsOn: userProfile?.start_of_the_week,
         stateDetails: stateDetails,
         onEvent: handleEventPropagation,
-        onChangeRange: handleDateRangeUpdate,
         onChangeStart: handleStartDate,
         onChangeDue: handleTargetDate,
         t: t,
       })}
 
       {/* assignee */}
-      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="assignee">
+      <WithDisplayPropertiesHOC
+        displayProperties={displayProperties}
+        displayPropertyKey="assignee"
+        shouldRenderProperty={(properties) => !!properties.assignee && showAssignee}
+      >
         {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
         <div className={propertyHeight} onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <MemberSelect
@@ -694,6 +652,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         displayProperties: displayProperties,
         subIssueCount: subIssueCount,
         isMobile: isMobile,
+        chipClassName: countChipClassName,
         onOpen: redirectToIssueDetail,
       })}
 
@@ -705,6 +664,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         label: translate("web.runtime.attachments_count", { count: issue.attachment_count ?? 0 }),
         icon: <AttachOutline className="h-3 w-3 flex-shrink-0" />,
         isMobile: isMobile,
+        chipClassName: countChipClassName,
         onEvent: handleEventPropagation,
       })}
 
@@ -716,8 +676,19 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         label: translate("web.runtime.links_count", { count: issue.link_count ?? 0 }),
         icon: <LinkOutline className="h-3 w-3 flex-shrink-0" />,
         isMobile: isMobile,
+        chipClassName: countChipClassName,
         onEvent: handleEventPropagation,
       })}
+
+      {/* time in status */}
+      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="time_in_status">
+        <TimeInStatusProperty
+          issue={issue}
+          stateName={stateDetails?.name}
+          chipClassName={countChipClassName}
+          isMobile={isMobile}
+        />
+      </WithDisplayPropertiesHOC>
 
       {/* label */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="labels">
@@ -730,6 +701,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           renderByDefault={isMobile}
           hideDropdownArrow
           maxRender={3}
+          pillVariant={pillVariant}
         />
       </WithDisplayPropertiesHOC>
     </ListPropertiesOverflow>

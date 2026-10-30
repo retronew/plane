@@ -48,9 +48,10 @@ def get_default_display_properties():
         "labels": True,
         "link": True,
         "priority": True,
-        "start_date": True,
+        "start_date": False,
         "state": True,
         "sub_issue_count": True,
+        "time_in_status": True,
         "updated_on": True,
     }
 
