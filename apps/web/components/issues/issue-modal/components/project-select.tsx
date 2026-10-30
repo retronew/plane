@@ -11,6 +11,7 @@ import { Controller } from "react-hook-form";
 // plane imports
 import { ETabIndices } from "@plane/constants";
 // types
+import { useTranslation } from "@plane/i18n";
 import type { TIssue } from "@plane/types";
 import { getTabIndex } from "@plane/utils";
 // components
@@ -27,6 +28,7 @@ type TIssueProjectSelectProps = {
 
 export const IssueProjectSelect = observer(function IssueProjectSelect(props: TIssueProjectSelectProps) {
   const { control, disabled = false, handleFormChange } = props;
+  const { t } = useTranslation();
   // store hooks
   const { isMobile } = usePlatformOS();
   // context hooks
@@ -43,7 +45,8 @@ export const IssueProjectSelect = observer(function IssueProjectSelect(props: TI
       }}
       render={({ field: { value, onChange } }) => (
         <ProjectSelect
-          value={value}
+          value={value || null}
+          placeholder={t("common.project")}
           onChange={(projectId) => {
             if (!projectId) return;
             onChange(projectId);

@@ -936,20 +936,22 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               handleFormChange={handleFormChange}
               setSelectedParentIssue={setSelectedParentIssue}
             />
-            <IssueCustomPropertiesFields
-              error={customPropertiesError}
-              loading={customPropertiesLoading}
-              context={customPropertyContext}
-              expectedContext={`${slug}:${projectId}:${typeId ?? ""}`}
-              properties={customProperties}
-              values={customPropertyValues}
-              projectId={projectId!}
-              disabled={isDisabled}
-              errors={customPropertyErrors}
-              onRetry={retryCustomProperties}
-              onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
-              t={t}
-            />
+            {projectId && (
+              <IssueCustomPropertiesFields
+                error={customPropertiesError}
+                loading={customPropertiesLoading}
+                context={customPropertyContext}
+                expectedContext={`${slug}:${projectId}:${typeId ?? ""}`}
+                properties={customProperties}
+                values={customPropertyValues}
+                projectId={projectId!}
+                disabled={isDisabled}
+                errors={customPropertyErrors}
+                onRetry={retryCustomProperties}
+                onChange={(id, value) => setCustomPropertyValues((current) => ({ ...current, [id]: value }))}
+                t={t}
+              />
+            )}
           </DialogMain>
           {showActionButtons && (
             <IssueFormActions
