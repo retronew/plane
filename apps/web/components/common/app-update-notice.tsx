@@ -1,19 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@plane/i18n";
-import { toastManager } from "@plane/blocks/toast";
+import { Banner } from "@makeplane/propel/components/banner";
+import { Button } from "@makeplane/propel/components/button";
 
 declare const __PLANE_WEB_BUILD_ID__: string;
 const checkInterval = 60_000;
 
 export function AppUpdateNotice() {
   const { t } = useTranslation();
+  const [available, setAvailable] = useState(false);
   useEffect(() => {
     if (typeof __PLANE_WEB_BUILD_ID__ === "undefined") return;
     let stopped = false;
-    let toastId: string | undefined;
+    let detected = false;
     let controller: AbortController | undefined;
     const check = async () => {
-      if (stopped || toastId || controller || document.visibilityState === "hidden" || !navigator.onLine) return;
+      if (stopped || detected || controller || document.visibilityState === "hidden" || !navigator.onLine) return;
       controller = new AbortController();
       const timeout = window.setTimeout(() => controller?.abort(), 10_000);
       try {
@@ -34,16 +36,8 @@ export function AppUpdateNotice() {
           data.buildId === __PLANE_WEB_BUILD_ID__
         )
           return;
-        toastId = toastManager.add({
-          id: "app-update-available",
-          timeout: 0,
-          title: t("app_update.title"),
-          description: t("app_update.description"),
-          data: {
-            variant: "info",
-            primaryAction: { label: t("app_update.refresh"), onClick: () => window.location.reload() },
-          },
-        });
+        detected = true;
+        setAvailable(true);
       } catch {
         // Offline, old deployments and transient proxy failures must not interrupt current work.
       } finally {
@@ -64,8 +58,36 @@ export function AppUpdateNotice() {
       window.removeEventListener("focus", onResume);
       window.removeEventListener("online", onResume);
       document.removeEventListener("visibilitychange", onResume);
-      if (toastId) toastManager.close(toastId);
     };
-  }, [t]);
-  return null;
+  }, []);
+  if (!available) return null;
+  return (
+    <div data-app-update-banner="" className="w-full shrink-0">
+      <Banner
+        placement="page"
+        size="sm"
+        variant="accent"
+        icon={null}
+        aria-live="polite"
+        aria-atomic="true"
+        description={
+          <span>
+            <span className="font-medium">{t("app_update.title")}</span>
+            <span className="ml-2 hidden md:inline">{t("app_update.description")}</span>
+          </span>
+        }
+        actions={
+          <Button
+            variant="ghost"
+            size="sm"
+            stretch="auto"
+            label={t("app_update.refresh")}
+            onClick={() => window.location.reload()}
+          />
+        }
+        dismissLabel={t("close")}
+        onDismiss={() => setAvailable(false)}
+      />
+    </div>
+  );
 }

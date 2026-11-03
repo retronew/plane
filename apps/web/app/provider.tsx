@@ -15,7 +15,6 @@ import { StoreProvider } from "@/lib/store-context";
 
 import { EditorPreferencesProvider } from "@/components/editor/preferences-provider";
 import { ProfileSettingsHost } from "@/components/common/modal/profile-settings-host";
-import { AppUpdateNotice } from "@/components/common/app-update-notice";
 
 // lazy imports
 const AppProgressBar = lazy(function AppProgressBar() {
@@ -45,7 +44,6 @@ export function AppProvider(props: IAppProvider) {
           {/* The toast viewport is a provider that calls `useTranslation`, so it sits inside
               TranslationProvider and wraps everything that can raise a toast. */}
           <PlaneToastProvider>
-            <AppUpdateNotice />
             <StoreWrapper>
               <InstanceWrapper>
                 <Suspense>

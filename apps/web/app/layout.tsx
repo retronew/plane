@@ -10,6 +10,7 @@ import { Outlet, redirect } from "react-router";
 import { cn } from "@plane/utils";
 // components
 import { scheduleBootFinish } from "@/components/common/boot-loader-state";
+import { AppUpdateNotice } from "@/components/common/app-update-notice";
 // local
 import { ensureTrailingSlash } from "./compat/next/helper";
 import { AppProvider } from "./provider";
@@ -37,7 +38,8 @@ export default function AppShellLayout() {
   return (
     <AppProvider>
       <div className={cn("relative flex h-screen w-full flex-col overflow-hidden bg-canvas", "desktop-app-container")}>
-        <main className="relative h-full w-full overflow-hidden">
+        <AppUpdateNotice />
+        <main className="relative min-h-0 w-full flex-1 overflow-hidden [&_.h-screen]:h-full">
           <Outlet />
         </main>
       </div>

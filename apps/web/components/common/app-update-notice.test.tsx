@@ -1,10 +1,9 @@
-import { act, cleanup, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppUpdateNotice } from "./app-update-notice";
 
-const mocks = vi.hoisted(() => ({ add: vi.fn(() => "notice"), close: vi.fn(), t: (key: string) => key }));
+const mocks = vi.hoisted(() => ({ t: (key: string) => key }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: mocks.t }) }));
-vi.mock("@plane/blocks/toast", () => ({ toastManager: mocks }));
 beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal("__PLANE_WEB_BUILD_ID__", "current");
@@ -26,18 +25,17 @@ it("checks without caching and only prompts once when a different build is found
     expect.stringContaining("/version.json?"),
     expect.objectContaining({ cache: "no-store" })
   );
-  expect(mocks.add).not.toHaveBeenCalled();
+  expect(screen.queryByText("app_update.title")).toBeNull();
   vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({ buildId: "next" }) } as Response);
   await act(() => vi.advanceTimersByTimeAsync(60_000));
-  expect(mocks.add).toHaveBeenCalledWith(
-    expect.objectContaining({
-      timeout: 0,
-      title: "app_update.title",
-      data: expect.objectContaining({ primaryAction: expect.objectContaining({ label: "app_update.refresh" }) }),
-    })
-  );
+  expect(screen.getByText("app_update.title").closest("[data-app-update-banner]")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "app_update.refresh" })).toBeTruthy();
   await act(() => vi.advanceTimersByTimeAsync(120_000));
-  expect(mocks.add).toHaveBeenCalledTimes(1);
+  expect(screen.getAllByText("app_update.title")).toHaveLength(1);
+  fireEvent.click(screen.getByRole("button", { name: "close" }));
+  expect(screen.queryByText("app_update.title")).toBeNull();
+  await act(() => vi.advanceTimersByTimeAsync(60_000));
+  expect(screen.queryByText("app_update.title")).toBeNull();
 });
 it("ignores failed or invalid responses and retries on return to the tab", async () => {
   vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"));
@@ -45,10 +43,10 @@ it("ignores failed or invalid responses and retries on return to the tab", async
   await act(async () => {});
   vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ buildId: 5 }) } as Response);
   await act(async () => window.dispatchEvent(new Event("focus")));
-  expect(mocks.add).not.toHaveBeenCalled();
+  expect(screen.queryByText("app_update.title")).toBeNull();
   vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ buildId: "next" }) } as Response);
   await act(async () => window.dispatchEvent(new Event("online")));
-  expect(mocks.add).toHaveBeenCalledTimes(1);
+  expect(screen.getByText("app_update.title")).toBeTruthy();
 });
 it("avoids background polling and aborts an in-flight check on unmount", async () => {
   const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
