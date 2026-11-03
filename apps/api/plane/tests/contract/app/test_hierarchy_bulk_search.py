@@ -103,6 +103,28 @@ def test_bulk_enforces_levels_atomically(bulk_search_ctx, session_client, api_ke
     assert other.parent_id == (parent.pk if valid else None)
 
 
+@pytest.mark.parametrize(
+    "filters,expected",
+    [
+        ({"priority": "urgent,high"}, {"Urgent backlog", "High started"}),
+        ({"state_group": "backlog"}, {"Urgent backlog", "Low backlog"}),
+        ({"state_group": "backlog", "priority": "urgent,high"}, {"Urgent backlog"}),
+    ],
+)
+def test_cycle_candidate_filters(bulk_search_ctx, session_client, filters, expected):
+    ctx = bulk_search_ctx
+    started = State.objects.create(project=ctx.project, name="Started", group="started")
+    for name, priority, state in [
+        ("Urgent backlog", "urgent", ctx.state),
+        ("Low backlog", "low", ctx.state),
+        ("High started", "high", started),
+    ]:
+        Issue.objects.create(project=ctx.project, state=state, name=name, priority=priority)
+    response = session_client.get(search_url(ctx), {"cycle": "true", **filters})
+    assert response.status_code == 200, response.data
+    assert {row["name"] for row in response.data} == expected
+
+
 def test_search_excludes_full_cycle_paths(bulk_search_ctx, session_client):
     ctx = bulk_search_ctx
     root = make_item(ctx)

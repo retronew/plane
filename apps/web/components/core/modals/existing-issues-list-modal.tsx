@@ -37,6 +37,8 @@ import { ProjectService } from "@/services/project";
 // components
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 import { IssueSearchModalEmptyState } from "./issue-search-modal-empty-state";
+import { ExistingIssuesFilters, emptyExistingIssueFilters } from "./existing-issues-filters";
+import type { ExistingIssueFilters } from "./existing-issues-filters";
 
 type Props = {
   workspaceSlug: string | undefined;
@@ -52,6 +54,15 @@ type Props = {
 };
 
 const projectService = new ProjectService();
+
+function candidateSearchKey(params: Props["searchParams"], filters: ExistingIssueFilters) {
+  if (!params.cycle) return JSON.stringify(params);
+  return JSON.stringify({
+    ...params,
+    ...(filters.state_group.length ? { state_group: filters.state_group.join(",") } : {}),
+    ...(filters.priority.length ? { priority: filters.priority.join(",") } : {}),
+  });
+}
 
 export function ExistingIssuesListModal(props: Props) {
   const { t } = useTranslation();
@@ -78,7 +89,9 @@ export function ExistingIssuesListModal(props: Props) {
   const { baseTabIndex } = getTabIndex(undefined, isMobile);
   const [retry, setRetry] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const searchParamsKey = JSON.stringify(searchParams);
+  const [candidateFilters, setCandidateFilters] = useState(emptyExistingIssueFilters);
+  const canFilter = searchParams.cycle === true;
+  const searchParamsKey = candidateSearchKey(searchParams, candidateFilters);
   const { issues, isLoading, isSearching, searchFailed, invalidateSearch } = useExistingIssuesSearch({
     isOpen,
     workspaceSlug,
@@ -100,6 +113,7 @@ export function ExistingIssuesListModal(props: Props) {
     setSearchTerm("");
     setSelectedIssues(null);
     setIsWorkspaceLevel(false);
+    setCandidateFilters(emptyExistingIssueFilters());
   };
 
   const onSubmit = () =>
@@ -114,14 +128,21 @@ export function ExistingIssuesListModal(props: Props) {
         onClose();
         setSearchTerm("");
         setSelectedIssues(null);
+        setCandidateFilters(emptyExistingIssueFilters());
       }
     );
 
-  const handleSelectIssues = () => {
-    setSelectedIssues(selectedIssues.length === filteredIssues.length ? [] : [...filteredIssues]);
-  };
-
   const filteredIssues = issues.filter((issue) => !shouldHideIssue?.(issue));
+  const visibleIds = new Set(filteredIssues.map((issue) => issue.id));
+  const selectedIds = new Set(selectedIssues.map((issue) => issue.id));
+  const allVisibleSelected = filteredIssues.length > 0 && filteredIssues.every((issue) => selectedIds.has(issue.id));
+  const handleSelectIssues = () => {
+    setSelectedIssues(
+      allVisibleSelected
+        ? selectedIssues.filter((issue) => !visibleIds.has(issue.id))
+        : [...selectedIssues, ...filteredIssues.filter((issue) => !selectedIds.has(issue.id))]
+    );
+  };
 
   return (
     <Dialog
@@ -136,6 +157,16 @@ export function ExistingIssuesListModal(props: Props) {
         <div className="sr-only">
           <DialogTitle>{t("issue.add.existing")}</DialogTitle>
         </div>
+        {canFilter && (
+          <ExistingIssuesFilters
+            value={candidateFilters}
+            onChange={(next) => {
+              setSelectedIssues(selectedIssues);
+              invalidateSearch();
+              setCandidateFilters(next);
+            }}
+          />
+        )}
         {/* `inline` + `open` renders the list in place: the dialog is the surface, so there is no
             popup positioner. */}
         <Combobox<ISearchIssueResponse, true>
@@ -258,9 +289,7 @@ export function ExistingIssuesListModal(props: Props) {
               variant="ghost"
               size="sm"
               stretch="auto"
-              label={
-                selectedIssues.length === issues.length ? t("issue.select.deselect_all") : t("issue.select.select_all")
-              }
+              label={allVisibleSelected ? t("issue.select.deselect_all") : t("issue.select.select_all")}
               onClick={handleSelectIssues}
               disabled={filteredIssues.length === 0}
             />

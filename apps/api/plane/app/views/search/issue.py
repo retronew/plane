@@ -19,6 +19,7 @@ from .base import BaseAPIView
 from plane.db.models import Issue, Project, ProjectIssueType, ProjectMember, IssueRelation
 from plane.services.hierarchy import hierarchy_error, hierarchy_level
 from plane.utils.issue_search import search_issues
+from plane.utils.issue_filters import issue_filters
 from plane.utils.workflow import normalize_issue_type
 
 
@@ -186,6 +187,14 @@ class IssueSearchEndpoint(BaseAPIView):
 
         if query:
             issues = self.search_issues_by_query(query, issues)
+
+        # Search-mode flags such as cycle/parent are not issue filter values.
+        candidate_filters = {
+            key: request.query_params[key]
+            for key in ("state_group", "priority")
+            if key in request.query_params
+        }
+        issues = issues.filter(**issue_filters(candidate_filters, "GET"))
 
         if parent == "true":
             issues = self.filter_hierarchy_candidates(request, slug, project_id, issues, children=False)

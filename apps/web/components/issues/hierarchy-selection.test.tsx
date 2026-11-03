@@ -12,6 +12,14 @@ vi.mock("@/services/project", () => ({
     projectIssuesSearch = state.search;
   },
 }));
+vi.mock("@/components/core/modals/existing-issues-filters", () => ({
+  emptyExistingIssueFilters: () => ({ state_group: [], priority: [] }),
+  ExistingIssuesFilters: ({
+    onChange,
+  }: {
+    onChange: (value: { state_group: string[]; priority: string[] }) => void;
+  }) => <button onClick={() => onChange({ state_group: ["backlog"], priority: ["high"] })}>Filter candidates</button>,
+}));
 vi.mock("@/hooks/use-debounce", () => ({ default: (value: string) => value }));
 vi.mock("@/hooks/use-platform-os", () => ({ usePlatformOS: () => ({ isMobile: false }) }));
 vi.mock("@/components/issues/issue-detail/issue-identifier", () => ({ IssueIdentifier: () => null }));
@@ -141,6 +149,33 @@ it("retains selected sub-items and permits retry after save failure", async () =
   fireEvent.click(screen.getByText("issue.select.add_selected"));
   await waitFor(() => expect(close).toHaveBeenCalledOnce());
   expect(submit).toHaveBeenLastCalledWith([issue]);
+});
+
+it("filters cycle candidates on the server and preserves selected items outside the new results", async () => {
+  const another = { ...issue, id: "second", name: "Filtered candidate" };
+  state.search.mockImplementation(async (_workspace, _project, params) => (params.priority ? [another] : [issue]));
+  const submit = vi.fn().mockResolvedValue(undefined);
+  render(
+    <ExistingIssuesListModal
+      workspaceSlug="w"
+      projectId="p"
+      isOpen
+      handleClose={vi.fn()}
+      handleOnSubmit={submit}
+      searchParams={{ cycle: true }}
+    />
+  );
+  fireEvent.click(await screen.findByText("Candidate"));
+  fireEvent.click(screen.getByText("Filter candidates"));
+  await screen.findByText("Filtered candidate");
+  expect(state.search).toHaveBeenLastCalledWith(
+    "w",
+    "p",
+    expect.objectContaining({ cycle: true, state_group: "backlog", priority: "high" })
+  );
+  fireEvent.click(screen.getByText("issue.select.select_all"));
+  fireEvent.click(screen.getByText("issue.select.add_selected"));
+  await waitFor(() => expect(submit).toHaveBeenCalledWith([issue, another]));
 });
 
 it("requeries sub-item candidates when the unsaved parent type changes and retries failures", async () => {
