@@ -18,6 +18,14 @@
 @import "./menu.css";
 @source "../**/*.{ts,tsx}";
 
+/* Separate medium from high's warm hue across labels, icons and card fills. */
+:root {
+  --priority-medium: var(--blue-700);
+  @variant dark {
+    --priority-medium: var(--blue-400);
+  }
+}
+
 * {
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
