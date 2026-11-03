@@ -1,3 +1,26 @@
+import type { TIssue, TStateGroups } from "@plane/types";
+
+type DurationIssue = Pick<TIssue, "state_changed_at" | "started_at"> &
+  Partial<Pick<TIssue, "created_at" | "completed_at">>;
+
+function parseTimestamp(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : undefined;
+}
+
+export function getIssueDuration(issue: DurationIssue, stateGroup: TStateGroups | undefined) {
+  const ended = stateGroup === "completed" || stateGroup === "cancelled";
+  const startedAt = parseTimestamp(issue.started_at);
+  const since = ended ? (startedAt ?? parseTimestamp(issue.created_at)) : parseTimestamp(issue.state_changed_at);
+  const end = ended
+    ? ((stateGroup === "completed" ? parseTimestamp(issue.completed_at) : undefined) ??
+      parseTimestamp(issue.state_changed_at))
+    : undefined;
+  if (!since || (ended && !end)) return undefined;
+  return { since, end, ended, fromCreation: ended && !startedAt };
+}
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

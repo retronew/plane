@@ -11,17 +11,17 @@ import { useTranslation } from "@plane/i18n";
 import type { TIssue, TStateGroups } from "@plane/types";
 import { cn, formatCompactDate, getDate } from "@plane/utils";
 import { useStatusDurationClock } from "@/hooks/use-status-duration-clock";
-import { formatStateEntryTime, formatTimeInStatus } from "./status-duration";
+import { formatStateEntryTime, formatTimeInStatus, getIssueDuration } from "./status-duration";
 
 type Props = {
-  issue: Pick<TIssue, "state_changed_at" | "started_at">;
+  issue: Pick<TIssue, "state_changed_at" | "started_at"> & Partial<Pick<TIssue, "created_at" | "completed_at">>;
   stateName: string | undefined;
   stateGroup?: TStateGroups;
   chipClassName: string;
   isMobile: boolean;
 };
 
-/** Current-state duration is only meaningful for work that has not ended. */
+/** Active work shows current-state time; ended work keeps its fixed total elapsed time. */
 export const TimeInStatusProperty = observer(function TimeInStatusProperty({
   issue,
   stateName,
@@ -30,22 +30,35 @@ export const TimeInStatusProperty = observer(function TimeInStatusProperty({
   isMobile,
 }: Props) {
   const { t, currentLocale } = useTranslation();
-  const since = issue.state_changed_at ? new Date(issue.state_changed_at) : undefined;
-  const active =
-    stateGroup !== "completed" && stateGroup !== "cancelled" && !!since && Number.isFinite(since.getTime());
-  const currentTime = useStatusDurationClock(active ? since?.getTime() : undefined);
-  if (!active || !since) return null;
+  const timing = getIssueDuration(issue, stateGroup);
+  const currentTime = useStatusDurationClock(timing && !timing.ended ? timing.since.getTime() : undefined);
+  if (!timing) return null;
 
+  const { since, end, ended, fromCreation } = timing;
   const startedAt = getDate(issue.started_at);
-  const duration = formatTimeInStatus(since, new Date(currentTime), currentLocale);
+  const duration = formatTimeInStatus(since, end ?? new Date(currentTime), currentLocale);
+  const displayedDuration = ended ? t("issue.display.properties.elapsed_duration", { duration }) : duration;
   const enteredAt = formatStateEntryTime(since, currentLocale);
-  const label = [
-    `${t("issue.display.properties.time_in_status")}: ${stateName ? `${stateName} · ` : ""}${duration}`,
-    `${t("common.state")} · ${enteredAt}`,
-    startedAt ? t("issue.display.properties.started_at", { date: formatCompactDate(startedAt) }) : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const label = ended
+    ? [
+        `${stateName ? `${stateName} · ` : ""}${displayedDuration}`,
+        t(
+          fromCreation
+            ? "issue.display.properties.elapsed_from_creation"
+            : "issue.display.properties.elapsed_from_start",
+          {
+            start: enteredAt,
+            end: formatStateEntryTime(end!, currentLocale),
+          }
+        ),
+      ].join("\n")
+    : [
+        `${t("issue.display.properties.time_in_status")}: ${stateName ? `${stateName} · ` : ""}${duration}`,
+        `${t("common.state")} · ${enteredAt}`,
+        startedAt ? t("issue.display.properties.started_at", { date: formatCompactDate(startedAt) }) : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
 
   return (
     <Tooltip label={label} layout="stacked" disabled={isMobile}>
@@ -59,7 +72,7 @@ export const TimeInStatusProperty = observer(function TimeInStatusProperty({
         }}
       >
         <Timer className="h-3 w-3 flex-shrink-0" />
-        <span className="truncate tabular-nums">{duration}</span>
+        <span className="truncate tabular-nums">{displayedDuration}</span>
       </div>
     </Tooltip>
   );

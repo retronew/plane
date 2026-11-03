@@ -3,11 +3,17 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { observable, runInAction } from "mobx";
 import type { TStateGroups } from "@plane/types";
 import { TimeInStatusProperty } from "./time-in-status";
-import { formatTimeInStatus } from "./status-duration";
+import { formatTimeInStatus, getIssueDuration } from "./status-duration";
 
 const translation = vi.hoisted(() => ({ locale: "en" }));
 vi.mock("@plane/i18n", () => ({
-  useTranslation: () => ({ t: (key: string) => key, currentLocale: translation.locale }),
+  useTranslation: () => ({
+    t: (key: string, values?: { duration?: string }) =>
+      key.endsWith("elapsed_duration")
+        ? `${translation.locale === "zh-CN" ? "耗时" : "Elapsed "}${values?.duration}`
+        : key,
+    currentLocale: translation.locale,
+  }),
 }));
 const NOW = new Date("2026-10-28T12:00:00Z");
 const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString();
@@ -44,16 +50,40 @@ it.each([null, "invalid-timestamp"])("ignores an unavailable timestamp: %s", (ti
   expect(screen.queryByTestId("time-in-status")).toBeNull();
   expect(vi.getTimerCount()).toBe(0);
 });
-it.each(["completed", "cancelled"] as const)("hides %s without subscribing to a clock", (stateGroup) => {
-  render(
-    <TimeInStatusProperty
-      {...props}
-      stateGroup={stateGroup}
-      issue={{ state_changed_at: ago(3_600_000), started_at: null }}
-    />
+it.each(["completed", "cancelled"] as const)(
+  "freezes total elapsed time for %s without subscribing to a clock",
+  (stateGroup) => {
+    translation.locale = "zh-CN";
+    render(
+      <TimeInStatusProperty
+        {...props}
+        stateGroup={stateGroup}
+        issue={{ state_changed_at: ago(3_600_000), started_at: ago(4 * 3_600_000), created_at: ago(8 * 3_600_000) }}
+      />
+    );
+    expect(screen.getByTestId("time-in-status").textContent).toBe("耗时3小时");
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => vi.advanceTimersByTime(3_600_000));
+    expect(screen.getByTestId("time-in-status").textContent).toBe("耗时3小时");
+  }
+);
+it("uses completion timestamp for completed work and state entry for cancellation", () => {
+  const issue = { started_at: ago(8 * 3_600_000), completed_at: ago(4 * 3_600_000), state_changed_at: ago(3_600_000) };
+  expect(getIssueDuration(issue, "completed")?.end?.toISOString()).toBe(issue.completed_at);
+  expect(getIssueDuration(issue, "cancelled")?.end?.toISOString()).toBe(issue.state_changed_at);
+});
+it("falls back to creation and records the basis when no start is available", () => {
+  const timing = getIssueDuration(
+    { started_at: null, created_at: ago(8 * 3_600_000), state_changed_at: ago(3_600_000) },
+    "cancelled"
   );
-  expect(screen.queryByTestId("time-in-status")).toBeNull();
-  expect(vi.getTimerCount()).toBe(0);
+  expect(timing?.fromCreation).toBe(true);
+  expect(formatTimeInStatus(timing!.since, timing!.end, "zh-CN")).toBe("7小时");
+});
+it("does not fabricate an end time or a negative elapsed period", () => {
+  expect(getIssueDuration({ started_at: ago(3_600_000) }, "cancelled")).toBeUndefined();
+  const timing = getIssueDuration({ started_at: NOW.toISOString(), state_changed_at: ago(3_600_000) }, "completed");
+  expect(formatTimeInStatus(timing!.since, timing!.end, "zh-CN")).toBe("<1分钟");
 });
 it.each(["2026-10-28T11:15:00Z", "2026-10-28T19:15:00+08:00"])(
   "preserves exact timestamp and timezone: %s",

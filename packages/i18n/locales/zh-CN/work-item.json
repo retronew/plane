@@ -63,6 +63,9 @@
         "created_on": "创建时间",
         "time_in_status": "状态停留时长",
         "started_at": "开始于 {date}",
+        "elapsed_duration": "耗时{duration}",
+        "elapsed_from_creation": "自创建起：{start} 至 {end}，包含等待和阻塞时间。",
+        "elapsed_from_start": "自开始处理起：{start} 至 {end}，包含等待和阻塞时间。",
         "sub_issue": "子工作项",
         "work_item_count": "工作项数量"
       },

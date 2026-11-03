@@ -63,6 +63,9 @@
         "created_on": "Created on",
         "time_in_status": "Time in status",
         "started_at": "Started {date}",
+        "elapsed_duration": "Elapsed {duration}",
+        "elapsed_from_creation": "Since creation: {start} – {end}. Includes waiting and blocked time.",
+        "elapsed_from_start": "Since work started: {start} – {end}. Includes waiting and blocked time.",
         "sub_issue": "Sub-work item",
         "work_item_count": "Work item count"
       },
