@@ -118,7 +118,9 @@ it.each(["google", "github", "gitlab", "gitea"])("preserves nested queries for %
   const assign = vi.fn();
   vi.stubGlobal("location", { assign, origin: "http://localhost" });
   const nextPath = "/workspace/issues/?peekId=issue&filter=a%26b#description";
-  const { result } = renderHook(() => useCoreOAuthConfig({ config, oauthActionText: "Sign in", logos, nextPath }));
+  const { result } = renderHook(() =>
+    useCoreOAuthConfig({ config, oauthActionText: "Sign in", logos, nextPath, resolvedTheme: "light" })
+  );
   result.current.oAuthOptions.find((option) => option.id === provider)?.onClick();
   const target = new URL(assign.mock.calls[0][0], "http://localhost");
   expect(target.pathname).toBe(`/auth/${provider}/`);
