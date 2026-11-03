@@ -1,4 +1,9 @@
 {
+  "app_update": {
+    "title": "Plane 有新版本可用",
+    "description": "请先保存更改，再刷新页面使用最新版本。",
+    "refresh": "刷新页面"
+  },
   "updates": {
     "progress": {
       "title": "进度",

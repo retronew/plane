@@ -1,4 +1,9 @@
 {
+  "app_update": {
+    "title": "A new version of Plane is available",
+    "description": "Save your changes, then refresh to use the latest version.",
+    "refresh": "Refresh"
+  },
   "updates": {
     "progress": {
       "title": "Progress",

@@ -1,4 +1,8 @@
 import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { buildVersionPlugin } from "./lib/build-version-plugin";
+
+const buildId = randomUUID();
 import * as dotenv from "dotenv";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
@@ -16,11 +20,12 @@ const viteEnv = Object.keys(process.env)
 export default defineConfig(() => ({
   define: {
     "process.env": JSON.stringify(viteEnv),
+    __PLANE_WEB_BUILD_ID__: JSON.stringify(buildId),
   },
   build: {
     assetsInlineLimit: 0,
   },
-  plugins: [reactRouter()],
+  plugins: [reactRouter(), buildVersionPlugin(buildId)],
   resolve: {
     // Native replacement for vite-tsconfig-paths; reads this app's tsconfig.json
     tsconfigPaths: true,
