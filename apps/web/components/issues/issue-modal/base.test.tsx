@@ -1,10 +1,12 @@
 import React from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CreateUpdateIssueModalBase } from "./base";
 
 const mocks = vi.hoisted(() => ({
   fetchIssue: vi.fn(),
+  updateIssue: vi.fn(),
+  toast: vi.fn(),
   allowedProjectIds: ["project", "other"],
   params: { workspaceSlug: "workspace", projectId: undefined as string | undefined },
   draft: undefined as { values: Record<string, unknown>; assetIds: string[] } | undefined,
@@ -16,10 +18,19 @@ vi.mock("./composer-cache", async (importOriginal) => ({
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
 vi.mock("next/navigation", () => ({ useParams: () => mocks.params }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock("@makeplane/propel/components/dialog", () => ({
-  Dialog: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+vi.mock("@plane/blocks/toast", () => ({ setToast: mocks.toast }));
+vi.mock("@makeplane/propel/components/dialog", async () => {
+  const { createPortal } = await import("react-dom");
+  return {
+    Dialog: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    DialogContent: ({ children, onClick }: React.ComponentProps<"div">) =>
+      createPortal(
+        // oxlint-disable-next-line jsx_a11y/click-events-have-key-events, jsx_a11y/no-static-element-interactions -- Mirror DialogContent's portal event boundary.
+        <div onClick={onClick}>{children}</div>,
+        document.body
+      ),
+  };
+});
 vi.mock("@/hooks/context/use-issue-modal", () => ({ useIssueModal: () => mocks }));
 vi.mock("@/hooks/store/use-cycle", () => ({ useCycle: () => ({}) }));
 vi.mock("@/hooks/store/use-module", () => ({ useModule: () => ({}) }));
@@ -28,21 +39,29 @@ vi.mock("@/hooks/store/use-issues", () => ({ useIssues: () => ({ issues: {} }) }
 vi.mock("@/hooks/store/use-project", () => ({ useProject: () => ({ getProjectByIdentifier: () => undefined }) }));
 vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "user" } }) }));
 vi.mock("@/hooks/use-issue-layout-store", () => ({ useIssueStoreType: () => "PROJECT" }));
-vi.mock("@/hooks/use-issues-actions", () => ({ useIssuesActions: () => ({}) }));
+vi.mock("@/hooks/use-issues-actions", () => ({ useIssuesActions: () => ({ updateIssue: mocks.updateIssue }) }));
 vi.mock("../create-issue-toast-action-items", () => ({ useCreateIssueToastActions: () => vi.fn() }));
 vi.mock("./draft-issue-layout", () => ({ DraftIssueLayout: () => null }));
 vi.mock("./form", () => ({
   IssueFormRoot: ({
     data,
     projectId,
+    onSubmit,
   }: {
     data: { description_html?: string; project_id?: string };
     projectId: string;
+    onSubmit: (values: { project_id: string; name: string }) => Promise<void>;
   }) => (
-    <>
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        void onSubmit({ project_id: projectId, name: "Updated title" });
+      }}
+    >
       <div data-testid="description">{data.description_html}</div>
       <div data-testid="project">{data.project_id ?? projectId}</div>
-    </>
+      <button type="submit">Update</button>
+    </form>
   ),
 }));
 
@@ -118,6 +137,33 @@ it("ignores an older issue response and preserves the committed description afte
   rerender(view("second", false));
   expect(screen.getByTestId("description").textContent).toBe("second description");
   expect(mocks.fetchIssue).toHaveBeenCalledTimes(2);
+});
+
+it("submits updates from a portalled dialog inside a card that cancels clicks", async () => {
+  const onClose = vi.fn();
+  const onCardClick = vi.fn((event: React.MouseEvent) => event.preventDefault());
+  render(
+    <button type="button" onClick={onCardClick}>
+      <CreateUpdateIssueModalBase
+        isOpen
+        onClose={onClose}
+        data={{ id: "issue", project_id: "project" }}
+        fetchIssueDetails={false}
+        withDraftIssueWrapper={false}
+      />
+    </button>
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Update" }));
+
+  await waitFor(() =>
+    expect(mocks.updateIssue).toHaveBeenCalledWith("project", "issue", {
+      project_id: "project",
+      name: "Updated title",
+    })
+  );
+  expect(onCardClick).not.toHaveBeenCalled();
+  expect(onClose).toHaveBeenCalledOnce();
 });
 
 it("ignores responses that arrive during the closing transition", async () => {

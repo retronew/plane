@@ -670,6 +670,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
         ref={composerRef}
         size="lg"
         data-issue-composer=""
+        // Portal clicks still bubble to the card, whose preventDefault would cancel form submission.
+        onClick={(event) => event.stopPropagation()}
         {...getDialogInitialFocusProps("[data-composer-title]")}
       >
         {withDraftIssueWrapper ? (
