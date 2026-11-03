@@ -15,6 +15,7 @@ import { applyCustomTheme, clearCustomTheme } from "@plane/utils";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useRouterParams } from "@/hooks/store/use-router-params";
 import { useUserProfile } from "@/hooks/store/user";
+import { useIssuePeekUrl } from "@/hooks/use-issue-peek-url";
 
 type TStoreWrapper = {
   children: ReactNode;
@@ -22,6 +23,7 @@ type TStoreWrapper = {
 
 function StoreWrapper(props: TStoreWrapper) {
   const { children } = props;
+  useIssuePeekUrl();
   // theme
   const { setTheme } = useTheme();
   // router
