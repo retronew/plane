@@ -5,9 +5,10 @@
  */
 
 import { redirect } from "react-router";
+import type { ClientLoaderFunctionArgs } from "react-router";
 
-export const clientLoader = () => {
-  throw redirect("/");
+export const clientLoader = ({ request }: ClientLoaderFunctionArgs) => {
+  throw redirect(`/${new URL(request.url).search}`);
 };
 
 export default function Login() {

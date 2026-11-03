@@ -11,9 +11,9 @@ class TestAPIService extends APIService {
   }
 }
 
-function setup(pathname: string) {
+function setup(pathname: string, search = "", hash = "") {
   const replace = vi.fn();
-  vi.stubGlobal("window", { location: { pathname, replace } });
+  vi.stubGlobal("window", { location: { pathname, search, hash, replace } });
   const responseUse = vi.fn();
   vi.mocked(create).mockReturnValue({
     interceptors: { request: { use: vi.fn() }, response: { use: responseUse } },
@@ -54,6 +54,18 @@ describe("API authentication redirects", () => {
       expect(replace).toHaveBeenCalledWith(`/?next_path=${encodeURIComponent(pathname)}`);
     }
   );
+
+  it("preserves the full private URL when an expired session redirects to login", async () => {
+    const path = "/wuzuo/projects/project/issues/";
+    const search = "?peekId=issue&projectId=project&filter=a%26b";
+    const hash = "#description";
+    const { replace, rejectResponse } = setup(path, search, hash);
+    const error = { response: { status: 401 } };
+    await expect(rejectResponse(error)).rejects.toBe(error);
+    const target = new URL(replace.mock.calls[0][0], "https://plane.test");
+    expect(target.searchParams.get("next_path")).toBe(`${path}${search}${hash}`);
+    expect([...target.searchParams.keys()]).toEqual(["next_path"]);
+  });
 
   it.each([{ response: { status: 403 } }, new Error("Network error")])(
     "preserves other errors without redirecting",

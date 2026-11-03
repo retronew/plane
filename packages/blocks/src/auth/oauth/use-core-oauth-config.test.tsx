@@ -114,13 +114,25 @@ it("marks providers from the instance config and skips the unconfigured ones", (
   expect(list.find((option) => option.id === "oidc")?.enabled).toBe(true);
 });
 
+it.each(["google", "github", "gitlab", "gitea"])("preserves nested queries for %s login", (provider) => {
+  const assign = vi.fn();
+  vi.stubGlobal("location", { assign, origin: "http://localhost" });
+  const nextPath = "/workspace/issues/?peekId=issue&filter=a%26b#description";
+  const { result } = renderHook(() => useCoreOAuthConfig({ config, oauthActionText: "Sign in", logos, nextPath }));
+  result.current.oAuthOptions.find((option) => option.id === provider)?.onClick();
+  const target = new URL(assign.mock.calls[0][0], "http://localhost");
+  expect(target.pathname).toBe(`/auth/${provider}/`);
+  expect(target.searchParams.get("next_path")).toBe(nextPath);
+  expect([...target.searchParams.keys()]).toEqual(["next_path"]);
+});
+
 it("sends each provider to its endpoint with the next_path", () => {
   const assign = vi.fn();
   vi.stubGlobal("location", { assign, origin: "http://localhost" });
 
   const google = options("light").find((option) => option.id === "google");
   google?.onClick?.();
-  expect(assign).toHaveBeenCalledWith(expect.stringContaining("/auth/google/?next_path=/wuzuo/"));
+  expect(new URL(assign.mock.calls[0][0], "http://localhost").searchParams.get("next_path")).toBe("/wuzuo/");
 
   vi.unstubAllGlobals();
 });

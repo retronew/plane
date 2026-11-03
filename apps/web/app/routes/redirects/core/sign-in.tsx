@@ -4,11 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { redirect } from "react-router";
-
-export const clientLoader = () => {
-  throw redirect("/");
-};
+export { clientLoader } from "./login";
 
 export default function SignIn() {
   return null;

@@ -77,7 +77,9 @@ export const useCoreOAuthConfig = ({
       text: withProvider("Google"),
       icon: <img src={logos.google} height={18} width={18} alt="Google Logo" />,
       onClick: () => {
-        window.location.assign(`${API_BASE_URL}/auth/google/${nextPath ? `?next_path=${nextPath}` : ``}`);
+        window.location.assign(
+          `${API_BASE_URL}/auth/google/${nextPath ? `?next_path=${encodeURIComponent(nextPath)}` : ``}`
+        );
       },
       enabled: config?.is_google_enabled,
     },
@@ -93,7 +95,9 @@ export const useCoreOAuthConfig = ({
         />
       ),
       onClick: () => {
-        window.location.assign(`${API_BASE_URL}/auth/github/${nextPath ? `?next_path=${nextPath}` : ``}`);
+        window.location.assign(
+          `${API_BASE_URL}/auth/github/${nextPath ? `?next_path=${encodeURIComponent(nextPath)}` : ``}`
+        );
       },
       enabled: config?.is_github_enabled,
     },
@@ -102,7 +106,9 @@ export const useCoreOAuthConfig = ({
       text: withProvider("GitLab"),
       icon: <img src={logos.gitlab} height={18} width={18} alt="GitLab Logo" />,
       onClick: () => {
-        window.location.assign(`${API_BASE_URL}/auth/gitlab/${nextPath ? `?next_path=${nextPath}` : ``}`);
+        window.location.assign(
+          `${API_BASE_URL}/auth/gitlab/${nextPath ? `?next_path=${encodeURIComponent(nextPath)}` : ``}`
+        );
       },
       enabled: config?.is_gitlab_enabled,
     },
@@ -111,7 +117,9 @@ export const useCoreOAuthConfig = ({
       text: withProvider("Gitea"),
       icon: <img src={logos.gitea} height={18} width={18} alt="Gitea Logo" />,
       onClick: () => {
-        window.location.assign(`${API_BASE_URL}/auth/gitea/${nextPath ? `?next_path=${nextPath}` : ``}`);
+        window.location.assign(
+          `${API_BASE_URL}/auth/gitea/${nextPath ? `?next_path=${encodeURIComponent(nextPath)}` : ``}`
+        );
       },
       enabled: config?.is_gitea_enabled,
     },

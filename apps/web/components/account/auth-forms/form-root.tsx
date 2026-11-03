@@ -87,7 +87,10 @@ export const AuthFormRoot = observer(function AuthFormRoot(props: TAuthFormRoot)
     setErrorInfo(undefined);
     setEmail("");
     setAuthStep(EAuthSteps.EMAIL);
-    router.push(currentAuthMode === EAuthModes.SIGN_IN ? `/` : "/sign-up");
+    const params = new URLSearchParams();
+    if (nextPath) params.set("next_path", nextPath);
+    const authPath = currentAuthMode === EAuthModes.SIGN_IN ? "/" : "/sign-up";
+    router.push(`${authPath}${params.size ? `?${params}` : ""}`);
   };
 
   // generating the unique code
