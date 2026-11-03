@@ -14,7 +14,9 @@ export function observeBlockHandlePosition(node: HTMLElement, handle: HTMLElemen
     const target = visual ?? content;
     const rect = textRect || target.getBoundingClientRect();
     const style = getComputedStyle(content);
-    const left = rect.left - origin.left - node.clientLeft;
+    // Task text starts after the checkbox; anchor outside the whole task row instead.
+    const horizontalRect = content.matches('[data-type="taskItem"]') ? content.getBoundingClientRect() : rect;
+    const left = horizontalRect.left - origin.left - node.clientLeft;
     const top = rect.top - origin.top - node.clientTop;
     // A text line's rect already includes heading/paragraph padding and alignment.
     const inset = textRect ? Math.max(0, (rect.height - 16) / 2) : visual ? 6 : (parseFloat(style.paddingTop) || 0) + 6;
