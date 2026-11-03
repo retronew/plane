@@ -46,7 +46,7 @@ function ArchivedIssueDetailsPage({ params }: Route.ComponentProps) {
   const project = issue ? getProjectById(issue?.project_id ?? "") : undefined;
   const pageTitle = project && issue ? `${project?.identifier}-${issue?.sequence_id} ${issue?.name}` : undefined;
 
-  if (!issue) return <></>;
+  if (!issue) return <IssueDetailSkeleton />;
 
   const issueLoader = !issue || isLoading;
 

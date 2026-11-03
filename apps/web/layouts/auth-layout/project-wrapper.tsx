@@ -43,6 +43,7 @@ interface IProjectAuthWrapper {
   projectId: string;
   children: ReactNode;
   isLoading?: boolean;
+  loadingFallback?: ReactNode;
 }
 
 export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IProjectAuthWrapper) {
@@ -144,7 +145,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
 
   const isProjectLoading = (isParentLoading || isProjectDetailsLoading) && !projectDetailsError;
 
-  if (isProjectLoading) return null;
+  if (isProjectLoading) return <>{props.loadingFallback}</>;
 
   if (!isProjectLoading && hasPermissionToCurrentProject === false) {
     return (

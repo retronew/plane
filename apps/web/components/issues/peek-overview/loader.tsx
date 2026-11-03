@@ -1,100 +1,42 @@
-/**
- * Copyright (c) 2023-present Plane Software, Inc. and contributors
- * SPDX-License-Identifier: AGPL-3.0-only
- * See the LICENSE file for details.
- */
-
 import { ArrowNarrowRightOutline } from "@makeplane/propel/icons";
-import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { Loader } from "@plane/blocks/skeleton";
-// components
-import { DescriptionSkeleton } from "@/components/common/loaders/description-skeleton";
-// hooks
-import { usePlatformOS } from "@/hooks/use-platform-os";
-import { translate } from "@plane/i18n";
+import { useTranslation } from "@plane/i18n";
+import { IssueDetailContentSkeleton } from "@/components/common/loaders/issue-detail-skeleton";
+import { useProject } from "@/hooks/store/use-project";
 
-type TIssuePeekOverviewLoader = {
+export function IssuePeekOverviewLoader({
+  removeRoutePeekId,
+  hasParent = false,
+  projectId,
+}: {
   removeRoutePeekId: () => void;
-};
-
-export function IssuePeekOverviewLoader(props: TIssuePeekOverviewLoader) {
-  const { removeRoutePeekId } = props;
-  // hooks
-  const { isMobile } = usePlatformOS();
-
+  hasParent?: boolean;
+  projectId?: string;
+}) {
+  const { t } = useTranslation();
+  const { getProjectById } = useProject();
+  const propertyCount = 10 + Number(!!getProjectById(projectId)?.estimate);
   return (
-    <Loader className="h-screen w-full space-y-6 overflow-hidden p-5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Tooltip label={translate("web.close_the_peek_view")} disabled={isMobile}>
-            <button onClick={removeRoutePeekId}>
-              <ArrowNarrowRightOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
-            </button>
-          </Tooltip>
-          <Loader.Item width="30px" height="30px" />
+    <div data-issue-peek-loading="" aria-busy="true" className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <div className="flex h-[60px] shrink-0 items-center justify-between px-4">
+        <div className="flex items-center gap-4">
+          <button type="button" aria-label={t("common.close_peek_view")} onClick={removeRoutePeekId}>
+            <ArrowNarrowRightOutline className="size-4 text-tertiary" />
+          </button>
+          <Loader>
+            <Loader.Item width="28px" height="28px" />
+          </Loader>
         </div>
-        <div className="flex items-center gap-2">
-          <Loader.Item width="80px" height="30px" />
-          <Loader.Item width="30px" height="30px" />
-          <Loader.Item width="30px" height="30px" />
-          <Loader.Item width="30px" height="30px" />
-        </div>
+        <Loader className="flex items-center gap-2">
+          <Loader.Item width="70px" height="28px" />
+          <Loader.Item width="28px" height="28px" />
+        </Loader>
       </div>
-
-      {/* issue title and description and comments */}
-      <div className="space-y-3">
-        <Loader.Item width="100px" height="20px" />
-
-        <DescriptionSkeleton />
-
-        <Loader.Item width="30px" height="30px" />
-      </div>
-
-      {/* sub issues */}
-      <div className="flex items-center justify-between gap-2">
-        <Loader.Item width="80px" height="20px" />
-        <Loader.Item width="100px" height="20px" />
-      </div>
-
-      {/* attachments */}
-      <div className="space-y-3">
-        <Loader.Item width="80px" height="20px" />
-        <div className="flex items-center gap-2">
-          <Loader.Item width="250px" height="50px" />
-          <Loader.Item width="250px" height="50px" />
+      <div className="min-h-0 flex-1 overflow-y-scroll pr-2.5">
+        <div className="space-y-6 px-8 py-5">
+          <IssueDetailContentSkeleton peek hasParent={hasParent} propertyCount={propertyCount} />
         </div>
       </div>
-
-      {/* properties */}
-      <div className="space-y-3">
-        <Loader.Item width="80px" height="20px" />
-        <div className="space-y-2">
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-          <div className="flex items-center gap-8">
-            <Loader.Item width="150px" height="25px" />
-            <Loader.Item width="150px" height="25px" />
-          </div>
-        </div>
-      </div>
-    </Loader>
+    </div>
   );
 }

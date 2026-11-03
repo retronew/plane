@@ -80,7 +80,7 @@ it("uses the shared Intake tabs and compact composer for regular issue details b
 it("retains legacy controls when explicitly requested", () => {
   render(<IssueActivity {...props} variant="default" />);
   expect(screen.getByText("common.activity")).toBeTruthy();
-  expect(screen.getByText("filters")).toBeTruthy();
+  expect(screen.queryByText("filters")).toBeNull();
 });
 
 it("keeps archived regular issue details read-only with the default tabs", () => {

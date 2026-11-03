@@ -64,6 +64,7 @@ function FullCommentToolbar({
 }: React.ComponentProps<typeof IssueCommentToolbar> & { isFocused: boolean; spacing: string }) {
   return (
     <div
+      data-comment-toolbar=""
       className={cn(
         "origin-top overflow-hidden transition-all duration-300 ease-out",
         isFocused ? "max-h-[200px] scale-y-100 opacity-100" : "invisible max-h-0 scale-y-0 opacity-0",
@@ -79,6 +80,30 @@ const compactCommentClasses = {
   normal: { editor: "", toolbar: "mt-3" },
   compact: { editor: "min-h-16 p-3 [&_p.is-empty]:before:font-medium", toolbar: "" },
 };
+
+function useCommentSurfaceFocus(editable: boolean, editor: EditorRefApi | null) {
+  const surface = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const element = surface.current;
+    if (!editable || !element) return;
+    element.setAttribute("data-comment-editor", "");
+    const focus = (event: MouseEvent) => {
+      if (event.button !== 0 || !(event.target instanceof Element)) return;
+      const interactive = event.target.closest(
+        '[data-slate-editor], [data-comment-toolbar], button, a, input, textarea, select, [role="button"], [role="menu"], dialog, [role="dialog"], [role="toolbar"]'
+      );
+      if (interactive && element.contains(interactive)) return;
+      event.preventDefault();
+      editor?.focus("end");
+    };
+    element.addEventListener("mousedown", focus);
+    return () => {
+      element.removeEventListener("mousedown", focus);
+      element.removeAttribute("data-comment-editor");
+    };
+  }, [editable, editor]);
+  return surface;
+}
 
 export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   props: LiteTextEditorWrapperProps,
@@ -113,6 +138,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   const isFullVariant = variant === "full";
   const [isFocused, setIsFocused] = useState(isFullVariant ? showToolbarInitially : true);
   const [editorRef, setEditorRef] = useState<EditorRefApi | null>(null);
+  const commentSurface = useCommentSurfaceFocus(editable, editorRef);
   const attachEditor = React.useCallback(
     (instance: EditorRefApi | null) => {
       setEditorRef(instance);
@@ -157,6 +183,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
         },
         parentClassName
       )}
+      ref={commentSurface}
       onFocus={() => isFullVariant && !showToolbarInitially && setIsFocused(true)}
       onBlur={() => isFullVariant && !showToolbarInitially && setIsFocused(false)}
     >

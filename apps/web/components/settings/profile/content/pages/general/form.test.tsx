@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import type { IUser, TUserProfile } from "@plane/types";
 import { GeneralProfileSettingsForm } from "./form";
 
-const mocks = vi.hoisted(() => ({ updateCurrentUser: vi.fn(), updateUserProfile: vi.fn() }));
+const mocks = vi.hoisted(() => ({ updateCurrentUser: vi.fn(), updateUserProfile: vi.fn(), setPromiseToast: vi.fn() }));
 vi.mock("@plane/i18n", () => ({
   translate: (key: string) => key,
   useTranslation: () => ({ t: (key: string) => key }),
@@ -13,7 +13,7 @@ vi.mock("@/hooks/store/user", () => ({
   useUserProfile: () => ({ updateUserProfile: mocks.updateUserProfile }),
 }));
 vi.mock("@/hooks/store/use-instance", () => ({ useInstance: () => ({ config: {} }) }));
-vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn(), setPromiseToast: vi.fn() }));
+vi.mock("@plane/blocks/toast", () => ({ setToast: vi.fn(), setPromiseToast: mocks.setPromiseToast }));
 vi.mock("@/components/account/deactivate-account-modal", () => ({ DeactivateAccountModal: () => null }));
 vi.mock("@/components/core/modals/change-email-modal", () => ({ ChangeEmailModal: () => null }));
 vi.mock("@/components/core/modals/user-image-upload-modal", () => ({ UserImageUploadModal: () => null }));
@@ -35,6 +35,9 @@ it.each(["John Doe", "吴佐"])("saves display name %s with an empty last name",
   await waitFor(() =>
     expect(mocks.updateCurrentUser).toHaveBeenCalledWith(expect.objectContaining({ display_name: name, last_name: "" }))
   );
+  const options = mocks.setPromiseToast.mock.lastCall?.[1];
+  expect(options.success.message()).toBe("account_settings.profile.updated_successfully");
+  expect(options.error.message()).toBe("account_settings.profile.update_failed");
 });
 
 it("rejects an invalid nonempty last name", async () => {

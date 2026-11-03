@@ -201,13 +201,7 @@ export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
                       tabIndex={props.tabIndex}
                       className={`plate-comparison-content ${props.mode === "document" ? "min-h-dvh pb-64" : props.mode === "rich" ? "min-h-32" : "min-h-12"} outline-none ${props.editorClassName ?? ""}`}
                       onMouseDown={(event) => {
-                        if (
-                          readOnly ||
-                          (props.mode !== "document" && props.mode !== "rich") ||
-                          event.button !== 0 ||
-                          event.target !== event.currentTarget
-                        )
-                          return;
+                        if (readOnly || event.button !== 0 || event.target !== event.currentTarget) return;
                         const last = event.currentTarget.lastElementChild;
                         if (last && event.clientY > last.getBoundingClientRect().bottom) {
                           event.preventDefault();

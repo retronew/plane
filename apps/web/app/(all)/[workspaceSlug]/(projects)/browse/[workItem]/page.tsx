@@ -122,7 +122,11 @@ type WorkItemDetailContainerProps = WorkItemDetailRoute & {
 };
 
 const WorkItemDetailContainer = ({ workspaceSlug, projectId, issueId, issue }: WorkItemDetailContainerProps) => (
-  <ProjectAuthWrapper workspaceSlug={workspaceSlug} projectId={projectId}>
+  <ProjectAuthWrapper
+    workspaceSlug={workspaceSlug}
+    projectId={projectId}
+    loadingFallback={<IssueDetailSkeleton hasParent={!!issue?.parent_id} />}
+  >
     <WorkItemDetailRoot workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} issue={issue} />
   </ProjectAuthWrapper>
 );
@@ -186,7 +190,7 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   }
 
   if (issueLoader) {
-    return <IssueDetailSkeleton />;
+    return <IssueDetailSkeleton hasParent={!!issue?.parent_id} />;
   }
 
   const detailRoute = getWorkItemDetailRoute(workspaceSlug, projectId, issueId);

@@ -9,6 +9,8 @@ import { ShieldCheck } from "lucide-react";
 import { observer } from "mobx-react";
 // hooks
 import { StateOutline } from "@makeplane/propel/icons";
+import { StateGroupIcon } from "@plane/blocks/icons";
+import { useProjectState } from "@/hooks/store/use-project-state";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // components
 import { IssueActivityBlockComponent, IssueLink } from "./";
@@ -36,6 +38,7 @@ export const IssueApprovalActivity = observer(function IssueApprovalActivity({
 
 export const IssueStateActivity = observer(function IssueStateActivity(props: TIssueStateActivity) {
   const { activityId, showIssue = true, ends } = props;
+  const { getStateById } = useProjectState();
   // hooks
   const {
     activity: { getActivityById },
@@ -44,6 +47,7 @@ export const IssueStateActivity = observer(function IssueStateActivity(props: TI
   const activity = getActivityById(activityId);
 
   if (!activity) return <></>;
+  const state = activity.new_identifier ? getStateById(activity.new_identifier) : undefined;
   return (
     <IssueActivityBlockComponent
       icon={<StateOutline className="h-4 w-4 flex-shrink-0 text-secondary" />}
@@ -55,7 +59,18 @@ export const IssueStateActivity = observer(function IssueStateActivity(props: TI
           translationKey="web.activity.state"
           components={{
             value: (
-              <span data-activity-part="" className="font-medium text-primary">
+              <span
+                data-activity-part=""
+                className="inline-flex items-center gap-1 rounded-sm bg-layer-1 px-1.5 py-0.5 align-middle text-caption-md-medium text-primary"
+              >
+                {state && (
+                  <StateGroupIcon
+                    stateGroup={state.group}
+                    color={state.color}
+                    icon={state.icon}
+                    className="size-3.5 shrink-0"
+                  />
+                )}
                 {activity.new_value}
               </span>
             ),

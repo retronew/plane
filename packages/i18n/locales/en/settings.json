@@ -1,6 +1,8 @@
 {
   "account_settings": {
     "profile": {
+      "updated_successfully": "Profile updated successfully.",
+      "update_failed": "There was an error updating your profile. Please try again.",
       "change_email_modal": {
         "title": "Change email",
         "description": "Enter a new email address to receive a verification link.",

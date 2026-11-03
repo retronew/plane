@@ -33,6 +33,19 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
   const localRef = useRef<EditorRefApi | null>(null);
   const editorRef = props.editorRef ?? localRef;
   const [status, setStatus] = useState<PlateCollaborationStatus>("connecting");
+  const [hasSynced, setHasSynced] = useState(false);
+  const handleStatusChange = useCallback((next: PlateCollaborationStatus) => setStatus(next), []);
+  useLayoutEffect(() => {
+    if (status !== "synced" || hasSynced) return;
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => setHasSynced(true));
+    });
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+    };
+  }, [status, hasSynced]);
   const [saveError, setSaveError] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [fenced, setFenced] = useState(false);
@@ -123,10 +136,10 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
         avatar: getFileURL(userAvatar ?? ""),
         color: "#2563eb",
       },
-      onStatusChange: setStatus,
+      onStatusChange: handleStatusChange,
       onStateless,
     };
-  }, [epoch, userId, userName, userAvatar, workspaceSlug, projectId, entityId, onStateless]);
+  }, [epoch, userId, userName, userAvatar, workspaceSlug, projectId, entityId, onStateless, handleStatusChange]);
 
   const reconnect = async () => {
     if (reconnectingRef.current) return;
@@ -175,42 +188,52 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
         />
       </div>
     );
-  if (!data || !workspace || !collaboration) return <DescriptionInputLoader />;
+  const preview = <DescriptionInputLoader className={props.containerClassName} />;
+  if (!data || !workspace || !collaboration) return preview;
   return (
-    <div className="space-y-2">
-      <RichTextEditor
-        key={`${entityId}:${data.epoch}:${generation}`}
-        ref={editorRef}
-        id={entityId}
-        editable={!props.disabled && data.can_read && data.can_edit && !fenced && !reconnecting}
-        collaboration={collaboration}
-        initialValue={data.description_html ?? props.initialValue ?? "<p></p>"}
-        workspaceSlug={workspaceSlug}
-        workspaceId={workspace.id}
-        projectId={projectId}
-        issueSequenceId={props.issueSequenceId}
-        disabledExtensions={props.disabledExtensions}
-        containerClassName={props.containerClassName}
-        dragDropEnabled
-        placeholder={props.placeholder ?? ((focused, value) => t(getDescriptionPlaceholderI18n(focused, value)))}
-        searchMentionCallback={(payload) =>
-          workspaceService.searchEntity(workspaceSlug, { ...payload, project_id: projectId })
-        }
-        uploadFile={async (blockId, file) =>
-          (
-            await uploadEditorAsset({
-              blockId,
-              data: { entity_identifier: entityId, entity_type: props.fileAssetType },
-              file,
-              projectId,
-              workspaceSlug,
-            })
-          ).asset_id
-        }
-        duplicateFile={async (assetId) =>
-          (await duplicateEditorAsset({ assetId, entityType: props.fileAssetType, projectId, workspaceSlug })).asset_id
-        }
-      />
+    <div className="relative" aria-busy={!hasSynced}>
+      {!hasSynced && preview}
+      <div
+        data-description-editor=""
+        className={!hasSynced ? "pointer-events-none invisible absolute inset-0" : undefined}
+        aria-hidden={!hasSynced}
+        inert={!hasSynced}
+      >
+        <RichTextEditor
+          key={`${entityId}:${data.epoch}:${generation}`}
+          ref={editorRef}
+          id={entityId}
+          editable={!props.disabled && data.can_read && data.can_edit && !fenced && !reconnecting}
+          collaboration={collaboration}
+          initialValue={data.description_html ?? props.initialValue ?? "<p></p>"}
+          workspaceSlug={workspaceSlug}
+          workspaceId={workspace.id}
+          projectId={projectId}
+          issueSequenceId={props.issueSequenceId}
+          disabledExtensions={props.disabledExtensions}
+          containerClassName={props.containerClassName}
+          dragDropEnabled
+          placeholder={props.placeholder ?? ((focused, value) => t(getDescriptionPlaceholderI18n(focused, value)))}
+          searchMentionCallback={(payload) =>
+            workspaceService.searchEntity(workspaceSlug, { ...payload, project_id: projectId })
+          }
+          uploadFile={async (blockId, file) =>
+            (
+              await uploadEditorAsset({
+                blockId,
+                data: { entity_identifier: entityId, entity_type: props.fileAssetType },
+                file,
+                projectId,
+                workspaceSlug,
+              })
+            ).asset_id
+          }
+          duplicateFile={async (assetId) =>
+            (await duplicateEditorAsset({ assetId, entityType: props.fileAssetType, projectId, workspaceSlug }))
+              .asset_id
+          }
+        />
+      </div>
       {(saveError || fenced || status === "error" || copyError) && (
         <div className="rounded-lg border border-subtle-1 bg-surface-1 p-3 text-13 text-danger-primary">
           {(saveError || fenced || status === "error") && (

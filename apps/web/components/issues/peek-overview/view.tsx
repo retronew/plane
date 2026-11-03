@@ -134,7 +134,7 @@ function PeekEmbeddedContent({
       </div>
       <div className={embedIssue ? "pt-4" : undefined}>
         <IssueActivity
-          variant={embedIssue ? "tabs" : "default"}
+          variant="tabs"
           workspaceSlug={workspaceSlug}
           projectId={projectId}
           issueId={issueId}
@@ -346,7 +346,13 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
               <IssuePeekOverviewError removeRoutePeekId={removeRoutePeekId} />
             </div>
           ) : (
-            isLoading && <IssuePeekOverviewLoader removeRoutePeekId={removeRoutePeekId} />
+            isLoading && (
+              <IssuePeekOverviewLoader
+                removeRoutePeekId={removeRoutePeekId}
+                hasParent={!!issue?.parent_id}
+                projectId={projectId}
+              />
+            )
           )}
           {!isLoading && !isError && issue && (
             <>

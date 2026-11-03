@@ -100,6 +100,17 @@ it("focuses the description end from its lower whitespace without enlarging comm
   const comment = render(<PlateEditorWithRef {...props} mode="lite" />);
   expect(comment.container.querySelector('[contenteditable="true"]')?.className).toContain("min-h-12");
 });
+it("focuses the end when lower comment whitespace is clicked", async () => {
+  const ref = createRef<EditorRefApi>();
+  const view = render(<PlateEditorWithRef {...props} mode="lite" ref={ref} />);
+  const content = view.container.querySelector('[contenteditable="true"]') as HTMLElement;
+  fireEvent.mouseDown(content, { clientY: 100, button: 0 });
+  await act(async () => {
+    ref.current!.insertText("<span> end</span>");
+  });
+  expect(ref.current!.getDocument().html).toContain("Initial end");
+  await waitFor(() => expect(document.activeElement).toBe(content));
+});
 it("keeps the imperative API stable when a wrapper stores it and recreates file handlers", () => {
   const published = vi.fn();
   function Wrapper({ revision }: { revision: number }) {

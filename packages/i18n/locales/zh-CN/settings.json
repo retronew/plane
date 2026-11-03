@@ -1,6 +1,8 @@
 {
   "account_settings": {
     "profile": {
+      "updated_successfully": "个人资料已更新。",
+      "update_failed": "个人资料更新失败，请重试。",
       "change_email_modal": {
         "title": "更改邮箱",
         "description": "请输入新的邮箱地址以接收验证链接。",

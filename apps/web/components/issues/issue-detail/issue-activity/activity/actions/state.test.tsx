@@ -4,6 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { setLanguage } from "@plane/i18n";
 import { IssueApprovalActivity } from "./state";
 const activity = vi.hoisted(() => ({ verb: "requested" }));
+vi.mock("@/hooks/store/use-project-state", () => ({ useProjectState: () => ({ getStateById: () => undefined }) }));
 vi.mock("@/hooks/store/use-issue-detail", () => ({
   useIssueDetail: () => ({ activity: { getActivityById: () => activity } }),
 }));

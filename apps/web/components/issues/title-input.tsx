@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { observer } from "mobx-react";
 import { Field } from "@makeplane/propel/components/field";
 import { TextArea } from "@makeplane/propel/components/text-area";
@@ -50,6 +50,13 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
   const hasUnsavedChanges = useRef(false);
   // ref to store current title value for cleanup function
   const currentTitleRef = useRef(title);
+  const titleInputRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const input = titleInputRef.current?.querySelector("textarea");
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${Math.max(input.scrollHeight, Number.parseFloat(getComputedStyle(input).lineHeight) || 20)}px`;
+  }, [title]);
   // hooks
   const debouncedValue = useDebounce(title, 1500);
 
@@ -156,6 +163,7 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
 
   return (
     <div
+      ref={titleInputRef}
       className={cn(
         "flex flex-col gap-1.5",
         isIntakeIssue && "[&_textarea]:!text-[24px] [&_textarea]:!leading-[30px] [&_textarea]:!font-semibold"

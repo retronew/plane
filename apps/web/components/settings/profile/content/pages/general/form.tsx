@@ -168,11 +168,11 @@ export const GeneralProfileSettingsForm = observer(function GeneralProfileSettin
       loading: t("web.updating"),
       success: {
         title: t("toast.success"),
-        message: () => `Profile updated successfully.`,
+        message: () => t("account_settings.profile.updated_successfully"),
       },
       error: {
         title: t("toast.error"),
-        message: () => `There was some error in updating your profile. Please try again.`,
+        message: () => t("account_settings.profile.update_failed"),
       },
     });
   };
