@@ -5,34 +5,42 @@
  */
 
 import { Timer } from "lucide-react";
+import { observer } from "mobx-react";
+import { intervalToDuration } from "date-fns";
+import { useSecondClock } from "@/hooks/use-second-clock";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { useTranslation } from "@plane/i18n";
 import type { TIssue } from "@plane/types";
 import { cn, formatCompactDate, getDate } from "@plane/utils";
 
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-const WEEK = 7 * DAY;
-const MONTH = 30 * DAY;
-const YEAR = 365 * DAY;
+const durationUnits = ["years", "months", "days", "hours", "minutes", "seconds"] as const;
+const unitFormatters = new Map<string, Intl.NumberFormat>();
+const listFormatters = new Map<string, Intl.ListFormat>();
 
-const UNITS: [number, string][] = [
-  [YEAR, "y"],
-  [MONTH, "mo"],
-  [WEEK, "w"],
-  [DAY, "d"],
-  [HOUR, "h"],
-  [MINUTE, "m"],
-];
-
-/** Compact elapsed time in its largest whole unit — "<1m", "45m", "7h", "3d", "2w", "5mo", "1y". */
-export function formatTimeInStatus(since: Date, now: Date = new Date()): string {
-  const elapsed = Math.max(0, now.getTime() - since.getTime());
-  for (const [size, unit] of UNITS) {
-    if (elapsed >= size) return `${Math.floor(elapsed / size)}${unit}`;
+function formatUnit(value: number, unit: string, locale: string) {
+  const key = `${locale}:${unit}`;
+  let formatter = unitFormatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "short" });
+    unitFormatters.set(key, formatter);
   }
-  return "<1m";
+  return formatter.format(value);
+}
+
+/** Keep all nonzero calendar units, including seconds, in the interface language. */
+export function formatTimeInStatus(since: Date, now: Date = new Date(), locale = "en"): string {
+  const language = locale === "ua" ? "uk-UA" : locale;
+  const duration = intervalToDuration({ start: since, end: new Date(Math.max(since.getTime(), now.getTime())) });
+  const parts = durationUnits.flatMap((unit) => {
+    const value = duration[unit];
+    return value ? [formatUnit(value, unit.slice(0, -1), language)] : [];
+  });
+  let formatter = listFormatters.get(language);
+  if (!formatter) {
+    formatter = new Intl.ListFormat(language, { style: "short", type: "unit" });
+    listFormatters.set(language, formatter);
+  }
+  return formatter.format(parts.length ? parts : [formatUnit(0, "second", language)]);
 }
 
 type Props = {
@@ -47,13 +55,19 @@ type Props = {
  * automatic counterpart of the planned start date. The tooltip names the state and, once work has
  * begun, when it started.
  */
-export function TimeInStatusProperty({ issue, stateName, chipClassName, isMobile }: Props) {
-  const { t } = useTranslation();
-  const since = getDate(issue.state_changed_at);
-  if (!since) return null;
+export const TimeInStatusProperty = observer(function TimeInStatusProperty({
+  issue,
+  stateName,
+  chipClassName,
+  isMobile,
+}: Props) {
+  const { t, currentLocale } = useTranslation();
+  const currentTime = useSecondClock();
+  const since = issue.state_changed_at ? new Date(issue.state_changed_at) : undefined;
+  if (!since || !Number.isFinite(since.getTime())) return null;
 
   const startedAt = getDate(issue.started_at);
-  const duration = formatTimeInStatus(since);
+  const duration = formatTimeInStatus(since, new Date(currentTime), currentLocale);
   const label = [
     `${t("issue.display.properties.time_in_status")}: ${stateName ? `${stateName} · ` : ""}${duration}`,
     startedAt ? t("issue.display.properties.started_at", { date: formatCompactDate(startedAt) }) : null,
@@ -66,7 +80,7 @@ export function TimeInStatusProperty({ issue, stateName, chipClassName, isMobile
       {/* read-only: a click on the chip neither opens the work item nor does anything else */}
       {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
       <div
-        className={cn(chipClassName, "flex-shrink-0 cursor-default text-secondary")}
+        className={cn(chipClassName, "max-w-full min-w-0 flex-shrink-0 cursor-default text-secondary")}
         data-testid="time-in-status"
         onClick={(e) => {
           e.stopPropagation();
@@ -74,8 +88,8 @@ export function TimeInStatusProperty({ issue, stateName, chipClassName, isMobile
         }}
       >
         <Timer className="h-3 w-3 flex-shrink-0" />
-        <span>{duration}</span>
+        <span className="truncate tabular-nums">{duration}</span>
       </div>
     </Tooltip>
   );
-}
+});
