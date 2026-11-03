@@ -3,7 +3,6 @@
 # See the LICENSE file for details.
 
 # Python imports
-import uuid
 from urllib.parse import urlencode
 
 # Django import
@@ -11,6 +10,7 @@ from django.http import HttpResponseRedirect
 from django.views import View
 
 # Module imports
+from plane.authentication.utils.oidc_state import start_oidc_transaction, consume_oidc_transaction
 from plane.authentication.provider.oauth.oidc import OIDCEmailMissing, OIDCOAuthProvider
 from plane.authentication.utils.oidc_email_bind import redirect_to_email_bind
 from plane.authentication.utils.login import user_login
@@ -45,9 +45,18 @@ class OIDCOauthInitiateSpaceEndpoint(View):
             return HttpResponseRedirect(url)
 
         try:
-            state = uuid.uuid4().hex
-            provider = OIDCOAuthProvider(request=request, state=state)
-            request.session["state"] = state
+            state = start_oidc_transaction(
+                request,
+                host=base_host(request=request, is_space=True),
+                next_path=str(validate_next_path(next_path)) if next_path else None,
+                audience="space",
+            )
+            provider = OIDCOAuthProvider(
+                request=request,
+                state=state,
+                entry=request.GET.get("entry"),
+                redirect_path="/auth/spaces/oidc/callback/",
+            )
             auth_url = provider.get_auth_url()
             return HttpResponseRedirect(auth_url)
         except AuthenticationException as e:
@@ -62,9 +71,10 @@ class OIDCCallbackSpaceEndpoint(View):
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
-        next_path = request.session.get("next_path")
+        pending = consume_oidc_transaction(request, state, audience="space")
+        next_path = (pending or {}).get("next_path")
 
-        if state != request.session.get("state", ""):
+        if not pending:
             exc = AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
                 error_message="OIDC_OAUTH_PROVIDER_ERROR",
@@ -87,15 +97,14 @@ class OIDCCallbackSpaceEndpoint(View):
             return HttpResponseRedirect(url)
 
         try:
-            provider = OIDCOAuthProvider(request=request, code=code)
+            provider = OIDCOAuthProvider(request=request, code=code, redirect_path="/auth/spaces/oidc/callback/")
             user = provider.authenticate()
             # Login the user and record his device info
             user_login(request=request, user=user, is_space=True)
             # Process workspace and project invitations
             # redirect to referer path
-            url = (
-                f"{base_host(request=request, is_space=True)}{str(validate_next_path(next_path)) if next_path else ''}"
-            )
+            path = str(validate_next_path(next_path)) if next_path else ""
+            url = f"{base_host(request=request, is_space=True).rstrip('/')}{path}"
             return HttpResponseRedirect(url)
         except OIDCEmailMissing as e:
             return redirect_to_email_bind(

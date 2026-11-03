@@ -73,6 +73,8 @@ export enum EAuthenticationErrorCodes {
   OIDC_EMAIL_BIND_EXPIRED = "5128",
   OIDC_EMAIL_BIND_INVALID_CODE = "5129",
   OIDC_ACCOUNT_ALREADY_LINKED = "5131",
+  OIDC_LOGIN_ENTRY_INVALID = "5132",
+  OIDC_IDENTITY_ALREADY_BOUND = "5133",
   // Reset Password
   INVALID_PASSWORD_TOKEN = "5125",
   EXPIRED_PASSWORD_TOKEN = "5130",
@@ -378,6 +380,18 @@ const errorCodeMessages: {
     message: () =>
       translate("web.auth_errors.the_verification_code_is_incorrect_please_check_your_email_and_try_again"),
   },
+  [EAuthenticationErrorCodes.OIDC_LOGIN_ENTRY_INVALID]: {
+    get title() {
+      return translate("web.auth_errors.oidc_login_entry_invalid");
+    },
+    message: () => translate("web.auth_errors.oidc_login_entry_invalid_message"),
+  },
+  [EAuthenticationErrorCodes.OIDC_IDENTITY_ALREADY_BOUND]: {
+    get title() {
+      return translate("web.auth_errors.oidc_identity_already_bound");
+    },
+    message: () => translate("web.auth_errors.oidc_identity_already_bound_message"),
+  },
   [EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED]: {
     get title() {
       return translate("web.auth_errors.account_already_linked");
@@ -548,6 +562,8 @@ export const authErrorHandler = (errorCode: EAuthenticationErrorCodes, email?: s
     EAuthenticationErrorCodes.OIDC_EMAIL_BIND_EXPIRED,
     EAuthenticationErrorCodes.OIDC_EMAIL_BIND_INVALID_CODE,
     EAuthenticationErrorCodes.OIDC_ACCOUNT_ALREADY_LINKED,
+    EAuthenticationErrorCodes.OIDC_LOGIN_ENTRY_INVALID,
+    EAuthenticationErrorCodes.OIDC_IDENTITY_ALREADY_BOUND,
     EAuthenticationErrorCodes.OAUTH_PROVIDER_UNVERIFIED_EMAIL,
     EAuthenticationErrorCodes.INVALID_PASSWORD_TOKEN,
     EAuthenticationErrorCodes.EXPIRED_PASSWORD_TOKEN,

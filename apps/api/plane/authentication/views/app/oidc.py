@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
-import uuid
 from urllib.parse import urlencode, urljoin
 
 # Django import
@@ -10,9 +9,10 @@ from django.http import HttpResponseRedirect
 from django.views import View
 
 # Module imports
+from plane.authentication.utils.oidc_state import start_oidc_transaction, consume_oidc_transaction
 from plane.authentication.provider.oauth.oidc import OIDCEmailMissing, OIDCOAuthProvider
 from plane.authentication.utils.oidc_email_bind import redirect_to_email_bind
-from plane.authentication.views.app.oidc_link import SESSION_KEY as OIDC_LINK_SESSION_KEY, complete_oidc_link
+from plane.authentication.views.app.oidc_link import complete_oidc_link
 from plane.authentication.utils.login import user_login
 from plane.authentication.utils.redirection_path import get_redirection_path
 from plane.authentication.utils.user_auth_workflow import post_user_auth_workflow
@@ -46,9 +46,13 @@ class OIDCOauthInitiateEndpoint(View):
             url = urljoin(base_host(request=request, is_app=True), "?" + urlencode(params))
             return HttpResponseRedirect(url)
         try:
-            state = uuid.uuid4().hex
-            provider = OIDCOAuthProvider(request=request, state=state)
-            request.session["state"] = state
+            state = start_oidc_transaction(
+                request,
+                host=base_host(request=request, is_app=True),
+                next_path=str(validate_next_path(next_path)) if next_path else None,
+                audience="app",
+            )
+            provider = OIDCOAuthProvider(request=request, state=state, entry=request.GET.get("entry"))
             auth_url = provider.get_auth_url()
             return HttpResponseRedirect(auth_url)
         except AuthenticationException as e:
@@ -63,10 +67,11 @@ class OIDCCallbackEndpoint(View):
     def get(self, request):
         code = request.GET.get("code")
         state = request.GET.get("state")
-        base_host = request.session.get("host")
-        next_path = request.session.get("next_path")
+        pending = consume_oidc_transaction(request, state, audience="app")
+        host = (pending or {}).get("host") or base_host(request=request, is_app=True)
+        next_path = (pending or {}).get("next_path")
 
-        if state != request.session.get("state", ""):
+        if not pending:
             exc = AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
                 error_message="OIDC_OAUTH_PROVIDER_ERROR",
@@ -74,7 +79,7 @@ class OIDCCallbackEndpoint(View):
             params = exc.get_error_dict()
             if next_path:
                 params["next_path"] = str(next_path)
-            url = urljoin(base_host, "?" + urlencode(params))
+            url = urljoin(host, "?" + urlencode(params))
             return HttpResponseRedirect(url)
 
         if not code:
@@ -85,11 +90,11 @@ class OIDCCallbackEndpoint(View):
             params = exc.get_error_dict()
             if next_path:
                 params["next_path"] = str(validate_next_path(next_path))
-            url = urljoin(base_host, "?" + urlencode(params))
+            url = urljoin(host, "?" + urlencode(params))
             return HttpResponseRedirect(url)
 
-        if request.session.get(OIDC_LINK_SESSION_KEY):
-            return complete_oidc_link(request, code, host=base_host)
+        if pending.get("purpose") == "link":
+            return complete_oidc_link(request, code, host=host, user_id=pending.get("user_id"))
 
         try:
             provider = OIDCOAuthProvider(request=request, code=code, callback=post_user_auth_workflow)
@@ -102,13 +107,13 @@ class OIDCCallbackEndpoint(View):
             else:
                 path = get_redirection_path(user=user)
             # redirect to referer path
-            url = urljoin(base_host, path)
+            url = urljoin(host, path)
             return HttpResponseRedirect(url)
         except OIDCEmailMissing as e:
-            return redirect_to_email_bind(request, e, host=base_host, next_path=next_path)
+            return redirect_to_email_bind(request, e, host=host, next_path=next_path)
         except AuthenticationException as e:
             params = e.get_error_dict()
             if next_path:
                 params["next_path"] = str(validate_next_path(next_path))
-            url = urljoin(base_host, "?" + urlencode(params))
+            url = urljoin(host, "?" + urlencode(params))
             return HttpResponseRedirect(url)

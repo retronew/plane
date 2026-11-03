@@ -85,6 +85,14 @@ const errorCodeMessages: {
     title: "admin.auth_errors.sso_not_admin.title",
     message: (t) => t("admin.auth_errors.sso_not_admin.message"),
   },
+  [EAdminAuthErrorCodes.OIDC_LOGIN_ENTRY_INVALID]: {
+    title: "web.auth_errors.oidc_login_entry_invalid",
+    message: (t) => t("web.auth_errors.oidc_login_entry_invalid_message"),
+  },
+  [EAdminAuthErrorCodes.OIDC_IDENTITY_ALREADY_BOUND]: {
+    title: "web.auth_errors.oidc_identity_already_bound",
+    message: (t) => t("web.auth_errors.oidc_identity_already_bound_message"),
+  },
   [EAdminAuthErrorCodes.ADMIN_SSO_FAILED]: {
     title: "admin.auth_errors.sso_failed.title",
     message: (t) => t("admin.auth_errors.sso_failed.message"),
@@ -108,6 +116,8 @@ export const authErrorHandler = (
     EAdminAuthErrorCodes.ADMIN_USER_DEACTIVATED,
     EAdminAuthErrorCodes.ADMIN_SSO_NOT_ADMIN,
     EAdminAuthErrorCodes.ADMIN_SSO_FAILED,
+    EAdminAuthErrorCodes.OIDC_LOGIN_ENTRY_INVALID,
+    EAdminAuthErrorCodes.OIDC_IDENTITY_ALREADY_BOUND,
   ];
 
   if (bannerAlertErrorCodes.includes(errorCode))

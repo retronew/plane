@@ -11,6 +11,7 @@ import requests
 # Module imports
 from plane.authentication.adapter.oauth import OauthAdapter
 from plane.db.models import Account
+from plane.authentication.utils.oidc_login_entries import resolve_provider_hint
 from plane.license.utils.instance_value import get_configuration_value
 from plane.authentication.adapter.error import (
     AUTHENTICATION_ERROR_CODES,
@@ -78,7 +79,8 @@ class OIDCOAuthProvider(OauthAdapter):
     provider = "oidc"
     scope = "openid email profile"
 
-    def __init__(self, request, code=None, state=None, callback=None, redirect_path="/auth/oidc/callback/"):
+    def __init__(self, request, code=None, state=None, callback=None, redirect_path="/auth/oidc/callback/", entry=None):
+        provider_hint = resolve_provider_hint(entry) if code is None else None
         (OIDC_ISSUER_URL, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_TRUST_EMAIL) = get_configuration_value(
             [
                 {
@@ -132,7 +134,16 @@ class OIDCOAuthProvider(OauthAdapter):
             "response_type": "code",
             "state": state,
         }
-        auth_url = f"{authorization_endpoint}?{urlencode(url_params)}"
+        endpoint = urlparse(authorization_endpoint)
+        # Preserve discovery query parameters, but never let them override protocol fields.
+        protected = {*url_params, "provider_hint"}
+        query = [
+            (key, value) for key, value in parse_qsl(endpoint.query, keep_blank_values=True) if key not in protected
+        ]
+        query.extend(url_params.items())
+        if provider_hint is not None:
+            query.append(("provider_hint", provider_hint))
+        auth_url = endpoint._replace(query=urlencode(query)).geturl()
 
         super().__init__(
             request,
@@ -210,6 +221,11 @@ class OIDCOAuthProvider(OauthAdapter):
         user_info_response = self.get_user_response()
 
         sub = str(user_info_response.get("sub") or "")
+        if not sub:
+            raise AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["OIDC_OAUTH_PROVIDER_ERROR"],
+                error_message="OIDC_OAUTH_PROVIDER_ERROR",
+            )
         name = user_info_response.get("name") or user_info_response.get("preferred_username") or ""
         user = {
             "provider_id": sub,

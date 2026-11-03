@@ -96,6 +96,8 @@ export enum EAdminAuthErrorCodes {
   ADMIN_USER_DEACTIVATED = "5190",
   ADMIN_SSO_NOT_ADMIN = "5195",
   ADMIN_SSO_FAILED = "5196",
+  OIDC_LOGIN_ENTRY_INVALID = "5132",
+  OIDC_IDENTITY_ALREADY_BOUND = "5133",
 }
 
 export type TAdminAuthErrorInfo = {

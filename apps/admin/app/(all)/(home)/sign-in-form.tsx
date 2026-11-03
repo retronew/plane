@@ -74,7 +74,10 @@ export const InstanceSignInForm = observer(function InstanceSignInForm() {
   // search params
   const searchParams = useSearchParams();
   const { config } = useInstance();
-  const isOIDCEnabled = !!config?.is_oidc_enabled;
+  const oidcEntries = config?.oidc_login_entries?.length
+    ? config.oidc_login_entries
+    : [{ id: "", name: config?.oidc_provider_name || "OIDC", icon_url: config?.oidc_provider_icon_url, enabled: true }];
+  const isOIDCEnabled = !!config?.is_oidc_enabled && oidcEntries.some((entry) => entry.enabled);
   const emailParam = searchParams.get("email") || undefined;
   const errorCode = searchParams.get("error_code") || undefined;
   const errorMessage = searchParams.get("error_message") || undefined;
@@ -141,14 +144,19 @@ export const InstanceSignInForm = observer(function InstanceSignInForm() {
             <>
               <OAuthOptions
                 showDivider={false}
-                options={[
-                  {
-                    id: "oidc",
-                    text: t("admin.sign_in.sso", { provider: config?.oidc_provider_name || "OIDC" }),
-                    icon: <OIDCProviderIcon iconUrl={config?.oidc_provider_icon_url} />,
-                    onClick: () => window.location.assign(`${API_BASE_URL}/api/instances/admins/oidc/`),
+                options={oidcEntries.map((entry) => ({
+                  id: entry.id ? `oidc:${entry.id}` : "oidc",
+                  text: t("admin.sign_in.sso", { provider: entry.name }),
+                  icon: <OIDCProviderIcon iconUrl={entry.icon_url || config?.oidc_provider_icon_url} />,
+                  onClick: () => {
+                    const params = new URLSearchParams();
+                    if (entry.id) params.set("entry", entry.id);
+                    window.location.assign(
+                      `${API_BASE_URL}/api/instances/admins/oidc/${params.size ? `?${params}` : ""}`
+                    );
                   },
-                ]}
+                  enabled: entry.enabled,
+                }))}
               />
               <div className="flex items-center">
                 <hr className="w-full border-strong" />

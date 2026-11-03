@@ -33,12 +33,15 @@ export function OAuthOptions(props: OAuthOptionsProps) {
 
   if (enabledOptions.length === 0) return null;
 
+  // Team entries need their labels: their fallback icons can be identical.
+  const useCompactButtons = compact && !enabledOptions.some((option) => option.id.startsWith("oidc:"));
+
   return (
     <div className={cn("w-full", containerClassName)}>
       <div
         className={cn(
           "flex gap-4 overflow-hidden transition-all duration-500 ease-in-out",
-          compact ? "flex-row" : "flex-col",
+          useCompactButtons ? "flex-row" : "flex-col",
           className
         )}
       >
@@ -48,7 +51,8 @@ export function OAuthOptions(props: OAuthOptionsProps) {
             text={option.text}
             icon={option.icon}
             onClick={option.onClick}
-            compact={compact}
+            compact={useCompactButtons}
+            aria-label={option.text}
             className="transition-all duration-300 ease-in-out"
           />
         ))}

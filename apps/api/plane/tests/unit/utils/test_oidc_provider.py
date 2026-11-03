@@ -44,6 +44,12 @@ def _linked_account(email=None):
 
 
 @pytest.fixture(autouse=True)
+def default_login_entries():
+    with patch("plane.authentication.utils.oidc_login_entries.get_configuration_value", return_value=("[]",)):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def no_linked_account():
     with _linked_account() as mock_filter:
         yield mock_filter

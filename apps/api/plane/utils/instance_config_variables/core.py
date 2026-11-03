@@ -191,6 +191,12 @@ oidc_config_variables = [
         "is_encrypted": False,
     },
     {
+        "key": "OIDC_LOGIN_ENTRIES",
+        "value": os.environ.get("OIDC_LOGIN_ENTRIES", "[]"),
+        "category": "OIDC",
+        "is_encrypted": False,
+    },
+    {
         "key": "OIDC_PROVIDER_NAME",
         "value": os.environ.get("OIDC_PROVIDER_NAME", "OIDC"),
         "category": "OIDC",

@@ -36,6 +36,9 @@ export const ProfileSSOLink = observer(function ProfileSSOLink({ currentEmail }:
   const router = useAppRouter();
   const isOIDCEnabled = !!config?.is_oidc_enabled;
   const providerName = config?.oidc_provider_name || "OIDC";
+  const entries = config?.oidc_login_entries?.length
+    ? config.oidc_login_entries.filter((entry) => entry.enabled)
+    : [{ id: "", name: providerName }];
   // the IdP email, offered when it differs from the account email
   const [suggestedEmail, setSuggestedEmail] = useState<string | undefined>(undefined);
   const [isChangeEmailOpen, setIsChangeEmailOpen] = useState(false);
@@ -82,13 +85,28 @@ export const ProfileSSOLink = observer(function ProfileSSOLink({ currentEmail }:
         }
         control={
           status && (
-            <Button
-              variant={status.linked ? "secondary" : "primary"}
-              size="sm"
-              stretch="auto"
-              onClick={() => window.location.assign(`${API_BASE_URL}/auth/oidc/link/`)}
-              label={status.linked ? t("web.sso_link.relink") : t("web.sso_link.link", { provider: providerName })}
-            />
+            <div className="flex flex-wrap gap-2">
+              {entries.map((entry) => (
+                <Button
+                  key={entry.id || "oidc"}
+                  variant={status.linked ? "secondary" : "primary"}
+                  size="sm"
+                  stretch="auto"
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (entry.id) params.set("entry", entry.id);
+                    window.location.assign(`${API_BASE_URL}/auth/oidc/link/${params.size ? `?${params}` : ""}`);
+                  }}
+                  label={
+                    status.linked
+                      ? entry.id
+                        ? t("web.sso_link.relink_with_provider", { provider: entry.name })
+                        : t("web.sso_link.relink")
+                      : t("web.sso_link.link", { provider: entry.name })
+                  }
+                />
+              ))}
+            </div>
           )
         }
       />

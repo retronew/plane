@@ -31,6 +31,7 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     oauthActionText,
     resolvedTheme,
     nextPath: searchParams.get("next_path"),
+    oidcPath: "/auth/spaces/oidc/",
     logos: {
       google: googleLogo,
       githubLight: githubLightLogo,

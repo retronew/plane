@@ -23,6 +23,7 @@ from rest_framework.response import Response
 
 # Module imports
 from .base import BaseAPIView
+from plane.authentication.utils.oidc_login_entries import parse_login_entries
 from plane.license.api.permissions import InstanceAdminPermission
 from plane.license.models import InstanceConfiguration
 from plane.license.api.serializers import InstanceConfigurationSerializer
@@ -45,6 +46,11 @@ class InstanceConfigurationEndpoint(BaseAPIView):
     @invalidate_cache(path="/api/instances/configurations/", user=False)
     @invalidate_cache(path="/api/instances/", user=False)
     def patch(self, request):
+        if "OIDC_LOGIN_ENTRIES" in request.data:
+            try:
+                parse_login_entries(request.data["OIDC_LOGIN_ENTRIES"])
+            except ValueError as exc:
+                return Response({"error": str(exc)}, status=400)
         feishu_keys = {"FEISHU_ENABLED", "FEISHU_APP_ID", *FEISHU_WRITE_ONLY_SECRETS}
         if feishu_keys.intersection(request.data):
             if not settings.SKIP_ENV_VAR:
@@ -60,6 +66,11 @@ class InstanceConfigurationEndpoint(BaseAPIView):
             for key in FEISHU_WRITE_ONLY_SECRETS.intersection(request.data):
                 if not isinstance(request.data[key], str):
                     return Response({"error": f"{key} must be a string."}, status=400)
+        if "OIDC_LOGIN_ENTRIES" in request.data:
+            # Older installations have not run configure_instance since this key was added.
+            InstanceConfiguration.objects.get_or_create(
+                key="OIDC_LOGIN_ENTRIES", defaults={"value": "[]", "category": "OIDC", "is_encrypted": False}
+            )
         configurations = InstanceConfiguration.objects.filter(key__in=request.data.keys())
         old_feishu_app_id = next((item.value for item in configurations if item.key == "FEISHU_APP_ID"), None)
 

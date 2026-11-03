@@ -10,6 +10,8 @@ import pytest
 from plane.authentication.adapter.error import AUTHENTICATION_ERROR_CODES
 from plane.authentication.views.app import oidc_link
 
+pytestmark = pytest.mark.django_db
+
 HOST = "http://app.example.com"
 USER_ID = "11111111-1111-1111-1111-111111111111"
 
@@ -31,7 +33,8 @@ def user():
     user = MagicMock()
     user.id = USER_ID
     user.email = "admin@old.example.com"
-    with patch.object(oidc_link.User.objects, "get", return_value=user):
+    with patch.object(oidc_link.User.objects, "select_for_update") as locked:
+        locked.return_value.get.return_value = user
         yield user
 
 

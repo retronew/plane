@@ -799,7 +799,11 @@
       "administrator": "administrator",
       "now": "now.",
       "to_get_started": "to get started.",
-      "user_account_deactivated_contact": "User account deactivated. Please contact {contact}."
+      "user_account_deactivated_contact": "User account deactivated. Please contact {contact}.",
+      "oidc_login_entry_invalid": "Login entry unavailable",
+      "oidc_login_entry_invalid_message": "This login entry is unavailable. Return to the login page and choose an enabled team.",
+      "oidc_identity_already_bound": "Another identity is already linked",
+      "oidc_identity_already_bound_message": "This Plane account already has a different sign-on identity. Sign in with the linked identity. Only one identity can be linked to each account."
     },
     "title_integrations": "Integrations",
     "title_members": "Members",
@@ -874,10 +878,11 @@
     "password_login_disabled_notice": "Password sign-in is disabled on this instance. Your account is managed through single sign-on, so there is no password to change.",
     "sso_link": {
       "title": "Single sign-on",
-      "linked_description": "Your account is linked to {provider}. You can sign in with it.",
+      "linked_description": "Your account is linked to {provider}. You can sign in with it. Linking another identity replaces the current one.",
       "unlinked_description": "Link your {provider} account to sign in to this account with single sign-on.",
       "link": "Link {provider}",
       "relink": "Re-link",
+      "relink_with_provider": "Replace with {provider}",
       "linked_title": "Linked to {provider}",
       "failed": "Could not link the account",
       "email_differs": "{provider} uses {email}. Use it as your account email too?",

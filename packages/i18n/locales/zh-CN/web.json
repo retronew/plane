@@ -799,7 +799,11 @@
       "administrator": "管理员",
       "now": "。",
       "to_get_started": "后开始使用。",
-      "user_account_deactivated_contact": "用户账号已停用，请联系{contact}。"
+      "user_account_deactivated_contact": "用户账号已停用，请联系{contact}。",
+      "oidc_login_entry_invalid": "登录入口不可用",
+      "oidc_login_entry_invalid_message": "此登录入口不可用，请返回登录页并选择已启用的团队入口。",
+      "oidc_identity_already_bound": "已绑定其他身份",
+      "oidc_identity_already_bound_message": "此 Plane 账号已绑定其他单点登录身份，请使用已绑定的身份登录。每个账号仅允许绑定一个身份。"
     },
     "title_integrations": "集成",
     "title_members": "成员",
@@ -874,10 +878,11 @@
     "password_login_disabled_notice": "本实例已关闭密码登录，您的账号通过单点登录管理，无需设置或修改密码。",
     "sso_link": {
       "title": "单点登录",
-      "linked_description": "你的账号已关联 {provider}，可以用它登录。",
+      "linked_description": "您的账号已关联 {provider}，可以用它登录。关联其他身份会替换当前身份。",
       "unlinked_description": "关联 {provider} 账号后，即可通过单点登录进入当前账号。",
       "link": "关联 {provider}",
       "relink": "重新关联",
+      "relink_with_provider": "更换为 {provider}",
       "linked_title": "已关联 {provider}",
       "failed": "关联失败",
       "email_differs": "{provider} 中的邮箱是 {email}，是否同步修改为账号邮箱？",

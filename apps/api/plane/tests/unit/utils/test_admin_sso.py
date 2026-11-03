@@ -6,9 +6,14 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+import time
+import uuid
 
 from plane.authentication.adapter.error import AUTHENTICATION_ERROR_CODES, AuthenticationException
 from plane.license.api.views import admin_sso
+from plane.authentication.utils.oidc_state import SESSION_KEY
+
+pytestmark = pytest.mark.django_db
 
 ADMIN_HOST = "http://admin.example.com/god-mode/"
 
@@ -26,8 +31,14 @@ def _patch_lookup(account_user=None, email_user=None, is_admin=True):
         patch.object(admin_sso.Account.objects, "filter"),
         patch.object(admin_sso.User.objects, "filter"),
         patch.object(admin_sso.InstanceAdmin.objects, "filter"),
+        patch.object(admin_sso.User.objects, "select_for_update"),
     ]
-    accounts, users, admins = (p.start() for p in patches)
+    accounts, users, admins, locked = (p.start() for p in patches)
+    persistence = patch.object(admin_sso.Account.objects, "get_or_create")
+    persistence.start()
+    patches.append(persistence)
+    locked.return_value.get.return_value = account_user or email_user
+    accounts.return_value.exclude.return_value.exists.return_value = False
     accounts.return_value.select_related.return_value.first.return_value = account
     users.return_value.first.return_value = email_user
     admins.return_value.exists.return_value = is_admin
@@ -69,10 +80,12 @@ class TestResolveAdminUser:
         assert admin_sso.resolve_admin_user("sub-1", None) is None
 
 
-def _request(state="s1", session_state="s1", code="c1"):
+def _request(state=None, session_state=None, code="c1"):
+    state = state or uuid.uuid4().hex
+    session_state = session_state or state
     request = MagicMock()
     request.GET = {"code": code, "state": state}
-    request.session = {admin_sso.STATE_SESSION_KEY: session_state} if session_state else {}
+    request.session = {SESSION_KEY: {session_state: {"created": time.time(), "audience": "admin"}}}
     return request
 
 
@@ -124,4 +137,4 @@ class TestAdminOIDCCallback:
         login.assert_called_once_with(request=request, user=admin, is_admin=True)
         assert response.url == f"{ADMIN_HOST}general/"
         # The state is single-use
-        assert admin_sso.STATE_SESSION_KEY not in request.session
+        assert request.GET["state"] not in request.session[SESSION_KEY]

@@ -22,6 +22,7 @@ type Options = {
   resolvedTheme: string | undefined;
   /** `next_path` query value forwarded to the OAuth endpoints. */
   nextPath: string | null;
+  oidcPath?: "/auth/oidc/" | "/auth/spaces/oidc/";
   logos: TOAuthProviderLogos;
 };
 
@@ -52,19 +53,23 @@ export const useCoreOAuthConfig = ({
   oauthActionText,
   resolvedTheme,
   nextPath,
+  oidcPath = "/auth/oidc/",
   logos,
 }: Options): TOAuthConfigs => {
   // translation
   const { t } = useTranslation();
   // derived values
   const withProvider = (provider: string) => t("web.oauth_action_with_provider", { action: oauthActionText, provider });
+  const oidcEntries = config?.oidc_login_entries?.length
+    ? config.oidc_login_entries
+    : [{ id: "", name: config?.oidc_provider_name || "OIDC", icon_url: config?.oidc_provider_icon_url, enabled: true }];
   const isOAuthEnabled =
     (config &&
       (config?.is_google_enabled ||
         config?.is_github_enabled ||
         config?.is_gitlab_enabled ||
         config?.is_gitea_enabled ||
-        config?.is_oidc_enabled)) ||
+        (config?.is_oidc_enabled && oidcEntries.some((entry) => entry.enabled)))) ||
     false;
   const oAuthOptions: TOAuthOption[] = [
     {
@@ -110,20 +115,18 @@ export const useCoreOAuthConfig = ({
       },
       enabled: config?.is_gitea_enabled,
     },
-    {
-      id: "oidc",
-      text: withProvider(config?.oidc_provider_name || "OIDC"),
-      icon: (
-        <OIDCProviderIcon
-          iconUrl={config?.oidc_provider_icon_url}
-          providerName={config?.oidc_provider_name || "OIDC"}
-        />
-      ),
+    ...oidcEntries.map((entry) => ({
+      id: entry.id ? `oidc:${entry.id}` : "oidc",
+      text: withProvider(entry.name),
+      icon: <OIDCProviderIcon iconUrl={entry.icon_url || config?.oidc_provider_icon_url} providerName={entry.name} />,
       onClick: () => {
-        window.location.assign(`${API_BASE_URL}/auth/oidc/${nextPath ? `?next_path=${nextPath}` : ``}`);
+        const params = new URLSearchParams();
+        if (entry.id) params.set("entry", entry.id);
+        if (nextPath) params.set("next_path", nextPath);
+        window.location.assign(`${API_BASE_URL}${oidcPath}${params.size ? `?${params}` : ""}`);
       },
-      enabled: config?.is_oidc_enabled,
-    },
+      enabled: !!config?.is_oidc_enabled && entry.enabled,
+    })),
   ];
 
   return {

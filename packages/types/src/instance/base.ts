@@ -43,6 +43,16 @@ export interface IInstance {
   workspaces_exist: boolean;
 }
 
+export type TOIDCLoginEntry = {
+  id: string;
+  name: string;
+  provider_hint: string;
+  icon_url?: string;
+  enabled: boolean;
+};
+
+export type TOIDCPublicLoginEntry = Omit<TOIDCLoginEntry, "provider_hint">;
+
 export interface IInstanceConfig {
   enable_signup: boolean;
   is_workspace_creation_disabled: boolean;
@@ -53,6 +63,7 @@ export interface IInstanceConfig {
   is_oidc_enabled: boolean;
   oidc_provider_name: string | undefined;
   oidc_provider_icon_url: string | undefined;
+  oidc_login_entries?: TOIDCPublicLoginEntry[];
   is_magic_login_enabled: boolean;
   is_email_password_enabled: boolean;
   github_app_name: string | undefined;

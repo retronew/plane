@@ -27,7 +27,8 @@ import { useTranslation } from "@plane/i18n";
 
 type Props = TProviderConfigFormProps;
 
-type OIDCConfigFormValues = Record<TInstanceOIDCAuthenticationConfigurationKeys, string>;
+import { OIDCLoginEntries, parseOIDCLoginEntries } from "./oidc-login-entries";
+import type { OIDCConfigFormValues } from "./oidc-login-entries";
 
 const OIDC_FORM_SWITCH_FIELD: TControllerSwitchFormField<OIDCConfigFormValues> = {
   name: "ENABLE_OIDC_SYNC",
@@ -37,6 +38,7 @@ const OIDC_FORM_SWITCH_FIELD: TControllerSwitchFormField<OIDCConfigFormValues> =
 const OIDC_CONFIG_KEYS: TInstanceOIDCAuthenticationConfigurationKeys[] = [
   "OIDC_PROVIDER_NAME",
   "OIDC_PROVIDER_ICON_URL",
+  "OIDC_LOGIN_ENTRIES",
   "OIDC_ISSUER_URL",
   "OIDC_CLIENT_ID",
   "OIDC_CLIENT_SECRET",
@@ -61,6 +63,8 @@ export function InstanceOIDCConfigForm(props: Props) {
     defaultValues: {
       OIDC_PROVIDER_NAME: config["OIDC_PROVIDER_NAME"] || "OIDC",
       OIDC_PROVIDER_ICON_URL: config["OIDC_PROVIDER_ICON_URL"] || "",
+      OIDC_LOGIN_ENTRIES: config["OIDC_LOGIN_ENTRIES"] || "[]",
+      loginEntries: parseOIDCLoginEntries(config["OIDC_LOGIN_ENTRIES"]),
       OIDC_ISSUER_URL: config["OIDC_ISSUER_URL"],
       OIDC_CLIENT_ID: config["OIDC_CLIENT_ID"],
       OIDC_CLIENT_SECRET: config["OIDC_CLIENT_SECRET"],
@@ -142,10 +146,23 @@ export function InstanceOIDCConfigForm(props: Props) {
         </>
       ),
     },
+    {
+      key: "Space_Callback_URI",
+      label: t("admin.authentication.oauth.oidc_space_callback"),
+      url: `${originURL}/auth/spaces/oidc/callback/`,
+      description: t("admin.authentication.oauth.oidc_all_callbacks_description"),
+    },
+    {
+      key: "Admin_Callback_URI",
+      label: t("admin.authentication.oauth.oidc_admin_callback"),
+      url: `${originURL}/api/instances/admins/oidc/callback/`,
+      description: t("admin.authentication.oauth.oidc_all_callbacks_description"),
+    },
   ];
 
   const onSubmit = async (formData: OIDCConfigFormValues) => {
-    const payload: Partial<OIDCConfigFormValues> = { ...formData };
+    const { loginEntries, ...configuration } = formData;
+    const payload = { ...configuration, OIDC_LOGIN_ENTRIES: JSON.stringify(loginEntries) };
 
     try {
       const response = await updateInstanceConfigurations(payload);
@@ -154,14 +171,18 @@ export function InstanceOIDCConfigForm(props: Props) {
         title: t("admin.authentication.oauth.done"),
         message: t("admin.authentication.oauth.configured", { provider: "OIDC" }),
       });
-      reset(
-        Object.fromEntries(
-          OIDC_CONFIG_KEYS.map((key) => [key, response.find((item) => item.key === key)?.value])
-        ) as OIDCConfigFormValues
-      );
+      reset({
+        ...Object.fromEntries(OIDC_CONFIG_KEYS.map((key) => [key, response.find((item) => item.key === key)?.value])),
+        loginEntries: parseOIDCLoginEntries(response.find((item) => item.key === "OIDC_LOGIN_ENTRIES")?.value),
+      } as OIDCConfigFormValues);
       handleClose(true);
     } catch (err) {
       console.error(err);
+      setToast({
+        type: "error",
+        title: t("admin.authentication.oauth.oidc_save_failed"),
+        message: t("admin.authentication.oauth.oidc_entry_field_invalid"),
+      });
     }
   };
 
@@ -187,6 +208,7 @@ export function InstanceOIDCConfigForm(props: Props) {
           required={field.required}
         />
       ))}
+      <OIDCLoginEntries control={control} errors={errors} />
       <ControllerSwitch control={control} field={OIDC_FORM_SWITCH_FIELD} />
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-1">

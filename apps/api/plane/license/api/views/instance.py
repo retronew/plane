@@ -21,6 +21,7 @@ from plane.license.api.serializers import InstanceSerializer
 from plane.license.models import Instance
 from plane.license.utils.instance_value import get_configuration_value
 from plane.utils.llm import get_llm_config
+from plane.authentication.utils.oidc_login_entries import public_login_entries
 from plane.utils.cache import cache_response, invalidate_cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
@@ -135,6 +136,7 @@ class InstanceEndpoint(BaseAPIView):
         data["is_gitlab_enabled"] = IS_GITLAB_ENABLED == "1"
         data["is_gitea_enabled"] = IS_GITEA_ENABLED == "1"
         data["is_oidc_enabled"] = IS_OIDC_ENABLED == "1"
+        data["oidc_login_entries"] = public_login_entries()
         data["oidc_provider_name"] = str(OIDC_PROVIDER_NAME or "OIDC")
         data["oidc_provider_icon_url"] = str(OIDC_PROVIDER_ICON_URL or "")
         data["is_magic_login_enabled"] = ENABLE_MAGIC_LINK_LOGIN == "1"

@@ -4,7 +4,7 @@
 
 # Python imports
 import requests
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError, IntegrityError, transaction
 
 # Django imports
 from django.utils import timezone
@@ -15,7 +15,7 @@ from plane.authentication.adapter.error import (
 )
 
 # Module imports
-from plane.db.models import Account
+from plane.db.models import Account, User
 from plane.utils.exception_logger import log_exception
 
 from .base import Adapter
@@ -73,6 +73,18 @@ class OauthAdapter(Adapter):
         self.set_token_data()
         self.set_user_data()
         return self.complete_login_or_signup()
+
+    def complete_login_or_signup(self):
+        if self.provider != "oidc":
+            return super().complete_login_or_signup()
+        # Serialize automatic email association and explicit profile re-linking on the user.
+        with transaction.atomic():
+            email = self.sanitize_email(self.user_data.get("email"))
+            user = User.objects.select_for_update().filter(email=email).first()
+            sub = self.user_data.get("user", {}).get("provider_id")
+            if user:
+                ensure_single_oidc_identity(user, sub)
+            return super().complete_login_or_signup()
 
     def get_user_token(self, data, headers=None):
         try:
@@ -136,4 +148,22 @@ class OauthAdapter(Adapter):
                     metadata=self.token_data.get("metadata", {}),
                 )
         except (DatabaseError, IntegrityError) as e:
+            if self.provider == "oidc":
+                # A concurrent claim must roll back this login, rather than authenticating
+                # a user whose identity could not be persisted.
+                key = "OIDC_ACCOUNT_ALREADY_LINKED" if isinstance(e, IntegrityError) else "OIDC_OAUTH_PROVIDER_ERROR"
+                raise AuthenticationException(error_code=AUTHENTICATION_ERROR_CODES[key], error_message=key) from e
             log_exception(e)
+
+
+def ensure_single_oidc_identity(user, sub):
+    if Account.objects.filter(user=user, provider="oidc").exclude(provider_account_id=sub).exists():
+        raise AuthenticationException(
+            error_code=AUTHENTICATION_ERROR_CODES["OIDC_IDENTITY_ALREADY_BOUND"],
+            error_message="OIDC_IDENTITY_ALREADY_BOUND",
+        )
+    if Account.objects.filter(provider="oidc", provider_account_id=sub).exclude(user=user).exists():
+        raise AuthenticationException(
+            error_code=AUTHENTICATION_ERROR_CODES["OIDC_ACCOUNT_ALREADY_LINKED"],
+            error_message="OIDC_ACCOUNT_ALREADY_LINKED",
+        )
