@@ -685,6 +685,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         <TimeInStatusProperty
           issue={issue}
           stateName={stateDetails?.name}
+          stateGroup={stateDetails?.group}
           chipClassName={countChipClassName}
           isMobile={isMobile}
         />

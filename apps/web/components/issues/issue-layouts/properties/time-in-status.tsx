@@ -6,70 +6,42 @@
 
 import { Timer } from "lucide-react";
 import { observer } from "mobx-react";
-import { intervalToDuration } from "date-fns";
-import { useSecondClock } from "@/hooks/use-second-clock";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { useTranslation } from "@plane/i18n";
-import type { TIssue } from "@plane/types";
+import type { TIssue, TStateGroups } from "@plane/types";
 import { cn, formatCompactDate, getDate } from "@plane/utils";
-
-const durationUnits = ["years", "months", "days", "hours", "minutes", "seconds"] as const;
-const unitFormatters = new Map<string, Intl.NumberFormat>();
-const listFormatters = new Map<string, Intl.ListFormat>();
-
-function formatUnit(value: number, unit: string, locale: string) {
-  const key = `${locale}:${unit}`;
-  let formatter = unitFormatters.get(key);
-  if (!formatter) {
-    formatter = new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "short" });
-    unitFormatters.set(key, formatter);
-  }
-  return formatter.format(value);
-}
-
-/** Keep all nonzero calendar units, including seconds, in the interface language. */
-export function formatTimeInStatus(since: Date, now: Date = new Date(), locale = "en"): string {
-  const language = locale === "ua" ? "uk-UA" : locale;
-  const duration = intervalToDuration({ start: since, end: new Date(Math.max(since.getTime(), now.getTime())) });
-  const parts = durationUnits.flatMap((unit) => {
-    const value = duration[unit];
-    return value ? [formatUnit(value, unit.slice(0, -1), language)] : [];
-  });
-  let formatter = listFormatters.get(language);
-  if (!formatter) {
-    formatter = new Intl.ListFormat(language, { style: "short", type: "unit" });
-    listFormatters.set(language, formatter);
-  }
-  return formatter.format(parts.length ? parts : [formatUnit(0, "second", language)]);
-}
+import { useStatusDurationClock } from "@/hooks/use-status-duration-clock";
+import { formatStateEntryTime, formatTimeInStatus } from "./status-duration";
 
 type Props = {
   issue: Pick<TIssue, "state_changed_at" | "started_at">;
   stateName: string | undefined;
+  stateGroup?: TStateGroups;
   chipClassName: string;
   isMobile: boolean;
 };
 
-/**
- * How long the work item has sat in its current state, recorded when the state changes — the
- * automatic counterpart of the planned start date. The tooltip names the state and, once work has
- * begun, when it started.
- */
+/** Current-state duration is only meaningful for work that has not ended. */
 export const TimeInStatusProperty = observer(function TimeInStatusProperty({
   issue,
   stateName,
+  stateGroup,
   chipClassName,
   isMobile,
 }: Props) {
   const { t, currentLocale } = useTranslation();
-  const currentTime = useSecondClock();
   const since = issue.state_changed_at ? new Date(issue.state_changed_at) : undefined;
-  if (!since || !Number.isFinite(since.getTime())) return null;
+  const active =
+    stateGroup !== "completed" && stateGroup !== "cancelled" && !!since && Number.isFinite(since.getTime());
+  const currentTime = useStatusDurationClock(active ? since?.getTime() : undefined);
+  if (!active || !since) return null;
 
   const startedAt = getDate(issue.started_at);
   const duration = formatTimeInStatus(since, new Date(currentTime), currentLocale);
+  const enteredAt = formatStateEntryTime(since, currentLocale);
   const label = [
     `${t("issue.display.properties.time_in_status")}: ${stateName ? `${stateName} · ` : ""}${duration}`,
+    `${t("common.state")} · ${enteredAt}`,
     startedAt ? t("issue.display.properties.started_at", { date: formatCompactDate(startedAt) }) : null,
   ]
     .filter(Boolean)
@@ -77,7 +49,6 @@ export const TimeInStatusProperty = observer(function TimeInStatusProperty({
 
   return (
     <Tooltip label={label} layout="stacked" disabled={isMobile}>
-      {/* read-only: a click on the chip neither opens the work item nor does anything else */}
       {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
       <div
         className={cn(chipClassName, "max-w-full min-w-0 flex-shrink-0 cursor-default text-secondary")}
