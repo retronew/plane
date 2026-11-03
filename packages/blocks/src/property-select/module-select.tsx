@@ -6,6 +6,7 @@
 
 import { useTranslation } from "@plane/i18n";
 import { ModuleOutline } from "@makeplane/propel/icons";
+import { ModuleIdentity } from "../icons/module/module-identity";
 import type { TPaginatedResponse } from "@plane/types";
 import { Select } from "../select/select";
 import type { SelectPaginationParams, SelectTooltip, SelectVariant } from "../select/types";
@@ -61,8 +62,12 @@ function triggerLabel(
   return selected.map((module) => module.name).join(", ");
 }
 
-function renderModuleIcon() {
-  return <ModuleOutline className="size-4 shrink-0 text-primary" />;
+function renderModuleIcon(module: ModuleOption) {
+  return <ModuleIdentity id={module.id} name={module.name} />;
+}
+
+function renderSingleModuleIcon(modules: ModuleOption[]) {
+  return modules[0] ? renderModuleIcon(modules[0]) : <ModuleOutline />;
 }
 
 function renderModuleTrailing(module: ModuleOption) {
@@ -112,7 +117,7 @@ export function ModuleSelect(props: ModuleSelectProps) {
           variant={variant}
           tabIndex={tabIndex}
           className={className}
-          prependIcon={<ModuleOutline />}
+          prependIcon={renderSingleModuleIcon}
           label={(modules) => modules[0]?.name ?? placeholder}
           tooltip={tooltip}
         >
@@ -144,7 +149,11 @@ export function ModuleSelect(props: ModuleSelectProps) {
   // "table-cell" / "pill" summarise as "N modules"; "select" / "select-ghost" list per-module pills instead.
   const showCountOnMultiple = variant === "table-cell" || variant.startsWith("pill-");
   const renderTriggerIcon = (modules: ModuleOption[]) =>
-    !showCountOnMultiple && modules.length > 0 ? undefined : <ModuleOutline />;
+    !showCountOnMultiple && modules.length > 0 ? undefined : modules.length === 1 ? (
+      renderModuleIcon(modules[0]!)
+    ) : (
+      <ModuleOutline />
+    );
 
   return (
     <Select<ModuleOption>
@@ -187,7 +196,7 @@ export function ModuleSelect(props: ModuleSelectProps) {
                   key={module.id}
                   className="flex h-5 max-w-full items-center gap-1 rounded-sm bg-layer-3 px-1.5 text-caption-md-medium text-secondary"
                 >
-                  <ModuleOutline className="size-3.5 shrink-0" />
+                  <ModuleIdentity id={module.id} name={module.name} className="size-4 text-[8px]" />
                   <span className="truncate">{module.name}</span>
                 </span>
               ))}

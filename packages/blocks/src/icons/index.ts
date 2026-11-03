@@ -29,6 +29,7 @@ export { ModuleCancelledIcon } from "./module/cancelled";
 export { ModuleCompletedIcon } from "./module/completed";
 export { ModuleInProgressIcon } from "./module/in-progress";
 export { ModuleStatusIcon } from "./module/module-status-icon";
+export { ModuleIdentity } from "./module/module-identity";
 export { ModulePausedIcon } from "./module/paused";
 export { ModulePlannedIcon } from "./module/planned";
 export { MonospaceIcon } from "./monospace-icon";

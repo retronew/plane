@@ -9,7 +9,8 @@ import React, { useRef } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CalendarOutline, ModuleOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { CalendarOutline, WorkItemsOutline } from "@makeplane/propel/icons";
+import { ModuleIdentity } from "@plane/blocks/icons";
 // plane package imports
 import { MODULE_STATUS, EUserPermissions, EUserPermissionsLevel, IS_FAVORITE_MENU_OPEN } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
@@ -300,7 +301,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
       >
         <div className="relative flex h-[108px] shrink-0 flex-col justify-between overflow-hidden rounded-lg bg-layer-2 p-3">
           <span className="grid size-9 place-items-center rounded-md bg-layer-1">
-            <ModuleOutline className="size-5 text-secondary" />
+            <ModuleIdentity id={moduleDetails.id} name={moduleDetails.name} className="size-8 text-12" />
           </span>
           <div className="flex items-center gap-3">
             <LinearProgress
