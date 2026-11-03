@@ -130,7 +130,7 @@ function EditableParagraph(props: NodeProps) {
       className="flex items-start gap-2"
       style={{ marginLeft: `${Math.max(1, Number(element.indent ?? 1)) * 24}px` }}
     >
-      <span contentEditable={false} className="pt-1">
+      <span contentEditable={false} className="inline-flex h-[1lh] shrink-0 items-center">
         <Checkbox
           checked={Boolean(element.checked)}
           aria-label={NodeApi.string(element) || "Task"}
