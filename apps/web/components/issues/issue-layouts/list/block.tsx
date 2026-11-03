@@ -14,6 +14,7 @@ import { IssueTreeLines } from "./tree-lines";
 import { PrioritySelect } from "@/components/dropdowns/priority/priority-select";
 import { StateSelect } from "@/components/dropdowns/state/state-select";
 import { SubIssuesProgress } from "./sub-issues-progress";
+import { IssueHierarchyIndicator } from "../hierarchy-indicator";
 // types
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -232,6 +233,10 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
   isCurrentBlockDragging,
   isMobile,
 }: TIssueBlockLeftProps) {
+  const {
+    issue: { getIssueById },
+  } = useIssueDetail();
+  const parentIssue = issue.parent_id ? getIssueById(issue.parent_id) : undefined;
   return (
     <div className="relative flex min-h-9 min-w-0 flex-grow items-center gap-2 [&_[data-list-identifier]]:w-[var(--issue-list-identifier-width)] [&_[data-list-identifier]]:text-[13px]">
       <div className="flex shrink-0 items-center gap-2 self-stretch">
@@ -279,6 +284,11 @@ const IssueBlockLeft = observer(function IssueBlockLeft({
       <Tooltip label={issue.name} layout="stacked" align="start" disabled={isCurrentBlockDragging || isMobile}>
         <p className="cursor-pointer truncate text-body-xs-medium text-primary">{issue.name}</p>
       </Tooltip>
+      <IssueHierarchyIndicator
+        parentId={issue.parent_id}
+        parentName={parentIssue?.name ?? issue.parent?.name}
+        subIssuesCount={subIssuesCount}
+      />
       <SubIssuesProgress
         issueId={issue.id}
         projectId={issue.project_id}

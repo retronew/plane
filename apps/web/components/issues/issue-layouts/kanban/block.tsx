@@ -168,8 +168,11 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
               isReadOnly={isReadOnly}
             />
           )}
-          {/* the parent it rolls up to; its own sub-work items show in the progress row */}
-          <IssueHierarchyIndicator parentId={issue.parent_id} parentName={parentIssue?.name ?? issue.parent?.name} />
+          <IssueHierarchyIndicator
+            parentId={issue.parent_id}
+            parentName={parentIssue?.name ?? issue.parent?.name}
+            subIssuesCount={issue.sub_issues_count ?? 0}
+          />
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}

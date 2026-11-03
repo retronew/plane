@@ -16,7 +16,7 @@ it("identifies a child even when its parent is not loaded", () => {
 });
 it("shows the parent name and child count together for intermediate tasks", () => {
   render(<IssueHierarchyIndicator parentId="parent" parentName="Release" subIssuesCount={3} />);
-  expect(screen.getByTitle("common.parent · Release").textContent).toBe("Release");
+  expect(screen.getByTitle("common.parent · Release").textContent).toBe("common.sub_work_item · Release");
   expect(screen.getByText("common.sub_work_items 3")).toBeTruthy();
   expect(screen.getByTitle("web.runtime.sub_items_count: 3")).toBeTruthy();
 });
