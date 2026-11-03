@@ -34,6 +34,18 @@ const props: PlateEditorProps = {
   extendedEditorProps: {},
 };
 afterEach(cleanup);
+it("opens links in editable descriptions without replacing the current document", () => {
+  const open = vi.spyOn(window, "open").mockImplementation(() => null);
+  try {
+    render(
+      <PlateEditorWithRef {...props} initialValue='<p><a href="https://example.com/docs">Documentation</a></p>' />
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Documentation" }));
+    expect(open).toHaveBeenCalledExactlyOnceWith("https://example.com/docs", "_blank", "noopener,noreferrer");
+  } finally {
+    open.mockRestore();
+  }
+});
 it("renders one row control per row and one column control per column for imported cells without IDs", () => {
   const view = render(
     <PlateEditorWithRef

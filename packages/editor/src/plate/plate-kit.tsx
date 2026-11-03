@@ -194,6 +194,28 @@ function Link({ attributes, children, element }: NodeProps) {
     </a>
   );
 }
+function EditableLink(props: NodeProps) {
+  const url = String(props.element.url ?? "");
+  const href = /^(https?:|mailto:|tel:|\/|#)/i.test(url) ? url : undefined;
+  return (
+    <a
+      {...props.attributes}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-accent-primary underline"
+      onClick={(event) => {
+        if (!href || event.button !== 0) return;
+        // Editable content consumes native link navigation; keep the document open while following the link.
+        event.preventDefault();
+        event.stopPropagation();
+        window.open(href, "_blank", "noopener,noreferrer");
+      }}
+    >
+      {props.children}
+    </a>
+  );
+}
 function Table({ attributes, children }: NodeProps) {
   return (
     <table {...attributes} className="w-full border-collapse border border-strong">
@@ -322,6 +344,7 @@ export const comparisonEditableComponents = {
   [BaseSandboxImagePlugin.key]: SandboxImageElement,
   [BaseComparisonMentionPlugin.key]: ComparisonMention,
   p: EditableParagraph,
+  a: EditableLink,
   code_block: ComparisonCodeBlock,
   table: ComparisonTable,
   td: ComparisonTableCell,
