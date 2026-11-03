@@ -18,13 +18,15 @@ it.each([24, 48, 72])("keeps the handle outside a task checkbox at indent %s", (
   const handle = node.firstElementChild as HTMLElement;
   const row = node.querySelector<HTMLElement>('[data-type="taskItem"]')!;
   const text = node.querySelector<HTMLElement>("[data-slate-string]")!;
+  const checkbox = row.querySelector<HTMLElement>('[role="checkbox"]')!;
+  vi.spyOn(checkbox, "getBoundingClientRect").mockReturnValue(rect(100 + indent, 64, 16, 16));
   vi.spyOn(node, "getBoundingClientRect").mockReturnValue(rect(100, 50, 600, 100));
   vi.spyOn(row, "getBoundingClientRect").mockReturnValue(rect(100 + indent, 60, 500, 48));
   vi.spyOn(text, "getClientRects").mockReturnValue([rect(124 + indent, 62, 300, 24)] as unknown as DOMRectList);
   const dispose = observeBlockHandlePosition(node, handle);
-  // A 16px handle ends 4px before the task row/checkbox and remains on the first text line.
+  // A 16px handle ends 4px before the checkbox and shares its center even with wrapped text.
   expect(Number.parseFloat(handle.style.left) + 16).toBe(indent - 4);
-  expect(handle.style.top).toBe("16px");
+  expect(Number.parseFloat(handle.style.top) + 8).toBe(64 - 50 + 8);
   dispose?.();
 });
 

@@ -14,14 +14,18 @@ export function observeBlockHandlePosition(node: HTMLElement, handle: HTMLElemen
     const target = visual ?? content;
     const rect = textRect || target.getBoundingClientRect();
     const style = getComputedStyle(content);
-    // Task text starts after the checkbox; anchor outside the whole task row instead.
-    const horizontalRect = content.matches('[data-type="taskItem"]') ? content.getBoundingClientRect() : rect;
+    const checkbox = content.matches('[data-type="taskItem"]')
+      ? content.querySelector<HTMLElement>('[role="checkbox"]')
+      : null;
+    const checkboxRect = checkbox?.getBoundingClientRect();
+    // Keep task handles outside the row and centered on its checkbox, including wrapped text.
+    const horizontalRect = checkboxRect ?? rect;
     const left = horizontalRect.left - origin.left - node.clientLeft;
     const top = rect.top - origin.top - node.clientTop;
     // A text line's rect already includes heading/paragraph padding and alignment.
     const inset = textRect ? Math.max(0, (rect.height - 16) / 2) : visual ? 6 : (parseFloat(style.paddingTop) || 0) + 6;
     handle.style.left = `${left - 20}px`;
-    handle.style.top = `${top + inset}px`;
+    handle.style.top = `${checkboxRect ? checkboxRect.top - origin.top - node.clientTop + (checkboxRect.height - 16) / 2 : top + inset}px`;
   };
 
   const resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);

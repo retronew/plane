@@ -37,7 +37,7 @@ function BlockHandle({
       <div
         ref={positionRef}
         contentEditable={false}
-        className="comparison-drag-handle absolute -left-5 z-10 opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100"
+        className="comparison-drag-handle absolute -left-5 z-10 flex opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100"
       >
         <IconButton
           ref={handleRef}
