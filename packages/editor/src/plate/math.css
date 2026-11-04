@@ -1,0 +1,42 @@
+.plane-equation {
+  margin-block: 12px;
+  text-align: center;
+}
+
+.plane-equation > span > button {
+  max-width: 100%;
+  height: auto;
+  min-height: 32px;
+  white-space: normal;
+}
+
+.plane-equation-render {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: middle;
+}
+
+.plane-equation .katex-display {
+  margin: 8px 0;
+}
+
+.plane-equation-inline {
+  display: inline;
+  margin: 0;
+  vertical-align: baseline;
+}
+
+.plane-equation-inline > span > button {
+  display: inline-flex;
+  min-height: 0;
+  padding: 0 2px;
+  vertical-align: baseline;
+}
+
+.plane-equation-input {
+  display: flex;
+  width: min(320px, calc(100vw - 48px));
+  flex-direction: column;
+  gap: 8px;
+}

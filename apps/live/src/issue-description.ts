@@ -3,7 +3,13 @@ import type { IncomingHttpHeaders } from "node:http";
 import { Hocuspocus } from "@hocuspocus/server";
 import type { Document, onAuthenticatePayload } from "@hocuspocus/server";
 import * as Y from "yjs";
-import { htmlToSlate, slateToHtml, slateNodesToInsertDelta, yTextToSlateElement } from "@plane/editor/plate-headless";
+import {
+  htmlToSlate,
+  slateToHtml,
+  slateNodesToInsertDelta,
+  yTextToSlateElement,
+  recoverOpaqueDiv,
+} from "@plane/editor/plate-headless";
 import type { SlateNode } from "@plane/editor/plate-headless";
 import { env } from "@/env";
 import { APIService } from "@/services/api.service";
@@ -72,6 +78,7 @@ export class IssueDescriptionAPI extends APIService implements IssueRepository {
 export interface IssueCodec {
   seed(html: string, snapshot?: IssueSnapshot): Uint8Array;
   projection?(document: Y.Doc): Partial<IssueWrite>;
+  migrate?(document: Y.Doc): boolean;
   html(document: Y.Doc): string;
 }
 function isSlateNode(value: unknown, depth = 0): value is SlateNode {
@@ -86,6 +93,49 @@ function isSlateNode(value: unknown, depth = 0): value is SlateNode {
   );
 }
 export const issueCodec: IssueCodec = {
+  migrate(doc) {
+    let changed = false;
+    const visit = (parent: Y.XmlText) => {
+      let index = 0;
+      for (const delta of parent.toDelta()) {
+        const child: unknown = delta.insert;
+        if (child instanceof Y.XmlText) {
+          const attributes = child.getAttributes();
+          // Unknown Slate metadata may carry list/layout semantics that cannot
+          // safely be distributed over several recovered blocks.
+          const plainAttributes = Object.keys(attributes).every((key) =>
+            ["type", "html", "id", "indent"].includes(key)
+          );
+          const recovered =
+            plainAttributes &&
+            child.length === 0 &&
+            (attributes.indent === undefined ||
+              (typeof attributes.indent === "number" && Number.isFinite(attributes.indent))) &&
+            attributes.type === "html_opaque" &&
+            typeof attributes.html === "string"
+              ? recoverOpaqueDiv(attributes.html)
+              : null;
+          if (recovered) {
+            // Retain the original block identity; unrelated Yjs nodes and shared
+            // types are never recreated, so in-flight edits can still merge.
+            if (typeof attributes.id === "string") recovered[0].id = attributes.id;
+            if (typeof attributes.indent === "number") {
+              for (const node of recovered) node.indent = Number(node.indent ?? 0) + attributes.indent;
+            }
+            parent.delete(index, 1);
+            parent.applyDelta([{ retain: index }, ...slateNodesToInsertDelta(recovered)]);
+            index += recovered.length;
+            changed = true;
+            continue;
+          }
+          visit(child);
+        }
+        index += typeof child === "string" ? child.length : 1;
+      }
+    };
+    doc.transact(() => visit(doc.get("content", Y.XmlText)));
+    return changed;
+  },
   seed(html) {
     const doc = new Y.Doc();
     try {
@@ -134,12 +184,47 @@ export class IssueDescriptionStore {
     private validate = checkSnapshot
   ) {}
 
+  /** Publish a repair only after CAS accepts it. Losing candidates are discarded,
+   * never merged into the room: independently inserted Yjs blocks would duplicate.
+   */
+  private async migrate(room: string, snapshot: IssueSnapshot, actor: Actor): Promise<IssueSnapshot> {
+    if (!snapshot.can_edit || snapshot.state === null || !this.codec.migrate) return snapshot;
+    const candidate = new Y.Doc();
+    try {
+      Y.applyUpdate(candidate, Buffer.from(snapshot.state, "base64"));
+      if (!this.codec.migrate(candidate)) return snapshot;
+      return await this.repository.write(
+        room,
+        actor.cookie,
+        {
+          format: FORMAT,
+          epoch: snapshot.epoch,
+          revision: snapshot.revision,
+          state: Buffer.from(Y.encodeStateAsUpdate(candidate)).toString("base64"),
+          description_html: this.codec.html(candidate),
+          ...this.codec.projection?.(candidate),
+        },
+        false,
+        actor.projectId
+      );
+    } finally {
+      candidate.destroy();
+    }
+  }
+
   async load(room: string, document: Y.Doc, actor: Actor) {
     let snapshot = await this.repository.read(room, actor.cookie, actor.projectId);
     for (let attempt = 0; attempt < 5; attempt++) {
       this.validate(room, snapshot);
       if (snapshot.state !== null) {
-        Y.applyUpdate(document, Buffer.from(snapshot.state, "base64"), REMOTE);
+        try {
+          snapshot = await this.migrate(room, snapshot, actor);
+        } catch (error) {
+          if (status(error) !== 409) throw error;
+          snapshot = await this.repository.read(room, actor.cookie, actor.projectId);
+          continue;
+        }
+        Y.applyUpdate(document, Buffer.from(snapshot.state!, "base64"), REMOTE);
         this.rooms.set(document, {
           snapshot,
           actors: new Map(),
@@ -206,10 +291,16 @@ export class IssueDescriptionStore {
         if (state.fenced) return;
         for (let attempt = 0; attempt < 5; attempt++) {
           const actor = state.lastWriter ?? state.reader;
-          const snapshot = await this.repository.read(room, actor.cookie, actor.projectId);
+          let snapshot = await this.repository.read(room, actor.cookie, actor.projectId);
           this.validate(room, snapshot);
           if (snapshot.state === null) throw new IssueEpochConflict();
-          Y.applyUpdate(document, Buffer.from(snapshot.state, "base64"), REMOTE);
+          try {
+            snapshot = await this.migrate(room, snapshot, actor);
+          } catch (error) {
+            if (status(error) !== 409) throw error;
+            continue;
+          }
+          Y.applyUpdate(document, Buffer.from(snapshot.state!, "base64"), REMOTE);
           state.snapshot = snapshot;
           if (!state.actors.size) return;
           if (!snapshot.can_edit)
@@ -287,6 +378,8 @@ export function createIssueDescriptionServer(options: Options = {}) {
   };
   const synchronize = async (documentName: string, document: Document) => {
     try {
+      let reader: Actor | undefined;
+      let editableReader: Actor | undefined;
       for (const connection of document.getConnections()) {
         try {
           const snapshot = await repository.read(
@@ -296,7 +389,8 @@ export function createIssueDescriptionServer(options: Options = {}) {
           );
           validate(documentName, snapshot);
           connection.readOnly = !snapshot.can_edit;
-          store.reader(document, connection.context as Actor);
+          reader = connection.context as Actor;
+          if (snapshot.can_edit) editableReader = reader;
         } catch (error) {
           if (error instanceof IssueEpochConflict) throw error;
           if ([401, 403, 404].includes(status(error) ?? 0)) {
@@ -306,6 +400,7 @@ export function createIssueDescriptionServer(options: Options = {}) {
           } else throw error;
         }
       }
+      if (editableReader ?? reader) store.reader(document, (editableReader ?? reader)!);
       const previous = store.snapshot(document)?.revision;
       await store.synchronize(documentName, document);
       const snapshot = store.snapshot(document);

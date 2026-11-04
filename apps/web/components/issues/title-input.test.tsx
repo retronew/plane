@@ -33,6 +33,27 @@ it("uses the latest fallback value when a whitespace title loses focus", () => {
   expect(props.setIsSubmitting).toHaveBeenLastCalledWith("saved");
   expect(props.issueOperations.update).not.toHaveBeenCalled();
 });
+it("emphasizes detail titles consistently when editing and read only", () => {
+  const props = {
+    value: "Detail title",
+    workspaceSlug: "workspace",
+    projectId: "project",
+    issueId: "issue",
+    isSubmitting: "saved" as const,
+    setIsSubmitting: vi.fn(),
+    issueOperations: { update: vi.fn() } as unknown as TIssueOperations,
+  };
+  const { rerender, container } = render(<IssueTitleInput {...props} />);
+  expect(container.firstElementChild?.className).toContain("[&_textarea]:!text-[24px]");
+  expect(container.firstElementChild?.className).toContain("[&_textarea]:!leading-[32px]");
+  expect(container.firstElementChild?.className).toContain("[&_textarea]:!font-semibold");
+  rerender(<IssueTitleInput {...props} disabled />);
+  const title = screen.getByText("Detail title");
+  expect(title.className).toContain("text-[24px]");
+  expect(title.className).toContain("leading-[32px]");
+  expect(title.className).toContain("font-semibold");
+});
+
 it("keeps Intake title typography identical when editing and read only", () => {
   const props = {
     value: "Intake title",

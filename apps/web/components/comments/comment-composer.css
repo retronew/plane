@@ -1,0 +1,18 @@
+[data-comment-composer] [data-slate-editor] {
+  --font-size-regular: 13px;
+  --font-size-list: 13px;
+  --line-height-regular: 20px;
+  --line-height-list: 20px;
+}
+
+[data-comment-composer-body] [data-slate-editor] {
+  min-height: 40px;
+}
+
+[data-comment-composer-body] textarea {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  font-size: 13px;
+  line-height: 20px;
+}

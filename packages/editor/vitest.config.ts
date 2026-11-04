@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.tsx", "src/plate/**/*.test.{ts,tsx}", "src/plate-headless/**/*.test.ts"],
     environment: "jsdom",
+    server: { deps: { inline: ["@platejs/math"] } },
   },
 });

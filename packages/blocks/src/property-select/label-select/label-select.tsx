@@ -153,7 +153,13 @@ export function LabelSelect(props: LabelSelectProps) {
                 {labels.map((label) => (
                   // each chip names its own label on hover (the aggregated trigger tooltip is off for chip rows)
                   <Tooltip key={label.id} label={t("common.labels")} layout="stacked" disabled={!showAllLabels}>
-                    <span className="flex h-6 shrink-0 items-center gap-1 rounded-md bg-label-grey-bg px-2 text-body-xs-medium text-label-grey-text">
+                    <span
+                      className={
+                        variant === "select-ghost-md"
+                          ? "flex h-5 max-w-full items-center gap-1 rounded-sm bg-layer-3 px-1.5 text-caption-md-medium text-secondary"
+                          : "flex h-6 shrink-0 items-center gap-1 rounded-md bg-label-grey-bg px-2 text-body-xs-medium text-label-grey-text"
+                      }
+                    >
                       <LabelDot color={label.color} />
                       <span className="truncate">{label.name}</span>
                     </span>

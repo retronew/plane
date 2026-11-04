@@ -1,5 +1,6 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role -- Rich command options require icons and preserve editor focus; native select cannot provide this UI. */
 import { useEffect, useId, useRef, useState } from "react";
+import { ChevronRightIcon, SigmaIcon, NetworkIcon, PaperclipIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
 import { Button } from "@makeplane/propel/components/button";
@@ -57,12 +58,28 @@ export const slashItems = [
   { command: "table", label: "table", terms: "table 表格", icon: TableEditorOutline, group: 2 },
   { command: "blockquote", label: "quote", terms: "blockquote quote 引用", icon: QuoteOutline, group: 2 },
   { command: "codeBlock", label: "code", terms: "code block 代码", icon: CodeOutline, group: 2 },
+  { command: "diagram", label: "diagram", terms: "diagram mermaid 图表 流程图", icon: NetworkIcon, group: 2 },
+  { command: "equation", label: "equation", terms: "latex math equation 数学 公式", icon: SigmaIcon, group: 2 },
   { command: "image", label: "image", terms: "image picture photo 图片", icon: ImageOutline, group: 3 },
+  {
+    command: "attachment",
+    label: "attachments",
+    terms: "attach file attachment 文件 附件",
+    icon: PaperclipIcon,
+    group: 3,
+  },
   {
     command: "horizontalRule",
     label: "divider",
     terms: "divider horizontal rule 分隔线",
     icon: MinusSquareOutline,
+    group: 3,
+  },
+  {
+    command: "toggle",
+    label: "toggle",
+    terms: "toggle collapsible section 折叠 收起",
+    icon: ChevronRightIcon,
     group: 3,
   },
   { command: "callout", label: "callout", terms: "callout alert info 提示", icon: ChatOutline, group: 3 },
@@ -96,7 +113,15 @@ export function executeSlashCommand(editor: SlateEditor, range: TRange, command:
     editor.tf.select(range);
     editor.tf.delete();
     if (command === "image") api.executeMenuItemCommand({ itemKey: "image", savedSelection: null });
-    else executeComparisonCommand(editor, command as ComparisonCommand);
+    else if (command === "attachment") api.executeMenuItemCommand({ itemKey: "attachment", savedSelection: null });
+    else if (command === "equation") {
+      editor.tf.insertNodes({ type: "equation", texExpression: "", children: [{ text: "" }] }, { select: true });
+    } else if (command === "diagram") {
+      editor.tf.insertNodes(
+        { type: "code_block", lang: "mermaid", children: [{ type: "code_line", children: [{ text: "graph TD" }] }] },
+        { select: true }
+      );
+    } else executeComparisonCommand(editor, command as ComparisonCommand);
   });
 }
 export function SlashMenu({ api, disabled }: { api: EditorRefApi; disabled: readonly string[] }) {
@@ -173,7 +198,7 @@ export function SlashMenu({ api, disabled }: { api: EditorRefApi; disabled: read
       style={{ ...floatingStyles, zIndex: 60 }}
       data-plane-plate-menu="open"
       data-prevent-outside-click
-      className="w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-subtle-1 bg-surface-1 p-1.5 shadow-raised-200"
+      className="w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-subtle-1 bg-surface-1 p-1 shadow-raised-200"
       onMouseDown={(event) => event.preventDefault()}
     >
       <div
@@ -204,12 +229,20 @@ export function SlashMenu({ api, disabled }: { api: EditorRefApi; disabled: read
               stretch="full"
               render={
                 <button
-                  aria-label={t(`web.${item.label}` as Parameters<typeof t>[0])}
-                  className={`min-h-8 justify-start gap-2.5 rounded-md px-2.5 py-1.5 text-body-xs-regular ${index === position ? "bg-layer-transparent-hover" : ""}`}
+                  aria-label={t(
+                    `${["toggle", "equation", "diagram"].includes(item.command) ? "editor_comparison" : "web"}.${item.label}` as Parameters<
+                      typeof t
+                    >[0]
+                  )}
+                  className={`min-h-8 justify-start gap-2.5 rounded-md px-2 py-1.5 text-body-sm-regular ${index === position ? "bg-layer-transparent-hover" : ""}`}
                 />
               }
               icon={<item.icon className="size-4 text-secondary" />}
-              label={t(`web.${item.label}` as Parameters<typeof t>[0])}
+              label={t(
+                `${["toggle", "equation", "diagram"].includes(item.command) ? "editor_comparison" : "web"}.${item.label}` as Parameters<
+                  typeof t
+                >[0]
+              )}
               onMouseEnter={() => setActive({ query: match!.query, index: position })}
               onClick={() => choose(item.command)}
             />

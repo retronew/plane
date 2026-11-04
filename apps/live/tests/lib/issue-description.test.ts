@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
 import { OutgoingMessage } from "@hocuspocus/server";
 import * as Y from "yjs";
+import { slateNodesToInsertDelta, yTextToSlateElement, type SlateElement } from "@plane/editor/plate-headless";
 import {
   createIssueDescriptionServer,
   IssueDescriptionStore,
@@ -76,6 +77,157 @@ const doc = () => {
 };
 afterEach(() => {
   for (const value of docs.splice(0)) value.destroy();
+});
+
+const fs30 =
+  "<div><p><strong>负责人（表格）：</strong>陈和平</p>\n<p><strong>延期原因：</strong>261013陈焓 因前项目经理制作表格离职，进度延迟</p></div>";
+function legacyRepository(html = fs30) {
+  const repository = new Repository();
+  const legacy = doc();
+  const value: SlateElement[] = [
+    { type: "p", id: "before", children: [{ text: "Existing" }] },
+    { type: "html_opaque", id: "legacy", html, children: [{ text: "" }] },
+  ];
+  legacy.get("content", Y.XmlText).applyDelta(slateNodesToInsertDelta(value));
+  legacy.getMap("unrelated").set("retained", true);
+  repository.snapshot.state = Buffer.from(Y.encodeStateAsUpdate(legacy)).toString("base64");
+  repository.snapshot.description_html = `<p>Existing</p>${html}`;
+  return repository;
+}
+
+describe("legacy opaque div recovery", () => {
+  it("CAS-publishes exactly one recovery across concurrent room loads and reconnects", async () => {
+    const repository = legacyRepository();
+    const first = doc(),
+      second = doc();
+    await Promise.all([
+      new IssueDescriptionStore(repository).load(room, first, actor),
+      new IssueDescriptionStore(repository).load(room, second, actor),
+    ]);
+    Y.applyUpdate(first, Y.encodeStateAsUpdate(second));
+    Y.applyUpdate(second, Y.encodeStateAsUpdate(first));
+    const nodes = yTextToSlateElement(first.get("content", Y.XmlText)).children;
+    expect(nodes).toHaveLength(3);
+    expect(nodes[1]).toMatchObject({
+      type: "p",
+      id: "legacy",
+      children: [{ text: "负责人（表格）：", bold: true }, { text: "陈和平" }],
+    });
+    expect(issueCodec.html(first)).toBe(`<p>Existing</p>${fs30.slice(5, -6).replace("\n", "")}`);
+    expect(issueCodec.html(second)).toBe(issueCodec.html(first));
+    expect(first.getMap("unrelated").get("retained")).toBe(true);
+    expect(repository.writes).toHaveLength(1);
+    const reconnected = doc();
+    await new IssueDescriptionStore(repository).load(room, reconnected, actor);
+    expect(issueCodec.html(reconnected)).toBe(issueCodec.html(first));
+    expect(repository.writes).toHaveLength(1);
+    expect(issueCodec.migrate!(reconnected)).toBe(false);
+  });
+  it("concurrent writer arrival repairs a reader-loaded room once and preserves in-flight edits", async () => {
+    const repository = legacyRepository();
+    repository.readonly.add("reader");
+    const first = doc(),
+      second = doc();
+    const a = new IssueDescriptionStore(repository),
+      b = new IssueDescriptionStore(repository);
+    await Promise.all([
+      a.load(room, first, { userId: "reader", cookie: "reader" }),
+      b.load(room, second, { userId: "reader", cookie: "reader" }),
+    ]);
+    const paragraph = first.get("content", Y.XmlText).toDelta()[0].insert as Y.XmlText;
+    paragraph.insert(0, "In-flight ");
+    a.changed(first, actor);
+    b.reader(second, actor);
+    await Promise.all([a.synchronize(room, first), b.synchronize(room, second)]);
+    await a.synchronize(room, first);
+    await b.synchronize(room, second);
+    expect(issueCodec.html(first)).toBe(issueCodec.html(second));
+    expect(first.get("content", Y.XmlText).length).toBe(3);
+    expect(issueCodec.html(first)).toContain("In-flight Existing");
+    const content = first.get("content", Y.XmlText);
+    const history = new Y.UndoManager(content);
+    const recovered = content.toDelta()[1].insert as Y.XmlText;
+    const before = issueCodec.html(first);
+    recovered.insert(recovered.length, "edit");
+    expect(issueCodec.html(first)).toContain("edit");
+    history.undo();
+    expect(issueCodec.html(first)).toBe(before);
+    expect(issueCodec.migrate!(first)).toBe(false);
+    history.destroy();
+  });
+  it("does not publish a failed repair and retries without duplicated content", async () => {
+    const repository = legacyRepository();
+    const document = doc();
+    repository.fail = true;
+    await expect(new IssueDescriptionStore(repository).load(room, document, actor)).rejects.toThrow("offline");
+    expect(document.get("content", Y.XmlText).length).toBe(0);
+    repository.fail = false;
+    await new IssueDescriptionStore(repository).load(room, document, actor);
+    expect(document.get("content", Y.XmlText).length).toBe(3);
+  });
+  it("recovers a room first loaded by a reader once a writer is available", async () => {
+    const repository = legacyRepository();
+    repository.readonly.add("reader");
+    const document = doc(),
+      store = new IssueDescriptionStore(repository);
+    await store.load(room, document, { userId: "reader", cookie: "reader" });
+    await store.synchronize(room, document);
+    expect(repository.writes).toHaveLength(0);
+    store.reader(document, actor);
+    await store.synchronize(room, document);
+    expect(document.get("content", Y.XmlText).length).toBe(3);
+    expect(repository.writes).toHaveLength(1);
+    await store.synchronize(room, document);
+    expect(repository.writes).toHaveLength(1);
+  });
+  it.each([
+    '<div data-custom="keep"><p>Opaque</p></div>',
+    '<div style="white-space:pre-wrap"><p>Opaque</p></div>',
+    '<issue-embed-component entity_identifier="issue"></issue-embed-component>',
+  ])("preserves special opaque payloads: %s", async (html) => {
+    const repository = legacyRepository(html),
+      document = doc();
+    await new IssueDescriptionStore(repository).load(room, document, actor);
+    expect(repository.writes).toHaveLength(0);
+    expect(yTextToSlateElement(document.get("content", Y.XmlText)).children[1]).toMatchObject({
+      type: "html_opaque",
+      html,
+    });
+  });
+  it.each([{ align: "center" }, { listStyleType: "disc" }, { htmlAttributes: { "data-custom": "keep" } }])(
+    "does not reinterpret opaque Slate metadata: %j",
+    (metadata) => {
+      const document = doc();
+      const value: SlateElement[] = [{ type: "html_opaque", html: fs30, ...metadata, children: [{ text: "" }] }];
+      document.get("content", Y.XmlText).applyDelta(slateNodesToInsertDelta(value));
+      expect(issueCodec.migrate!(document)).toBe(false);
+      expect(yTextToSlateElement(document.get("content", Y.XmlText)).children).toEqual(value);
+    }
+  );
+  it("retains indentation on every recovered block inside a toggle body", () => {
+    const document = doc();
+    const value: SlateElement[] = [
+      { type: "toggle", children: [{ text: "Summary" }] },
+      { type: "html_opaque", id: "body", indent: 1, html: fs30, children: [{ text: "" }] },
+    ];
+    document.get("content", Y.XmlText).applyDelta(slateNodesToInsertDelta(value));
+    expect(issueCodec.migrate!(document)).toBe(true);
+    const nodes = yTextToSlateElement(document.get("content", Y.XmlText)).children;
+    expect(nodes.slice(1)).toMatchObject([
+      { type: "p", id: "body", indent: 1 },
+      { type: "p", indent: 1 },
+    ]);
+    expect(issueCodec.migrate!(document)).toBe(false);
+  });
+  it("keeps nested attributed wrappers and embeds while recovering editable siblings", async () => {
+    const html =
+      '<div><p>Editable</p><div data-custom="keep"><p>Opaque</p></div><issue-embed-component entity_identifier="issue"></issue-embed-component></div>';
+    const repository = legacyRepository(html),
+      document = doc();
+    await new IssueDescriptionStore(repository).load(room, document, actor);
+    expect(issueCodec.html(document)).toBe(`<p>Existing</p>${html.slice(5, -6)}`);
+    expect(issueCodec.migrate!(document)).toBe(false);
+  });
 });
 
 describe("issue description CAS persistence", () => {

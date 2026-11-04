@@ -7,7 +7,7 @@ type Attributes = Record<string, string>;
 const empty = (): SlateText[] => [{ text: "" }];
 const element = (node: HtmlNode): node is HtmlElement => "tagName" in node;
 const isBlock = (tag: string) =>
-  /^(p|h[1-6]|blockquote|pre|ul|ol|table|hr|div|section|article|figure|image-component|img|.*-embed-component|attachment-component)$/.test(
+  /^(p|h[1-6]|blockquote|pre|ul|ol|table|hr|div|details|section|article|figure|image-component|img|.*-embed-component|attachment-component)$/.test(
     tag
   );
 const blocked = new Set([
@@ -142,6 +142,8 @@ function inline(nodes: HtmlNode[], inherited: Record<string, unknown> = {}): Sla
       style = styleMap(a),
       tag = node.tagName;
     if (tag === "br") return [{ ...inherited, text: "\n" }];
+    if (tag === "span" && a["data-type"] === "inline_equation")
+      return [block("inline_equation", empty(), {}, { texExpression: textOf(node) })];
     if (tag === "mention-component") return [block("comparison_mention", empty(), a, a)];
     if (tag === "a") return [block("a", inline(node.childNodes, inherited), a, { url: a.href ?? "" })];
     const marks: Record<string, unknown> = { ...inherited };
@@ -196,7 +198,8 @@ function listNodes(list: HtmlElement, depth: number): SlateElement[] {
       for (const node of nodes) {
         if (element(node) && ["ul", "ol"].includes(node.tagName)) nested.push(node);
         else if (element(node) && style === "todo" && ["label", "input"].includes(node.tagName)) continue;
-        else if (element(node) && node.tagName === "div") collect(node.childNodes);
+        else if (element(node) && node.tagName === "div" && attrs(node)["data-type"] !== "equation")
+          collect(node.childNodes);
         else content.push(node);
       }
     };
@@ -208,7 +211,8 @@ function listNodes(list: HtmlElement, depth: number): SlateElement[] {
     const checkOrder = (nodes: HtmlNode[]) => {
       for (const child of nodes) {
         if (element(child) && ["ul", "ol"].includes(child.tagName)) sawList = true;
-        else if (element(child) && child.tagName === "div") checkOrder(child.childNodes);
+        else if (element(child) && child.tagName === "div" && attrs(child)["data-type"] !== "equation")
+          checkOrder(child.childNodes);
         else if (sawList && (element(child) || textOf(child).trim())) interleaved = true;
       }
     };
@@ -239,8 +243,24 @@ function readBlock(node: HtmlElement): SlateElement[] {
     style = styleMap(a),
     tag = node.tagName;
   const extra = style["text-align"] ? { align: style["text-align"] } : {};
+  // A bare div is only a layout wrapper, not an unsupported atomic block.
+  // Keep attributed divs opaque so custom semantics and styling survive.
+  if (tag === "div" && node.attrs.length === 0) return readBlocks(node.childNodes);
+  if (tag === "div" && a["data-type"] === "equation")
+    return [block("equation", empty(), {}, { texExpression: textOf(node) })];
   if (tag === "ul" || tag === "ol") return listNodes(node, 1);
   if (tag === "p" || /^h[1-6]$/.test(tag)) return [block(tag, inline(node.childNodes), a, extra)];
+  if (tag === "details") {
+    const summary = node.childNodes.find((child) => element(child) && child.tagName === "summary");
+    // Preserve malformed/nonstandard details intact instead of discarding content.
+    if (!summary || !element(summary)) return [opaque(node, false)];
+    const body = node.childNodes.filter((child) => child !== summary);
+    if (body.some((child) => element(child) && child.tagName === "summary")) return [opaque(node, false)];
+    return [
+      block("toggle", inline(summary.childNodes), a, { summaryAttributes: attrs(summary) }),
+      ...readBlocks(body).map((child) => Object.assign(child, { indent: Number(child.indent ?? 0) + 1 })),
+    ];
+  }
   if (tag === "blockquote") return [block(tag, readBlocks(node.childNodes), a, extra)];
   if (tag === "div" && a["data-block-type"] === "callout-component")
     return [block("comparison_callout", readBlocks(node.childNodes), a, a)];
@@ -357,6 +377,18 @@ export function htmlToSlate(html: string): SlateValue {
   const nodes = readBlocks(fragment.childNodes);
   return nodes.length ? nodes : [block("p", empty())];
 }
+/** Recover only legacy opaque nodes whose entire payload is a bare div wrapper.
+ * Inspect before sanitizing: an attributed wrapper must never be mistaken for a
+ * plain one merely because the sanitizer removed an unsupported attribute.
+ */
+export function recoverOpaqueDiv(html: string): SlateValue | null {
+  const fragment = parseFragment(html);
+  const meaningful = fragment.childNodes.filter((node) => element(node) || textOf(node).trim());
+  if (meaningful.length !== 1) return null;
+  const root = meaningful[0];
+  if (!element(root) || root.tagName !== "div" || root.attrs.length !== 0) return null;
+  return htmlToSlate(html);
+}
 function attributesHtml(attributes: Attributes): string {
   return Object.entries(cleanAttributes(attributes))
     .map(([key, value]) => ` ${key}="${escape(value)}"`)
@@ -408,6 +440,8 @@ function nodeHtml(node: SlateNode): string {
   const n = node as SlateElement,
     a = storedAttrs(n);
   if (n.type === "html_opaque" || n.type === "html_opaque_inline") return sanitizeHtml(String(n.html ?? ""));
+  if (n.type === "equation" || n.type === "inline_equation")
+    return tagHtml(n.type === "equation" ? "div" : "span", { "data-type": n.type }, escape(n.texExpression));
   if (n.align) a.style = `${a.style ?? ""};text-align:${n.align}`;
   const children = () => writeNodes(n.children);
   if (n.type === "comparison_mention" || n.type === "comparison_callout") {
@@ -497,7 +531,31 @@ function writeNodes(nodes: SlateNode[]): string {
     roots.length = 0;
     stack.length = 0;
   };
-  for (const node of nodes) {
+  for (let index = 0; index < nodes.length; index++) {
+    const node = nodes[index];
+    if (node.type === "toggle" && typeof node.text !== "string") {
+      flush();
+      const depth = Number(node.indent ?? 0);
+      const body: SlateNode[] = [];
+      // Match the official toggle index's list-indent correction.
+      while (index + 1 < nodes.length) {
+        const next = nodes[index + 1];
+        const indent = Number(next.indent ?? 0);
+        if (indent - (next.listStyleType && indent ? 1 : 0) <= depth) break;
+        body.push({ ...next, indent: indent - depth - 1 });
+        index++;
+      }
+      const attributes = storedAttrs(node);
+      // Expansion is local UI state in the official plugin, not shared content.
+      delete attributes.open;
+      const summaryAttributes = storedAttrs({ htmlAttributes: node.summaryAttributes, text: "" });
+      html += tagHtml(
+        "details",
+        attributes,
+        tagHtml("summary", summaryAttributes, writeNodes((node as SlateElement).children)) + writeNodes(body)
+      );
+      continue;
+    }
     if (!node.listStyleType || typeof node.text === "string") {
       flush();
       html += nodeHtml(node);

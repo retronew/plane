@@ -62,6 +62,22 @@ describe("label color slots", () => {
   });
 });
 
+it("uses compact module-sized chips in sidebar selects and retains the label color", () => {
+  render(
+    <LabelSelect
+      variant="select-ghost-md"
+      value={[{ id: "a", name: "Backend", color: "#123456" }]}
+      getValues={getValues}
+      onChange={vi.fn()}
+    />
+  );
+  const chip = screen.getByText("Backend").parentElement;
+  expect(chip?.className).toContain("h-5");
+  expect(chip?.className).toContain("text-caption-md-medium");
+  expect(chip?.className).toContain("max-w-full");
+  expect(chip?.querySelector<HTMLElement>("[style]")?.style.backgroundColor).toBe("rgb(18, 52, 86)");
+});
+
 it("keeps the tag glyph visible in icon mode after selecting a label", () => {
   render(
     <LabelSelect

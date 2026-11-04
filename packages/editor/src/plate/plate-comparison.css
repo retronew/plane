@@ -62,7 +62,7 @@
   .plate-comparison-content
   > .comparison-draggable:has(> .editor-heading-block)
   > .comparison-drag-handle {
-  top: calc(var(--block-heading-padding) + 6px);
+  top: 6px;
 }
 
 .editor-container .plate-comparison-content > .comparison-draggable:first-child > .editor-heading-block {
@@ -73,10 +73,46 @@
   top: 6px;
 }
 
+.editor-container:has(.plate-comparison-content) {
+  --plate-block-gap: 16px;
+  --font-size-regular: 0.9375rem;
+  --font-size-code: 0.8125rem;
+  --font-size-list: var(--font-size-regular);
+  --font-size-h1: 1.375rem;
+  --font-size-h2: 1.25rem;
+  --font-size-h3: 1.125rem;
+  --font-size-h4: 1rem;
+  --font-size-h5: 0.9375rem;
+  --font-size-h6: 0.9375rem;
+  --line-height-regular: 1.6;
+  --line-height-list: 1.6;
+  --line-height-h1: 1.3454545;
+  --line-height-h2: 1.4;
+  --line-height-h3: 1.4444444;
+  --line-height-h4: 1.5;
+  --line-height-h5: 1.6;
+  --line-height-h6: 1.6;
+}
+
+.editor-container.line-spacing-small:has(.plate-comparison-content) {
+  --plate-block-gap: 8px;
+}
+
+.editor-container.large-font:has(.plate-comparison-content) {
+  --font-size-regular: 1rem;
+  --font-size-h1: 1.75rem;
+  --font-size-h2: 1.5rem;
+  --font-size-h3: 1.375rem;
+  --font-size-h4: 1.25rem;
+  --font-size-h5: 1.125rem;
+  --font-size-h6: 1rem;
+}
+
 .plate-comparison-content {
   font-family: var(--font-style);
   font-size: var(--font-size-regular);
-  font-weight: 400;
+  line-height: var(--line-height-regular);
+  font-weight: 450;
   overflow-wrap: break-word;
   tab-size: 4;
 }
@@ -123,9 +159,11 @@
   padding: 16px;
   tab-size: 2;
   margin-block: 1.5em;
-  font-size: 0.875em;
-  line-height: 1.7142857;
-  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.6666667;
+  border: 0.5px solid var(--border-color-subtle);
+  border-radius: 6px;
+  background-color: var(--background-color-layer-2);
 }
 
 .plate-comparison-content .comparison-code-block[data-language]::before {
@@ -170,4 +208,83 @@
 .plate-comparison-content td,
 .plate-comparison-content th {
   padding: 7px 10px;
+}
+
+.plate-comparison-content h1 {
+  font-size: var(--font-size-h1);
+  line-height: var(--line-height-h1);
+}
+.plate-comparison-content h2 {
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-h2);
+}
+.plate-comparison-content h3 {
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-h3);
+}
+.plate-comparison-content h4 {
+  font-size: var(--font-size-h4);
+  line-height: var(--line-height-h4);
+}
+.plate-comparison-content h5 {
+  font-size: var(--font-size-h5);
+  line-height: var(--line-height-h5);
+}
+.plate-comparison-content h6 {
+  font-size: var(--font-size-h6);
+  line-height: var(--line-height-h6);
+}
+.plate-comparison-content :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+}
+
+/* Slate wrappers must not change the rhythm between document blocks. */
+.editor-container .plate-comparison-content :is(p.editor-paragraph-block, .editor-heading-block) {
+  padding-block: 0 !important;
+  letter-spacing: -0.0066667em;
+}
+
+.editor-container .plate-comparison-content > * + *,
+.editor-container .plate-comparison-content > .comparison-draggable + .comparison-draggable {
+  margin-block-start: var(--plate-block-gap) !important;
+}
+
+.editor-container .plate-comparison-content > :is(ul, ol, [data-type="taskItem"]) + :is(ul, ol, [data-type="taskItem"]),
+.editor-container
+  .plate-comparison-content
+  > .comparison-draggable:has(:is(ul, ol, [data-type="taskItem"]))
+  + .comparison-draggable:has(:is(ul, ol, [data-type="taskItem"])) {
+  margin-block-start: 6px !important;
+}
+
+.editor-container .plate-comparison-content :is(ul, ol, li) {
+  margin-block: 0;
+  padding-block: 0;
+}
+
+.editor-container .plate-comparison-content blockquote {
+  margin-block: 0;
+  padding-inline-start: 16px;
+}
+
+.editor-container .plate-comparison-content pre {
+  margin-block: 0;
+  padding: 12px 16px;
+}
+
+.editor-container .plate-comparison-content pre code {
+  font-size: inherit;
+  line-height: inherit;
+  border: 0;
+}
+
+.plane-selection-toolbar button {
+  min-width: 28px;
+  min-height: 28px;
+}
+
+@media (max-width: 767px) {
+  .editor-container:has(.plate-comparison-content[contenteditable="true"]) {
+    --font-size-regular: 1rem;
+  }
 }

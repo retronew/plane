@@ -33,8 +33,7 @@ it.each([{ variant: "compact" as const }, { isIntakeIssue: true }])(
     const props = editor.mock.lastCall?.[0];
     expect(props.compactCommentToolbar).toBe(true);
     expect(props.containerClassName).toContain("max-h-[200px] overflow-y-auto");
-    expect(props.parentClassName).toContain("rounded-xl");
-    expect(props.parentClassName).toContain("!p-0");
+    expect(props.parentClassName).toBeUndefined();
   }
 );
 it("keeps normal editor appearance by default and stores the same comment body", async () => {

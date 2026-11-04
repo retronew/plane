@@ -1,6 +1,6 @@
 .plate-comparison-content .comparison-table-scroll {
   overflow-x: auto;
-  padding-block: 18px 30px;
+  padding-block: 0 24px;
   padding-inline-end: 30px;
 }
 
@@ -11,13 +11,42 @@
 
 .plate-comparison-content .comparison-table-grid {
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 0.5px solid var(--border-color-subtle);
+  border-radius: 6px;
   margin: 0;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .plate-comparison-content .comparison-table-cell {
   position: relative;
   overflow-wrap: anywhere;
+  border: 0;
+  border-inline-end: 0.5px solid var(--border-color-subtle);
+  border-block-end: 0.5px solid var(--border-color-subtle);
+}
+
+.plate-comparison-content .comparison-table-cell:last-child {
+  border-inline-end: 0;
+}
+
+.plate-comparison-content tr:last-child .comparison-table-cell {
+  border-block-end: 0;
+}
+
+.plate-comparison-content tr:first-child > :first-child {
+  border-start-start-radius: 6px;
+}
+.plate-comparison-content tr:first-child > :last-child {
+  border-start-end-radius: 6px;
+}
+.plate-comparison-content tr:last-child > :first-child {
+  border-end-start-radius: 6px;
+}
+.plate-comparison-content tr:last-child > :last-child {
+  border-end-end-radius: 6px;
 }
 
 .plate-comparison-content th.comparison-table-cell {

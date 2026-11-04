@@ -274,7 +274,7 @@ export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
   };
   if (!relevant) return null;
   if (loadError) return <ApprovalLoadError onRetry={() => void mutate()} />;
-  if (!data) return <output className="text-caption-md-regular text-tertiary">{t("loading")}</output>;
+  if (!data) return null;
   const currentSource = hasApprovalSource(workflow, issue?.state_id);
   if (!shouldRenderApproval(pending, data.results.length, currentSource)) return null;
   return (

@@ -85,6 +85,7 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
       refreshRunning.current = false;
     }
   }, []);
+  const pendingSave = useRef(false);
   const submittingRef = useRef(setIsSubmitting);
   useLayoutEffect(() => {
     submittingRef.current = setIsSubmitting;
@@ -104,10 +105,16 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
         return;
       }
       if (!message || typeof message !== "object" || !("type" in message) || typeof message.type !== "string") return;
-      if (message.type === "pending") submittingRef.current("submitting");
+      if (message.type === "pending") {
+        pendingSave.current = true;
+        submittingRef.current("submitting");
+      }
       if (message.type === "saved") {
         setSaveError(false);
-        submittingRef.current("submitted");
+        if (pendingSave.current) {
+          pendingSave.current = false;
+          submittingRef.current("submitted");
+        }
         void refreshSavedIssue();
       }
       if (message.type === "save-error") setSaveError(true);

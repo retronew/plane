@@ -13,7 +13,9 @@ import { NodeApi, type TElement } from "platejs";
 import type { EditorRefApi, TEditorAsset } from "../types";
 import { useEditorPreferences } from "../components/editor-preferences";
 import type { PlateEditorProps, PlateComparisonEditorLabels } from "./types";
-import { comparisonPlugins, comparisonEditableComponents, comparisonCommandLabels } from "./plate-kit";
+import { comparisonEditableComponents, comparisonCommandLabels } from "./plate-kit";
+import { createMarkdownInputPlugins } from "./markdown-input";
+import { comparisonMathPlugins } from "./math";
 import { SelectionToolbar } from "./selection-toolbar";
 import { SandboxAssetsProvider, insertSandboxImage, type SandboxImageLabels } from "./image-plugin";
 import { useEditorAssets } from "./assets";
@@ -41,6 +43,7 @@ const draggable = new Set([
   "hr",
   "comparison_callout",
   "sandboxImage",
+  "toggle",
 ]);
 const components = Object.fromEntries(
   Object.entries(comparisonEditableComponents).map(([key, component]) => [
@@ -54,9 +57,19 @@ export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
     const preferences = useEditorPreferences();
     const assets = useEditorAssets(props.fileHandler);
     const container = useRef<HTMLDivElement>(null);
+    const disabledExtensions = useRef(props.disabledExtensions);
+    useEffect(() => {
+      disabledExtensions.current = props.disabledExtensions;
+    }, [props.disabledExtensions]);
     const editor = usePlateEditor({
       id: props.id,
-      plugins: [...comparisonPlugins, ...opaquePlugins, ...(props.dragDropEnabled ? [DndPlugin] : [])],
+      plugins: [
+        // oxlint-disable-next-line react/refs -- Rule predicates read capabilities at input time, never during render.
+        ...createMarkdownInputPlugins(() => disabledExtensions.current),
+        ...opaquePlugins,
+        ...comparisonMathPlugins,
+        ...(props.dragDropEnabled ? [DndPlugin] : []),
+      ],
       override: { components: props.dragDropEnabled ? components : comparisonEditableComponents },
       value: () =>
         props.collaboration

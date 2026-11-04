@@ -83,87 +83,87 @@
 .plate-github-code .hljs-punctuation,
 .plate-github-code .hljs-tag {
 }
-:is(.dark, .dark-contrast) .plate-github-code {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code {
   color: #c9d1d9;
   background: #0d1117;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-doctag,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-keyword,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-meta .hljs-keyword,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-template-tag,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-template-variable,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-type,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-variable.language_ {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-doctag,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-keyword,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-meta .hljs-keyword,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-template-tag,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-template-variable,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-type,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-variable.language_ {
   color: #ff7b72;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-title,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-title.class_,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-title.class_.inherited__,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-title.function_ {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-title,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-title.class_,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-title.class_.inherited__,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-title.function_ {
   color: #d2a8ff;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-attr,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-attribute,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-literal,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-meta,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-number,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-operator,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-variable,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-attr,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-class,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-id {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-attr,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-attribute,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-literal,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-meta,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-number,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-operator,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-variable,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-selector-attr,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-selector-class,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-selector-id {
   color: #79c0ff;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-regexp,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-string,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-meta .hljs-string {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-regexp,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-string,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-meta .hljs-string {
   color: #a5d6ff;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-built_in,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-symbol {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-built_in,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-symbol {
   color: #ffa657;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-comment,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-code,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-formula {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-comment,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-code,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-formula {
   color: #8b949e;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-name,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-quote,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-tag,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-selector-pseudo {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-name,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-quote,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-selector-tag,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-selector-pseudo {
   color: #7ee787;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-subst {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-subst {
   color: #c9d1d9;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-section {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-section {
   color: #1f6feb;
   font-weight: bold;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-bullet {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-bullet {
   color: #f2cc60;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-emphasis {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-emphasis {
   color: #c9d1d9;
   font-style: italic;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-strong {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-strong {
   color: #c9d1d9;
   font-weight: bold;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-addition {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-addition {
   color: #aff5b4;
   background-color: #033a16;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-deletion {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-deletion {
   color: #ffdcd7;
   background-color: #67060c;
 }
-:is(.dark, .dark-contrast) .plate-github-code .hljs-char.escape_,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-link,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-params,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-property,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-punctuation,
-:is(.dark, .dark-contrast) .plate-github-code .hljs-tag {
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-char.escape_,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-link,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-params,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-property,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-punctuation,
+:is(.dark, .dark-contrast, [data-theme*="dark"]) .plate-github-code .hljs-tag {
 }

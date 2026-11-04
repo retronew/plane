@@ -154,7 +154,7 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
       <div
         className={cn(
           "whitespace-pre-line",
-          isIntakeIssue ? "text-[24px] leading-[30px] font-semibold" : "text-20 font-medium"
+          isIntakeIssue ? "text-[24px] leading-[30px] font-semibold" : "text-[24px] leading-[32px] font-semibold"
         )}
       >
         {title}
@@ -165,8 +165,8 @@ export const IssueTitleInput = observer(function IssueTitleInput(props: IssueTit
     <div
       ref={titleInputRef}
       className={cn(
-        "flex flex-col gap-1.5",
-        isIntakeIssue && "[&_textarea]:!text-[24px] [&_textarea]:!leading-[30px] [&_textarea]:!font-semibold"
+        "flex flex-col gap-1.5 [&_textarea]:!text-[24px] [&_textarea]:!font-semibold",
+        isIntakeIssue ? "[&_textarea]:!leading-[30px]" : "[&_textarea]:!leading-[32px]"
       )}
     >
       <div className={cn("relative", containerClassName)}>

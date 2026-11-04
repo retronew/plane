@@ -124,6 +124,37 @@ describe("headless HTML conversion (Node, no DOM globals)", () => {
       "Unsupported Slate node type"
     );
   });
+  it("unwraps bare divs into editable blocks, including the FS-30 description", () => {
+    const html =
+      "<div><p><strong>负责人（表格）：</strong>陈和平</p>\n<p><strong>延期原因：</strong>261013陈焓 因前项目经理制作表格离职，进度延迟</p></div>";
+    expect(htmlToSlate(html)).toEqual([
+      { type: "p", children: [{ text: "负责人（表格）：", bold: true }, { text: "陈和平" }] },
+      {
+        type: "p",
+        children: [{ text: "延期原因：", bold: true }, { text: "261013陈焓 因前项目经理制作表格离职，进度延迟" }],
+      },
+    ]);
+    expect(stableRoundTrips(html)).toBe(html.slice(5, -6).replace("\n", ""));
+    expect(htmlToSlate("<div>before<div><p>nested</p></div>after</div>").map((node) => node.children[0].text)).toEqual([
+      "before",
+      "nested",
+      "after",
+    ]);
+  });
+  it.each(['data-custom="value"', 'class="custom"', 'style="white-space:pre-wrap"'])(
+    "preserves attributed div wrappers: %s",
+    (attribute) => {
+      const html = `<div ${attribute}><p>Body</p></div>`;
+      expect(htmlToSlate(html)[0].type).toBe("html_opaque");
+      expect(stableRoundTrips(html)).toBe(html);
+    }
+  );
+  it("keeps unsupported descendants while unwrapping a bare div", () => {
+    const html =
+      '<div><p>Editable</p><div data-custom="kept"><p>Opaque</p></div><issue-embed-component entity_identifier="issue"></issue-embed-component></div>';
+    expect(htmlToSlate(html).map((node) => node.type)).toEqual(["p", "html_opaque", "html_opaque"]);
+    expect(stableRoundTrips(html)).toBe(html.slice(5, -6));
+  });
   it("returns an editable paragraph for empty HTML", () => {
     expect(htmlToSlate("")).toEqual([{ type: "p", children: [{ text: "" }] }]);
   });

@@ -40,6 +40,22 @@ it("searches both Chinese and English and respects disabled features", () => {
   expect(filterSlashItems("标题", ["heading"])).toEqual([]);
   expect(filterSlashItems("task", ["taskList"])).toEqual([]);
 });
+it("exposes Linear content blocks while retaining existing advanced entries", () => {
+  const commands = filterSlashItems("", []).map((item) => item.command);
+  expect(commands).toEqual(
+    expect.arrayContaining(["toggle", "equation", "diagram", "attachment", "callout", "heading6"])
+  );
+  expect(filterSlashItems("mermaid", ["codeBlock"])).toEqual([]);
+  expect(filterSlashItems("公式", ["math"])).toEqual([]);
+});
+it("inserts diagrams using the existing persistent code block model", () => {
+  const editor = makeEditor("/diagram");
+  executeSlashCommand(editor, getSlashMatch(editor)!.range, "diagram", api);
+  expect(editor.children).toEqual(
+    expect.arrayContaining([expect.objectContaining({ type: "code_block", lang: "mermaid" })])
+  );
+  expect(editor.api.string([])).not.toContain("/diagram");
+});
 it("deletes only the trigger query and inserts at the current block", () => {
   const editor = makeEditor("Existing /标题");
   const match = getSlashMatch(editor)!;

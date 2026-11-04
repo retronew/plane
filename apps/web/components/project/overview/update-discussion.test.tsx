@@ -106,6 +106,26 @@ function setup(overrides: Partial<React.ComponentProps<typeof ProjectUpdateDiscu
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
 const input = () => screen.getByRole("textbox", { name: /^(?:\d+ )?web\.project_overview\.comment$/ });
 const submit = () => fireEvent.submit(input().closest("form")!);
+
+it("focuses the shared discussion composer from body and footer whitespace", async () => {
+  setup();
+  await openComments();
+  const textarea = input();
+  const composer = textarea.closest("[data-comment-composer]")!;
+  for (const target of [
+    composer,
+    composer.querySelector("[data-comment-composer-body]")!,
+    composer.querySelector("[data-comment-composer-footer]")!,
+  ]) {
+    textarea.blur();
+    fireEvent.mouseDown(target, { button: 0 });
+    expect(document.activeElement).toBe(textarea);
+  }
+  textarea.blur();
+  fireEvent.mouseDown(within(composer as HTMLElement).getByRole("button"), { button: 0 });
+  expect(document.activeElement).not.toBe(textarea);
+  expect(mocks.createUpdateComment).not.toHaveBeenCalled();
+});
 async function openComments() {
   fireEvent.click(button(/^(?:\d+ )?web\.project_overview\.comment$/));
   await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
@@ -224,7 +244,7 @@ describe("project update discussion", () => {
     fireEvent.change(input(), { target: { value: body } });
     submit();
     expect(mocks.createUpdateComment).not.toHaveBeenCalled();
-    expect(button("submit")).toHaveProperty("disabled", true);
+    expect(button("common.comment")).toHaveProperty("disabled", true);
   });
 
   it("retries a failed lazy load, preserves the draft and renders comments as plain text", async () => {

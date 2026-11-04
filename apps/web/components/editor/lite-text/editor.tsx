@@ -25,6 +25,7 @@ import { useEditorFlagging } from "@/hooks/use-editor-flagging";
 // plane web service
 import { WorkspaceService } from "@/services/workspace.service";
 import { LiteToolbar } from "./lite-toolbar";
+import { CommentComposer } from "@/components/comments/comment-composer";
 const workspaceService = new WorkspaceService();
 
 type LiteTextEditorWrapperProps = MakeOptional<
@@ -78,32 +79,8 @@ function FullCommentToolbar({
 
 const compactCommentClasses = {
   normal: { editor: "", toolbar: "mt-3" },
-  compact: { editor: "min-h-16 p-3 [&_p.is-empty]:before:font-medium", toolbar: "" },
+  compact: { editor: "", toolbar: "" },
 };
-
-function useCommentSurfaceFocus(editable: boolean, editor: EditorRefApi | null) {
-  const surface = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    const element = surface.current;
-    if (!editable || !element) return;
-    element.setAttribute("data-comment-editor", "");
-    const focus = (event: MouseEvent) => {
-      if (event.button !== 0 || !(event.target instanceof Element)) return;
-      const interactive = event.target.closest(
-        '[data-slate-editor], [data-comment-toolbar], button, a, input, textarea, select, [role="button"], [role="menu"], dialog, [role="dialog"], [role="toolbar"]'
-      );
-      if (interactive && element.contains(interactive)) return;
-      event.preventDefault();
-      editor?.focus("end");
-    };
-    element.addEventListener("mousedown", focus);
-    return () => {
-      element.removeEventListener("mousedown", focus);
-      element.removeAttribute("data-comment-editor");
-    };
-  }, [editable, editor]);
-  return surface;
-}
 
 export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   props: LiteTextEditorWrapperProps,
@@ -138,7 +115,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   const isFullVariant = variant === "full";
   const [isFocused, setIsFocused] = useState(isFullVariant ? showToolbarInitially : true);
   const [editorRef, setEditorRef] = useState<EditorRefApi | null>(null);
-  const commentSurface = useCommentSurfaceFocus(editable, editorRef);
+  const focusInput = React.useCallback(() => editorRef?.focus("end"), [editorRef]);
   const attachEditor = React.useCallback(
     (instance: EditorRefApi | null) => {
       setEditorRef(instance);
@@ -175,17 +152,37 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
   const commentClasses = compactCommentClasses[compactCommentToolbar ? "compact" : "normal"];
 
   return (
-    <div
-      className={cn(
-        "relative rounded-sm border border-subtle",
-        {
-          "p-3": editable && !isLiteVariant,
-        },
-        parentClassName
-      )}
-      ref={commentSurface}
+    <CommentComposer
+      compact={compactCommentToolbar}
+      disabled={!editable}
+      onFocusInput={focusInput}
+      className={cn({ "p-3": editable && !isLiteVariant && !compactCommentToolbar }, parentClassName)}
       onFocus={() => isFullVariant && !showToolbarInitially && setIsFocused(true)}
       onBlur={() => isFullVariant && !showToolbarInitially && setIsFocused(false)}
+      footer={
+        isFullVariant &&
+        editable && (
+          <FullCommentToolbar
+            isFocused={isFocused}
+            spacing={commentClasses.toolbar}
+            accessSpecifier={accessSpecifier}
+            executeCommand={(item) => {
+              // @ts-expect-error Legacy toolbar command shape.
+              editorRef?.executeMenuItemCommand({ itemKey: item.itemKey, ...item.extraProps });
+            }}
+            handleAccessChange={handleAccessChange}
+            handleSubmit={(e) => rest.onEnterKeyPress?.(e)}
+            isCommentEmpty={isEmpty}
+            isSubmitting={isSubmitting}
+            showAccessSpecifier={showAccessSpecifier}
+            showSubmitButton={showSubmitButton}
+            editorRef={editorRef}
+            submitButtonText={submitButtonText}
+            compact={compactCommentToolbar}
+            showFormatting={false}
+          />
+        )
+      }
     >
       {/* Wrapper for lite toolbar layout */}
       <div className={cn(isLiteVariant && editable ? "flex items-end gap-1" : "")}>
@@ -248,34 +245,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
           />
         )}
       </div>
-
-      {/* Full Toolbar - conditionally rendered */}
-      {isFullVariant && editable && (
-        <FullCommentToolbar
-          isFocused={isFocused}
-          spacing={commentClasses.toolbar}
-          accessSpecifier={accessSpecifier}
-          executeCommand={(item) => {
-            // TODO: update this while toolbar homogenization
-            // @ts-expect-error type mismatch here
-            editorRef?.executeMenuItemCommand({
-              itemKey: item.itemKey,
-              ...item.extraProps,
-            });
-          }}
-          handleAccessChange={handleAccessChange}
-          handleSubmit={(e) => rest.onEnterKeyPress?.(e)}
-          isCommentEmpty={isEmpty}
-          isSubmitting={isSubmitting}
-          showAccessSpecifier={showAccessSpecifier}
-          editorRef={editorRef}
-          showSubmitButton={showSubmitButton}
-          submitButtonText={submitButtonText}
-          compact={compactCommentToolbar}
-          showFormatting={false}
-        />
-      )}
-    </div>
+    </CommentComposer>
   );
 });
 

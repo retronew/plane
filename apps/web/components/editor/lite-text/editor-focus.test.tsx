@@ -80,9 +80,12 @@ it("focuses comment whitespace inside a dialog without treating the ancestor dia
   fireEvent.mouseDown(view.container.querySelector("[data-comment-editor]")!, { button: 0 });
   expect(calls.focus).toHaveBeenCalledWith("end");
 });
-it("does not steal clicks on toolbar whitespace or focus read-only comments", () => {
+it("focuses toolbar whitespace but keeps toolbar buttons and read-only comments independent", () => {
   const view = render(<LiteTextEditor {...props} editable />);
   fireEvent.mouseDown(view.getByTestId("toolbar-space"), { button: 0 });
+  expect(calls.focus).toHaveBeenCalledWith("end");
+  calls.focus.mockClear();
+  fireEvent.mouseDown(view.getByText("Submit"), { button: 0 });
   expect(calls.focus).not.toHaveBeenCalled();
   view.rerender(<LiteTextEditor {...props} editable={false} />);
   fireEvent.mouseDown(view.container.firstElementChild!, { button: 0 });

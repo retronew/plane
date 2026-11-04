@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { WorkflowApprovalCard } from "./approval-card";
 const state = vi.hoisted(() => ({
+  loading: false,
   canDecide: true,
   decide: vi.fn(),
   fetch: vi.fn(),
@@ -43,34 +44,36 @@ vi.mock("@/hooks/store/use-project-workflow", () => ({
 }));
 vi.mock("swr", () => ({
   default: () => ({
-    data: {
-      pending: state.pending
-        ? {
-            id: "approval",
-            version: 4,
-            can_decide: state.canDecide,
-            branches: [
-              {
-                id: "branch",
-                destination_id: "done",
-                reject_state_id: "todo",
-                approvers: [{ id: "member", name: "Snapshot name" }],
-              },
-              ...(state.secondBranch
-                ? [
-                    {
-                      id: "other",
-                      destination_id: "todo",
-                      reject_state_id: "done",
-                      approvers: [{ id: "bob", name: "Bob" }],
-                    },
-                  ]
-                : []),
-            ],
-          }
-        : null,
-      results: state.history,
-    },
+    data: state.loading
+      ? undefined
+      : {
+          pending: state.pending
+            ? {
+                id: "approval",
+                version: 4,
+                can_decide: state.canDecide,
+                branches: [
+                  {
+                    id: "branch",
+                    destination_id: "done",
+                    reject_state_id: "todo",
+                    approvers: [{ id: "member", name: "Snapshot name" }],
+                  },
+                  ...(state.secondBranch
+                    ? [
+                        {
+                          id: "other",
+                          destination_id: "todo",
+                          reject_state_id: "done",
+                          approvers: [{ id: "bob", name: "Bob" }],
+                        },
+                      ]
+                    : []),
+                ],
+              }
+            : null,
+          results: state.history,
+        },
     mutate: state.mutate,
   }),
 }));
@@ -93,6 +96,7 @@ vi.mock("@makeplane/propel/components/button", () => ({
   ),
 }));
 beforeEach(() => {
+  state.loading = false;
   state.canDecide = true;
   state.pending = true;
   state.enabled = true;
@@ -104,6 +108,16 @@ beforeEach(() => {
   state.mutate.mockReset().mockResolvedValue({});
   state.toast.mockReset();
 });
+it("does not add a loading text above the description skeleton while approvals load", () => {
+  state.loading = true;
+  const view = render(<WorkflowApprovalCard workspaceSlug="w" projectId="p" issueId="i" disabled={false} />);
+  expect(view.container.childElementCount).toBe(0);
+
+  state.loading = false;
+  view.rerender(<WorkflowApprovalCard workspaceSlug="w" projectId="p" issueId="i" disabled />);
+  expect(screen.getByText(/Snapshot name/)).toBeTruthy();
+});
+
 it("submits a versioned branch decision and reloads both approval and work item", async () => {
   render(<WorkflowApprovalCard workspaceSlug="w" projectId="p" issueId="i" disabled={false} />);
   expect(screen.getByText(/Snapshot name/)).toBeTruthy();

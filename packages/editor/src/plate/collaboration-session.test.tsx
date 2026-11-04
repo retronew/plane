@@ -1,4 +1,6 @@
-import { StrictMode, useRef } from "react";
+import { createRef, StrictMode, useRef } from "react";
+import { PlateEditorWithRef } from "./editor";
+import type { EditorRefApi } from "../types";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { Plate, PlateContent, createPlateEditor } from "platejs/react";
@@ -12,6 +14,9 @@ const providers = vi.hoisted(
 vi.mock("@hocuspocus/provider", () => ({
   HocuspocusProvider: class {
     options: Record<string, any>;
+    get document() {
+      return this.options.document as Y.Doc;
+    }
     awareness = {
       states: new Map(),
       listeners: new Set<() => void>(),
@@ -29,6 +34,70 @@ vi.mock("@hocuspocus/provider", () => ({
     }
   },
 }));
+it.each([false, true])("edits persisted Yjs content through production editor (existing IDs: %s)", async (withIds) => {
+  const ref = createRef<EditorRefApi>();
+  const view = render(
+    <StrictMode>
+      <PlateEditorWithRef
+        id="persisted-collaboration"
+        initialValue="<p>Existing description</p>"
+        ref={ref}
+        editable
+        collaboration={room}
+        disabledExtensions={[]}
+        flaggedExtensions={[]}
+        extendedEditorProps={{}}
+        getEditorMetaData={() => ({ file_assets: [], user_mentions: [] })}
+        mentionHandler={{ renderComponent: () => null }}
+        fileHandler={{
+          assetsUploadStatus: {},
+          cancel: vi.fn(),
+          checkIfAssetExists: async () => true,
+          delete: vi.fn(),
+          restore: vi.fn(),
+          getAssetSrc: async (id) => id,
+          getAssetDownloadSrc: async (id) => id,
+          upload: async () => "asset",
+          duplicate: async () => "copy",
+          validation: { maxFileSize: 1000 },
+        }}
+      />
+    </StrictMode>
+  );
+  expect(view.container.querySelector('[contenteditable="false"]')).toBeTruthy();
+  const provider = providers.at(-1)!;
+  await act(async () => {
+    const persisted = new Y.Doc();
+    const paragraph = new Y.XmlText("Existing description");
+    paragraph.setAttribute("type", "p");
+    if (withIds) paragraph.setAttribute("id", "persisted-id");
+    persisted.get("content", Y.XmlText).applyDelta([{ insert: paragraph }]);
+    Y.applyUpdate(provider.options.document, Y.encodeStateAsUpdate(persisted));
+    persisted.destroy();
+    provider.options.onSynced({ state: true });
+  });
+  expect(view.container.querySelector('[contenteditable="true"]')).toBeTruthy();
+  expect(ref.current!.getDocument().html).toContain("Existing description");
+  await act(async () => {
+    ref.current!.focus("end");
+    ref.current!.insertText(" edited");
+  });
+  expect(ref.current!.getDocument().html).toContain("Existing description edited");
+  const root = (provider.options.document as Y.Doc).get("content", Y.XmlText);
+  expect(root.toString()).toContain("Existing description edited");
+  if (withIds) expect((root.toDelta()[0].insert as Y.XmlText).getAttribute("id")).toBe("persisted-id");
+  await act(async () => provider.options.onClose());
+  expect(view.container.querySelector('[contenteditable="false"]')).toBeTruthy();
+  await act(async () => provider.options.onSynced({ state: true }));
+  expect(view.container.querySelector('[contenteditable="true"]')).toBeTruthy();
+  await act(async () => {
+    ref.current!.focus("end");
+    ref.current!.insertText(" again");
+  });
+  expect(ref.current!.getDocument().html).toContain("Existing description edited again");
+  expect(root.toString()).toContain("Existing description edited again");
+});
+
 const room = {
   url: "ws://localhost:3100/live",
   name: "test",
@@ -64,7 +133,9 @@ function Harness({ editor }: { editor: ReturnType<typeof createPlateEditor> }) {
 function synchronize() {
   const provider = providers.at(-1)!;
   const doc = provider.options.document as Y.Doc;
-  doc.get("content", Y.XmlText).applyDelta([{ insert: new Y.XmlText("hello"), attributes: { type: "p" } }]);
+  const paragraph = new Y.XmlText("hello");
+  paragraph.setAttribute("type", "p");
+  doc.get("content", Y.XmlText).applyDelta([{ insert: paragraph }]);
   provider.options.onSynced({ state: true });
   return provider;
 }

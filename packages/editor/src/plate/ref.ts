@@ -3,6 +3,7 @@ import { NodeApi, type Point, type Value } from "platejs";
 import type { PlateEditor } from "platejs/react";
 import * as Y from "yjs";
 import { MarkdownPlugin } from "@platejs/markdown";
+import { insertEquation, insertInlineEquation } from "@platejs/math";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { htmlToSlate, slateToHtml } from "../plate-headless";
 import type { EditorRefApi, IMarking, TCollaborationUser } from "../types";
@@ -127,6 +128,11 @@ export function createPlateRef(
     executeMenuItemCommand: (props) => {
       const key = props.itemKey as string;
       if (isPlateFeatureDisabled(disabled(), key)) throw new Error(`Editor feature ${key} is disabled`);
+      if (key === "equation" || key === "inline_equation") {
+        if (key === "equation") insertEquation(editor);
+        else insertInlineEquation(editor);
+        return;
+      }
       if (["bold", "italic", "underline", "strikethrough", "code"].includes(key)) {
         editor.tf.toggleMark(key);
         return;

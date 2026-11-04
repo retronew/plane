@@ -9,6 +9,8 @@ import {
   StrikethroughIcon,
   Code2Icon,
   LinkIcon,
+  QuoteIcon,
+  SquareCodeIcon,
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
@@ -78,6 +80,26 @@ function MarkButton({ mark, label }: { mark: (typeof marks)[number]; label: stri
       icon={<Icon className="size-4" />}
       aria-label={label}
       aria-pressed={pressed}
+    />
+  );
+}
+
+function BlockButton({ type, label }: { type: "blockquote" | "code_block"; label: string }) {
+  const editor = useEditorRef();
+  const active = useEditorSelector((current) => current.api.some({ match: { type } }), [type]);
+  return (
+    <IconButton
+      type="button"
+      size="md"
+      variant={active ? "tertiary" : "ghost"}
+      icon={type === "blockquote" ? <QuoteIcon className="size-4" /> : <SquareCodeIcon className="size-4" />}
+      aria-label={label}
+      aria-pressed={active}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => {
+        setSelectionBlockType(editor, active ? "p" : type);
+        editor.tf.focus();
+      }}
     />
   );
 }
@@ -280,6 +302,8 @@ export function SelectionToolbarControls({ labels: providedLabels }: { labels: P
       </div>
       <div className="flex shrink-0 gap-0.5 px-1">
         {!disabled("link") && <LinkSelector labels={labels} />}
+        {!disabled("blockquote") && <BlockButton type="blockquote" label={labels.blockquote} />}
+        {!disabled("codeBlock") && <BlockButton type="code_block" label={labels.codeBlock} />}
         {!disabled("color") && (
           <FontColorToolbarButton mark="color" label={labels.textColor} clearLabel={labels.clearColor} />
         )}
@@ -314,7 +338,7 @@ export function SelectionToolbar({ labels: providedLabels }: { labels: PlateComp
         {...props}
         aria-label={labels.toolbar}
         data-testid="selection-toolbar"
-        className="z-50 flex max-w-[90vw] items-center gap-1 divide-x divide-subtle overflow-x-auto rounded-lg border border-subtle bg-surface-1 p-1 shadow-raised-200"
+        className="plane-selection-toolbar z-50 flex max-w-[calc(100vw-16px)] items-center gap-0 divide-x divide-subtle overflow-x-auto rounded-lg border border-subtle bg-surface-1 p-1 shadow-raised-200"
       >
         <SelectionToolbarControls labels={labels} />
       </fieldset>

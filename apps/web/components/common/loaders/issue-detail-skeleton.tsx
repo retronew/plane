@@ -23,9 +23,9 @@ export function IssueDetailContentSkeleton({
             <Loader.Item height="24px" width="110px" />
           </Loader>
         </div>
-        <div data-detail-slot="title" className="h-5">
+        <div data-detail-slot="title" className="h-8">
           <Loader>
-            <Loader.Item height="20px" width="65%" />
+            <Loader.Item height="32px" width="65%" />
           </Loader>
         </div>
         <div data-detail-slot="description">

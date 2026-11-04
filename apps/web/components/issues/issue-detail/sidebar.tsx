@@ -134,7 +134,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
 
             {createdByDetails && (
               <SidebarPropertyListItem icon={UserOutline} label={t("common.created_by")}>
-                <div className="flex gap-2 px-2">
+                <div className="flex min-h-7.5 min-w-0 items-center gap-2 px-[calc(var(--field-inset-md)+1px)]">
                   <ButtonAvatars showTooltip userIds={createdByDetails.id} />
                   <span className="grow truncate text-body-xs-regular leading-5">{createdByDetails?.display_name}</span>
                 </div>

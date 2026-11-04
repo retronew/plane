@@ -66,6 +66,9 @@ export type TEditorCommands =
   | "attachment"
   | "emoji"
   | "external-embed"
+  | "toggle"
+  | "equation"
+  | "inline_equation"
   | TExtendedEditorCommands;
 
 export type TCommandExtraProps = {

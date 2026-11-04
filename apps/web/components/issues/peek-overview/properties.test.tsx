@@ -69,7 +69,9 @@ it("retains all regular issue properties and update operations in embedded notif
   );
   for (const label of ["Estimate", "Modules", "Cycle", "Parent", "Labels", "Custom properties"])
     expect(screen.getByText(label)).toBeTruthy();
-  expect(screen.getByText("Long creator name")).toBeTruthy();
+  const creator = screen.getByText("Long creator name");
+  expect(creator.parentElement?.className).toContain("min-h-7.5");
+  expect(creator.parentElement?.className).toContain("gap-2");
   fireEvent.click(screen.getByText("Change state"));
   fireEvent.click(screen.getByText("Change assignees"));
   expect(update).toHaveBeenCalledWith("workspace", "project", "issue", { state_id: "next" });

@@ -25,6 +25,7 @@ import type { TProjectOverviewUpdate, TProjectOverviewUpdateComment } from "@pla
 import { calculateTimeAgo, getFileURL, renderFormattedDate, renderFormattedTime } from "@plane/utils";
 import { projectOverviewKey, projectOverviewService } from "@/services/project/project-overview.service";
 import { overviewActorName, overviewTranslationKey as key } from "./activity-values";
+import { CommentComposer } from "@/components/comments/comment-composer";
 
 type Props = {
   update: TProjectOverviewUpdate;
@@ -279,13 +280,28 @@ function UpdateDiscussionComposer({
   return (
     <form
       ref={composerRef}
-      className="flex min-h-9 items-center gap-2 rounded-lg border border-subtle-1 bg-layer-2 py-0.5 pr-1.5 pl-3 transition-[background-color,border-color,box-shadow] focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:ring-2 focus-within:ring-accent-strong/20 hover:border-strong hover:bg-layer-2-hover focus-within:hover:border-accent-strong"
       onSubmit={(event) => {
         event.preventDefault();
         void onSubmit();
       }}
     >
-      <div className="flex min-h-6 min-w-0 flex-1 flex-col justify-center [&>textarea]:flex-none [&>textarea]:leading-5 [&>textarea]:placeholder:text-disabled">
+      <CommentComposer
+        disabled={pending}
+        onFocusInput={() => composerRef.current?.querySelector("textarea")?.focus()}
+        footer={
+          <div className="flex h-9 items-center justify-end px-2.5 py-1">
+            <Button
+              type="submit"
+              variant="secondary"
+              size="sm"
+              stretch="auto"
+              label={t("common.comment")}
+              loading={pending}
+              disabled={submitDisabled}
+            />
+          </div>
+        }
+      >
         <TextArea
           size="lg"
           surface="inline"
@@ -298,18 +314,7 @@ function UpdateDiscussionComposer({
           disabled={pending}
           onChange={(event) => setDraft(event.target.value)}
         />
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <IconButton
-          type="submit"
-          variant="secondary"
-          size="sm"
-          aria-label={t("submit")}
-          icon={<ArrowUp className="size-3.5" />}
-          loading={pending}
-          disabled={submitDisabled}
-        />
-      </div>
+      </CommentComposer>
     </form>
   );
 }

@@ -19,7 +19,8 @@ function serverDocument() {
 function client(server: Y.Doc) {
   const doc = new Y.Doc();
   Y.applyUpdate(doc, Y.encodeStateAsUpdate(server));
-  const editor = bindComparisonEditor(createPlateEditor({ plugins: comparisonPlugins }), doc);
+  // Plate disables NodeIdPlugin by default in tests; exercise production behavior.
+  const editor = bindComparisonEditor(createPlateEditor({ plugins: comparisonPlugins, nodeId: true }), doc);
   YjsEditor.connect(editor);
   cleanup.push(() => {
     YjsEditor.disconnect(editor);
@@ -39,6 +40,41 @@ function text(editor: ReturnType<typeof client>["editor"]) {
 }
 
 describe("comparison collaboration", () => {
+  it("shares stable IDs for splits and inserts from both peers and preserves remote work on local undo", () => {
+    const server = serverDocument(),
+      a = client(server),
+      b = client(server);
+    a.editor.tf.select(a.editor.api.start([])!);
+    a.editor.tf.insertText("First");
+    a.editor.tf.insertBreak();
+    a.editor.tf.insertText("Split");
+    a.editor.tf.insertNodes({ type: "p", children: [{ text: "Inserted by A" }] }, { at: [2] });
+    YjsEditor.flushLocalChanges(a.editor);
+    sync(a.doc, b.doc);
+    expect(b.editor.children).toEqual(a.editor.children);
+    const originalIds = a.editor.children.slice(1).map((node) => node.id);
+    expect(originalIds).toEqual([expect.any(String), expect.any(String)]);
+    expect(new Set(originalIds).size).toBe(originalIds.length);
+
+    b.editor.undoManager.stopCapturing();
+    b.editor.tf.select(b.editor.api.end([2])!);
+    b.editor.tf.insertBreak();
+    b.editor.tf.insertText("Split by B");
+    b.editor.tf.insertNodes({ type: "p", children: [{ text: "Inserted by B" }] }, { at: [4] });
+    YjsEditor.flushLocalChanges(b.editor);
+    sync(a.doc, b.doc);
+    expect(a.editor.children).toEqual(b.editor.children);
+    b.editor.tf.undo();
+    sync(a.doc, b.doc);
+    expect(a.editor.children).toEqual(b.editor.children);
+    expect(text(a.editor)).toContain("Inserted by A");
+    expect(text(a.editor)).not.toContain("Inserted by B");
+    expect(a.editor.children.slice(1).map((node) => node.id)).toEqual(originalIds);
+    b.editor.tf.redo();
+    sync(a.doc, b.doc);
+    expect(a.editor.children).toEqual(b.editor.children);
+    expect(text(a.editor)).toContain("Inserted by B");
+  });
   it("synchronizes native text deletion and node replacement to another connected peer", () => {
     const server = serverDocument(),
       a = client(server),

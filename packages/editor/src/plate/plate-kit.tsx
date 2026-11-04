@@ -1,4 +1,9 @@
 import { MarkdownPlugin } from "@platejs/markdown";
+import remarkMath from "remark-math";
+import { BaseTogglePlugin } from "@platejs/toggle";
+import { TogglePlugin } from "@platejs/toggle/react";
+import { ComparisonToggle } from "./toggle";
+import { htmlToSlate, slateToHtml } from "../plate-headless";
 import { ComparisonCodeBlock } from "./code-block";
 import { ComparisonTable, ComparisonTableCell } from "./table-cell";
 import {
@@ -283,9 +288,9 @@ function HorizontalRule({ attributes, children }: NodeProps) {
   );
 }
 
-const blockTypes = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"];
+const blockTypes = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "toggle"];
 export const comparisonBasePlugins: SlatePlugins = [
-  MarkdownPlugin,
+  MarkdownPlugin.configure({ options: { remarkPlugins: [remarkMath] } }),
   BaseSandboxImagePlugin,
   BaseComparisonMentionPlugin,
   BaseComparisonCalloutPlugin,
@@ -297,6 +302,7 @@ export const comparisonBasePlugins: SlatePlugins = [
   BaseH5Plugin,
   BaseH6Plugin,
   BaseBlockquotePlugin,
+  BaseTogglePlugin,
   BaseBoldPlugin,
   BaseItalicPlugin,
   BaseUnderlinePlugin,
@@ -324,6 +330,7 @@ export const comparisonComponents = {
   h5: Heading,
   h6: Heading,
   blockquote: Quote,
+  toggle: StaticParagraph,
   bold: Bold,
   italic: Italic,
   underline: Underline,
@@ -341,6 +348,7 @@ export const comparisonComponents = {
 };
 export const comparisonEditableComponents = {
   ...comparisonComponents,
+  toggle: ComparisonToggle,
   [BaseSandboxImagePlugin.key]: SandboxImageElement,
   [BaseComparisonMentionPlugin.key]: ComparisonMention,
   p: EditableParagraph,
@@ -362,10 +370,13 @@ export const comparisonPlugins = comparisonBasePlugins.map((plugin) =>
           ? TablePlugin
           : plugin.key === BaseCodeBlockPlugin.key
             ? CodeBlockPlugin.configure({ options: { lowlight } })
-            : toPlatePlugin(plugin)
+            : plugin.key === BaseTogglePlugin.key
+              ? TogglePlugin
+              : toPlatePlugin(plugin)
 );
 
 export const comparisonCommandLabels = {
+  toggle: "Collapsible section",
   paragraph: "Paragraph",
   heading1: "Heading 1",
   heading2: "Heading 2",
@@ -408,6 +419,7 @@ export const comparisonCommandLabels = {
   uploadFailed: "Image upload failed",
 };
 export type ComparisonCommand =
+  | "toggle"
   | "callout"
   | "paragraph"
   | "heading1"
@@ -440,6 +452,32 @@ export function executeComparisonCommand(editor: SlateEditor, command: Compariso
     return;
   }
   switch (command) {
+    case "toggle": {
+      const entry = editor.api.block();
+      if (!entry) break;
+      if (entry[1].length > 1) {
+        // Official toggles own top-level indented siblings, never table-cell children.
+        editor.tf.insertNodes({ type: "toggle", children: [{ text: "" }] }, { at: [entry[1][0] + 1], select: true });
+      } else {
+        editor.tf.withoutNormalizing(() => {
+          if (entry[0].listStyleType) {
+            editor.tf.unsetNodes(["listStyleType", "listStart", "listRestart", "checked"], { at: entry[1] });
+            editor.tf.setNodes({ indent: Math.max(0, Number(entry[0].indent ?? 1) - 1) }, { at: entry[1] });
+          }
+          editor.tf.toggleBlock("toggle");
+        });
+      }
+      const toggle = editor.api.block();
+      if (toggle?.[0].type === "toggle") {
+        // Canonical empty Yjs documents can predate Plate's node-ID initialization.
+        const id = toggle[0].id ?? normalizeNodeId([structuredClone(toggle[0])])[0].id;
+        if (typeof id === "string") {
+          if (!toggle[0].id) editor.tf.setNodes({ id }, { at: toggle[1] });
+          editor.getApi(BaseTogglePlugin).toggle.toggleIds([id], true);
+        }
+      }
+      break;
+    }
     case "callout":
       editor.tf.insertNodes({
         type: "comparison_callout",
@@ -512,6 +550,7 @@ export function executeComparisonCommand(editor: SlateEditor, command: Compariso
 
 export function deserializeComparisonHtml(editor: SlateEditor, html: string): Value {
   const document = new DOMParser().parseFromString(html, "text/html");
+  if (document.querySelector("details")) return htmlToSlate(html);
   for (const wrapper of document.querySelectorAll('[data-slate-type="hr"]'))
     wrapper.replaceWith(document.createElement("hr"));
   for (const code of document.querySelectorAll("pre > code")) {
@@ -655,6 +694,8 @@ function groupHtmlLists(parent: Element, document: Document) {
 }
 
 export async function serializeComparisonHtml(value: Value): Promise<string> {
+  // Static node rendering cannot group the official plugin's sibling-based bodies.
+  if (value.some((node) => node.type === "toggle")) return slateToHtml(value);
   const editor = createSlateEditor({
     plugins: comparisonBasePlugins,
     override: { components: comparisonComponents },

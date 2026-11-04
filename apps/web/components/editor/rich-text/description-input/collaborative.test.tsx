@@ -110,6 +110,22 @@ it("keeps configuration stable across callback and response object replacements"
   for (const payload of ["null", "[]", "42", "invalid", '{"type":{}}'])
     expect(() => act(() => state.config?.onStateless?.(payload))).not.toThrow();
 });
+it("does not announce an initial saved acknowledgement but shows feedback after a pending save", () => {
+  const initial = props();
+  render(<CollaborativeDescriptionInput key="test" {...initial} />);
+  act(() => state.config?.onStateless?.('{"type":"saved"}'));
+  expect(initial.setIsSubmitting).not.toHaveBeenCalled();
+  expect(state.fetchIssue).toHaveBeenCalledWith("workspace", "project", "issue");
+
+  act(() => state.config?.onStateless?.('{"type":"pending"}'));
+  expect(initial.setIsSubmitting).toHaveBeenLastCalledWith("submitting");
+  act(() => state.config?.onStateless?.('{"type":"saved"}'));
+  expect(initial.setIsSubmitting).toHaveBeenLastCalledWith("submitted");
+  expect(initial.setIsSubmitting).toHaveBeenCalledTimes(2);
+  act(() => state.config?.onStateless?.('{"type":"saved"}'));
+  expect(initial.setIsSubmitting).toHaveBeenCalledTimes(2);
+});
+
 it("does not fetch or replace a fenced document if clipboard copying fails", async () => {
   const view = render(<CollaborativeDescriptionInput key="test" {...props()} />);
   act(() => state.config?.onStateless?.('{"type":"fenced"}'));

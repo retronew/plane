@@ -61,7 +61,7 @@ function CreatedByProperty({ id, displayName, embedIssue }: { id: string; displa
       variant={embedIssue ? "detail" : "default"}
       icon={UserOutline}
       label={t("common.created_by")}
-      childrenClassName="px-2"
+      childrenClassName="min-h-7.5 gap-2 px-[calc(var(--field-inset-md)+1px)]"
     >
       <ButtonAvatars showTooltip userIds={isIntakeCreator ? null : id} />
       <span

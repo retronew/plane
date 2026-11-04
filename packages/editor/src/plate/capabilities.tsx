@@ -4,6 +4,8 @@ const aliases: Record<string, string[]> = {
   image: ["image", "imageComponent"],
   table: ["table"],
   codeBlock: ["codeBlock"],
+  diagram: ["diagram", "codeBlock"],
+  equation: ["equation", "math"],
   horizontalRule: ["horizontalRule"],
   todoList: ["taskList", "taskItem"],
   callout: ["callout-component"],

@@ -12,6 +12,8 @@ const nodeNames: Record<string, string> = {
   sandboxImage: "image-component",
   comparison_mention: "mention-component",
   comparison_callout: "callout-component",
+  // Plate's legacy JSON adapter preserves the flat toggle + indent model.
+  toggle: "toggle",
 };
 const marks: Record<string, string> = {
   bold: "bold",
@@ -32,7 +34,9 @@ const convertToLegacy = (node: SlateNode): JSONContent => {
   const { children, type, ...attrs } = node;
   if (/^h[1-6]$/.test(type))
     return { type: "heading", attrs: { ...attrs, level: Number(type[1]) }, content: children.map(convertToLegacy) };
-  if (type === "a")
+  // A text link can use the legacy mark, but inline elements need their
+  // container retained so their attributes and children survive the round trip.
+  if (type === "a" && children.every((child) => "text" in child))
     return {
       type: "text",
       text: children.map((child) => ("text" in child ? child.text : "")).join(""),
@@ -76,7 +80,8 @@ export function slateToLegacyJSON(value: SlateValue): JSONContent {
     if (!stack.length || stack.at(-1)!.indent < indent) {
       const list: JSONContent = {
         type: style === "todo" ? "taskList" : style === "decimal" ? "orderedList" : "bulletList",
-        attrs: node.listStart ? { start: node.listStart } : undefined,
+        // Toggle bodies add an extra indent level which is not a list ancestor.
+        attrs: { ...(node.listStart ? { start: node.listStart } : {}), indent },
         content: [],
       };
       const parent = stack.at(-1)?.lastItem;
@@ -142,7 +147,9 @@ export function legacyJSONToSlate(document: unknown): SlateValue {
 function flattenLegacy(node: JSONContent, indent = 0, listStyleType?: string): SlateElement[] {
   if (["bulletList", "orderedList", "taskList"].includes(node.type ?? "")) {
     const style = node.type === "orderedList" ? "decimal" : node.type === "taskList" ? "todo" : "disc";
-    return (node.content ?? []).flatMap((child) => flattenLegacy(child, indent + 1, style));
+    const storedIndent = Number(node.attrs?.indent);
+    const listIndent = Number.isFinite(storedIndent) && storedIndent > 0 ? storedIndent : indent + 1;
+    return (node.content ?? []).flatMap((child) => flattenLegacy(child, listIndent, style));
   }
   if (["listItem", "taskItem"].includes(node.type ?? ""))
     return (node.content ?? [])

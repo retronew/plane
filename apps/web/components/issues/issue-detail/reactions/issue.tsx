@@ -134,16 +134,18 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
   };
 
   return (
-    <div className={cn("relative mt-4", className)}>
+    <div className={cn("relative", className)}>
       <div className="flex flex-wrap items-center gap-2">
-        <EmojiReactionGroup reactions={reactions} onReactionClick={handleReactionClick} showAddButton={false} />
+        {reactions.length > 0 && (
+          <EmojiReactionGroup reactions={reactions} onReactionClick={handleReactionClick} showAddButton={false} />
+        )}
         {!disabled && (
           <EmojiReactionPicker
             isOpen={isPickerOpen}
             handleToggle={setIsPickerOpen}
             onChange={handleEmojiSelect}
             tooltip={translate("common.actions.add_reaction")}
-            buttonClassName="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-secondary hover:bg-layer-2-hover"
+            buttonClassName="inline-flex size-7 shrink-0 items-center justify-start rounded-sm p-0 text-secondary hover:bg-layer-2-hover"
             label={<ReactionOutline className="size-3.5" />}
             placement="bottom-start"
           />

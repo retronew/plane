@@ -136,11 +136,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
                   return asset_id;
                 }}
                 showToolbarInitially={showToolbarInitially}
-                parentClassName={
-                  compact
-                    ? "overflow-hidden rounded-xl border-subtle-1 bg-layer-2 !p-0 transition-[background-color,border-color,box-shadow] hover:border-strong hover:bg-layer-2-hover focus-within:border-accent-strong focus-within:bg-layer-2-hover focus-within:hover:border-accent-strong focus-within:ring-2 focus-within:ring-accent-strong/20"
-                    : "p-2"
-                }
+                parentClassName={compact ? undefined : "p-2"}
                 compactCommentToolbar={compact}
                 displayConfig={{
                   fontSize: "small-font",

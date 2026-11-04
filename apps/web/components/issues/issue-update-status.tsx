@@ -21,8 +21,9 @@ export const NameDescriptionUpdateStatus = observer(function NameDescriptionUpda
   return (
     <>
       <div
-        className={`flex items-center gap-x-2 transition-all duration-300 ${
-          isSubmitting === "saved" ? "fade-out" : "fade-in"
+        aria-hidden={isSubmitting === "saved"}
+        className={`flex items-center gap-x-2 transition-opacity duration-300 ${
+          isSubmitting === "saved" ? "opacity-0" : "opacity-100"
         }`}
       >
         {isSubmitting !== "submitted" && isSubmitting !== "saved" && (
