@@ -71,7 +71,11 @@ const useKanbanDndContext = () => {
 type TKanbanDndProviderProps = {
   children: ReactNode;
   orderBy: TIssueOrderByOptions | undefined;
-  handleOnDrop: (source: GroupDropLocation, destination: GroupDropLocation) => Promise<void>;
+  handleOnDrop: (
+    source: GroupDropLocation,
+    destination: GroupDropLocation,
+    beforeConfirmation?: () => void
+  ) => Promise<void>;
   onRequestDelete: (issueId: string) => void;
 };
 
@@ -259,7 +263,7 @@ export function KanbanDndProvider(props: TKanbanDndProviderProps) {
             canReorder: destinationColumn.canReorder,
           });
           // keep showing the preview until the store has the new order, so the card doesn't snap back
-          void handleOnDrop(source, destination).finally(() => {
+          void handleOnDrop(source, destination, resetDrag).finally(() => {
             resetDrag();
             // no landing flash: the drop animation already shows where the card went. A column sorted by
             // a rule may have moved it out of view, so follow it there.

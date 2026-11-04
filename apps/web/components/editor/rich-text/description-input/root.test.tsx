@@ -4,13 +4,15 @@ import { DescriptionInput } from "./root";
 
 const editor = vi.hoisted(() => ({
   change: undefined as undefined | ((json: object, html: string, options?: { isMigrationUpdate: boolean }) => void),
+  placeholder: undefined as unknown,
 }));
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/utils", () => ({ getDescriptionPlaceholderI18n: () => "placeholder" }));
 vi.mock("@/components/editor/rich-text", () => ({
-  RichTextEditor: (props: { onChange: typeof editor.change }) => {
+  RichTextEditor: (props: { onChange: typeof editor.change; placeholder: unknown }) => {
     editor.change = props.onChange;
+    editor.placeholder = props.placeholder;
     return null;
   },
 }));
@@ -36,6 +38,14 @@ function fixture(onSubmit = vi.fn().mockResolvedValue(undefined)) {
     setIsSubmitting: vi.fn(),
   };
 }
+it("uses a stable default placeholder and preserves a custom placeholder", () => {
+  const props = { ...fixture(), key: "description", initialValue: "<p></p>" };
+  const view = render(<DescriptionInput {...props} />);
+  expect(editor.placeholder).toBe("common.press_for_commands");
+  view.rerender(<DescriptionInput {...props} placeholder="Custom description" />);
+  expect(editor.placeholder).toBe("Custom description");
+});
+
 it("routes existing project issue descriptions to collaboration without an HTML save timer", async () => {
   vi.useFakeTimers();
   const props = fixture();

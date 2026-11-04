@@ -105,7 +105,7 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
     [canEditPropertiesBasedOnProject, enableInlineEditing, isEditingAllowed]
   );
 
-  const handleOnDrop = useGroupIssuesDragNDrop(storeType, orderBy, group_by);
+  const { handleOnDrop, confirmationDialog } = useGroupIssuesDragNDrop(storeType, orderBy, group_by);
 
   const renderQuickActions: TRenderQuickActions = useCallback(
     ({ issue, parentRef }) => (
@@ -149,6 +149,7 @@ export const BaseListRoot = observer(function BaseListRoot(props: IBaseListRoot)
 
   return (
     <IssueLayoutHOC layout={EIssueLayoutTypes.LIST}>
+      {confirmationDialog}
       <div className={`relative size-full bg-surface-2`}>
         <List
           issuesMap={issueMap}

@@ -7,6 +7,9 @@ const state = vi.hoisted(() => ({
   fetch: vi.fn(),
   options: vi.fn(),
   toast: vi.fn(),
+  select: vi.fn(),
+  refresh: vi.fn(),
+  confirm: vi.fn(),
   states: [
     { id: "a", name: "Backlog", project_id: "p", allow_new_work_items: true, group: "backlog", color: "#555" },
     {
@@ -22,6 +25,10 @@ const state = vi.hoisted(() => ({
   ],
   workflow: {} as TProjectWorkflow,
 }));
+vi.mock("@/components/workflow/use-approval-transition-confirmation", () => ({
+  useApprovalTransitionConfirmation: () => ({ requestConfirmation: state.confirm, confirmationDialog: null }),
+}));
+vi.mock("swr", () => ({ useSWRConfig: () => ({ mutate: state.refresh }) }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w" }) }));
 vi.mock("@/hooks/store/use-project-state", () => ({
   useProjectState: () => ({
@@ -51,19 +58,22 @@ vi.mock("@plane/blocks/property-select", () => ({
     getValues: (args: object) => Promise<{ results: { id: string; name: string }[] }>;
     onChange: (id: string) => void;
     allowedStateIds?: Set<string> | null;
-  }) => (
-    <button
-      onClick={async () => {
-        const data = await props.getValues({ search: "" });
-        state.options(data.results);
-        state.toast(
-          data.results.filter((item) => !props.allowedStateIds || props.allowedStateIds.has(item.id)).map((s) => s.id)
-        );
-      }}
-    >
-      open
-    </button>
-  ),
+  }) => {
+    state.select = props.onChange as typeof state.select;
+    return (
+      <button
+        onClick={async () => {
+          const data = await props.getValues({ search: "" });
+          state.options(data.results);
+          state.toast(
+            data.results.filter((item) => !props.allowedStateIds || props.allowedStateIds.has(item.id)).map((s) => s.id)
+          );
+        }}
+      >
+        open
+      </button>
+    );
+  },
 }));
 
 beforeEach(() => {
@@ -82,8 +92,46 @@ beforeEach(() => {
   };
   state.fetch.mockReset().mockImplementation(async () => state.workflow);
   state.toast.mockReset();
+  state.confirm.mockReset().mockResolvedValue(true);
+  state.refresh.mockReset().mockResolvedValue(undefined);
   state.options.mockReset();
 });
+it("waits for approval entry confirmation before changing state", async () => {
+  state.workflow.transitions.push({
+    id: "approval",
+    source_id: "b",
+    destination_id: "c",
+    member_ids: [],
+    kind: "approval",
+  });
+  const onChange = vi.fn();
+  state.confirm.mockResolvedValue(false);
+  render(<StateSelect projectId="p" value="a" onChange={onChange} variant="pill-md" />);
+  state.select("b");
+  await waitFor(() => expect(state.confirm).toHaveBeenCalledWith("Todo"));
+  expect(onChange).not.toHaveBeenCalled();
+});
+it("reports approval entry only after the confirmed save succeeds", async () => {
+  state.workflow.transitions.push({
+    id: "approval",
+    source_id: "b",
+    destination_id: "c",
+    member_ids: [],
+    kind: "approval",
+  });
+  const onChange = vi.fn().mockResolvedValue(undefined);
+  render(<StateSelect projectId="p" value="a" onChange={onChange} variant="pill-md" />);
+  state.select("b");
+  await waitFor(() => expect(onChange).toHaveBeenCalledWith("b"));
+  expect(state.refresh).toHaveBeenCalledWith(expect.any(Function));
+  expect(state.refresh.mock.calls[0][0](["workflow-approvals", "w", "p", "issue"])).toBe(true);
+  expect(state.refresh.mock.calls[0][0](["workflow-approvals", "w", "other", "issue"])).toBe(false);
+  expect(onChange.mock.invocationCallOrder[0]).toBeLessThan(state.refresh.mock.invocationCallOrder[0]);
+  expect(state.toast).toHaveBeenCalledWith(
+    expect.objectContaining({ type: "success", title: "web.workflow_ui.entered_approval" })
+  );
+});
+
 it("passes the group percentage rather than the sort order to state icons", async () => {
   render(<StateSelect projectId="p" value="b" onChange={() => undefined} variant="pill-md" bypassWorkflow />);
   fireEvent.click(screen.getByText("open"));

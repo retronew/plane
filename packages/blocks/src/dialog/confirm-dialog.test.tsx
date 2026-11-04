@@ -57,6 +57,22 @@ describe("ConfirmDialog open state", () => {
     expect(dialog.hasAttribute("data-prevent-outside-click")).toBe(true);
   });
 
+  it("places optional form fields outside the description paragraph", async () => {
+    renderDialog({
+      children: (
+        <label>
+          Approval note
+          <textarea aria-label="Approval note" />
+        </label>
+      ),
+    });
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete cycle" });
+    const field = screen.getByRole("textbox", { name: "Approval note" });
+    const description = document.getElementById(dialog.getAttribute("aria-describedby") ?? "");
+    expect(dialog.contains(field)).toBe(true);
+    expect(description?.contains(field)).toBe(false);
+  });
+
   it("opens and closes with isOpen", async () => {
     const { rerender, props } = renderDialog({ isOpen: false });
     rerender(<ConfirmDialog {...props} isOpen />);

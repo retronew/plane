@@ -156,13 +156,6 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
         value={issue.name}
       />
 
-      <WorkflowApprovalCard
-        workspaceSlug={workspaceSlug}
-        projectId={issue.project_id}
-        issueId={issueId}
-        disabled={readOnly}
-      />
-
       <DescriptionInput
         issueSequenceId={issue.sequence_id}
         containerClassName="-ml-3 border-none"
@@ -207,6 +200,13 @@ export const PeekOverviewIssueDetails = observer(function PeekOverviewIssueDetai
           />
         )}
       </div>
+
+      <WorkflowApprovalCard
+        workspaceSlug={workspaceSlug}
+        projectId={issue.project_id}
+        issueId={issueId}
+        disabled={readOnly}
+      />
     </div>
   );
 });

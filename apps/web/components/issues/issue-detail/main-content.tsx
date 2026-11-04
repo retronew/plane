@@ -285,13 +285,6 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           value={issue.name}
         />
 
-        <WorkflowApprovalCard
-          workspaceSlug={workspaceSlug}
-          projectId={issue.project_id}
-          issueId={issueId}
-          disabled={isDisabled}
-        />
-
         <IssueDescriptionSection
           workspaceSlug={workspaceSlug}
           projectId={issue.project_id}
@@ -334,6 +327,13 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           disabled={isDisabled}
         />
       )}
+
+      <WorkflowApprovalCard
+        workspaceSlug={workspaceSlug}
+        projectId={issue.project_id}
+        issueId={issueId}
+        disabled={isDisabled}
+      />
 
       <IssueActivity workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={isArchived} />
     </>

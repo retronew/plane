@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   data: { can_read: true, can_edit: true, epoch: 1, description_html: "<p>remote</p>" },
   config: undefined as PlateCollaborationConfig | undefined,
   editable: false,
+  placeholder: undefined as unknown,
   mutate: vi.fn(),
   retrieve: vi.fn(),
   copy: vi.fn(),
@@ -40,7 +41,7 @@ it("refreshes store after saved and coalesces overlapping acknowledgements witho
       })
   );
   const initial = props();
-  render(<CollaborativeDescriptionInput key="test" {...initial} />);
+  render(<CollaborativeDescriptionInput {...initial} />);
   act(() => {
     state.config?.onStateless?.('{"type":"saved"}');
     state.config?.onStateless?.('{"type":"saved"}');
@@ -66,7 +67,9 @@ vi.mock("@/components/editor/rich-text", () => ({
     collaboration?: PlateCollaborationConfig;
     editable: boolean;
     initialValue: string;
+    placeholder: unknown;
   }) => {
+    state.placeholder = editorProps.placeholder;
     if (editorProps.collaboration) {
       state.config = editorProps.collaboration;
       state.editable = editorProps.editable;
@@ -86,6 +89,7 @@ beforeEach(() => {
 afterEach(cleanup);
 function props() {
   return {
+    key: "description",
     projectId: "project",
     workspaceSlug: "workspace",
     entityId: "issue",
@@ -96,13 +100,22 @@ function props() {
     editorRef: { current: { getDocument: () => ({ html: "<p>local edit</p>" }) } as never },
   };
 }
+it("uses one placeholder for empty collaborative descriptions and honors overrides", () => {
+  state.data = { ...state.data, description_html: "<p></p>" };
+  const initial = props();
+  const view = render(<CollaborativeDescriptionInput {...initial} />);
+  expect(state.placeholder).toBe("common.press_for_commands");
+  view.rerender(<CollaborativeDescriptionInput {...initial} placeholder="Custom description" />);
+  expect(state.placeholder).toBe("Custom description");
+});
+
 it("keeps configuration stable across callback and response object replacements", () => {
   const initial = props();
-  const view = render(<CollaborativeDescriptionInput key="test" {...initial} />);
+  const view = render(<CollaborativeDescriptionInput {...initial} />);
   const config = state.config;
   state.data = { ...state.data };
   const next = vi.fn();
-  view.rerender(<CollaborativeDescriptionInput key="test" {...initial} setIsSubmitting={next} />);
+  view.rerender(<CollaborativeDescriptionInput {...initial} setIsSubmitting={next} />);
   expect(state.config).toBe(config);
   act(() => state.config?.onStateless?.('{"type":"pending"}'));
   expect(next).toHaveBeenCalledWith("submitting");
@@ -112,7 +125,7 @@ it("keeps configuration stable across callback and response object replacements"
 });
 it("does not announce an initial saved acknowledgement but shows feedback after a pending save", () => {
   const initial = props();
-  render(<CollaborativeDescriptionInput key="test" {...initial} />);
+  render(<CollaborativeDescriptionInput {...initial} />);
   act(() => state.config?.onStateless?.('{"type":"saved"}'));
   expect(initial.setIsSubmitting).not.toHaveBeenCalled();
   expect(state.fetchIssue).toHaveBeenCalledWith("workspace", "project", "issue");
@@ -127,7 +140,7 @@ it("does not announce an initial saved acknowledgement but shows feedback after 
 });
 
 it("does not fetch or replace a fenced document if clipboard copying fails", async () => {
-  const view = render(<CollaborativeDescriptionInput key="test" {...props()} />);
+  const view = render(<CollaborativeDescriptionInput {...props()} />);
   act(() => state.config?.onStateless?.('{"type":"fenced"}'));
   state.copy.mockRejectedValue(new Error("denied"));
   await act(async () => fireEvent.click(view.getByText("editor_collaboration.copy_reconnect")));
@@ -139,7 +152,7 @@ it("does not fetch or replace a fenced document if clipboard copying fails", asy
   expect(view.getByText("editor_collaboration.copy_error")).toBeTruthy();
 });
 it("preserves a local copy for transport errors and contains fetch failures", async () => {
-  const view = render(<CollaborativeDescriptionInput key="test" {...props()} />);
+  const view = render(<CollaborativeDescriptionInput {...props()} />);
   act(() => state.config?.onStatusChange?.("error"));
   state.retrieve.mockRejectedValue(new Error("offline"));
   await act(async () => fireEvent.click(view.getByText("editor_collaboration.copy_reconnect")));
@@ -150,11 +163,11 @@ it("preserves a local copy for transport errors and contains fetch failures", as
 it("keeps one loading surface until sync and never returns to a placeholder on disconnect", async () => {
   state.loading = true;
   const initial = { ...props(), initialValue: "<p>saved description</p>" };
-  const view = render(<CollaborativeDescriptionInput key="test" {...initial} />);
+  const view = render(<CollaborativeDescriptionInput {...initial} />);
   expect(view.getByTestId("description-loading")).toBeTruthy();
   expect(view.queryByTestId("editor")).toBeNull();
   state.loading = false;
-  view.rerender(<CollaborativeDescriptionInput key="test" {...initial} />);
+  view.rerender(<CollaborativeDescriptionInput {...initial} />);
   expect(view.container.querySelector("[data-description-editor]")?.getAttribute("aria-hidden")).toBe("true");
   act(() => state.config?.onStatusChange?.("synced"));
   await waitFor(() => expect(view.queryByTestId("description-loading")).toBeNull());
@@ -165,7 +178,7 @@ it("keeps one loading surface until sync and never returns to a placeholder on d
 });
 it("keeps read-only permission after successful reconnect", async () => {
   state.data.can_edit = false;
-  const view = render(<CollaborativeDescriptionInput key="test" {...props()} />);
+  const view = render(<CollaborativeDescriptionInput {...props()} />);
   act(() => state.config?.onStateless?.('{"type":"fenced"}'));
   await act(async () => fireEvent.click(view.getByText("editor_collaboration.copy_reconnect")));
   expect(state.mutate).toHaveBeenCalledWith(state.data, { revalidate: false });

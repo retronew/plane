@@ -5,12 +5,13 @@
  */
 
 import { useRef } from "react";
+import { Maximize2 } from "lucide-react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import {
   ArrowNarrowRightOutline,
-  DragDropOutline,
-  FullScreenPeekOutline,
+  CloseOutline,
+  ChevronDownOutline,
   LinkOutline,
   ModalPeekOutline,
   SidePeekOutline,
@@ -36,9 +37,12 @@ import { NameDescriptionUpdateStatus } from "../issue-update-status";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
 
-export type TPeekModes = "side-peek" | "modal" | "full-screen";
+export type TPeekModes = "side-peek" | "modal";
 
 type TPeekOption = { key: TPeekModes; icon: any; i18n_title: string };
+
+const peekToolButtonClassName =
+  "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-subtle-1 bg-layer-2 p-0 text-secondary shadow-raised-100 outline-none transition-colors hover:border-strong hover:bg-layer-2-hover focus-visible:ring-2 focus-visible:ring-accent-strong";
 
 const PEEK_OPTIONS: TPeekOption[] = [
   {
@@ -50,11 +54,6 @@ const PEEK_OPTIONS: TPeekOption[] = [
     key: "modal",
     icon: ModalPeekOutline,
     i18n_title: "common.modal",
-  },
-  {
-    key: "full-screen",
-    icon: FullScreenPeekOutline,
-    i18n_title: "common.full_screen",
   },
 ];
 
@@ -168,19 +167,22 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
     <div
       className={cn(
         "relative flex shrink-0 items-center justify-between gap-2",
-        embedIssue ? "min-h-[52px] border-b border-subtle px-page-x py-2" : "p-4",
-        currentMode?.key === "full-screen" && "border-b border-subtle"
+        embedIssue ? "min-h-[52px] border-b border-subtle px-page-x py-2" : "p-4"
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Tooltip label={t("common.close_peek_view")} disabled={isMobile}>
           <button
             type="button"
             aria-label={t("common.close_peek_view")}
-            className={embedIssue ? "flex size-7.5 shrink-0 items-center justify-center rounded-sm p-1.5" : undefined}
+            className={peekToolButtonClassName}
             onClick={removeRoutePeekId}
           >
-            <ArrowNarrowRightOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
+            {peekMode === "modal" && !embedIssue ? (
+              <CloseOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
+            ) : (
+              <ArrowNarrowRightOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
+            )}
           </button>
         </Tooltip>
 
@@ -188,10 +190,10 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
           <Link
             href={workItemLink}
             aria-label={t("issue.open_in_full_screen")}
-            className={embedIssue ? "flex size-7.5 shrink-0 items-center justify-center rounded-sm p-1.5" : undefined}
+            className={peekToolButtonClassName}
             onClick={() => removeRoutePeekId()}
           >
-            <DragDropOutline className="h-4 w-4 text-tertiary hover:text-secondary" />
+            <Maximize2 className="size-4" strokeWidth={1.5} />
           </Link>
         </Tooltip>
         {currentMode && embedIssue === false && (
@@ -204,11 +206,19 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
               getOptionLabel={(mode) => t(mode.i18n_title)}
               getOptionIcon={renderPeekOptionIcon}
               showSearch={false}
+              contentMinWidth={144}
+              fitOptionLabels
               pinSelected={false}
             >
               <Select.Trigger
                 variant="icon-md"
-                prependIcon={<currentMode.icon className="h-4 w-4 text-tertiary hover:text-secondary" />}
+                className={cn(peekToolButtonClassName, "w-11 gap-1")}
+                prependIcon={
+                  <span className="flex items-center gap-1">
+                    <currentMode.icon className="size-4" />
+                    <ChevronDownOutline className="size-3 text-tertiary" />
+                  </span>
+                }
                 tooltip={isMobile ? false : { heading: t("common.toggle_peek_view_layout") }}
               />
             </Select>

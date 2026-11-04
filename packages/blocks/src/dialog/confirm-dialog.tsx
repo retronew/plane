@@ -33,6 +33,8 @@ export type TConfirmDialogVariant = "danger" | "primary" | "warning";
 type ConfirmDialogBaseProps = {
   /** Supporting copy under the title. Rendered inside the dialog's `<p>` description. */
   content: React.ReactNode | string;
+  /** Optional form fields below the description, outside its paragraph. */
+  children?: React.ReactNode;
   /** Called whenever the dialog asks to close — the cancel button or `Esc`. */
   handleClose: () => void;
   /** Called when the confirm button is pressed. */
@@ -100,6 +102,7 @@ const BUTTON_VARIANTS: Record<TConfirmDialogVariant, ButtonVariant> = {
 export function ConfirmDialog(props: ConfirmDialogProps) {
   const {
     content,
+    children,
     handleClose,
     handleSubmit,
     hideIcon = false,
@@ -142,6 +145,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               <AlertDialogDescription data-confirm-description="">{content}</AlertDialogDescription>
             </AlertDialogIntro>
           </AlertDialogHeader>
+          {children}
         </AlertDialogBody>
         <AlertDialogActions data-confirm-actions="">
           <Button

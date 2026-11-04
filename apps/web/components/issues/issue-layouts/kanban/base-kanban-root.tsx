@@ -118,7 +118,7 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
     EUserPermissionsLevel.PROJECT
   );
 
-  const handleOnDrop = useGroupIssuesDragNDrop(storeType, orderBy, group_by, sub_group_by);
+  const { handleOnDrop, confirmationDialog } = useGroupIssuesDragNDrop(storeType, orderBy, group_by, sub_group_by);
 
   const handleRequestDelete = useCallback((workItemId: string) => {
     setDraggedIssueId(workItemId);
@@ -172,6 +172,7 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
 
   return (
     <>
+      {confirmationDialog}
       <DeleteIssueModal
         dataId={draggedIssueId}
         isOpen={deleteIssueModal}

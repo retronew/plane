@@ -35,6 +35,13 @@ export function workflowAllowsTransition(
   );
 }
 
+export function workflowRequiresApproval(workflow: TProjectWorkflow | undefined, stateId: string) {
+  return (
+    workflowIsActive(workflow) &&
+    workflow!.transitions.some((rule) => rule.source_id === stateId && rule.kind === "approval")
+  );
+}
+
 export function getWorkflowErrorReason(error: unknown, depth = 0): string | undefined {
   if (depth > 4 || !error || typeof error !== "object") return undefined;
   const value = error as Record<string, unknown> & { response?: { data?: unknown }; data?: unknown };

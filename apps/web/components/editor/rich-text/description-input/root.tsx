@@ -12,7 +12,6 @@ import { Controller, useForm } from "react-hook-form";
 import type { EditorRefApi, TExtensions } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
 import { EFileAssetType, type TNameDescriptionLoader } from "@plane/types";
-import { getDescriptionPlaceholderI18n } from "@plane/utils";
 // components
 import { RichTextEditor } from "@/components/editor/rich-text";
 // hooks
@@ -271,7 +270,7 @@ const LocalDescriptionInput = observer(function LocalDescriptionInput(props: Des
             saveContext.revision += 1;
             debouncedFormSave();
           }}
-          placeholder={placeholder ?? ((isFocused, value) => t(getDescriptionPlaceholderI18n(isFocused, value)))}
+          placeholder={placeholder ?? t("common.press_for_commands")}
           searchMentionCallback={async (payload) =>
             await workspaceService.searchEntity(workspaceSlug?.toString() ?? "", {
               ...payload,

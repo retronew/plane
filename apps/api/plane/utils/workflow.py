@@ -341,13 +341,45 @@ def verify_workflow_write(prepared, instance=None, attrs=None, actor=None):
     elif rule and rule.steps:
         workflow_conflict("WORKFLOW_CONTEXT_STALE")
     prepared["rule"] = rule
+    # Capture only the locked, actual entry. Creation, draft promotion, intake and
+    # type remapping have no trustworthy state to restore for this request.
+    prepared["approval_entry"] = None
+    target = attrs.get("state")
+    if (
+        instance is not None
+        and actor is not None
+        and not instance.is_draft
+        and instance.archived_at is None
+        and instance.state_id
+        and instance.state.group != "triage"
+        and not IntakeIssue.objects.filter(issue_id=instance.pk, status__in=[-2, -1, 0, 2]).exists()
+        and not attrs.get("is_draft", False)
+        and target is not None
+        and target.pk != instance.state_id
+        and getattr(attrs.get("type", instance.type), "pk", None) == instance.type_id
+    ):
+        workflow = resolve_issue_workflow(instance.project_id, instance.type_id)
+        if (
+            workflow_is_enforced(instance.project_id, workflow)
+            and workflow_states(instance.project_id, workflow).filter(pk=instance.state_id).exists()
+            and not WorkflowTransition.objects.filter(
+                workflow=workflow, source_id=instance.state_id, kind="approval"
+            ).exists()
+        ):
+            prepared["approval_entry"] = {
+                "previous_state_id": instance.state_id,
+                "requested_by_id": actor.pk,
+                "source_id": target.pk,
+                "type_id": instance.type_id,
+                "workflow_id": workflow.pk,
+            }
     return attrs
 
 
 def finish_workflow_write(prepared, issue, actor=None):
     from plane.services.workflow_approval import sync_issue_approval
 
-    sync_issue_approval(issue, actor=actor)
+    sync_issue_approval(issue, actor=actor, entry=prepared.get("approval_entry"))
     if prepared.get("evidence"):
         from plane.utils.workflow_runner import finish_runner_execution
 

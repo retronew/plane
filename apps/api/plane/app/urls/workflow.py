@@ -14,6 +14,7 @@ from plane.app.views.project.workflow_approval import (
     WorkflowApprovalDecisionEndpoint,
     WorkflowApprovalEndpoint,
     WorkflowApprovalReapplyEndpoint,
+    WorkflowApprovalWithdrawalEndpoint,
 )
 
 from plane.app.views.project.custom_property import (
@@ -51,6 +52,10 @@ urlpatterns = [
     path(prefix + "issue-types/<uuid:type_id>/", ProjectIssueTypeEndpoint.as_view()),
     path(prefix + "issues/<uuid:issue_id>/approvals/", WorkflowApprovalEndpoint.as_view()),
     path(prefix + "issues/<uuid:issue_id>/approvals/reapply/", WorkflowApprovalReapplyEndpoint.as_view()),
+    path(
+        prefix + "issues/<uuid:issue_id>/approvals/<uuid:approval_id>/withdraw/",
+        WorkflowApprovalWithdrawalEndpoint.as_view(),
+    ),
     path(
         prefix + "issues/<uuid:issue_id>/approvals/<uuid:approval_id>/decide/",
         WorkflowApprovalDecisionEndpoint.as_view(),

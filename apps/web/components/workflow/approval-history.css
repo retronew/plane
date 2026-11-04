@@ -1,0 +1,23 @@
+.approval-history::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  interpolate-size: allow-keywords;
+  transition:
+    block-size 200ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 150ms ease-out,
+    content-visibility 200ms allow-discrete;
+}
+
+.approval-history[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .approval-history::details-content {
+    transition:
+      opacity 150ms ease-out,
+      content-visibility 150ms allow-discrete;
+  }
+}

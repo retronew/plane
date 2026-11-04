@@ -103,6 +103,13 @@ class WorkflowApproval(ProjectBaseModel):
     policy_version = models.PositiveIntegerField(default=0)
     branches = models.JSONField(default=list)
     decision = models.JSONField(default=dict, blank=True)
+    previous_state = models.ForeignKey(
+        "db.State", on_delete=models.SET_NULL, null=True, blank=True, related_name="withdrawable_approvals"
+    )
+    requested_by = models.ForeignKey(
+        "db.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="requested_workflow_approvals"
+    )
+    withdrawal = models.JSONField(default=dict, blank=True)
     invalidation_reason = models.CharField(max_length=80, blank=True, default="")
     idempotency_key = models.CharField(max_length=128, blank=True, default="")
 

@@ -14,8 +14,8 @@ export function IssueDetailContentSkeleton({
     <>
       <div className={peek ? "space-y-2" : "space-y-4 rounded-lg"}>
         {hasParent && (
-          <Loader className="mb-5 h-[34px]">
-            <Loader.Item height="34px" width="220px" />
+          <Loader className="flex h-8 items-center">
+            <Loader.Item height="20px" width="220px" />
           </Loader>
         )}
         <div data-detail-slot="header" className={peek ? "h-6" : "mb-2.5 h-6"}>

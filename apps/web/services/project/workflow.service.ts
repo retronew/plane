@@ -148,10 +148,27 @@ export class ProjectWorkflowService extends APIService {
     projectId: string,
     issueId: string,
     approvalId: string,
-    data: { transition_id: string; outcome: "approve" | "reject"; version: number; idempotency_key: string }
+    data: {
+      transition_id: string;
+      outcome: "approve" | "reject";
+      version: number;
+      idempotency_key: string;
+      note?: string;
+    }
   ): Promise<unknown> {
     return (
       await this.post(`${this.projectBase(slug, projectId)}issues/${issueId}/approvals/${approvalId}/decide/`, data)
+    ).data;
+  }
+  async withdraw(
+    slug: string,
+    projectId: string,
+    issueId: string,
+    approvalId: string,
+    data: { version: number; idempotency_key: string }
+  ): Promise<TWorkflowApproval> {
+    return (
+      await this.post(`${this.projectBase(slug, projectId)}issues/${issueId}/approvals/${approvalId}/withdraw/`, data)
     ).data;
   }
   async reapply(slug: string, projectId: string, issueId: string, version?: number): Promise<unknown> {

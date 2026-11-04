@@ -5,6 +5,7 @@
  */
 
 import { WarningCircleOutline } from "@makeplane/propel/icons";
+import { createPortal } from "react-dom";
 // plane imports
 import { ISSUE_ORDER_BY_OPTIONS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -56,18 +57,20 @@ export function GroupDragOverlay(props: Props) {
         { "bg-danger-subtle/80 text-danger-secondary": isDropDisabled && !!message }
       )}
     >
-      {message ? (
-        <span className="flex items-center gap-1.5 text-center">
-          <WarningCircleOutline width={14} height={14} className="shrink-0" />
-          {message}
-        </span>
-      ) : (
-        orderByTranslationKey && (
-          <span className="text-center">
-            {t("issue.layouts.ordered_by_label")} {t(orderByTranslationKey)}
-          </span>
-        )
-      )}
+      {message
+        ? typeof document !== "undefined" &&
+          createPortal(
+            <output className="shadow-lg pointer-events-none fixed inset-x-4 top-20 z-[2000] mx-auto flex w-fit max-w-lg items-start gap-2.5 rounded-lg border border-subtle bg-warning-subtle px-4 py-3 text-left text-body-sm-medium leading-6 text-warning-primary">
+              <WarningCircleOutline width={20} height={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 break-words">{message}</span>
+            </output>,
+            document.body
+          )
+        : orderByTranslationKey && (
+            <span className="text-center">
+              {t("issue.layouts.ordered_by_label")} {t(orderByTranslationKey)}
+            </span>
+          )}
     </div>
   );
 }

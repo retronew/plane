@@ -7,11 +7,19 @@ import { useGroupIssuesDragNDrop } from "./use-group-dragndrop";
 
 const state = vi.hoisted(() => ({
   allowed: true,
+  needsApproval: false,
+  confirm: vi.fn(),
   update: vi.fn(),
   cycle: vi.fn(),
   module: vi.fn(),
   toast: vi.fn(),
   resolve: vi.fn(),
+}));
+vi.mock("@/hooks/store/use-project-state", () => ({
+  useProjectState: () => ({ getStateById: () => ({ name: "Review" }) }),
+}));
+vi.mock("@/components/workflow/use-approval-transition-confirmation", () => ({
+  useApprovalTransitionConfirmation: () => ({ requestConfirmation: state.confirm, confirmationDialog: null }),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w" }) }));
 vi.mock("@plane/i18n", () => ({ translate: (key: string) => key }));
@@ -40,6 +48,7 @@ vi.mock("./store/use-project-workflow", () => ({
 }));
 vi.mock("@/helpers/workflow", () => ({
   workflowAllowsTransition: () => state.allowed,
+  workflowRequiresApproval: () => state.needsApproval,
   getWorkflowErrorCode: () => "WORKFLOW_TRANSITION_NOT_ALLOWED",
   getWorkflowErrorReason: () => undefined,
 }));
@@ -59,17 +68,39 @@ vi.mock("@/components/issues/issue-layouts/utils", () => ({
 
 beforeEach(() => {
   state.allowed = true;
+  state.needsApproval = false;
+  state.confirm.mockReset().mockResolvedValue(true);
   for (const mock of [state.update, state.cycle, state.module]) mock.mockReset().mockResolvedValue(undefined);
   state.toast.mockReset();
   state.resolve.mockReset().mockReturnValue({});
 });
+it("cancels every grouping update when approval entry is not confirmed", async () => {
+  state.needsApproval = true;
+  state.confirm.mockResolvedValue(false);
+  const { result } = renderHook(() => useGroupIssuesDragNDrop(EIssuesStoreType.PROJECT, "sort_order", "state"));
+  await result.current.handleOnDrop(source, destination);
+  expect(state.confirm).toHaveBeenCalledWith("Review");
+  expect(state.update).not.toHaveBeenCalled();
+  expect(state.cycle).not.toHaveBeenCalled();
+  expect(state.module).not.toHaveBeenCalled();
+});
+it("reports pending approval once after a confirmed drag saves", async () => {
+  state.needsApproval = true;
+  const { result } = renderHook(() => useGroupIssuesDragNDrop(EIssuesStoreType.PROJECT, "sort_order", "state"));
+  await result.current.handleOnDrop(source, destination);
+  expect(state.update).toHaveBeenCalledTimes(1);
+  expect(state.toast).toHaveBeenCalledWith(
+    expect.objectContaining({ type: "success", title: "web.workflow_ui.entered_approval" })
+  );
+});
+
 const source = { id: "a" } as GroupDropLocation;
 const destination = { id: "b" } as GroupDropLocation;
 
 it("rejects a forbidden drag before changing any grouping dimension", async () => {
   state.allowed = false;
   const { result } = renderHook(() => useGroupIssuesDragNDrop(EIssuesStoreType.PROJECT, "sort_order", "state"));
-  await result.current(source, destination);
+  await result.current.handleOnDrop(source, destination);
   expect(state.update).not.toHaveBeenCalled();
   expect(state.cycle).not.toHaveBeenCalled();
   expect(state.module).not.toHaveBeenCalled();
@@ -78,7 +109,7 @@ it("rejects a forbidden drag before changing any grouping dimension", async () =
 it("leaves cycle and module unchanged if the API rejects a stale rule", async () => {
   state.update.mockRejectedValueOnce({ workflow: ["WORKFLOW_TRANSITION_NOT_ALLOWED"] });
   const { result } = renderHook(() => useGroupIssuesDragNDrop(EIssuesStoreType.PROJECT, "sort_order", "state"));
-  await result.current(source, destination);
+  await result.current.handleOnDrop(source, destination);
   expect(state.update).toHaveBeenCalledWith("p", "i", { state_id: "b" });
   expect(state.cycle).not.toHaveBeenCalled();
   expect(state.module).not.toHaveBeenCalled();
@@ -91,7 +122,7 @@ it("leaves cycle and module unchanged if the API rejects a stale rule", async ()
 
 it("saves an allowed state before changing cycle and module", async () => {
   const { result } = renderHook(() => useGroupIssuesDragNDrop(EIssuesStoreType.PROJECT, "sort_order", "state"));
-  await result.current(source, destination);
+  await result.current.handleOnDrop(source, destination);
   expect(state.cycle).toHaveBeenCalledWith("w", "p", "c", "i");
   expect(state.module).toHaveBeenCalledWith("w", "p", "i", ["m"], []);
   expect(state.update.mock.invocationCallOrder[0]).toBeLessThan(state.cycle.mock.invocationCallOrder[0]);

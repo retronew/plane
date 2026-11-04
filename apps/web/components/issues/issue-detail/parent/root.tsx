@@ -7,10 +7,10 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
-import { MoreHorizontalOutline, RemoveOutline } from "@makeplane/propel/icons";
+import { MoreHorizontalOutline, ParentOutline, RemoveOutline } from "@makeplane/propel/icons";
 import type { TIssue } from "@plane/types";
 // component
-import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
+import { Tooltip } from "@makeplane/propel/components/tooltip";
 // ui
 import { ControlLink } from "@plane/blocks/layout";
 import { Icon } from "@makeplane/propel/components/icon";
@@ -21,7 +21,6 @@ import { generateWorkItemLink } from "@plane/utils";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
-import { useProjectState } from "@/hooks/store/use-project-state";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
@@ -42,7 +41,6 @@ export const IssueParentDetail = observer(function IssueParentDetail(props: TIss
   const { t } = useTranslation();
   // hooks
   const { issueMap } = useIssues();
-  const { getProjectStates } = useProjectState();
   const { handleRedirection } = useIssuePeekOverviewRedirection();
   const { isMobile } = usePlatformOS();
   const { getProjectIdentifierById } = useProject();
@@ -50,11 +48,6 @@ export const IssueParentDetail = observer(function IssueParentDetail(props: TIss
   // derived values
   const parentIssue = issueMap?.[issue.parent_id || ""] || undefined;
   const projectIdentifier = getProjectIdentifierById(parentIssue?.project_id);
-
-  const issueParentState = getProjectStates(parentIssue?.project_id)?.find(
-    (state) => state?.id === parentIssue?.state_id
-  );
-  const stateColor = issueParentState?.color || undefined;
 
   if (!parentIssue) return <></>;
 
@@ -72,23 +65,23 @@ export const IssueParentDetail = observer(function IssueParentDetail(props: TIss
 
   return (
     <>
-      <div className="mb-5 flex w-min items-center gap-3 rounded-md border border-strong bg-layer-1 px-2.5 py-1 text-11 whitespace-nowrap">
-        <ControlLink href={workItemLink} onClick={handleParentIssueClick}>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2.5">
-              <span className="block h-2 w-2 rounded-full" style={{ backgroundColor: stateColor }} />
-              {parentIssue.project_id && (
-                <IssueIdentifier
-                  projectId={parentIssue.project_id}
-                  issueId={parentIssue.id}
-                  size="xs"
-                  variant="secondary"
-                />
-              )}
-            </div>
-            <span className="truncate text-primary">{(parentIssue?.name ?? "").substring(0, 50)}</span>
-          </div>
-        </ControlLink>
+      <div data-parent-issue="" className="flex min-h-8 w-full min-w-0 items-center gap-2 text-caption-md-regular">
+        <span className="flex shrink-0 items-center gap-1.5 text-tertiary">
+          <ParentOutline className="size-3.5" />
+          <span>{t("common.parent")}</span>
+        </span>
+        <Tooltip label={`${projectIdentifier}-${parentIssue.sequence_id} ${parentIssue.name}`}>
+          <ControlLink
+            href={workItemLink}
+            onClick={handleParentIssueClick}
+            className="flex min-w-0 items-center gap-2 rounded-md py-1 text-secondary outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-accent-strong"
+          >
+            <span className="shrink-0 text-tertiary">
+              {projectIdentifier}-{parentIssue.sequence_id}
+            </span>
+            <span className="min-w-0 truncate">{parentIssue.name}</span>
+          </ControlLink>
+        </Tooltip>
 
         <Menu>
           {/* Icon-only trigger, so it needs an explicit accessible name. */}

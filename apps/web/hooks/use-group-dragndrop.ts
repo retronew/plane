@@ -5,6 +5,7 @@
  */
 
 import { useParams } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { setToast } from "@plane/blocks/toast";
 import type { SetToastProps } from "@plane/blocks/toast";
 import type { EIssuesStoreType, TIssue, TIssueGroupByOptions, TIssueOrderByOptions } from "@plane/types";
@@ -17,7 +18,14 @@ import { useIssuesActions } from "./use-issues-actions";
 import { translate } from "@plane/i18n";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
-import { workflowAllowsTransition, getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
+import {
+  workflowAllowsTransition,
+  workflowRequiresApproval,
+  getWorkflowErrorCode,
+  getWorkflowErrorReason,
+} from "@/helpers/workflow";
+import { useApprovalTransitionConfirmation } from "@/components/workflow/use-approval-transition-confirmation";
+import { useProjectState } from "@/hooks/store/use-project-state";
 
 type DNDStoreType =
   | EIssuesStoreType.GLOBAL
@@ -41,6 +49,9 @@ export const useGroupIssuesDragNDrop = (
   const { workspaceSlug } = useParams();
   const workflowStore = useProjectWorkflow();
   const { data: currentUser } = useUser();
+  const { getStateById } = useProjectState();
+  const { requestConfirmation, confirmationDialog } = useApprovalTransitionConfirmation();
+  const { mutate } = useSWRConfig();
 
   const {
     issue: { getIssueById },
@@ -66,9 +77,11 @@ export const useGroupIssuesDragNDrop = (
         ADD: string[];
         REMOVE: string[];
       };
-    }
+    },
+    beforeConfirmation?: () => void
   ) => {
     const previous = getIssueById(issueId);
+    let needsApproval = false;
     if (workspaceSlug && data.state_id && previous?.state_id) {
       await Promise.all([
         workflowStore.fetchList(workspaceSlug.toString(), projectId),
@@ -83,6 +96,14 @@ export const useGroupIssuesDragNDrop = (
         });
         return;
       }
+      needsApproval = data.state_id !== previous.state_id && workflowRequiresApproval(workflow, data.state_id);
+      if (needsApproval) {
+        // Clear the visual drag preview before opening the confirmation dialog.
+        beforeConfirmation?.();
+        if (!(await requestConfirmation(getStateById(data.state_id)?.name ?? data.state_id))) return;
+      }
+      // Do not apply a queued drag after the work item has changed while the dialog was open.
+      if (getIssueById(issueId)?.state_id !== previous.state_id) return;
     }
     const errorToastProps: SetToastProps = {
       type: "error",
@@ -103,6 +124,21 @@ export const useGroupIssuesDragNDrop = (
     if (updateIssue && Object.keys(issueData).length > 0) {
       try {
         await updateIssue(projectId, issueId, issueData);
+        if (needsApproval)
+          await mutate(
+            (key) =>
+              Array.isArray(key) &&
+              key[0] === "workflow-approvals" &&
+              key[1] === workspaceSlug &&
+              key[2] === projectId &&
+              key[3] === issueId
+          );
+        if (needsApproval)
+          setToast({
+            type: "success",
+            title: translate("web.workflow_ui.entered_approval"),
+            message: translate("web.workflow_ui.entered_approval_description"),
+          });
       } catch (error: unknown) {
         const code = getWorkflowErrorCode(error);
         setToast({
@@ -136,7 +172,11 @@ export const useGroupIssuesDragNDrop = (
     }
   };
 
-  const handleOnDrop = async (source: GroupDropLocation, destination: GroupDropLocation) => {
+  const handleOnDrop = async (
+    source: GroupDropLocation,
+    destination: GroupDropLocation,
+    beforeConfirmation?: () => void
+  ) => {
     if (
       source.columnId &&
       destination.columnId &&
@@ -150,7 +190,8 @@ export const useGroupIssuesDragNDrop = (
       destination,
       getIssueById,
       getIssueIds,
-      updateIssueOnDrop,
+      (projectId, issueId, data, issueUpdates) =>
+        updateIssueOnDrop(projectId, issueId, data, issueUpdates, beforeConfirmation),
       groupBy,
       subGroupBy,
       orderBy !== "sort_order"
@@ -163,5 +204,5 @@ export const useGroupIssuesDragNDrop = (
     });
   };
 
-  return handleOnDrop;
+  return { handleOnDrop, confirmationDialog };
 };

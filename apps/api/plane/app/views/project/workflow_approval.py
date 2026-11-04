@@ -6,11 +6,22 @@ from rest_framework.response import Response
 from plane.app.views.project.workflow import WorkflowBaseView
 from plane.db.models import Issue, Project
 from plane.db.models.workflow import WorkflowApproval
-from plane.services.workflow_approval import approval_representation, decide_approval, sync_issue_approval
+from plane.services.workflow_approval import (
+    approval_representation,
+    decide_approval,
+    sync_issue_approval,
+    withdraw_approval,
+)
 from plane.utils.workflow import _eligible_actor, workflow_conflict, workflow_error
 
 
+class WithdrawalSerializer(serializers.Serializer):
+    version = serializers.IntegerField(min_value=1)
+    idempotency_key = serializers.CharField(max_length=128, allow_blank=False)
+
+
 class DecisionSerializer(serializers.Serializer):
+    note = serializers.CharField(required=False, allow_blank=True, max_length=2000, default="")
     transition_id = serializers.UUIDField()
     outcome = serializers.ChoiceField(choices=["approve", "reject"])
     version = serializers.IntegerField(min_value=1)
@@ -33,6 +44,16 @@ class WorkflowApprovalDecisionEndpoint(WorkflowBaseView):
         serializer = DecisionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         approval = decide_approval(project_id, issue_id, approval_id, actor=request.user, **serializer.validated_data)
+        return Response(approval_representation(approval, request.user))
+
+
+class WorkflowApprovalWithdrawalEndpoint(WorkflowBaseView):
+    def post(self, request, slug, project_id, issue_id, approval_id):
+        self.project(request, slug, project_id)
+        get_object_or_404(WorkflowApproval, project_id=project_id, issue_id=issue_id, pk=approval_id)
+        serializer = WithdrawalSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        approval = withdraw_approval(project_id, issue_id, approval_id, actor=request.user, **serializer.validated_data)
         return Response(approval_representation(approval, request.user))
 
 

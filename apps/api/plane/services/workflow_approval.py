@@ -15,6 +15,7 @@ from plane.utils.workflow import (
     workflow_conflict,
     workflow_error,
     workflow_is_enforced,
+    workflow_states,
 )
 
 
@@ -97,7 +98,7 @@ def _activity(issue, approval, actor, action):
     )
 
 
-def sync_issue_approval(issue, actor=None, force=False):
+def sync_issue_approval(issue, actor=None, force=False, *, entry=None):
     """Call inside the final write transaction with the project and issue locked."""
     workflow = resolve_issue_workflow(issue.project_id, issue.type_id)
     pending = WorkflowApproval.objects.filter(issue=issue, status="pending").first()
@@ -138,6 +139,24 @@ def sync_issue_approval(issue, actor=None, force=False):
         entry_sequence=sequence,
         policy_version=project.workflow_version,
         branches=branches,
+        previous_state_id=(
+            entry["previous_state_id"]
+            if entry
+            and not force
+            and entry["source_id"] == issue.state_id
+            and entry["type_id"] == issue.type_id
+            and entry["workflow_id"] == workflow.pk
+            else None
+        ),
+        requested_by_id=(
+            entry["requested_by_id"]
+            if entry
+            and not force
+            and entry["source_id"] == issue.state_id
+            and entry["type_id"] == issue.type_id
+            and entry["workflow_id"] == workflow.pk
+            else None
+        ),
     )
     _activity(issue, approval, actor, "requested")
     recipients = {person["id"] for branch in branches for person in branch["approvers"]}
@@ -179,6 +198,98 @@ def sync_issue_approval(issue, actor=None, force=False):
     return approval
 
 
+def can_withdraw(approval, actor, *, issue=None):
+    """One eligibility predicate for both presentation and the locked mutation."""
+    if (
+        approval.status != "pending"
+        or actor is None
+        or approval.requested_by_id != actor.pk
+        or approval.previous_state_id is None
+        or not _eligible_actor(approval.project_id, actor)
+    ):
+        return False
+    issue = issue or Issue.objects.filter(pk=approval.issue_id).first()
+    if not issue or issue.archived_at is not None or issue.is_draft or issue.state_id != approval.source_id:
+        return False
+    workflow = resolve_issue_workflow(issue.project_id, issue.type_id)
+    if (
+        not workflow_is_enforced(issue.project_id, workflow)
+        or workflow.pk != approval.workflow_id
+        or Project.objects.get(pk=issue.project_id).workflow_version != approval.policy_version
+        or not workflow_states(issue.project_id, workflow).filter(pk=approval.previous_state_id).exists()
+        or not workflow_states(issue.project_id, workflow).filter(pk=approval.source_id).exists()
+        or WorkflowTransition.objects.filter(
+            workflow=workflow, source_id=approval.previous_state_id, kind="approval"
+        ).exists()
+    ):
+        return False
+    rules = list(
+        WorkflowTransition.objects.filter(workflow=workflow, source_id=approval.source_id, kind="approval")
+        .prefetch_related("members", "approvers")
+        .order_by("id")
+    )
+    return (
+        bool(rules)
+        and len(rules) == len(approval.branches)
+        and all(branch_matches(rule, branch) for rule, branch in zip(rules, approval.branches, strict=True))
+    )
+
+
+def withdraw_approval(project_id, issue_id, approval_id, version, idempotency_key, actor):
+    if (
+        not isinstance(version, int)
+        or isinstance(version, bool)
+        or version < 1
+        or not isinstance(idempotency_key, str)
+        or not idempotency_key.strip()
+        or len(idempotency_key) > 128
+    ):
+        workflow_error("WORKFLOW_INVALID_APPROVAL_WITHDRAWAL")
+    with transaction.atomic():
+        Project.objects.select_for_update().get(pk=project_id)
+        issue = Issue.objects.select_for_update().get(pk=issue_id, project_id=project_id)
+        approval = WorkflowApproval.objects.select_for_update().get(
+            pk=approval_id, project_id=project_id, issue_id=issue_id
+        )
+        if approval.idempotency_key == idempotency_key:
+            if approval.withdrawal and approval.withdrawal.get("actor_id") == str(actor.pk):
+                return approval
+            workflow_conflict("WORKFLOW_IDEMPOTENCY_CONFLICT")
+        if approval.version != version:
+            workflow_conflict()
+        if approval.status != "pending":
+            workflow_conflict("WORKFLOW_APPROVAL_ALREADY_DECIDED")
+        if not can_withdraw(approval, actor, issue=issue):
+            workflow_error("WORKFLOW_APPROVAL_WITHDRAW_NOT_ALLOWED")
+        before_state_id = issue.state_id
+        issue.state = approval.previous_state
+        issue.save()
+        approval.status = "cancelled"
+        approval.invalidation_reason = "withdrawn"
+        approval.version += 1
+        approval.idempotency_key = idempotency_key
+        approval.withdrawal = {
+            "actor_id": str(actor.pk),
+            "actor_name": member_snapshot(actor)["name"],
+            "at": timezone.now().isoformat(),
+            "previous_state_id": str(approval.previous_state_id),
+        }
+        approval.save()
+        _activity(issue, approval, actor, "withdrawn")
+        IssueActivity.objects.create(
+            project_id=project_id,
+            issue=issue,
+            actor=actor,
+            field="state",
+            verb="updated",
+            old_identifier=before_state_id,
+            new_identifier=issue.state_id,
+            old_value=str(before_state_id),
+            new_value=issue.state.name,
+        )
+        return approval
+
+
 def approval_representation(approval, actor=None):
     can_decide = (
         approval.status == "pending"
@@ -195,6 +306,10 @@ def approval_representation(approval, actor=None):
         "version": approval.version,
         "branches": approval.branches,
         "can_decide": can_decide,
+        "previous_state_id": approval.previous_state_id,
+        "requested_by_id": approval.requested_by_id,
+        "can_withdraw": can_withdraw(approval, actor),
+        "withdrawal": approval.withdrawal or None,
         "decision": approval.decision or None,
         "created_at": approval.created_at,
         "invalidation_reason": approval.invalidation_reason,
@@ -241,9 +356,13 @@ def decide_approval(
     idempotency_key,
     actor,
     *,
+    note="",
     verify_locked=None,
     complete_locked=None,
 ):
+    if not isinstance(note, str) or len(note) > 2000:
+        workflow_error("WORKFLOW_INVALID_APPROVAL_DECISION")
+    note = note.strip()
     if outcome not in ("approve", "reject") or not idempotency_key:
         workflow_error("WORKFLOW_INVALID_APPROVAL_DECISION")
     approval = WorkflowApproval.objects.get(pk=approval_id, project_id=project_id, issue_id=issue_id)
@@ -252,6 +371,7 @@ def decide_approval(
             approval.decision.get("actor_id") != str(actor.pk)
             or approval.decision.get("transition_id") != str(transition_id)
             or approval.decision.get("outcome") != outcome
+            or approval.decision.get("note", "") != note
         ):
             workflow_conflict("WORKFLOW_IDEMPOTENCY_CONFLICT")
         if verify_locked or complete_locked:
@@ -293,6 +413,7 @@ def decide_approval(
                 approval.decision.get("actor_id") == str(actor.pk)
                 and approval.decision.get("transition_id") == str(transition_id)
                 and approval.decision.get("outcome") == outcome
+                and approval.decision.get("note", "") == note
             ):
                 if complete_locked:
                     complete_locked(approval)
@@ -315,6 +436,7 @@ def decide_approval(
         approval.idempotency_key = idempotency_key
         approval.decision = {
             "outcome": outcome,
+            "note": note,
             "transition_id": str(rule.pk),
             "actor_id": str(actor.pk),
             "at": timezone.now().isoformat(),

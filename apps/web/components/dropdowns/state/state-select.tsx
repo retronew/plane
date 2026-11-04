@@ -7,6 +7,7 @@
 import type { ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import { observer } from "mobx-react";
+import { useSWRConfig } from "swr";
 import { useParams } from "next/navigation";
 // plane imports
 import { StateSelect as StateSelectBlock } from "@plane/blocks/property-select";
@@ -20,7 +21,8 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
 import { workflowAllowsCreation, workflowAllowsTransition, workflowIsActive } from "@/helpers/workflow";
-import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
+import { getWorkflowErrorCode, getWorkflowErrorReason, workflowRequiresApproval } from "@/helpers/workflow";
+import { useApprovalTransitionConfirmation } from "@/components/workflow/use-approval-transition-confirmation";
 import { setToast } from "@plane/blocks/toast";
 
 type StateSelectWebProps = {
@@ -183,34 +185,60 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const selectedState = value ? getStateById(value) : undefined;
   const selected = selectedState ? toOption(selectedState, getStatePercentageInGroup(selectedState.id)) : null;
 
+  const { requestConfirmation, confirmationDialog } = useApprovalTransitionConfirmation();
+  const { mutate } = useSWRConfig();
+  const changeState = async (stateId: string) => {
+    const needsApproval =
+      !bypassWorkflow &&
+      !isForWorkItemCreation &&
+      stateId !== value &&
+      workflowRequiresApproval(currentWorkflow, stateId);
+    if (needsApproval && !(await requestConfirmation(getStateById(stateId)?.name ?? stateId))) return;
+    try {
+      await onChange(stateId);
+      if (needsApproval)
+        await mutate(
+          (key) =>
+            Array.isArray(key) && key[0] === "workflow-approvals" && key[1] === workspaceSlug && key[2] === projectId
+        );
+      if (needsApproval)
+        setToast({
+          type: "success",
+          title: t("web.workflow_ui.entered_approval"),
+          message: t("web.workflow_ui.entered_approval_description"),
+        });
+    } catch (error: unknown) {
+      const code = getWorkflowErrorCode(error);
+      setToast({
+        type: "error",
+        title: t("error"),
+        message:
+          getWorkflowErrorReason(error) ??
+          (code ? t(`web.workflow_errors.${code}`) : t("web.failed_to_perform_this_action")),
+      });
+    }
+  };
+
   return (
-    <StateSelectBlock
-      getValues={getValues}
-      allowedStateIds={allowedStateIds}
-      value={selected}
-      onChange={(stateId) => {
-        void Promise.resolve()
-          .then(() => onChange(stateId))
-          .catch((error: unknown) => {
-            const code = getWorkflowErrorCode(error);
-            setToast({
-              type: "error",
-              title: t("error"),
-              message:
-                getWorkflowErrorReason(error) ??
-                (code ? t(`web.workflow_errors.${code}`) : t("web.failed_to_perform_this_action")),
-            });
-          });
-      }}
-      variant={variant}
-      disabled={disabled}
-      placeholder={placeholder ?? t("state")}
-      onClose={onClose}
-      className={className}
-      tooltip={resolvedTooltip}
-      appendElement={appendElement}
-      testId={testId}
-      tabIndex={tabIndex}
-    />
+    <>
+      <StateSelectBlock
+        getValues={getValues}
+        allowedStateIds={allowedStateIds}
+        value={selected}
+        onChange={(stateId) => {
+          void changeState(stateId);
+        }}
+        variant={variant}
+        disabled={disabled}
+        placeholder={placeholder ?? t("state")}
+        onClose={onClose}
+        className={className}
+        tooltip={resolvedTooltip}
+        appendElement={appendElement}
+        testId={testId}
+        tabIndex={tabIndex}
+      />
+      {confirmationDialog}
+    </>
   );
 });

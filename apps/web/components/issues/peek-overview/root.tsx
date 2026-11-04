@@ -23,6 +23,7 @@ import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow
 // local imports
 import type { TIssueOperations } from "../issue-detail";
 import { IssueView } from "./view";
+import { useRetainedPeek } from "./use-retained-peek";
 
 export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWorkItemPeekOverview) {
   const {
@@ -46,6 +47,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     issue: { fetchIssue },
     fetchActivities,
   } = useIssueDetail();
+  const { item: displayedPeek, closing, onExited } = useRetainedPeek(peekIssue, !embedIssue);
   const issueStoreType = useIssueStoreType();
   const storeType = issueStoreFromProps ?? issueStoreType;
   const { issues } = useIssues(storeType);
@@ -214,7 +216,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
   );
 
   const { isLoading } = useSWR(
-    ["peek-issue", peekIssue?.workspaceSlug, peekIssue?.projectId, peekIssue?.issueId],
+    peekIssue ? ["peek-issue", peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId] : null,
     () => peekIssue && issueOperations.fetch(peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId),
     {
       revalidateIfStale: false,
@@ -223,24 +225,26 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     }
   );
 
-  if (!peekIssue?.workspaceSlug || !peekIssue?.projectId || !peekIssue?.issueId) return <></>;
+  if (!displayedPeek?.workspaceSlug || !displayedPeek?.projectId || !displayedPeek?.issueId) return <></>;
 
   // Check if issue is editable, based on user role
   const isEditable = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.PROJECT,
-    peekIssue?.workspaceSlug,
-    peekIssue?.projectId
+    displayedPeek.workspaceSlug,
+    displayedPeek.projectId
   );
 
   return (
     <IssueView
-      workspaceSlug={peekIssue.workspaceSlug}
-      projectId={peekIssue.projectId}
-      issueId={peekIssue.issueId}
-      isLoading={isLoading}
+      workspaceSlug={displayedPeek.workspaceSlug}
+      projectId={displayedPeek.projectId}
+      issueId={displayedPeek.issueId}
+      closing={closing}
+      onExited={onExited}
+      isLoading={!closing && isLoading}
       isError={hasError}
-      is_archived={!!peekIssue.isArchived}
+      is_archived={!!displayedPeek.isArchived}
       disabled={!isEditable}
       embedIssue={embedIssue}
       embedRemoveCurrentNotification={embedRemoveCurrentNotification}

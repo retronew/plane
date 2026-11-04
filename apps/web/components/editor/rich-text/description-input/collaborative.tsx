@@ -6,7 +6,7 @@ import { LIVE_URL } from "@plane/constants";
 import type { EditorRefApi } from "@plane/editor";
 import type { PlateCollaborationConfig } from "@plane/editor/plate";
 import { useTranslation } from "@plane/i18n";
-import { getDescriptionPlaceholderI18n, getFileURL } from "@plane/utils";
+import { getFileURL } from "@plane/utils";
 import { RichTextEditor } from "@/components/editor/rich-text";
 import { useEditorAsset } from "@/hooks/store/use-editor-asset";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -220,7 +220,7 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
           disabledExtensions={props.disabledExtensions}
           containerClassName={props.containerClassName}
           dragDropEnabled
-          placeholder={props.placeholder ?? ((focused, value) => t(getDescriptionPlaceholderI18n(focused, value)))}
+          placeholder={props.placeholder ?? t("common.press_for_commands")}
           searchMentionCallback={(payload) =>
             workspaceService.searchEntity(workspaceSlug, { ...payload, project_id: projectId })
           }

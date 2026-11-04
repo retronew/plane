@@ -172,7 +172,17 @@ export type TWorkflowApproval = {
   version: number;
   branches: TWorkflowTransition[];
   can_decide: boolean;
-  decision: { outcome: "approve" | "reject"; transition_id: string; actor_id: string; at: string } | null;
+  can_withdraw?: boolean;
+  previous_state_id?: string | null;
+  requested_by_id?: string | null;
+  withdrawal?: { actor_id: string; actor_name?: string; at: string; previous_state_id: string } | null;
+  decision: {
+    outcome: "approve" | "reject";
+    transition_id: string;
+    actor_id: string;
+    at: string;
+    note?: string;
+  } | null;
   created_at: string;
 };
 export type TWorkflowScriptVersion = {
