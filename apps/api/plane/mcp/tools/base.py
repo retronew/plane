@@ -204,17 +204,9 @@ class Tool:
             "inputSchema": {
                 "type": "object",
                 "properties": properties,
+                # Claude clients reject top-level schema combinators. Conditional workspace
+                # requirements are described above and enforced by run() and the MCP view.
                 "required": ["action"] if self.name == "workspace" else ["action", "workspace_slug"],
-                **(
-                    {
-                        "anyOf": [
-                            {"properties": {"action": {"const": "list"}}},
-                            {"required": ["workspace_slug"]},
-                        ]
-                    }
-                    if self.name == "workspace"
-                    else {}
-                ),
                 "additionalProperties": False,
             },
             "annotations": {

@@ -77,12 +77,20 @@ def test_tool_run_rejects_invalid_workspace_before_handler(slug):
 
 
 @pytest.mark.unit
-def test_workspace_schema_requires_target_except_discovery():
-    schema = TOOLS_BY_NAME["workspace"].definition()["inputSchema"]
-    assert schema["anyOf"] == [
-        {"properties": {"action": {"const": "list"}}},
-        {"required": ["workspace_slug"]},
-    ]
-    for tool in TOOLS:
-        if tool.name != "workspace":
-            assert "workspace_slug" in tool.definition()["inputSchema"]["required"]
+@pytest.mark.parametrize("tool", TOOLS, ids=lambda tool: tool.name)
+def test_tool_schema_is_compatible_with_claude(tool):
+    schema = tool.definition()["inputSchema"]
+    assert schema["type"] == "object"
+    assert not {"anyOf", "oneOf", "allOf"}.intersection(schema)
+    assert "action" in schema["required"]
+    assert ("workspace_slug" in schema["required"]) is (tool.name != "workspace")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("action", ["me", "members", "search"])
+def test_workspace_non_discovery_requires_target(action):
+    from types import SimpleNamespace
+    from plane.mcp.tools.base import ToolError
+
+    with pytest.raises(ToolError, match="workspace_slug"):
+        TOOLS_BY_NAME["workspace"].run(SimpleNamespace(slug=None), {"action": action})
