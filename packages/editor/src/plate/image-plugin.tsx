@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, useState, type ReactNode } from "react";
+import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon, ExpandIcon, Trash2Icon } from "lucide-react";
 import { BaseImagePlugin } from "@platejs/media";
@@ -7,14 +7,7 @@ import { useMediaState } from "@platejs/media/react";
 import { Resizable, ResizableProvider, ResizeHandle } from "@platejs/resizable";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { type SlateEditor, type SlatePlugin, type TElement } from "platejs";
-import {
-  PlateElement,
-  toPlatePlugin,
-  useEditorSelector,
-  useFocusedLast,
-  withHOC,
-  type PlateElementProps,
-} from "platejs/react";
+import { PlateElement, toPlatePlugin, useEditorSelector, withHOC, type PlateElementProps } from "platejs/react";
 import { type EditorAssets as SandboxAssets, useAssetUrl } from "./assets";
 import {
   collectDocumentImages,
@@ -144,9 +137,9 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
   const lightbox = useImageLightbox();
   const [error, setError] = useState("");
   const { selected, readOnly } = useMediaState();
-  const focusedLast = useFocusedLast();
   const collapsed = useEditorSelector((currentEditor) => !currentEditor.api.isExpanded(), []);
-  const showToolbar = selected && focusedLast && collapsed && !readOnly;
+  const [dismissed, setDismissed] = useState(true);
+  const showToolbar = selected && collapsed && !readOnly && !dismissed;
   const { refs, floatingStyles } = useFloating({
     open: showToolbar,
     placement: "top",
@@ -154,6 +147,23 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
     middleware: [offset(6), flip(), shift({ padding: 8 })],
     whileElementsMounted: autoUpdate,
   });
+  useEffect(() => {
+    if (readOnly) return;
+    const editorNode = editor.api.toDOMNode(editor);
+    if (!editorNode) return;
+    const ownerDocument = editorNode.ownerDocument;
+    const onInteraction = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      setDismissed(!editorNode.contains(target) && !refs.floating.current?.contains(target));
+    };
+    ownerDocument.addEventListener("pointerdown", onInteraction, true);
+    ownerDocument.addEventListener("focusin", onInteraction, true);
+    return () => {
+      ownerDocument.removeEventListener("pointerdown", onInteraction, true);
+      ownerDocument.removeEventListener("focusin", onInteraction, true);
+    };
+  }, [editor, readOnly, refs.floating]);
   const src = useAssetUrl(assets, image.src);
   const preview = () => {
     const images = collectDocumentImages(editor.children, assets);
@@ -189,9 +199,15 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
               type="button"
               className="focus-visible:ring-offset-surface-1 block w-full cursor-pointer rounded-md border-0 bg-transparent p-0 text-left leading-none outline-none focus-visible:ring-2 focus-visible:ring-accent-strong/50 focus-visible:ring-offset-2"
               onDoubleClick={preview}
-              onMouseDown={(event) => event.preventDefault()}
+              onMouseDown={(event) => {
+                // Slate cancels mousedown on void nodes, which also cancels native dragging.
+                if (event.currentTarget.closest('[data-block-type="sandboxImage"][draggable="true"]'))
+                  event.stopPropagation();
+                else event.preventDefault();
+              }}
               onClick={() => {
                 if (readOnly) return;
+                setDismissed(false);
                 const at = editor.api.findPath(element);
                 if (at) editor.tf.select(at);
                 editor.tf.focus();

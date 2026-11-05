@@ -126,6 +126,49 @@ it("exposes draggable handles for multiple image blocks when sorting is enabled"
   }
 });
 
+it("drags images from their content while leaving text editable", async () => {
+  const view = render(
+    <PlateEditorWithRef
+      {...props}
+      dragDropEnabled
+      initialValue='<p>Select text</p><image-component src="asset-one"></image-component>'
+    />
+  );
+  await waitFor(() => expect(view.container.querySelector("img")).not.toBeNull());
+  expect(view.container.querySelector('[data-block-type="sandboxImage"]')?.getAttribute("draggable")).toBe("true");
+  expect(view.container.querySelector('[data-block-type="p"]')?.hasAttribute("draggable")).toBe(false);
+  expect(fireEvent.mouseDown(view.container.querySelector("button:has(img)")!)).toBe(true);
+});
+
+it("dismisses the image toolbar outside the editor but preserves toolbar input focus", async () => {
+  const view = render(
+    <>
+      <input aria-label="Issue title" />
+      <button type="button">Outside action</button>
+      <PlateEditorWithRef {...props} initialValue='<image-component src="asset-one"></image-component>' />
+    </>
+  );
+  await waitFor(() => expect(view.container.querySelector("img")).not.toBeNull());
+  const image = view.container.querySelector("button:has(img)")!;
+  const content = view.container.querySelector('[contenteditable="true"]') as HTMLElement;
+  act(() => content.focus());
+  fireEvent.focus(content);
+  fireEvent.click(image);
+  await waitFor(() => expect(screen.queryByTestId("image-floating-toolbar")).not.toBeNull());
+  const alt = screen.getByRole("textbox", { name: "editor_comparison.alt" });
+  fireEvent.pointerDown(alt);
+  act(() => alt.focus());
+  expect(screen.queryByTestId("image-floating-toolbar")).not.toBeNull();
+  fireEvent.change(alt, { target: { value: "Updated description" } });
+  await waitFor(() => expect(view.container.querySelector("img")?.alt).toBe("Updated description"));
+  act(() => screen.getByRole("textbox", { name: "Issue title" }).focus());
+  expect(screen.queryByTestId("image-floating-toolbar")).toBeNull();
+  fireEvent.click(image);
+  await waitFor(() => expect(screen.queryByTestId("image-floating-toolbar")).not.toBeNull());
+  fireEvent.pointerDown(screen.getByRole("button", { name: "Outside action" }));
+  expect(screen.queryByTestId("image-floating-toolbar")).toBeNull();
+});
+
 it.each(["rich", "lite", "document"] as const)(
   "creates a text paragraph below a selected final image in %s mode",
   async (mode) => {

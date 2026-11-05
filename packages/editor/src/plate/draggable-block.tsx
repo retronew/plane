@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ComponentType } from "react";
+import { useCallback, useLayoutEffect, useRef, type ComponentType } from "react";
 import { observeDropGaps } from "./drop-gaps";
 import { observeBlockHandlePosition } from "./block-handle-position";
 import { GripVertical } from "lucide-react";
@@ -16,6 +16,14 @@ function BlockHandle({
   const { handleRef, nodeRef, isDragging } = useDraggable({ element: props.element });
   const { dropLine } = useDropLine({ id: String(props.element.id) });
   const positionRef = useRef<HTMLDivElement>(null);
+  const dragFromContent = props.element.type === "sandboxImage";
+  const setNodeRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      nodeRef.current = node;
+      if (dragFromContent) handleRef(node);
+    },
+    [nodeRef, handleRef, dragFromContent]
+  );
   useLayoutEffect(() => {
     const node = nodeRef?.current;
     if (!node) return;
@@ -28,7 +36,7 @@ function BlockHandle({
   }, [nodeRef]);
   return (
     <div
-      ref={nodeRef}
+      ref={setNodeRef}
       className="comparison-draggable group/drag relative"
       data-comparison-block={props.element.id}
       data-block-type={props.element.type}
@@ -40,7 +48,8 @@ function BlockHandle({
         className="comparison-drag-handle absolute -left-5 z-10 flex opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100"
       >
         <IconButton
-          ref={handleRef}
+          ref={dragFromContent ? undefined : handleRef}
+          draggable={dragFromContent || undefined}
           size="sm"
           variant="ghost"
           icon={<GripVertical className="size-4" />}
