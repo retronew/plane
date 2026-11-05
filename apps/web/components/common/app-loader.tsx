@@ -12,7 +12,13 @@ import { LogoSpinner } from "./logo-spinner";
 /** The boot loader itself, rendered once by root.tsx's Layout. */
 export function BootLoader() {
   return (
-    <div id={BOOT_LOADER_ID} className="fixed inset-0 z-[100] flex items-center justify-center bg-canvas">
+    <div
+      id={BOOT_LOADER_ID}
+      ref={(element) => {
+        if (element && hasBootFinished()) element.hidden = true;
+      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-canvas"
+    >
       <LogoSpinner />
     </div>
   );

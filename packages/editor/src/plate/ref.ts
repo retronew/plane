@@ -32,12 +32,30 @@ export function createPlateRef(
       stateListeners.delete(fn);
     };
   };
-  const headings = (): IMarking[] =>
-    editor.children.flatMap((node, index) =>
+  let headingDocument: Value | undefined;
+  let headingSnapshot: IMarking[] = [];
+  const headings = (): IMarking[] => {
+    if (headingDocument === editor.children) return headingSnapshot;
+    headingDocument = editor.children;
+    const next: IMarking[] = editor.children.flatMap((node, index) =>
       /^h[1-6]$/.test(node.type)
         ? [{ type: "heading", level: Number(node.type[1]), text: NodeApi.string(node), sequence: index }]
         : []
     );
+    // External-store consumers require the same snapshot reference until its contents change.
+    if (
+      next.length !== headingSnapshot.length ||
+      next.some((heading, index) => {
+        const previous = headingSnapshot[index];
+        return (
+          heading.level !== previous.level || heading.text !== previous.text || heading.sequence !== previous.sequence
+        );
+      })
+    ) {
+      headingSnapshot = next;
+    }
+    return headingSnapshot;
+  };
   const info = () => {
     const text = editor.api.string([]);
     return {

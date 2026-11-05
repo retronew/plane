@@ -25,6 +25,7 @@ import { PagesVersionEditor } from "../version/editor";
 import { PageEditorBody } from "./editor-body";
 import type { TEditorBodyConfig, TEditorBodyHandlers } from "./editor-body";
 import { PageEditorToolbarRoot } from "./toolbar";
+import { PageErrorBoundary } from "./page-error-boundary";
 
 export type TPageRootHandlers = {
   create: (payload: Partial<TPage>) => Promise<Partial<TPage> | undefined>;
@@ -48,7 +49,15 @@ type TPageRootProps = {
   customRealtimeEventHandlers?: TCustomEventHandlers;
 };
 
-export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
+export function PageRoot(props: TPageRootProps) {
+  return (
+    <PageErrorBoundary key={props.page.id}>
+      <PageRootContent {...props} />
+    </PageErrorBoundary>
+  );
+}
+
+const PageRootContent = observer(function PageRootContent(props: TPageRootProps) {
   const {
     config,
     handlers,
