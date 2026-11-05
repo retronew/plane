@@ -1501,6 +1501,7 @@
       "due_date_removed": "removed the due date from {issue}"
     },
     "ui": {
+      "sentence_end": ".",
       "link": "link",
       "no_projects": "No projects found",
       "no_labels": "No labels found",

@@ -323,7 +323,10 @@ function IssueFormDescription({
   onClose: () => void;
 }) {
   return (
-    <DialogBody tabIndex={0} render={<div className="vertical-scrollbar scrollbar-sm [&>div]:w-auto" />}>
+    <DialogBody
+      tabIndex={0}
+      render={<div className="issue-composer-description-scroll vertical-scrollbar scrollbar-sm [&>div]:w-auto" />}
+    >
       <IssueDescriptionEditor
         control={control}
         isDraft={isDraft}

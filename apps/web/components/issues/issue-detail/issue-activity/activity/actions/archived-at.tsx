@@ -1,3 +1,4 @@
+import { ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -42,7 +43,7 @@ export const IssueArchivedAtActivity = observer(function IssueArchivedAtActivity
       {activity.new_value === "restore"
         ? translate("web.restored_the_work_item")
         : translate("web.archived_the_work_item")}
-      .
+      <ActivitySentenceEnd />
     </IssueActivityBlockComponent>
   );
 });

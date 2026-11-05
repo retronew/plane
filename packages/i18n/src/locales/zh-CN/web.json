@@ -1501,6 +1501,7 @@
       "due_date_removed": "移除了{issue}的截止日期"
     },
     "ui": {
+      "sentence_end": "。",
       "link": "链接",
       "no_projects": "未找到项目",
       "no_labels": "未找到标签",

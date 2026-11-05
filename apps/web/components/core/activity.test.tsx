@@ -51,22 +51,34 @@ describe("activity sentence localization", () => {
     ["modules", "deleted", "从模块Sprint 1移除了此工作项", "old"],
   ])("renders %s %s with the correct linked value", (field, verb, expected, id) => {
     const { container } = render(<ActivityMessage activity={activity({ field, verb, old_value: "Sprint 1" })} />);
-    expect(container.textContent).toBe(expected);
+    expect(container.textContent).toBe(`${expected}。`);
     expect(screen.getByRole("link").getAttribute("href")).toBe(`/workspace/projects/project/${field}/${id}`);
+  });
+
+  it("keeps punctuation in user values while localizing the sentence ending", async () => {
+    const { container } = render(
+      <ActivityMessage activity={activity({ field: "assignees", new_value: "Example Inc." })} />
+    );
+    expect(container.textContent).toBe("为此工作项添加了负责人Example Inc.。");
+    expect(screen.getByRole("link").textContent).toBe("Example Inc.");
+    await act(async () => {
+      await setLanguage("en");
+    });
+    expect(container.textContent).toBe("added Example Inc. as an assignee to this work item.");
   });
 
   it("does not duplicate the intake duplicate-status explanation", () => {
     const { container } = render(<ActivityMessage activity={activity({ field: "inbox", verb: "2" })} />);
-    expect(container.textContent).toBe("将此工作项标记为重复项并从需求收集拒绝");
+    expect(container.textContent).toBe("将此工作项标记为重复项并从需求收集拒绝。");
   });
 
   it("translates priority values and updates full sentences when the language changes", async () => {
     const { container } = render(<ActivityMessage activity={activity({ field: "priority", new_value: "high" })} />);
-    expect(container.textContent).toBe("将此工作项的优先级设为高");
+    expect(container.textContent).toBe("将此工作项的优先级设为高。");
     await act(async () => {
       await setLanguage("en");
     });
-    expect(container.textContent).toBe("set the priority of this work item to High");
+    expect(container.textContent).toBe("set the priority of this work item to High.");
   });
 });
 

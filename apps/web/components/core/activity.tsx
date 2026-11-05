@@ -5,7 +5,7 @@
  */
 
 import { cloneElement, isValidElement, useEffect } from "react";
-import { ActivitySentence } from "@/components/common/activity/activity-sentence";
+import { ActivitySentence, ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // store hooks
@@ -140,19 +140,22 @@ function activityMessage(
   value?: React.ReactNode
 ) {
   return (
-    <Translation
-      translationKey={`web.activity.${key}`}
-      components={{
-        issue: showIssue ? (
-          <span data-activity-part="">
-            <IssueLink activity={activity} />
-          </span>
-        ) : (
-          <Translation translationKey="web.this_work_item" />
-        ),
-        value: value == null ? value : <span data-activity-part="">{value}</span>,
-      }}
-    />
+    <>
+      <Translation
+        translationKey={`web.activity.${key}`}
+        components={{
+          issue: showIssue ? (
+            <span data-activity-part="">
+              <IssueLink activity={activity} />
+            </span>
+          ) : (
+            <Translation translationKey="web.this_work_item" />
+          ),
+          value: value == null ? value : <span data-activity-part="">{value}</span>,
+        }}
+      />
+      <ActivitySentenceEnd />
+    </>
   );
 }
 

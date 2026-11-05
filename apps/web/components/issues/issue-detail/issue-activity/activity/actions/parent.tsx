@@ -1,3 +1,4 @@
+import { ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -42,7 +43,8 @@ export const IssueParentActivity = observer(function IssueParentActivity(props: 
           </span>
         )}
         {showIssue && (activity.new_value ? ` for ` : ` from `)}
-        {showIssue && <IssueLink activityId={activityId} />}.
+        {showIssue && <IssueLink activityId={activityId} />}
+        <ActivitySentenceEnd />
       </>
     </IssueActivityBlockComponent>
   );

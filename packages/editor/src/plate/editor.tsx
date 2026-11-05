@@ -212,12 +212,19 @@ export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
                       readOnly={readOnly}
 
                       tabIndex={props.tabIndex}
-                      className={`plate-comparison-content ${props.mode === "document" ? "min-h-dvh pb-64" : props.mode === "rich" ? "min-h-32" : "min-h-12"} outline-none ${props.editorClassName ?? ""}`}
+                      className={`plate-comparison-content ${props.mode === "document" ? "min-h-dvh pb-64" : props.mode === "rich" ? "min-h-32 pb-8" : "min-h-12 pb-4"} outline-none ${props.editorClassName ?? ""}`}
                       onMouseDown={(event) => {
                         if (readOnly || event.button !== 0 || event.target !== event.currentTarget) return;
                         const last = event.currentTarget.lastElementChild;
                         if (last && event.clientY > last.getBoundingClientRect().bottom) {
                           event.preventDefault();
+                          const lastNode = editor.children.at(-1);
+                          if (lastNode && editor.api.isVoid(lastNode)) {
+                            editor.tf.insertNodes(
+                              { type: "p", children: [{ text: "" }] },
+                              { at: [editor.children.length] }
+                            );
+                          }
                           const end = editor.api.end([]);
                           if (end) editor.tf.select(end);
                           editor.tf.focus();

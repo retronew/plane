@@ -1,3 +1,4 @@
+import { ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 import { observer } from "mobx-react";
 import { CalendarOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -50,7 +51,8 @@ export const IssueDateActivity = observer(function IssueDateActivity({
           </>
         )}
         {showIssue && (activity.new_value ? ` for ` : ` from `)}
-        {showIssue && <IssueLink activityId={activityId} />}.
+        {showIssue && <IssueLink activityId={activityId} />}
+        <ActivitySentenceEnd />
       </>
     </IssueActivityBlockComponent>
   );

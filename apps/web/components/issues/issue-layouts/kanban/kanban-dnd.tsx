@@ -9,6 +9,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AutoScroller, KeyboardSensor, PointerActivationConstraints, PointerSensor } from "@dnd-kit/dom";
 import { DragDropProvider, useDroppable } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
+import { kanbanCollisionDetection } from "./kanban-collision";
 // plane imports
 import { setToast } from "@plane/blocks/toast";
 import { translate } from "@plane/i18n";
@@ -315,6 +316,7 @@ export function useKanbanSortableCard(input: {
     data: { kind: "card", issueId, columnId },
     disabled,
     sensors: cardSensors,
+    collisionDetector: kanbanCollisionDetection,
     transition: KANBAN_SORT_TRANSITION,
   });
 }
@@ -357,6 +359,7 @@ export function useKanbanColumnDnd(input: {
     accept: "issue",
     // cards inside the column win over the column itself
     collisionPriority: 1,
+    collisionDetector: kanbanCollisionDetection,
     data: { kind: "column", columnId },
   });
 

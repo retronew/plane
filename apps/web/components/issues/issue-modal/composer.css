@@ -35,6 +35,16 @@
   padding: 0;
 }
 
+/* Extend the scroll viewport into the existing dialog gutter without indenting the text. */
+[data-issue-composer] .issue-composer-description-scroll {
+  margin-left: -20px;
+  padding-left: 20px;
+}
+
+[data-issue-composer] .issue-composer-description-scroll > div {
+  overflow-x: visible;
+}
+
 [data-issue-composer] .issue-composer-actions {
   flex-wrap: wrap;
   gap: 12px;

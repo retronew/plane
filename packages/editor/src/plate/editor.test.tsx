@@ -111,6 +111,46 @@ it("focuses the end when lower comment whitespace is clicked", async () => {
   expect(ref.current!.getDocument().html).toContain("Initial end");
   await waitFor(() => expect(document.activeElement).toBe(content));
 });
+it("exposes draggable handles for multiple image blocks when sorting is enabled", () => {
+  const view = render(
+    <PlateEditorWithRef
+      {...props}
+      dragDropEnabled
+      initialValue='<image-component src="asset-one"></image-component><image-component src="asset-two"></image-component>'
+    />
+  );
+  const images = view.container.querySelectorAll('[data-block-type="sandboxImage"]');
+  expect(images).toHaveLength(2);
+  for (const image of images) {
+    expect(image.querySelector(".comparison-drag-handle button")?.getAttribute("draggable")).toBe("true");
+  }
+});
+
+it.each(["rich", "lite", "document"] as const)(
+  "creates a text paragraph below a selected final image in %s mode",
+  async (mode) => {
+    const ref = createRef<EditorRefApi>();
+    const view = render(
+      <PlateEditorWithRef
+        {...props}
+        mode={mode}
+        ref={ref}
+        initialValue='<image-component src="asset-one"></image-component>'
+      />
+    );
+    const content = view.container.querySelector('[contenteditable="true"]') as HTMLElement;
+    const imageButton = view.container.querySelector("button:has(img)");
+    if (imageButton) fireEvent.mouseDown(imageButton);
+    fireEvent.mouseDown(content, { clientY: 600, button: 0 });
+    await act(async () => {
+      ref.current!.insertText("<span>After image</span>");
+    });
+    const html = ref.current!.getDocument().html;
+    expect(html).toMatch(/<\/image-component>\s*<p[^>]*>After image<\/p>/);
+    await waitFor(() => expect(document.activeElement).toBe(content));
+  }
+);
+
 it("keeps the imperative API stable when a wrapper stores it and recreates file handlers", () => {
   const published = vi.fn();
   function Wrapper({ revision }: { revision: number }) {

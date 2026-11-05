@@ -1,3 +1,4 @@
+import { ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -38,13 +39,14 @@ export const IssueRelationActivity = observer(function IssueRelationActivity(pro
       {activityContent}
       {activity.old_value === "" ? (
         <span data-activity-part="" className="font-medium text-primary">
-          {activity.new_value}.
+          {activity.new_value}
         </span>
       ) : (
         <span data-activity-part="" className="font-medium text-primary">
-          {activity.old_value}.
+          {activity.old_value}
         </span>
       )}
+      <ActivitySentenceEnd />
     </IssueActivityBlockComponent>
   );
 });

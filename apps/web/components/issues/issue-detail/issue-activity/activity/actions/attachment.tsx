@@ -1,3 +1,4 @@
+import { ActivitySentenceEnd } from "@/components/common/activity/activity-sentence";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -35,7 +36,8 @@ export const IssueAttachmentActivity = observer(function IssueAttachmentActivity
           ? translate("web.uploaded_a_new_attachment")
           : translate("web.removed_an_attachment")}
         {showIssue && (activity.verb === "created" ? ` to ` : ` from `)}
-        {showIssue && <IssueLink activityId={activityId} />}.
+        {showIssue && <IssueLink activityId={activityId} />}
+        <ActivitySentenceEnd />
       </>
     </IssueActivityBlockComponent>
   );
