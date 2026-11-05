@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { TDailyDigestPreview } from "./daily-digest";
 import type { ENotificationFilterType } from "./enums";
 import type { IUserLite } from "./users";
 
@@ -40,6 +41,7 @@ export type TNotificationData = {
   project_id?: string;
   approval_id?: string;
   event?: string;
+  digest?: TDailyDigestPreview;
   entry_sequence?: number;
   issue?: TNotificationIssueLite;
   issue_activity?: {

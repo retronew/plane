@@ -1,0 +1,13 @@
+<!doctype html>
+<html><body style="font-family: sans-serif; color: #172b4d;">
+<h1>{{ heading }}</h1>
+<p>{{ period_start }} – {{ period_end }} ({{ timezone }})</p>
+{% for section in sections %}
+<h2>{{ section.label }}: {{ section.count }}</h2>
+{% if section.items %}<ul>
+{% for item in section.items %}
+<li><a href="{{ item.url }}">{{ item.identifier }} · {{ item.name }}</a>{% if item.target_date %} — {{ item.target_date }}{% endif %}</li>
+{% endfor %}
+</ul>{% endif %}
+{% endfor %}
+</body></html>

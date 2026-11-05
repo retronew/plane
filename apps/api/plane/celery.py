@@ -27,6 +27,10 @@ app = Celery("plane")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.beat_schedule = {
+    "dispatch-personal-daily-digests": {
+        "task": "plane.bgtasks.daily_digest_task.dispatch_daily_digests",
+        "schedule": crontab(minute="*"),
+    },
     "dispatch-feishu-card-actions": {
         "task": "plane.bgtasks.feishu_card_task.dispatch_feishu_card_actions",
         "schedule": 10.0,

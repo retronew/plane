@@ -6,6 +6,7 @@ export const NOTIFICATION_EVENTS = [
   "comment",
   "mention",
   "due_reminder",
+  "daily_digest",
   "approval_requested",
   "intake_created",
 ] as const;

@@ -45,6 +45,9 @@ const getNotificationContentDetails = (
 };
 
 export function NotificationTitle({ notification }: { notification: TNotification }) {
+  if (notification.data?.event === "daily_digest") {
+    return <Translation translationKey="notification_preferences.digest.title" />;
+  }
   if (notification.data?.event === "approval_requested") {
     // Older approval notifications only store the work item name in the title.
     const name = notification.data.issue?.name ?? notification.title?.replace(/^Approval requested: /, "");
@@ -127,6 +130,9 @@ export function NotificationContent({
   const { field, new_value: newValue, old_value: oldValue, verb } = data?.issue_activity ?? {};
   const notificationField = notification.sender === "in_app:intake:created" ? "intake_created" : field;
 
+  if (data?.event === "daily_digest") {
+    return <Translation translationKey="notification_preferences.digest.notification_summary" />;
+  }
   if (data?.event === "approval_requested") {
     return <Translation translationKey="web.workflow_ui.pending_approval" />;
   }

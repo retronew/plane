@@ -123,7 +123,7 @@ export function NotificationPreferencesForm({ scope = GLOBAL_SCOPE }: { scope?: 
             </tr>
           </thead>
           <tbody>
-            {NOTIFICATION_EVENTS.map((event) => (
+            {NOTIFICATION_EVENTS.filter((event) => global || event !== "daily_digest").map((event) => (
               <tr key={event} className="border-t border-subtle">
                 <th scope="row" className="font-normal p-2">
                   {t(`notification_preferences.events.${event}`)}

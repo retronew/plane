@@ -5,6 +5,8 @@
  */
 
 import { useCallback, useEffect } from "react";
+import type { ReactNode } from "react";
+import type { TDailyDigestPreview } from "@plane/types";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 // plane imports
@@ -15,16 +17,58 @@ import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 // hooks
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
+import { useNotification } from "@/hooks/store/notifications/use-notification";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
 import { useNotificationPreview } from "@/hooks/use-notification-preview";
 // local imports
 import { InboxContentRoot } from "../inbox/content";
+import { DailyDigestNotification } from "./daily-digest";
 
 type NotificationsRootProps = {
   workspaceSlug?: string;
 };
+
+function SelectedNotificationContent({
+  digest,
+  workspaceSlug,
+  projectId,
+  issueId,
+  isIntake,
+  loading,
+  onClose,
+  children,
+}: {
+  digest: TDailyDigestPreview | undefined;
+  workspaceSlug: string | undefined;
+  projectId: string | undefined;
+  issueId: string | undefined;
+  isIntake: boolean;
+  loading: boolean;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (digest) return <DailyDigestNotification digest={digest} onBack={onClose} />;
+  if (!isIntake || !workspaceSlug || !projectId || !issueId) return children;
+  if (loading)
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <LogoSpinner />
+      </div>
+    );
+  return (
+    <InboxContentRoot
+      setIsMobileSidebar={() => {}}
+      isMobileSidebar={false}
+      workspaceSlug={workspaceSlug}
+      projectId={projectId}
+      inboxIssueId={issueId}
+      isNotificationEmbed
+      embedRemoveCurrentNotification={onClose}
+    />
+  );
+}
 
 export const NotificationsRoot = observer(function NotificationsRoot({ workspaceSlug }: NotificationsRootProps) {
   const { t } = useTranslation();
@@ -37,6 +81,8 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
     notificationIdsByWorkspaceId,
     getNotifications,
   } = useWorkspaceNotifications();
+  const selectedNotification = useNotification(currentSelectedNotificationId);
+  const digest = selectedNotification.data?.event === "daily_digest" ? selectedNotification.data.digest : undefined;
   const { fetchUserProjectInfo } = useUserPermissions();
   const { PeekOverviewComponent, setPeekWorkItem } = useNotificationPreview();
   // derived values
@@ -93,29 +139,17 @@ export const NotificationsRoot = observer(function NotificationsRoot({ workspace
           />
         </div>
       ) : (
-        <>
-          {intakeProject && issue_id ? (
-            <>
-              {projectMemberInfoLoader ? (
-                <div className="flex h-full w-full items-center justify-center">
-                  <LogoSpinner />
-                </div>
-              ) : (
-                <InboxContentRoot
-                  setIsMobileSidebar={() => {}}
-                  isMobileSidebar={false}
-                  workspaceSlug={workspace_slug}
-                  projectId={project_id}
-                  inboxIssueId={issue_id}
-                  isNotificationEmbed
-                  embedRemoveCurrentNotification={embedRemoveCurrentNotification}
-                />
-              )}
-            </>
-          ) : (
-            <PeekOverviewComponent embedIssue embedRemoveCurrentNotification={embedRemoveCurrentNotification} />
-          )}
-        </>
+        <SelectedNotificationContent
+          digest={digest}
+          workspaceSlug={workspace_slug}
+          projectId={project_id}
+          issueId={issue_id}
+          isIntake={Boolean(intakeProject)}
+          loading={projectMemberInfoLoader}
+          onClose={embedRemoveCurrentNotification}
+        >
+          <PeekOverviewComponent embedIssue embedRemoveCurrentNotification={embedRemoveCurrentNotification} />
+        </SelectedNotificationContent>
       )}
     </div>
   );

@@ -344,6 +344,7 @@ CELERY_IMPORTS = (
     # scheduled tasks
     "plane.bgtasks.issue_automation_task",
     "plane.bgtasks.issue_reminder_task",
+    "plane.bgtasks.daily_digest_task",
     "plane.bgtasks.workflow_runner_task",
     "plane.bgtasks.feishu_task",
     "plane.bgtasks.feishu_card_task",

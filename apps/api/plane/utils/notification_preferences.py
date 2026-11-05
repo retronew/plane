@@ -16,6 +16,7 @@ EVENTS = (
     "due_reminder",
     "approval_requested",
     "intake_created",
+    "daily_digest",
 )
 CHANNEL_DEFAULTS = {"in_app": True, "email": True, "feishu": False}
 LEGACY_EVENTS = {

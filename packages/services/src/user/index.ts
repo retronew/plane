@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+export * from "./daily-digest.service";
 export * from "./favorite.service";
 export * from "./user.service";
 export * from "./notification-preferences.service";

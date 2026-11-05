@@ -113,6 +113,18 @@ it("opens the work item referenced by an approval notification", async () => {
   expect(markNotificationAsRead).toHaveBeenCalledWith("workspace");
 });
 
+it("opens a digest with no project or work item and marks it read", async () => {
+  state.notification!.project = undefined;
+  state.notification!.sender = "in_app:daily_digest";
+  state.notification!.data = { event: "daily_digest" };
+  render(<NotificationItem workspaceSlug="workspace" notificationId="approval-notification" />);
+  fireEvent.click(screen.getByText("Your progress and work that needs attention"));
+  await waitFor(() => expect(markNotificationAsRead).toHaveBeenCalledWith("workspace"));
+  expect(setCurrentSelectedNotificationId).toHaveBeenCalledWith("approval-notification");
+  expect(setPeekIssue).toHaveBeenCalledWith(undefined);
+  expect(screen.getByText("Daily work digest")).toBeTruthy();
+});
+
 it("ignores a notification that has not loaded yet", () => {
   state.notification = undefined;
   const { container } = render(<NotificationItem workspaceSlug="workspace" notificationId="missing" />);

@@ -139,7 +139,7 @@ class NotificationViewSet(BaseViewSet, BasePaginator):
             workspace__slug=slug,
         )
         notifications = filter_notifications(
-            self.get_queryset().filter(entity_name="issue"),
+            self.get_queryset().filter(entity_name__in=["issue", "daily_digest"]),
             request.GET,
             slug,
             request.user,
@@ -276,7 +276,10 @@ class MarkAllReadNotificationViewSet(BaseViewSet):
     def create(self, request, slug):
         notifications = filter_notifications(
             Notification.objects.filter(
-                workspace__slug=slug, receiver=request.user, entity_name="issue", read_at__isnull=True
+                workspace__slug=slug,
+                receiver=request.user,
+                entity_name__in=["issue", "daily_digest"],
+                read_at__isnull=True,
             ),
             request.data,
             slug,

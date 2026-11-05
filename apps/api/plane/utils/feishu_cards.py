@@ -334,6 +334,10 @@ def _interactive_elements(delivery, issue, approval, chinese):
 
 
 def delivery_card(delivery):
+    if delivery.kind == "daily_digest":
+        from plane.services.daily_digest_rendering import digest_feishu_card
+
+        return digest_feishu_card(delivery)
     from plane.utils.feishu import web_url
 
     chinese = (getattr(getattr(delivery.user, "profile", None), "language", "en") or "en").startswith("zh")

@@ -6,6 +6,7 @@ from .analytic import AnalyticView
 from .api import APIActivityLog, APIToken
 from .asset import FileAsset
 from .base import BaseModel
+from .daily_digest import DailyDigest, DailyDigestConfig, DailyDigestDelivery
 from .feishu import (
     FeishuBinding,
     FeishuOAuthState,

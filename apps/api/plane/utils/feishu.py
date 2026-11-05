@@ -36,6 +36,10 @@ def delivery_allowed(delivery, config):
         return False
     if delivery.is_test:
         return True
+    if delivery.kind == "daily_digest":
+        from plane.services.daily_digest import feishu_digest_payload
+
+        return feishu_digest_payload(delivery) is not None
     if not delivery.workspace_id:
         return False
     if not WorkspaceMember.objects.filter(

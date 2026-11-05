@@ -4,6 +4,8 @@
 
 from django.urls import path
 
+from plane.app.views.daily_digest import DailyDigestConfigEndpoint, DailyDigestPreviewEndpoint
+
 from plane.app.views import (
     AccountEndpoint,
     ProfileEndpoint,
@@ -22,6 +24,8 @@ from plane.app.views import (
 )
 
 urlpatterns = [
+    path("users/me/daily-digest/", DailyDigestConfigEndpoint.as_view(), name="user-daily-digest"),
+    path("users/me/daily-digest/preview/", DailyDigestPreviewEndpoint.as_view(), name="user-daily-digest-preview"),
     # User Profile
     path(
         "users/me/",

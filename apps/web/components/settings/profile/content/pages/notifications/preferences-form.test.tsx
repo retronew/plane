@@ -98,7 +98,7 @@ describe("notification preferences", () => {
       screen.getByRole("switch", { name: "notification_preferences.channels.email · notification_preferences.force" })
     );
     await waitFor(() => expect(api.update).toHaveBeenCalledWith({ override_scopes: { email: true } }, {}));
-    expect(screen.getAllByRole("row")).toHaveLength(9);
+    expect(screen.getAllByRole("row")).toHaveLength(NOTIFICATION_EVENTS.length + 1);
   });
   it("saves on, off and inherit distinctly and shows effective sources", async () => {
     const data = preferences(true);
@@ -132,7 +132,9 @@ describe("notification preferences", () => {
       expect(api.update).toHaveBeenCalledWith({ events: { email: { comment: null } } }, { workspace_id: "workspace" })
     );
     await waitFor(() => expect(input.textContent).toContain("notification_preferences.inherit"));
-    expect(screen.getAllByText(/notification_preferences.sources.channel_disabled/)).toHaveLength(8);
+    expect(screen.getAllByText(/notification_preferences.sources.channel_disabled/)).toHaveLength(
+      NOTIFICATION_EVENTS.filter((event) => event !== "daily_digest").length
+    );
   });
   it("disables scope selectors while saving and restores the saved value after failure", async () => {
     api.retrieve.mockResolvedValue(preferences(true));

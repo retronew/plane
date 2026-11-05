@@ -88,7 +88,9 @@ const NotificationItemAvatar = ({
   triggeredBy: IUserLite | undefined;
 }) => (
   <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-layer-1">
-    {sender === "in_app:issue_reminder:due" && <BellRing className="size-5 text-secondary" />}
+    {(sender === "in_app:issue_reminder:due" || sender === "in_app:daily_digest") && (
+      <BellRing className="size-5 text-secondary" />
+    )}
     {triggeredBy && (
       <Avatar
         alt={triggeredBy.display_name || triggeredBy.first_name}
@@ -148,7 +150,15 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
   const workspace = getWorkspaceBySlug(workspaceSlug);
   const notificationTriggeredBy = getNotificationTriggeredBy(notification);
 
+  const isDailyDigest = notification?.data?.event === "daily_digest";
+
   const handleNotificationIssuePeekOverview = async () => {
+    if (isDailyDigest) {
+      setPeekIssue(undefined);
+      setCurrentSelectedNotificationId(notificationId);
+      await markNotificationAsReadIfUnread(notification, workspaceSlug, markNotificationAsRead);
+      return;
+    }
     const peekTarget = getNotificationPeekTarget({
       workspaceSlug,
       projectId,
@@ -168,7 +178,8 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
     setPeekIssue(peekTarget);
   };
 
-  if (!workspaceSlug || !notificationId || !notification?.id || !workspace?.id || !projectId) return <></>;
+  if (!workspaceSlug || !notificationId || !notification?.id || !workspace?.id || (!projectId && !isDailyDigest))
+    return <></>;
 
   return (
     <Row
@@ -195,7 +206,7 @@ export const NotificationItem = observer(function NotificationItem(props: TNotif
                 notification={notification}
                 workspaceId={workspace.id}
                 workspaceSlug={workspaceSlug}
-                projectId={projectId}
+                projectId={projectId ?? ""}
               />
             </div>
             <NotificationOption
