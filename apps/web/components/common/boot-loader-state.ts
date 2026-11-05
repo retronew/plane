@@ -25,7 +25,6 @@ export const hasBootFinished = () => bootFinished;
 /** Hides the boot loader for good. Safe to call more than once. */
 export const finishBoot = () => {
   clearTimeout(hideTimer);
-  if (bootFinished) return;
   bootFinished = true;
   document.getElementById(BOOT_LOADER_ID)?.setAttribute("hidden", "");
 };
