@@ -366,8 +366,12 @@ class TestMCPCrossWorkspace:
         assert response.json()["result"]["isError"] is True
         assert "workspace_slug" in response.json()["result"]["content"][0]["text"]
 
-    def test_missing_workspace_never_uses_header(self, mcp):
-        response = mcp("tools/call", {"name": "project", "arguments": {"action": "list"}}, explicit_workspace=False)
+    @pytest.mark.parametrize(
+        "tool,action",
+        [("project", "list"), ("workspace", "me"), ("workspace", "members"), ("workspace", "search")],
+    )
+    def test_missing_workspace_never_uses_header(self, mcp, tool, action):
+        response = mcp("tools/call", {"name": tool, "arguments": {"action": action}}, explicit_workspace=False)
         assert response.json()["result"]["isError"] is True
         assert "workspace_slug" in response.json()["result"]["content"][0]["text"]
 
