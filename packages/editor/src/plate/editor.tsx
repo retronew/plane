@@ -1,8 +1,8 @@
 // oxlint-disable-next-line import/no-unassigned-import -- Editor styles.
 import "./plate-comparison.css";
 import { DisabledPlateFeatures, isPlateFeatureDisabled } from "./capabilities";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, type ComponentType } from "react";
-import { Plate, PlateContent, usePlateEditor, type PlateElementProps } from "platejs/react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, type DragEvent } from "react";
+import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { DndPlugin } from "@platejs/dnd";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -21,7 +21,7 @@ import { SandboxAssetsProvider, insertSandboxImage, type SandboxImageLabels } fr
 import { useEditorAssets } from "./assets";
 import { PlateMentionContext } from "./mentions";
 import { opaquePlugins } from "./opaque";
-import { withBlockHandle } from "./draggable-block";
+import { BlockDraggable } from "./draggable-block";
 import { legacyJSONToSlate } from "./legacy-json";
 import { createPlateRef } from "./ref";
 import { useComparisonCollaboration, RemoteComparisonCursors } from "./collaboration-session";
@@ -29,34 +29,32 @@ import { replaceSharedValue } from "./collaboration";
 import { shouldSubmitComment } from "./keyboard";
 import { SlashMenu } from "./slash-menu";
 
-const draggable = new Set([
-  "p",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "blockquote",
-  "table",
-  "code_block",
-  "hr",
-  "comparison_callout",
-  "sandboxImage",
-  "toggle",
-]);
-const components = Object.fromEntries(
-  Object.entries(comparisonEditableComponents).map(([key, component]) => [
-    key,
-    draggable.has(key) ? withBlockHandle(component as ComponentType<PlateElementProps>) : component,
-  ])
-);
+/**
+ * Image files dropped into the editor are uploaded; every other drop must reach Slate.
+ * Plate treats an editable handler that returns nothing as handled when the event is already
+ * default-prevented, and react-dnd's HTML5Backend prevents every native drop in its window
+ * capture listener. Returning `false` explicitly keeps native text drag-and-drop moving text.
+ */
+export function createImageDropHandler(insert: (files: File[]) => void, enabled: () => boolean) {
+  return (event: DragEvent<HTMLElement>): boolean => {
+    const files = Array.from(event.dataTransfer?.files ?? []).filter((file) => file.type.startsWith("image/"));
+    if (!enabled() || !files.length) return false;
+    event.preventDefault();
+    insert(files);
+    return true;
+  };
+}
+
+// Official dnd-kit composition: one wrapper renders above every draggable block.
+const dndPlugins = [DndPlugin.configure({ options: { enableScroller: true }, render: { aboveNodes: BlockDraggable } })];
 export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
   function PlateEditorWithRef(props, forwardedRef) {
     const { t } = useTranslation();
     const preferences = useEditorPreferences();
     const assets = useEditorAssets(props.fileHandler);
     const container = useRef<HTMLDivElement>(null);
+    // Like platejs.org, every editable surface supports block drag unless a caller opts out.
+    const dragDropEnabled = props.dragDropEnabled !== false;
     const disabledExtensions = useRef(props.disabledExtensions);
     useEffect(() => {
       disabledExtensions.current = props.disabledExtensions;
@@ -68,9 +66,9 @@ export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
         ...createMarkdownInputPlugins(() => disabledExtensions.current),
         ...opaquePlugins,
         ...comparisonMathPlugins,
-        ...(props.dragDropEnabled ? [DndPlugin] : []),
+        ...(dragDropEnabled ? dndPlugins : []),
       ],
-      override: { components: props.dragDropEnabled ? components : comparisonEditableComponents },
+      override: { components: comparisonEditableComponents },
       value: () =>
         props.collaboration
           ? [{ type: "p", children: [{ text: "" }] }]
@@ -257,15 +255,10 @@ export const PlateEditorWithRef = forwardRef<EditorRefApi, PlateEditorProps>(
                           void Promise.all(files.map((file) => insertSandboxImage(editor, assets, file)));
                         }
                       }}
-                      onDrop={(event) => {
-                        const files = Array.from(event.dataTransfer.files).filter((file) =>
-                          file.type.startsWith("image/")
-                        );
-                        if (!readOnly && !isPlateFeatureDisabled(props.disabledExtensions, "image") && files.length) {
-                          event.preventDefault();
-                          void Promise.all(files.map((file) => insertSandboxImage(editor, assets, file)));
-                        }
-                      }}
+                      onDrop={createImageDropHandler(
+                        (files) => void Promise.all(files.map((file) => insertSandboxImage(editor, assets, file))),
+                        () => !readOnly && !isPlateFeatureDisabled(props.disabledExtensions, "image")
+                      )}
                     />
                     {!props.disabledExtensions.includes("collaboration-cursor") && (
                       <RemoteComparisonCursors cursors={collab.cursors} />

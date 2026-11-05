@@ -12,7 +12,7 @@ afterEach(() => {
 it.each([24, 48, 72])("keeps the handle outside a task checkbox at indent %s", (indent) => {
   const parent = document.createElement("div");
   parent.innerHTML =
-    '<div><button class="comparison-drag-handle"></button><div class="comparison-drop-gap-before"></div><div data-type="taskItem"><span contenteditable="false"><button role="checkbox"></button></span><span><span data-slate-string>Wrapped task</span></span></div></div>';
+    '<div><button ></button><div data-block-content><div data-type="taskItem"><span contenteditable="false"><button role="checkbox"></button></span><span><span data-slate-string>Wrapped task</span></span></div></div></div>';
   document.body.append(parent);
   const node = parent.firstElementChild as HTMLElement;
   const handle = node.firstElementChild as HTMLElement;
@@ -33,7 +33,7 @@ it.each([24, 48, 72])("keeps the handle outside a task checkbox at indent %s", (
 it("preserves aligned paragraph positioning", () => {
   const parent = document.createElement("div");
   parent.innerHTML =
-    '<div><button></button><div class="comparison-drop-gap-before"></div><p><span data-slate-string>Aligned</span></p></div>';
+    "<div><button></button><div data-block-content><p><span data-slate-string>Aligned</span></p></div></div>";
   document.body.append(parent);
   const node = parent.firstElementChild as HTMLElement;
   const handle = node.firstElementChild as HTMLElement;

@@ -1,7 +1,7 @@
 // Measure the rendered content, not the full-width Slate/DnD wrapper.
 // Only the handle is moved; the official drop target and document layout stay intact.
 export function observeBlockHandlePosition(node: HTMLElement, handle: HTMLElement) {
-  const findContent = () => node.querySelector(":scope > .comparison-drop-gap-before")?.nextElementSibling;
+  const findContent = () => node.querySelector(":scope > [data-block-content]")?.firstElementChild;
   const initial = findContent();
   if (!(initial instanceof HTMLElement)) return;
   let content: HTMLElement = initial;

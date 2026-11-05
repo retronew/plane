@@ -111,33 +111,59 @@ it("focuses the end when lower comment whitespace is clicked", async () => {
   expect(ref.current!.getDocument().html).toContain("Initial end");
   await waitFor(() => expect(document.activeElement).toBe(content));
 });
-it("exposes draggable handles for multiple image blocks when sorting is enabled", () => {
-  const view = render(
-    <PlateEditorWithRef
-      {...props}
-      dragDropEnabled
-      initialValue='<image-component src="asset-one"></image-component><image-component src="asset-two"></image-component>'
-    />
-  );
-  const images = view.container.querySelectorAll('[data-block-type="sandboxImage"]');
-  expect(images).toHaveLength(2);
-  for (const image of images) {
-    expect(image.querySelector(".comparison-drag-handle button")?.getAttribute("draggable")).toBe("true");
+const allBlocks =
+  "<h1>Title</h1><p>Text</p><blockquote>Quote</blockquote><hr><pre><code>code</code></pre>" +
+  "<table><tbody><tr><td>Cell</td></tr></tbody></table>" +
+  '<image-component src="asset-one"></image-component>';
+const topLevelBlocks = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll<HTMLElement>(".plate-comparison-content > .plate-block-draggable"));
+
+it("renders the official drag handle above every top-level block by default", async () => {
+  const view = render(<PlateEditorWithRef {...props} initialValue={allBlocks} />);
+  const blocks = topLevelBlocks(view.container);
+  expect(blocks.map((block) => block.dataset.blockType)).toEqual([
+    "h1",
+    "p",
+    "blockquote",
+    "hr",
+    "code_block",
+    "table",
+    "sandboxImage",
+  ]);
+  for (const block of blocks) {
+    expect(block.querySelector(":scope > [data-plate-drag-handle] button")?.getAttribute("draggable")).toBe("true");
+    expect(block.querySelector(":scope > [data-block-content]")).not.toBeNull();
   }
+  // Blocks inside table cells are drop targets without their own gutter, matching platejs.org.
+  const cell = view.container.querySelector("td")!;
+  expect(cell.querySelector("[data-plate-drag-handle]")).toBeNull();
 });
 
-it("drags images from their content while leaving text editable", async () => {
+it("renders no drag handles when a surface opts out or is read-only", () => {
+  const optOut = render(<PlateEditorWithRef {...props} dragDropEnabled={false} initialValue={allBlocks} />);
+  expect(optOut.container.querySelector(".plate-block-draggable")).toBeNull();
+  optOut.unmount();
+  const readOnly = render(<PlateEditorWithRef {...props} editable={false} initialValue={allBlocks} />);
+  expect(readOnly.container.querySelector(".plate-block-draggable")).toBeNull();
+});
+
+it("drags images from the image itself instead of the whole row", async () => {
   const view = render(
     <PlateEditorWithRef
       {...props}
-      dragDropEnabled
       initialValue='<p>Select text</p><image-component src="asset-one"></image-component>'
     />
   );
   await waitFor(() => expect(view.container.querySelector("img")).not.toBeNull());
-  expect(view.container.querySelector('[data-block-type="sandboxImage"]')?.getAttribute("draggable")).toBe("true");
-  expect(view.container.querySelector('[data-block-type="p"]')?.hasAttribute("draggable")).toBe(false);
-  expect(fireEvent.mouseDown(view.container.querySelector("button:has(img)")!)).toBe(true);
+  const row = view.container.querySelector<HTMLElement>('[data-block-type="sandboxImage"]')!;
+  const image = row.querySelector("img")!;
+  expect(row.hasAttribute("draggable")).toBe(false);
+  expect(row.querySelector("[data-block-content]")?.hasAttribute("draggable")).toBe(false);
+  expect(image.getAttribute("draggable")).toBe("true");
+  // Resizing stays on the image frame, which sizes to the image rather than the row.
+  expect(row.querySelectorAll("[data-image-resize-handle]")).toHaveLength(2);
+  // Slate must not cancel the mousedown that starts a native image drag.
+  expect(fireEvent.mouseDown(image)).toBe(true);
 });
 
 it("dismisses the image toolbar outside the editor but preserves toolbar input focus", async () => {

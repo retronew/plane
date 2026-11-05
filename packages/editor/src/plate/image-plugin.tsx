@@ -1,6 +1,7 @@
 import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon, ExpandIcon, Trash2Icon } from "lucide-react";
+import { DndPlugin, useDraggable } from "@platejs/dnd";
 import { BaseImagePlugin } from "@platejs/media";
 import { FloatingPortal, autoUpdate, flip, offset, shift, useFloating } from "@platejs/floating";
 import { useMediaState } from "@platejs/media/react";
@@ -137,6 +138,9 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
   const lightbox = useImageLightbox();
   const [error, setError] = useState("");
   const { selected, readOnly } = useMediaState();
+  // Official media-image-node: only the image itself is the drag source, never the whole row.
+  const { isDragging, handleRef } = useDraggable({ element });
+  const draggable = !readOnly && Boolean(editor.plugins[DndPlugin.key]);
   const collapsed = useEditorSelector((currentEditor) => !currentEditor.api.isExpanded(), []);
   const [dismissed, setDismissed] = useState(true);
   const showToolbar = selected && collapsed && !readOnly && !dismissed;
@@ -189,10 +193,10 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
   };
   return (
     <PlateElement {...props} className="my-3">
-      <div contentEditable={false}>
+      <figure contentEditable={false} className="relative m-0">
         <Resizable
           options={{ align: alignment(image.alignment), readOnly }}
-          className={image.alignment === "center" ? "mx-auto" : image.alignment === "right" ? "ml-auto" : "mr-auto"}
+          className={`group/image relative ${image.alignment === "center" ? "mx-auto" : image.alignment === "right" ? "ml-auto" : "mr-auto"}`}
         >
           {src ? (
             <button
@@ -201,8 +205,7 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
               onDoubleClick={preview}
               onMouseDown={(event) => {
                 // Slate cancels mousedown on void nodes, which also cancels native dragging.
-                if (event.currentTarget.closest('[data-block-type="sandboxImage"][draggable="true"]'))
-                  event.stopPropagation();
+                if (draggable) event.stopPropagation();
                 else event.preventDefault();
               }}
               onClick={() => {
@@ -214,26 +217,30 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
               }}
             >
               <img
-                ref={refs.setReference}
+                ref={(node) => {
+                  refs.setReference(node);
+                  if (draggable) handleRef(node);
+                }}
                 src={src}
                 alt={image.alt ?? ""}
                 title={image.title}
-                draggable={false}
-                className={`block w-full max-w-full rounded-md transition-shadow duration-150 motion-reduce:transition-none ${selected ? "ring-2 ring-accent-strong/50" : ""}`}
+                draggable={draggable}
+                data-image-drag-source={draggable || undefined}
+                className={`block w-full max-w-full rounded-md transition-shadow duration-150 motion-reduce:transition-none ${selected ? "ring-2 ring-accent-strong/50" : ""} ${isDragging ? "opacity-50" : ""}`}
                 style={{ height: typeof image.width === "number" ? "auto" : dimension(image.height, "auto") }}
               />
             </button>
           ) : (
             <output>{labels.unavailable}</output>
           )}
-          {showToolbar &&
+          {!readOnly &&
             src &&
             (["left", "right"] as const).map((direction) => (
               <ResizeHandle
                 key={direction}
                 options={{ direction }}
                 data-image-resize-handle={direction}
-                className={`absolute top-1/2 h-10 w-2 -translate-y-1/2 cursor-ew-resize rounded border border-strong bg-layer-1 ${direction === "left" ? "-left-1" : "-right-1"}`}
+                className={`absolute top-1/2 z-10 h-10 w-2 -translate-y-1/2 cursor-ew-resize rounded border border-strong bg-layer-1 transition-opacity group-hover/image:opacity-100 ${selected ? "opacity-100" : "opacity-0"} ${direction === "left" ? "-left-1" : "-right-1"}`}
               />
             ))}
         </Resizable>
@@ -309,7 +316,7 @@ export const SandboxImageElement = withHOC(ResizableProvider, function SandboxIm
           </FloatingPortal>
         )}
         {error && <p role="alert">{error}</p>}
-      </div>
+      </figure>
       {props.children}
     </PlateElement>
   );
