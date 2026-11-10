@@ -31,6 +31,13 @@ class ToolError(Exception):
 
 
 @dataclass
+class ToolContent:
+    """A tool result given as raw MCP content blocks (text and images) instead of one JSON text block."""
+
+    blocks: list
+
+
+@dataclass
 class Context:
     request: Any
     user: Any

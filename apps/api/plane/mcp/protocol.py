@@ -17,7 +17,7 @@ import logging
 # Module imports
 from plane.mcp.formatting import to_text
 from plane.mcp.instructions import SERVER_INSTRUCTIONS
-from plane.mcp.tools.base import ToolError
+from plane.mcp.tools.base import ToolContent, ToolError
 from plane.mcp.tools.resources import TOOLS, TOOLS_BY_NAME
 
 logger = logging.getLogger("plane.mcp")
@@ -119,6 +119,8 @@ def handle(method: str, params: dict, ctx_factory) -> dict:
         except Exception:
             logger.exception("MCP tool %s failed", name)
             return complete({"content": [{"type": "text", "text": "服务器内部错误，请稍后重试。"}], "isError": True})
+        if isinstance(output, ToolContent):
+            return complete({"content": output.blocks, "isError": False})
         return complete({"content": [{"type": "text", "text": to_text(output)}], "isError": False})
 
     raise RpcError(METHOD_NOT_FOUND, f"Method not found: {method}", http_status=404)

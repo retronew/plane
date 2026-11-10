@@ -19,6 +19,9 @@ SERVER_INSTRUCTIONS = """\
 - 不确定对象在哪时，先用 workspace(action='search', workspace_slug='目标工作区 slug')。
 - 状态、标签、负责人可以直接传名称；负责人可以传 me、邮箱或显示名。
 - 正文、评论、页面内容都用 Markdown。
+- 正文和评论里的图片写作 ![图片](asset:资产ID)。要看图片内容，用
+  workitem(action='images', workspace_slug='目标工作区 slug', work_item='WEB-12')，
+  它按顺序返回描述、评论和附件里的图片，每次最多 5 张，可用 images 参数指定序号或资产 ID。
 - 列表结果带 next_cursor 时表示还有下一页，把它作为 cursor 传入即可。
 - 删除、批量归档前先向用户确认。
 

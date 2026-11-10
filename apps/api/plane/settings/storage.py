@@ -8,7 +8,7 @@ import uuid
 
 # Third party imports
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 from urllib.parse import quote
 
 # Module imports
@@ -174,6 +174,26 @@ class S3Storage(S3Boto3Storage):
             "ETag": response.get("ETag"),
             "Metadata": response.get("Metadata", {}),
         }
+
+    def read_object(self, object_name, max_size=None):
+        """Read an object's bytes server-side; at most ``max_size + 1`` so callers can detect oversize files"""
+        try:
+            response = self.s3_client.get_object(Bucket=self.aws_storage_bucket_name, Key=str(object_name))
+            body = response["Body"]
+            try:
+                data = body.read() if max_size is None else body.read(max_size + 1)
+            finally:
+                body.close()
+        except ClientError as e:
+            # A missing object (upload never completed) is expected, not an error
+            if e.response.get("Error", {}).get("Code") not in ("404", "NoSuchKey"):
+                log_exception(e)
+            return None
+        except BotoCoreError as e:
+            log_exception(e)
+            return None
+
+        return {"ContentType": response.get("ContentType"), "Body": data}
 
     def copy_object(self, object_name, new_object_name):
         """Copy an S3 object to a new location"""

@@ -2,13 +2,28 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import base64
 import json
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from rest_framework.test import APIClient
 
-from plane.db.models import APIToken, Issue, Label, Page, Project, ProjectMember, State, Workspace, WorkspaceMember
+from plane.db.models import (
+    APIToken,
+    FileAsset,
+    Issue,
+    IssueComment,
+    Label,
+    Page,
+    Project,
+    ProjectMember,
+    State,
+    Workspace,
+    WorkspaceMember,
+)
+from plane.mcp.images import MAX_IMAGE_BYTES
 
 MODERN = "2026-07-28"
 META = {
@@ -480,3 +495,152 @@ class TestMCPCrossWorkspace:
         assert not error and target.slug not in [row["slug"] for row in rows]
         error, message = mcp.tool("project", action="list", workspace_slug=target.slug)
         assert error and "活跃成员" in message
+
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 24
+JPEG = b"\xff\xd8\xff\xe0" + b"\0" * 24
+SVG = b'<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+
+
+@pytest.mark.contract
+class TestMCPImages:
+    @pytest.fixture
+    def stored(self):
+        """Object storage stand-in: asset key -> bytes."""
+        objects = {}
+
+        def read_object(name, max_size=None):
+            return {"ContentType": "application/octet-stream", "Body": objects[name]} if name in objects else None
+
+        with patch("plane.mcp.images.S3Storage") as storage:
+            storage.return_value.read_object.side_effect = read_object
+            yield objects
+
+    @staticmethod
+    def asset(project, stored, data, *, name="shot.png", mime="image/png", size=None, **links):
+        links.setdefault("entity_type", FileAsset.EntityTypeContext.ISSUE_DESCRIPTION)
+        asset = FileAsset.objects.create(
+            asset=f"{project.workspace_id}/{uuid4().hex}-{name}",
+            workspace=project.workspace,
+            project=project,
+            is_uploaded=True,
+            size=len(data) if size is None else size,
+            attributes={"name": name, "type": mime, "size": len(data)},
+            **links,
+        )
+        stored[asset.asset.name] = data
+        return asset
+
+    @staticmethod
+    def images(mcp, **arguments):
+        response = mcp("tools/call", {"name": "workitem", "arguments": {"action": "images", **arguments}})
+        assert response.status_code == 200, response.content
+        result = response.json()["result"]
+        assert result["isError"] is False, result
+        return json.loads(result["content"][0]["text"]), result["content"][1:]
+
+    @pytest.mark.django_db
+    def test_reads_description_comment_and_attachment_images(self, mcp, project, workspace, create_user, stored):
+        _, item = mcp.tool("workitem", action="create", project="WEB", name="Has screenshots")
+        key = f"WEB-{item['sequence_id']}"
+        issue = Issue.objects.get(pk=item["id"])
+        described = self.asset(project, stored, PNG, issue=issue)
+        # The user is not a member of this project: pasting its asset id must not expose the image
+        secret = Project.objects.create(name="Secret", identifier="SEC", workspace=workspace, created_by=create_user)
+        foreign = self.asset(secret, stored, PNG)
+        Issue.objects.filter(pk=issue.pk).update(
+            description_html=(
+                f'<p>Now:</p><image-component src="{described.id}"></image-component>'
+                f'<image-component src="{foreign.id}"></image-component>'
+                '<image-component src="https://example.com/doc.png"></image-component>'
+            )
+        )
+        _, comment = mcp.tool("workitem", action="add_comment", work_item=key, comment="see below")
+        commented = self.asset(
+            project,
+            stored,
+            JPEG,
+            name="c.jpg",
+            mime="image/jpeg",
+            entity_type=FileAsset.EntityTypeContext.COMMENT_DESCRIPTION,
+            comment_id=comment["id"],
+        )
+        IssueComment.objects.filter(pk=comment["id"]).update(
+            comment_html=f'<p>see below</p><image-component src="{commented.id}"></image-component>'
+        )
+        attached = self.asset(
+            project, stored, PNG, name="spec.png", entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT, issue=issue
+        )
+
+        _, detail = mcp.tool("workitem", action="get", work_item=key)
+        assert f"![图片](asset:{described.id})" in detail["description"]
+        assert "![图片](https://example.com/doc.png)" in detail["description"]
+        _, comments = mcp.tool("workitem", action="comments", work_item=key)
+        assert f"![图片](asset:{commented.id})" in comments["results"][0]["comment"]
+
+        summary, blocks = self.images(mcp, work_item=key)
+        assert summary["total"] == 5
+        rows = summary["images"]
+        assert [row.get("asset") or row.get("url") for row in rows] == [
+            str(described.id),
+            str(foreign.id),
+            "https://example.com/doc.png",
+            str(commented.id),
+            str(attached.id),
+        ]
+        assert [row["status"] for row in rows] == [
+            "已显示",
+            "找不到图片，或无权访问",
+            rows[2]["status"],
+            "已显示",
+            "已显示",
+        ]
+        assert rows[2]["status"].startswith("外链图片")
+        assert rows[0]["url"].endswith(
+            f"/api/assets/v2/workspaces/{workspace.slug}/projects/{project.id}/{described.id}/"
+        )
+        assert "next" not in summary
+
+        labels = [block["text"] for block in blocks if block["type"] == "text"]
+        assert (
+            labels[0] == "图片 1（描述）"
+            and labels[1].startswith("图片 4（评论 ")
+            and labels[2] == "图片 5（附件：spec.png）"
+        )
+        images = [(block["mimeType"], base64.b64decode(block["data"])) for block in blocks if block["type"] == "image"]
+        assert images == [("image/png", PNG), ("image/jpeg", JPEG), ("image/png", PNG)]
+
+    @pytest.mark.django_db
+    def test_selection_limits_and_unviewable_images(self, mcp, project, stored):
+        _, item = mcp.tool("workitem", action="create", project="WEB", name="Many screenshots")
+        key = f"WEB-{item['sequence_id']}"
+        issue = Issue.objects.get(pk=item["id"])
+        shots = [self.asset(project, stored, PNG, issue=issue) for _ in range(6)]
+        large = self.asset(project, stored, PNG, issue=issue, size=MAX_IMAGE_BYTES + 1)
+        vector = self.asset(project, stored, SVG, issue=issue, name="d.svg", mime="image/svg+xml")
+        Issue.objects.filter(pk=issue.pk).update(
+            description_html="".join(
+                f'<image-component src="{asset.id}"></image-component>' for asset in [*shots, large, vector]
+            )
+        )
+
+        summary, blocks = self.images(mcp, work_item=key)
+        assert summary["total"] == 8
+        assert [row["status"] for row in summary["images"]].count("已显示") == 5
+        assert len([block for block in blocks if block["type"] == "image"]) == 5
+        assert "images=[6, 7, 8]" in summary["next"]
+
+        summary, blocks = self.images(mcp, work_item=key, images=["7", str(vector.id).upper()])
+        status = {row["index"]: row["status"] for row in summary["images"]}
+        assert status[7].startswith("图片超过") and status[8].startswith("格式不支持")
+        assert summary["images"][6]["url"].endswith(f"/{large.id}/")
+        assert not [block for block in blocks if block["type"] == "image"]
+
+        is_error, message = mcp.tool("workitem", action="images", work_item=key, images=["9"])
+        assert is_error and "共 8 张" in message
+
+    @pytest.mark.django_db
+    def test_work_item_without_images(self, mcp, project, stored):
+        _, item = mcp.tool("workitem", action="create", project="WEB", name="Plain", description="no pictures")
+        is_error, result = mcp.tool("workitem", action="images", work_item=f"WEB-{item['sequence_id']}")
+        assert not is_error and result["total"] == 0

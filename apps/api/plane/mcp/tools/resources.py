@@ -9,6 +9,7 @@ import json
 
 # Module imports
 from plane.mcp.formatting import compact, markdown_to_html
+from plane.mcp.images import MAX_IMAGES, work_item_images
 from plane.mcp.tools.base import (
     P_CURSOR,
     P_DATE,
@@ -355,6 +356,21 @@ workitem_tool = Tool(
             "工作项详情",
             _get_work_item,
             params={"work_item": P_WORK_ITEM},
+            required=("work_item",),
+            read_only=True,
+        ),
+        Action(
+            "images",
+            f"查看描述、评论和附件中的图片（正文里写作 ![图片](asset:ID)），每次最多 {MAX_IMAGES} 张",
+            work_item_images,
+            params={
+                "work_item": P_WORK_ITEM,
+                "images": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": f"要看的图片序号（从 1 开始）或资产 ID；不传则返回前 {MAX_IMAGES} 张",
+                },
+            },
             required=("work_item",),
             read_only=True,
         ),
