@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { IssueActivityBlockComponent } from "./activity-block";
-import { IntakeActivityContext } from "../../../intake-activity-context";
+import { ActivityDisplayContext, IntakeActivityContext } from "../../../intake-activity-context";
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.ComponentProps<"a">) => (
@@ -56,6 +56,20 @@ it("preserves normal activity without the Intake avatar", () => {
     </IssueActivityBlockComponent>
   );
   expect(screen.queryByRole("img", { name: "Full Member Name" })).toBeNull();
+});
+it("keeps the avatar outside the wrapping message in the detail activity row", () => {
+  render(
+    <ActivityDisplayContext.Provider value>
+      <IssueActivityBlockComponent activityId="activity" ends="top">
+        a long activity message that may wrap
+      </IssueActivityBlockComponent>
+    </ActivityDisplayContext.Provider>
+  );
+  const avatar = screen.getByRole("img", { name: "Full Member Name" }).closest("a")!;
+  const message = screen.getByText("Full Member Name").closest("[data-activity-message]")!;
+  expect(avatar.parentElement).toBe(message.parentElement);
+  expect(message.contains(avatar)).toBe(false);
+  expect(message.textContent).toContain("a long activity message");
 });
 it("does not invent an actor avatar for missing identity", () => {
   data.actor = undefined;

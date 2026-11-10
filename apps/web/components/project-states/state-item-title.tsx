@@ -117,7 +117,13 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
       </button>
       <span className={STATE_SWITCH_SLOT_CLASS_NAME}>
         <Tooltip
-          label={groupClosed ? t("web.allow_new_work_items_locked_hint") : t("web.allow_new_work_items_hint")}
+          label={t(
+            state.default
+              ? "web.allow_new_work_items_default_hint"
+              : groupClosed
+                ? "web.allow_new_work_items_locked_hint"
+                : "web.allow_new_work_items_hint"
+          )}
           disabled={isMobile}
         >
           <span className="flex">
@@ -125,7 +131,7 @@ export const StateItemTitle = observer(function StateItemTitle(props: TStateItem
               size="sm"
               aria-label={t("web.allow_new_work_items")}
               checked={!groupClosed && state.allow_new_work_items !== false}
-              disabled={disabled || savingCreation || groupClosed}
+              disabled={disabled || savingCreation || groupClosed || state.default}
               onCheckedChange={async (checked) => {
                 if (props.disabled || savingCreation) return;
                 setSavingCreation(true);

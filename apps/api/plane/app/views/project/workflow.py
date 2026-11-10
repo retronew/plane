@@ -161,7 +161,10 @@ class WorkflowBaseView(BaseAPIView):
                     "icon": s.icon,
                     "group": s.group,
                     "sequence": s.sequence,
-                    "allow_creation": s.allow_new_work_items and s.id not in restricted,
+                    "allow_creation": s.allow_new_work_items
+                    and s.group not in (project.disabled_state_groups or [])
+                    and s.id not in restricted,
+                    "creation_blocked": not s.allow_new_work_items or s.group in (project.disabled_state_groups or []),
                 }
                 for s in states
             ],
@@ -350,11 +353,16 @@ class ProjectWorkflowEndpoint(WorkflowBaseView):
             if project_switch_changed:
                 cancel_approvals(project.pk, reason="project_switch_changed")
             if project.workflow_enabled and (project_switch_changed or (not was_active and workflow.is_active)):
-                targets = ProjectWorkflow.objects.filter(project=project) if project_switch_changed else [workflow]
+                targets = (
+                    ProjectWorkflow.objects.filter(project=project, is_active=True)
+                    if project_switch_changed
+                    else [workflow]
+                )
                 for target in targets:
                     if (
                         not workflow_states(project.pk, target)
                         .filter(allow_new_work_items=True)
+                        .exclude(group__in=project.disabled_state_groups or [])
                         .exclude(pk__in=target.restricted_creation_states.values("id"))
                         .exists()
                     ):
@@ -404,6 +412,10 @@ class WorkflowCreationPolicyEndpoint(WorkflowBaseView):
         state = self.state(project, data["state_id"], workflow)
         if not data["allow_creation"] and workflow.initial_state_id == state.pk:
             workflow_error("WORKFLOW_DEFAULT_REQUIRES_CREATION")
+        if data["allow_creation"] and (
+            not state.allow_new_work_items or state.group in (project.disabled_state_groups or [])
+        ):
+            workflow_error("WORKFLOW_CREATION_NOT_ALLOWED")
         was_allowed = not workflow.restricted_creation_states.filter(pk=state.pk).exists()
         if data["allow_creation"]:
             workflow.restricted_creation_states.remove(state)
@@ -412,6 +424,7 @@ class WorkflowCreationPolicyEndpoint(WorkflowBaseView):
         if (
             not workflow_states(project.pk, workflow)
             .filter(allow_new_work_items=True)
+            .exclude(group__in=project.disabled_state_groups or [])
             .exclude(pk__in=workflow.restricted_creation_states.values("id"))
             .exists()
         ):

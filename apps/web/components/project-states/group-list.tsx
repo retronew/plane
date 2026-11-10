@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SortableProvider } from "@plane/blocks/sortable";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
@@ -41,6 +41,7 @@ export const GroupList = observer(function GroupList(props: TGroupList) {
     stateItemClassName,
   } = props;
   const [saving, setSaving] = useState(false);
+  const togglingGroup = useRef(false);
   const { t } = useTranslation();
   return (
     <div className={cn("rounded-xl border border-subtle bg-layer-2 p-3", groupListClassName)}>
@@ -74,7 +75,18 @@ export const GroupList = observer(function GroupList(props: TGroupList) {
                 disabledStateGroups
                   ? {
                       checked: !disabledStateGroups.groups.includes(groupKey),
-                      onChange: (checked) => disabledStateGroups.onChange(groupKey, checked),
+                      onChange: async (checked) => {
+                        // All groups share one project field; serialize writes and their optimistic rollbacks.
+                        if (togglingGroup.current) return;
+                        togglingGroup.current = true;
+                        setSaving(true);
+                        try {
+                          await disabledStateGroups.onChange(groupKey, checked);
+                        } finally {
+                          togglingGroup.current = false;
+                          setSaving(false);
+                        }
+                      },
                     }
                   : undefined
               }

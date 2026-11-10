@@ -3,6 +3,8 @@ import type { IState } from "../state";
 export type TWorkflowState = Pick<IState, "id" | "name" | "color" | "group" | "icon"> & {
   sequence?: number;
   allow_creation: boolean;
+  /** The project state or its group prevents creation, independently of workflow policy. */
+  creation_blocked?: boolean;
 };
 export type TWorkflowStep = {
   script_version_id: string;

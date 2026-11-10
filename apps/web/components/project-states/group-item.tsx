@@ -50,6 +50,7 @@ export const GroupItem = observer(function GroupItem(props: TGroupItem) {
   const shouldShowEmptyState = states.length === 0 && !createState;
 
   const isCreateDisabled = !isEditable || createState;
+  const hasDefaultState = states.some((state) => state.default);
 
   return (
     <div className={cn("min-w-0", groupItemClassName)} ref={dropElementRef}>
@@ -63,7 +64,8 @@ export const GroupItem = observer(function GroupItem(props: TGroupItem) {
           allowNewWorkItems
             ? {
                 checked: allowNewWorkItems.checked,
-                disabled: !isEditable || savingGroup,
+                disabled: !isEditable || savingGroup || hasDefaultState,
+                hint: hasDefaultState ? t("web.allow_new_work_items_default_group_hint") : undefined,
                 onChange: async (checked) => {
                   setSavingGroup(true);
                   try {

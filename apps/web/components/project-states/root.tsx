@@ -17,6 +17,7 @@ import { ProjectStateLoader, GroupList } from "@/components/project-states";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 
 type TProjectState = {
   workspaceSlug: string;
@@ -37,6 +38,7 @@ export const ProjectStateRoot = observer(function ProjectStateRoot(props: TProje
   } = useProjectState();
   const { getProjectById, updateProject } = useProject();
   const { allowPermissions } = useUserPermissions();
+  const workflowStore = useProjectWorkflow(projectId);
   // derived values
   const isEditable = allowPermissions(
     [EUserProjectRoles.ADMIN],
@@ -89,6 +91,7 @@ export const ProjectStateRoot = observer(function ProjectStateRoot(props: TProje
             const current = getProjectById(projectId)?.disabled_state_groups ?? [];
             const next = enabled ? current.filter((entry) => entry !== group) : [...new Set([...current, group])];
             await updateProject(workspaceSlug, projectId, { disabled_state_groups: next });
+            await workflowStore.refreshAfterStateChange(workspaceSlug, projectId).catch(() => undefined);
           },
         }}
       />

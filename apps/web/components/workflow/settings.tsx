@@ -43,6 +43,8 @@ import { WorkflowStateRules } from "./state-rules";
 import { WorkflowImpactDialog } from "./impact-dialog";
 import { WorkflowMetadata } from "./workflow-metadata";
 import { WorkflowSwitcher } from "./workflow-switcher";
+import { WorkflowCreateTypeAction } from "./create-type-action";
+import { WorkflowTypes } from "./workflow-types";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -504,7 +506,8 @@ function WorkflowListSection(props: {
           />
           <WorkflowFilterSelects filters={filters} />
           {canManage && (
-            <div className="ml-auto flex shrink-0 items-center">
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <WorkflowCreateTypeAction workspaceSlug={workspaceSlug} projectId={projectId} disabled={busy} />
               <Button
                 stretch="auto"
                 variant="primary"
@@ -813,14 +816,9 @@ function WorkflowSettingsContent(props: {
   if (!list && !workflows.length) return <WorkflowLoadState failed={failed} onRetry={onRetry} t={t} />;
   return (
     <>
-      <WorkflowExecutionsLink
-        detail={detail}
-        canManage={canManage}
-        workflow={workflow}
-        workspaceSlug={workspaceSlug}
-        projectId={projectId}
-        t={t}
-      />
+      {detail && workflow && (
+        <WorkflowTypes workflow={workflow} projectId={projectId} workspaceSlug={workspaceSlug} disabled={busy} />
+      )}
       {detail ? (
         workflow ? (
           <WorkflowDetailSection
@@ -868,6 +866,14 @@ function WorkflowSettingsContent(props: {
           t={t}
         />
       )}
+      <WorkflowExecutionsLink
+        detail={detail}
+        canManage={canManage}
+        workflow={workflow}
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        t={t}
+      />
       <WorkflowDialogs
         metadata={metadata}
         metadataOpen={metadataOpen}

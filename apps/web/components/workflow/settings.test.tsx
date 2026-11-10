@@ -290,6 +290,28 @@ it("uses the persisted project toggle instead of a cosmetic switch", async () =>
   await waitFor(() => expect(state.store.service.update).toHaveBeenCalledWith("w", "p", { enabled: false }));
   expect(state.store.set).toHaveBeenCalled();
 });
+it("locks creation switches blocked by project state settings", () => {
+  state.store.workflows.p.states[1] = {
+    ...state.store.workflows.p.states[1],
+    allow_creation: false,
+    creation_blocked: true,
+  };
+  render(<WorkflowSettings detail />);
+  expect(
+    screen
+      .getByRole("switch", { name: "Todo workflows.workflow_states.work_item_creation" })
+      .getAttribute("aria-disabled")
+  ).toBe("true");
+  expect(state.store.service.setCreation).not.toHaveBeenCalled();
+});
+it("only offers type creation to project managers", () => {
+  const { unmount } = render(<WorkflowSettings />);
+  expect(screen.getByRole("button", { name: "web.workflow_ui.types_settings.add" })).toBeTruthy();
+  unmount();
+  state.store.workflows.p.can_manage = false;
+  render(<WorkflowSettings />);
+  expect(screen.queryByRole("button", { name: "web.workflow_ui.types_settings.add" })).toBeNull();
+});
 it("keeps the initial state creation switch locked and supports the rule side panel", async () => {
   render(<WorkflowSettings detail />);
   expect(

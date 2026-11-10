@@ -92,6 +92,87 @@ def test_disabling_a_state_group_blocks_only_creation_in_that_group(session_clie
     assert session_client.patch(endpoint, {"disabled_state_groups": ["made-up"]}, format="json").status_code == 400
 
 
+@pytest.mark.parametrize("blocked_by", ["state", "group"])
+def test_workflow_creation_switch_reports_project_restrictions(session_client, ctx, blocked_by):
+    if blocked_by == "state":
+        State.objects.filter(pk=ctx.done.pk).update(allow_new_work_items=False)
+    else:
+        Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    response = session_client.get(ctx.config)
+    assert response.status_code == 200
+    state = next(s for s in response.data["states"] if str(s["id"]) == str(ctx.done.pk))
+    assert state["creation_blocked"] is True
+    assert state["allow_creation"] is False
+    response = session_client.patch(
+        ctx.config + "states/", {"state_id": str(ctx.done.pk), "allow_creation": True}, format="json"
+    )
+    assert response.status_code == 400
+    assert "WORKFLOW_CREATION_NOT_ALLOWED" in str(response.data)
+
+
+def test_workflow_policy_cannot_remove_last_entry_by_counting_a_closed_group(session_client, ctx):
+    Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed", "unstarted"])
+    response = session_client.patch(
+        ctx.config + "states/", {"state_id": str(ctx.backlog.pk), "allow_creation": False}, format="json"
+    )
+    assert response.status_code == 400
+    assert "WORKFLOW_NO_CREATION_STATE" in str(response.data)
+    assert not ctx.workflow.restricted_creation_states.filter(pk=ctx.backlog.pk).exists()
+
+
+@pytest.mark.parametrize("endpoint", ["patch", "preview"])
+@pytest.mark.parametrize("blocked_by", ["state", "group"])
+@pytest.mark.parametrize("is_active", [False, True])
+def test_project_enable_checks_only_active_workflows(session_client, ctx, endpoint, blocked_by, is_active):
+    custom = ProjectWorkflow.objects.create(project=ctx.project, name="Closed", is_default=False, is_active=is_active)
+    custom.states.add(ctx.done)
+    if blocked_by == "state":
+        State.objects.filter(pk=ctx.done.pk).update(allow_new_work_items=False)
+    else:
+        Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    response = session_client.patch(ctx.config, {"enabled": False}, format="json")
+    assert response.status_code == 200, response.data
+
+    if endpoint == "patch":
+        response = session_client.patch(ctx.config, {"enabled": True}, format="json")
+    else:
+        response = session_client.post(
+            ctx.base + "workflows/preview/", {"operation": "enable", "enabled": True}, format="json"
+        )
+    assert response.status_code == (400 if is_active else 200), response.data
+    if is_active:
+        assert "WORKFLOW_NO_CREATION_STATE" in str(response.data)
+    ctx.project.refresh_from_db()
+    custom.refresh_from_db()
+    assert ctx.project.workflow_enabled is (endpoint == "patch" and not is_active)
+    assert custom.is_active is is_active
+
+
+@pytest.mark.parametrize("endpoint", ["patch", "preview"])
+@pytest.mark.parametrize("blocked_by", ["state", "group"])
+def test_cannot_enable_a_workflow_without_an_effective_creation_state(session_client, ctx, endpoint, blocked_by):
+    custom = ProjectWorkflow.objects.create(project=ctx.project, name="Closed", is_default=False, is_active=False)
+    custom.states.add(ctx.done)
+    if blocked_by == "state":
+        State.objects.filter(pk=ctx.done.pk).update(allow_new_work_items=False)
+    else:
+        Project.objects.filter(pk=ctx.project.pk).update(disabled_state_groups=["completed"])
+    if endpoint == "patch":
+        response = session_client.patch(
+            ctx.base + f"workflows/{custom.pk}/", {"is_active": True, "version": custom.version}, format="json"
+        )
+    else:
+        response = session_client.post(
+            ctx.base + "workflows/preview/",
+            {"operation": "enable", "workflow_id": str(custom.pk), "is_active": True},
+            format="json",
+        )
+    assert response.status_code == 400
+    assert "WORKFLOW_NO_CREATION_STATE" in str(response.data)
+    custom.refresh_from_db()
+    assert not custom.is_active
+
+
 def test_state_creation_settings_protect_default_and_last_entry(session_client, ctx):
     endpoint = ctx.base + "states/"
     response = session_client.patch(

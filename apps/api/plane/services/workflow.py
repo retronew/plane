@@ -115,11 +115,13 @@ def preview_migration(project, data):
         )
         target_workflow = workflow
         target_states = workflow_states(project.pk, workflow)
-        targets = [workflow] if workflow else list(ProjectWorkflow.objects.filter(project=project))
+        targets = [workflow] if workflow else list(ProjectWorkflow.objects.filter(project=project, is_active=True))
         for target in targets:
             if (
                 not disabling
                 and not workflow_states(project.pk, target)
+                .filter(allow_new_work_items=True)
+                .exclude(group__in=project.disabled_state_groups or [])
                 .exclude(pk__in=target.restricted_creation_states.values("id"))
                 .exists()
             ):

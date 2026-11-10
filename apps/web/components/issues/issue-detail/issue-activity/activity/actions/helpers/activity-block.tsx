@@ -34,7 +34,7 @@ export function IntakeActivityActor({ activityId }: { activityId: string }) {
   return (
     <Tooltip label={name}>
       <a
-        className="mr-1.5 inline-flex align-middle"
+        className="my-1 inline-flex shrink-0"
         aria-label={name}
         href={`/${activity.workspace_detail?.slug}/profile/${actor.id}`}
       >
@@ -59,7 +59,7 @@ type TIssueActivityBlockComponent = {
 
 function ActivityTimestamp({ createdAt, isMobile }: { createdAt: string; isMobile: boolean }) {
   return (
-    <div className={cn("shrink-0", "text-11")}>
+    <div className="flex h-7 shrink-0 items-center text-11">
       <Tooltip label={`${renderFormattedDate(createdAt)}, ${renderFormattedTime(createdAt)}`} disabled={isMobile}>
         <span className="whitespace-nowrap text-tertiary"> {calculateTimeAgo(createdAt)}</span>
       </Tooltip>
@@ -82,7 +82,8 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
   return (
     <div
       className={cn(
-        "relative flex items-center gap-3",
+        "relative flex items-start gap-3",
+        // Keep the icon, avatar, first text line, and timestamp on the same center even when the message wraps.
         "text-caption-sm-regular",
         ends === "top" ? "pb-2" : ends === "bottom" ? "pt-2" : "py-2"
       )}
@@ -91,21 +92,23 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
       <div className="z-[4] flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-subtle bg-layer-2 text-secondary shadow-raised-100 [&_svg]:size-4">
         {icon ? icon : <HierarchyOutline className="h-3.5 w-3.5" />}
       </div>
-      <div className="min-w-0 flex-1 break-words text-secondary">
+      <div className="flex min-w-0 flex-1 items-start gap-1.5 text-secondary" data-activity-content="">
         {detailDisplay && !customUserName && <IntakeActivityActor activityId={activityId} />}
-        <Tooltip
-          label={customUserName ?? activity.actor_detail?.display_name ?? ""}
-          disabled={!detailDisplay || !activity.actor_detail?.display_name}
-        >
-          <span>
-            {!activity?.field && activity?.verb === "created" ? (
-              <IssueCreatorDisplay activityId={activityId} customUserName={customUserName} />
-            ) : (
-              <IssueUser activityId={activityId} customUserName={customUserName} />
-            )}
-          </span>
-        </Tooltip>
-        <ActivitySentence> {children} </ActivitySentence>
+        <div className="min-w-0 flex-1 py-1.5 leading-4 [overflow-wrap:anywhere]" data-activity-message="">
+          <Tooltip
+            label={customUserName ?? activity.actor_detail?.display_name ?? ""}
+            disabled={!detailDisplay || !activity.actor_detail?.display_name}
+          >
+            <span>
+              {!activity?.field && activity?.verb === "created" ? (
+                <IssueCreatorDisplay activityId={activityId} customUserName={customUserName} />
+              ) : (
+                <IssueUser activityId={activityId} customUserName={customUserName} />
+              )}
+            </span>
+          </Tooltip>
+          <ActivitySentence> {children} </ActivitySentence>
+        </div>
       </div>
       <ActivityTimestamp createdAt={activity.created_at} isMobile={isMobile} />
     </div>

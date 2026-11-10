@@ -22,6 +22,10 @@ Sources distilled from: Microsoft Localization Style Guides, Mozilla L10n, Unico
 
 **Source of truth**: `packages/i18n/src/locales/en/<namespace>.json`. Every other locale mirrors English key-for-key. The `sync-check.ts` script catches missing / stale / collision keys; it does **not** catch value-quality mistakes. That is what this skill is for.
 
+## Project override: Simplified Chinese Intake terminology
+
+The user explicitly requires **Intake → 需求收集** in all `zh-CN` UI copy. This overrides every Intake do-not-translate rule, example, table and red flag below for Simplified Chinese. Preserve translation keys and code identifiers; translate visible values only. English remains Intake. For this project, maintain `en` and `zh-CN` only unless the user explicitly requests another locale. Keep `packages/i18n/locales/zh-CN/` copies synchronized with `src/locales/zh-CN/`.
+
 ## When to Use
 
 - Adding a new key to any `packages/i18n/src/locales/en/*.json`

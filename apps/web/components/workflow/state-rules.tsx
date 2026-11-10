@@ -74,13 +74,21 @@ export function WorkflowStateRules({
                   {t("common.default")}
                 </span>
               )}
-              <Tooltip label={t(initial ? "workflows.workflow_states.default_state" : "web.workflow_ui.creation_hint")}>
+              <Tooltip
+                label={t(
+                  state.creation_blocked
+                    ? "web.workflow_ui.creation_blocked_hint"
+                    : initial
+                      ? "workflows.workflow_states.default_state"
+                      : "web.workflow_ui.creation_hint"
+                )}
+              >
                 <label className="flex shrink-0 items-center gap-2 text-caption-md-regular text-secondary">
                   <span>{t("workflows.workflow_states.work_item_creation")}</span>
                   <Switch
                     size="md"
                     checked={state.allow_creation}
-                    disabled={busy || !workflow.can_manage || initial}
+                    disabled={busy || !workflow.can_manage || initial || state.creation_blocked}
                     aria-label={`${state.name} ${t("workflows.workflow_states.work_item_creation")}`}
                     onCheckedChange={(allow) => onCreation(state.id, allow)}
                   />
