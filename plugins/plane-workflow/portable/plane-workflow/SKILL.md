@@ -206,6 +206,7 @@ WEB-30  Medium · 10/20 截止  导出报表加筛选          [待开始]
 
 Plane MCP `workitem` 工具 `action="get", workspace_slug="<目标 slug>"`，`work_item="<编号>"`。展示标题、状态、优先级、负责人、描述要点（最多 8 行）。
 
+- 描述或评论中出现 `![图片](asset:...)` 时，调用 `workitem(action="images", workspace_slug="<目标 slug>", work_item="<编号>")` 查看截图，再理解需求。返回 `next` 时用 `images` 参数继续读取；未显示、超限或读取失败的图片要明确说明，不能当作已看过。旧版服务没有 `images` 操作时，说明需要升级 MCP 服务。
 - 状态组已是 `completed` / `cancelled`：提醒用户并确认是否仍要继续。
 - 负责人是别人：提醒「当前负责人是 X」，确认后再改。
 
