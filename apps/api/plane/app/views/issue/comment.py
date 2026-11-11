@@ -113,7 +113,10 @@ class IssueCommentViewSet(BaseViewSet):
         current_instance = json.dumps(IssueCommentSerializer(issue_comment).data, cls=DjangoJSONEncoder)
         serializer = IssueCommentSerializer(issue_comment, data=request.data, partial=True)
         if serializer.is_valid():
-            if "comment_html" in request.data and request.data["comment_html"] != issue_comment.comment_html:
+            if any(
+                field in request.data and request.data[field] != getattr(issue_comment, field)
+                for field in ("comment_html", "comment_json")
+            ):
                 serializer.save(edited_at=timezone.now())
             else:
                 serializer.save()

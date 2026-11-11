@@ -1,3 +1,4 @@
+import { MemberWorkOverview } from "./member-work-overview";
 import { ProjectComparison } from "./project-comparison";
 import CreatedVsResolved from "./work-items/created-vs-resolved";
 import { AnalyticsMetricCard } from "./metric-card";
@@ -614,7 +615,12 @@ export const ProjectsAnalytics = observer(function ProjectsAnalytics() {
   return <AnalyticsDetails tab="projects" />;
 });
 export const UsersAnalytics = observer(function UsersAnalytics() {
-  return <AnalyticsDetails tab="users" />;
+  return (
+    <>
+      <MemberWorkOverview />
+      <AnalyticsDetails tab="users" />
+    </>
+  );
 });
 export const CyclesAnalytics = observer(function CyclesAnalytics() {
   return <AnalyticsDetails tab="cycles" />;
