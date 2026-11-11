@@ -4,6 +4,7 @@ from uuid import UUID
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, OuterRef, Subquery
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
@@ -187,6 +188,16 @@ class WorkspaceSyncEntitiesEndpoint(BaseAPIView):
                         issue_id=OuterRef("pk"),
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )
+                ),
+                completed_sub_issues_count=Coalesce(
+                    Subquery(
+                        Issue.issue_objects.filter(parent=OuterRef("pk"), state__group="completed")
+                        .order_by()
+                        .values("parent_id")
+                        .annotate(n=Count("pk"))
+                        .values("n")[:1]
+                    ),
+                    0,
                 ),
                 sub_issues_count=Subquery(
                     Issue.issue_objects.filter(parent=OuterRef("pk"))

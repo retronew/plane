@@ -926,6 +926,11 @@ class IssueListDetailSerializer(serializers.Serializer):
             "link_count": instance.link_count,
         }
 
+        # Only annotated querysets can supply an authoritative completion count.
+        completed_count = getattr(instance, "completed_sub_issues_count", None)
+        if completed_count is not None:
+            data["completed_sub_issues_count"] = completed_count
+
         # Handle expanded fields only when requested - using direct field access
         if self.expand:
             if "issue_relation" in self.expand:

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -7,8 +6,6 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 
 export const SubIssuesProgress = observer(function SubIssuesProgress({
   issueId,
-  projectId,
-  workspaceSlug,
   total,
 }: {
   issueId: string;
@@ -22,24 +19,24 @@ export const SubIssuesProgress = observer(function SubIssuesProgress({
     issue: { getIssueById },
   } = useIssueDetail();
   const { getStateById } = useProjectState();
-  const distribution = subIssues.stateDistributionByIssueId(issueId);
-  useEffect(() => {
-    if (total > 0 && workspaceSlug && projectId && !distribution)
-      void subIssues.fetchSubIssues(workspaceSlug, projectId, issueId).catch((error: unknown) => {
-        console.error("Failed to load sub-work item progress", error);
-      });
-  }, [total, workspaceSlug, projectId, issueId, distribution, subIssues]);
   if (total <= 0) return null;
-  // Read live states so edits in this list update the ring without refetching the children.
-  const completed = distribution
-    ? Object.values(distribution)
-        .flat()
-        .filter((id) => {
-          const child = getIssueById(id);
-          const state = child?.state_id ? getStateById(child.state_id) : undefined;
-          return state ? state.group === "completed" : distribution.completed.includes(id);
-        }).length
-    : 0;
+  const authoritativeCount = getIssueById(issueId)?.completed_sub_issues_count;
+  let completed: number | undefined;
+  if (typeof authoritativeCount === "number" && Number.isFinite(authoritativeCount)) {
+    completed = Math.min(Math.max(authoritativeCount, 0), total);
+  } else {
+    // Legacy entities may omit the count. Never use cached distribution groups as
+    // state truth or fetch an unbounded children list for each visible parent.
+    const distribution = subIssues.stateDistributionByIssueId(issueId);
+    const childIds = distribution ? [...new Set(Object.values(distribution).flat())] : [];
+    const states = childIds.map((id) => {
+      const child = getIssueById(id);
+      return child?.state_id ? getStateById(child.state_id) : undefined;
+    });
+    if (childIds.length === total && states.every((state) => !!state)) {
+      completed = states.filter((state) => state?.group === "completed").length;
+    }
+  }
   const label = t("web.runtime.sub_items_count", { count: total });
   return (
     <Tooltip label={label}>
@@ -58,12 +55,12 @@ export const SubIssuesProgress = observer(function SubIssuesProgress({
             stroke="currentColor"
             strokeWidth="2"
             pathLength="100"
-            strokeDasharray={`${distribution ? (completed / total) * 100 : 0} 100`}
+            strokeDasharray={`${((completed ?? 0) / total) * 100} 100`}
             className="text-accent-primary"
           />
         </svg>
         <span>
-          {distribution ? completed : "–"}/{total}
+          {completed ?? "–"}/{total}
         </span>
       </span>
     </Tooltip>
