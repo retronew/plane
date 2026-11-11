@@ -322,7 +322,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     key: "archive",
     section: "lifecycle",
     title: t("common.actions.archive"),
-    description: isInArchivableGroup ? undefined : t("issue.archive.description"),
+    disabledReason: isInArchivableGroup ? undefined : t("issue.archive.description"),
     icon: ArchiveOutline,
     action: () => handleOptionalAction(setArchiveIssueModal, translate("web.runtime.action_archive"), true),
     disabled: !isInArchivableGroup,

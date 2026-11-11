@@ -103,7 +103,7 @@ it.each([EUserPermissions.ADMIN, EUserPermissions.MEMBER])(
       "add_to_favorites",
       "project_cycles.complete.action",
       "export",
-      "archiveweb.only_completed_cycles_can_be_archived",
+      "archive",
       "delete",
     ]);
     const sequence = Array.from(menu.querySelectorAll('[role="menuitem"], [role="separator"]'));
@@ -153,7 +153,7 @@ it("uses the same grouping, order, and danger color in the card context menu", a
     "project_cycles.complete.action",
     "export",
     "separator",
-    "archiveweb.only_completed_cycles_can_be_archived",
+    "archive",
     "delete",
   ]);
   expect(within(menu).getByRole("menuitem", { name: "delete" }).className).toContain("text-danger-primary");

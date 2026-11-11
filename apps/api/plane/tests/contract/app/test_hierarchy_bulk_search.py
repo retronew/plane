@@ -1,4 +1,7 @@
+from datetime import timedelta
 from types import SimpleNamespace
+
+from django.utils import timezone
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -123,6 +126,59 @@ def test_cycle_candidate_filters(bulk_search_ctx, session_client, filters, expec
     response = session_client.get(search_url(ctx), {"cycle": "true", **filters})
     assert response.status_code == 200, response.data
     assert {row["name"] for row in response.data} == expected
+
+
+@pytest.mark.parametrize(
+    "filters,expected",
+    [
+        ({"start_date": "2026-11-01;after,2026-11-10;before"}, {"Matching", "Late target"}),
+        ({"target_date": "2026-11-15;before"}, {"Matching", "Early start", "Other priority"}),
+        (
+            {
+                "start_date": "2026-11-01;after",
+                "target_date": "2026-11-15;before",
+                "priority": "high",
+                "state_group": "backlog",
+            },
+            {"Matching"},
+        ),
+        ({"target_date": "none"}, {"Undated"}),
+    ],
+)
+def test_cycle_candidate_date_filters(bulk_search_ctx, session_client, filters, expected):
+    ctx = bulk_search_ctx
+    for name, start, target, priority in [
+        ("Matching", "2026-11-01", "2026-11-15", "high"),
+        ("Early start", "2026-10-31", "2026-11-15", "high"),
+        ("Late target", "2026-11-10", "2026-11-16", "high"),
+        ("Other priority", "2026-11-11", "2026-11-15", "low"),
+        ("Undated", None, None, "high"),
+    ]:
+        Issue.objects.create(
+            project=ctx.project, state=ctx.state, name=name, priority=priority,
+            start_date=start, target_date=target,
+        )
+    response = session_client.get(search_url(ctx), {"cycle": "true", **filters})
+    assert response.status_code == 200, response.data
+    assert {row["name"] for row in response.data} == expected
+
+
+def test_cycle_candidate_relative_dates_before_result_limit(bulk_search_ctx, session_client):
+    ctx = bulk_search_ctx
+    today = timezone.now().date()
+    for index in range(101):
+        Issue.objects.create(
+            project=ctx.project, state=ctx.state, name=f"Outside {index}", start_date=today - timedelta(days=1)
+        )
+    match = Issue.objects.create(
+        project=ctx.project, state=ctx.state, name="Relative match",
+        start_date=today + timedelta(days=8), target_date=today + timedelta(days=13),
+    )
+    response = session_client.get(search_url(ctx), {
+        "cycle": "true", "start_date": "1_weeks;after;fromnow", "target_date": "2_weeks;before;fromnow",
+    })
+    assert response.status_code == 200, response.data
+    assert [row["id"] for row in response.data] == [match.id]
 
 
 def test_search_excludes_full_cycle_paths(bulk_search_ctx, session_client):

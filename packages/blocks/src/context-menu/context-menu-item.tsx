@@ -122,6 +122,7 @@ export function ContextMenuItem(props: ContextMenuItemProps) {
       description={disabledReason ? undefined : item.description || undefined}
       selected={item.selected}
       disabled={item.disabled}
+      aria-description={disabledReason}
       closeOnClick={item.closeOnClick !== false}
       onClick={(e) => {
         // Parity with the legacy menu: a choice must not also fire a wrapping `Link`'s click.

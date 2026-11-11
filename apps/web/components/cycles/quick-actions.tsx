@@ -6,6 +6,7 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
  */
 
 import { Fragment, useState } from "react";
+import { QuickActionMenuItem } from "@/components/common/quick-action-menu-item";
 import { observer } from "mobx-react";
 import { ExportOutline, MoreHorizontalOutline, StopCircleOutline, ShowOutline } from "@makeplane/propel/icons";
 // ui
@@ -15,15 +16,10 @@ import { FavoriteStarIcon } from "@plane/blocks/common";
 import { useTranslation } from "@plane/i18n";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
 import { setToast } from "@plane/blocks/toast";
 import type { TContextMenuItem } from "@plane/blocks/context-menu";
-import {
-  ContextMenu,
-  getRenderableItems,
-  hasMenuSeparatorBefore,
-  resolveItemVariant,
-} from "@plane/blocks/context-menu";
+import { ContextMenu, getRenderableItems, hasMenuSeparatorBefore } from "@plane/blocks/context-menu";
 import { copyUrlToClipboard } from "@plane/utils";
 // hooks
 import { useCycleMenuItems } from "@/components/common/quick-actions-helper";
@@ -269,17 +265,7 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
             {renderedItems.map((item, index) => (
               <Fragment key={item.key}>
                 {hasMenuSeparatorBefore(renderedItems, index) && <MenuSeparator />}
-                <MenuItem
-                  variant={resolveItemVariant(item)}
-                  icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-                  label={item.title ?? ""}
-                  description={item.description}
-                  disabled={item.disabled}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    item.action();
-                  }}
-                />
+                <QuickActionMenuItem item={item} />
               </Fragment>
             ))}
           </MenuContent>

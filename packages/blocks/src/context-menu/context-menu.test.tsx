@@ -269,6 +269,35 @@ describe("ContextMenu rows", () => {
     expect(screen.queryByText("Only completed cycles can be archived")).toBeNull();
   });
 
+  it("shows an explicit disabled reason on keyboard focus without allowing activation", async () => {
+    const user = userEvent.setup();
+    const action = vi.fn();
+    render(
+      <Harness
+        items={[
+          { key: "copy", title: "Copy", action: vi.fn() },
+          {
+            key: "archive",
+            title: "Archive",
+            disabled: true,
+            disabledReason: "Only completed cycles can be archived",
+            action,
+          },
+        ]}
+      />
+    );
+    await openMenu();
+    row("Copy").focus();
+    await user.keyboard("{ArrowDown}");
+    const archive = row("Archive");
+    expect(document.activeElement).toBe(archive);
+    expect(archive.getAttribute("aria-description")).toBe("Only completed cycles can be archived");
+    expect((await screen.findByRole("tooltip")).textContent).toBe("Only completed cycles can be archived");
+    await user.keyboard("{Enter} ");
+    expect(action).not.toHaveBeenCalled();
+    expect(screen.getByRole("menu")).toBeTruthy();
+  });
+
   it("renders the description of an enabled row as a second line under the label", async () => {
     render(
       <Harness

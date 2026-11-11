@@ -191,8 +191,8 @@ class IssueSearchEndpoint(BaseAPIView):
         # Search-mode flags such as cycle/parent are not issue filter values.
         candidate_filters = {
             key: request.query_params[key]
-            for key in ("state_group", "priority")
-            if key in request.query_params
+            for key in ("state_group", "priority", "start_date", "target_date")
+            if key in request.query_params and not (key == "target_date" and target_date == "none")
         }
         issues = issues.filter(**issue_filters(candidate_filters, "GET"))
 

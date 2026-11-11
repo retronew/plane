@@ -16,7 +16,7 @@ import {
   DialogMain,
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
-import { CloseOutline, RocketOutline } from "@makeplane/propel/icons";
+import { NewTabOutline } from "@makeplane/propel/icons";
 // i18n
 import { useTranslation } from "@plane/i18n";
 // types
@@ -35,7 +35,6 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // services
 import { ProjectService } from "@/services/project";
 // components
-import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 import { IssueSearchModalEmptyState } from "./issue-search-modal-empty-state";
 import { ExistingIssuesFilters, emptyExistingIssueFilters } from "./existing-issues-filters";
 import type { ExistingIssueFilters } from "./existing-issues-filters";
@@ -56,11 +55,13 @@ type Props = {
 const projectService = new ProjectService();
 
 function candidateSearchKey(params: Props["searchParams"], filters: ExistingIssueFilters) {
-  if (!params.cycle) return JSON.stringify(params);
+  if (params.cycle !== true) return JSON.stringify(params);
   return JSON.stringify({
     ...params,
     ...(filters.state_group.length ? { state_group: filters.state_group.join(",") } : {}),
     ...(filters.priority.length ? { priority: filters.priority.join(",") } : {}),
+    ...(filters.start_date.length ? { start_date: filters.start_date.join(",") } : {}),
+    ...(filters.target_date.length ? { target_date: filters.target_date.join(",") } : {}),
   });
 }
 
@@ -85,31 +86,40 @@ export function ExistingIssuesListModal(props: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isWorkspaceLevel, setIsWorkspaceLevel] = useState(false);
   const { isMobile } = usePlatformOS();
-  const debouncedSearchTerm: string = useDebounce(searchTerm, 500);
+  const debouncedQuery: string = useDebounce(searchTerm, 500);
+  // A completed close clears the query synchronously, including a quick reopen before debounce settles.
+  const debouncedSearchTerm = searchTerm === "" ? "" : debouncedQuery;
   const { baseTabIndex } = getTabIndex(undefined, isMobile);
   const [retry, setRetry] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [candidateFilters, setCandidateFilters] = useState(emptyExistingIssueFilters);
   const canFilter = searchParams.cycle === true;
   const searchParamsKey = candidateSearchKey(searchParams, candidateFilters);
-  const { issues, isLoading, isSearching, searchFailed, invalidateSearch } = useExistingIssuesSearch({
-    isOpen,
-    workspaceSlug,
-    projectId,
-    searchParamsKey,
-    debouncedSearchTerm,
-    isWorkspaceLevel,
-    workItemSearchServiceCallback,
-    retry,
-  });
+  const { issues, isLoading, isSearching, searchFailed, invalidateSearch, cancelPendingSearch, resetSearch } =
+    useExistingIssuesSearch({
+      isOpen,
+      workspaceSlug,
+      projectId,
+      searchParamsKey,
+      debouncedSearchTerm,
+      isWorkspaceLevel,
+      workItemSearchServiceCallback,
+      retry,
+    });
   const selectedIdSet = new Set(selectedWorkItemIds);
   const selectedIssues = selection ?? issues.filter((issue) => selectedIdSet.has(issue.id));
 
-  const handleClose = () => {
-    if (isSubmitting) return;
-    invalidateSearch();
-    setSaveError(null);
+  const close = () => {
+    cancelPendingSearch();
     onClose();
+  };
+  const handleClose = () => {
+    if (!isSubmitting) close();
+  };
+  const handleOpenChangeComplete = (open: boolean) => {
+    if (open || isOpen) return;
+    resetSearch();
+    setSaveError(null);
     setSearchTerm("");
     setSelectedIssues(null);
     setIsWorkspaceLevel(false);
@@ -124,12 +134,7 @@ export function ExistingIssuesListModal(props: Props) {
       t,
       setIsSubmitting,
       setSaveError,
-      () => {
-        onClose();
-        setSearchTerm("");
-        setSelectedIssues(null);
-        setCandidateFilters(emptyExistingIssueFilters());
-      }
+      close
     );
 
   const filteredIssues = issues.filter((issue) => !shouldHideIssue?.(issue));
@@ -147,6 +152,8 @@ export function ExistingIssuesListModal(props: Props) {
   return (
     <Dialog
       open={isOpen}
+      disablePointerDismissal
+      onOpenChangeComplete={handleOpenChangeComplete}
       onOpenChange={(open) => {
         if (!open) handleClose();
       }}
@@ -157,29 +164,18 @@ export function ExistingIssuesListModal(props: Props) {
         <div className="sr-only">
           <DialogTitle>{t("issue.add.existing")}</DialogTitle>
         </div>
-        {canFilter && (
-          <ExistingIssuesFilters
-            value={candidateFilters}
-            onChange={(next) => {
-              setSelectedIssues(selectedIssues);
-              invalidateSearch();
-              setCandidateFilters(next);
-            }}
-          />
-        )}
         {/* `inline` + `open` renders the list in place: the dialog is the surface, so there is no
             popup positioner. */}
         <Combobox<ISearchIssueResponse, true>
           inline
           multiple
-          // Bound to the dialog so the combobox resets its transient state when the modal closes.
-          open={isOpen}
-          onOpenChange={(open) => {
-            if (!open) handleClose();
-          }}
+          // Dialog owns mounting and exit animation; keep inline rows visible until it unmounts.
+          open
+          // Inline list visibility belongs to the dialog. Outside presses and input blur from
+          // filter popovers must not dismiss the enclosing modal; Dialog handles Escape itself.
           value={selectedIssues}
           onValueChange={(next) => {
-            if (!isSubmitting) setSelectedIssues(next);
+            if (!isSubmitting && !isSearching && !isLoading) setSelectedIssues(next);
           }}
           // Re-searching returns fresh objects, so rows are matched to the selection by id.
           isItemEqualToValue={(itemValue, value) => itemValue.id === value.id}
@@ -188,17 +184,34 @@ export function ExistingIssuesListModal(props: Props) {
           onInputValueChange={(next, details) => {
             // Base UI clears the query after every pick in multiple mode; letting that through
             // would re-run the debounced server search on each toggle.
-            if (details.reason === "input-clear") return;
+            if (details.reason === "input-clear" || next === searchTerm) return;
             invalidateSearch();
             setSearchTerm(next);
           }}
         >
-          <ComboboxSearch
-            placeholder={t("common.search.placeholder")}
-            aria-label={t("issue.add.existing")}
-            tabIndex={baseTabIndex}
-          />
-          <DialogMain>
+          {canFilter ? (
+            <ExistingIssuesFilters
+              value={candidateFilters}
+              onChange={(next) => {
+                setSelectedIssues(selectedIssues);
+                invalidateSearch();
+                setCandidateFilters(next);
+              }}
+            >
+              <ComboboxSearch
+                placeholder={t("common.search.placeholder")}
+                aria-label={t("issue.add.existing")}
+                tabIndex={baseTabIndex}
+              />
+            </ExistingIssuesFilters>
+          ) : (
+            <ComboboxSearch
+              placeholder={t("common.search.placeholder")}
+              aria-label={t("issue.add.existing")}
+              tabIndex={baseTabIndex}
+            />
+          )}
+          <DialogMain render={<div className="gap-2! px-3! py-2!" />}>
             {saveError && (
               <p role="alert" className="text-13 text-danger-primary">
                 {t(saveError)}
@@ -216,74 +229,26 @@ export function ExistingIssuesListModal(props: Props) {
                 />
               </div>
             )}
-            <div className="flex flex-shrink-0 flex-col-reverse gap-4 text-13 text-secondary sm:flex-row sm:items-center sm:justify-between">
-              {selectedIssues.length > 0 ? (
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  {selectedIssues.map((issue) => (
-                    <div
-                      key={issue.id}
-                      className="flex items-center gap-1 rounded-md border border-subtle bg-layer-1 py-1 pl-2 text-11 whitespace-nowrap text-primary"
-                    >
-                      <IssueIdentifier
-                        projectId={issue.project_id}
-                        issueTypeId={issue.type_id}
-                        projectIdentifier={issue.project__identifier}
-                        issueSequenceId={issue.sequence_id}
-                        size="xs"
-                        variant="secondary"
-                      />
-                      <button
-                        type="button"
-                        className="group p-1"
-                        onClick={() => setSelectedIssues(selectedIssues.filter((i) => i.id !== issue.id))}
-                      >
-                        <CloseOutline className="h-3 w-3 text-secondary group-hover:text-primary" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="w-min rounded-md border border-subtle bg-layer-1 p-2 text-11 whitespace-nowrap">
-                  {t("issue.select.empty")}
-                </div>
-              )}
-              {workspaceLevelToggle && (
-                <Tooltip label={t("web.toggle_workspace_level_search")} disabled={isMobile}>
-                  <div
-                    className={`flex flex-shrink-0 cursor-pointer items-center gap-1 text-11 ${
-                      isWorkspaceLevel ? "text-primary" : "text-secondary"
-                    }`}
-                  >
-                    <Switch
-                      size="md"
-                      checked={isWorkspaceLevel}
-                      onCheckedChange={setIsWorkspaceLevel}
-                      aria-label={t("common.workspace_level")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setIsWorkspaceLevel((prevData) => !prevData)}
-                      className="flex-shrink-0"
-                    >
-                      {t("common.workspace_level")}
-                    </button>
-                  </div>
-                </Tooltip>
-              )}
-            </div>
+            {workspaceLevelToggle && (
+              <WorkspaceLevelToggle
+                checked={isWorkspaceLevel}
+                onCheckedChange={setIsWorkspaceLevel}
+                isMobile={isMobile}
+              />
+            )}
 
             <ExistingIssuesSearchResults
               workspaceSlug={workspaceSlug}
               searchTerm={searchTerm}
               debouncedSearchTerm={debouncedSearchTerm}
-              isSearching={isSearching}
+              isSearching={isSearching || isSubmitting}
               isLoading={isLoading}
               searchFailed={searchFailed}
               filteredIssues={filteredIssues}
             />
           </DialogMain>
         </Combobox>
-        <DialogActions>
+        <DialogActions render={<div className="px-3! pt-2! pb-3!" />}>
           <DialogInfo>
             <Button
               variant="ghost"
@@ -291,7 +256,7 @@ export function ExistingIssuesListModal(props: Props) {
               stretch="auto"
               label={allVisibleSelected ? t("issue.select.deselect_all") : t("issue.select.select_all")}
               onClick={handleSelectIssues}
-              disabled={filteredIssues.length === 0}
+              disabled={isSubmitting || isSearching || isLoading || filteredIssues.length === 0}
             />
           </DialogInfo>
           <Button variant="secondary" size="md" stretch="auto" label={t("common.cancel")} onClick={handleClose} />
@@ -307,6 +272,39 @@ export function ExistingIssuesListModal(props: Props) {
         </DialogActions>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function WorkspaceLevelToggle({
+  checked,
+  onCheckedChange,
+  isMobile,
+}: {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  isMobile: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex justify-end text-13 text-secondary">
+      <Tooltip label={t("web.toggle_workspace_level_search")} disabled={isMobile}>
+        <div
+          className={`flex flex-shrink-0 cursor-pointer items-center gap-1 text-11 ${
+            checked ? "text-primary" : "text-secondary"
+          }`}
+        >
+          <Switch
+            size="md"
+            checked={checked}
+            onCheckedChange={onCheckedChange}
+            aria-label={t("common.workspace_level")}
+          />
+          <button type="button" onClick={() => onCheckedChange(!checked)} className="flex-shrink-0">
+            {t("common.workspace_level")}
+          </button>
+        </div>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -341,12 +339,11 @@ function useExistingIssuesSearch({
       workItemSearchServiceCallback ??
       (projectId ? projectService.projectIssuesSearch.bind(projectService, workspaceSlug, projectId) : undefined);
     if (!searchService) return;
-    // Search context changed: mark the asynchronous request pending and discard stale candidates.
+    // Keep the previous rows mounted while refreshing to avoid replacing the list with a skeleton.
     // oxlint-disable-next-line react/set-state-in-effect
     setIsLoading(true);
     setIsSearching(true);
     setSearchFailed(false);
-    setIssues([]);
     const params = JSON.parse(searchParamsKey) as Partial<TProjectIssuesSearchParams>;
     searchService({ search: debouncedSearchTerm, ...params, workspace_search: isWorkspaceLevel })
       .then((res) => {
@@ -385,8 +382,17 @@ function useExistingIssuesSearch({
     searchFailed,
     invalidateSearch: () => {
       requestGeneration.current++;
-      setIssues([]);
       setIsSearching(true);
+    },
+    cancelPendingSearch: () => {
+      requestGeneration.current++;
+    },
+    resetSearch: () => {
+      requestGeneration.current++;
+      setIssues([]);
+      setIsLoading(false);
+      setIsSearching(false);
+      setSearchFailed(false);
     },
   };
 }
@@ -435,7 +441,10 @@ function ExistingIssuesSearchResults({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="vertical-scrollbar scrollbar-md max-h-80 min-h-0 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain">
+    <div
+      aria-busy={isSearching || isLoading}
+      className="vertical-scrollbar scrollbar-md max-h-80 min-h-0 scroll-py-2 overflow-x-hidden overflow-y-auto overscroll-contain [&_[role=option]]:h-10! [&_[role=option]]:min-h-10! [&_[role=option]]:text-body-sm-regular"
+    >
       {/* TODO: Translate here */}
       {searchTerm !== "" && (
         <h5 className="text-13 text-secondary">
@@ -446,7 +455,7 @@ function ExistingIssuesSearchResults({
         </h5>
       )}
 
-      {isSearching || isLoading ? (
+      {(isSearching || isLoading) && filteredIssues.length === 0 ? (
         <Loader className="space-y-3 p-3">
           <Loader.Item height="40px" />
           <Loader.Item height="40px" />
@@ -471,6 +480,7 @@ function ExistingIssuesSearchResults({
                   key={issue.id}
                   value={issue}
                   selection="checkbox"
+                  disabled={isSearching || isLoading}
                   label={issue.name}
                   icon={
                     <span className="flex flex-shrink-0 items-center gap-2">
@@ -480,33 +490,30 @@ function ExistingIssuesSearchResults({
                           backgroundColor: issue.state__color,
                         }}
                       />
-                      <IssueIdentifier
-                        projectId={issue.project_id}
-                        issueTypeId={issue.type_id}
-                        projectIdentifier={issue.project__identifier}
-                        issueSequenceId={issue.sequence_id}
-                        size="xs"
-                        variant="secondary"
-                      />
+                      <span className="shrink-0 text-body-xs-regular text-secondary">
+                        {issue.project__identifier}-{issue.sequence_id}
+                      </span>
                     </span>
                   }
                   trailing={
-                    <a
-                      href={generateWorkItemLink({
-                        workspaceSlug,
-                        projectId: issue?.project_id,
-                        issueId: issue?.id,
-                        projectIdentifier: issue.project__identifier,
-                        sequenceId: issue?.sequence_id,
-                      })}
-                      target="_blank"
-                      className="relative z-1 hidden flex-shrink-0 text-secondary group-hover/item:block hover:text-primary"
-                      rel="noopener noreferrer"
-                      aria-label={t("common.actions.open_in_new_tab")}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <RocketOutline className="h-4 w-4" />
-                    </a>
+                    <Tooltip label={t("common.actions.open_in_new_tab")}>
+                      <a
+                        href={generateWorkItemLink({
+                          workspaceSlug,
+                          projectId: issue?.project_id,
+                          issueId: issue?.id,
+                          projectIdentifier: issue.project__identifier,
+                          sequenceId: issue?.sequence_id,
+                        })}
+                        target="_blank"
+                        className="relative z-1 flex-shrink-0 text-secondary opacity-0 group-hover/item:opacity-100 hover:text-primary focus:opacity-100"
+                        rel="noopener noreferrer"
+                        aria-label={t("common.actions.open_in_new_tab")}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <NewTabOutline className="h-4 w-4" />
+                      </a>
+                    </Tooltip>
                   }
                 />
               ))}

@@ -39,7 +39,7 @@ export function filterMenuItemsByQuery(items: TContextMenuItem[], query: string)
  * row to one compact line and moves the explanation into a hover tooltip instead of a second line.
  */
 export function getDisabledReason(item: TContextMenuItem): string | undefined {
-  return item.disabled && item.description ? item.description : undefined;
+  return item.disabled ? item.disabledReason || item.description || undefined : undefined;
 }
 
 /**

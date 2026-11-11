@@ -172,6 +172,7 @@ export type TProjectIssuesSearchParams = {
   type_id?: string;
   parent_type_id?: string;
   workspace_search: boolean;
+  start_date?: string;
   target_date?: string;
   state_group?: string;
   priority?: string;

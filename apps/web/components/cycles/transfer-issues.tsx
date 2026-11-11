@@ -20,25 +20,27 @@ type Props = {
 export function TransferIssues(props: Props) {
   const { handleClick, canTransferIssues = false, disabled = false } = props;
   return (
-    <Banner
-      placement="page"
-      variant="neutral"
-      icon={<Icon icon={WarningCircleOutline} />}
-      title={translate("web.completed_cycles_are_not_editable")}
-      actions={
-        canTransferIssues ? (
-          <Button
-            variant="primary"
-            size="md"
-            stretch="auto"
-            icon={<Icon icon={TransferWorkItemOutline} />}
-            iconPosition="start"
-            onClick={handleClick}
-            disabled={disabled}
-            label={translate("web.transfer_work_items")}
-          />
-        ) : undefined
-      }
-    />
+    <div className="[&_[data-slot=banner-icon]]:self-center">
+      <Banner
+        placement="page"
+        variant="neutral"
+        icon={<Icon icon={WarningCircleOutline} />}
+        title={translate("web.completed_cycles_are_not_editable")}
+        actions={
+          canTransferIssues ? (
+            <Button
+              variant="primary"
+              size="md"
+              stretch="auto"
+              icon={<Icon icon={TransferWorkItemOutline} />}
+              iconPosition="start"
+              onClick={handleClick}
+              disabled={disabled}
+              label={translate("web.transfer_work_items")}
+            />
+          ) : undefined
+        }
+      />
+    </div>
   );
 }

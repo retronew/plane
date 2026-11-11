@@ -47,13 +47,13 @@ export const useQuickActionsFactory = () => {
 
     createArchiveMenuItem: (
       handler: () => void,
-      opts: { shouldRender?: boolean; disabled?: boolean; description?: string }
+      opts: { shouldRender?: boolean; disabled?: boolean; disabledReason?: string }
     ): TContextMenuItem => ({
       key: "archive",
       title: t("archive"),
       icon: ArchiveOutline,
       action: handler,
-      description: opts.description,
+      disabledReason: opts.disabledReason,
       disabled: opts.disabled,
       shouldRender: opts.shouldRender,
     }),

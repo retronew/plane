@@ -27,10 +27,12 @@ export type TContextMenuItem = {
   /** The row label. */
   title?: string;
   /**
-   * Secondary copy, usually the reason a row is disabled. Rendered as a muted second line under the
-   * label; a submenu trigger, which has no second line, shows it at its inline end.
+   * Secondary copy rendered under the label, or at a submenu trigger's inline end.
+   * Legacy disabled rows use this as their tooltip reason; prefer `disabledReason` for new rows.
    */
   description?: string;
+  /** Explanation shown in a tooltip only while the row is disabled. */
+  disabledReason?: string;
   /**
    * Leading glyph component, e.g. a lucide icon. Deliberately `any`-propped, matching the legacy
    * type: the arrays that feed this mix lucide icons, `ISvgIcons` glyphs and local components.
