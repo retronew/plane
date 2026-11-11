@@ -26,7 +26,11 @@ const detail = {
   commentReaction: { applyCommentReactions: vi.fn() },
   activity: { activities: {} as Record<string, string[]>, activityMap: {} as Record<string, unknown> },
   relation: { relationMap: {} as Record<string, unknown> },
-  subIssues: { subIssues: {} as Record<string, string[]>, subIssuesStateDistribution: {} as Record<string, unknown> },
+  subIssues: {
+    applySubIssues: vi.fn(),
+    subIssues: {} as Record<string, string[]>,
+    subIssuesStateDistribution: {} as Record<string, unknown>,
+  },
 };
 const store = {
   projectIssues: list,
@@ -67,19 +71,27 @@ beforeEach(() => {
   detail.comment.comments = { i: ["deleted"] };
   detail.comment.commentMap = { deleted: { id: "deleted" } };
   detail.relation.relationMap = { i: { blocking: ["stale"] } };
+  detail.subIssues.subIssues = {};
 });
 it("refreshes the entity and all detail collections, removing deleted comments and empty relations", async () => {
   const hook = renderHook(() => useIssueDetailSync("w", "p", "i"));
   await mocks.sync.subscribe.mock.calls[0][0].refresh();
   expect(mocks.addIssue).toHaveBeenCalledWith([
-    expect.objectContaining({ id: "i", name: "remote", description_html: "remote description", sub_issues_count: 1 }),
+    expect.objectContaining({ id: "i", name: "remote", description_html: "remote description" }),
   ]);
   expect(detail.comment.comments.i).toEqual(["c"]);
   expect(detail.comment.commentMap.deleted).toBeUndefined();
   expect(detail.commentReaction.applyCommentReactions).toHaveBeenCalledWith("deleted", []);
   expect(detail.activity.activities.i).toEqual(["a"]);
   expect(detail.relation.relationMap.i).toEqual({ blocking: [] });
-  expect(detail.subIssues.subIssues.i).toEqual(["child"]);
+  expect(mocks.get).toHaveBeenCalledWith(expect.stringContaining("sub-issues/"), {
+    params: { include_descendants: true },
+    signal: expect.any(AbortSignal),
+  });
+  expect(detail.subIssues.applySubIssues).toHaveBeenCalledWith("i", {
+    sub_issues: [{ id: "child" }],
+    state_distribution: {},
+  });
   expect(detail.addAttachments).toHaveBeenCalledWith("i", []);
   expect(detail.addLinks).toHaveBeenCalledWith("i", []);
   expect(detail.addReactions).toHaveBeenCalledWith("i", []);
@@ -94,6 +106,7 @@ it("discards a snapshot crossing a mutation and schedules another refresh", asyn
   const hook = renderHook(() => useIssueDetailSync("w", "p", "i"));
   await expect(mocks.sync.subscribe.mock.calls[0][0].refresh()).rejects.toHaveProperty("name", "AbortError");
   expect(mocks.addIssue).not.toHaveBeenCalled();
+  expect(detail.subIssues.applySubIssues).not.toHaveBeenCalled();
   hook.unmount();
 });
 it.each([403, 404])("clears inaccessible entities and closes their surface on %s", async (status) => {
@@ -127,6 +140,7 @@ it.each(["hidden", "closed", "superseded"])("rejects all late collection respons
   pending.forEach((resolve) => resolve());
   await expect(refresh).rejects.toHaveProperty("name", "AbortError");
   expect(mocks.addIssue).not.toHaveBeenCalled();
+  expect(detail.subIssues.applySubIssues).not.toHaveBeenCalled();
   expect(detail.comment.comments.i).toEqual(["deleted"]);
   hook.unmount();
 });
@@ -142,8 +156,7 @@ it("clears all collections when remote items are removed", async () => {
   expect(detail.comment.comments.i).toEqual([]);
   expect(detail.activity.activities.i).toEqual([]);
   expect(detail.relation.relationMap.i).toEqual({});
-  expect(detail.subIssues.subIssues.i).toEqual([]);
-  expect(mocks.addIssue).toHaveBeenCalledWith([expect.objectContaining({ sub_issues_count: 0 })]);
+  expect(detail.subIssues.applySubIssues).toHaveBeenCalledWith("i", { sub_issues: [], state_distribution: {} });
   hook.unmount();
 });
 it("keeps remotely archived entities so the route can redirect instead of reporting deletion", async () => {
@@ -219,5 +232,40 @@ it("skips unrelated IDs but never skips a reset", async () => {
   expect(mocks.get).not.toHaveBeenCalled();
   await subscription.refresh({ issueIds: ["other"], reset: true });
   expect(mocks.get).toHaveBeenCalledTimes(7);
+  hook.unmount();
+});
+
+it.each(["child", "grandchild"])("refreshes the root snapshot for an event naming known descendant %s", async (id) => {
+  detail.subIssues.subIssues = { i: ["child"], child: ["grandchild"], grandchild: ["i"] };
+  const hook = renderHook(() => useIssueDetailSync("w", "p", "i"));
+  await mocks.sync.subscribe.mock.calls[0][0].refresh({ issueIds: [id], changedFields: ["parent_id"] });
+  expect(mocks.get).toHaveBeenCalledTimes(5);
+  expect(detail.subIssues.applySubIssues).toHaveBeenCalledWith("i", expect.anything());
+  hook.unmount();
+});
+
+it("ignores unrelated cached subtrees while the active tree has descendants", async () => {
+  detail.subIssues.subIssues = { i: ["child"], child: ["grandchild"], elsewhere: ["unrelated"] };
+  const hook = renderHook(() => useIssueDetailSync("w", "p", "i"));
+  await mocks.sync.subscribe.mock.calls[0][0].refresh({ issueIds: ["unrelated"], changedFields: ["parent_id"] });
+  expect(mocks.get).not.toHaveBeenCalled();
+  expect(detail.subIssues.applySubIssues).not.toHaveBeenCalled();
+  hook.unmount();
+});
+
+it("passes the complete descendant snapshot to the guarded store commit", async () => {
+  const snapshot = {
+    sub_issues: [
+      { id: "child", parent_id: "i" },
+      { id: "grandchild", parent_id: "child" },
+    ],
+    state_distribution: { completed: ["child"] },
+  };
+  mocks.get.mockImplementation(async (url, config) =>
+    url.endsWith("sub-issues/") ? { data: snapshot } : respond(url, config)
+  );
+  const hook = renderHook(() => useIssueDetailSync("w", "p", "i"));
+  await mocks.sync.subscribe.mock.calls[0][0].refresh();
+  expect(detail.subIssues.applySubIssues).toHaveBeenCalledWith("i", snapshot);
   hook.unmount();
 });

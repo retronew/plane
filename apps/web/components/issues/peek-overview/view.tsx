@@ -203,6 +203,13 @@ function PeekOverviewContent({
   );
 }
 
+function getPeekVisibility(hasIssue: boolean, isLoading?: boolean, isError?: boolean) {
+  return {
+    header: hasIssue && !isError,
+    content: hasIssue && !isLoading && !isError,
+  };
+}
+
 export const IssueView = observer(function IssueView(props: IIssueView) {
   const {
     workspaceSlug,
@@ -234,6 +241,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
     issue: { getIssueById },
   } = useIssueDetail();
   const issue = getIssueById(issueId);
+  const visible = getPeekVisibility(!!issue, isLoading, isError);
   // remove peek id
   const removeRoutePeekId = () => {
     setPeekIssue(undefined);
@@ -297,6 +305,25 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
                 }
           }
         >
+          {visible.header && (
+            <IssuePeekOverviewHeader
+              peekMode={peekMode}
+              setPeekMode={(value) => setPeekMode(value)}
+              removeRoutePeekId={removeRoutePeekId}
+              toggleDeleteIssueModal={toggleDeleteIssueModal}
+              toggleArchiveIssueModal={toggleArchiveIssueModal}
+              toggleDuplicateIssueModal={toggleDuplicateIssueModal}
+              toggleEditIssueModal={toggleEditIssueModal}
+              handleRestoreIssue={handleRestore}
+              isArchived={is_archived}
+              issueId={issueId}
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              isSubmitting={isSubmitting}
+              disabled={disabled || !!isLoading}
+              embedIssue={embedIssue}
+            />
+          )}
           {isError ? (
             <div className="relative h-screen w-full overflow-hidden">
               <IssuePeekOverviewError removeRoutePeekId={removeRoutePeekId} />
@@ -308,29 +335,12 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
                 floating={peekMode === "modal"}
                 hasParent={!!issue?.parent_id}
                 projectId={projectId}
+                showHeader={!issue}
               />
             )
           )}
-          {!isLoading && !isError && issue && (
+          {visible.content && (
             <>
-              {/* header */}
-              <IssuePeekOverviewHeader
-                peekMode={peekMode}
-                setPeekMode={(value) => setPeekMode(value)}
-                removeRoutePeekId={removeRoutePeekId}
-                toggleDeleteIssueModal={toggleDeleteIssueModal}
-                toggleArchiveIssueModal={toggleArchiveIssueModal}
-                toggleDuplicateIssueModal={toggleDuplicateIssueModal}
-                toggleEditIssueModal={toggleEditIssueModal}
-                handleRestoreIssue={handleRestore}
-                isArchived={is_archived}
-                issueId={issueId}
-                workspaceSlug={workspaceSlug}
-                projectId={projectId}
-                isSubmitting={isSubmitting}
-                disabled={disabled}
-                embedIssue={embedIssue}
-              />
               {/* content */}
               <PeekOverviewContent
                 {...props}

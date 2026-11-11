@@ -16,7 +16,12 @@ import type {
   TGroupedIssues,
   TIssue,
 } from "@plane/types";
-import { getFilteredWorkItems, getGroupedWorkItemIds, updateSubWorkItemFilters } from "../helpers/base-issues-utils";
+import {
+  getFilteredWorkItems,
+  getGroupedWorkItemIds,
+  getOrderedWorkItems,
+  updateSubWorkItemFilters,
+} from "../helpers/base-issues-utils";
 import type { IssueSubIssuesStore } from "./sub_issues.store";
 
 export const DEFAULT_DISPLAY_PROPERTIES = {
@@ -38,6 +43,7 @@ export interface IWorkItemSubIssueFiltersStore {
     workItemId: string
   ) => void;
   getGroupedSubWorkItems: (workItemId: string) => TGroupedIssues;
+  getVisibleSubWorkItemIds: (parentId: string, rootId: string) => string[];
   getFilteredSubWorkItems: (workItemId: string, filters: IIssueFilterOptions) => TIssue[];
   getSubIssueFilters: (workItemId: string) => Partial<ISubWorkItemFilters>;
   resetFilters: (workItemId: string) => void;
@@ -106,7 +112,11 @@ export class WorkItemSubIssueFiltersStore implements IWorkItemSubIssueFiltersSto
   getGroupedSubWorkItems = computedFn((parentWorkItemId: string) => {
     const subIssueFilters = this.getSubIssueFilters(parentWorkItemId);
 
-    const filteredWorkItems = this.getFilteredSubWorkItems(parentWorkItemId, subIssueFilters.filters ?? {});
+    const visibleIds = this.getVisibleSubWorkItemIds(parentWorkItemId, parentWorkItemId);
+    const filteredWorkItems = this.subIssueStore.rootIssueDetailStore.rootIssueStore.issues.getIssuesByIds(
+      visibleIds,
+      "un-archived"
+    );
 
     // get group by and order by
     const groupByKey = subIssueFilters.displayFilters?.group_by;
@@ -122,16 +132,64 @@ export class WorkItemSubIssueFiltersStore implements IWorkItemSubIssueFiltersSto
    * @param workItemId
    * @returns
    */
-  getFilteredSubWorkItems = computedFn((workItemId: string, filters: IIssueFilterOptions) => {
-    const subIssueIds = this.subIssueStore.subIssuesByIssueId(workItemId);
-    const workItems = this.subIssueStore.rootIssueDetailStore.rootIssueStore.issues.getIssuesByIds(
-      subIssueIds,
-      "un-archived"
+  getFilteredSubWorkItems = computedFn((workItemId: string, filters: IIssueFilterOptions) =>
+    getFilteredWorkItems(this.getSubWorkItemTree(workItemId).workItems, filters)
+  );
+
+  // Follow only accessible, active parent paths. A missing ancestor must not promote its children.
+  getSubWorkItemTree = computedFn((rootId: string) => {
+    const includeDescendants = this.getSubIssueFilters(rootId).displayFilters?.sub_issue ?? true;
+    const workItems: TIssue[] = [];
+    const parentById = new Map<string, string>();
+    const seen = new Set([rootId]);
+    const pending = [rootId];
+    for (let index = 0; index < pending.length; index++) {
+      const parentId = pending[index];
+      const children = this.subIssueStore.rootIssueDetailStore.rootIssueStore.issues.getIssuesByIds(
+        this.subIssueStore.subIssuesByIssueId(parentId) ?? [],
+        "un-archived"
+      );
+      for (const child of children) {
+        if (seen.has(child.id) || child.is_draft || child.archived_at) continue;
+        seen.add(child.id);
+        parentById.set(child.id, parentId);
+        workItems.push(child);
+        if (includeDescendants) pending.push(child.id);
+      }
+    }
+    return { workItems, parentById };
+  });
+
+  getVisibleSubWorkItemIds = computedFn(
+    (parentId: string, rootId: string): string[] => this.getVisibleSubWorkItemIdsByParent(rootId).get(parentId) ?? []
+  );
+
+  // Shared by all rendered levels so filtering and ancestor expansion happen once per root.
+  getVisibleSubWorkItemIdsByParent = computedFn((rootId: string) => {
+    const filters = this.getSubIssueFilters(rootId);
+    const { workItems, parentById } = this.getSubWorkItemTree(rootId);
+    const visibleIds = new Set<string>();
+    for (const match of getFilteredWorkItems(workItems, filters.filters ?? {})) {
+      let id: string | undefined = match.id;
+      while (id && id !== rootId && !visibleIds.has(id)) {
+        visibleIds.add(id);
+        id = parentById.get(id);
+      }
+    }
+    const itemsByParent = new Map<string, TIssue[]>();
+    for (const item of workItems) {
+      if (!visibleIds.has(item.id)) continue;
+      const parentId = parentById.get(item.id)!;
+      const siblings = itemsByParent.get(parentId) ?? [];
+      siblings.push(item);
+      itemsByParent.set(parentId, siblings);
+    }
+    return new Map(
+      [...itemsByParent].map(([parentId, items]) => [
+        parentId,
+        getOrderedWorkItems(items, filters.displayFilters?.order_by ?? "-created_at"),
+      ])
     );
-
-    const filteredWorkItems = getFilteredWorkItems(workItems, filters);
-
-    return filteredWorkItems;
   });
 
   /**

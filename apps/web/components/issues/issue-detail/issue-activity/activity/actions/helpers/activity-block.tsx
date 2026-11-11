@@ -34,7 +34,7 @@ export function IntakeActivityActor({ activityId }: { activityId: string }) {
   return (
     <Tooltip label={name}>
       <a
-        className="my-1 inline-flex shrink-0"
+        className="inline-flex h-7 shrink-0 items-center"
         aria-label={name}
         href={`/${activity.workspace_detail?.slug}/profile/${actor.id}`}
       >
@@ -94,7 +94,7 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
       </div>
       <div className="flex min-w-0 flex-1 items-start gap-1.5 text-secondary" data-activity-content="">
         {detailDisplay && !customUserName && <IntakeActivityActor activityId={activityId} />}
-        <div className="min-w-0 flex-1 py-1.5 leading-4 [overflow-wrap:anywhere]" data-activity-message="">
+        <div className="min-w-0 flex-1 leading-7 [overflow-wrap:anywhere]" data-activity-message="">
           <Tooltip
             label={customUserName ?? activity.actor_detail?.display_name ?? ""}
             disabled={!detailDisplay || !activity.actor_detail?.display_name}

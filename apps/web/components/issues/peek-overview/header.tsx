@@ -9,6 +9,7 @@ import { Maximize2 } from "lucide-react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import {
+  ArrowNarrowLeftOutline,
   ArrowNarrowRightOutline,
   CloseOutline,
   ChevronDownOutline,
@@ -30,6 +31,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
 import { useUser } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { useIssuePeekBack } from "@/hooks/use-issue-peek-back";
 // local imports
 import { IssueSubscription } from "../issue-detail/subscription";
 import { WorkItemDetailQuickActions } from "../issue-layouts/quick-action-dropdowns";
@@ -100,6 +102,7 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
   // ref
   const parentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+  const { canGoBack, goBack } = useIssuePeekBack({ workspaceSlug, projectId, issueId });
   // store hooks
   const { data: currentUser } = useUser();
   const {
@@ -171,6 +174,19 @@ export const IssuePeekOverviewHeader = observer(function IssuePeekOverviewHeader
       )}
     >
       <div className="flex items-center gap-2">
+        {!embedIssue && (
+          <Tooltip label={t("common.go_back")} disabled={isMobile || !canGoBack}>
+            <button
+              type="button"
+              aria-label={t("common.go_back")}
+              disabled={!canGoBack}
+              className={cn(peekToolButtonClassName, "disabled:pointer-events-none disabled:opacity-40")}
+              onClick={goBack}
+            >
+              <ArrowNarrowLeftOutline className="size-4" />
+            </button>
+          </Tooltip>
+        )}
         <Tooltip label={t("common.close_peek_view")} disabled={isMobile}>
           <button
             type="button"

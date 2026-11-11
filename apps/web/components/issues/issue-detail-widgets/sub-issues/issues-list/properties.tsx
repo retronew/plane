@@ -13,10 +13,16 @@ import { DueDateOutline, StartDateOutline } from "@makeplane/propel/icons";
 import type { DateRangeValue } from "@plane/blocks/property-select";
 import { DateRangeSelect, DateSelect } from "@plane/blocks/property-select";
 import type { IIssueDisplayProperties, TIssue } from "@plane/types";
-import { cn, getDate, renderFormattedPayloadDate, shouldHighlightIssueDueDate } from "@plane/utils";
+import {
+  cn,
+  formatCompactDate,
+  formatCompactDateRange,
+  getDate,
+  renderFormattedPayloadDate,
+  shouldHighlightIssueDueDate,
+} from "@plane/utils";
 // components
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
-import { PrioritySelect } from "@/components/dropdowns/priority/priority-select";
 import { StateSelect } from "@/components/dropdowns/state/state-select";
 // hooks
 import { WithDisplayPropertiesHOC } from "@/components/issues/issue-layouts/properties/with-display-properties-HOC";
@@ -93,7 +99,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
   const minDate = getDate(issue.start_date);
 
   return (
-    <div className="relative flex items-center gap-2">
+    <div className="relative flex flex-wrap items-center justify-end gap-1.5">
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="state">
         <StateSelect
           issueTypeId={issue.type_id}
@@ -111,21 +117,6 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
               },
               { ...issue }
             )
-          }
-          disabled={!canEdit}
-          variant="pill-sm"
-          tooltip
-        />
-      </WithDisplayPropertiesHOC>
-
-      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="priority">
-        <PrioritySelect
-          value={issue.priority}
-          onChange={(val) =>
-            issue.project_id &&
-            updateSubIssue(workspaceSlug, issue.project_id, parentIssueId, issueId, {
-              priority: val,
-            })
           }
           disabled={!canEdit}
           variant="pill-sm"
@@ -153,7 +144,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
             showTooltip
             tooltipHeading={t("project_cycles.date_range")}
             weekStartsOn={userProfile?.start_of_the_week}
-            mergeDates
+            formatLabel={formatCompactDateRange}
             side="top"
             align="end"
             variant="pill-sm"
@@ -170,6 +161,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
         <DateSelect
           value={getDate(issue.start_date) ?? null}
           onChange={handleStartDate}
+          formatLabel={formatCompactDate}
           maxDate={maxDate}
           placeholder={t("common.order_by.start_date")}
           icon={<StartDateOutline />}
@@ -180,7 +172,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
           weekStartsOn={userProfile?.start_of_the_week}
           side="top"
           align="end"
-          variant="pill-sm"
+          variant={issue.start_date ? "pill-sm" : "icon-sm"}
         />
       </WithDisplayPropertiesHOC>
 
@@ -193,6 +185,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
         <DateSelect
           value={getDate(issue?.target_date) ?? null}
           onChange={handleTargetDate}
+          formatLabel={formatCompactDate}
           minDate={minDate}
           placeholder={t("common.order_by.due_date")}
           icon={<DueDateOutline />}
@@ -204,7 +197,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
           weekStartsOn={userProfile?.start_of_the_week}
           side="top"
           align="end"
-          variant="pill-sm"
+          variant={issue.target_date ? "pill-sm" : "icon-sm"}
         />
       </WithDisplayPropertiesHOC>
 
@@ -220,7 +213,7 @@ export const SubIssuesListItemProperties = observer(function SubIssuesListItemPr
           }
           disabled={!canEdit}
           multiple
-          variant={issue.assignee_ids?.length ? "avatar-group-sm" : "pill-sm"}
+          variant={issue.assignee_ids?.length ? "avatar-group-sm" : "icon-sm"}
           tooltip={{ heading: t("common.assignees") }}
         />
       </WithDisplayPropertiesHOC>

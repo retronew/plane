@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 // plane imports
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 import type { TIssueServiceType } from "@plane/types";
+import { cn } from "@plane/utils";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // local imports
@@ -33,6 +34,15 @@ export const SubIssuesCollapsible = observer(function SubIssuesCollapsible(props
 
   return (
     <Collapsible
+      render={
+        <div
+          data-sub-issues-container=""
+          className={cn(
+            "overflow-hidden rounded-xl border border-subtle bg-surface-1 [&>div:first-child]:bg-layer-1 [&>div:last-child>div]:pb-0",
+            isCollapsibleOpen && "[&>div:first-child]:border-b [&>div:first-child]:border-subtle"
+          )}
+        />
+      }
       open={isCollapsibleOpen}
       onOpenChange={() => toggleOpenWidget("sub-work-items")}
       trigger={<SubIssuesCollapsibleTitle parentIssueId={issueId} issueServiceType={issueServiceType} />}

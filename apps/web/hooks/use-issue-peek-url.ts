@@ -33,7 +33,14 @@ export function useIssuePeekUrl() {
         if (!workspaceSlug || (peekIssue && peekIssue.workspaceSlug !== workspaceSlug)) return;
         const target = buildIssuePeekUrl(location, peekIssue);
         if (target !== `${location.pathname}${location.search}${location.hash}`) {
-          void navigate(target, { replace: !peekIssue, preventScrollReset: true });
+          void navigate(target, {
+            replace: !peekIssue,
+            preventScrollReset: true,
+            state: {
+              ...location.state,
+              issuePeekBack: peekIssue && routePeek ? routePeek : undefined,
+            },
+          });
         }
       }
     );

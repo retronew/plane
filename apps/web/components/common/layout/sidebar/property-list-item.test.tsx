@@ -23,9 +23,10 @@ it("centers detail rows with a bounded label column and wrapping values", () => 
   );
   expect(container.firstElementChild?.className).toContain("min-h-8");
   expect(container.firstElementChild?.className).toContain("items-center");
-  expect(screen.getByText("Assignees").parentElement?.className).toContain("w-[clamp(120px,25%,160px)]");
+  expect(screen.getByText("Assignees").parentElement?.className).toContain("w-24");
   const value = screen.getByText(name.trim()).parentElement;
   expect(value?.className).toContain("min-w-0");
+  expect(value?.className).toContain("max-w-72");
   expect(value?.className).toContain("break-words");
   expect(value?.className).toContain("flex-wrap");
   expect(value?.className).toContain("px-2");

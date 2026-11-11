@@ -59,6 +59,7 @@ export interface IIssueSubIssuesStore extends IIssueSubIssuesStoreActions {
   subIssuesByIssueId: (issueId: string) => string[] | undefined;
   subIssueHelpersByIssueId: (issueId: string) => TSubIssueHelpers;
   // actions
+  applySubIssues: (parentIssueId: string, response: TIssueSubIssues) => void;
   fetchOtherProjectProperties: (workspaceSlug: string, projectIds: string[]) => Promise<void>;
   setSubIssueHelpers: (parentIssueId: string, key: TSubIssueHelpersKeys, value: string) => void;
 }
@@ -87,6 +88,7 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
       // actions
       setSubIssueHelpers: action,
       fetchSubIssues: action,
+      applySubIssues: action,
       createSubIssues: action,
       updateSubIssue: action,
       removeSubIssue: action,
@@ -127,38 +129,70 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
 
   fetchSubIssues = async (workspaceSlug: string, projectId: string, parentIssueId: string) => {
     this.loader = "init-loader";
-    const response = await this.issueService.subIssues(workspaceSlug, projectId, parentIssueId);
+    const response = await this.issueService.subIssues(workspaceSlug, projectId, parentIssueId, {
+      include_descendants: true,
+    });
 
+    this.applySubIssues(parentIssueId, response);
+    const issueList = Array.isArray(response.sub_issues) ? response.sub_issues : [];
+    const otherProjectIds = uniq(
+      issueList.map((issue) => issue.project_id).filter((id) => !!id && id !== projectId)
+    ) as string[];
+    this.fetchOtherProjectProperties(workspaceSlug, otherProjectIds);
+    this.loader = undefined;
+    return response;
+  };
+
+  // Commit only after the caller's request/revision guard has accepted the complete snapshot.
+  applySubIssues = (parentIssueId: string, response: TIssueSubIssues) => {
     const subIssuesStateDistribution = response?.state_distribution ?? {};
+    const issueList = Array.isArray(response.sub_issues) ? response.sub_issues : [];
 
-    const issueList = (response.sub_issues ?? []) as TIssue[];
+    // Replace all previously reachable buckets, including nodes that became leaves or disappeared.
+    const previousParents = new Set<string>();
+    const pending = [parentIssueId];
+    while (pending.length) {
+      const id = pending.pop()!;
+      if (previousParents.has(id)) continue;
+      previousParents.add(id);
+      pending.push(...(this.subIssues[id] ?? []));
+    }
+
+    const children = new Map<string, TIssue[]>();
+    for (const issue of issueList) {
+      if (!issue.parent_id || issue.is_draft || issue.archived_at) continue;
+      const siblings = children.get(issue.parent_id) ?? [];
+      siblings.push(issue);
+      children.set(issue.parent_id, siblings);
+    }
+    const buckets: TIssueSubIssuesIdMap = {};
+    const seen = new Set([parentIssueId]);
+    const parents = [parentIssueId];
+    for (let index = 0; index < parents.length; index++) {
+      const parentId = parents[index];
+      buckets[parentId] = [];
+      for (const issue of children.get(parentId) ?? []) {
+        if (seen.has(issue.id)) continue;
+        seen.add(issue.id);
+        buckets[parentId].push(issue.id);
+        parents.push(issue.id);
+      }
+    }
 
     this.rootIssueDetailStore.rootIssueStore.issues.addIssue(issueList);
 
-    // fetch other issues states and members when sub-issues are from different project
-    if (issueList && issueList.length > 0) {
-      const otherProjectIds = uniq(
-        issueList.map((issue) => issue.project_id).filter((id) => !!id && id !== projectId)
-      ) as string[];
-      this.fetchOtherProjectProperties(workspaceSlug, otherProjectIds);
-    }
-    if (issueList) {
-      this.rootIssueDetailStore.rootIssueStore.issues.updateIssue(parentIssueId, {
-        sub_issues_count: issueList.length,
-      });
-    }
-
-    runInAction(() => {
-      set(this.subIssuesStateDistribution, parentIssueId, subIssuesStateDistribution);
-      set(
-        this.subIssues,
-        parentIssueId,
-        issueList.map((issue) => issue.id)
-      );
+    this.rootIssueDetailStore.rootIssueStore.issues.updateIssue(parentIssueId, {
+      sub_issues_count: buckets[parentIssueId].length,
     });
 
-    this.loader = undefined;
-    return response;
+    runInAction(() => {
+      for (const id of previousParents) {
+        delete this.subIssues[id];
+        delete this.subIssuesStateDistribution[id];
+      }
+      Object.assign(this.subIssues, buckets);
+      set(this.subIssuesStateDistribution, parentIssueId, subIssuesStateDistribution);
+    });
   };
 
   createSubIssues = async (workspaceSlug: string, projectId: string, parentIssueId: string, issueIds: string[]) => {

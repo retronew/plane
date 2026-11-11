@@ -25,7 +25,7 @@ export function SidebarPropertyListItem(props: TSidebarPropertyListItemProps) {
       <div
         className={cn(
           "flex shrink-0 items-center gap-1.5 text-tertiary",
-          isDetail ? "min-h-8 w-[clamp(120px,25%,160px)] text-13" : "h-7.5 w-30 text-body-xs-regular"
+          isDetail ? "min-h-8 w-24 text-13" : "h-7.5 w-30 text-body-xs-regular"
         )}
       >
         <Icon className="size-4 shrink-0" />
@@ -36,7 +36,7 @@ export function SidebarPropertyListItem(props: TSidebarPropertyListItemProps) {
         className={cn(
           "flex grow flex-wrap items-center gap-1",
           isDetail &&
-            "min-h-8 min-w-0 flex-1 break-words [&_button]:max-w-full [&_button_span.flex]:max-w-full [&_button_span.flex]:min-w-0 [&>*]:max-w-full",
+            "min-h-8 max-w-72 min-w-0 flex-1 break-words [&_button]:max-w-full [&_button_span.flex]:max-w-full [&_button_span.flex]:min-w-0 [&>*]:max-w-full",
           childrenClassName
         )}
       >

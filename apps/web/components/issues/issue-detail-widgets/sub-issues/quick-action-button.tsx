@@ -12,6 +12,8 @@ import { useTranslation } from "@plane/i18n";
 import { AddOutline, WorkItemsOutline } from "@makeplane/propel/icons";
 import type { TIssue, TIssueServiceType } from "@plane/types";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 // components
 import { handleTriggerClick, handleTriggerKeyDown } from "@/components/common/trigger-guard";
 // hooks
@@ -108,12 +110,17 @@ export const SubIssuesActionButton = observer(function SubIssuesActionButton(pro
         <MenuTrigger
           disabled={disabled || isLeaf}
           aria-disabled={disabled || isLeaf}
-          aria-label={t("issue.add.sub_issue")}
+          render={
+            <IconButton
+              variant="ghost"
+              size="sm"
+              aria-label={t("issue.add.sub_issue")}
+              icon={<Icon icon={AddOutline} />}
+            />
+          }
           onClick={handleTriggerClick}
           onKeyDown={handleTriggerKeyDown}
-        >
-          <AddOutline className="h-4 w-4" />
-        </MenuTrigger>
+        />
       )}
       <MenuContent side="bottom" align="start">
         {optionItems.map((item) => (

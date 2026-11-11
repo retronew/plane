@@ -23,7 +23,7 @@ type Props = {
   projectId: string;
   parentIssueId: string;
   rootIssueId: string;
-  spacingLeft: number;
+  treeBranches: boolean[];
   canEdit: boolean;
   handleIssueCrudState: (
     key: "create" | "existing" | "update" | "delete",
@@ -46,14 +46,19 @@ export const SubIssuesListRoot = observer(function SubIssuesListRoot(props: Prop
     subIssueOperations,
     issueServiceType = EIssueServiceType.ISSUES,
     storeType = EIssuesStoreType.PROJECT,
-    spacingLeft = 0,
+    treeBranches,
   } = props;
   const { t } = useTranslation();
   // store hooks
   const {
     subIssues: {
-      subIssuesByIssueId,
-      filters: { getSubIssueFilters, getGroupedSubWorkItems, getFilteredSubWorkItems, resetFilters },
+      filters: {
+        getSubIssueFilters,
+        getGroupedSubWorkItems,
+        getFilteredSubWorkItems,
+        getVisibleSubWorkItemIds,
+        resetFilters,
+      },
     },
   } = useIssueDetail(issueServiceType);
 
@@ -76,10 +81,9 @@ export const SubIssuesListRoot = observer(function SubIssuesListRoot(props: Prop
         const groupedSubIssues = getGroupedSubWorkItems(rootIssueId);
         return groupedSubIssues?.[groupId] ?? [];
       }
-      const subIssueIds = subIssuesByIssueId(parentIssueId);
-      return subIssueIds ?? [];
+      return getVisibleSubWorkItemIds(parentIssueId, rootIssueId);
     },
-    [isRootLevel, subIssuesByIssueId, rootIssueId, getGroupedSubWorkItems, parentIssueId]
+    [isRootLevel, getVisibleSubWorkItemIds, rootIssueId, getGroupedSubWorkItems, parentIssueId]
   );
 
   return (
@@ -115,7 +119,7 @@ export const SubIssuesListRoot = observer(function SubIssuesListRoot(props: Prop
             handleIssueCrudState={handleIssueCrudState}
             subIssueOperations={subIssueOperations}
             storeType={storeType}
-            spacingLeft={spacingLeft}
+            treeBranches={treeBranches}
           />
         ))
       )}
