@@ -88,6 +88,12 @@ it("requires project selection outside a project even with cached project data",
   render(<CreateUpdateIssueModalBase isOpen onClose={vi.fn()} withDraftIssueWrapper={false} />);
   expect(screen.getByTestId("project").textContent).toBe("");
 });
+it.each(["", undefined])("restores a draft without a selected project (%s)", (projectId) => {
+  mocks.draft = { values: { project_id: projectId, name: "Unselected project draft" }, assetIds: [] };
+  render(<CreateUpdateIssueModalBase isOpen onClose={vi.fn()} withDraftIssueWrapper={false} />);
+  expect(screen.getByTestId("project").textContent).toBe("");
+  expect(screen.getByTestId("entity").textContent).toContain("Unselected project draft");
+});
 it("preserves explicit projects and drafts from the same project", () => {
   mocks.params.projectId = "other";
   mocks.draft = { values: { project_id: "project", description_html: "Same project draft" }, assetIds: [] };
