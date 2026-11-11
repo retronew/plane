@@ -15,6 +15,7 @@ import { StoreProvider } from "@/lib/store-context";
 
 import { EditorPreferencesProvider } from "@/components/editor/preferences-provider";
 import { ProfileSettingsHost } from "@/components/common/modal/profile-settings-host";
+import { IssueSyncProvider } from "@/components/issues/sync-provider";
 
 // lazy imports
 const AppProgressBar = lazy(function AppProgressBar() {
@@ -51,6 +52,7 @@ export function AppProvider(props: IAppProvider) {
                     <SWRConfig value={WEB_SWR_CONFIG}>
                       {children}
                       <ProfileSettingsHost />
+                      <IssueSyncProvider />
                     </SWRConfig>
                   </EditorPreferencesProvider>
                 </Suspense>

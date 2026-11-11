@@ -2,6 +2,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from django.urls import path
+from plane.app.views.workspace_sync import (
+    WorkspaceSyncAccessEndpoint,
+    WorkspaceSyncChangesEndpoint,
+    WorkspaceSyncEntitiesEndpoint,
+)
+
 from .analytic import urlpatterns as analytic_urls
 from .api import urlpatterns as api_urls
 from .asset import urlpatterns as asset_urls
@@ -25,6 +32,11 @@ from .exporter import urlpatterns as exporter_urls
 from .workflow import urlpatterns as workflow_urls
 
 urlpatterns = [
+    path("workspaces/<str:slug>/sync/changes/", WorkspaceSyncChangesEndpoint.as_view(), name="workspace-sync-changes"),
+    path(
+        "workspaces/<str:slug>/sync/entities/", WorkspaceSyncEntitiesEndpoint.as_view(), name="workspace-sync-entities"
+    ),
+    path("workspaces/<str:slug>/sync/access/", WorkspaceSyncAccessEndpoint.as_view(), name="workspace-sync-access"),
     *analytic_urls,
     *asset_urls,
     *cycle_urls,

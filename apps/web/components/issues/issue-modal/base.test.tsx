@@ -1,10 +1,13 @@
 import React from "react";
+import { observable, runInAction } from "mobx";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CreateUpdateIssueModalBase } from "./base";
 
 const mocks = vi.hoisted(() => ({
   fetchIssue: vi.fn(),
+  issue: { getIssueById: vi.fn() },
+  sync: vi.fn(),
   updateIssue: vi.fn(),
   toast: vi.fn(),
   allowedProjectIds: ["project", "other"],
@@ -15,7 +18,7 @@ vi.mock("./composer-cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./composer-cache")>()),
   readComposerDraft: () => mocks.draft,
 }));
-vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
+vi.mock("@/hooks/use-issue-detail-sync", () => ({ useIssueDetailSync: mocks.sync }));
 vi.mock("next/navigation", () => ({ useParams: () => mocks.params }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: mocks.toast }));
@@ -48,7 +51,7 @@ vi.mock("./form", () => ({
     projectId,
     onSubmit,
   }: {
-    data: { description_html?: string; project_id?: string };
+    data: { name?: string; state_id?: string; assignee_ids?: string[]; description_html?: string; project_id?: string };
     projectId: string;
     onSubmit: (values: { project_id: string; name: string }) => Promise<void>;
   }) => (
@@ -58,6 +61,7 @@ vi.mock("./form", () => ({
         void onSubmit({ project_id: projectId, name: "Updated title" });
       }}
     >
+      <div data-testid="entity">{JSON.stringify([data.name, data.state_id, data.assignee_ids])}</div>
       <div data-testid="description">{data.description_html}</div>
       <div data-testid="project">{data.project_id ?? projectId}</div>
       <button type="submit">Update</button>
@@ -181,4 +185,38 @@ it("ignores responses that arrive during the closing transition", async () => {
     resolve({ description_html: "late description" });
   });
   expect(screen.getByTestId("description").textContent).toBe("");
+});
+
+it("observes shared entity properties and keeps the closing transition stable", () => {
+  const entity = observable({ id: "issue", name: "Current", state_id: "s1", assignee_ids: ["u1"] });
+  mocks.issue.getIssueById.mockImplementation((id: string) => (id === "issue" ? entity : undefined));
+  const onClose = vi.fn();
+  const props = {
+    data: { id: "issue", project_id: "project", name: "Snapshot" },
+    onClose,
+    fetchIssueDetails: false,
+    withDraftIssueWrapper: false,
+  };
+  const { rerender } = render(<CreateUpdateIssueModalBase {...props} isOpen />);
+  expect(screen.getByTestId("entity").textContent).toContain("Current");
+  act(() =>
+    runInAction(() => {
+      entity.name = "Remote";
+      entity.state_id = "s2";
+      entity.assignee_ids = ["u2"];
+    })
+  );
+  expect(screen.getByTestId("entity").textContent).toBe(JSON.stringify(["Remote", "s2", ["u2"]]));
+  const syncArgs = mocks.sync.mock.calls.at(-1)!;
+  expect(syncArgs[2]).toBe("issue");
+  act(() => syncArgs[3]());
+  expect(onClose).toHaveBeenCalledOnce();
+  rerender(<CreateUpdateIssueModalBase {...props} isOpen={false} />);
+  act(() =>
+    runInAction(() => {
+      entity.name = "During exit";
+    })
+  );
+  expect(screen.getByTestId("entity").textContent).toContain("Remote");
+  mocks.issue.getIssueById.mockReset();
 });

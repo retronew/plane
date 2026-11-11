@@ -1,3 +1,4 @@
+import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -10,6 +11,7 @@ import "./composer.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isEqual } from "lodash-es";
+import { toJS } from "mobx";
 import { getIssueModuleChanges } from "@/helpers/issue-modules";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -306,8 +308,20 @@ const buildIssueModalData = (args: {
 }): Partial<TIssue> => ({
   ...args.data,
   description_html: args.description,
-  cycle_id: args.data?.cycle_id ? args.data.cycle_id : args.cycleId ? args.cycleId.toString() : null,
-  module_ids: args.data?.module_ids ? args.data.module_ids : args.moduleId ? [args.moduleId.toString()] : null,
+  cycle_id: args.data?.id
+    ? (args.data.cycle_id ?? null)
+    : args.data?.cycle_id
+      ? args.data.cycle_id
+      : args.cycleId
+        ? args.cycleId.toString()
+        : null,
+  module_ids: args.data?.id
+    ? (args.data.module_ids ?? null)
+    : args.data?.module_ids
+      ? args.data.module_ids
+      : args.moduleId
+        ? [args.moduleId.toString()]
+        : null,
   ...args.cachedDraftValues,
 });
 
@@ -330,6 +344,18 @@ function useComposerRestoreAnimation(cacheKey: string | undefined, isDraft: bool
     },
     [cacheKey, isDraft]
   );
+}
+
+function useModalEntitySnapshot(data: Partial<TIssue> | undefined, isOpen: boolean, isDraft: boolean) {
+  const {
+    issue: { getIssueById },
+  } = useIssueDetail();
+  // Read observable fields while the calling observer renders.
+  const entity = data?.id && !isDraft ? getIssueById(data.id) : undefined;
+  const snapshot = entity ? { ...data, ...toJS(entity) } : data;
+  const [retained, setRetained] = useState(snapshot);
+  if (isOpen && !isEqual(retained, snapshot)) setRetained(snapshot);
+  return isOpen ? snapshot : retained;
 }
 
 export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueModalBase(props: IssuesModalProps) {
@@ -371,6 +397,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const { issues: projectIssues } = useIssues(EIssuesStoreType.PROJECT);
   const { issues: draftIssues } = useIssues(EIssuesStoreType.WORKSPACE_DRAFT);
   const { fetchIssue } = useIssueDetail();
+  const modalData = useModalEntitySnapshot(data, isOpen, isDraft);
   const { allowedProjectIds, handleCreateSubWorkItem } = useIssueModal();
   const { getProjectByIdentifier } = useProject();
   // current store details
@@ -394,6 +421,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const composerRef = useComposerRestoreAnimation(cacheKey, isDraft);
 
   const issueIdToFetch = data?.id ?? data?.sourceIssueId;
+  useIssueDetailSync(workspaceSlugValue, projectId, data?.id, onClose, isOpen && !isDraft);
   const descriptionFallback = cachedDraft?.values.description_html ?? data?.description_html ?? "<p></p>";
 
   useEffect(() => {
@@ -572,8 +600,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
 
       // Run cycle, module, and property changes sequentially to avoid
       // optimistic store writes from racing against each other.
-      await handleCycleChange(data, payload);
-      await handleModuleChange(data, payload);
+      await handleCycleChange(modalData, payload);
+      await handleModuleChange(modalData, payload);
 
       setToast({
         type: "success",
@@ -627,7 +655,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const commonIssueModalProps: IssueFormProps = {
     issueTitleRef: issueTitleRef,
     data: buildIssueModalData({
-      data,
+      data: modalData,
       description,
       cycleId,
       moduleId,

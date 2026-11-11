@@ -131,6 +131,7 @@ MIDDLEWARE = [
     "plane.middleware.request_body_size.RequestBodySizeLimitMiddleware",
     "plane.middleware.logger.APITokenLogMiddleware",
     "plane.middleware.logger.RequestLoggerMiddleware",
+    "plane.middleware.workspace_sync.WorkspaceSyncInvalidationMiddleware",
 ]
 
 # Rest Framework settings

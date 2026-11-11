@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { create } from "axios";
+import { issueSync } from "@/lib/sync/issue-sync";
 import { APIService } from "./api.service";
 
-vi.mock("axios", () => ({ create: vi.fn() }));
+vi.mock("axios", async (importOriginal) => ({ ...(await importOriginal<typeof import("axios")>()), create: vi.fn() }));
 vi.mock("@plane/services", () => ({ normalizeAPIRequestURL: (url: string) => url }));
 
 class TestAPIService extends APIService {
@@ -27,6 +28,48 @@ function setup(pathname: string, search = "", hash = "") {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
+});
+
+describe("issue query invalidation boundaries", () => {
+  it.each([
+    "/api/workspaces/w/projects/p/issues/i/custom-properties/",
+    "/api/workspaces/w/projects/p/issues/i/collaboration/",
+  ])("does not cancel independent schema or collaboration reads: %s", async (url) => {
+    let revision = 1;
+    vi.spyOn(issueSync, "revision", "get").mockImplementation(() => revision);
+    let finish!: (value: unknown) => void;
+    vi.mocked(create).mockReturnValue({
+      interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+      get: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    } as unknown as ReturnType<typeof create>);
+    const request = new TestAPIService().get(url);
+    revision++;
+    finish({ data: { ready: true } });
+    await expect(request).resolves.toEqual({ data: { ready: true } });
+  });
+
+  it("still cancels an entity response crossing a mutation", async () => {
+    let revision = 1;
+    vi.spyOn(issueSync, "revision", "get").mockImplementation(() => revision);
+    const invalidate = vi.spyOn(issueSync, "invalidate").mockImplementation(() => undefined);
+    let finish!: (value: unknown) => void;
+    vi.mocked(create).mockReturnValue({
+      interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+      get: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    } as unknown as ReturnType<typeof create>);
+    const request = new TestAPIService().get("/api/workspaces/w/projects/p/issues/i/");
+    revision++;
+    finish({ data: {} });
+    await expect(request).rejects.toMatchObject({ code: "ERR_CANCELED" });
+    expect(invalidate).toHaveBeenCalledOnce();
+  });
 });
 
 describe("API authentication redirects", () => {

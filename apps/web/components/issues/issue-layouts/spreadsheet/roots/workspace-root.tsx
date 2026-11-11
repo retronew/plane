@@ -45,16 +45,16 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
   // Store hooks
   const {
     issuesFilter: { filters, updateFilters },
-    issues: { fetchIssues, getIssueLoader, getPaginationData, groupedIssueIds },
+    issues: { getIssueLoader, getPaginationData, groupedIssueIds },
   } = useIssues(EIssuesStoreType.GLOBAL);
-  const { updateIssue, removeIssue, archiveIssue } = useIssuesActions(EIssuesStoreType.GLOBAL);
+  const { fetchIssues, updateIssue, removeIssue, archiveIssue } = useIssuesActions(EIssuesStoreType.GLOBAL);
   const { allowPermissions } = useUserPermissions();
 
   // Derived values
   const issueFilters = globalViewId ? filters?.[globalViewId.toString()] : undefined;
 
   useEffect(() => {
-    void fetchIssues(workspaceSlug, globalViewId, "init-loader", { canGroup: false, perPageCount: 100 });
+    void fetchIssues("init-loader", { canGroup: false, perPageCount: 100 });
   }, [fetchIssues, workspaceSlug, globalViewId]);
 
   // Permission checker

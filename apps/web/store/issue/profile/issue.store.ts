@@ -19,7 +19,7 @@ import { UserService } from "@/services/user.service";
 
 // services
 // types
-import type { IBaseIssuesStore } from "../helpers/base-issues.store";
+import type { IBaseIssuesStore, TIssueSyncContext } from "../helpers/base-issues.store";
 import { BaseIssuesStore } from "../helpers/base-issues.store";
 import type { IIssueRootStore } from "../root.store";
 import type { IProfileIssuesFilter } from "./filter.store";
@@ -37,12 +37,16 @@ export interface IProfileIssues extends IBaseIssuesStore {
     loadType: TLoader,
     option: IssuePaginationOptions,
     view: TProfileViews,
-    isExistingPaginationOptions?: boolean
+    isExistingPaginationOptions?: boolean,
+    refreshLoadedRange?: boolean,
+    context?: TIssueSyncContext
   ) => Promise<TIssuesResponse | undefined>;
   fetchIssuesWithExistingPagination: (
     workspaceSlug: string,
     userId: string,
-    loadType: TLoader
+    loadType: TLoader,
+    refreshLoadedRange?: boolean,
+    context?: TIssueSyncContext
   ) => Promise<TIssuesResponse | undefined>;
   fetchNextIssues: (
     workspaceSlug: string,
@@ -125,7 +129,8 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
     loadType: TLoader,
     options: IssuePaginationOptions,
     view: TProfileViews,
-    isExistingPaginationOptions: boolean = false
+    isExistingPaginationOptions: boolean = false,
+    refreshLoadedRange: boolean = false
   ) => {
     const request = this.beginIssueRequest(
       JSON.stringify([workspaceSlug, userId, view]),
@@ -150,9 +155,23 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
       else if (this.currentView === "subscribed") params = { ...params, subscriber: userId };
 
       // call the fetch issues API with the params
-      const response = await this.userService.getUserProfileIssues(workspaceSlug, userId, params, {
-        signal: request.controller.signal,
-      });
+      const response = await this.collectLoadedIssueRange(
+        workspaceSlug,
+        request,
+        options,
+        refreshLoadedRange,
+        async (cursor, syncParams = {}, signal = request.controller.signal) => {
+          return this.userService.getUserProfileIssues(
+            workspaceSlug,
+            userId,
+            { ...params, ...(cursor ? { cursor } : {}), ...syncParams },
+            {
+              signal,
+            }
+          );
+        },
+        params
+      );
 
       // after fetching issues, call the base method to process the response further
       if (request.controller !== this.controller || request.controller.signal.aborted) return;
@@ -219,7 +238,9 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
       else if (this.currentView === "subscribed") params = { ...params, subscriber: userId };
 
       // call the fetch issues API with the params for next page in issues
-      const response = await this.userService.getUserProfileIssues(workspaceSlug, userId, params);
+      const response = await this.userService.getUserProfileIssues(workspaceSlug, userId, params, {
+        signal: controller.signal,
+      });
 
       // after the next page of issues are fetched, call the base method to process the response
       if (controller !== this.controller || controller.signal.aborted) return;
@@ -241,9 +262,24 @@ export class ProfileIssues extends BaseIssuesStore implements IProfileIssues {
    * @param loadType
    * @returns
    */
-  fetchIssuesWithExistingPagination = async (workspaceSlug: string, userId: string, loadType: TLoader) => {
+  fetchIssuesWithExistingPagination = async (
+    workspaceSlug: string,
+    userId: string,
+    loadType: TLoader,
+    refreshLoadedRange = false,
+    context?: TIssueSyncContext
+  ) => {
+    if (context) return this.refreshSyncedIssues(workspaceSlug, context);
     if (!this.paginationOptions || !this.currentView) return;
-    return await this.fetchIssues(workspaceSlug, userId, loadType, this.paginationOptions, this.currentView, true);
+    return await this.fetchIssues(
+      workspaceSlug,
+      userId,
+      loadType,
+      this.paginationOptions,
+      this.currentView,
+      true,
+      refreshLoadedRange
+    );
   };
 
   // Using aliased names as they cannot be overridden in other stores

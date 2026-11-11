@@ -16,7 +16,7 @@ import type {
 } from "@plane/types";
 // services
 // types
-import type { IBaseIssuesStore } from "../helpers/base-issues.store";
+import type { IBaseIssuesStore, TIssueSyncContext } from "../helpers/base-issues.store";
 import { BaseIssuesStore } from "../helpers/base-issues.store";
 import type { IIssueRootStore } from "../root.store";
 import type { IProjectViewIssuesFilter } from "./filter.store";
@@ -35,7 +35,9 @@ export interface IProjectViewIssues extends IBaseIssuesStore {
     workspaceSlug: string,
     projectId: string,
     viewId: string,
-    loadType: TLoader
+    loadType: TLoader,
+    refreshLoadedRange?: boolean,
+    context?: TIssueSyncContext
   ) => Promise<TIssuesResponse | undefined>;
   fetchNextIssues: (
     workspaceSlug: string,
@@ -94,7 +96,8 @@ export class ProjectViewIssues extends BaseIssuesStore implements IProjectViewIs
     viewId: string,
     loadType: TLoader,
     options: IssuePaginationOptions,
-    isExistingPaginationOptions: boolean = false
+    isExistingPaginationOptions: boolean = false,
+    refreshLoadedRange: boolean = false
   ) => {
     const request = this.beginIssueRequest(
       JSON.stringify([workspaceSlug, projectId, viewId]),
@@ -105,9 +108,23 @@ export class ProjectViewIssues extends BaseIssuesStore implements IProjectViewIs
       // get params from pagination options
       const params = this.issueFilterStore?.getFilterParams(options, viewId, undefined, undefined, undefined);
       // call the fetch issues API with the params
-      const response = await this.issueService.getIssues(workspaceSlug, projectId, params, {
-        signal: request.controller.signal,
-      });
+      const response = await this.collectLoadedIssueRange(
+        workspaceSlug,
+        request,
+        options,
+        refreshLoadedRange,
+        async (cursor, syncParams = {}, signal = request.controller.signal) => {
+          return this.issueService.getIssues(
+            workspaceSlug,
+            projectId,
+            { ...params, ...(cursor ? { cursor } : {}), ...syncParams },
+            {
+              signal,
+            }
+          );
+        },
+        params
+      );
 
       // after fetching issues, call the base method to process the response further
       if (request.controller !== this.controller || request.controller.signal.aborted) return;
@@ -170,7 +187,9 @@ export class ProjectViewIssues extends BaseIssuesStore implements IProjectViewIs
         subGroupId
       );
       // call the fetch issues API with the params for next page in issues
-      const response = await this.issueService.getIssues(workspaceSlug, projectId, params);
+      const response = await this.issueService.getIssues(workspaceSlug, projectId, params, {
+        signal: controller.signal,
+      });
 
       // after the next page of issues are fetched, call the base method to process the response
       if (controller !== this.controller || controller.signal.aborted) return;
@@ -196,10 +215,21 @@ export class ProjectViewIssues extends BaseIssuesStore implements IProjectViewIs
     workspaceSlug: string,
     projectId: string,
     viewId: string,
-    loadType: TLoader
+    loadType: TLoader,
+    refreshLoadedRange = false,
+    context?: TIssueSyncContext
   ) => {
+    if (context) return this.refreshSyncedIssues(workspaceSlug, context);
     if (!this.paginationOptions) return;
-    return await this.fetchIssues(workspaceSlug, projectId, viewId, loadType, this.paginationOptions, true);
+    return await this.fetchIssues(
+      workspaceSlug,
+      projectId,
+      viewId,
+      loadType,
+      this.paginationOptions,
+      true,
+      refreshLoadedRange
+    );
   };
 
   // Using aliased names as they cannot be overridden in other stores

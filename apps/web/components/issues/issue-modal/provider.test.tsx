@@ -14,8 +14,8 @@ vi.mock("@/services/project/custom-properties.service", () => ({
 }));
 vi.mock("@/hooks/store/user/user-user", () => ({ useUser: () => ({ projectsWithCreatePermissions: { p: true } }) }));
 vi.mock("@plane/i18n", () => {
-  const t = (key: string) => key;
-  return { useTranslation: () => ({ t }) };
+  // Match the real hook: its translation wrapper changes on every render.
+  return { useTranslation: () => ({ t: (key: string) => key }) };
 });
 vi.mock("@plane/blocks/toast", () => ({ setToast: mocks.toast }));
 let context: NonNullable<React.ContextType<typeof IssueModalContext>>;
@@ -174,4 +174,49 @@ it("preserves the context value when only the provider parent rerenders", async 
   const previousContext = context;
   view.rerender(<TestProvider typeId="bug" />);
   expect(context).toBe(previousContext);
+});
+
+it("does not repeat a failed preload when translation or parent renders change", async () => {
+  mocks.values.mockRejectedValue(new Error("offline"));
+  const data = { id: "i", project_id: "p" } as import("@plane/types").TIssue;
+  const view = render(<TestProvider typeId="bug" data={data} />);
+  await waitFor(() => expect(context.customPropertiesError).toBeTruthy());
+  expect(mocks.values).toHaveBeenCalledTimes(1);
+  expect(mocks.toast).toHaveBeenCalledTimes(1);
+  view.rerender(<TestProvider typeId="bug" data={{ ...data }} />);
+  await act(async () => {});
+  expect(mocks.values).toHaveBeenCalledTimes(1);
+  expect(mocks.toast).toHaveBeenCalledTimes(1);
+  mocks.values.mockResolvedValue({ values: { bug: 3 } });
+  act(() => context.retryCustomProperties());
+  await waitFor(() => expect(context.customPropertiesError).toBeFalsy());
+  expect(mocks.values).toHaveBeenCalledTimes(2);
+  expect(context.customPropertyValues.bug).toBe(3);
+});
+
+it("bounds repeated canceled preloads and permits an explicit retry", async () => {
+  const { CanceledError } = await import("axios");
+  mocks.values.mockRejectedValue(new CanceledError("Issue response invalidated by a local mutation"));
+  const data = { id: "i", project_id: "p" } as import("@plane/types").TIssue;
+  render(<TestProvider typeId="bug" data={data} />);
+  await waitFor(() => expect(context.customPropertiesError).toBeTruthy());
+  expect(mocks.values).toHaveBeenCalledTimes(2);
+  expect(mocks.toast).not.toHaveBeenCalled();
+  mocks.values.mockResolvedValue({ values: { bug: 5 } });
+  act(() => context.retryCustomProperties());
+  await waitFor(() => expect(context.customPropertiesError).toBeFalsy());
+  expect(context.customPropertyValues.bug).toBe(5);
+  expect(mocks.values).toHaveBeenCalledTimes(3);
+});
+
+it("automatically recovers a canceled preload without a toast or manual retry", async () => {
+  const { CanceledError } = await import("axios");
+  mocks.values.mockRejectedValueOnce(new CanceledError("stale")).mockResolvedValue({ values: { bug: 7 } });
+  const data = { id: "i", project_id: "p" } as import("@plane/types").TIssue;
+  render(<TestProvider typeId="bug" data={data} />);
+  await waitFor(() => expect(context.customPropertyValues.bug).toBe(7));
+  expect(context.customPropertiesError).toBeFalsy();
+  expect(context.customPropertiesLoading).toBe(false);
+  expect(mocks.values).toHaveBeenCalledTimes(2);
+  expect(mocks.toast).not.toHaveBeenCalled();
 });
