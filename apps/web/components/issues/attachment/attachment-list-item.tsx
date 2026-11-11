@@ -57,6 +57,7 @@ export const IssueAttachmentsListItem = observer(function IssueAttachmentsListIt
   return (
     <>
       <button
+        className="w-full min-w-0 text-left"
         aria-label={`${fileName}.${fileExtension}`}
         type="button"
         onClick={(e) => {
