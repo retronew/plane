@@ -26,8 +26,6 @@ app = Celery("plane")
 # pickle the object when using Windows.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-app.conf.imports = (*app.conf.imports, "plane.bgtasks.workspace_sync_task")
-
 app.conf.beat_schedule = {
     "prune-workspace-sync-log": {
         "task": "plane.bgtasks.workspace_sync_task.prune_workspace_sync_log",
