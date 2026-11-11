@@ -21,7 +21,7 @@ export type IIssueStore = {
   issuesIdentifierMap: Record<string, string>; // Record defines issue_identifier as key and issue_id as value
   // actions
   getIssues(workspaceSlug: string, projectId: string, issueIds: string[]): Promise<TIssue[]>;
-  addIssue(issues: TIssue[]): void;
+  addIssue(issues: TIssue[], preserveNewer?: boolean): void;
   addIssueIdentifier(issueIdentifier: string, issueId: string): void;
   updateIssue(issueId: string, issue: Partial<TIssue>): void;
   removeIssue(issueId: string): void;
@@ -58,10 +58,12 @@ export class IssueStore implements IIssueStore {
    * @param {TIssue[]} issues
    * @returns {void}
    */
-  addIssue = (issues: TIssue[]) => {
+  addIssue = (issues: TIssue[], _preserveNewer = false) => {
     if (issues && issues.length <= 0) return;
     runInAction(() => {
       issues.forEach((issue) => {
+        // updated_at may contain an optimistic browser timestamp. Request guards,
+        // rather than wall clocks, determine whether a server snapshot is current.
         // add issue identifier to the issuesIdentifierMap
         const projectIdentifier = rootStore.projectRoot.project.getProjectIdentifierById(issue?.project_id);
         const workItemSequenceId = issue?.sequence_id;

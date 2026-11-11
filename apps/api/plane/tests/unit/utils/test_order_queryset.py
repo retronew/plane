@@ -74,4 +74,4 @@ def test_creator_column_orders_by_public_display_name(direction):
     queryset = Mock()
     order = f"{direction}created_by__display_name"
     order_issue_queryset(queryset, order)
-    queryset.order_by.assert_called_once_with(order, "-created_at")
+    queryset.order_by.assert_called_once_with(order, "-created_at", "id")

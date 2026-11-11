@@ -180,7 +180,13 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     }
   }, [workspaceSlug, data, router]);
 
-  if (hasIssueDetailError(error, isLoading)) {
+  useEffect(() => {
+    if (issue?.archived_at && issue.project_id) {
+      router.replace(`/${workspaceSlug}/projects/${issue.project_id}/archives/issues/${issue.id}/`);
+    }
+  }, [issue?.archived_at, issue?.project_id, issue?.id, router, workspaceSlug]);
+
+  if (hasIssueDetailError(error, isLoading) || (data && !issue && !isLoading)) {
     return (
       <IssueDetailErrorState
         resolvedTheme={resolvedTheme}

@@ -6,12 +6,56 @@
 from typing import Any
 
 # Django imports
-from django.db import models
+from django.db import models, router, transaction
 from django.utils import timezone
 
 # Module imports
 from plane.bgtasks.deletion_task import soft_delete_related_objects
 from plane.db.sync import SyncQuerySet
+
+
+def workspace_sync_save(save):
+    from functools import wraps
+
+    @wraps(save)
+    def wrapped(instance, *args, **kwargs):
+        from plane.services.workspace_sync import lock_workspaces
+        from plane.db.models import Project
+
+        using = kwargs.get("using") or router.db_for_write(type(instance), instance=instance)
+        workspace_id = instance.workspace_id
+        if not workspace_id and instance.project_id:
+            workspace_id = (
+                Project.all_objects.using(using).values_list("workspace_id", flat=True).get(pk=instance.project_id)
+            )
+        with transaction.atomic(using=using):
+            workspaces = [workspace_id]
+            if instance.pk and not instance._state.adding:
+                previous = (
+                    type(instance)
+                    .all_objects.using(using)
+                    .filter(pk=instance.pk)
+                    .values_list("workspace_id", flat=True)
+                    .first()
+                )
+                workspaces.append(previous)
+            if instance._meta.model_name in {"issuerelation", "issueblocker"}:
+                from plane.db.models import Issue
+
+                endpoints = [
+                    getattr(instance, key, None)
+                    for key in ("issue_id", "related_issue_id", "block_id", "blocked_by_id")
+                ]
+                workspaces.extend(
+                    Issue.all_objects.using(using)
+                    .filter(pk__in=[pk for pk in endpoints if pk])
+                    .values_list("workspace_id", flat=True)
+                )
+            lock_workspaces(workspaces, using)
+            return save(instance, *args, **kwargs)
+
+    wrapped._workspace_sync_wrapped = True
+    return wrapped
 
 
 class TimeAuditModel(models.Model):

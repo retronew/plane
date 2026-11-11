@@ -10,6 +10,7 @@
 import { TemplatePicker } from "@/components/settings/workspace/configuration/template-picker";
 import { getWorkItemTemplatePatch } from "@/components/settings/workspace/configuration/template-application";
 import React, { useState, useRef, useEffect } from "react";
+import { isEqual } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import type { Control, FormState, UseFormGetValues, UseFormSetValue } from "react-hook-form";
@@ -84,8 +85,10 @@ export interface IssueFormProps {
   handleDraftAndClose?: () => void;
   isProjectSelectionDisabled?: boolean;
   showActionButtons?: boolean;
-  dataResetProperties?: any[];
+  dataResetProperties?: unknown[];
 }
+
+const EMPTY_RESET_PROPERTIES: unknown[] = [];
 
 type TTranslate = (key: string, params?: Record<string, unknown>) => string;
 
@@ -568,7 +571,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     primaryButtonText = getDefaultPrimaryButtonText(data, isDraft, t),
     isProjectSelectionDisabled = false,
     showActionButtons = true,
-    dataResetProperties = [],
+    dataResetProperties = EMPTY_RESET_PROPERTIES,
   } = props;
 
   // states
@@ -694,14 +697,21 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  // Reset form when data prop changes
+  const previousData = useRef(data);
+  const previousResetProperties = useRef(dataResetProperties);
   useEffect(() => {
-    if (data) {
-      // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- react-hook-form reset resyncs the form with the incoming work item, not a callback handed to a parent
-      reset({ ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: projectId, ...data });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...dataResetProperties]);
+    const identityChanged = previousData.current?.id !== data?.id;
+    const explicitReset = !isEqual(previousResetProperties.current, dataResetProperties);
+    const remoteChanged = Boolean(data?.id) && !isEqual(previousData.current, data);
+    previousData.current = data;
+    previousResetProperties.current = dataResetProperties;
+    if (!identityChanged && !explicitReset && !remoteChanged) return;
+    // Subscribe to dirtyFields above: keepDirtyValues must preserve edits even after focus leaves the input.
+    reset(
+      { ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: defaultProjectId, ...data },
+      { keepDirtyValues: !identityChanged && !explicitReset }
+    );
+  }, [data, dataResetProperties, defaultProjectId, reset]);
 
   useDefaultIssueType({
     projectId,
@@ -752,8 +762,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
           ...getChangedIssuefields(formData, dirtyFields as { [key: string]: boolean | undefined }),
           project_id: getValues<"project_id">("project_id"),
           id: data.id,
-          description_html: formData.description_html ?? "<p></p>",
-          type_id: getValues<"type_id">("type_id"),
         };
 
     // this condition helps to move the issues from draft to project issues
@@ -911,7 +919,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               isDraft={isDraft}
               issueName={watch("name")}
               issueId={data?.id}
-              descriptionHtmlData={data?.description_html}
+              descriptionHtmlData={watch("description_html")}
               editorRef={editorRef}
               submitBtnRef={submitBtnRef}
               gptAssistantModal={gptAssistantModal}

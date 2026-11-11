@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { issueSync } from "@/lib/sync/issue-sync";
 import { EIssueLayoutTypes } from "@plane/types";
 import type { TIssuesResponse, TLoader } from "@plane/types";
 import type { IIssueRootStore } from "../root.store";
 import type { IBaseIssueFilterStore } from "./issue-filter-helper.store";
+import { IssueFilterHelperStore } from "./issue-filter-helper.store";
 import { BaseIssuesStore } from "./base-issues.store";
 import { ProjectIssues } from "../project/issue.store";
 import { CycleIssues } from "../cycle/issue.store";
@@ -33,13 +35,27 @@ const response = (id: string): TIssuesResponse =>
     next_page_results: true,
   }) as TIssuesResponse;
 
-function setup(scope: string) {
+function setup(scope: string, paginationOptions = options) {
   const filters = {
     issueFilters: { displayFilters: { layout: EIssueLayoutTypes.LIST, group_by: null, sub_group_by: null } },
-    getFilterParams: () => ({}),
+    getFilterParams: (
+      pagination: typeof options,
+      _entity: string,
+      cursor?: string,
+      group?: string,
+      subgroup?: string
+    ) => IssueFilterHelperStore.prototype.getPaginationParams(undefined, pagination, cursor, group, subgroup),
   } as unknown as IBaseIssueFilterStore;
+  const stateMap: Record<string, unknown> = {};
+  const labelMap: Record<string, unknown> = {};
+  const memberMap: Record<string, unknown> = {};
   const root = {
-    rootStore: { router: {} },
+    rootStore: {
+      router: {},
+      state: { stateMap, getStateById: (id: string) => stateMap[id] },
+      label: { labelMap, getLabelById: (id: string) => labelMap[id] },
+      memberRoot: { memberMap, getUserDetails: (id: string) => memberMap[id] },
+    },
     issues: { addIssue: vi.fn(), getIssuesByIds: (ids: string[]) => ids.map((id) => ({ id })) },
     issueDetail: { relation: { extractRelationsFromIssues: vi.fn() } },
   } as unknown as IIssueRootStore;
@@ -67,21 +83,223 @@ function setup(scope: string) {
           ? vi.spyOn(store.issueArchiveService, "getArchivedIssues")
           : vi.spyOn(store.issueService, "getIssues");
   const fetch = (entity = "entity", loader: TLoader = "init-loader") => {
-    if (store instanceof CycleIssues) return store.fetchIssues("ws", "project", loader, options, entity);
-    if (store instanceof ModuleIssues) return store.fetchIssues("ws", "project", loader, options, entity);
-    if (store instanceof ProjectViewIssues) return store.fetchIssues("ws", "project", entity, loader, options);
-    if (store instanceof ProfileIssues) return store.fetchIssues("ws", entity, loader, options, "assigned");
-    return (store as ProjectIssues | WorkspaceIssues | ArchivedIssues).fetchIssues("ws", entity, loader, options);
+    if (store instanceof CycleIssues) return store.fetchIssues("ws", "project", loader, paginationOptions, entity);
+    if (store instanceof ModuleIssues) return store.fetchIssues("ws", "project", loader, paginationOptions, entity);
+    if (store instanceof ProjectViewIssues)
+      return store.fetchIssues("ws", "project", entity, loader, paginationOptions);
+    if (store instanceof ProfileIssues) return store.fetchIssues("ws", entity, loader, paginationOptions, "assigned");
+    return (store as ProjectIssues | WorkspaceIssues | ArchivedIssues).fetchIssues(
+      "ws",
+      entity,
+      loader,
+      paginationOptions
+    );
   };
-  const next = () => {
+  const next = (group?: string, subgroup?: string) => {
     if (store instanceof CycleIssues || store instanceof ModuleIssues || store instanceof ProjectViewIssues)
-      return store.fetchNextIssues("ws", "project", "entity");
-    return (store as ProjectIssues | WorkspaceIssues | ProfileIssues | ArchivedIssues).fetchNextIssues("ws", "entity");
+      return store.fetchNextIssues("ws", "project", "entity", group, subgroup);
+    return (store as ProjectIssues | WorkspaceIssues | ProfileIssues | ArchivedIssues).fetchNextIssues(
+      "ws",
+      "entity",
+      group,
+      subgroup
+    );
   };
-  return { store, filters, api, fetch, next };
+  const realtime = () => {
+    if (store instanceof CycleIssues || store instanceof ModuleIssues)
+      return store.fetchIssuesWithExistingPagination("ws", "project", "mutation", "entity", true);
+    if (store instanceof ProjectViewIssues)
+      return store.fetchIssuesWithExistingPagination("ws", "project", "entity", "mutation", true);
+    return (
+      store as ProjectIssues | WorkspaceIssues | ProfileIssues | ArchivedIssues
+    ).fetchIssuesWithExistingPagination("ws", "entity", "mutation", true);
+  };
+  return { store, root, filters, api, fetch, next, realtime };
 }
 
 describe.each(["project", "cycle", "module", "view", "workspace", "profile", "archived"])("%s refresh", (scope) => {
+  it.each(["flat", "group", "subgroup"])(
+    "loads unknown dictionaries once per project for %s snapshots",
+    async (shape) => {
+      const { store, root, api, fetch, realtime } = setup(scope);
+      api.mockResolvedValueOnce(response("old"));
+      await fetch();
+      const issues = ["first", "second", "third"].map((id, index) => ({
+        id,
+        project_id: index === 2 ? "p2" : "p1",
+        state_id: index === 2 ? "s2" : "s1",
+        label_ids: [index === 2 ? "l2" : "l1"],
+        assignee_ids: ["member"],
+      }));
+      const leaf = { results: issues, total_results: 3 };
+      const snapshot = {
+        ...response(""),
+        results:
+          shape === "flat"
+            ? issues
+            : { high: shape === "group" ? leaf : { results: { open: leaf }, total_results: 3 } },
+        total_count: 3,
+        next_page_results: false,
+      } as unknown as TIssuesResponse;
+      const dictionaries = vi.spyOn(store.issueService, "get").mockImplementation(
+        async (path) =>
+          ({
+            data: path.endsWith("states/")
+              ? [{ id: path.includes("p1") ? "s1" : "s2" }]
+              : path.endsWith("issue-labels/")
+                ? [{ id: path.includes("p1") ? "l1" : "l2" }]
+                : [{ member: { id: "member", display_name: "Remote" }, created_at: "today" }],
+          }) as never
+      );
+      api.mockResolvedValue(snapshot);
+      await realtime();
+      expect(dictionaries).toHaveBeenCalledTimes(5);
+      expect(root.rootStore.state.stateMap).toEqual({ s1: { id: "s1" }, s2: { id: "s2" } });
+      expect(root.rootStore.label.labelMap).toEqual({ l1: { id: "l1" }, l2: { id: "l2" } });
+      expect(root.rootStore.memberRoot.memberMap).toEqual({
+        member: { id: "member", display_name: "Remote", joining_date: "today" },
+      });
+      for (const call of dictionaries.mock.calls) expect(call[1]).toMatchObject({ signal: store.controller.signal });
+      await realtime();
+      expect(dictionaries).toHaveBeenCalledTimes(5);
+    }
+  );
+  it.each(["abort", "revision"])("does not apply stale dictionaries or issues after %s", async (invalidation) => {
+    const revision = vi.spyOn(issueSync, "revision", "get").mockReturnValue(0);
+    const { store, root, api, fetch, realtime } = setup(scope);
+    api.mockResolvedValueOnce(response("old"));
+    await fetch();
+    const previous = store.groupedIssueIds;
+    api.mockResolvedValueOnce({
+      ...response(""),
+      results: [{ id: "new", project_id: "p1", state_id: "s1" }],
+      next_page_results: false,
+    } as unknown as TIssuesResponse);
+    let resolve!: (value: unknown) => void;
+    const pending = new Promise((res) => {
+      resolve = res;
+    });
+    const dictionaries = vi.spyOn(store.issueService, "get").mockReturnValue(pending as never);
+    const refreshing = realtime();
+    await vi.waitFor(() => expect(dictionaries).toHaveBeenCalledOnce());
+    if (invalidation === "abort") store.controller.abort();
+    else revision.mockReturnValue(1);
+    resolve({ data: [{ id: "s1" }] });
+    await refreshing;
+    expect(root.rootStore.state.stateMap).toEqual({});
+    expect(store.groupedIssueIds).toBe(previous);
+  });
+  it.each(["list", "group", "subgroup", "calendar", "gantt"])(
+    "replaces the complete loaded %s range atomically with fresh counts and IDs",
+    async (layout) => {
+      const paginationOptions = {
+        ...options,
+        perPageCount: 2,
+        ...(layout === "calendar"
+          ? { groupedBy: "target_date" as const, after: "2026-11-01", before: "2026-11-30" }
+          : {}),
+      };
+      const { store, filters, api, fetch, next, realtime } = setup(scope, paginationOptions);
+      if (layout === "group" || layout === "subgroup" || layout === "calendar")
+        filters.issueFilters!.displayFilters!.group_by = "priority";
+      if (layout === "subgroup") {
+        filters.issueFilters!.displayFilters!.layout = EIssueLayoutTypes.KANBAN;
+        filters.issueFilters!.displayFilters!.sub_group_by = "state";
+      }
+      if (layout === "calendar") filters.issueFilters!.displayFilters!.layout = EIssueLayoutTypes.CALENDAR;
+      if (layout === "gantt") filters.issueFilters!.displayFilters!.layout = EIssueLayoutTypes.GANTT;
+      const grouped = ["group", "subgroup", "calendar"].includes(layout);
+      const page = (ids: string[], count: number, cursor: string, more: boolean): TIssuesResponse => {
+        const leaf = { results: ids.map((id) => ({ id })), total_results: count };
+        return {
+          ...response(""),
+          results: grouped
+            ? { high: layout === "subgroup" ? { results: { open: leaf }, total_results: count } : leaf }
+            : leaf.results,
+          total_count: count,
+          next_cursor: cursor,
+          next_page_results: more,
+        } as unknown as TIssuesResponse;
+      };
+      const ids = () => store.getIssueIds(grouped ? "high" : undefined, layout === "subgroup" ? "open" : undefined);
+      api.mockResolvedValueOnce(page(["a", "deleted"], 8, "2:1:0", true));
+      await fetch();
+      api.mockResolvedValueOnce({
+        ...page(["filtered-out", "d"], 8, "2:2:0", true),
+        results: [{ id: "filtered-out" }, { id: "d" }],
+      } as unknown as TIssuesResponse);
+      await next(grouped ? "high" : undefined, layout === "subgroup" ? "open" : undefined);
+      expect(ids()).toEqual(["a", "deleted", "filtered-out", "d"]);
+      const visible = store.groupedIssueIds;
+      const pending = deferred();
+      api.mockResolvedValueOnce(page(["new", "a"], 5, "2:1:0", true)).mockReturnValueOnce(pending.promise);
+      const refreshing = realtime();
+      await vi.waitFor(() => expect(api).toHaveBeenCalledTimes(4));
+      expect(store.groupedIssueIds).toBe(visible);
+      expect(store.getIssueLoader()).toBe("mutation");
+      pending.resolve(page(["d", "e"], 5, "2:2:0", true));
+      await refreshing;
+      expect(ids()).toEqual(["new", "a", "d", "e"]);
+      expect(
+        store.getGroupIssueCount(grouped ? "high" : undefined, layout === "subgroup" ? "open" : undefined, false)
+      ).toBe(5);
+      expect(store.paginationOptions).toEqual(paginationOptions);
+      const paramsIndex = scope === "workspace" ? 1 : 2;
+      expect(api.mock.calls[3][paramsIndex]).toMatchObject({ cursor: "2:1:0", per_page: "2" });
+      if (layout === "calendar")
+        expect(api.mock.calls[3][paramsIndex]).toMatchObject({
+          group_by: "target_date",
+          target_date: "2026-11-01;after,2026-11-30;before",
+        });
+      expect(api.mock.calls[3][paramsIndex + 1]).toMatchObject({ signal: store.controller.signal });
+      api.mockResolvedValueOnce(page(["last"], 5, "2:3:0", false));
+      await next();
+      expect(ids()).toEqual(["new", "a", "d", "e", "last"]);
+    }
+  );
+  it("reads ranges larger than the server page limit using bounded pages", async () => {
+    const { store, api, fetch, next, realtime } = setup(scope, { ...options, perPageCount: 1000 });
+    const page = (prefix: string, size: number, cursor: string, more: boolean) =>
+      ({
+        ...response(""),
+        results: Array.from({ length: size }, (_, index) => ({ id: `${prefix}-${index}` })),
+        total_count: 1001,
+        next_cursor: cursor,
+        next_page_results: more,
+      }) as unknown as TIssuesResponse;
+    api.mockResolvedValueOnce(page("old", 1000, "1000:1:0", true));
+    await fetch();
+    api.mockResolvedValueOnce(page("last", 1, "1000:2:0", false));
+    await next();
+    api
+      .mockResolvedValueOnce(page("fresh", 1000, "1000:1:0", true))
+      .mockResolvedValueOnce(page("fresh-last", 1, "1000:2:0", false));
+    await realtime();
+    expect(store.getIssueIds()).toHaveLength(1001);
+    expect(store.getIssueIds()).not.toContain("old-0");
+    const paramsIndex = scope === "workspace" ? 1 : 2;
+    expect(api.mock.calls[2][paramsIndex]).toMatchObject({ per_page: "1000", cursor: "1000:0:0" });
+    expect(api.mock.calls[3][paramsIndex]).toMatchObject({ per_page: "1000", cursor: "1000:1:0" });
+  });
+  it("keeps the entire previous range when a later refresh page fails or is aborted", async () => {
+    const { store, api, fetch, next, realtime } = setup(scope, { ...options, perPageCount: 1 });
+    api.mockResolvedValueOnce(response("a"));
+    await fetch();
+    api.mockResolvedValueOnce(response("b"));
+    await next();
+    const visible = store.groupedIssueIds;
+    api.mockResolvedValueOnce(response("new")).mockRejectedValueOnce(new Error("offline"));
+    await expect(realtime()).rejects.toThrow("offline");
+    expect(store.groupedIssueIds).toBe(visible);
+    const pending = deferred();
+    api.mockResolvedValueOnce(response("new")).mockReturnValueOnce(pending.promise);
+    const refreshing = realtime();
+    await vi.waitFor(() => expect(api).toHaveBeenCalledTimes(6));
+    store.controller.abort();
+    pending.resolve(response("stale"));
+    await refreshing;
+    expect(store.groupedIssueIds).toBe(visible);
+  });
   it("keeps data and applied grouping until a successful replacement, including zero results", async () => {
     const { store, filters, api, fetch } = setup(scope);
     api.mockResolvedValueOnce(response("old"));

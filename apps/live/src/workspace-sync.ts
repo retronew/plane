@@ -16,6 +16,10 @@ export type SyncMessage = {
   project_ids?: string[];
   issue_ids?: string[];
   event_id?: string;
+  cursor?: string;
+  changed_fields?: string[];
+  scopes?: string[];
+  reset?: boolean;
 };
 type SyncEvent = SyncMessage & { workspace_id: string; workspace_slug: string; project_id: string };
 export type SyncAccess = { workspace_id: string; workspace_slug: string; project_ids: string[] };
@@ -32,6 +36,11 @@ export class WorkspaceSyncAPI extends APIService implements SyncRepository {
     ).data;
   }
 }
+
+const strings = (items: unknown): items is string[] =>
+  Array.isArray(items) &&
+  items.length <= 100 &&
+  items.every((item) => typeof item === "string" && /^[a-zA-Z0-9_]{1,100}$/.test(item));
 
 export function parseSyncEvent(raw: string): SyncEvent | null {
   if (Buffer.byteLength(raw) > 16384) return null;
@@ -59,6 +68,10 @@ export function parseSyncEvent(raw: string): SyncEvent | null {
         !event.issue_ids.every((id) => typeof id === "string" && UUID.test(id)))
     )
       return null;
+    if (event.cursor !== undefined && (typeof event.cursor !== "string" || !/^\d+$/.test(event.cursor))) return null;
+    if (event.changed_fields !== undefined && !strings(event.changed_fields)) return null;
+    if (event.scopes !== undefined && !strings(event.scopes)) return null;
+    if (event.reset !== undefined && typeof event.reset !== "boolean") return null;
     // Explicit allowlist: Redis metadata or accidental content never reaches browsers.
     return {
       type: "invalidate",
@@ -68,6 +81,10 @@ export function parseSyncEvent(raw: string): SyncEvent | null {
       project_id: event.project_id,
       event_id: event.event_id,
       ...(event.issue_ids ? { issue_ids: event.issue_ids } : {}),
+      ...(event.cursor ? { cursor: event.cursor } : {}),
+      ...(event.changed_fields ? { changed_fields: event.changed_fields } : {}),
+      ...(event.scopes ? { scopes: event.scopes } : {}),
+      ...(event.reset || !event.issue_ids?.length || !event.changed_fields?.length ? { reset: true } : {}),
     };
   } catch {
     return null;
@@ -144,7 +161,24 @@ export class WorkspaceSyncServer {
         if (connection.slug !== event.workspace_slug) continue;
         // Never send event identifiers until a fresh API check has allowed the project.
         const previous = connection.pending.get(event.project_id);
-        connection.pending.set(event.project_id, previous ? { ...event, issue_ids: undefined } : event);
+        connection.pending.set(
+          event.project_id,
+          previous
+            ? {
+                ...event,
+                issue_ids: [...new Set([...(previous.issue_ids ?? []), ...(event.issue_ids ?? [])])],
+                changed_fields: [...new Set([...(previous.changed_fields ?? []), ...(event.changed_fields ?? [])])],
+                scopes: [...new Set([...(previous.scopes ?? []), ...(event.scopes ?? [])])],
+                reset:
+                  previous.reset ||
+                  event.reset ||
+                  !previous.issue_ids?.length ||
+                  !event.issue_ids?.length ||
+                  !previous.changed_fields?.length ||
+                  !event.changed_fields?.length,
+              }
+            : event
+        );
         if (connection.pending.size > 1000) {
           connection.pending.clear();
           connection.resync = true;
@@ -241,6 +275,7 @@ export class WorkspaceSyncServer {
     const resync = connection.resync;
     connection.resync = false;
     try {
+      // react-doctor-disable-next-line react-doctor/async-defer-await -- Permission lookup may outlive the socket; the post-await guard prevents sending to a disconnected client.
       const access = await this.access(connection);
       if (connection.closed) return;
       if (
@@ -260,9 +295,8 @@ export class WorkspaceSyncServer {
             project_id: projectId,
           });
       }
-      const gained =
-        connection.access !== undefined &&
-        access.project_ids.some((id) => !connection.access?.project_ids.includes(id));
+      const previousProjects = new Set(connection.access?.project_ids);
+      const gained = connection.access !== undefined && access.project_ids.some((id) => !previousProjects.has(id));
       connection.access = access;
       if (connection.initial) {
         this.send(connection, { type: "ready", protocol_version: 1, project_ids: access.project_ids });
@@ -281,6 +315,10 @@ export class WorkspaceSyncServer {
           project_id: event.project_id,
           event_id: event.event_id,
           ...(event.issue_ids ? { issue_ids: event.issue_ids } : {}),
+          ...(event.cursor ? { cursor: event.cursor } : {}),
+          ...(event.changed_fields ? { changed_fields: event.changed_fields } : {}),
+          ...(event.scopes ? { scopes: event.scopes } : {}),
+          ...(event.reset || !event.issue_ids?.length || !event.changed_fields?.length ? { reset: true } : {}),
         });
       }
     } catch (error) {

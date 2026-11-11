@@ -12,6 +12,9 @@ import { ALL_ISSUES, ISSUE_PRIORITIES } from "@plane/constants";
 // types
 import type {
   TIssue,
+  IState,
+  IIssueLabel,
+  IWorkspaceMember,
   TIssueGroupByOptions,
   TIssueOrderByOptions,
   TGroupedIssues,
@@ -31,6 +34,7 @@ import { EIssueServiceType, EIssueLayoutTypes } from "@plane/types";
 import { convertToISODateString } from "@plane/utils";
 // plane web imports
 // services
+import { issueSync } from "@/lib/sync/issue-sync";
 import { CycleService } from "@/services/cycle.service";
 import { IssueArchiveService, IssueService } from "@/services/issue";
 import { ModuleService } from "@/services/module.service";
@@ -47,6 +51,42 @@ import {
   getSubGroupIssueKeyActions,
 } from "./base-issues-utils";
 import type { IBaseIssueFilterStore } from "./issue-filter-helper.store";
+
+const maxLoadedCount = (value: unknown): number => {
+  if (Array.isArray(value)) return value.length;
+  if (!value || typeof value !== "object") return 0;
+  return Math.max(0, ...Object.values(value).map(maxLoadedCount));
+};
+// Only response result trees are combined; counts and cursor metadata always come
+// from the server. Never merge IDs from the previous visible list.
+const mergeResults = (previous: unknown, incoming: unknown): unknown => {
+  if (Array.isArray(previous) && Array.isArray(incoming)) {
+    const issues = new Map<string, TIssue>();
+    for (const issue of [...previous, ...incoming] as TIssue[]) issues.set(issue.id, issue);
+    return [...issues.values()];
+  }
+  if (previous && incoming && typeof previous === "object" && typeof incoming === "object") {
+    const merged: Record<string, unknown> = { ...previous };
+    for (const [key, value] of Object.entries(incoming)) {
+      merged[key] =
+        key === "results" || (value !== null && typeof value === "object") ? mergeResults(merged[key], value) : value;
+    }
+    return merged;
+  }
+  return incoming;
+};
+
+export type TIssueSyncContext = { issueIds?: string[]; changedFields?: string[]; reset?: boolean };
+type TSyncPageFetcher = (
+  cursor?: string,
+  params?: Record<string, unknown>,
+  signal?: AbortSignal
+) => Promise<TIssuesResponse>;
+type TAppliedQuery = {
+  params: Record<string, unknown>;
+  fetchPage: TSyncPageFetcher;
+  args?: Parameters<BaseIssuesStore["onfetchIssues"]>;
+};
 
 export type TIssueDisplayFilterOptions = Exclude<TIssueGroupByOptions, null> | "target_date";
 
@@ -181,6 +221,10 @@ const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
 export abstract class BaseIssuesStore implements IBaseIssuesStore {
   appliedDisplayFilters: NonNullable<IBaseIssueFilterStore["issueFilters"]>["displayFilters"] | undefined;
   private requestEntity: string | undefined;
+  private initialQueryController: AbortController | undefined;
+  private applyingSyncResponse = false;
+  private appliedQuery: TAppliedQuery | undefined;
+  private pendingQueries = new WeakMap<object, TAppliedQuery>();
   loader: Record<string, TLoader> = {};
   groupedIssueIds: TIssues | undefined = undefined;
   issuePaginationData: TIssuePaginationData = {};
@@ -305,9 +349,129 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       this.controller = new AbortController();
     }
     this.requestEntity = entity;
+    this.initialQueryController = loadType === "init-loader" ? this.controller : undefined;
     this.loader = {};
     this.setLoader(keepData ? "mutation" : loadType);
-    return { controller: this.controller, displayFilters };
+    return { controller: this.controller, displayFilters, revision: issueSync.revision };
+  }
+
+  /** Read the visible range into a detached response before replacing any observable list.
+   * Keep the original page size: cursors encode it, and the API rejects per_page > 1000.
+   * Reading each group together also includes newly introduced groups and removes stale IDs.
+   */
+  async collectLoadedIssueRange(
+    workspaceSlug: string,
+    request: ReturnType<BaseIssuesStore["beginIssueRequest"]>,
+    options: IssuePaginationOptions,
+    refreshLoadedRange: boolean,
+    fetchPage: TSyncPageFetcher,
+    params: Record<string, unknown> = {},
+    refreshDictionaries = false
+  ): Promise<TIssuesResponse> {
+    const pageCount = refreshLoadedRange
+      ? Math.max(1, Math.ceil(maxLoadedCount(this.groupedIssueIds) / options.perPageCount))
+      : 1;
+    let response = await fetchPage();
+    const cursors = new Set<string>();
+    for (let page = 1; page < pageCount && response.next_page_results; page++) {
+      if (
+        request.controller !== this.controller ||
+        request.controller.signal.aborted ||
+        request.revision !== issueSync.revision
+      )
+        return response;
+      const cursor = response.next_cursor;
+      if (!cursor || cursors.has(cursor)) throw new Error("Issue pagination did not advance");
+      cursors.add(cursor);
+      // The next cursor is only available after the preceding page completes.
+      // oxlint-disable-next-line no-await-in-loop
+      const next = await fetchPage(cursor);
+      response = {
+        ...next,
+        results: mergeResults(response.results, next.results) as TIssuesResponse["results"],
+      };
+    }
+    await this.loadUnknownIssueDictionaries(workspaceSlug, request, response, refreshDictionaries);
+    this.pendingQueries.set(request, { params: structuredClone(params), fetchPage });
+    return response;
+  }
+
+  async loadUnknownIssueDictionaries(
+    workspaceSlug: string,
+    request: ReturnType<BaseIssuesStore["beginIssueRequest"]>,
+    response: TIssuesResponse,
+    refreshDictionaries = false
+  ) {
+    const valid = () =>
+      request.controller === this.controller &&
+      !request.controller.signal.aborted &&
+      request.revision === issueSync.revision;
+    if (!valid()) return;
+    const { state, label, memberRoot } = this.rootIssueStore.rootStore;
+    const { issueList } = this.processIssueResponse(response);
+    const stateProjects = new Set<string>();
+    const labelProjects = new Set<string>();
+    let needsMembers = false;
+    if (refreshDictionaries) {
+      // Include the previous window: a reset can remove every issue of a project.
+      const visit = (value: unknown): void => {
+        if (typeof value === "string") {
+          const project = this.rootIssueStore.issues.getIssueById(value)?.project_id;
+          if (project) {
+            stateProjects.add(project);
+            labelProjects.add(project);
+          }
+        } else if (value && typeof value === "object") {
+          for (const child of Object.values(value)) visit(child);
+        }
+      };
+      visit(this.groupedIssueIds);
+      for (const issue of issueList) {
+        if (!issue.project_id) continue;
+        stateProjects.add(issue.project_id);
+        labelProjects.add(issue.project_id);
+      }
+    }
+    for (const issue of issueList) {
+      if (issue.project_id && issue.state_id && !state.getStateById(issue.state_id))
+        stateProjects.add(issue.project_id);
+      if (issue.project_id && issue.label_ids?.some((id) => !label.getLabelById(id)))
+        labelProjects.add(issue.project_id);
+      if (
+        [...(issue.assignee_ids ?? []), issue.created_by, issue.updated_by].some(
+          (id) => id && !memberRoot.getUserDetails(id)
+        )
+      )
+        needsMembers = true;
+    }
+    // One request per affected project/dictionary, independent of the issue count or
+    // number of response pages. Existing shared dictionaries also cover open details.
+    const getDictionary = async <T>(path: string): Promise<T> =>
+      (
+        await this.issueService.get(`/api/workspaces/${workspaceSlug}/${path}`, {
+          signal: request.controller.signal,
+        })
+      ).data as T;
+    const [states, labels, members] = await Promise.all([
+      Promise.all([...stateProjects].map((project) => getDictionary<IState[]>(`projects/${project}/states/`))),
+      Promise.all(
+        [...labelProjects].map((project) => getDictionary<IIssueLabel[]>(`projects/${project}/issue-labels/`))
+      ),
+      needsMembers ? getDictionary<IWorkspaceMember[]>("members/") : [],
+    ]);
+    if (!valid()) return;
+    runInAction(() => {
+      if (refreshDictionaries) {
+        for (const [id, value] of Object.entries(state.stateMap))
+          if (stateProjects.has(value.project_id)) delete state.stateMap[id];
+        for (const [id, value] of Object.entries(label.labelMap))
+          if (value.project_id && labelProjects.has(value.project_id)) delete label.labelMap[id];
+      }
+      for (const value of states.flat()) state.stateMap[value.id] = value;
+      for (const value of labels.flat()) label.labelMap[value.id] = value;
+      for (const value of members)
+        memberRoot.memberMap[value.member.id] = { ...value.member, joining_date: value.created_at };
+    });
   }
 
   applyIssueResponse(
@@ -315,8 +479,219 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     ...args: Parameters<BaseIssuesStore["onfetchIssues"]>
   ) {
     if (request.controller !== this.controller || request.controller.signal.aborted) return;
+    if (request.revision !== issueSync.revision) return;
     this.onfetchIssues(...args);
+    if (this.initialQueryController === request.controller) this.initialQueryController = undefined;
     this.appliedDisplayFilters = request.displayFilters;
+    const query = this.pendingQueries.get(request);
+    if (query) this.appliedQuery = { ...query, args };
+  }
+
+  /** Reconcile against the last successfully applied main query, never a group cursor. */
+  async refreshSyncedIssues(workspaceSlug: string, context: TIssueSyncContext): Promise<TIssuesResponse | undefined> {
+    // An old subscription must not cancel a new layout's initial request.
+    if (this.initialQueryController === this.controller && !this.controller.signal.aborted && this.getIssueLoader())
+      throw new DOMException("Issue synchronization awaits initial query", "AbortError");
+    const query = this.appliedQuery;
+    if (!query?.args || !this.paginationOptions || !this.requestEntity)
+      throw new DOMException("Issue synchronization has no applied query", "AbortError");
+    const options = { ...this.paginationOptions };
+    const displayFilters = this.appliedDisplayFilters;
+    const request = this.beginIssueRequest(this.requestEntity, "mutation", true);
+    request.displayFilters = { ...displayFilters };
+    const assertCurrent = () => {
+      if (
+        request.controller !== this.controller ||
+        request.controller.signal.aborted ||
+        request.revision !== issueSync.revision
+      )
+        throw new DOMException("Issue synchronization superseded", "AbortError");
+    };
+    const issueIds = uniq(context.issueIds ?? []);
+    try {
+      if (this.canMergeSyncEntities(context, query.params) && issueIds.length <= 100) {
+        const { data } = await this.issueService.get(`/api/workspaces/${workspaceSlug}/sync/entities/`, {
+          params: { ids: issueIds.join(",") },
+          signal: request.controller.signal,
+        });
+        assertCurrent();
+        // A disappearing entity may affect membership/counts despite a display-only event.
+        if (!data.removed_ids.length) {
+          const response = { ...query.args[0], results: data.issues } as TIssuesResponse;
+          await this.loadUnknownIssueDictionaries(workspaceSlug, request, response);
+          assertCurrent();
+          runInAction(() => {
+            this.rootIssueStore.issues.addIssue(data.issues, true);
+            this.rootIssueStore.issueDetail.relation.extractRelationsFromIssues(data.issues);
+            this.setLoader(undefined);
+          });
+          return response;
+        }
+      }
+      const depth = Math.max(1, Math.ceil(maxLoadedCount(this.groupedIssueIds) / options.perPageCount));
+      let response: TIssuesResponse | undefined;
+      if (!context.reset && issueIds.length <= 100 && depth <= 20) {
+        const windowResponse = await query.fetchPage(
+          undefined,
+          {
+            sync_window: 1,
+            sync_entity_mode: "changed",
+            sync_changed_ids: issueIds.join(","),
+            sync_depth: depth,
+          },
+          request.controller.signal
+        );
+        assertCurrent();
+        const window = (
+          windowResponse as TIssuesResponse & {
+            sync_window?: {
+              results: unknown;
+              entities: TIssue[];
+              reset_required: boolean;
+            };
+          }
+        ).sync_window;
+        if (window && !window.reset_required && window.results && Array.isArray(window.entities)) {
+          const entities = new Map(window.entities.map((issue) => [issue.id, issue]));
+          const unknown = new Set<string>();
+          const collectUnknown = (value: unknown): void => {
+            if (Array.isArray(value)) {
+              for (const id of value)
+                if (typeof id === "string" && !entities.has(id) && !this.rootIssueStore.issues.getIssueById(id))
+                  unknown.add(id);
+            } else if (value && typeof value === "object") {
+              for (const child of Object.values(value)) if (child && typeof child === "object") collectUnknown(child);
+            }
+          };
+          collectUnknown(window.results);
+          const unknownIds = [...unknown];
+          let nextOffset = 0;
+          const fetchUnknownBatch = async (): Promise<void> => {
+            const offset = nextOffset;
+            nextOffset += 100;
+            if (offset >= unknownIds.length) return;
+            // Four workers bound concurrency; each URL contains at most 100 IDs.
+            const { data } = await this.issueService.get(`/api/workspaces/${workspaceSlug}/sync/entities/`, {
+              params: { ids: unknownIds.slice(offset, offset + 100).join(",") },
+              signal: request.controller.signal,
+            });
+            assertCurrent();
+            for (const entity of data.issues) entities.set(entity.id, entity);
+            return fetchUnknownBatch();
+          };
+          await Promise.all(Array.from({ length: Math.min(4, Math.ceil(unknownIds.length / 100)) }, fetchUnknownBatch));
+          let missing = false;
+          const hydrate = (value: unknown): unknown => {
+            if (Array.isArray(value))
+              return value.map((id: string) => {
+                const entity = entities.get(id) ?? this.rootIssueStore.issues.getIssueById(id);
+                if (!entity) missing = true;
+                return entity;
+              });
+            if (value && typeof value === "object")
+              return Object.fromEntries(
+                Object.entries(value).map(([key, child]) => [
+                  key,
+                  key === "results" || (child && typeof child === "object") ? hydrate(child) : child,
+                ])
+              );
+            return value;
+          };
+          const results = hydrate(window.results) as TIssuesResponse["results"];
+          if (!missing) response = { ...windowResponse, results };
+        }
+      }
+      if (!response)
+        response = await this.collectLoadedIssueRange(
+          workspaceSlug,
+          request,
+          options,
+          true,
+          (cursor) => query.fetchPage(cursor, {}, request.controller.signal),
+          query.params,
+          !!context.reset
+        );
+      else await this.loadUnknownIssueDictionaries(workspaceSlug, request, response);
+      assertCurrent();
+      this.applyingSyncResponse = true;
+      try {
+        this.applyIssueResponse(
+          request,
+          response,
+          options,
+          ...(query.args.slice(2) as [string, string?, string?, boolean?])
+        );
+      } finally {
+        this.applyingSyncResponse = false;
+      }
+      // Keep the original query closure and params across window/fallback requests.
+      this.appliedQuery = {
+        ...query,
+        args: [response, options, ...query.args.slice(2)] as Parameters<BaseIssuesStore["onfetchIssues"]>,
+      };
+      return response;
+    } catch (error) {
+      if (request.controller === this.controller && !request.controller.signal.aborted) this.setLoader(undefined);
+      throw error;
+    }
+  }
+
+  private canMergeSyncEntities(context: TIssueSyncContext, params: Record<string, unknown>): boolean {
+    if (context.reset || !context.issueIds?.length || !context.changedFields?.length) return false;
+    // Deliberately small allowlist: unknown fields and scope/visibility changes calibrate the window.
+    const displayFields = new Set([
+      "name",
+      "description",
+      "description_html",
+      "description_stripped",
+      "attachment_count",
+      "link_count",
+      "sub_issues_count",
+      "updated_at",
+      "updated_by",
+      "updated_by_id",
+    ]);
+    if (context.changedFields.some((field) => !displayFields.has(field))) return false;
+    const dependencies = new Set<string>([
+      this.orderByKey ?? "",
+      this.issueGroupKey ?? "",
+      this.issueSubGroupKey ?? "",
+    ]);
+    const ordering = String(params.order_by ?? "-updated_at");
+    const orderKey = ISSUE_ORDERBY_KEY[ordering as TIssueOrderByOptions];
+    if (!orderKey) return false;
+    dependencies.add(orderKey);
+    if (dependencies.has("updated_at")) return false;
+    const inspect = (value: unknown): boolean => {
+      if (Array.isArray(value)) return value.every(inspect);
+      if (!value || typeof value !== "object") return false;
+      return Object.entries(value).every(([key, child]) => {
+        if (["and", "or"].includes(key)) return inspect(child);
+        dependencies.add(key.split("__")[0]);
+        return true;
+      });
+    };
+    if (params.filters) {
+      try {
+        if (!inspect(typeof params.filters === "string" ? JSON.parse(params.filters) : params.filters)) return false;
+      } catch {
+        return false;
+      }
+    }
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== "") dependencies.add(key.split("__")[0]);
+    }
+    if (
+      (params.name || params.search || params.search_query || params.text) &&
+      context.changedFields.some((field) => field === "name" || field.startsWith("description"))
+    )
+      return false;
+    if (
+      ["name", "text", "search", "search_query"].some((key) => dependencies.has(key)) &&
+      context.changedFields.some((field) => field === "name" || field.startsWith("description"))
+    )
+      return false;
+    return context.changedFields.every((field) => !dependencies.has(field));
   }
 
   // current Group by value
@@ -505,14 +880,15 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     const { issueList, groupedIssues, groupedIssueCount } = this.processIssueResponse(issuesResponse);
 
     // The Issue list is added to the main Issue Map
-    this.rootIssueStore.issues.addIssue(issueList);
+    this.rootIssueStore.issues.addIssue(issueList, this.applyingSyncResponse);
 
     // Update all the GroupIds to this Store's groupedIssueIds and update Individual group issue counts
     runInAction(() => {
       this.clear(shouldClearPaginationOptions, false);
       // An empty grouped response is loaded data too.
       this.groupedIssueIds = {};
-      this.updateGroupedIssueIds(groupedIssues, groupedIssueCount);
+      this.groupedIssueIds = groupedIssues;
+      this.groupedIssueCount = groupedIssueCount;
       this.loader[getGroupKey()] = undefined;
     });
 
@@ -1245,6 +1621,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       }
     });
     if (cancelRequest) {
+      this.appliedQuery = undefined;
       this.controller.abort();
       this.controller = new AbortController();
     }

@@ -17,7 +17,7 @@ import type {
 // services
 import { WorkspaceService } from "@/services/workspace.service";
 // types
-import type { IBaseIssuesStore } from "../helpers/base-issues.store";
+import type { IBaseIssuesStore, TIssueSyncContext } from "../helpers/base-issues.store";
 import { BaseIssuesStore } from "../helpers/base-issues.store";
 import type { IIssueRootStore } from "../root.store";
 import type { IWorkspaceIssuesFilter } from "./filter.store";
@@ -35,7 +35,9 @@ export interface IWorkspaceIssues extends IBaseIssuesStore {
   fetchIssuesWithExistingPagination: (
     workspaceSlug: string,
     viewId: string,
-    loadType: TLoader
+    loadType: TLoader,
+    refreshLoadedRange?: boolean,
+    context?: TIssueSyncContext
   ) => Promise<TIssuesResponse | undefined>;
   fetchNextIssues: (
     workspaceSlug: string,
@@ -99,7 +101,8 @@ export class WorkspaceIssues extends BaseIssuesStore implements IWorkspaceIssues
     viewId: string,
     loadType: TLoader,
     options: IssuePaginationOptions,
-    isExistingPaginationOptions: boolean = false
+    isExistingPaginationOptions: boolean = false,
+    refreshLoadedRange: boolean = false
   ) => {
     const request = this.beginIssueRequest(
       JSON.stringify([workspaceSlug, viewId]),
@@ -110,9 +113,22 @@ export class WorkspaceIssues extends BaseIssuesStore implements IWorkspaceIssues
       // get params from pagination options
       const params = this.issueFilterStore?.getFilterParams(options, viewId, undefined, undefined, undefined);
       // call the fetch issues API with the params
-      const response = await this.workspaceService.getViewIssues(workspaceSlug, params, {
-        signal: request.controller.signal,
-      });
+      const response = await this.collectLoadedIssueRange(
+        workspaceSlug,
+        request,
+        options,
+        refreshLoadedRange,
+        async (cursor, syncParams = {}, signal = request.controller.signal) => {
+          return this.workspaceService.getViewIssues(
+            workspaceSlug,
+            { ...params, ...(cursor ? { cursor } : {}), ...syncParams },
+            {
+              signal,
+            }
+          );
+        },
+        params
+      );
 
       // after fetching issues, call the base method to process the response further
       if (request.controller !== this.controller || request.controller.signal.aborted) return;
@@ -169,7 +185,7 @@ export class WorkspaceIssues extends BaseIssuesStore implements IWorkspaceIssues
         subGroupId
       );
       // call the fetch issues API with the params for next page in issues
-      const response = await this.workspaceService.getViewIssues(workspaceSlug, params);
+      const response = await this.workspaceService.getViewIssues(workspaceSlug, params, { signal: controller.signal });
 
       // after the next page of issues are fetched, call the base method to process the response
       if (controller !== this.controller || controller.signal.aborted) return;
@@ -191,9 +207,16 @@ export class WorkspaceIssues extends BaseIssuesStore implements IWorkspaceIssues
    * @param loadType
    * @returns
    */
-  fetchIssuesWithExistingPagination = async (workspaceSlug: string, viewId: string, loadType: TLoader) => {
+  fetchIssuesWithExistingPagination = async (
+    workspaceSlug: string,
+    viewId: string,
+    loadType: TLoader,
+    refreshLoadedRange = false,
+    context?: TIssueSyncContext
+  ) => {
+    if (context) return this.refreshSyncedIssues(workspaceSlug, context);
     if (!this.paginationOptions) return;
-    return await this.fetchIssues(workspaceSlug, viewId, loadType, this.paginationOptions, true);
+    return await this.fetchIssues(workspaceSlug, viewId, loadType, this.paginationOptions, true, refreshLoadedRange);
   };
 
   // Using aliased names as they cannot be overridden in other stores

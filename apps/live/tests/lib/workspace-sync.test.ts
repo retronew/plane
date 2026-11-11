@@ -62,7 +62,7 @@ describe("workspace sync security and lifecycle", () => {
     expect(syncOriginAllowed(undefined)).toBe(false);
   });
   it("validates Redis events and strips content", () => {
-    expect(parseSyncEvent(JSON.stringify({ ...event, name: "secret" }))).toEqual(event);
+    expect(parseSyncEvent(JSON.stringify({ ...event, name: "secret" }))).toEqual({ ...event, reset: true });
     expect(parseSyncEvent(JSON.stringify({ ...event, protocol_version: 2 }))).toBeNull();
     expect(parseSyncEvent(JSON.stringify({ ...event, issue_ids: ["invalid"] }))).toBeNull();
     expect(parseSyncEvent("x".repeat(17000))).toBeNull();
@@ -131,4 +131,33 @@ describe("workspace sync security and lifecycle", () => {
     await vi.advanceTimersByTimeAsync(30000);
     expect(access).toHaveBeenCalledTimes(2);
   });
+});
+
+it("unions safe metadata across coalesced events and resets unknown changes", async () => {
+  const socket = connect();
+  await vi.advanceTimersByTimeAsync(30);
+  subscriber.emit(
+    "message",
+    "plane:sync:v1",
+    JSON.stringify({ ...event, issue_ids: [project], changed_fields: ["name"], cursor: "10", scopes: ["issues"] })
+  );
+  subscriber.emit(
+    "message",
+    "plane:sync:v1",
+    JSON.stringify({ ...event, issue_ids: [other], changed_fields: ["priority"], cursor: "11", scopes: ["issues"] })
+  );
+  await vi.advanceTimersByTimeAsync(30);
+  expect(messages(socket).at(-1)).toMatchObject({
+    issue_ids: [project, other],
+    changed_fields: ["name", "priority"],
+    cursor: "11",
+  });
+  push();
+  subscriber.emit(
+    "message",
+    "plane:sync:v1",
+    JSON.stringify({ ...event, issue_ids: [other], changed_fields: ["name"] })
+  );
+  await vi.advanceTimersByTimeAsync(30);
+  expect(messages(socket).at(-1).reset).toBe(true);
 });

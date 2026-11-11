@@ -5,6 +5,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isCancel } from "axios";
 import { useTranslation } from "@plane/i18n";
 import { setToast } from "@plane/blocks/toast";
 import {
@@ -33,6 +34,10 @@ export type TIssueModalProviderProps = {
 export const IssueModalProvider = observer(function IssueModalProvider(props: TIssueModalProviderProps) {
   const { children, allowedProjectIds, dataForPreload } = props;
   const { t } = useTranslation();
+  const translate = useRef(t);
+  useEffect(() => {
+    translate.current = t;
+  }, [t]);
   const [context, setContext] = useState<{
     projectId: string;
     workspaceSlug: string;
@@ -93,28 +98,38 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
       return;
     let cancelled = false;
     const key = `${preloadProjectId}:${preloadIssueId}`;
-    new CustomPropertiesService()
-      .values(preloadSlug, preloadProjectId, preloadIssueId)
-      .then(({ values }) => {
-        if (!cancelled) {
-          setValues((current) => ({
-            ...current,
-            ...Object.fromEntries(Object.entries(values).filter(([id]) => !editedKeys.current.has(id))),
-          }));
-          setPreload({ key });
-        }
-        return undefined;
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setPreload({ key, error });
-          setToast({ type: "error", title: t("web.work_item_properties.load_failed") });
-        }
-      });
+    const load = (retried = false): Promise<void> =>
+      new CustomPropertiesService()
+        .values(preloadSlug, preloadProjectId, preloadIssueId)
+        .then(({ values }) => {
+          if (!cancelled) {
+            setValues((current) => ({
+              ...current,
+              ...Object.fromEntries(Object.entries(values).filter(([id]) => !editedKeys.current.has(id))),
+            }));
+            setPreload({ key });
+          }
+          return undefined;
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) {
+            // A mutation may invalidate an in-flight GET. Retry once without turning
+            // the cancellation into a user-facing failure or an unbounded retry loop.
+            if (isCancel(error) && !retried) {
+              void load(true);
+              return;
+            }
+            setPreload({ key, error });
+            if (!isCancel(error)) {
+              setToast({ type: "error", title: translate.current("web.work_item_properties.load_failed") });
+            }
+          }
+        });
+    void load();
     return () => {
       cancelled = true;
     };
-  }, [preloadSlug, preloadProjectId, preloadDraft, preloadIssueId, preloadIssueProject, retryCount, t]);
+  }, [preloadSlug, preloadProjectId, preloadDraft, preloadIssueId, preloadIssueProject, retryCount]);
   const prepareCustomProperties = useCallback(
     (projectId: string, workspaceSlug: string, typeId?: string | null) => {
       if (
@@ -127,8 +142,8 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
       ) {
         setToast({
           type: "error",
-          title: t("web.work_item_properties.load_failed"),
-          message: t("web.work_item_properties.retry_hint"),
+          title: translate.current("web.work_item_properties.load_failed"),
+          message: translate.current("web.work_item_properties.retry_hint"),
         });
         return null;
       }
@@ -145,7 +160,6 @@ export const IssueModalProvider = observer(function IssueModalProvider(props: TI
       dataForPreload?.id,
       context?.isDraft,
       preload,
-      t,
       customPropertyValues,
     ]
   );

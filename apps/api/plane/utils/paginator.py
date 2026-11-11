@@ -17,6 +17,7 @@ from rest_framework.response import Response
 
 # Module imports
 from plane.utils.order_queryset import ISSUE_GROUP_BY_ALLOWLIST
+from plane.utils.sync_window import MAX_WINDOW_MEMBERS, SyncWindow
 
 
 class Cursor:
@@ -122,6 +123,13 @@ class OffsetPaginator:
         self.on_results = on_results
         self.total_count_queryset = total_count_queryset
 
+    def bound_window(self, results):
+        """Bound materialization before any serializer or grouping callback runs."""
+        if getattr(self, "window_depth", None) is not None:
+            results = results[: MAX_WINDOW_MEMBERS + 1]
+            self.window_reset_required = results.count() > MAX_WINDOW_MEMBERS
+        return results
+
     def get_result(self, limit=1000, cursor=None):
         # offset is page #
         # value is page limit
@@ -137,12 +145,16 @@ class OffsetPaginator:
             queryset = queryset.order_by(
                 (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
                 "-created_at",
+                "id",
             )
+        elif getattr(self, "window_depth", None):
+            ordering = queryset.query.order_by or queryset.model._meta.ordering or ()
+            queryset = queryset.order_by(*ordering, "id")
         # The current page
         page = cursor.offset
         # The offset - use limit instead of cursor.value for consistent pagination
         offset = cursor.offset * limit
-        stop = offset + limit + 1
+        stop = offset + limit * getattr(self, "window_depth", 1) + 1
 
         if self.max_offset is not None and offset >= self.max_offset:
             raise BadPaginationError("Pagination offset too large")
@@ -162,15 +174,21 @@ class OffsetPaginator:
         # Check if there are more results available after the current page
 
         # Adjust cursors based on the results for pagination
-        next_cursor = Cursor(limit, page + 1, False, page_results.count() > limit)
+        next_cursor = Cursor(
+            limit,
+            page + getattr(self, "window_depth", 1),
+            False,
+            page_results.count() > limit * getattr(self, "window_depth", 1),
+        )
         # If the page is greater than 0, then set the previous cursor
         prev_cursor = Cursor(limit, page - 1, True, page > 0)
 
         # Process the results
-        results = results[:limit]
+        results = results[: limit * getattr(self, "window_depth", 1)]
 
+        results = self.bound_window(results)
         # Process the results
-        if self.on_results:
+        if self.on_results and not getattr(self, "window_reset_required", False):
             results = self.on_results(results)
 
         # Count the queryset
@@ -234,7 +252,7 @@ class GroupedOffsetPaginator(OffsetPaginator):
 
         page = cursor.offset
         offset = cursor.offset * cursor.value
-        stop = offset + (cursor.value or limit) + 1
+        stop = offset + (cursor.value or limit) * getattr(self, "window_depth", 1) + 1
 
         # Check if the offset is greater than the max offset
         if self.max_offset is not None and offset >= self.max_offset:
@@ -258,6 +276,7 @@ class GroupedOffsetPaginator(OffsetPaginator):
                         else F(*self.key).asc(nulls_last=True)  # Order by asc if set
                     ),
                     F("created_at").desc(),
+                    F("id").asc(),
                 ),
             )
         )
@@ -265,10 +284,13 @@ class GroupedOffsetPaginator(OffsetPaginator):
         results = queryset.filter(row_number__gt=offset, row_number__lt=stop).order_by(
             (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
             F("created_at").desc(),
+            F("id").asc(),
         )
 
         # Adjust cursors based on the grouped results for pagination
-        next_cursor = Cursor(limit, page + 1, False, queryset.filter(row_number__gte=stop).exists())
+        next_cursor = Cursor(
+            limit, page + getattr(self, "window_depth", 1), False, queryset.filter(row_number__gte=stop).exists()
+        )
 
         # Add previous cursors
         prev_cursor = Cursor(limit, page - 1, True, page > 0)
@@ -276,6 +298,7 @@ class GroupedOffsetPaginator(OffsetPaginator):
         # Count the queryset
         count = queryset.count()
 
+        results = self.bound_window(results)
         # Optionally, calculate the total count and max_hits if needed
         # This might require adjustments based on specific use cases
         if results:
@@ -441,7 +464,7 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
         offset = cursor.offset * cursor.value
 
         # the stop
-        stop = offset + (cursor.value or limit) + 1
+        stop = offset + (cursor.value or limit) * getattr(self, "window_depth", 1) + 1
 
         if self.max_offset is not None and offset >= self.max_offset:
             raise BadPaginationError("Pagination offset too large")
@@ -462,6 +485,7 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
                 order_by=(
                     (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
                     "-created_at",
+                    "id",
                 ),
             )
         )
@@ -470,10 +494,13 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
         results = queryset.filter(row_number__gt=offset, row_number__lt=stop).order_by(
             (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
             F("created_at").desc(),
+            F("id").asc(),
         )
 
         # Adjust cursors based on the grouped results for pagination
-        next_cursor = Cursor(limit, page + 1, False, queryset.filter(row_number__gte=stop).exists())
+        next_cursor = Cursor(
+            limit, page + getattr(self, "window_depth", 1), False, queryset.filter(row_number__gte=stop).exists()
+        )
 
         # Add previous cursors
         prev_cursor = Cursor(limit, page - 1, True, page > 0)
@@ -481,6 +508,7 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
         # Count the queryset
         count = queryset.count()
 
+        results = self.bound_window(results)
         # Optionally, calculate the total count and max_hits if needed
         # This might require adjustments based on specific use cases
         if results:
@@ -673,6 +701,9 @@ class BasePaginator:
     ):
         """Paginate the request"""
         per_page = self.get_per_page(request, default_per_page, max_per_page)
+        sync_window = SyncWindow(request.GET) if "sync_window" in request.GET else None
+        if sync_window and per_page <= 0:
+            raise ParseError("sync_window requires positive per_page.")
         # Convert the cursor value to integer and float from string
         input_cursor = None
         try:
@@ -705,21 +736,31 @@ class BasePaginator:
 
             paginator = paginator_cls(**paginator_kwargs)
 
+        paginator.window_reset_required = False
+        if not sync_window and hasattr(paginator, "window_depth"):
+            del paginator.window_depth
+        if sync_window:
+            paginator.window_depth = sync_window.depth
+            input_cursor = cursor_cls(per_page, 0, False)
+
         try:
             cursor_result = paginator.get_result(limit=per_page, cursor=input_cursor)
         except BadPaginationError:
             raise ParseError(detail="Error in parsing")
 
-        if on_results:
+        reset_required = sync_window and paginator.window_reset_required
+        if reset_required:
+            results = {} if group_by_field_name else []
+        elif on_results:
             results = on_results(cursor_result.results)
         else:
             results = cursor_result.results
 
-        if group_by_field_name:
+        if group_by_field_name and not reset_required:
             results = paginator.process_results(results=results)
 
         # Add Manipulation functions to the response
-        if controller is not None:
+        if controller is not None and not reset_required:
             results = controller(results)
         else:
             results = results
@@ -741,5 +782,13 @@ class BasePaginator:
                 "results": results,
             }
         )
+
+        if sync_window:
+            response.data["sync_window"] = (
+                {"results": results, "entities": [], "reset_required": True}
+                if reset_required
+                else sync_window.project(results)
+            )
+            del response.data["results"]
 
         return response

@@ -866,6 +866,11 @@ class IssuePaginatedViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def list(self, request, slug, project_id):
+        if "sync_window" in request.GET:
+            return Response(
+                {"error": "sync_window is not supported by the v2 paginator."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         cursor = request.GET.get("cursor", None)
         is_description_required = request.GET.get("description", "false")
         updated_at = request.GET.get("updated_at__gt", None)

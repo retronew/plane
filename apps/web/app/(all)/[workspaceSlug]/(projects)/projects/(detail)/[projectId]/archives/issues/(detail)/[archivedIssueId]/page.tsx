@@ -37,7 +37,7 @@ function ArchivedIssueDetailsPage({ params }: Route.ComponentProps) {
 
   const { getProjectById } = useProject();
 
-  const { isLoading } = useSWR(`ARCHIVED_ISSUE_DETAIL_${workspaceSlug}_${projectId}_${archivedIssueId}`, () =>
+  const { isLoading, error } = useSWR(`ARCHIVED_ISSUE_DETAIL_${workspaceSlug}_${projectId}_${archivedIssueId}`, () =>
     fetchIssue(workspaceSlug, projectId, archivedIssueId)
   );
 
@@ -46,6 +46,24 @@ function ArchivedIssueDetailsPage({ params }: Route.ComponentProps) {
   const project = issue ? getProjectById(issue?.project_id ?? "") : undefined;
   const pageTitle = project && issue ? `${project?.identifier}-${issue?.sequence_id} ${issue?.name}` : undefined;
 
+  if (error || (!isLoading && !issue)) {
+    return (
+      <Banner
+        placement="page"
+        variant="warning"
+        title={t("issue.empty_state.issue_detail.title")}
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            stretch="auto"
+            label={t("issue.archive.go_to_archives")}
+            onClick={() => router.push(`/${workspaceSlug}/projects/${projectId}/archives/issues/`)}
+          />
+        }
+      />
+    );
+  }
   if (!issue) return <IssueDetailSkeleton />;
 
   const issueLoader = !issue || isLoading;

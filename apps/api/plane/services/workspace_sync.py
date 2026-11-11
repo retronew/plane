@@ -1,4 +1,4 @@
-"""Best-effort, content-free work item invalidation after database commit."""
+"""Durable, transactionally ordered changes with best-effort Redis wakeups."""
 
 import json
 import logging
@@ -26,6 +26,7 @@ SYNC_MODELS = frozenset(
         "issueblocker",
         "issuelink",
         "issueattachment",
+        "fileasset",
         "issuecomment",
         "issuereaction",
         "issuevote",
@@ -72,7 +73,10 @@ def publish(workspace_id, workspace_slug, project_id, issue_ids=None):
         logger.warning("Workspace sync publish failed", exc_info=True)
     finally:
         if client is not None:
-            client.close()
+            try:
+                client.close()
+            except Exception:
+                logger.warning("Workspace sync Redis close failed", exc_info=True)
 
 
 def publish_targets(targets, using):
@@ -133,11 +137,59 @@ class CommitInvalidations:
             publish_targets(self.targets, self.using)
 
 
-def invalidate_targets(targets, using=None):
+def lock_workspaces(workspace_ids, using=None):
+    from plane.db.models import WorkspaceSyncCursor
+
+    rows = []
+    for workspace_id in sorted(set(filter(None, workspace_ids)), key=str):
+        WorkspaceSyncCursor.objects.using(using).get_or_create(workspace_id=workspace_id)
+        rows.append(WorkspaceSyncCursor.objects.using(using).select_for_update().get(workspace_id=workspace_id))
+    return rows
+
+
+def record_changes(targets, using=None, issue_ids=None, changed_fields=None, scopes=None, operation="unknown"):
+    from plane.db.models import WorkspaceSyncEvent
+
+    targets = {(w, p) for w, p in targets if w and p}
+    if not targets:
+        return
+    with transaction.atomic(using=using):
+        rows = {str(row.workspace_id): row for row in lock_workspaces([w for w, _ in targets], using)}
+        for workspace_id, project_id in sorted(targets, key=lambda pair: (str(pair[0]), str(pair[1]))):
+            row = rows[str(workspace_id)]
+            row.cursor += 1
+            row.save(using=using, update_fields=["cursor"])
+            event_id = uuid4()
+            payload = {
+                "type": "invalidate",
+                "protocol_version": 1,
+                "event_id": str(event_id),
+                "cursor": str(row.cursor),
+                "project_id": str(project_id),
+                "operation": operation,
+                "scopes": scopes or ["issue"],
+            }
+            ids = list(dict.fromkeys(str(value) for value in (issue_ids or []) if value))
+            if 0 < len(ids) <= 100:
+                payload["issue_ids"] = ids
+            fields = set(changed_fields or []) - {"id", "created_at", "created_by", "created_by_id"}
+            if fields:
+                payload["changed_fields"] = sorted(fields)
+            WorkspaceSyncEvent.objects.using(using).create(
+                workspace_id=workspace_id,
+                project_id=project_id,
+                event_id=event_id,
+                cursor=row.cursor,
+                payload=payload,
+            )
+
+
+def invalidate_targets(targets, using=None, **metadata):
     """Coalesce within exactly the same savepoint scope, preserving rollback isolation."""
     targets = set(targets)
     if not targets:
         return
+    record_changes(targets, using, **metadata)
     connection = transaction.get_connection(using)
     batch = request_invalidations.get()
     if connection.in_atomic_block:
@@ -158,14 +210,98 @@ def invalidate_targets(targets, using=None):
     transaction.on_commit(CommitInvalidations(targets, connection.alias, batch), using=connection.alias)
 
 
-def model_changed(sender, instance, using, **kwargs):
-    if sender._meta.model_name in SYNC_MODELS and instance.workspace_id and instance.project_id:
-        invalidate_targets([(instance.workspace_id, instance.project_id)], using)
+def model_changing(sender, instance, using, update_fields=None, **kwargs):
+    if kwargs.get("raw") or sender._meta.model_name not in SYNC_MODELS:
+        return
+    lock_workspaces([instance.workspace_id], using)
+    previous = sender.all_objects.using(using).filter(pk=instance.pk).values().first() if instance.pk else None
+    instance._sync_previous = previous
+    instance._sync_update_fields = update_fields
+    instance._sync_fields = [
+        (field.attname if field.is_relation and field.name != "estimate_point" else field.name)
+        for field in sender._meta.concrete_fields
+        if field.name not in {"id", "created_at", "created_by"}
+        if (update_fields is None or field.name in update_fields or field.attname in update_fields)
+        and (previous is None or previous.get(field.attname) != getattr(instance, field.attname))
+    ]
+
+
+def model_changed(sender, instance, using, created=False, signal=None, **kwargs):
+    from django.db.models.signals import post_delete
+
+    name = sender._meta.model_name
+    origin = kwargs.get("origin")
+    origin_model = getattr(origin, "model", type(origin))
+    origin_name = getattr(getattr(origin_model, "_meta", None), "model_name", None)
+    if (
+        kwargs.get("raw")
+        or origin_name == "workspace"
+        or name not in SYNC_MODELS
+        or not instance.workspace_id
+        or not instance.project_id
+    ):
+        return
+    deleted = signal is post_delete or bool(getattr(instance, "deleted_at", None))
+    fields = list(getattr(instance, "_sync_fields", []))
+    previous = getattr(instance, "_sync_previous", None)
+    update_fields = getattr(instance, "_sync_update_fields", None)
+    if not deleted and (update_fields is None or "updated_at" in update_fields):
+        if previous is None or previous.get("updated_at") != instance.updated_at:
+            fields.append("updated_at")
+    operation = "delete" if deleted else "create" if created else "archive" if "archived_at" in fields else "update"
+    ids = [instance.pk] if name == "issue" else [getattr(instance, "issue_id", None)]
+    if name in {"issuerelation", "issueblocker"}:
+        ids.append(getattr(instance, "related_issue_id", None))
+        ids.extend([getattr(instance, "block_id", None), getattr(instance, "blocked_by_id", None)])
+    relation_fields = {
+        "issueassignee": "assignee_ids",
+        "issuelabel": "label_ids",
+        "cycleissue": "cycle_id",
+        "moduleissue": "module_ids",
+    }
+    if name in relation_fields:
+        fields = [relation_fields[name]]
+    if name == "issue":
+        ids.append(getattr(instance, "parent_id", None))
+        if previous:
+            ids.append(previous.get("parent_id"))
+    scopes = ["issue" if name == "issue" else "comments" if name == "issuecomment" else "relations"]
+    targets = {(instance.workspace_id, instance.project_id)}
+    if previous and previous.get("workspace_id") and previous.get("project_id"):
+        targets.add((previous["workspace_id"], previous["project_id"]))
+    # Group relation endpoints by their own project. Never disclose an ID from a
+    # private project in an otherwise visible project's event.
+    from plane.db.models import Issue
+
+    grouped = {target: set() for target in targets}
+    if name == "issue":
+        for target in targets:
+            grouped[target].add(instance.pk)
+    for issue_id, workspace_id, project_id in (
+        Issue.all_objects.using(using)
+        .filter(pk__in=[pk for pk in ids if pk])
+        .values_list("id", "workspace_id", "project_id")
+    ):
+        grouped.setdefault((workspace_id, project_id), set()).add(issue_id)
+    for target, target_ids in grouped.items():
+        invalidate_targets(
+            [target], using, issue_ids=target_ids, changed_fields=fields, scopes=scopes, operation=operation
+        )
+
+
+def model_deleting(sender, instance, using, origin=None, **kwargs):
+    origin_model = getattr(origin, "model", type(origin))
+    origin_name = getattr(getattr(origin_model, "_meta", None), "model_name", None)
+    if sender._meta.model_name in SYNC_MODELS and origin_name != "workspace":
+        lock_workspaces([instance.workspace_id], using)
 
 
 def register_signals():
-    from django.db.models.signals import post_delete, post_save
+    from django.db.models.signals import post_delete, post_save, pre_save, pre_delete
 
+    pre_delete.connect(model_deleting, dispatch_uid="workspace-sync-before-delete", weak=False)
+
+    pre_save.connect(model_changing, dispatch_uid="workspace-sync-before-save", weak=False)
     post_save.connect(model_changed, dispatch_uid="workspace-sync-save", weak=False)
     post_delete.connect(model_changed, dispatch_uid="workspace-sync-delete", weak=False)
 
@@ -179,4 +315,15 @@ def request_invalidation(kwargs):
     projects = Project.objects.filter(workspace__slug=slug)
     if kwargs.get("project_id"):
         projects = projects.filter(pk=kwargs["project_id"])
-    invalidate_targets(projects.values_list("workspace_id", "id"))
+    targets = set(projects.values_list("workspace_id", "id"))
+    batch = request_invalidations.get()
+    if batch is not None:
+        # Existing committed callbacks and surviving on_commit entries are the
+        # source of truth. A rolled-back savepoint cannot suppress the fallback.
+        connection = transaction.get_connection()
+        covered = set(batch.targets.get(connection.alias, set()))
+        for _scope, callback, _robust in connection.run_on_commit:
+            if isinstance(callback, CommitInvalidations) and callback.request_batch is batch:
+                covered.update(callback.targets)
+        targets.difference_update(covered)
+    invalidate_targets(targets)

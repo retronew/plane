@@ -72,7 +72,14 @@ export abstract class APIService {
         ...config,
       })
       .then((response) => {
-        if (/\/(?:issues|issues-detail|archived-issues)\//.test(url) && revision !== issueSync.revision) {
+        // Schema/permission and Yjs reads have their own lifecycle. Cancelling
+        // them for unrelated entity mutations can leave an edit dialog unusable.
+        const independentRead = /\/(?:custom-properties|collaboration)(?:\/|\?|$)/.test(url);
+        if (
+          !independentRead &&
+          /\/(?:issues|issues-detail|archived-issues)\//.test(url) &&
+          revision !== issueSync.revision
+        ) {
           issueSync.invalidate();
           throw new CanceledError("Issue response invalidated by a local mutation");
         }
