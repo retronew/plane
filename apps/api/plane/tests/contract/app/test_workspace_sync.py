@@ -303,6 +303,29 @@ def test_entities_restrict_ids_and_permissions(session_client, workspace, sync_p
     assert body["issues"] == [] and body["removed_ids"] == [str(issue.id)]
 
 
+def test_entities_include_authoritative_completed_sub_issues_count(session_client, workspace, sync_project):
+    from plane.db.models import State
+
+    done = State.objects.create(workspace=workspace, project=sync_project, name="Done", group="completed")
+    started = State.objects.create(workspace=workspace, project=sync_project, name="Started", group="started")
+    parent = Issue.objects.create(workspace=workspace, project=sync_project, name="Parent")
+    child = Issue.objects.create(workspace=workspace, project=sync_project, parent=parent, name="Child", state=started)
+    url = f"/api/workspaces/{workspace.slug}/sync/entities/"
+
+    def count():
+        response = session_client.get(url, {"ids": str(parent.id)})
+        assert response.status_code == 200, response.content
+        return response.json()["issues"][0]["completed_sub_issues_count"]
+
+    assert count() == 0
+    child.state = done
+    child.save(update_fields=["state"])
+    assert count() == 1
+    child.state = started
+    child.save(update_fields=["state"])
+    assert count() == 0
+
+
 def test_outbox_retry_preserves_event_identity(workspace, sync_project, settings):
     from plane.db.models import WorkspaceSyncEvent
     from plane.bgtasks.workspace_sync_task import publish_workspace_sync_outbox
