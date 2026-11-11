@@ -1,9 +1,11 @@
-import { act, cleanup, render, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { makeAutoObservable } from "mobx";
+import { observer } from "mobx-react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TPeekIssue } from "@/store/issue/issue-details/root.store";
 import { useIssuePeekUrl } from "./use-issue-peek-url";
+import { useIssuePeekBack } from "./use-issue-peek-back";
 
 const projectId = "900a56f7-6a64-498f-8d64-4c5c349e5625";
 const first: TPeekIssue = { workspaceSlug: "wuzuo", projectId, issueId: "b43e5331-5157-43a2-94c0-267f17618dd6" };
@@ -22,10 +24,11 @@ const store = makeAutoObservable({
 });
 vi.mock("./store/use-issue-detail", () => ({ useIssueDetail: () => store }));
 
-function Sync() {
+const Sync = observer(function Sync() {
   useIssuePeekUrl();
-  return null;
-}
+  const { canGoBack, goBack } = useIssuePeekBack(store.peekIssue ?? first);
+  return canGoBack ? <button onClick={goBack}>Go back</button> : null;
+});
 function setup(url = basePath) {
   const router = createMemoryRouter(
     [
@@ -56,6 +59,41 @@ describe("issue detail URL synchronization", () => {
     act(() => store.setPeekIssue(undefined));
     await waitFor(() => expect(router.state.location.search).toBe("?filter=a%26b"));
     expect(router.state.location.hash).toBe("#description");
+  });
+
+  it("returns through multiple peeked tasks without creating new history entries", async () => {
+    const router = setup(`${basePath}?filter=a%26b#description`);
+    act(() => store.setPeekIssue(first));
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("peekId")).toBe(first.issueId));
+    expect(screen.queryByRole("button", { name: "Go back" })).toBeNull();
+    act(() => store.setPeekIssue(second));
+    await screen.findByRole("button", { name: "Go back" });
+    const third = { ...first, issueId: "c43e5331-5157-43a2-94c0-267f17618dd6" };
+    act(() => store.setPeekIssue(third));
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("peekId")).toBe(third.issueId));
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+    await waitFor(() => expect(store.peekIssue).toEqual(second));
+    expect(router.state.location.hash).toBe("#description");
+    expect(new URLSearchParams(router.state.location.search).get("filter")).toBe("a&b");
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+    await waitFor(() => expect(store.peekIssue?.issueId).toBe(first.issueId));
+    expect(screen.queryByRole("button", { name: "Go back" })).toBeNull();
+    await act(() => router.navigate(1));
+    expect(store.peekIssue).toEqual(second);
+    expect(screen.getByRole("button", { name: "Go back" })).toBeTruthy();
+  });
+
+  it("does not offer Back for a direct link or after closing and opening a fresh peek", async () => {
+    const router = setup(`${basePath}?peekId=${first.issueId}`);
+    await waitFor(() => expect(store.peekIssue?.issueId).toBe(first.issueId));
+    expect(screen.queryByRole("button", { name: "Go back" })).toBeNull();
+    act(() => store.setPeekIssue(second));
+    await screen.findByRole("button", { name: "Go back" });
+    act(() => store.setPeekIssue(undefined));
+    await waitFor(() => expect(router.state.location.search).toBe(""));
+    act(() => store.setPeekIssue(first));
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("peekId")).toBe(first.issueId));
+    expect(screen.queryByRole("button", { name: "Go back" })).toBeNull();
   });
 
   it("restores a copied global-view URL without a project route parameter", async () => {

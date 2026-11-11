@@ -80,7 +80,18 @@ export function useIssueDetailSync(
       abort,
       onAccessRevoked: revoke,
       refresh: async (context) => {
-        if (!context?.reset && context?.issueIds?.length && !context.issueIds.includes(issueId)) return;
+        if (!context?.reset && context?.issueIds?.length) {
+          // Descendant changes may name only their direct parent; refresh the complete root snapshot.
+          const knownIds = new Set<string>();
+          const pending = [issueId];
+          for (let index = 0; index < pending.length; index++) {
+            const id = pending[index];
+            if (knownIds.has(id)) continue;
+            knownIds.add(id);
+            pending.push(...(rootIssueStore.issueDetail.subIssues.subIssues[id] ?? []));
+          }
+          if (!context.issueIds.some((id) => knownIds.has(id))) return;
+        }
         abort();
         const request = new AbortController();
         controller = request;
@@ -104,7 +115,7 @@ export function useIssueDetailSync(
             get<TIssueComment[]>("history/", { activity_type: "issue-comment" }),
             get<TIssueActivity[]>("history/", { activity_type: "issue-property" }),
             get<TIssueRelation>("issue-relation/"),
-            get<TIssueSubIssues>("sub-issues/"),
+            get<TIssueSubIssues>("sub-issues/", { include_descendants: true }),
           ]);
           if (!valid()) {
             throw new DOMException("Detail synchronization superseded", "AbortError");
@@ -154,11 +165,8 @@ export function useIssueDetailSync(
           }
           runInAction(() => {
             const detail = rootIssueStore.issueDetail;
-            const subIssues = (children.sub_issues ?? []) as TIssue[];
             // DescriptionInput preserves unsaved edits; collaborative editors retain their Yjs document.
-            rootIssueStore.issues.addIssue([
-              { ...rootIssueStore.issues.getIssueById(issueId), ...issue, sub_issues_count: subIssues.length },
-            ]);
+            rootIssueStore.issues.addIssue([{ ...rootIssueStore.issues.getIssueById(issueId), ...issue }]);
             rootIssueStore.issues.addIssue(parents.filter((parent): parent is TIssue => !!parent));
             detail.addAttachments(issueId, issue.issue_attachments ?? []);
             detail.addLinks(issueId, issue.issue_link ?? []);
@@ -182,9 +190,7 @@ export function useIssueDetailSync(
               Object.entries(relations).map(([key, issues]) => [key, issues.flat().map((related) => related.id)])
             ) as Record<keyof TIssueRelation, string[]>;
             rootIssueStore.issues.addIssue(Object.values(relations).flat());
-            rootIssueStore.issues.addIssue(subIssues);
-            detail.subIssues.subIssues[issueId] = subIssues.map((child) => child.id);
-            detail.subIssues.subIssuesStateDistribution[issueId] = children.state_distribution ?? {};
+            detail.subIssues.applySubIssues(issueId, children);
             if (refreshDictionaries) {
               for (const [id, state] of Object.entries(stateStore.stateMap))
                 if (state.project_id === projectId) delete stateStore.stateMap[id];

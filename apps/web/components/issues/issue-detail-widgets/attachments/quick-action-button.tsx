@@ -9,6 +9,8 @@ import { observer } from "mobx-react";
 import type { FileRejection } from "react-dropzone";
 import { useDropzone } from "react-dropzone";
 import { AddOutline } from "@makeplane/propel/icons";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 // plane imports
 import { setToast } from "@plane/blocks/toast";
 import type { TIssueServiceType } from "@plane/types";
@@ -109,7 +111,10 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
           },
         })
       ) : (
-        <button
+        <IconButton
+          variant="ghost"
+          size="sm"
+          icon={<Icon icon={AddOutline} />}
           onClick={(event) => {
             event.stopPropagation();
             open();
@@ -117,9 +122,7 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
           type="button"
           aria-label={translate("common.attachment")}
           disabled={isLoading || disabled}
-        >
-          <AddOutline className="h-4 w-4" />
-        </button>
+        />
       )}
       <input {...getInputProps()} />
     </>

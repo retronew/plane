@@ -5,7 +5,6 @@
  */
 
 import { useCallback } from "react";
-import { cloneDeep } from "lodash-es";
 import { observer } from "mobx-react";
 import {
   EIssueFilterType,
@@ -22,6 +21,7 @@ import { EIssueServiceType } from "@plane/types";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
 import { SubIssueDisplayFilters } from "./display-filters";
 import { SubIssueFilters } from "./filters";
 import { SubIssuesActionButton } from "./quick-action-button";
@@ -43,6 +43,7 @@ export const SubWorkItemTitleActions = observer(function SubWorkItemTitleActions
     },
   } = useIssueDetail(issueServiceType);
   const { getProjectStates } = useProjectState();
+  const workflowStore = useProjectWorkflow(projectId);
   const {
     project: { getProjectMemberIds },
   } = useMember();
@@ -68,32 +69,14 @@ export const SubWorkItemTitleActions = observer(function SubWorkItemTitleActions
   );
 
   const handleFiltersUpdate = useCallback(
-    (key: keyof IIssueFilterOptions, value: string | string[]) => {
-      const newValues = cloneDeep(subIssueFilters?.filters?.[key]) ?? [];
-      const newValuesSet = new Set(newValues);
-
-      if (Array.isArray(value)) {
-        // this validation is majorly for the filter start_date, target_date custom
-        value.forEach((val) => {
-          if (!newValuesSet.has(val)) {
-            newValues.push(val);
-            newValuesSet.add(val);
-          } else {
-            newValues.splice(newValues.indexOf(val), 1);
-            newValuesSet.delete(val);
-          }
-        });
-      } else {
-        if (subIssueFilters?.filters?.[key]?.includes(value)) newValues.splice(newValues.indexOf(value), 1);
-        else newValues.push(value);
-      }
-      updateSubWorkItemFilters(EIssueFilterType.FILTERS, { [key]: newValues }, parentId);
+    (filters: IIssueFilterOptions) => {
+      updateSubWorkItemFilters(EIssueFilterType.FILTERS, filters, parentId);
     },
-    [subIssueFilters?.filters, updateSubWorkItemFilters, parentId]
+    [updateSubWorkItemFilters, parentId]
   );
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1">
       <SubIssueDisplayFilters
         layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
         displayProperties={subIssueFilters?.displayProperties ?? {}}
@@ -106,6 +89,7 @@ export const SubWorkItemTitleActions = observer(function SubWorkItemTitleActions
         filters={subIssueFilters?.filters ?? {}}
         memberIds={projectMemberIds ?? undefined}
         states={projectStates}
+        issueTypes={workflowStore.issueTypes[projectId]?.results}
         availableFilters={SUB_WORK_ITEM_AVAILABLE_FILTERS_FOR_WORK_ITEM_PAGE}
       />
       {!disabled && (

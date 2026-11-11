@@ -6,14 +6,17 @@
 
 import { useMemo } from "react";
 import { observer } from "mobx-react";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
+import { Menu, MenuTrigger } from "@makeplane/propel/components/menu";
 import { PreferencesOutline } from "@makeplane/propel/icons";
-// plane imports
+import { ActionMenuContent } from "@plane/blocks/common";
 import type { IIssueDisplayFilterOptions, ILayoutDisplayFiltersOptions, IIssueDisplayProperties } from "@plane/types";
 import { cn } from "@plane/utils";
 import { useTranslation } from "@plane/i18n";
-// components
-import { DisplayFiltersSelection, FiltersDropdown } from "@/components/issues/issue-layouts/filters";
+import { DisplayFiltersSelection } from "@/components/issues/issue-layouts/filters";
 import { isDisplayFiltersApplied } from "@/components/issues/issue-layouts/utils";
+
 type TSubIssueDisplayFiltersProps = {
   displayProperties: IIssueDisplayProperties;
   displayFilters: IIssueDisplayFilterOptions;
@@ -30,41 +33,42 @@ export const SubIssueDisplayFilters = observer(function SubIssueDisplayFilters(p
     handleDisplayFiltersUpdate,
     displayFilters,
   } = props;
-
   const { t } = useTranslation();
   const isFilterApplied = useMemo(
     () => isDisplayFiltersApplied({ displayProperties, displayFilters }),
     [displayProperties, displayFilters]
   );
 
+  if (!layoutDisplayFiltersOptions?.display_filters || !layoutDisplayFiltersOptions.display_properties.length)
+    return null;
+
   return (
-    <>
-      {layoutDisplayFiltersOptions?.display_filters && layoutDisplayFiltersOptions?.display_properties.length > 0 && (
-        <FiltersDropdown
-          displayMenu
-          title={t("common.display")}
-          placement="bottom-end"
-          menuButton={
-            <div
-              className={cn(
-                "relative rounded-sm p-1 transition-all duration-200",
-                isFilterApplied && "bg-accent-primary/20"
-              )}
-            >
-              {isFilterApplied && <span className="absolute -top-1 -right-1 rounded-full bg-accent-primary p-1" />}
-              <PreferencesOutline className="h-3.5 w-3.5 text-primary" />
-            </div>
-          }
-        >
-          <DisplayFiltersSelection
-            displayProperties={displayProperties}
-            displayFilters={displayFilters}
-            handleDisplayPropertiesUpdate={handleDisplayPropertiesUpdate}
-            handleDisplayFiltersUpdate={handleDisplayFiltersUpdate}
-            layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
+    <Menu>
+      <MenuTrigger
+        render={
+          <IconButton
+            variant="ghost"
+            size="sm"
+            aria-label={t("common.display")}
+            icon={<Icon icon={PreferencesOutline} />}
+            render={(renderProps) => (
+              <button
+                {...renderProps}
+                className={cn(renderProps.className, isFilterApplied && "bg-accent-primary/20 text-accent-primary")}
+              />
+            )}
           />
-        </FiltersDropdown>
-      )}
-    </>
+        }
+      />
+      <ActionMenuContent side="bottom" align="end">
+        <DisplayFiltersSelection
+          displayProperties={displayProperties}
+          displayFilters={displayFilters}
+          handleDisplayPropertiesUpdate={handleDisplayPropertiesUpdate}
+          handleDisplayFiltersUpdate={handleDisplayFiltersUpdate}
+          layoutDisplayFiltersOptions={layoutDisplayFiltersOptions}
+        />
+      </ActionMenuContent>
+    </Menu>
   );
 });

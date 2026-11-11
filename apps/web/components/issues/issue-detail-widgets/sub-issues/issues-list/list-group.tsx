@@ -29,7 +29,7 @@ interface TSubIssuesListGroupProps {
   ) => void;
   subIssueOperations: TSubIssueOperations;
   storeType?: EIssuesStoreType;
-  spacingLeft?: number;
+  treeBranches: boolean[];
 }
 
 export const SubIssuesListGroup = observer(function SubIssuesListGroup(props: TSubIssuesListGroupProps) {
@@ -45,7 +45,7 @@ export const SubIssuesListGroup = observer(function SubIssuesListGroup(props: TS
     subIssueOperations,
     workItemIds,
     storeType = EIssuesStoreType.PROJECT,
-    spacingLeft = 0,
+    treeBranches,
   } = props;
 
   const isAllIssues = group.id === ALL_ISSUES;
@@ -55,7 +55,7 @@ export const SubIssuesListGroup = observer(function SubIssuesListGroup(props: TS
 
   if (!workItemIds.length) return null;
 
-  const items = workItemIds.map((workItemId) => (
+  const items = workItemIds.map((workItemId, index) => (
     <SubIssuesListItem
       key={workItemId}
       workspaceSlug={workspaceSlug}
@@ -67,7 +67,7 @@ export const SubIssuesListGroup = observer(function SubIssuesListGroup(props: TS
       handleIssueCrudState={handleIssueCrudState}
       subIssueOperations={subIssueOperations}
       issueServiceType={serviceType}
-      spacingLeft={spacingLeft}
+      treeBranches={parentIssueId === rootIssueId ? [] : [...treeBranches, index < workItemIds.length - 1]}
       storeType={storeType}
     />
   ));

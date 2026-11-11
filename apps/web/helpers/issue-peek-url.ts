@@ -25,6 +25,30 @@ export function readIssuePeekUrl(
   };
 }
 
+/** Only offer Back for another task reached inside this workspace's peek navigation. */
+export function readIssuePeekBack(state: unknown, current: TPeekIssue): TPeekIssue | undefined {
+  if (!state || typeof state !== "object" || !("issuePeekBack" in state)) return undefined;
+  const previous = state.issuePeekBack;
+  if (!previous || typeof previous !== "object") return undefined;
+  if (
+    !("workspaceSlug" in previous) ||
+    previous.workspaceSlug !== current.workspaceSlug ||
+    !("projectId" in previous) ||
+    typeof previous.projectId !== "string" ||
+    !uuidPattern.test(previous.projectId) ||
+    !("issueId" in previous) ||
+    typeof previous.issueId !== "string" ||
+    !uuidPattern.test(previous.issueId) ||
+    previous.issueId === current.issueId
+  )
+    return undefined;
+  return {
+    workspaceSlug: current.workspaceSlug,
+    projectId: previous.projectId,
+    issueId: previous.issueId,
+  };
+}
+
 export function buildIssuePeekUrl(
   location: { pathname: string; search: string; hash: string },
   peekIssue: TPeekIssue | undefined

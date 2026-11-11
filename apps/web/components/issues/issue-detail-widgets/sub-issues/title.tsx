@@ -43,7 +43,7 @@ export const SubIssuesCollapsibleTitle = observer(function SubIssuesCollapsibleT
       <span className="flex items-center gap-1.5 text-13 text-tertiary">
         <CircularProgress
           value={percentage}
-          size="md"
+          size="sm"
           variant={percentage === 100 ? "success" : "brand"}
           aria-label={t("web.sub_work_item_progress")}
         />

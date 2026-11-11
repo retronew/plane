@@ -58,7 +58,7 @@ function CreatedByProperty({ id, displayName, embedIssue }: { id: string; displa
   const isIntakeCreator = displayName?.includes("-intake");
   return (
     <SidebarPropertyListItem
-      variant={embedIssue ? "detail" : "default"}
+      variant="detail"
       icon={UserOutline}
       label={t("common.created_by")}
       childrenClassName="min-h-7.5 gap-2 px-[calc(var(--field-inset-md)+1px)]"
@@ -112,7 +112,7 @@ function EstimateProperty({
 export const PeekOverviewProperties = observer(function PeekOverviewProperties(props: IPeekOverviewProperties) {
   const { workspaceSlug, projectId, issueId, issueOperations, disabled, embedIssue = false } = props;
   const { t } = useTranslation();
-  const propertyVariant = embedIssue ? "detail" : "default";
+  const propertyVariant = "detail";
   // store hooks
   const { getProjectById } = useProject();
   const {

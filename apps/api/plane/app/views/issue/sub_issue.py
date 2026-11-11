@@ -16,6 +16,7 @@ from django.views.decorators.gzip import gzip_page
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.functions import Coalesce
+from django.db.models.expressions import RawSQL
 
 # Third Party imports
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ from .. import BaseAPIView
 from plane.app.serializers import IssueSerializer
 from plane.app.permissions import ProjectEntityPermission
 from plane.db.models import Issue, IssueLink, FileAsset, CycleIssue, IssueLabel, IssueAssignee, ModuleIssue, Project
+from plane.db.models.state import StateGroup
 from plane.services.hierarchy import hierarchy_error, validate_hierarchy_write
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.timezone_converter import user_timezone_converter
@@ -34,18 +36,53 @@ from plane.utils.host import base_host
 from plane.utils.order_queryset import order_issue_queryset
 
 
+def _descendant_ids(issues, issue_id):
+    """Traverse only visible, scoped edges in one query, terminating on cycles.
+
+    Compile the manager queryset rather than duplicating issue_objects visibility
+    rules in SQL. UNION deduplicates IDs across iterations; excluding the root
+    prevents corrupt cycles from returning the requested issue as its own child.
+    """
+    eligible_sql, params = issues.exclude(pk=issue_id).order_by().values("id", "parent_id").query.sql_with_params()
+    return RawSQL(
+        f"""
+        WITH RECURSIVE eligible AS ({eligible_sql}), descendants(id) AS (
+            SELECT id FROM eligible WHERE parent_id = %s
+            UNION
+            SELECT child.id FROM eligible child
+            INNER JOIN descendants parent ON child.parent_id = parent.id
+        )
+        SELECT id FROM descendants
+        """,
+        (*params, issue_id),
+        output_field=UUIDField(),
+    )
+
+
 class SubIssuesEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
 
     @method_decorator(gzip_page)
     def get(self, request, slug, project_id, issue_id):
-        # SECURITY: scope the parent lookup to the URL project. ProjectEntityPermission
-        # only checks that the caller belongs to `project_id`, not that `issue_id` lives
-        # in it, so an unscoped filter leaks sub-issue metadata across projects in the
-        # same workspace.
+        include_descendants = request.GET.get("include_descendants", "").lower() == "true"
+        issues = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id)
+        # Permission checks cover the URL project, so validate the root itself as
+        # well: corrupt cross-project parent edges must not expose local children.
+        # Preserve legacy reads under archived/draft roots in direct-only mode.
+        parents = Issue.objects.filter(workspace__slug=slug, project_id=project_id)
+        if include_descendants:
+            # Archived detail pages use this endpoint too. Only the root may be
+            # archived; descendant traversal still uses issue_objects throughout.
+            parents = parents.exclude(is_draft=True).exclude(state__group=StateGroup.TRIAGE.value).exclude(
+                project__archived_at__isnull=False
+            )
+            sub_issues = issues.filter(pk__in=_descendant_ids(issues, issue_id))
+        else:
+            sub_issues = issues.filter(parent_id=issue_id)
+        if not parents.filter(pk=issue_id).exists():
+            sub_issues = sub_issues.none()
         sub_issues = (
-            Issue.issue_objects.filter(parent_id=issue_id, workspace__slug=slug, project_id=project_id)
-            .annotate(
+            sub_issues.annotate(
                 cycle_id=Subquery(
                     CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
                 )
@@ -179,10 +216,11 @@ class SubIssuesEndpoint(BaseAPIView):
             )
         )
 
-        # create's a dict with state group name with their respective issue id's
+        # Progress always reflects direct children, even when displaying all descendants.
         result = defaultdict(list)
         for sub_issue in sub_issues:
-            result[sub_issue["state_group"]].append(str(sub_issue["id"]))
+            if str(sub_issue["parent_id"]) == str(issue_id):
+                result[sub_issue["state_group"]].append(str(sub_issue["id"]))
 
         datetime_fields = ["created_at", "updated_at"]
         sub_issues = user_timezone_converter(sub_issues, datetime_fields, request.user.user_timezone)
