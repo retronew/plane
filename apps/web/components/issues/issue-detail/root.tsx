@@ -1,3 +1,4 @@
+import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -85,6 +86,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
   const {
     issues: { removeIssue: removeArchivedIssue },
   } = useIssues(EIssuesStoreType.ARCHIVED);
+  useIssueDetailSync(detailWorkspaceSlug, detailProjectId, detailIssueId, undefined, true, is_archived);
   const { allowPermissions } = useUserPermissions();
   const { issueDetailSidebarCollapsed } = useAppTheme();
 

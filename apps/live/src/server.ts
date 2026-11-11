@@ -27,6 +27,7 @@ import { env } from "@/env";
 import { HocusPocusServerManager } from "@/hocuspocus";
 // redis
 import { redisManager } from "@/redis";
+import { WorkspaceSyncServer, WORKSPACE_SYNC_PATH } from "@/workspace-sync";
 
 export class Server {
   private app: Express;
@@ -36,6 +37,7 @@ export class Server {
   private comparisonServer: Hocuspocus | undefined;
   private issueDescriptionServer: Hocuspocus | undefined;
   private pageDescriptionServer: Hocuspocus | undefined;
+  private workspaceSyncServer: WorkspaceSyncServer | undefined;
 
   constructor() {
     this.app = express();
@@ -100,6 +102,11 @@ export class Server {
 
   private setupRoutes(hocuspocusServer: Hocuspocus) {
     CONTROLLERS.forEach((controller) => registerController(this.router, controller, [hocuspocusServer]));
+    this.workspaceSyncServer = new WorkspaceSyncServer();
+    this.workspaceSyncServer.initialize();
+    (this.router as expressWs.Router).ws(WORKSPACE_SYNC_PATH, (socket, request) => {
+      this.workspaceSyncServer!.connect(socket, request);
+    });
     this.issueDescriptionServer = createIssueDescriptionServer();
     const issueDescriptionServer = this.issueDescriptionServer;
     (this.router as expressWs.Router).ws(ISSUE_DESCRIPTION_PATH, (socket, request) => {
@@ -132,6 +139,7 @@ export class Server {
   }
 
   public async destroy() {
+    this.workspaceSyncServer?.destroy();
     await this.pageDescriptionServer?.destroy();
     await this.issueDescriptionServer?.destroy();
     await this.comparisonServer?.destroy();

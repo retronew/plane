@@ -1,3 +1,4 @@
+import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -394,6 +395,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const composerRef = useComposerRestoreAnimation(cacheKey, isDraft);
 
   const issueIdToFetch = data?.id ?? data?.sourceIssueId;
+  useIssueDetailSync(workspaceSlugValue, projectId, data?.id, onClose, isOpen && !isDraft);
   const descriptionFallback = cachedDraft?.values.description_html ?? data?.description_html ?? "<p></p>";
 
   useEffect(() => {

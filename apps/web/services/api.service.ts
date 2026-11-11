@@ -6,8 +6,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
-import { create } from "axios";
+import { CanceledError, create } from "axios";
+import { issueSync } from "@/lib/sync/issue-sync";
 import { normalizeAPIRequestURL } from "@plane/services";
+import { withIssueSyncMutation } from "./issue-sync-mutation";
 
 export abstract class APIService {
   protected baseURL: string;
@@ -63,29 +65,49 @@ export abstract class APIService {
   }
 
   get(url: string, params = {}, config: AxiosRequestConfig = {}) {
-    return this.axiosInstance.get(url, {
-      ...params,
-      ...config,
-    });
+    const revision = issueSync.revision;
+    return this.axiosInstance
+      .get(url, {
+        ...params,
+        ...config,
+      })
+      .then((response) => {
+        if (/\/(?:issues|issues-detail|archived-issues)\//.test(url) && revision !== issueSync.revision) {
+          issueSync.invalidate();
+          throw new CanceledError("Issue response invalidated by a local mutation");
+        }
+        return response;
+      });
+  }
+
+  private mutate<T>(url: string | undefined, request: () => Promise<T>): Promise<T> {
+    const issueMutation =
+      /\/(?:issues|archived-issues|draft-issues|draft-to-issue|issue-dates|bulk-[^/]*issues|cycles|modules)\//.test(
+        url ?? ""
+      );
+    return issueMutation ? withIssueSyncMutation(request) : request();
   }
 
   post(url: string, data = {}, config: AxiosRequestConfig = {}) {
-    return this.axiosInstance.post(url, data, config);
+    return this.mutate(url, () => this.axiosInstance.post(url, data, config));
   }
 
   put(url: string, data = {}, config: AxiosRequestConfig = {}) {
-    return this.axiosInstance.put(url, data, config);
+    return this.mutate(url, () => this.axiosInstance.put(url, data, config));
   }
 
   patch(url: string, data = {}, config: AxiosRequestConfig = {}) {
-    return this.axiosInstance.patch(url, data, config);
+    return this.mutate(url, () => this.axiosInstance.patch(url, data, config));
   }
 
   delete(url: string, data?: any, config: AxiosRequestConfig = {}) {
-    return this.axiosInstance.delete(url, { data, ...config });
+    return this.mutate(url, () => this.axiosInstance.delete(url, { data, ...config }));
   }
 
-  request(config = {}) {
+  request(config: AxiosRequestConfig = {}) {
+    if (["post", "put", "patch", "delete"].includes(config.method?.toLowerCase() ?? "get")) {
+      return this.mutate(config.url, () => this.axiosInstance(config));
+    }
     return this.axiosInstance(config);
   }
 }

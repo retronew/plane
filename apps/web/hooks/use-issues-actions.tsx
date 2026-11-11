@@ -21,6 +21,7 @@ import type {
 } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 import { useIssues } from "./store/use-issues";
+import { useIssueListSync } from "./use-issue-list-sync";
 
 export interface IssueActions {
   fetchIssues: (
@@ -53,26 +54,28 @@ export const useIssuesActions = (storeType: EIssuesStoreType): IssueActions => {
   const archivedIssueActions = useArchivedIssueActions();
   const workspaceDraftIssueActions = useWorkspaceDraftIssueActions();
 
-  switch (storeType) {
-    case EIssuesStoreType.PROJECT_VIEW:
-      return projectViewIssueActions;
-    case EIssuesStoreType.PROFILE:
-      return profileIssueActions;
-    case EIssuesStoreType.ARCHIVED:
-      return archivedIssueActions;
-    case EIssuesStoreType.CYCLE:
-      return cycleIssueActions;
-    case EIssuesStoreType.MODULE:
-      return moduleIssueActions;
-    case EIssuesStoreType.GLOBAL:
-      return globalIssueActions;
-    case EIssuesStoreType.WORKSPACE_DRAFT:
-      //@ts-expect-error type mismatch
-      return workspaceDraftIssueActions;
-    case EIssuesStoreType.PROJECT:
-    default:
-      return projectIssueActions;
-  }
+  const selectedActions = (() => {
+    switch (storeType) {
+      case EIssuesStoreType.PROJECT_VIEW:
+        return projectViewIssueActions;
+      case EIssuesStoreType.PROFILE:
+        return profileIssueActions;
+      case EIssuesStoreType.ARCHIVED:
+        return archivedIssueActions;
+      case EIssuesStoreType.CYCLE:
+        return cycleIssueActions;
+      case EIssuesStoreType.MODULE:
+        return moduleIssueActions;
+      case EIssuesStoreType.GLOBAL:
+        return globalIssueActions;
+      case EIssuesStoreType.WORKSPACE_DRAFT:
+        return workspaceDraftIssueActions;
+      case EIssuesStoreType.PROJECT:
+      default:
+        return projectIssueActions;
+    }
+  })();
+  return useIssueListSync(storeType, selectedActions as IssueActions);
 };
 
 const useProjectIssueActions = () => {

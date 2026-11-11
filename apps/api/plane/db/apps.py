@@ -7,3 +7,8 @@ from django.apps import AppConfig
 
 class DbConfig(AppConfig):
     name = "plane.db"
+
+    def ready(self):
+        from plane.services.workspace_sync import register_signals
+
+        register_signals()

@@ -1,3 +1,4 @@
+import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
 /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
@@ -59,6 +60,15 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     setPeekIssue(undefined);
     if (embedIssue) embedRemoveCurrentNotification?.();
   }, [embedIssue, embedRemoveCurrentNotification, setPeekIssue]);
+
+  useIssueDetailSync(
+    peekIssue?.workspaceSlug,
+    peekIssue?.projectId,
+    peekIssue?.issueId,
+    removeRoutePeekId,
+    !is_draft && !closing,
+    peekIssue?.isArchived
+  );
 
   const issueOperations: TIssueOperations = useMemo(
     () => ({
