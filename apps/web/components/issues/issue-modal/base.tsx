@@ -92,7 +92,7 @@ const buildComposerDraftState = (args: {
       : undefined;
   const savedDraft = cacheKey ? readComposerDraft(cacheKey) : undefined;
   // A saved composer belongs to its project; another entry point must not inherit its properties or assets.
-  const cachedDraft = savedDraft?.values.project_id === args.projectId ? savedDraft : undefined;
+  const cachedDraft = (savedDraft?.values.project_id || undefined) === args.projectId ? savedDraft : undefined;
   const clearCachedDraft = () => {
     if (cacheKey) saveComposerDraft(cacheKey);
   };

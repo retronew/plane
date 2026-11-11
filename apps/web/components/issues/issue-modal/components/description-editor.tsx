@@ -13,7 +13,6 @@ import { AiStar1Outline } from "@makeplane/propel/icons";
 import { ETabIndices } from "@plane/constants";
 import type { EditorRefApi } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
-import { setToast } from "@plane/blocks/toast";
 import type { TIssue } from "@plane/types";
 import { EFileAssetType } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
@@ -89,18 +88,9 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [descriptionHtmlData]);
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = () => {
     if (gptAssistantModal) return;
-    if (editorRef.current?.isEditorReadyToDiscard()) {
-      onClose();
-    } else {
-      setToast({
-        type: "error",
-        title: t("toast.error"),
-        message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
-      });
-      event.preventDefault(); // Prevent default action if editor is not ready to discard
-    }
+    onClose();
   };
 
   useKeypress("Escape", handleKeyDown);

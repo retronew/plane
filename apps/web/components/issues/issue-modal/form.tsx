@@ -166,7 +166,6 @@ function IssueFormHeader({
   data,
   isProjectSelectionDisabled,
   modalTitle,
-  editorRef,
   handleFormChange,
   onClose,
   t,
@@ -175,7 +174,6 @@ function IssueFormHeader({
   data: Partial<TIssue> | undefined;
   isProjectSelectionDisabled: boolean;
   modalTitle: string;
-  editorRef: React.MutableRefObject<EditorRefApi | null>;
   handleFormChange: () => void;
   onClose: () => void;
   t: TTranslate;
@@ -193,23 +191,7 @@ function IssueFormHeader({
         <ChevronRight className="size-3.5 shrink-0 text-placeholder" aria-hidden="true" />
         <DialogTitle data-composer-heading="">{modalTitle}</DialogTitle>
       </div>
-      <IconButton
-        variant="ghost"
-        size="md"
-        icon={<Icon icon={X} />}
-        aria-label={t("close")}
-        onClick={() => {
-          if (editorRef.current?.isEditorReadyToDiscard()) {
-            onClose();
-          } else {
-            setToast({
-              type: "error",
-              title: t("toast.error"),
-              message: t("web.editor_is_still_processing_changes_please_wait_before_procee"),
-            });
-          }
-        }}
-      />
+      <IconButton variant="ghost" size="md" icon={<Icon icon={X} />} aria-label={t("close")} onClick={onClose} />
     </div>
   );
 }
@@ -498,7 +480,7 @@ function IssueFormActions({
             label={t("web.discard")}
             disabled={isDisabled || isMoving}
             onClick={() => {
-              if (!editorRef.current?.isEditorReadyToDiscard()) {
+              if (editorRef.current && !editorRef.current.isEditorReadyToDiscard()) {
                 setToast({
                   type: "error",
                   title: t("error"),
@@ -656,7 +638,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
   const onClose = () => {
     if (isSubmitting || isMoving || isApplyingTemplate) return;
-    if (!editorRef.current?.isEditorReadyToDiscard()) {
+    if (editorRef.current && !editorRef.current.isEditorReadyToDiscard()) {
       setToast({ type: "error", title: t("error"), message: t("editor_is_not_ready_to_discard_changes") });
       return;
     }
@@ -892,7 +874,6 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
               data={data}
               isProjectSelectionDisabled={isProjectSelectionDisabled}
               modalTitle={modalTitle}
-              editorRef={editorRef}
               handleFormChange={handleFormChange}
               onClose={onClose}
               t={t}
