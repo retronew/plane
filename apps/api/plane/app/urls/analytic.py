@@ -5,6 +5,7 @@
 from django.urls import path
 
 from plane.app.views.analytic.details import AnalyticsDetailsEndpoint
+from plane.app.views.analytic.member_work import MemberWorkEndpoint, MemberWorkDetailEndpoint
 
 
 from plane.app.views import (
@@ -24,6 +25,12 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path("workspaces/<str:slug>/member-work/", MemberWorkEndpoint.as_view(), name="member-work"),
+    path(
+        "workspaces/<str:slug>/member-work/<str:user_id>/",
+        MemberWorkDetailEndpoint.as_view(),
+        name="member-work-detail",
+    ),
     path(
         "workspaces/<str:slug>/advance-analytics-details/",
         AnalyticsDetailsEndpoint.as_view(),

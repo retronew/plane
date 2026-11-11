@@ -4,6 +4,7 @@
 
 from django.urls import path
 from plane.app.views.issue.collaboration import IssueCollaborationEndpoint
+from plane.app.views.issue.comment_review import IssueCommentReviewEndpoint
 
 from plane.app.views import (
     BulkCreateIssueLabelsEndpoint,
@@ -35,6 +36,16 @@ from plane.app.views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comment-reviews/",
+        IssueCommentReviewEndpoint.as_view(),
+        name="issue-comment-reviews",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/comment-reviews/<uuid:comment_id>/",
+        IssueCommentReviewEndpoint.as_view(),
+        name="issue-comment-review",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/collaboration/",
         IssueCollaborationEndpoint.as_view(),

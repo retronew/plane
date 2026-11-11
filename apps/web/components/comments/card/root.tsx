@@ -13,6 +13,7 @@ import type { TIssueComment, TCommentsOperations } from "@plane/types";
 import { CommentQuickActions } from "../quick-actions";
 import { CommentBlock } from "../comment-block";
 import { CommentCardDisplay } from "./display";
+import { CommentReasonReview } from "./reason-review";
 
 type TCommentCard = {
   workspaceSlug: string;
@@ -79,6 +80,15 @@ export const CommentCard = observer(function CommentCard(props: TCommentCard) {
           />
         )}
       />
+      {projectId && !isIntakeIssue && (
+        <CommentReasonReview
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          issueId={entityId}
+          comment={comment}
+          disabled={disabled || isEditing}
+        />
+      )}
     </CommentBlock>
   );
 });
