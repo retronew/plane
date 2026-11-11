@@ -42,6 +42,8 @@
     "state_template_preview": "Preview",
     "state_template_apply": "Apply changes",
     "state_template_error": "Unable to apply the template. Resolve conflicting state names or workflow settings, then preview again.",
+    "state_template_missing_default": "No default state template is configured. In workspace settings → Templates, set a project template containing states as the default state template, then preview again.",
+    "state_template_request_error": "Unable to preview or apply the template. Check your permissions and network connection, then try again.",
     "change_skin_tone": "Change skin tone",
     "no_project_templates": "No project templates yet. Create one in workspace settings.",
     "project_quick_actions": {

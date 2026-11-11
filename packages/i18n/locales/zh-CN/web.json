@@ -42,6 +42,8 @@
     "state_template_preview": "预览",
     "state_template_apply": "应用变更",
     "state_template_error": "无法应用模板。请先处理状态名称或工作流设置冲突，再重新预览。",
+    "state_template_missing_default": "尚未配置默认状态模板。请在工作区设置→模板中，将包含状态的项目模板设为默认状态模板，再重新预览。",
+    "state_template_request_error": "无法预览或应用模板。请检查权限和网络连接后重试。",
     "change_skin_tone": "更改肤色",
     "no_project_templates": "暂无项目模板，可在工作区设置中创建",
     "project_quick_actions": {
