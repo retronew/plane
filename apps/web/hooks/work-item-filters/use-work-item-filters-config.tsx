@@ -431,12 +431,38 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [t]
   );
 
+  const stateDurationFilterConfig = useMemo<TFilterConfig<TWorkItemFilterProperty>>(
+    () => ({
+      id: "state_duration",
+      label: t("web.state_duration"),
+      icon: CalendarOutline,
+      isEnabled: true,
+      allowMultipleFilters: true,
+      supportedOperatorConfigsMap: new Map(
+        [COMPARISON_OPERATOR.GREATER_THAN, COMPARISON_OPERATOR.LESS_THAN].map((operator) => [
+          operator,
+          {
+            type: FILTER_FIELD_TYPE.NUMBER,
+            isOperatorEnabled: true,
+            min: 0,
+            max: 365000,
+            label: t("web.state_duration"),
+            unitLabel: t("web.state_duration_days"),
+            description: t("web.state_duration_hint"),
+          },
+        ])
+      ),
+    }),
+    [t]
+  );
+
   return {
     areAllConfigsInitialized,
     configs: [
       ...textConfigs,
       stateFilterConfig,
       stateGroupFilterConfig,
+      stateDurationFilterConfig,
       assigneeFilterConfig,
       priorityFilterConfig,
       projectFilterConfig,
@@ -453,6 +479,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     configMap: {
       project_id: projectFilterConfig,
       state_group: stateGroupFilterConfig,
+      state_duration: stateDurationFilterConfig,
       state_id: stateFilterConfig,
       label_id: labelFilterConfig,
       cycle_id: workspaceRelationConfigs[0],

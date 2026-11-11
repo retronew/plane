@@ -3,10 +3,14 @@
 # See the LICENSE file for details.
 
 import copy
+from datetime import timedelta
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
+from django.utils.functional import cached_property
 from django_filters import FilterSet, filters
+from rest_framework.exceptions import ValidationError
 
 from plane.db.models import Issue
 
@@ -133,6 +137,28 @@ class BaseFilterSet(FilterSet):
 
 
 class IssueFilterSet(BaseFilterSet):
+    state_duration__gt = filters.NumberFilter(
+        method="filter_state_duration", lookup_expr="gt", min_value=0, max_value=365000
+    )
+    state_duration__lt = filters.NumberFilter(
+        method="filter_state_duration", lookup_expr="lt", min_value=0, max_value=365000
+    )
+
+    @cached_property
+    def filter_now(self):
+        return timezone.now()
+
+    def filter_state_duration(self, queryset, name, value):
+        """Continuous wall-clock days in the current state, including legacy rows."""
+        lookup = "lt" if name == "state_duration__gt" else "gt"
+        try:
+            cutoff = self.filter_now - timedelta(days=float(value))
+        except (OverflowError, ValueError):
+            raise ValidationError({name: "Duration exceeds the supported datetime range."})
+        return Q(**{f"state_changed_at__{lookup}": cutoff}) | Q(
+            state_changed_at__isnull=True, **{f"created_at__{lookup}": cutoff}
+        )
+
     name__icontains = filters.CharFilter(field_name="name", lookup_expr="icontains")
     text__icontains = filters.CharFilter(method="filter_text")
 

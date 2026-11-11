@@ -99,6 +99,7 @@ export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
   "name",
   "text",
   "state_group",
+  "state_duration",
   "priority",
   "start_date",
   "target_date",

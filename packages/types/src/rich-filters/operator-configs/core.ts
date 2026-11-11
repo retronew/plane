@@ -7,6 +7,7 @@
 import type { TFilterValue } from "../expression";
 import type {
   TTextFilterFieldConfig,
+  TNumberFilterFieldConfig,
   TDateFilterFieldConfig,
   TDateRangeFilterFieldConfig,
   TSingleSelectFilterFieldConfig,
@@ -31,4 +32,6 @@ export type TCoreOperatorSpecificConfigs = {
   [CORE_COLLECTION_OPERATOR.IN]: TCoreInOperatorConfigs;
   [CORE_COMPARISON_OPERATOR.RANGE]: TCoreRangeOperatorConfigs;
   [CORE_COMPARISON_OPERATOR.CONTAINS]: TTextFilterFieldConfig;
+  [CORE_COMPARISON_OPERATOR.GREATER_THAN]: TNumberFilterFieldConfig;
+  [CORE_COMPARISON_OPERATOR.LESS_THAN]: TNumberFilterFieldConfig;
 };
