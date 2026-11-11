@@ -8,6 +8,7 @@ import json
 # Django imports
 from django.db.models import Q
 from django.http import QueryDict
+from django.utils import timezone
 
 # Third party imports
 from django_filters.utils import translate_validation
@@ -90,7 +91,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         self._validate_fields(filter_data, view)
 
         # Build combined Q object from the filter tree
-        combined_q = self._evaluate_node(filter_data, view, queryset)
+        combined_q = self._evaluate_node(filter_data, view, queryset, filter_now=timezone.now())
         if combined_q is None:
             return queryset
 
@@ -161,7 +162,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
             return fields
         return []
 
-    def _evaluate_node(self, node, view, queryset):
+    def _evaluate_node(self, node, view, queryset, filter_now=None):
         """
         Recursively evaluate a JSON node into a combined Q object.
 
@@ -183,7 +184,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
                 return None
             combined_q = Q()
             for child in children:
-                child_q = self._evaluate_node(child, view, queryset)
+                child_q = self._evaluate_node(child, view, queryset, filter_now=filter_now)
                 if child_q is None:
                     continue
                 combined_q |= child_q
@@ -196,7 +197,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
                 return None
             combined_q = Q()
             for child in children:
-                child_q = self._evaluate_node(child, view, queryset)
+                child_q = self._evaluate_node(child, view, queryset, filter_now=filter_now)
                 if child_q is None:
                     continue
                 combined_q &= child_q
@@ -207,13 +208,13 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
             child = node["not"]
             if not isinstance(child, dict):
                 return None
-            child_q = self._evaluate_node(child, view, queryset)
+            child_q = self._evaluate_node(child, view, queryset, filter_now=filter_now)
             if child_q is None:
                 return None
             return ~child_q
 
         # Leaf dict: evaluate via FilterSet to get a Q object
-        return self._build_leaf_q(node, view, queryset)
+        return self._build_leaf_q(node, view, queryset, filter_now=filter_now)
 
     def _preprocess_leaf_conditions(self, leaf_conditions, view, queryset):
         """Hook: Preprocess leaf conditions before building Q object.
@@ -232,7 +233,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         """
         return leaf_conditions
 
-    def _build_leaf_q(self, leaf_conditions, view, queryset):
+    def _build_leaf_q(self, leaf_conditions, view, queryset, filter_now=None):
         """Build a Q object from leaf filter conditions using the view's FilterSet.
 
         We serialize the leaf dict into a QueryDict and let the view's
@@ -273,6 +274,9 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         # Instantiate the filterset with the actual queryset
         # Custom filter methods may need access to the queryset for filtering
         fs = filterset_class(data=qd, queryset=queryset)
+        # Every leaf in this tree must compare relative durations to the same instant.
+        if filter_now is not None:
+            fs.filter_now = filter_now
 
         if not fs.is_valid():
             ve = translate_validation(fs.errors)

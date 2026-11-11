@@ -1,5 +1,10 @@
 {
   "web": {
+    "state_duration": "Time in current state",
+    "state_duration_days": "days",
+    "state_duration_hint": "Elapsed time since the last state change, in days. Older work items without a recorded state change use their creation time.",
+    "state_duration_greater_than": "is greater than",
+    "state_duration_less_than": "is less than",
     "state_color_reset": "Reset color",
     "state_icon_planned": "Planned",
     "state_icon_ready": "Ready",

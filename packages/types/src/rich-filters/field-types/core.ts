@@ -13,6 +13,7 @@ import type { TBaseFilterFieldConfig, IFilterOption } from "./shared";
  */
 export const CORE_FILTER_FIELD_TYPE = {
   TEXT: "text",
+  NUMBER: "number",
   DATE: "date",
   DATE_RANGE: "date_range",
   SINGLE_SELECT: "single_select",
@@ -21,6 +22,15 @@ export const CORE_FILTER_FIELD_TYPE = {
 
 export type TTextFilterFieldConfig = TBaseFilterFieldConfig & {
   type: typeof CORE_FILTER_FIELD_TYPE.TEXT;
+};
+
+export type TNumberFilterFieldConfig = TBaseFilterFieldConfig & {
+  type: typeof CORE_FILTER_FIELD_TYPE.NUMBER;
+  min?: number;
+  max?: number;
+  label: string;
+  unitLabel?: string;
+  description?: string;
 };
 
 // -------- DATE FILTER CONFIGURATIONS --------
@@ -85,6 +95,7 @@ export type TMultiSelectFilterFieldConfig<V extends TFilterValue> = TBaseFilterF
  */
 export type TCoreFilterFieldConfigs<V extends TFilterValue = TFilterValue> =
   | TTextFilterFieldConfig
+  | TNumberFilterFieldConfig
   | TDateFilterFieldConfig<V>
   | TDateRangeFilterFieldConfig<V>
   | TSingleSelectFilterFieldConfig<V>

@@ -12,6 +12,8 @@ import { CORE_EQUALITY_OPERATOR, CORE_COLLECTION_OPERATOR, CORE_COMPARISON_OPERA
  */
 export const CORE_OPERATOR_LABELS_MAP: Record<TCoreSupportedOperators, string> = {
   [CORE_COMPARISON_OPERATOR.CONTAINS]: "common.filter_operators.contains",
+  [CORE_COMPARISON_OPERATOR.GREATER_THAN]: "web.state_duration_greater_than",
+  [CORE_COMPARISON_OPERATOR.LESS_THAN]: "web.state_duration_less_than",
   [CORE_EQUALITY_OPERATOR.EXACT]: "common.filter_operators.exact",
   [CORE_COLLECTION_OPERATOR.IN]: "common.filter_operators.in",
   [CORE_COMPARISON_OPERATOR.RANGE]: "common.filter_operators.range",

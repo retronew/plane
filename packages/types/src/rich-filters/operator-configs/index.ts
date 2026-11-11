@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { TTextFilterFieldConfig } from "../field-types";
+import type { TTextFilterFieldConfig, TNumberFilterFieldConfig } from "../field-types";
 import type { EQUALITY_OPERATOR, COLLECTION_OPERATOR, COMPARISON_OPERATOR } from "../operators";
 import type { TCoreExactOperatorConfigs, TCoreInOperatorConfigs, TCoreRangeOperatorConfigs } from "./core";
 import type {
@@ -42,6 +42,8 @@ export type TOperatorSpecificConfigs = {
   [COLLECTION_OPERATOR.IN]: TInOperatorConfigs;
   [COMPARISON_OPERATOR.RANGE]: TRangeOperatorConfigs;
   [COMPARISON_OPERATOR.CONTAINS]: TTextFilterFieldConfig;
+  [COMPARISON_OPERATOR.GREATER_THAN]: TNumberFilterFieldConfig;
+  [COMPARISON_OPERATOR.LESS_THAN]: TNumberFilterFieldConfig;
 } & TExtendedOperatorSpecificConfigs;
 
 /**

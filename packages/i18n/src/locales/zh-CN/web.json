@@ -1,5 +1,10 @@
 {
   "web": {
+    "state_duration": "当前状态停留时间",
+    "state_duration_days": "天",
+    "state_duration_hint": "从最近一次进入当前状态起计算，单位为天；旧工作项缺少状态变更时间时使用创建时间。",
+    "state_duration_greater_than": "大于",
+    "state_duration_less_than": "小于",
     "state_color_reset": "恢复默认颜色",
     "state_icon_planned": "计划中",
     "state_icon_ready": "就绪",

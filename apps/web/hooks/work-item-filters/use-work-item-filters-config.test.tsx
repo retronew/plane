@@ -61,6 +61,25 @@ it("retries failed workspace loads and shares in-flight requests", async () => {
   await Promise.all([load(), load()]);
   expect(stores.cycle.fetchWorkspaceCycles).toHaveBeenCalledTimes(2);
 });
+it("exposes numeric state duration comparisons in workspace and project views", () => {
+  const { result, rerender } = renderHook(
+    ({ projectId }) => useWorkItemFiltersConfig({ workspaceSlug: "workspace", projectId, allowedFilters: [] }),
+    { initialProps: { projectId: undefined as string | undefined } }
+  );
+  const config = result.current.configMap.state_duration!;
+  expect(config.label).toBe("当前状态停留时间");
+  expect(config.isEnabled).toBe(true);
+  expect(config.allowMultipleFilters).toBe(true);
+  expect([...config.supportedOperatorConfigsMap.keys()]).toEqual(["gt", "lt"]);
+  expect(config.supportedOperatorConfigsMap.get("gt")).toMatchObject({
+    type: "number",
+    min: 0,
+    max: 365000,
+    unitLabel: "天",
+  });
+  rerender({ projectId: "project" });
+  expect(result.current.configMap.state_duration?.isEnabled).toBe(true);
+});
 it("keeps project options scoped and respects disabled project capabilities", () => {
   const { result } = renderHook(() =>
     useWorkItemFiltersConfig({
