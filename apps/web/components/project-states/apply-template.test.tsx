@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
 import { ApplyStateTemplate } from "./apply-template";
 
 const mocks = vi.hoisted(() => ({ stateTemplate: vi.fn() }));
@@ -27,6 +27,45 @@ vi.mock("@makeplane/propel/components/dialog", () => {
 });
 vi.mock("@/components/settings/workspace/configuration/select", () => ({ ConfigurationSelect: () => null }));
 vi.mock("@/services/workspace-configuration.service", () => ({ workspaceConfigurationService: mocks }));
+
+afterEach(() => {
+  cleanup();
+  vi.resetAllMocks();
+});
+
+it.each([
+  [400, { template: "Configure a workspace default state template first." }, "web.state_template_missing_default"],
+  [400, { mapping: "A retained state has the same name." }, "web.state_template_error"],
+  [403, { detail: "Permission denied." }, "web.state_template_request_error"],
+  [500, {}, "web.state_template_request_error"],
+  [undefined, undefined, "web.state_template_request_error"],
+])("explains preview failures (%s) without enabling apply", async (status, data, message) => {
+  mocks.stateTemplate.mockRejectedValue({
+    isAxiosError: true,
+    response: status ? { status, data } : undefined,
+  });
+  const onApplied = vi.fn();
+  render(<ApplyStateTemplate workspaceSlug="w" projectId="p" states={[]} onApplied={onApplied} />);
+  fireEvent.click(screen.getByRole("button", { name: "web.apply_state_template" }));
+  fireEvent.click(screen.getByRole("button", { name: "web.state_template_preview" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(message);
+  expect((screen.getByRole("button", { name: "web.state_template_apply" }) as HTMLButtonElement).disabled).toBe(true);
+  expect(onApplied).not.toHaveBeenCalled();
+});
+
+it("can retry preview after the default template is configured", async () => {
+  mocks.stateTemplate
+    .mockRejectedValueOnce({ isAxiosError: true, response: { status: 400, data: { template: "Missing default" } } })
+    .mockResolvedValueOnce({ template: "Configured template", matched: [], added: [], retained: [], token: "preview" });
+  render(<ApplyStateTemplate workspaceSlug="w" projectId="p" states={[]} onApplied={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: "web.apply_state_template" }));
+  fireEvent.click(screen.getByRole("button", { name: "web.state_template_preview" }));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "web.state_template_preview" }));
+  await screen.findByText("Configured template");
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect((screen.getByRole("button", { name: "web.state_template_apply" }) as HTMLButtonElement).disabled).toBe(false);
+});
 
 it("shows all added attributes and localized changes before applying the preview token", async () => {
   const preview = {

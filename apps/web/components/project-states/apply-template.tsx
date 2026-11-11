@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isAxiosError } from "axios";
 import { Button } from "@makeplane/propel/components/button";
 import {
   Dialog,
@@ -77,9 +78,15 @@ export function ApplyStateTemplate({
         setPreview(result);
         setStale(false);
       }
-    } catch {
+    } catch (error: unknown) {
       setStale(true);
-      setMessage(t("web.state_template_error"));
+      if (isAxiosError(error) && error.response?.status === 400) {
+        setMessage(
+          t(error.response.data?.template ? "web.state_template_missing_default" : "web.state_template_error")
+        );
+      } else {
+        setMessage(t("web.state_template_request_error"));
+      }
     } finally {
       setBusy(false);
     }
