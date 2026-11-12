@@ -12,6 +12,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { TProjectOverviewActivity, TProjectOverviewActivityPage } from "@plane/types";
 import { ProjectOverviewActivity } from "./activity";
 import { useRefreshProjectActivities } from "./use-refresh-activities";
+import { activityFields, projectActivityValue } from "./activity-values";
 
 const mocks = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock("@plane/i18n", () => ({
@@ -120,6 +121,37 @@ it("renders a compact actor/action/time timeline and reveals values only in the 
   await closeDetails();
   expect(screen.queryByText("Before")).toBeNull();
   expect(screen.queryByText("After")).toBeNull();
+});
+
+it.each([
+  ["remind_in", 0, 2, "web.disabled", `${key}.reminder_lead_days`],
+  ["remind_email_enabled", true, false, "web.enabled", "web.disabled"],
+  ["remind_feishu_enabled", false, true, "web.disabled", "web.enabled"],
+  ["timezone", "UTC", "Asia/Shanghai", "UTC", "Asia/Shanghai"],
+])("shows readable reminder audit values for %s", async (field, oldValue, newValue, previous, next) => {
+  mocks.list.mockResolvedValue(page([{ ...entry, field: String(field), old_value: oldValue, new_value: newValue }]));
+  setup();
+  expect(
+    await screen.findByText(`${key}.activity_updated ${key}.activity_fields.${field}`, { exact: false })
+  ).toBeTruthy();
+  const dialog = await openDetails();
+  expect(within(dialog).getByText(String(previous))).toBeTruthy();
+  expect(within(dialog).getByText(String(next))).toBeTruthy();
+});
+
+it("formats only supported reminder values and keeps unrelated audit snapshots unchanged", () => {
+  const translate = (translationKey: string, params?: Record<string, unknown>) =>
+    `${translationKey}:${params?.count ?? ""}`;
+  expect(projectActivityValue("remind_in", 7, translate)).toBe(`${key}.reminder_lead_days:7`);
+  expect(projectActivityValue("remind_in", 0, translate)).toBe("web.disabled:");
+  expect(projectActivityValue("remind_in", -1, translate)).toBe("-1");
+  expect(projectActivityValue("remind_in", "2", translate)).toBe("2");
+  expect(projectActivityValue("timezone", "UTC", translate)).toBe("UTC");
+  expect(projectActivityValue("name", false, translate)).toBe("false");
+  expect(projectActivityValue("remind_email_enabled", null, translate)).toBe("—");
+  for (const field of ["remind_in", "remind_email_enabled", "remind_feishu_enabled", "timezone"]) {
+    expect(activityFields.has(field)).toBe(true);
+  }
 });
 
 it("keeps change details mounted until the closing animation finishes", async () => {

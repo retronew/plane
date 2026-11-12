@@ -1,7 +1,8 @@
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
+import logging
 from datetime import timedelta
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from celery import shared_task
 from django.conf import settings
@@ -13,6 +14,8 @@ from django.utils import timezone
 
 from plane.bgtasks.email_notification_task import remove_unwanted_characters
 from plane.db.models import (
+    DueReminderScanRun,
+    FeishuDelivery,
     Issue,
     IssueAssignee,
     IssueDueReminder,
@@ -23,7 +26,6 @@ from plane.db.models import (
 )
 from plane.license.utils.instance_value import get_email_configuration
 from plane.utils.email import generate_plain_text_from_html, get_email_language
-from plane.utils.exception_logger import log_exception
 from plane.utils.feishu import enqueue_feishu_notification
 from plane.utils.notification_preferences import should_notify
 
@@ -63,102 +65,183 @@ def email_enabled(receiver_id, project):
     return should_notify(receiver_id, project.workspace_id, project.pk, "due_reminder", "email")
 
 
+logger = logging.getLogger(__name__)
+
+
+def record_scan_error(run, project_id, channel, code):
+    run.error_count += 1
+    if len(run.errors) < 50:
+        run.errors.append({"project_id": str(project_id) if project_id else None, "channel": channel, "code": code})
+
+
+def process_recipient(run, project, issue, assignee, now):
+    in_app_created = feishu_enqueued = 0
+    queue_email = False
+    # Serialize channel decisions using the durable, uniquely constrained delivery key.
+    with transaction.atomic():
+        delivery, _ = IssueDueReminder.all_objects.select_for_update().get_or_create(
+            issue=issue,
+            receiver_id=assignee.assignee_id,
+            target_date=issue.target_date,
+        )
+        try:
+            with transaction.atomic():
+                if project.remind_feishu_enabled and should_notify(
+                    assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "feishu"
+                ):
+                    event_key = f"due-reminder:{delivery.id}"
+                    existed = FeishuDelivery.objects.filter(
+                        event_key=event_key, user_id=assignee.assignee_id, channel="feishu"
+                    ).exists()
+                    outbox = enqueue_feishu_notification(
+                        event_key=event_key,
+                        user_id=assignee.assignee_id,
+                        kind="due_reminder",
+                        title=f"Work item due soon: {issue.name}",
+                        body=issue.target_date.isoformat(),
+                        workspace_id=project.workspace_id,
+                        project_id=project.pk,
+                        issue_id=issue.pk,
+                    )
+                    feishu_enqueued = int(outbox is not None and not existed)
+        except Exception:
+            record_scan_error(run, project.pk, "feishu", "enqueue_failed")
+        if delivery.in_app_processed_at is None:
+            try:
+                with transaction.atomic():
+                    if should_notify(assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "in_app"):
+                        Notification.objects.create(
+                            workspace=project.workspace,
+                            project=project,
+                            receiver_id=assignee.assignee_id,
+                            triggered_by=None,
+                            entity_name="issue",
+                            entity_identifier=issue.id,
+                            sender="in_app:issue_reminder:due",
+                            title=issue.name,
+                            data={
+                                "issue": {
+                                    "id": str(issue.id),
+                                    "name": issue.name,
+                                    "identifier": project.identifier,
+                                    "sequence_id": issue.sequence_id,
+                                    "state_name": issue.state.name,
+                                    "state_group": issue.state.group,
+                                },
+                                "issue_activity": {
+                                    "id": str(delivery.id),
+                                    "field": "due_reminder",
+                                    "verb": "reminded",
+                                    "new_value": issue.target_date.isoformat(),
+                                    "old_value": None,
+                                },
+                            },
+                        )
+                        in_app_created = 1
+                    # Explicit opt-outs are processed; later enabling must not replay history.
+                    delivery.in_app_processed_at = now
+                    delivery.save(update_fields=["in_app_processed_at"])
+            except Exception:
+                record_scan_error(run, project.pk, "in_app", "notification_failed")
+                in_app_created = 0
+        try:
+            with transaction.atomic():
+                if (
+                    project.remind_email_enabled
+                    and delivery.email_sent_at is None
+                    and email_enabled(assignee.assignee_id, project)
+                    and (delivery.email_queued_at is None or delivery.email_queued_at < now - timedelta(minutes=30))
+                ):
+                    delivery.email_queued_at = now
+                    delivery.save(update_fields=["email_queued_at"])
+                    queue_email = True
+        except Exception:
+            record_scan_error(run, project.pk, "email", "queue_failed")
+    # Production scans have committed here. A broker failure retains the existing
+    # 30-minute outbox lease and cannot roll back other channels.
+    run.in_app_created += in_app_created
+    run.feishu_enqueued += feishu_enqueued
+    if queue_email:
+        try:
+            send_due_reminder_email.delay(str(delivery.id))
+            run.email_queued += 1
+        except Exception:
+            record_scan_error(run, project.pk, "email", "broker_failed")
+
+
 @shared_task
 def send_due_reminders():
     """Hourly catch-up scan, measured in each project's local calendar dates."""
-    now = timezone.now()
-    created_count = 0
-    for project in Project.objects.filter(remind_in__gt=0, archived_at__isnull=True).select_related("workspace"):
-        today = now.astimezone(ZoneInfo(project.timezone)).date()
-        issues = (
-            Issue.issue_objects.filter(
-                project=project,
-                target_date__gte=today,
-                target_date__lte=today + timedelta(days=project.remind_in),
-                state__group__in=["backlog", "unstarted", "started"],
-            )
-            .select_related("state")
-            .prefetch_related(
-                Prefetch(
-                    "issue_assignee",
-                    queryset=IssueAssignee.objects.filter(assignee_id__in=active_recipients(project)),
-                    to_attr="reminder_assignees",
-                )
-            )
-        )
-        for issue in issues.iterator(chunk_size=100):
-            for assignee in issue.reminder_assignees:
-                try:
-                    with transaction.atomic():
-                        delivery, created = IssueDueReminder.all_objects.select_for_update().get_or_create(
-                            issue=issue,
-                            receiver_id=assignee.assignee_id,
-                            target_date=issue.target_date,
+    task_id = getattr(send_due_reminders.request, "id", None)
+    try:
+        run = DueReminderScanRun.objects.create(task_id=task_id)
+    except Exception:
+        logger.error("due_reminder_scan_audit_create_failed task_id=%s", task_id)
+        raise
+    try:
+        now = timezone.now()
+        projects = Project.objects.filter(remind_in__gt=0, archived_at__isnull=True).select_related("workspace")
+        for project in projects.iterator(chunk_size=100):
+            run.projects_scanned += 1
+            try:
+                today = now.astimezone(ZoneInfo(project.timezone)).date()
+            except (ZoneInfoNotFoundError, ValueError, TypeError):
+                record_scan_error(run, project.pk, "timezone", "invalid_timezone")
+                continue
+            try:
+                issues = (
+                    Issue.issue_objects.filter(
+                        project=project,
+                        target_date__gte=today,
+                        target_date__lte=today + timedelta(days=project.remind_in),
+                        state__group__in=["backlog", "unstarted", "started"],
+                    )
+                    .select_related("state")
+                    .prefetch_related(
+                        Prefetch(
+                            "issue_assignee",
+                            queryset=IssueAssignee.objects.filter(assignee_id__in=active_recipients(project)),
+                            to_attr="reminder_assignees",
                         )
-                        if project.remind_feishu_enabled and should_notify(
-                            assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "feishu"
-                        ):
-                            enqueue_feishu_notification(
-                                event_key=f"due-reminder:{delivery.id}",
-                                user_id=assignee.assignee_id,
-                                kind="due_reminder",
-                                title=f"Work item due soon: {issue.name}",
-                                body=issue.target_date.isoformat(),
-                                workspace_id=project.workspace_id,
-                                project_id=project.pk,
-                                issue_id=issue.pk,
-                            )
-                        if created and should_notify(
-                            assignee.assignee_id, project.workspace_id, project.pk, "due_reminder", "in_app"
-                        ):
-                            try:
-                                with transaction.atomic():
-                                    Notification.objects.create(
-                                        workspace=project.workspace,
-                                        project=project,
-                                        receiver_id=assignee.assignee_id,
-                                        triggered_by=None,
-                                        entity_name="issue",
-                                        entity_identifier=issue.id,
-                                        sender="in_app:issue_reminder:due",
-                                        title=issue.name,
-                                        data={
-                                            "issue": {
-                                                "id": str(issue.id),
-                                                "name": issue.name,
-                                                "identifier": project.identifier,
-                                                "sequence_id": issue.sequence_id,
-                                                "state_name": issue.state.name,
-                                                "state_group": issue.state.group,
-                                            },
-                                            "issue_activity": {
-                                                "id": str(delivery.id),
-                                                "field": "due_reminder",
-                                                "verb": "reminded",
-                                                "new_value": issue.target_date.isoformat(),
-                                                "old_value": None,
-                                            },
-                                        },
-                                    )
-                                    created_count += 1
-                            except Exception as error:
-                                log_exception(error)
-                        # Durable outbox: broker/SMTP failures can be retried on the next scan.
-                        if (
-                            project.remind_email_enabled
-                            and delivery.email_sent_at is None
-                            and email_enabled(assignee.assignee_id, project)
-                            and (
-                                delivery.email_queued_at is None
-                                or delivery.email_queued_at < now - timedelta(minutes=30)
-                            )
-                        ):
-                            delivery.email_queued_at = now
-                            delivery.save(update_fields=["email_queued_at"])
-                            transaction.on_commit(lambda key=str(delivery.id): send_due_reminder_email.delay(key))
-                except Exception as error:
-                    log_exception(error)
-    return created_count
+                    )
+                )
+                for issue in issues.iterator(chunk_size=100):
+                    run.issue_count += 1
+                    for assignee in issue.reminder_assignees:
+                        run.recipient_count += 1
+                        try:
+                            process_recipient(run, project, issue, assignee, now)
+                        except Exception:
+                            record_scan_error(run, project.pk, "scan", "recipient_failed")
+            except Exception:
+                record_scan_error(run, project.pk, "scan", "project_failed")
+        run.status = "partial" if run.error_count else "succeeded"
+    except Exception:
+        run.status = "failed"
+        record_scan_error(run, None, "scan", "scan_failed")
+        raise
+    finally:
+        run.finished_at = timezone.now()
+        try:
+            run.save()
+        except Exception:
+            logger.error("due_reminder_scan_audit_save_failed run_id=%s task_id=%s", run.pk, task_id)
+            raise
+        logger.info(
+            "due_reminder_scan run_id=%s task_id=%s status=%s projects=%s issues=%s recipients=%s "
+            "in_app_created=%s feishu_enqueued=%s email_queued=%s errors=%s",
+            run.pk,
+            task_id,
+            run.status,
+            run.projects_scanned,
+            run.issue_count,
+            run.recipient_count,
+            run.in_app_created,
+            run.feishu_enqueued,
+            run.email_queued,
+            run.error_count,
+        )
+    return run.in_app_created
 
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
