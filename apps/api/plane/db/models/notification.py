@@ -2,7 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import uuid
+
 # Django imports
+from django.utils import timezone
 from django.conf import settings
 from django.db import models
 
@@ -149,12 +152,39 @@ class EmailNotificationLog(BaseModel):
         ordering = ("-created_at",)
 
 
+class DueReminderScanRun(models.Model):
+    """Operational scan audit; errors contain fixed codes and project IDs only."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True)
+    status = models.CharField(
+        max_length=16,
+        default="running",
+        choices=[(value, value) for value in ("running", "succeeded", "partial", "failed")],
+    )
+    task_id = models.CharField(max_length=255, null=True)
+    projects_scanned = models.PositiveIntegerField(default=0)
+    issue_count = models.PositiveIntegerField(default=0)
+    recipient_count = models.PositiveIntegerField(default=0)
+    in_app_created = models.PositiveIntegerField(default=0)
+    feishu_enqueued = models.PositiveIntegerField(default=0)
+    email_queued = models.PositiveIntegerField(default=0)
+    error_count = models.PositiveIntegerField(default=0)
+    errors = models.JSONField(default=list)
+
+    class Meta:
+        db_table = "due_reminder_scan_runs"
+
+
 class IssueDueReminder(BaseModel):
     """Durable delivery key and email outbox for an assignee's due-date reminder."""
 
     issue = models.ForeignKey("db.Issue", on_delete=models.CASCADE, related_name="due_reminders")
     receiver = models.ForeignKey("db.User", on_delete=models.CASCADE, related_name="due_reminders")
     target_date = models.DateField()
+    # Includes explicit preference opt-outs; failures remain NULL and can retry.
+    in_app_processed_at = models.DateTimeField(null=True)
     email_queued_at = models.DateTimeField(null=True)
     email_sent_at = models.DateTimeField(null=True)
 

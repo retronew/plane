@@ -2132,6 +2132,10 @@
       "activity_old_value": "原值",
       "activity_new_value": "新值",
       "activity_fields": {
+        "remind_in": "自动到期提醒",
+        "remind_email_enabled": "提醒邮件通道",
+        "remind_feishu_enabled": "提醒飞书通道",
+        "timezone": "项目时区",
         "name": "名称",
         "description": "描述",
         "description_html": "描述",
@@ -2157,6 +2161,7 @@
         "attachment": "附件",
         "reaction": "表情回应"
       },
+      "reminder_lead_days": "到期前 {count} 天",
       "view_changes": "查看变化",
       "change_details": "变化详情",
       "sort_activity": "排序",

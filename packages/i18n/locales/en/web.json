@@ -2132,6 +2132,10 @@
       "activity_old_value": "Previous value",
       "activity_new_value": "New value",
       "activity_fields": {
+        "remind_in": "automatic due reminders",
+        "remind_email_enabled": "reminder email channel",
+        "remind_feishu_enabled": "reminder Feishu channel",
+        "timezone": "project timezone",
         "name": "name",
         "description": "description",
         "description_html": "description",
@@ -2157,6 +2161,7 @@
         "attachment": "attachment",
         "reaction": "reaction"
       },
+      "reminder_lead_days": "{count, plural, one {# day before due} other {# days before due}}",
       "view_changes": "View changes",
       "change_details": "Change details",
       "sort_activity": "Sort activity",

@@ -56,4 +56,20 @@ export const activityFields = new Set([
   "description_html",
   "emoji",
   "icon_prop",
+  "remind_in",
+  "remind_email_enabled",
+  "remind_feishu_enabled",
+  "timezone",
 ]);
+
+type Translate = (key: string, params?: Record<string, unknown>) => string;
+
+export function projectActivityValue(field: string, value: unknown, t: Translate): string {
+  if ((field === "remind_email_enabled" || field === "remind_feishu_enabled") && typeof value === "boolean") {
+    return t(value ? "web.enabled" : "web.disabled");
+  }
+  if (field === "remind_in" && typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 7) {
+    return value === 0 ? t("web.disabled") : t(`${overviewTranslationKey}.reminder_lead_days`, { count: value });
+  }
+  return activityValue(value);
+}

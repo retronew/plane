@@ -20,7 +20,12 @@ import {
 import { useTranslation } from "@plane/i18n";
 import type { TProjectOverviewActivity } from "@plane/types";
 import { getFileURL, renderFormattedDate, renderFormattedTime } from "@plane/utils";
-import { activityFields, activityValue, overviewActorName, overviewTranslationKey as key } from "./activity-values";
+import {
+  activityFields,
+  projectActivityValue,
+  overviewActorName,
+  overviewTranslationKey as key,
+} from "./activity-values";
 
 export function ProjectActivityDetailDialog({
   entry,
@@ -76,13 +81,13 @@ export function ProjectActivityDetailDialog({
                 <div>
                   <dt className="mb-2 font-medium text-secondary">{t(`${key}.activity_old_value`)}</dt>
                   <dd className="max-h-64 overflow-y-auto rounded-xl border border-subtle bg-layer-1 p-3 text-primary">
-                    {activityValue(entry.old_value)}
+                    {projectActivityValue(entry.field, entry.old_value, t)}
                   </dd>
                 </div>
                 <div>
                   <dt className="mb-2 font-medium text-secondary">{t(`${key}.activity_new_value`)}</dt>
                   <dd className="max-h-64 overflow-y-auto rounded-xl border border-subtle bg-layer-1 p-3 text-primary">
-                    {activityValue(entry.new_value)}
+                    {projectActivityValue(entry.field, entry.new_value, t)}
                   </dd>
                 </div>
               </dl>

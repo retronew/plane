@@ -54,6 +54,10 @@ PROJECT_ACTIVITY_FIELDS = (
     "labels",
     "start_date",
     "target_date",
+    "remind_in",
+    "remind_email_enabled",
+    "remind_feishu_enabled",
+    "timezone",
 )
 
 
