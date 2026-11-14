@@ -15,6 +15,14 @@
 
 正文只使用 name/description frontmatter，不依赖客户端专属工具名。当前无需客户端字段适配；以后需要时由生成器适配，不能分别维护业务正文。互引使用自然语言，单项正文包含必要的执行边界。
 
+## 管理与导入能力补全（0.4.0）
+
+导入支持归档分页、指定项目的 UUID 回读、external_source/external_id 幂等写入和批量逐项结果；原生依赖支持方向明确的查询、新增、移除，模块支持负责人和成员的设置及清空。Markdown 任务复选框保留状态，模块统计按工作项去重。完整流程见 [导入能力参考](skills/plane-conventions/references/import.md)。
+
+七个新增 MCP 动作覆盖项目提醒读取与修改、项目配置审计、团队成员工作汇总与明细、评论原因评审读取与提交。`plane-conventions`、`issue-next`、`standup` 和 Claude 管理代理已补充相应流程；参数及语义见 [管理能力参考](skills/plane-conventions/references/management.md)。参考文件随 Claude、OpenAI 和通用技能包分发。
+
+需同时更新 Plane 后端才能使用新动作；只更新插件不会增加服务端工具。成员明细使用 `page` / `next_page`，其余常规列表使用 cursor。工作项 filters 新增当前状态时长说明（`state_duration__gt` / `state_duration__lt`），底层过滤仍由现有 API 执行。提醒投递运行日志不在此接口范围内，项目配置审计只能证明配置变更。
+
 ## 安装
 
 Claude Code 从仓库安装 marketplace，再安装插件：

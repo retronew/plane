@@ -21,6 +21,8 @@ description: 我接下来该做什么——列出分配给我、未完成的 Pla
 
 1. Plane MCP `workitem` 工具：`action="my_summary", workspace_slug="<目标 slug>"`。
 2. `workitem` 工具：`action="my_items", workspace_slug="<目标 slug>"`，`filters={"state_group__in":"unstarted,started"}`，`per_page=50`。
+3. 用户要排查长期停滞时，可另查 `filters={"and":[{"state_group":"started"},{"state_duration__gt":3}]}`。时长为当前状态连续自然天，不是工时；不要用该筛选结果替代完整待办统计。
+4. 用户问团队或其他成员负载时，使用 `workspace(action="member_work", workspace_slug="<目标 slug>")`，再用 `workspace(action="member_work_items", workspace_slug="<目标 slug>", member="<成员>")` 下钻。明细按 `next_page` 传 `page` 翻页；日期范围按截止日期计算，不能当作活动时间范围。
 
 ## 2. 排序
 

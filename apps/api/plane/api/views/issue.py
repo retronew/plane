@@ -10,7 +10,7 @@ import re
 # Django imports
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseRedirect
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import (
     Case,
     CharField,
@@ -360,12 +360,18 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
         external_source = request.GET.get("external_source")
 
         if external_id and external_source:
-            issue = Issue.objects.get(
-                external_id=external_id,
-                external_source=external_source,
-                workspace__slug=slug,
-                project_id=project_id,
-            )
+            try:
+                issue = Issue.objects.get(
+                    external_id=external_id,
+                    external_source=external_source,
+                    workspace__slug=slug,
+                    project_id=project_id,
+                )
+            except Issue.MultipleObjectsReturned:
+                return Response(
+                    {"error": "Multiple work items match external_id and external_source in this project"},
+                    status=status.HTTP_409_CONFLICT,
+                )
             return Response(
                 IssueSerializer(issue, fields=self.fields, expand=self.expand).data,
                 status=status.HTTP_200_OK,
@@ -618,7 +624,8 @@ class IssueDetailAPIEndpoint(BaseAPIView):
         Supports filtering, ordering, and field selection through query parameters.
         """
 
-        issue = Issue.issue_objects.annotate(
+        manager = Issue.objects if request.GET.get("include_archived", "").lower() == "true" else Issue.issue_objects
+        issue = manager.annotate(
             sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
             .order_by()
             .annotate(count=Func(F("id"), function="Count"))
@@ -652,6 +659,7 @@ class IssueDetailAPIEndpoint(BaseAPIView):
             404: WORK_ITEM_NOT_FOUND_RESPONSE,
         },
     )
+    @transaction.atomic
     def put(self, request, slug, project_id):
         """Update or create work item
 
@@ -660,9 +668,11 @@ class IssueDetailAPIEndpoint(BaseAPIView):
         """
         # Get the entities required for putting the issue, external_id and
         # external_source are must to identify the issue here
-        project = Project.objects.get(pk=project_id)
-        external_id = request.data.get("external_id")
-        external_source = request.data.get("external_source")
+        # Serialize lookup and creation, including retries for absent external IDs.
+        project = Project.objects.select_for_update().get(pk=project_id, workspace__slug=slug)
+        identity = IssueSerializer(context={"request": request})
+        external_id = identity.fields["external_id"].run_validation(request.data.get("external_id"))
+        external_source = identity.fields["external_source"].run_validation(request.data.get("external_source"))
 
         # If the external_id and source are present, we need to find the exact
         # issue that needs to be updated with the provided external_id and
@@ -697,26 +707,30 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                     # If the serializer is valid, save the issue and dispatch
                     # the update issue activity worker event.
                     serializer.save()
-                    issue_activity.delay(
-                        type="issue.activity.updated",
-                        requested_data=requested_data,
-                        actor_id=str(request.user.id),
-                        issue_id=str(issue.id),
-                        project_id=str(project_id),
-                        current_instance=current_instance,
-                        epoch=int(timezone.now().timestamp()),
-                        notification=True,
-                        origin=base_host(request=request, is_app=True),
+                    transaction.on_commit(
+                        lambda: issue_activity.delay(
+                            type="issue.activity.updated",
+                            requested_data=requested_data,
+                            actor_id=str(request.user.id),
+                            issue_id=str(issue.id),
+                            project_id=str(project_id),
+                            current_instance=current_instance,
+                            epoch=int(timezone.now().timestamp()),
+                            notification=True,
+                            origin=base_host(request=request, is_app=True),
+                        )
                     )
                     # Send the model activity for webhook dispatch
-                    model_activity.delay(
-                        model_name="issue",
-                        model_id=str(issue.id),
-                        requested_data=request.data,
-                        current_instance=current_instance,
-                        actor_id=request.user.id,
-                        slug=slug,
-                        origin=base_host(request=request, is_app=True),
+                    transaction.on_commit(
+                        lambda: model_activity.delay(
+                            model_name="issue",
+                            model_id=str(issue.id),
+                            requested_data=request.data,
+                            current_instance=current_instance,
+                            actor_id=request.user.id,
+                            slug=slug,
+                            origin=base_host(request=request, is_app=True),
+                        )
                     )
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 return Response(
@@ -724,6 +738,11 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                     # request
                     serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Issue.MultipleObjectsReturned:
+                return Response(
+                    {"error": "Multiple work items match external_id and external_source in this project"},
+                    status=status.HTTP_409_CONFLICT,
                 )
             except Issue.DoesNotExist:
                 # If the issue does not exist, a new record needs to be created
@@ -758,26 +777,30 @@ class IssueDetailAPIEndpoint(BaseAPIView):
                     issue.created_by_id = request.data.get("created_by", request.user.id)
                     issue.save(update_fields=["created_at", "created_by"])
 
-                    issue_activity.delay(
-                        type="issue.activity.created",
-                        requested_data=json.dumps(self.request.data, cls=DjangoJSONEncoder),
-                        actor_id=str(request.user.id),
-                        issue_id=str(serializer.data.get("id", None)),
-                        project_id=str(project_id),
-                        current_instance=None,
-                        epoch=int(timezone.now().timestamp()),
-                        notification=True,
-                        origin=base_host(request=request, is_app=True),
+                    transaction.on_commit(
+                        lambda: issue_activity.delay(
+                            type="issue.activity.created",
+                            requested_data=json.dumps(self.request.data, cls=DjangoJSONEncoder),
+                            actor_id=str(request.user.id),
+                            issue_id=str(serializer.data.get("id", None)),
+                            project_id=str(project_id),
+                            current_instance=None,
+                            epoch=int(timezone.now().timestamp()),
+                            notification=True,
+                            origin=base_host(request=request, is_app=True),
+                        )
                     )
                     # Send the model activity for webhook dispatch
-                    model_activity.delay(
-                        model_name="issue",
-                        model_id=str(serializer.data["id"]),
-                        requested_data=request.data,
-                        current_instance=None,
-                        actor_id=request.user.id,
-                        slug=slug,
-                        origin=base_host(request=request, is_app=True),
+                    transaction.on_commit(
+                        lambda: model_activity.delay(
+                            model_name="issue",
+                            model_id=str(serializer.data["id"]),
+                            requested_data=request.data,
+                            current_instance=None,
+                            actor_id=request.user.id,
+                            slug=slug,
+                            origin=base_host(request=request, is_app=True),
+                        )
                     )
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

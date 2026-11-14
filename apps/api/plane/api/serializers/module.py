@@ -27,11 +27,35 @@ class ModuleCreateSerializer(BaseSerializer):
     project organization setup.
     """
 
+    lead = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), pk_field=serializers.UUIDField(), required=False, allow_null=True
+    )
     members = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=serializers.UUIDField(),
         write_only=True,
         required=False,
     )
+
+    def validate_lead(self, lead):
+        if (
+            lead is not None
+            and not ProjectMember.objects.filter(
+                project_id=self.context.get("project_id"), member=lead, is_active=True
+            ).exists()
+        ):
+            raise serializers.ValidationError("Lead must be an active project member")
+        return lead
+
+    def validate_members(self, members):
+        members = list(dict.fromkeys(members))
+        valid_members = set(
+            ProjectMember.objects.filter(
+                project_id=self.context.get("project_id"), member_id__in=members, is_active=True
+            ).values_list("member_id", flat=True)
+        )
+        if set(members) != valid_members:
+            raise serializers.ValidationError("Members must be active project members")
+        return members
 
     class Meta:
         model = Module
@@ -72,11 +96,6 @@ class ModuleCreateSerializer(BaseSerializer):
             and data.get("start_date", None) > data.get("target_date", None)
         ):
             raise serializers.ValidationError("Start date cannot exceed target date")
-
-        if data.get("members", []):
-            data["members"] = ProjectMember.objects.filter(
-                project_id=self.context.get("project_id"), member_id__in=data["members"]
-            ).values_list("member_id", flat=True)
 
         return data
 
@@ -202,7 +221,10 @@ class ModuleSerializer(BaseSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["members"] = [str(member.id) for member in instance.members.all()]
+        members = getattr(instance, "active_module_members", None)
+        if members is None:
+            members = ModuleMember.objects.filter(module=instance).only("member_id")
+        data["members"] = [str(membership.member_id) for membership in members]
         return data
 
 

@@ -35,6 +35,7 @@ from plane.db.models import (
     Module,
     ModuleIssue,
     ModuleLink,
+    ModuleMember,
     Project,
     ProjectMember,
     UserFavorite,
@@ -75,6 +76,25 @@ from plane.utils.openapi import (
 )
 
 
+def _module_issue_counts():
+    # Match the visibility of Issue.issue_objects in the module work-item list.
+    visible = Q(
+        issue_module__deleted_at__isnull=True,
+        issue_module__issue__deleted_at__isnull=True,
+        issue_module__issue__archived_at__isnull=True,
+        issue_module__issue__project__archived_at__isnull=True,
+        issue_module__issue__is_draft=False,
+    ) & ~Q(issue_module__issue__state__group="triage")
+    counts = {"total_issues": Count("issue_module__issue_id", filter=visible, distinct=True)}
+    for group in ("completed", "cancelled", "started", "unstarted", "backlog"):
+        counts[f"{group}_issues"] = Count(
+            "issue_module__issue_id",
+            filter=visible & Q(issue_module__issue__state__group=group),
+            distinct=True,
+        )
+    return counts
+
+
 class ModuleListCreateAPIEndpoint(BaseAPIView):
     """Module List and Create Endpoint"""
 
@@ -91,84 +111,20 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
             .select_related("project")
             .select_related("workspace")
             .select_related("lead")
-            .prefetch_related("members")
+            .prefetch_related(
+                Prefetch(
+                    "modulemember_set",
+                    queryset=ModuleMember.objects.only("module_id", "member_id"),
+                    to_attr="active_module_members",
+                )
+            )
             .prefetch_related(
                 Prefetch(
                     "link_module",
                     queryset=ModuleLink.objects.select_related("module", "created_by"),
                 )
             )
-            .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
+            .annotate(**_module_issue_counts())
             .order_by(self.kwargs.get("order_by", "-created_at"))
         )
 
@@ -342,84 +298,20 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
             .select_related("project")
             .select_related("workspace")
             .select_related("lead")
-            .prefetch_related("members")
+            .prefetch_related(
+                Prefetch(
+                    "modulemember_set",
+                    queryset=ModuleMember.objects.only("module_id", "member_id"),
+                    to_attr="active_module_members",
+                )
+            )
             .prefetch_related(
                 Prefetch(
                     "link_module",
                     queryset=ModuleLink.objects.select_related("module", "created_by"),
                 )
             )
-            .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
+            .annotate(**_module_issue_counts())
             .order_by(self.kwargs.get("order_by", "-created_at"))
         )
 
@@ -950,84 +842,20 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
             .select_related("project")
             .select_related("workspace")
             .select_related("lead")
-            .prefetch_related("members")
+            .prefetch_related(
+                Prefetch(
+                    "modulemember_set",
+                    queryset=ModuleMember.objects.only("module_id", "member_id"),
+                    to_attr="active_module_members",
+                )
+            )
             .prefetch_related(
                 Prefetch(
                     "link_module",
                     queryset=ModuleLink.objects.select_related("module", "created_by"),
                 )
             )
-            .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
-            )
+            .annotate(**_module_issue_counts())
             .order_by(self.kwargs.get("order_by", "-created_at"))
         )
 

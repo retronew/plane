@@ -179,6 +179,9 @@ class ProjectUpdateSerializer(ProjectCreateSerializer):
         fields = ProjectCreateSerializer.Meta.fields + [
             "default_state",
             "estimate",
+            "remind_in",
+            "remind_email_enabled",
+            "remind_feishu_enabled",
         ]
 
         read_only_fields = ProjectCreateSerializer.Meta.read_only_fields

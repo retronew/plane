@@ -30,8 +30,6 @@ NOISE_FIELDS = {
     "display_filters",
     "display_properties",
     "logo_props",
-    "external_id",
-    "external_source",
     "description_binary",
     "description_json",
     "description_stripped",
@@ -43,10 +41,36 @@ NOISE_FIELDS = {
 def markdown_to_html(text: str | None) -> str:
     if not text:
         return "<p></p>"
-    return markdown_lib.markdown(text, extensions=["extra", "sane_lists"])
+    html = markdown_lib.markdown(text, extensions=["extra", "sane_lists"])
+    soup = BeautifulSoup(html, "html.parser")
+    for item in soup.find_all("li"):
+        content = item.find("p", recursive=False) or item
+        first = content.contents[0] if content.contents else None
+        if not isinstance(first, str):
+            continue
+        match = re.match(r"^\[([ xX])\]\s+", first)
+        if not match:
+            continue
+        first.replace_with(str(first)[match.end() :])
+        item["data-type"] = "taskItem"
+        item["data-checked"] = str(match.group(1).lower() == "x").lower()
+        if item.parent.name == "ul":
+            item.parent["data-type"] = "taskList"
+    return str(soup)
 
 
 class _MarkdownConverter(MarkdownConverter):
+    def escape(self, text):
+        escaped = super().escape(text)
+        # A hyphen inside an identifier is never a Markdown list marker.
+        return re.sub(r"(?<=\w)\\-(?=\w)", "-", escaped)
+
+    def convert_li(self, el, text, convert_as_inline):
+        if el.get("data-type") == "taskItem":
+            marker = "x" if el.get("data-checked") == "true" else " "
+            text = f"[{marker}] {text.strip()}"
+        return super().convert_li(el, text, convert_as_inline)
+
     def convert_img(self, el, text, convert_as_inline):
         # markdownify keeps only the alt text in headings and table cells; keep the reference
         return super().convert_img(el, text, False)

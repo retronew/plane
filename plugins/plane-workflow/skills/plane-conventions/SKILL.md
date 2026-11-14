@@ -24,6 +24,22 @@ description: 团队在 Plane 中的规范——工作项标题写法、优先级
 - `workspace(action="list")` 无需 slug；其他工作区操作必须显式提供 `workspace_slug`。缺失时先 list 定位，仍不明确则询问，不使用请求头或历史工作区默认值。个人 token 可跨有权限的工作区，workspace-scoped token 不得超出绑定工作区；每次调用仍校验成员资格与项目权限。
 - 写入前核实目标工作区、项目、对象和权限，展示带工作区来源的具体方案并确认授权；已有明确授权可沿用原范围。目标未确定先询问；无权限时拒绝该目标，不切到其他 workspace 重试同名对象或绕过限制。
 
+## 管理与排查能力
+
+按当前服务端工具 schema 选择操作；旧服务端缺少动作时说明需要升级，不反复尝试不存在的工具。完整参数与示例见 [管理能力参考](references/management.md)。
+
+- 提醒：`project(action="reminder_settings")` 读取配置，`project(action="update_reminder_settings")` 修改提前天数、渠道与项目时区。配置开启只证明设置已保存，不能据此声称邮件或飞书已送达。
+- 项目配置审计：`project(action="activities")` 查看操作者、字段、旧值、新值及时间，使用 `next_cursor` 继续分页。
+- 团队负载：`workspace(action="member_work")` 汇总当前负责人在可见项目中的工作量；`workspace(action="member_work_items")` 下钻成员，按 `next_page` 传 `page` 翻页。日期范围按工作项截止日期筛选，逾期与延期完成按各项目时区判断。
+- 原因评审：先读 `workitem(action="comments")` 与 `workitem(action="comment_reviews")` 核对评论和历史，再在已获明确授权时用 `workitem(action="review_comment")` 评审。仅管理员可写，禁止自审；正文编辑后旧评审失效。未评审不等于原因不合理。
+- 停留时长：工作项 `filters` 支持 `state_duration__gt` / `state_duration__lt`，单位为自然天、支持小数、严格大于/小于，表示当前状态连续停留时间，不代表历史累计耗时。
+
+所有示例调用仍须显式提供 `workspace_slug`，写后读取核验，失败停止依赖步骤。
+
+## 批量导入与原生依赖
+
+完整步骤与参数见 [导入能力参考](references/import.md)。导入前分别读完普通和归档列表；使用 external_source/external_id 幂等写入，逐项保存 UUID 与结果，结果不明先精确回读。先建立工作项，再建立父子和 blocks/blocked_by 依赖；写后从两端核对方向。模块支持负责人和成员的替换、清空与回读，统计按实际工作项去重。
+
 ## 工作项
 
 - **标题**：动词开头，说清楚要做成什么，不超过 60 字。例：「修复登录页在 Safari 下白屏」，不写「登录问题」。

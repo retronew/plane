@@ -38,7 +38,8 @@ description: 生成站会汇总——昨天做了什么、今天计划、风险�
 
 - 今天计划最多 5 条，优先进行中和逾期的。
 - 风险只写逾期、7 天内到期但未开始、urgent 未开始的工作项。
-- 不要编造原因。
+- 不要编造原因。需要核对逾期或延期完成的原因时，读取 `workitem(action="comments", workspace_slug="<目标 slug>", work_item="<编号>")` 与 `workitem(action="comment_reviews", workspace_slug="<目标 slug>", work_item="<编号>")`。区分未评审、不合理以及评论修改导致旧评审失效；生成站会本身不授权提交评审。
+- 团队汇总可用 `workspace(action="member_work", workspace_slug="<目标 slug>")` 和 `workspace(action="member_work_items", workspace_slug="<目标 slug>", member="<成员>")` 补充负载与风险。成员明细按 `next_page` 传 `page` 翻页；日期筛选依据截止日期，不能用于推断“昨天完成”。
 
 ## 3. 可选：写入 Plane
 

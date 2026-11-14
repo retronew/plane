@@ -147,6 +147,44 @@ test("all eight complete canonical skills are identical across directories and a
   });
 });
 
+test("management guidance preserves pagination, evidence and review semantics in every distribution", async () => {
+  const name = "plane-conventions/references/management.md";
+  const canonical = await readFile(resolve(source, name), "utf8");
+  for (const action of [
+    "reminder_settings",
+    "update_reminder_settings",
+    "activities",
+    "member_work",
+    "member_work_items",
+    "comment_reviews",
+    "review_comment",
+  ])
+    assert.ok(canonical.includes(`action="${action}"`), action);
+  for (const phrase of [
+    "next_cursor",
+    "next_page=null",
+    "target_date",
+    "禁止评审自己的评论",
+    "评论编辑后评审失效",
+    "不代表投递成功",
+    "state_duration__gt",
+  ])
+    assert.ok(canonical.includes(phrase), phrase);
+  for (const dir of [publicDir, resolve(root, "plugins/plane-workflow-openai/skills")])
+    assert.equal(await readFile(resolve(dir, name), "utf8"), canonical);
+  for (const [archive, prefix] of [
+    ["plane-workflow.zip", ""],
+    ["plane-workflow-claude.zip", "skills/"],
+    ["plane-workflow-openai.zip", "skills/"],
+  ])
+    assert.equal(
+      unzip(await readFile(resolve(publicDir, archive)))
+        .get(`${prefix}${name}`)
+        .toString(),
+      canonical
+    );
+});
+
 test("distributions contain no embedded credentials or unsupported installation prompts", async () => {
   for (const dir of [resolve(here, ".."), resolve(root, "plugins/plane-workflow-openai"), publicDir]) {
     for (const [name, content] of await files(dir)) {
