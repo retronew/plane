@@ -82,12 +82,13 @@ class Context:
             raise ToolError(f"找不到项目 {value}，或你不是该项目成员。可用 project(action='list') 查看。")
         return str(project.id)
 
-    def work_item(self, value, project=None) -> tuple[str, str]:
+    def work_item(self, value, project=None, *, include_archived=False) -> tuple[str, str]:
         """Resolve ``PROJ-12`` or a UUID to (project_id, work_item_id)."""
         if not value:
             raise ToolError("缺少 work_item：请传工作项编号（如 WEB-12）或 ID。")
         value = str(value).strip()
-        queryset = Issue.issue_objects.filter(workspace__slug=self.slug, project__in=self.projects())
+        manager = Issue.objects if include_archived else Issue.issue_objects
+        queryset = manager.filter(workspace__slug=self.slug, project__in=self.projects(), is_draft=False)
         match = WORK_ITEM_KEY.match(value)
         if match:
             issue = queryset.filter(project__identifier__iexact=match.group(1), sequence_id=int(match.group(2))).first()
@@ -302,6 +303,8 @@ P_FILTERS = {
         "state_id、priority(urgent/high/medium/low/none)、assignee_id、label_id、cycle_id、module_id、parent_id、"
         "created_by_id、start_date、target_date；加 __in 传逗号分隔的多个值，"
         "日期加 __range 传 'YYYY-MM-DD,YYYY-MM-DD'。"
-        '例：{"and":[{"state_group__in":"started"},{"priority__in":"urgent,high"}]}'
+        "state_duration__gt / state_duration__lt：当前状态连续停留的自然天数，支持小数、严格大于/小于；"
+        "旧记录缺少状态进入时间时回退 created_at，非历史累计耗时。"
+        '例：{"and":[{"state_group__in":"started"},{"state_duration__gt":3}]}'
     ),
 }

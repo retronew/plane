@@ -31,8 +31,8 @@ from plane.api.views import (
     IssueAttachmentDetailAPIEndpoint,
     WorkspaceIssueAPIEndpoint,
     IssueSearchEndpoint,
-    IssueRelationListCreateAPIEndpoint,
 )
+from plane.api.views.work_item_relations import WorkItemRelationAPIEndpoint
 
 
 new_url_patterns = [
@@ -98,7 +98,7 @@ new_url_patterns = [
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/relations/",
-        IssueRelationListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),
+        WorkItemRelationAPIEndpoint.as_view(http_method_names=["get", "post", "delete"]),
         name="work-item-relation-list",
     ),
 ]

@@ -12,7 +12,39 @@ from plane.api.views import (
     ProjectSummaryAPIEndpoint,
 )
 
+from plane.api.views.business import (
+    MemberWorkAPIEndpoint,
+    MemberWorkItemsAPIEndpoint,
+    ProjectActivityAPIEndpoint,
+    IssueCommentReviewAPIEndpoint,
+)
+
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/member-work/",
+        MemberWorkAPIEndpoint.as_view(http_method_names=["get"]),
+        name="member-work",
+    ),
+    path(
+        "workspaces/<str:slug>/member-work/<uuid:user_id>/items/",
+        MemberWorkItemsAPIEndpoint.as_view(http_method_names=["get"]),
+        name="member-work-items",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/activities/",
+        ProjectActivityAPIEndpoint.as_view(http_method_names=["get"]),
+        name="project-activities",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/comment-reviews/",
+        IssueCommentReviewAPIEndpoint.as_view(http_method_names=["get"]),
+        name="work-item-comment-reviews",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-items/<uuid:issue_id>/comments/<uuid:comment_id>/review/",
+        IssueCommentReviewAPIEndpoint.as_view(http_method_names=["post"]),
+        name="work-item-comment-review",
+    ),
     path(
         "workspaces/<str:slug>/projects/",
         ProjectListCreateAPIEndpoint.as_view(http_method_names=["get", "post"]),

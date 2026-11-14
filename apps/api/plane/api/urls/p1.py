@@ -5,6 +5,7 @@
 from django.urls import path
 
 from plane.api.views import (
+    IssueDetailAPIEndpoint,
     CycleAnalyticsAPIEndpoint,
     CycleDateCheckAPIEndpoint,
     CycleProgressAPIEndpoint,
@@ -19,6 +20,11 @@ PROJECT = "workspaces/<str:slug>/projects/<uuid:project_id>/"
 
 # Kwarg names match the web app views these endpoints reuse
 urlpatterns = [
+    path(
+        f"{PROJECT}work-items/upsert/",
+        IssueDetailAPIEndpoint.as_view(http_method_names=["put"]),
+        name="work-item-upsert",
+    ),
     path(
         f"{PROJECT}cycles/date-check/",
         CycleDateCheckAPIEndpoint.as_view(http_method_names=["post"]),

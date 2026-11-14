@@ -6,6 +6,7 @@
 
 # Python imports
 import json
+import logging
 
 # Module imports
 from plane.mcp.formatting import compact, markdown_to_html
@@ -60,6 +61,30 @@ def _me(ctx, args):
     return me
 
 
+MEMBER_WORK_PARAMS = {
+    "projects": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "仅统计这些项目，传标识、名称或 ID；不传则统计有权限的项目",
+    },
+    "start_date": {"type": "string", "description": "截止日期范围起点 YYYY-MM-DD，须与 end_date 一起提供"},
+    "end_date": {"type": "string", "description": "截止日期范围终点 YYYY-MM-DD，含当天"},
+}
+
+
+def _member_work(ctx, args):
+    query = pick(args, "start_date", "end_date")
+    if args.get("projects"):
+        query["project_ids"] = ",".join(ctx.project_id(value) for value in as_list(args["projects"]))
+    path = "member-work/"
+    if "member" in args:
+        member_id = ctx.member_ids([args["member"]])[0]
+        path += f"{member_id}/items/"
+        query.update(pick(args, "status", "page", "page_size"))
+    # Member drill-down uses numbered pages, not the cursor pagination of workitem.list.
+    return ctx.api("GET", path, query)
+
+
 def _search(ctx, args):
     query = {"search": args["query"], "entities": ",".join(as_list(args.get("entities"))) or None}
     if args.get("project"):
@@ -81,6 +106,31 @@ workspace_tool = Tool(
             "members",
             "工作区成员列表（含 ID、邮箱、显示名，用于指派负责人）",
             lambda ctx, a: compact(ctx.api("GET", "members/")),
+            read_only=True,
+        ),
+        Action(
+            "member_work",
+            "成员工作概览：当前分配量、状态、逾期、延期完成及原因评审计数；按项目时区和截止日期统计",
+            _member_work,
+            params=MEMBER_WORK_PARAMS,
+            read_only=True,
+        ),
+        Action(
+            "member_work_items",
+            "成员工作明细；按返回 next_page 继续传 page 翻页，不使用 cursor",
+            _member_work,
+            params={
+                **MEMBER_WORK_PARAMS,
+                "member": {"type": "string", "description": "成员：me、邮箱、显示名或 ID"},
+                "status": {
+                    "type": "string",
+                    "enum": ["all", "overdue", "late_completed", "justified", "unjustified", "unreviewed"],
+                    "description": "明细类别，默认 all；评审状态本身不等于逾期，需根据日期及状态核实",
+                },
+                "page": {"type": "integer", "minimum": 1, "description": "页码，默认 1，后续使用 next_page"},
+                "page_size": {"type": "integer", "minimum": 1, "maximum": 100, "description": "每页条数，默认 20"},
+            },
+            required=("member",),
             read_only=True,
         ),
         Action(
@@ -111,6 +161,24 @@ def _project_body(args):
     if "description" in args:
         body["description"] = args["description"]
     return body
+
+
+REMINDER_FIELDS = ("remind_in", "remind_email_enabled", "remind_feishu_enabled", "timezone")
+
+
+def _reminder_settings(ctx, args):
+    path = _project_path(ctx, args)
+    body = pick(args, *REMINDER_FIELDS)
+    if body:
+        ctx.api("PATCH", path, body=body)
+    project = ctx.api("GET", path)
+    return {key: project.get(key) for key in ("id", "name", *REMINDER_FIELDS)}
+
+
+def _update_reminder_settings(ctx, args):
+    if not pick(args, *REMINDER_FIELDS):
+        raise ToolError("没有要修改的提醒设置。")
+    return _reminder_settings(ctx, args)
 
 
 def _set_default_state(ctx, args):
@@ -156,6 +224,40 @@ project_tool = Tool(
                 "description": {"type": "string", "description": "项目描述（纯文本）"},
             },
             required=("project",),
+        ),
+        Action(
+            "reminder_settings",
+            "读取项目到期提醒配置和时区；配置开启不代表已投递成功",
+            _reminder_settings,
+            params={"project": P_PROJECT},
+            required=("project",),
+            read_only=True,
+        ),
+        Action(
+            "update_reminder_settings",
+            "修改到期提醒配置（仅管理员），未传字段保持原值，变更写入项目审计",
+            _update_reminder_settings,
+            params={
+                "project": P_PROJECT,
+                "remind_in": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7,
+                    "description": "提前提醒天数，0 关闭，最多 7 天",
+                },
+                "remind_email_enabled": {"type": "boolean", "description": "启用邮件提醒"},
+                "remind_feishu_enabled": {"type": "boolean", "description": "启用飞书提醒"},
+                "timezone": {"type": "string", "description": "项目 IANA 时区，如 Asia/Shanghai"},
+            },
+            required=("project",),
+        ),
+        Action(
+            "activities",
+            "项目配置变更审计：操作者、字段、旧值、新值及时间",
+            lambda ctx, a: ctx.list_page(_project_path(ctx, a, "activities/"), a),
+            params={"project": P_PROJECT, **PAGING},
+            required=("project",),
+            read_only=True,
         ),
         Action(
             "states",
@@ -260,12 +362,15 @@ def _work_item_body(ctx, project_id, args):
     if "labels" in args:
         body["labels"] = ctx.label_ids(project_id, args["labels"])
     if "parent" in args:
-        body["parent"] = ctx.work_item(args["parent"])[1] if args["parent"] else None
+        body["parent"] = ctx.work_item(args["parent"], project_id, include_archived=True)[1] if args["parent"] else None
+    body.update(pick(args, "external_id", "external_source"))
     return body
 
 
 def _work_item_path(ctx, args, suffix=""):
-    project_id, work_item_id = ctx.work_item(args.get("work_item"))
+    project_id, work_item_id = ctx.work_item(
+        args.get("work_item"), args.get("project"), include_archived=args.get("include_archived", False)
+    )
     return f"projects/{project_id}/work-items/{work_item_id}/{suffix}"
 
 
@@ -277,7 +382,110 @@ def _list_work_items(ctx, args):
 
 
 def _get_work_item(ctx, args):
-    return compact(ctx.api("GET", _work_item_path(ctx, args), {"expand": WORK_ITEM_EXPAND}))
+    return compact(
+        ctx.api(
+            "GET",
+            _work_item_path(ctx, args),
+            {
+                "expand": WORK_ITEM_EXPAND,
+                "include_archived": "true" if args.get("include_archived") else None,
+            },
+        )
+    )
+
+
+def _relations(ctx, args, method="GET"):
+    relation = args.get("relation_type")
+    if relation == "blocks":
+        relation = "blocking"
+    body = None
+    if method != "GET":
+        body = {
+            "relation_type": relation,
+            "issues": [ctx.work_item(value)[1] for value in as_list(args["related_items"])],
+        }
+    path = _work_item_path(ctx, args, "relations/")
+    ctx.api(method, path, body=body) if method != "GET" else None
+    result = ctx.api("GET", path)
+    result["blocks"] = result.pop("blocking", [])
+    return result
+
+
+EXTERNAL_FIELDS = {
+    "external_source": {"type": "string", "description": "外部来源命名空间，和 external_id 一起唯一定位"},
+    "external_id": {"type": "string", "description": "外部稳定 ID / local_id，和 external_source 配对"},
+}
+
+
+def _by_external_id(ctx, args):
+    return compact(
+        ctx.api(
+            "GET",
+            _project_path(ctx, args, "work-items/"),
+            {
+                **pick(args, "external_id", "external_source"),
+                "include_archived": "true",
+                "expand": WORK_ITEM_EXPAND,
+            },
+        )
+    )
+
+
+def _upsert_work_item(ctx, args):
+    project_id = ctx.project_id(args["project"])
+    body = _work_item_body(ctx, project_id, args)
+    item = ctx.api("PUT", f"projects/{project_id}/work-items/upsert/", body=body)
+    return compact(
+        ctx.api(
+            "GET",
+            f"projects/{project_id}/work-items/{item['id']}/",
+            {
+                "expand": WORK_ITEM_EXPAND,
+                "include_archived": "true",
+            },
+        )
+    )
+
+
+def _bulk_upsert(ctx, args):
+    items = args["items"]
+    if not isinstance(items, list) or not 1 <= len(items) <= 100:
+        raise ToolError("items 必须包含 1–100 个工作项。")
+    results = []
+    seen = set()
+    for item in items:
+        external_id = item.get("external_id") if isinstance(item, dict) else None
+        if not isinstance(external_id, str) or not external_id.strip() or external_id in seen:
+            raise ToolError("每项须有非空且批内唯一的 external_id。")
+        if set(item) - set(WORK_ITEM_FIELDS) - {"external_id"}:
+            raise ToolError(
+                f"不支持的工作项字段：{', '.join(sorted(set(item) - set(WORK_ITEM_FIELDS) - {'external_id'}))}"
+            )
+        seen.add(external_id)
+    for item in items:
+        try:
+            result = _upsert_work_item(
+                ctx, {**item, "project": args["project"], "external_source": args["external_source"]}
+            )
+            results.append({"external_id": item["external_id"], "status": "succeeded", "work_item": result})
+        except ToolError as exc:
+            status = "unknown" if "HTTP 5" in str(exc) else "failed"
+            results.append({"external_id": item["external_id"], "status": status, "error": str(exc)})
+        except Exception:
+            logging.getLogger(__name__).exception("MCP bulk upsert result is uncertain")
+            results.append(
+                {
+                    "external_id": item["external_id"],
+                    "status": "unknown",
+                    "error": "结果未确认，请按外部 ID 读取核验后再重试。",
+                }
+            )
+    return {
+        "results": results,
+        "succeeded": sum(row["status"] == "succeeded" for row in results),
+        "failed": sum(row["status"] == "failed" for row in results),
+        "unknown": sum(row["status"] == "unknown" for row in results),
+    }
 
 
 def _create_work_item(ctx, args):
@@ -352,10 +560,95 @@ workitem_tool = Tool(
             read_only=True,
         ),
         Action(
+            "archived",
+            "已归档工作项（含子任务、UUID、parent 和 archived_at），独立 cursor 分页；普通 list 不含归档",
+            lambda ctx, a: ctx.list_page(
+                _project_path(ctx, a, "archived-work-items/"), a, {"expand": WORK_ITEM_EXPAND}
+            ),
+            params={"project": P_PROJECT, **PAGING},
+            required=("project",),
+            read_only=True,
+        ),
+        Action(
+            "get_by_external_id",
+            "按项目、外部来源和稳定 ID 精确查询单对象，含归档与子任务；未命中报错，重复匹配报冲突",
+            _by_external_id,
+            params={"project": P_PROJECT, **EXTERNAL_FIELDS},
+            required=("project", "external_source", "external_id"),
+            read_only=True,
+        ),
+        Action(
+            "upsert",
+            "按外部来源+稳定ID幂等创建或更新；未知结果先 get_by_external_id 核验；归档命中保持归档",
+            _upsert_work_item,
+            params={"project": P_PROJECT, **EXTERNAL_FIELDS, **WORK_ITEM_FIELDS},
+            required=("project", "external_source", "external_id"),
+        ),
+        Action(
+            "bulk_upsert",
+            "最多100项按稳定外部ID逐项幂等写入并返回各项结果；非整批事务，失败先核验再重试",
+            _bulk_upsert,
+            params={
+                "project": P_PROJECT,
+                "external_source": EXTERNAL_FIELDS["external_source"],
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                        "type": "object",
+                        "properties": {**WORK_ITEM_FIELDS, "external_id": EXTERNAL_FIELDS["external_id"]},
+                        "required": ["external_id"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
+            required=("project", "external_source", "items"),
+        ),
+        Action(
+            "relations",
+            "原生关系：blocks 表示本工作项阻塞目标，blocked_by 表示本工作项被目标阻塞",
+            _relations,
+            params={"work_item": P_WORK_ITEM, "project": P_PROJECT},
+            required=("work_item",),
+            read_only=True,
+        ),
+        *[
+            Action(
+                name,
+                "幂等"
+                + ("新增" if method == "POST" else "移除")
+                + "原生依赖并回读；blocks=本项阻塞目标，blocked_by=本项被目标阻塞",
+                lambda ctx, a, method=method: _relations(ctx, a, method),
+                params={
+                    "work_item": P_WORK_ITEM,
+                    "project": P_PROJECT,
+                    "relation_type": {
+                        "type": "string",
+                        "enum": ["blocks", "blocked_by"],
+                        "description": "从当前工作项视角解释方向",
+                    },
+                    "related_items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {"type": "string"},
+                        "description": "目标编号或 UUID 列表",
+                    },
+                },
+                required=("work_item", "relation_type", "related_items"),
+            )
+            for name, method in [("add_relation", "POST"), ("remove_relation", "DELETE")]
+        ],
+        Action(
             "get",
-            "工作项详情",
+            "工作项详情，可选 project 校验归属，读取归档须 include_archived=true",
             _get_work_item,
-            params={"work_item": P_WORK_ITEM},
+            params={
+                "work_item": P_WORK_ITEM,
+                "project": P_PROJECT,
+                "include_archived": {"type": "boolean", "description": "true 允许读取归档，默认 false"},
+            },
             required=("work_item",),
             read_only=True,
         ),
@@ -422,6 +715,37 @@ workitem_tool = Tool(
             read_only=True,
         ),
         Action(
+            "comment_reviews",
+            "读取评论原因评审的当前状态、是否因编辑失效及历史；同时返回 can_review",
+            lambda ctx, a: ctx.api("GET", _work_item_path(ctx, a, "comment-reviews/")),
+            params={"work_item": P_WORK_ITEM},
+            required=("work_item",),
+            read_only=True,
+        ),
+        Action(
+            "review_comment",
+            "评审评论原因（仅管理员、禁止自审）；评论编辑后评审失效，重新评审追加历史",
+            lambda ctx, a: ctx.api(
+                "POST",
+                _work_item_path(ctx, a, f"comments/{a['comment_id']}/review/"),
+                body={"status": a["review_status"]},
+            ),
+            params={
+                "work_item": P_WORK_ITEM,
+                "comment_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "评论 ID，取自 comments 或 comment_reviews",
+                },
+                "review_status": {
+                    "type": "string",
+                    "enum": ["justified", "unjustified", "unreviewed"],
+                    "description": "原因合理、不合理或重置为未评审",
+                },
+            },
+            required=("work_item", "comment_id", "review_status"),
+        ),
+        Action(
             "add_comment",
             "发表评论（Markdown）",
             lambda ctx, a: compact(
@@ -475,7 +799,8 @@ workitem_tool = Tool(
         Action(
             "unarchive",
             "取消归档",
-            lambda ctx, a: ctx.api("DELETE", _work_item_path(ctx, a, "archive/")) or {"unarchived": a["work_item"]},
+            lambda ctx, a: ctx.api("DELETE", _work_item_path(ctx, {**a, "include_archived": True}, "archive/"))
+            or {"unarchived": a["work_item"]},
             params={"work_item": P_WORK_ITEM},
             required=("work_item",),
         ),
@@ -520,15 +845,21 @@ def _container_tool(kind, label, path, items_path, id_resolver, date_fields):
         container_id = id_resolver(ctx, project_id, args.get(kind))
         return project_id, f"projects/{project_id}/{path}/{container_id}/{suffix}"
 
-    def body_of(args):
+    def body_of(ctx, args):
         body = pick(args, "name", *date_fields)
         if "description" in args:
             body["description"] = args["description"]
+        if kind == "module":
+            project_id = ctx.project_id(args.get("project"))
+            if "lead" in args:
+                body["lead"] = ctx.member_ids([args["lead"]], project_id)[0] if args["lead"] else None
+            if "members" in args:
+                body["members"] = ctx.member_ids(args["members"], project_id)
         return body
 
     def create(ctx, args):
         project_id = ctx.project_id(args.get("project"))
-        body = {**body_of(args), "project_id": project_id}
+        body = {**body_of(ctx, args), "project_id": project_id}
         return compact(ctx.api("POST", f"projects/{project_id}/{path}/", body=body))
 
     def add_items(ctx, args):
@@ -544,6 +875,21 @@ def _container_tool(kind, label, path, items_path, id_resolver, date_fields):
 
     ref = {kind: {"type": "string", "description": f"{label}名称或 ID"}}
     dates = {name: P_DATE for name in date_fields}
+    ownership = (
+        {
+            "lead": {
+                "type": ["string", "null"],
+                "description": "模块负责人：me、项目成员邮箱/名称/UUID；null或空字符串清空，省略保留",
+            },
+            "members": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "模块成员：me、邮箱/名称/UUID；更新时全量替换，[]清空，省略保留",
+            },
+        }
+        if kind == "module"
+        else {}
+    )
     return Tool(
         name=kind,
         title=label,
@@ -569,14 +915,21 @@ def _container_tool(kind, label, path, items_path, id_resolver, date_fields):
                 "create",
                 f"创建{label}",
                 create,
-                params={"project": P_PROJECT, "name": P_NAME, "description": {"type": "string"}, **dates},
+                params={"project": P_PROJECT, "name": P_NAME, "description": {"type": "string"}, **dates, **ownership},
                 required=("project", "name"),
             ),
             Action(
                 "update",
                 f"修改{label}",
-                lambda ctx, a: compact(ctx.api("PATCH", container_path(ctx, a)[1], body=body_of(a))),
-                params={"project": P_PROJECT, **ref, "name": P_NAME, "description": {"type": "string"}, **dates},
+                lambda ctx, a: compact(ctx.api("PATCH", container_path(ctx, a)[1], body=body_of(ctx, a))),
+                params={
+                    "project": P_PROJECT,
+                    **ref,
+                    "name": P_NAME,
+                    "description": {"type": "string"},
+                    **dates,
+                    **ownership,
+                },
                 required=("project", kind),
             ),
             Action(

@@ -348,6 +348,160 @@ class TestMCPProjectInsights:
 
 @pytest.mark.contract
 @pytest.mark.django_db
+class TestMCPManagement:
+    def test_reminder_settings_round_trip_and_audit(self, mcp, project):
+        is_error, settings = mcp.tool(
+            "project",
+            action="update_reminder_settings",
+            project="WEB",
+            remind_in=3,
+            remind_email_enabled=True,
+            remind_feishu_enabled=False,
+            timezone="Asia/Shanghai",
+        )
+        assert not is_error, settings
+        assert settings["remind_in"] == 3
+        assert settings["remind_email_enabled"] is True
+        assert settings["remind_feishu_enabled"] is False
+        is_error, current = mcp.tool("project", action="reminder_settings", project="WEB")
+        assert not is_error and current == settings
+        is_error, events = mcp.tool("project", action="activities", project="WEB", per_page=1)
+        assert not is_error, events
+        assert len(events["results"]) == 1
+        assert events.get("next_cursor")
+        is_error, next_events = mcp.tool(
+            "project",
+            action="activities",
+            project="WEB",
+            per_page=1,
+            cursor=events["next_cursor"],
+        )
+        assert not is_error and next_events["results"][0]["id"] != events["results"][0]["id"]
+        is_error, error = mcp.tool("project", action="update_reminder_settings", project="WEB")
+        assert is_error and "没有要修改" in error
+
+    @pytest.mark.parametrize(
+        "action,extra",
+        [
+            ("update_reminder_settings", {"project": "WEB", "remind_in": 2}),
+            ("review_comment", {"work_item": "WEB-1", "comment_id": str(uuid4()), "review_status": "justified"}),
+        ],
+    )
+    def test_new_writes_reject_read_only_token(self, mcp, project, create_user, action, extra):
+        if action == "review_comment":
+            is_error, item = mcp.tool("workitem", action="create", project="WEB", name="Read-only review target")
+            assert not is_error, item
+        token = APIToken.objects.create(user=create_user, label="ro", token=f"ro-{action}", scope=APIToken.SCOPE_READ)
+        response = mcp(
+            "tools/call",
+            {
+                "name": "project" if action == "update_reminder_settings" else "workitem",
+                "arguments": {"action": action, **extra},
+            },
+            token=token.token,
+        )
+        assert response.json()["result"]["isError"]
+        assert "read-only" in response.json()["result"]["content"][0]["text"]
+
+    def test_member_summary_and_numbered_detail_pagination(self, mcp, project, create_user):
+        from datetime import date, timedelta
+
+        ids = []
+        for name in ["First", "Second"]:
+            is_error, item = mcp.tool(
+                "workitem",
+                action="create",
+                project="WEB",
+                name=name,
+                assignees=["me"],
+                target_date=str(date.today() - timedelta(days=2)),
+            )
+            assert not is_error, item
+            ids.append(item["id"])
+        is_error, summary = mcp.tool("workspace", action="member_work", projects=["WEB"])
+        assert not is_error, summary
+        row = next(row for row in summary["rows"] if row["id"] == str(create_user.id))
+        assert row["assigned"] == row["overdue"] == 2
+        is_error, first = mcp.tool(
+            "workspace", action="member_work_items", projects=["WEB"], member="me", status="overdue", page_size=1
+        )
+        assert not is_error, first
+        assert first["count"] == 2 and first["next_page"] == 2
+        is_error, second = mcp.tool(
+            "workspace",
+            action="member_work_items",
+            projects=["WEB"],
+            member="me",
+            status="overdue",
+            page_size=1,
+            page=first["next_page"],
+        )
+        assert not is_error and second["next_page"] is None
+        assert {first["results"][0]["id"], second["results"][0]["id"]} == set(ids)
+        is_error, error = mcp.tool("workspace", action="member_work", start_date="2026-01-01")
+        assert is_error, error
+
+    def test_comment_review_history_and_self_review_rejection(self, mcp, project, workspace, create_user):
+        from plane.db.models import User
+
+        is_error, item = mcp.tool("workitem", action="create", project="WEB", name="Needs reason")
+        assert not is_error, item
+        author = User.objects.create(email="reason-author@example.com", username="reason-author")
+        comment = IssueComment.objects.create(
+            project=project,
+            workspace=workspace,
+            issue_id=item["id"],
+            actor=author,
+            created_by=author,
+            comment_html="<p>Blocked externally</p>",
+        )
+        is_error, reviewed = mcp.tool(
+            "workitem",
+            action="review_comment",
+            work_item="WEB-1",
+            comment_id=str(comment.id),
+            review_status="justified",
+        )
+        assert not is_error, reviewed
+        assert reviewed["status"] == "justified" and len(reviewed["history"]) == 1
+        is_error, reviews = mcp.tool("workitem", action="comment_reviews", work_item="WEB-1")
+        assert not is_error and reviews["can_review"] is True
+        assert reviews["reviews"][0]["status"] == "justified"
+        comment.comment_html = "<p>Changed reason</p>"
+        comment.save()
+        is_error, reviews = mcp.tool("workitem", action="comment_reviews", work_item="WEB-1")
+        assert not is_error and reviews["reviews"][0]["is_stale"] is True
+        assert reviews["reviews"][0]["status"] == "unreviewed"
+        is_error, own = mcp.tool("workitem", action="add_comment", work_item="WEB-1", comment="My reason")
+        assert not is_error, own
+        is_error, error = mcp.tool(
+            "workitem", action="review_comment", work_item="WEB-1", comment_id=own["id"], review_status="justified"
+        )
+        assert is_error and "own comment" in error
+
+    def test_state_duration_filter_reaches_project_and_my_items(self, mcp, project, create_user):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        ids = []
+        for name in ["Old", "New"]:
+            is_error, item = mcp.tool(
+                "workitem", action="create", project="WEB", name=name, state="Doing", assignees=["me"]
+            )
+            assert not is_error, item
+            ids.append(item["id"])
+        Issue.objects.filter(id=ids[0]).update(state_changed_at=timezone.now() - timedelta(days=4))
+        filters = {"and": [{"state_group": "started"}, {"state_duration__gt": 3}]}
+        for action, extra in [("list", {"project": "WEB"}), ("my_items", {})]:
+            is_error, results = mcp.tool("workitem", action=action, filters=filters, **extra)
+            assert not is_error, results
+            assert [item["id"] for item in results["results"]] == [ids[0]]
+        is_error, error = mcp.tool("workitem", action="list", project="WEB", filters={"state_duration__gt": -1})
+        assert is_error, error
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
 class TestMCPCrossWorkspace:
     @pytest.fixture
     def other(self, create_user):
