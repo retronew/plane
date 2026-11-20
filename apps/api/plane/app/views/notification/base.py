@@ -9,6 +9,7 @@ from django.db.models import Exists, OuterRef, Q, Case, When, BooleanField, Inte
 from django.utils import timezone
 from django.db import transaction
 from plane.utils.notification_preferences import sync_legacy_preferences
+from plane.utils.browser_notification_feed import browser_notification_feed
 
 # Third party imports
 from rest_framework import status
@@ -138,12 +139,7 @@ class NotificationViewSet(BaseViewSet, BasePaginator):
             issue_intake__status__in=[0, 2, -2],
             workspace__slug=slug,
         )
-        notifications = filter_notifications(
-            self.get_queryset().filter(entity_name__in=["issue", "daily_digest"]),
-            request.GET,
-            slug,
-            request.user,
-        ).annotate(
+        notifications = self.get_queryset().filter(entity_name__in=["issue", "daily_digest"]).annotate(
             is_inbox_issue=Exists(intake_issue),
             is_intake_issue=Exists(intake_issue),
             is_mentioned_notification=Case(
@@ -152,6 +148,9 @@ class NotificationViewSet(BaseViewSet, BasePaginator):
                 output_field=BooleanField(),
             ),
         )
+        if request.GET.get("browser_feed") == "true":
+            return browser_notification_feed(request, notifications, slug)
+        notifications = filter_notifications(notifications, request.GET, slug, request.user)
         order_by = request.GET.get("order_by", "-created_at")
         if order_by == "priority":
             priority = Issue.objects.filter(pk=OuterRef("entity_identifier"), workspace__slug=slug).values("priority")[

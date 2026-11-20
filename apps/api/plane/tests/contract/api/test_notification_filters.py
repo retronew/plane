@@ -124,3 +124,86 @@ def test_mentions_boolean_and_bulk_read(session_client, workspace, notification_
     for notification in [first, second, foreign]:
         notification.refresh_from_db()
         assert notification.read_at is None
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_browser_feed_is_paginated_from_first_request_and_receiver_scoped(session_client, workspace, notification_data):
+    first, second, mentioned, foreign, *_ = notification_data
+    response = session_client.get(url(workspace), {"browser_feed": "true"})
+    assert response.status_code == 200
+    assert {item["id"] for item in response.json()["results"]} == {str(first.id), str(second.id)}
+    assert response.json()["next_page_results"] is False
+    assert response.json()["next_cursor"] is None
+    response = session_client.get(url(workspace), {"browser_feed": "true", "mentioned": "true"})
+    assert [item["id"] for item in response.json()["results"]] == [str(mentioned.id)]
+    assert str(foreign.id) not in str(response.json())
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_browser_feed_empty_response_has_pagination_shape(session_client, workspace):
+    response = session_client.get(url(workspace), {"browser_feed": "true"})
+    assert response.status_code == 200
+    assert response.json() == {"results": [], "next_page_results": False, "next_cursor": None}
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_browser_feed_keyset_survives_inserts_deletes_and_archiving(session_client, workspace, notification_data):
+    first, second, *_ = notification_data
+    rows = [
+        Notification.objects.create(
+            workspace=workspace,
+            project=first.project,
+            receiver=first.receiver,
+            entity_name="issue",
+            entity_identifier=first.entity_identifier,
+            sender="issue updated",
+            title="Browser page test",
+        )
+        for _ in range(101)
+    ]
+    # Same timestamp also exercises the UUID tie-breaker.
+    timestamp = timezone.now()
+    Notification.objects.filter(pk__in=[row.pk for row in rows]).update(created_at=timestamp)
+    params = {"browser_feed": "true"}
+    response = session_client.get(url(workspace), params)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["results"]) == 100
+    assert data["next_page_results"] is True
+    seen = {item["id"] for item in data["results"]}
+    Notification.objects.filter(pk=data["results"][0]["id"]).delete()
+    Notification.objects.filter(pk=data["results"][1]["id"]).update(archived_at=timezone.now())
+    remaining = next(row for row in rows if str(row.id) not in seen)
+    Notification.objects.filter(pk=remaining.pk).update(snoozed_till=timezone.now() + timedelta(days=1))
+    newcomer = Notification.objects.create(
+        workspace=workspace,
+        project=first.project,
+        receiver=first.receiver,
+        entity_name="issue",
+        sender="issue updated",
+        title="Arrived during pagination",
+    )
+    following = session_client.get(url(workspace), {**params, "cursor": data["next_cursor"]})
+    assert following.status_code == 200
+    items = following.json()["results"]
+    assert {item["id"] for item in items} == {str(remaining.id), str(first.id), str(second.id)}
+    assert str(newcomer.id) not in {item["id"] for item in items}
+    assert following.json()["next_page_results"] is False
+    invalid = session_client.get(url(workspace), {**params, "cursor": data["next_cursor"] + "invalid"})
+    assert invalid.status_code == 400
+    cross_stream = session_client.get(url(workspace), {**params, "cursor": data["next_cursor"], "mentioned": "true"})
+    assert cross_stream.status_code == 400
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+def test_browser_feed_keeps_mutable_status_rows_so_client_can_skip_them(session_client, workspace, notification_data):
+    first, second, *_ = notification_data
+    Notification.objects.filter(pk=first.pk).update(archived_at=timezone.now(), read_at=timezone.now())
+    Notification.objects.filter(pk=second.pk).update(snoozed_till=timezone.now() + timedelta(days=1))
+    data = session_client.get(url(workspace), {"browser_feed": "true"}).json()
+    assert {item["id"] for item in data["results"]} == {str(first.id), str(second.id)}
+    assert session_client.get(url(workspace)).json() == []

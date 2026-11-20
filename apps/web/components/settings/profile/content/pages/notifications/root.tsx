@@ -1,6 +1,7 @@
 import { Tab, Tabs, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
 import { useTranslation } from "@plane/i18n";
 import { ProfileSettingsHeading } from "@/components/settings/profile/heading";
+import { BrowserNotificationsSettings } from "./browser-notifications";
 import { DailyDigestSettings } from "./daily-digest";
 import { FeishuAccount } from "./feishu-account";
 import { NotificationPreferencesTab } from "./preferences-tab";
@@ -17,12 +18,18 @@ export function NotificationsProfileSettings() {
         <Tabs variant="underline" defaultValue="preferences">
           <TabsList aria-label={t("notification_preferences.title")}>
             <Tab value="preferences" label={t("notification_preferences.tabs.preferences")} />
+            <Tab value="browser" label={t("notification_preferences.browser.title")} />
             <Tab value="digest" label={t("notification_preferences.digest.title")} />
             <Tab value="accounts" label={t("notification_preferences.tabs.accounts")} />
           </TabsList>
           <TabsPanel value="preferences" keepMounted>
             <div className="pt-5">
               <NotificationPreferencesTab />
+            </div>
+          </TabsPanel>
+          <TabsPanel value="browser" keepMounted>
+            <div className="pt-5">
+              <BrowserNotificationsSettings />
             </div>
           </TabsPanel>
           <TabsPanel value="digest" keepMounted>

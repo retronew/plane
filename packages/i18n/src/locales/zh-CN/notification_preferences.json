@@ -8,6 +8,37 @@
       "preferences_description": "选择要接收的通知事件，也可为特定工作区或项目设置例外。",
       "accounts_description": "查看用于接收飞书通知的账号及其连接状态。"
     },
+    "browser": {
+      "title": "浏览器通知",
+      "description": "通过桌面通知接收工作区的新动态。工作项标题可能会显示在锁屏上。",
+      "enabled": "接收浏览器通知",
+      "enabled_description": "默认开启。此偏好仅适用于本浏览器中的当前账号，更改会自动保存。接收通知还需要您授予浏览器权限。",
+      "status": {
+        "default": "尚未请求通知权限",
+        "granted": "已允许通知",
+        "denied": "已阻止通知",
+        "unsupported": "浏览器通知不可用"
+      },
+      "status_description": {
+        "default": "点击「允许通知」，向浏览器请求通知权限。",
+        "granted": "浏览器已获得通知权限。开启浏览器通知后，您可以发送测试通知。",
+        "denied": "请在浏览器设置中允许此网站发送通知，然后返回此页面。",
+        "unsupported": "当前浏览器或环境不支持桌面通知。请尝试使用支持通知的浏览器，并通过 HTTPS 访问。"
+      },
+      "allow": "允许通知",
+      "onboarding": {
+        "title": "开启浏览器通知",
+        "description": "在 Plane 中打开此工作区时，您可以收到新通知。工作项标题可能会显示在锁屏上。您也可以稍后在个人设置中开启。",
+        "later": "稍后"
+      },
+      "test": "发送测试通知",
+      "error": "无法完成通知操作。请检查浏览器和系统的通知设置后重试。",
+      "availability": "请保持该工作区的 Plane 标签页打开，以接收新通知。后台标签页可能延迟接收；关闭该工作区的所有标签页后，不再接收新的系统通知。",
+      "notification_title": "Plane 通知",
+      "notification_body": "您在 {workspace} 中有一条新通知。",
+      "test_title": "Plane 测试通知",
+      "test_body": "您当前账号在本浏览器中的通知功能正常。"
+    },
     "channels_title": "通知渠道",
     "channels": { "in_app": "站内通知", "email": "邮件", "feishu": "飞书" },
     "channel_description": "通过{channel}接收通知。",

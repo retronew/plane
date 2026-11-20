@@ -10,20 +10,26 @@ vi.mock("./preferences-tab", () => ({
     return <button onClick={() => setSelected(true)}>{selected ? "workspace selected" : "choose workspace"}</button>;
   },
 }));
+vi.mock("./browser-notifications", () => ({ BrowserNotificationsSettings: () => <h3>Browser notifications</h3> }));
 vi.mock("./daily-digest", () => ({ DailyDigestSettings: () => <h3>Digest settings</h3> }));
 vi.mock("./feishu-account", () => ({ FeishuAccount: () => <h4>Feishu binding status</h4> }));
 beforeEach(() => vi.stubGlobal("PointerEvent", MouseEvent));
 afterEach(() => vi.unstubAllGlobals());
 
-it("opens preferences by default and separates digest and account settings", () => {
+it("opens preferences by default and separates browser, digest and account settings", () => {
   render(<NotificationsProfileSettings />);
-  expect(screen.getAllByRole("tab")).toHaveLength(3);
+  expect(screen.getAllByRole("tab")).toHaveLength(4);
   expect(
     screen.getByRole("tab", { name: "notification_preferences.tabs.preferences" }).getAttribute("aria-selected")
   ).toBe("true");
   expect(screen.queryByRole("heading", { name: "Digest settings" })).toBeNull();
   expect(screen.queryByRole("heading", { name: "Feishu binding status" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Browser notifications" })).toBeNull();
+  fireEvent.click(screen.getByRole("tab", { name: "notification_preferences.browser.title" }));
+  expect(screen.getByRole("heading", { name: "Browser notifications" })).toBeTruthy();
+  expect(screen.queryByRole("heading", { name: "Digest settings" })).toBeNull();
   fireEvent.click(screen.getByRole("tab", { name: "notification_preferences.digest.title" }));
+  expect(screen.queryByRole("heading", { name: "Browser notifications" })).toBeNull();
   expect(screen.getByRole("heading", { name: "Digest settings" })).toBeTruthy();
   expect(screen.queryByRole("button", { name: "choose workspace" })).toBeNull();
   fireEvent.click(screen.getByRole("tab", { name: "notification_preferences.tabs.accounts" }));

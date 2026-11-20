@@ -8,6 +8,37 @@
       "preferences_description": "Choose which events you receive and set exceptions for individual workspaces or projects.",
       "accounts_description": "Check the account used to receive Feishu notifications and its connection status."
     },
+    "browser": {
+      "title": "Browser notifications",
+      "description": "Receive desktop notifications for updates in your workspaces. Work item titles may appear on your lock screen.",
+      "enabled": "Receive browser notifications",
+      "enabled_description": "On by default. This preference applies only to your current account in this browser and saves automatically. Browser permission is required to receive notifications.",
+      "status": {
+        "default": "Permission not requested",
+        "granted": "Notifications allowed",
+        "denied": "Notifications blocked",
+        "unsupported": "Browser notifications unavailable"
+      },
+      "status_description": {
+        "default": "Select Allow notifications to request permission from your browser.",
+        "granted": "Your browser has permission to show notifications. You can send a test while browser notifications are enabled.",
+        "denied": "Allow notifications for this site in your browser settings, then return to this page.",
+        "unsupported": "This browser or environment does not support desktop notifications. Try a supported browser over HTTPS."
+      },
+      "allow": "Allow notifications",
+      "onboarding": {
+        "title": "Turn on browser notifications",
+        "description": "Get updates from this workspace while it's open in Plane. Work item titles may appear on your lock screen. You can turn notifications on later in your personal settings.",
+        "later": "Not now"
+      },
+      "test": "Send test notification",
+      "error": "Unable to complete the notification action. Check your browser and system notification settings, then try again.",
+      "availability": "Keep a Plane tab open in a workspace to receive its new notifications. Background tabs may receive them late. No new notifications are delivered while all tabs for that workspace are closed.",
+      "notification_title": "Plane notification",
+      "notification_body": "You have a new notification in {workspace}.",
+      "test_title": "Plane test notification",
+      "test_body": "Browser notifications are working for your account in this browser."
+    },
     "channels_title": "Delivery channels",
     "channels": { "in_app": "In-app", "email": "Email", "feishu": "Feishu" },
     "channel_description": "Receive notifications through {channel}.",
