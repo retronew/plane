@@ -4,17 +4,17 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useDialogDismissal } from "@plane/hooks";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
-import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
 import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
 import { Collapsible } from "@makeplane/propel/components/collapsible";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Icon } from "@makeplane/propel/components/icon";
-import { EditOutline } from "@makeplane/propel/icons";
+import { EditOutline, CloseOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IUserProfileProjectSegregation } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
@@ -22,7 +22,6 @@ import { cn, renderFormattedDate, getFileURL } from "@plane/utils";
 // components
 import { CoverImage } from "@/components/common/cover-image";
 // hooks
-import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useProject } from "@/hooks/store/use-project";
 import { useUser } from "@/hooks/store/user";
@@ -35,31 +34,23 @@ import styles from "./sidebar.module.css";
 type TProfileSidebar = {
   userProjectsData: IUserProfileProjectSegregation | undefined;
   className?: string;
+  closeMobile?: () => void;
 };
 
 export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSidebar) {
-  const { userProjectsData, className = "" } = props;
-  // refs
-  const ref = useRef<HTMLDivElement>(null);
+  const { userProjectsData, closeMobile, className = "" } = props;
+  const panelRef = useRef<HTMLElement>(null);
+  useDialogDismissal({ isOpen: !!closeMobile, handleClose: closeMobile, onOutsideClick: closeMobile, panelRef });
   // router
   const { userId } = useParams();
   // store hooks
   const { data: currentUser } = useUser();
-  const { profileSidebarCollapsed, toggleProfileSidebar } = useAppTheme();
   const { getProjectById } = useProject();
   const { toggleProfileSettingsModal } = useCommandPalette();
   const { isMobile } = usePlatformOS();
   const { t } = useTranslation();
   // derived values
   const userData = userProjectsData?.user_data;
-
-  useOutsideClickDetector(ref, () => {
-    if (profileSidebarCollapsed === false) {
-      if (window.innerWidth < 768) {
-        toggleProfileSidebar();
-      }
-    }
-  });
 
   const userDetails = [
     {
@@ -72,30 +63,27 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
     },
   ];
 
-  useEffect(() => {
-    const handleToggleProfileSidebar = () => {
-      if (window && window.innerWidth < 768) {
-        toggleProfileSidebar(true);
-      }
-      if (window && profileSidebarCollapsed && window.innerWidth >= 768) {
-        toggleProfileSidebar(false);
-      }
-    };
-
-    window.addEventListener("resize", handleToggleProfileSidebar);
-    handleToggleProfileSidebar();
-    return () => window.removeEventListener("resize", handleToggleProfileSidebar);
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- register the resize listener once
-  }, []);
-
   return (
-    <div
+    <aside
+      ref={panelRef}
+      id="profile-details-panel"
+      aria-label={t("profile.label")}
       className={cn(
-        `vertical-scrollbar fixed z-5 flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-subtle bg-surface-1 transition-[margin-left] motion-reduce:transition-none md:relative md:w-[300px]`,
+        `vertical-scrollbar fixed z-5 flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-subtle bg-surface-1 md:relative md:w-[300px]`,
         className
       )}
-      style={profileSidebarCollapsed ? { marginLeft: "100vw" } : {}}
     >
+      {closeMobile && (
+        <div className="absolute top-3 left-3 z-10">
+          <IconButton
+            variant="secondary"
+            size="sm"
+            icon={<Icon icon={CloseOutline} />}
+            aria-label={t("profile.hide_details")}
+            onClick={closeMobile}
+          />
+        </div>
+      )}
       {userProjectsData ? (
         <>
           <div className="relative h-[110px] shrink-0">
@@ -265,6 +253,6 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
           </div>
         </Loader>
       )}
-    </div>
+    </aside>
   );
 });

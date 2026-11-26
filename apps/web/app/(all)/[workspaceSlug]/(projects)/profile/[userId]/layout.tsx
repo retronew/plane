@@ -11,8 +11,10 @@ import useSWR from "swr";
 // components
 import { PROFILE_VIEWER_TAB, PROFILE_ADMINS_TAB, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
+import { CssTransition } from "@/components/core/css-transition";
 import { AppHeader } from "@/components/core/app-header";
 import { ContentWrapper } from "@/components/core/content-wrapper";
+import { useProfileSidebar } from "@/components/profile/use-profile-sidebar";
 import { ProfileSidebar } from "@/components/profile/sidebar";
 // constants
 import { USER_PROFILE_PROJECT_SEGREGATION } from "@plane/constants";
@@ -42,7 +44,8 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
   );
 
   const windowSize = useSize();
-  const isSmallerScreen = windowSize[0] >= 768;
+  const isDesktop = windowSize[0] >= 768;
+  const sidebar = useProfileSidebar(isDesktop);
 
   const { data: userProjectsData } = useSWR(USER_PROFILE_PROJECT_SEGREGATION(workspaceSlug, userId), () =>
     userService.getUserProfileProjectsSegregation(workspaceSlug, userId)
@@ -67,6 +70,8 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
                 type={currentTab?.i18n_label}
                 userProjectsData={userProjectsData}
                 showProfileIssuesFilter={isIssuesTab}
+                sidebarOpen={sidebar.open}
+                toggleSidebar={sidebar.toggle}
               />
             }
             mobileHeader={isIssuesTab && <ProfileIssuesMobileHeader />}
@@ -85,11 +90,35 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
                   </div>
                 )}
               </div>
-              {!isSmallerScreen && <ProfileSidebar userProjectsData={userProjectsData} />}
+              {!isDesktop && (
+                <CssTransition
+                  show={sidebar.open}
+                  transitionClassName="fixed right-0 z-5 h-full w-full transition-all duration-300 ease-in-out motion-reduce:transition-none"
+                  fromClassName="translate-x-full opacity-0"
+                  toClassName="translate-x-0 opacity-100"
+                  enterClassName=""
+                  leaveClassName=""
+                  leaveDurationMs={300}
+                >
+                  <ProfileSidebar userProjectsData={userProjectsData} closeMobile={sidebar.closeMobile} />
+                </CssTransition>
+              )}
             </div>
           </ContentWrapper>
         </div>
-        {isSmallerScreen && <ProfileSidebar userProjectsData={userProjectsData} />}
+        {isDesktop && (
+          <CssTransition
+            show={sidebar.open}
+            transitionClassName="h-full shrink-0 overflow-hidden transition-all duration-300 ease-in-out motion-reduce:transition-none"
+            fromClassName="w-0 translate-x-full opacity-0"
+            toClassName="w-[300px] translate-x-0 opacity-100"
+            enterClassName=""
+            leaveClassName=""
+            leaveDurationMs={300}
+          >
+            <ProfileSidebar userProjectsData={userProjectsData} />
+          </CssTransition>
+        )}
       </div>
     </>
   );

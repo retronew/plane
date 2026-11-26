@@ -16,27 +16,26 @@ import { Header } from "@plane/blocks/layout";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { cn } from "@plane/utils";
 // components
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 import { ProfileIssuesFilter } from "@/components/profile/profile-issues-filter";
 // hooks
-import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 
 type TUserProfileHeader = {
   userProjectsData: IUserProfileProjectSegregation | undefined;
   type?: string | undefined;
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;
   showProfileIssuesFilter?: boolean;
 };
 
 export const UserProfileHeader = observer(function UserProfileHeader(props: TUserProfileHeader) {
-  const { userProjectsData, type = undefined, showProfileIssuesFilter } = props;
+  const { userProjectsData, type = undefined, showProfileIssuesFilter, sidebarOpen, toggleSidebar } = props;
   // router
   const { workspaceSlug, userId } = useParams();
   const router = useRouter();
   // store hooks
-  const { toggleProfileSidebar, profileSidebarCollapsed } = useAppTheme();
   const { data: currentUser } = useUser();
   const { workspaceUserInfo, allowPermissions } = useUserPermissions();
   const { t } = useTranslation();
@@ -99,30 +98,17 @@ export const UserProfileHeader = observer(function UserProfileHeader(props: TUse
               ))}
             </MenuContent>
           </Menu>
-          <div className="shrink-0 md:hidden">
-            <IconButton
-              variant="ghost"
-              size="md"
-              aria-label={t(
-                profileSidebarCollapsed
-                  ? "aria_labels.projects_sidebar.expand_sidebar"
-                  : "aria_labels.projects_sidebar.collapse_sidebar"
-              )}
-              onClick={() => {
-                toggleProfileSidebar();
-              }}
-              icon={
-                <Icon
-                  icon={
-                    <RightSidePaneOutline
-                      className={cn("size-4", !profileSidebarCollapsed ? "text-accent-primary" : "text-secondary")}
-                    />
-                  }
-                />
-              }
-            />
-          </div>
         </div>
+        <IconButton
+          variant="ghost"
+          size="md"
+          aria-label={t(sidebarOpen ? "profile.hide_details" : "profile.show_details")}
+          data-prevent-outside-click
+          aria-expanded={sidebarOpen}
+          aria-controls={sidebarOpen ? "profile-details-panel" : undefined}
+          onClick={toggleSidebar}
+          icon={<Icon icon={<RightSidePaneOutline className="size-4 text-secondary" />} />}
+        />
       </Header.RightItem>
     </Header>
   );

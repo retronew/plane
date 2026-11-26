@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import type { IUserProfileProjectSegregation } from "@plane/types";
 import { ProfileSidebar } from "./sidebar";
 
-const mock = vi.hoisted(() => ({ toggle: vi.fn(), edit: vi.fn() }));
+const mock = vi.hoisted(() => ({ edit: vi.fn() }));
 vi.hoisted(() => {
   HTMLCanvasElement.prototype.getContext = () => null;
 });
@@ -15,9 +15,6 @@ vi.mock("@plane/i18n", () => ({
   getCurrentLanguage: () => "en",
 }));
 vi.mock("@plane/blocks/emoji-icon-picker", () => ({ ProjectLogo: () => <span>Icon</span> }));
-vi.mock("@/hooks/store/use-app-theme", () => ({
-  useAppTheme: () => ({ profileSidebarCollapsed: false, toggleProfileSidebar: mock.toggle }),
-}));
 vi.mock("@/hooks/store/use-command-palette", () => ({
   useCommandPalette: () => ({ toggleProfileSettingsModal: mock.edit }),
 }));
