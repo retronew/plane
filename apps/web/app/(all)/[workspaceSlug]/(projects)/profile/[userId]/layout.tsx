@@ -77,7 +77,7 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
             mobileHeader={isIssuesTab && <ProfileIssuesMobileHeader />}
           />
           <ContentWrapper>
-            <div className="flex h-full w-full flex-row md:flex-col md:overflow-hidden">
+            <div className="relative flex h-full w-full flex-row overflow-hidden md:flex-col">
               <div className="flex w-full flex-col md:h-full md:overflow-hidden">
                 <ProfileNavbar isAuthorized={!!isAuthorized} />
                 {isAuthorized || !isAuthorizedPath ? (
@@ -93,7 +93,7 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
               {!isDesktop && (
                 <CssTransition
                   show={sidebar.open}
-                  transitionClassName="fixed right-0 z-5 h-full w-full transition-all duration-300 ease-in-out motion-reduce:transition-none"
+                  transitionClassName="absolute inset-0 z-5 h-full w-full transition-all duration-300 ease-in-out motion-reduce:transition-none"
                   fromClassName="translate-x-full opacity-0"
                   toClassName="translate-x-0 opacity-100"
                   enterClassName=""

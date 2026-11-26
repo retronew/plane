@@ -69,7 +69,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
       id="profile-details-panel"
       aria-label={t("profile.label")}
       className={cn(
-        `vertical-scrollbar fixed z-5 flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-subtle bg-surface-1 md:relative md:w-[300px]`,
+        `vertical-scrollbar relative z-5 flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-subtle bg-surface-1 md:w-[300px]`,
         className
       )}
     >
