@@ -1,10 +1,16 @@
 import { useEffect } from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import type { TNameDescriptionLoader } from "@plane/types";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { TIssueOperations } from "../issue-detail";
 import { IssueView } from "./view";
 
-const mocks = vi.hoisted(() => ({ mounts: vi.fn(), unmounts: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  mounts: vi.fn(),
+  unmounts: vi.fn(),
+  editors: new Map<string, (value: TNameDescriptionLoader) => void>(),
+  unmountEditor: vi.fn(),
+}));
 vi.mock("@/hooks/store/use-issue-detail", () => ({
   useIssueDetail: () => ({
     setPeekIssue: vi.fn(),
@@ -33,7 +39,28 @@ vi.mock("./loader", () => ({
   ),
 }));
 vi.mock("./error", () => ({ IssuePeekOverviewError: () => null }));
-vi.mock("./issue-detail", () => ({ PeekOverviewIssueDetails: () => <div>Issue body</div> }));
+vi.mock("./issue-detail", () => ({
+  PeekOverviewIssueDetails: function Editor({
+    issueId,
+    isSubmitting,
+    setIsSubmitting,
+  }: {
+    issueId: string;
+    isSubmitting: TNameDescriptionLoader;
+    setIsSubmitting: (value: TNameDescriptionLoader) => void;
+  }) {
+    useEffect(() => {
+      mocks.editors.set(issueId, setIsSubmitting);
+    }, [issueId, setIsSubmitting]);
+    useEffect(
+      () => () => {
+        mocks.unmountEditor();
+      },
+      []
+    );
+    return <div data-testid="save-status">{isSubmitting}</div>;
+  },
+}));
 vi.mock("./properties", () => ({ PeekOverviewProperties: () => null }));
 vi.mock("../issue-detail/issue-activity", () => ({ IssueActivity: () => null }));
 vi.mock("../issue-detail-widgets", () => ({ IssueDetailWidgets: () => null }));
@@ -44,7 +71,24 @@ const props = {
   is_archived: false,
   issueOperations: {} as TIssueOperations,
 };
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.editors.clear();
+});
+it("switches cached issues in the same panel and isolates editor cleanup and late autosaves", () => {
+  const { container, rerender } = render(<IssueView {...props} />);
+  const panel = container.querySelector("[data-peek-panel]");
+  const saveFirst = mocks.editors.get("parent")!;
+  act(() => saveFirst("submitting"));
+  rerender(<IssueView {...props} issueId="second" />);
+  expect(panel).toBeTruthy();
+  expect(container.querySelector("[data-peek-panel]")).toBe(panel);
+  expect(mocks.unmountEditor).toHaveBeenCalledOnce();
+  expect(screen.getByTestId("save-status").textContent).toBe("saved");
+  act(() => mocks.editors.get("second")!("submitting"));
+  act(() => saveFirst("saved"));
+  expect(screen.getByTestId("save-status").textContent).toBe("submitting");
+});
 it("keeps the same toolbar mounted while a child loads and after returning", () => {
   const { rerender } = render(<IssueView {...props} />);
   const toolbar = screen.getByTestId("peek-toolbar");

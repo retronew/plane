@@ -5,6 +5,25 @@ import usePeekOverviewOutsideClickDetector from "./use-peek-overview-outside-cli
 
 afterEach(cleanup);
 
+it("replaces a peek from another card without first dismissing it during mousedown", () => {
+  const panel = createRef<HTMLDivElement>();
+  const select = vi.fn();
+  const view = render(
+    <>
+      <div ref={panel}>Current issue</div>
+      <button type="button" data-issue-peek-trigger onClick={() => select("second")}>
+        <span>Second issue</span>
+      </button>
+    </>
+  );
+  renderHook(() => usePeekOverviewOutsideClickDetector(panel, () => select(undefined), "first"));
+  const target = view.getByText("Second issue");
+  fireEvent.mouseDown(target);
+  fireEvent.mouseUp(target);
+  fireEvent.click(target);
+  expect(select.mock.calls).toEqual([["second"]]);
+});
+
 it("keeps the peek open for protected editor layers while dismissing ordinary outside clicks", () => {
   const ref = createRef<HTMLDivElement>();
   const close = vi.fn();

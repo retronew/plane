@@ -6,7 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { EIssueLayoutTypes } from "@plane/types";
+import { EIssueLayoutTypes, type IIssueDisplayProperties } from "@plane/types";
 // components
 import { useLayoutTransitionReady } from "@/components/common/layout-transition";
 import { LayoutErrorBoundary } from "@/components/common/layout-error-boundary";
@@ -25,6 +25,7 @@ type IssueLayoutLoaderProps = {
   layout: EIssueLayoutTypes;
   grouped?: boolean;
   propertyCount?: number;
+  displayProperties?: IIssueDisplayProperties;
   showWeekends?: boolean;
   calendarLayout?: "month" | "week";
 };
@@ -38,12 +39,19 @@ export const IssueLayoutLoader = observer(function IssueLayoutLoader(props: Issu
   );
 });
 
-function IssueLayoutSkeleton({ layout, grouped, propertyCount, showWeekends, calendarLayout }: IssueLayoutLoaderProps) {
+function IssueLayoutSkeleton({
+  layout,
+  grouped,
+  propertyCount,
+  displayProperties,
+  showWeekends,
+  calendarLayout,
+}: IssueLayoutLoaderProps) {
   switch (layout) {
     case EIssueLayoutTypes.LIST:
       return <ListLayoutLoader grouped={grouped} propertyCount={propertyCount} />;
     case EIssueLayoutTypes.KANBAN:
-      return <KanbanLayoutLoader />;
+      return <KanbanLayoutLoader displayProperties={displayProperties} />;
     case EIssueLayoutTypes.SPREADSHEET:
       return <SpreadsheetLayoutLoader columnCount={propertyCount} />;
     case EIssueLayoutTypes.CALENDAR:
@@ -80,6 +88,7 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
       <IssueLayoutLoader
         layout={layout}
         grouped={filters?.displayFilters?.group_by != null}
+        displayProperties={filters?.displayProperties}
         propertyCount={propertyCount}
         showWeekends={filters?.displayFilters?.calendar?.show_weekends}
         calendarLayout={filters?.displayFilters?.calendar?.layout}

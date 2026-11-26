@@ -365,6 +365,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
         <ControlLink
           href={workItemLink}
           onClick={() => handleIssuePeekOverview(issueDetail)}
+          data-issue-peek-trigger={issueDetail.tempId ? undefined : true}
           className="outline-none"
           disabled={!!issueDetail?.tempId}
         >

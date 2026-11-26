@@ -452,6 +452,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   return (
     <ControlLink
       id={`issue-${issue.id}`}
+      data-issue-peek-trigger={issue.tempId || issue.is_draft ? undefined : true}
       href={workItemLink}
       onClick={() => handleIssuePeekOverview(issue)}
       className="w-full cursor-pointer"

@@ -675,6 +675,7 @@ function SelectPopupContent<T>(props: {
   popupLabel: string;
   handleSearchKeyDown: ((event: KeyboardEvent<HTMLInputElement>) => void) | undefined;
   contentSizing: SelectProps<T>["contentSizing"];
+  popupAnchor: SelectProps<T>["popupAnchor"];
   dropdownPlacement: ReturnType<typeof useSelectDropdownPlacement>;
   applyPopupOptions: (node: HTMLSpanElement | null) => void;
   fitPopupToLabels: (node: HTMLSpanElement | null) => void;
@@ -718,6 +719,7 @@ function SelectPopupContent<T>(props: {
     popupLabel,
     handleSearchKeyDown,
     contentSizing,
+    popupAnchor,
     dropdownPlacement,
     applyPopupOptions,
     fitPopupToLabels,
@@ -775,6 +777,7 @@ function SelectPopupContent<T>(props: {
         data-select-popup=""
         aria-label={popupLabel}
         sizing={contentSizing}
+        anchor={popupAnchor}
         side={dropdownPlacement?.side}
         align={dropdownPlacement?.align}
         data-prevent-outside-click
@@ -1084,6 +1087,18 @@ export function SelectRoot<T>(props: SelectProps<T>) {
     ]
   );
 
+  // A portalled menu can outlive its visible chip when the board scrolls. Observe only the
+  // active anchor so a clipped card cannot leave an actionable menu over the column header.
+  const { popupAnchor } = props;
+  useEffect(() => {
+    if (!isOpen || !popupAnchor) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry && !entry.isIntersecting && popupAnchor.isConnected) close();
+    });
+    observer.observe(popupAnchor);
+    return () => observer.disconnect();
+  }, [isOpen, popupAnchor, close]);
+
   const mount = useCallback(() => setIsEngineMounted(true), [setIsEngineMounted]);
   const engineValue = useMemo<SelectEngineContextValue>(
     () => ({ mounted: isEngineMounted, activate, mount, disabled }),
@@ -1126,6 +1141,7 @@ export function SelectRoot<T>(props: SelectProps<T>) {
       popupLabel={popupLabel}
       handleSearchKeyDown={onSearchSubmit ? handleSearchKeyDown : undefined}
       contentSizing={contentSizing}
+      popupAnchor={popupAnchor}
       dropdownPlacement={dropdownPlacement}
       applyPopupOptions={applyPopupOptions}
       fitPopupToLabels={fitPopupToLabels}

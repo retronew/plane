@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useState } from "react";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { useTranslation } from "@plane/i18n";
 import { LabelPropertyIcon } from "../../icons/properties/label-icon";
@@ -92,6 +93,12 @@ export function LabelSelect(props: LabelSelectProps) {
   const { variant } = props;
   const isSelectKind = ["select", "select-ghost"].includes(splitSelectVariant(variant).variant);
 
+  // Board chips flow independently in the card. Keep the clicked id across the Select's lazy
+  // remount, and follow the first remaining chip if the user removes that label in the open menu.
+  const [pressedLabelId, setPressedLabelId] = useState<string>();
+  const [anchorChip, setAnchorChip] = useState<HTMLSpanElement | null>(null);
+  const anchorId = showAllLabels && (value.find((label) => label.id === pressedLabelId) ?? value[0])?.id;
+
   const handleLabelCreated = (id: string) => {
     onChange([...value.map((label) => label.id), id]);
   };
@@ -114,6 +121,7 @@ export function LabelSelect(props: LabelSelectProps) {
       infinite
       multiple
       getValues={getValues}
+      popupAnchor={showAllLabels ? anchorChip : undefined}
       value={value}
       onChange={onChange}
       disabled={disabled}
@@ -154,6 +162,8 @@ export function LabelSelect(props: LabelSelectProps) {
                   // each chip names its own label on hover (the aggregated trigger tooltip is off for chip rows)
                   <Tooltip key={label.id} label={t("common.labels")} layout="stacked" disabled={!showAllLabels}>
                     <span
+                      ref={label.id === anchorId ? setAnchorChip : undefined}
+                      onPointerDown={showAllLabels ? () => setPressedLabelId(label.id) : undefined}
                       className={
                         variant === "select-ghost-md"
                           ? "flex h-5 max-w-full items-center gap-1 rounded-sm bg-layer-3 px-1.5 text-caption-md-medium text-secondary"

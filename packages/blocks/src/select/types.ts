@@ -206,6 +206,8 @@ type SelectBaseProps<T> = {
    * 400px, `anchor` matches the trigger). Defaults to `auto`.
    */
   contentSizing?: ComboboxContentSizing;
+  /** Visible element to position against when the trigger's contents wrap independently. */
+  popupAnchor?: HTMLElement | null;
   /** Optional minimum width in px for this auto-sized panel; other pickers retain Propel's default. */
   contentMinWidth?: number;
   /** Size a virtualized popup from its full option labels, capped by available screen space. */

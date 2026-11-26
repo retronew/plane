@@ -408,6 +408,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
         <ControlLink
           id={getIssueBlockId(issueId, groupId, subGroupId)}
           href={workItemLink}
+          data-issue-peek-trigger={issue.tempId ? undefined : true}
           ref={(element) => {
             cardRef.current = element;
             handleRef(element);

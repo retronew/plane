@@ -6,7 +6,7 @@
 
 // oxlint-disable-next-line import/no-unassigned-import -- Peek enter and exit animations.
 import "./peek-panel.css";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { createPortal } from "react-dom";
 // plane imports
@@ -210,6 +210,25 @@ function getPeekVisibility(hasIssue: boolean, isLoading?: boolean, isError?: boo
   };
 }
 
+function useIssueSubmissionStatus(issueId: string) {
+  const [submission, setSubmission] = useState<{ issueId: string; status: TNameDescriptionLoader }>({
+    issueId,
+    status: "saved",
+  });
+  if (submission.issueId !== issueId) setSubmission({ issueId, status: "saved" });
+  const isSubmitting = submission.status;
+  const setIsSubmitting = useCallback(
+    (status: TNameDescriptionLoader) => {
+      // Completing an old editor's autosave must not change the new issue's saving indicator.
+      setSubmission((current) =>
+        current.issueId === issueId && current.status !== status ? { issueId, status } : current
+      );
+    },
+    [issueId]
+  );
+  return { isSubmitting, setIsSubmitting };
+}
+
 export const IssueView = observer(function IssueView(props: IIssueView) {
   const {
     workspaceSlug,
@@ -225,7 +244,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
   } = props;
   // states
   const { mode: peekMode, setMode: setPeekMode } = usePeekMode();
-  const [isSubmitting, setIsSubmitting] = useState<TNameDescriptionLoader>("saved");
+  const { isSubmitting, setIsSubmitting } = useIssueSubmissionStatus(issueId);
   const [isDeleteIssueModalOpen, setIsDeleteIssueModalOpen] = useState(false);
   const [isArchiveIssueModalOpen, setIsArchiveIssueModalOpen] = useState(false);
   const [isDuplicateIssueModalOpen, setIsDuplicateIssueModalOpen] = useState(false);
@@ -343,6 +362,7 @@ export const IssueView = observer(function IssueView(props: IIssueView) {
             <>
               {/* content */}
               <PeekOverviewContent
+                key={issueId}
                 {...props}
                 embedIssue={embedIssue}
                 disabled={disabled}

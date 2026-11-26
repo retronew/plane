@@ -66,6 +66,7 @@ export const IssueGanttBlock = observer(function IssueGanttBlock(props: Props) {
             className="space-between relative flex h-full w-full cursor-pointer items-center rounded-sm"
             style={blockStyle}
             onClick={handleIssuePeekOverview}
+            data-issue-peek-trigger={issueDetails && !issueDetails.tempId ? true : undefined}
           >
             <div className="absolute top-0 left-0 h-full w-full bg-surface-1/50" />
             <div
@@ -133,6 +134,7 @@ export const IssueGanttSidebarBlock = observer(function IssueGanttSidebarBlock(p
       id={`issue-${issueId}`}
       href={workItemLink}
       onClick={handleIssuePeekOverview}
+      data-issue-peek-trigger={issueDetails && !issueDetails.tempId ? true : undefined}
       className="line-clamp-1 w-full cursor-pointer text-13 text-primary"
       disabled={!!issueDetails?.tempId}
     >

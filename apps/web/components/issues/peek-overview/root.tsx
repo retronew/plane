@@ -5,7 +5,7 @@ import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
  * See the LICENSE file for details.
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 // Plane imports
@@ -53,9 +53,6 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
   const storeType = issueStoreFromProps ?? issueStoreType;
   const { issues } = useIssues(storeType);
 
-  // state
-  const [hasError, setError] = useState(false);
-
   const removeRoutePeekId = useCallback(() => {
     setPeekIssue(undefined);
     if (embedIssue) embedRemoveCurrentNotification?.();
@@ -73,13 +70,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
   const issueOperations: TIssueOperations = useMemo(
     () => ({
       fetch: async (workspaceSlug: string, projectId: string, issueId: string) => {
-        try {
-          setError(false);
-          await fetchIssue(workspaceSlug, projectId, issueId);
-        } catch (error) {
-          setError(true);
-          console.error("Error fetching the parent issue", error);
-        }
+        await fetchIssue(workspaceSlug, projectId, issueId);
       },
       update: async (workspaceSlug: string, projectId: string, issueId: string, data: Partial<TIssue>) => {
         if (issues?.updateIssue) {
@@ -225,13 +216,14 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     [fetchIssue, is_draft, issues, fetchActivities, pathname, removeRoutePeekId, restoreIssue]
   );
 
-  const { isLoading } = useSWR(
+  const { isLoading, error } = useSWR(
     peekIssue ? ["peek-issue", peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId] : null,
     () => peekIssue && issueOperations.fetch(peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId),
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      shouldRetryOnError: false,
     }
   );
 
@@ -253,7 +245,7 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
       closing={closing}
       onExited={onExited}
       isLoading={!closing && isLoading}
-      isError={hasError}
+      isError={Boolean(error)}
       is_archived={!!displayedPeek.isArchived}
       disabled={!isEditable}
       embedIssue={embedIssue}

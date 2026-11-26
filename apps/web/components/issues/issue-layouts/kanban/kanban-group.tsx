@@ -125,6 +125,7 @@ const getCanDragIssuesInCurrentGrouping = (
   !!groupBy && DRAG_ALLOWED_GROUPS.includes(groupBy) && (subGroupBy ? DRAG_ALLOWED_GROUPS.includes(subGroupBy) : true);
 
 function KanbanGroupLoadMore(props: {
+  displayProperties: IIssueDisplayProperties | undefined;
   isPaginating: boolean;
   isSubGroup: boolean;
   onLoadMore: () => void;
@@ -136,7 +137,7 @@ function KanbanGroupLoadMore(props: {
   const showSkeleton = useDelayedLoading(isPaginating);
 
   if (isSubGroup) {
-    if (showSkeleton) return <KanbanIssueBlockLoader />;
+    if (showSkeleton) return <KanbanIssueBlockLoader displayProperties={props.displayProperties} />;
 
     return (
       <button
@@ -155,7 +156,7 @@ function KanbanGroupLoadMore(props: {
       {showSkeleton &&
         Array.from({ length: 2 }).map((_, index) => (
           // oxlint-disable-next-line react/no-array-index-key
-          <KanbanIssueBlockLoader key={index} />
+          <KanbanIssueBlockLoader key={index} displayProperties={props.displayProperties} />
         ))}
       <span ref={setIntersectionElement} className="block h-px" aria-hidden="true" />
     </div>
@@ -329,6 +330,7 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
 
         {shouldLoadMore && (
           <KanbanGroupLoadMore
+            displayProperties={displayProperties}
             isPaginating={isPaginating}
             isSubGroup={isSubGroup}
             onLoadMore={loadMoreIssuesInThisGroup}

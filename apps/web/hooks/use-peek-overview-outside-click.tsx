@@ -47,8 +47,9 @@ const usePeekOverviewOutsideClickDetector = (
         if (path.some((el) => el.hasAttribute("data-base-ui-portal"))) {
           return;
         }
-        // check if the click target is the current issue element or its children
-        if (path.some((el) => el.id === `issue-${issueId}`)) {
+        // Another card selects its issue on click. Dismissing on the preceding mousedown
+        // would start the exit animation and replace the current peek's history entry.
+        if (path.some((el) => el.hasAttribute("data-issue-peek-trigger") || el.id === `issue-${issueId}`)) {
           return;
         }
         const shouldDelayOutsideClick = path.some((el) => el.hasAttribute("data-delay-outside-click"));

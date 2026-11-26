@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { LabelSelect } from "./label-select";
@@ -89,6 +89,71 @@ it("keeps the tag glyph visible in icon mode after selecting a label", () => {
     />
   );
   expect(screen.getByRole("button", { name: /Backend/ }).querySelector("svg")).not.toBeNull();
+});
+
+it("positions the board picker on the pressed chip and follows the remaining chip on removal", async () => {
+  // The board's display:contents button has no layout box. Give each visible chip a distinct
+  // width so the real positioner's computed --anchor-width identifies what it measured.
+  const boxes = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+    const width = this.classList.contains("bg-label-grey-bg") ? (this.textContent === "Backend" ? 64 : 88) : 0;
+    return DOMRect.fromRect({ x: 300, y: 200, width, height: width ? 24 : 0 });
+  });
+  try {
+    const labels = [
+      { id: "a", name: "Backend" },
+      { id: "b", name: "Frontend" },
+    ];
+    const props = { variant: "pill-md", showAllLabels: true, getValues, onChange: vi.fn() } as const;
+    const user = userEvent.setup();
+    const { rerender } = render(<LabelSelect {...props} value={labels} />);
+    const anchorWidth = () => screen.getByRole("dialog").parentElement?.style.getPropertyValue("--anchor-width");
+
+    await user.click(screen.getByText("Frontend"));
+    await waitFor(() => expect(anchorWidth()).toBe("88px"));
+    rerender(<LabelSelect {...props} value={[labels[0]]} />);
+    await waitFor(() => expect(anchorWidth()).toBe("64px"));
+    await user.keyboard("{Escape}");
+    rerender(<LabelSelect {...props} value={labels} />);
+    await user.click(screen.getByText("Backend"));
+    await waitFor(() => expect(anchorWidth()).toBe("64px"));
+  } finally {
+    boxes.mockRestore();
+  }
+});
+
+it("dismisses the open board picker when its chip scrolls out of the column", async () => {
+  const intersections = new Map<Element, (visible: boolean) => void>();
+  class ChipObserver extends IntersectionObserver {
+    constructor(callback: IntersectionObserverCallback) {
+      super(callback);
+      this.observe = (element) => {
+        intersections.set(element, (isIntersecting) => {
+          callback([{ target: element, isIntersecting } as IntersectionObserverEntry], this);
+        });
+      };
+    }
+  }
+  vi.stubGlobal("IntersectionObserver", ChipObserver);
+  try {
+    render(
+      <LabelSelect
+        variant="pill-md"
+        showAllLabels
+        value={[{ id: "b", name: "Frontend" }]}
+        getValues={getValues}
+        onChange={vi.fn()}
+      />
+    );
+    await userEvent.setup().click(screen.getByText("Frontend"));
+    const chip = screen.getByText("Frontend").parentElement!;
+    expect(intersections.has(chip)).toBe(true);
+    act(() => intersections.get(chip)!(true));
+    expect(screen.getByRole("dialog")).toBeDefined();
+    act(() => intersections.get(chip)!(false));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
 
 it("names each chip on hover when every label is shown", async () => {

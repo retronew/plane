@@ -4,74 +4,86 @@
  * See the LICENSE file for details.
  */
 
-import { forwardRef } from "react";
-import { range } from "lodash-es";
-// plane ui
 import { ContentWrapper } from "@plane/blocks/layout";
-// plane utils
-import { cn } from "@plane/utils";
+import type { IIssueDisplayProperties } from "@plane/types";
+import { splitKanbanCardProperties } from "@/components/issues/issue-layouts/kanban/card-layout";
 
-export const KanbanIssueBlockLoader = forwardRef(function KanbanIssueBlockLoader(
-  { cardHeight = 100, shouldAnimate = true }: { cardHeight?: number; shouldAnimate?: boolean },
-  ref: React.ForwardedRef<HTMLSpanElement>
-) {
+const defaultProperties: IIssueDisplayProperties = {
+  key: true,
+  state: true,
+  labels: true,
+  priority: true,
+  assignee: true,
+  due_date: true,
+};
+
+type CardProps = { displayProperties?: IIssueDisplayProperties };
+
+export function KanbanIssueBlockLoader({ displayProperties = defaultProperties }: CardProps) {
+  const { body, showLabels, showStateIcon, showFooterProperties } = splitKanbanCardProperties(displayProperties);
+  const bodyCount =
+    Number(showLabels) + Object.entries(body ?? {}).filter(([key, enabled]) => key !== "key" && enabled).length;
   return (
-    <span
-      ref={ref}
-      className={cn(`block rounded-lg border border-subtle bg-layer-2 p-3`, { "animate-pulse": shouldAnimate })}
-      style={{ height: `${cardHeight}px` }}
+    <div
+      data-kanban-card-skeleton=""
+      aria-hidden="true"
+      className="space-y-2 rounded-xl border border-transparent bg-layer-2 p-2.5 pb-2 shadow-raised-100 motion-safe:animate-pulse"
     >
-      <span className="mb-3 block h-3 w-16 rounded-sm bg-layer-1" />
-      <span className="mb-2 block h-3.5 w-4/5 rounded-sm bg-layer-1" />
-      <span className="mt-3 flex gap-2">
-        <span className="h-6 w-16 rounded-lg bg-layer-1" />
-        <span className="h-6 w-12 rounded-lg bg-layer-1" />
-      </span>
-    </span>
-  );
-});
-
-export function KanbanColumnLoader({
-  cardsInColumn = 3,
-  ignoreHeader = false,
-  cardHeight = 100,
-  shouldAnimate = true,
-}: {
-  cardsInColumn?: number;
-  ignoreHeader?: boolean;
-  cardHeight?: number;
-  shouldAnimate?: boolean;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-2", !ignoreHeader && "w-[336px] shrink-0 rounded-xl bg-layer-1 p-2")}>
-      {!ignoreHeader && (
-        <div className="flex h-9 items-center justify-between px-1">
-          <div className="item-center flex gap-3">
-            <span className={cn("h-4 w-4 rounded-full bg-layer-2", { "animate-pulse": shouldAnimate })} />
-            <span className={cn("h-3.5 w-20 rounded-sm bg-layer-2", { "animate-pulse": shouldAnimate })} />
-          </div>
+      <div className="flex min-h-6 items-center gap-1.5">
+        {displayProperties.key && <span className="h-3 w-14 rounded-sm bg-layer-3" />}
+        {displayProperties.priority && <span className="h-5 w-10 rounded-lg bg-layer-3" />}
+      </div>
+      <div className="flex min-h-5 items-center gap-1.5">
+        {showStateIcon && <span className="size-4 rounded-full bg-layer-3" />}
+        <span className="h-3.5 w-3/5 rounded-sm bg-layer-3" />
+      </div>
+      {bodyCount > 0 && (
+        <div data-kanban-skeleton-properties="" className="flex flex-wrap gap-1.5">
+          {["w-16", "w-20", "w-14", "w-12", "w-16", "w-14"].slice(0, bodyCount).map((width, index) => (
+            // oxlint-disable-next-line react/no-array-index-key -- Fixed decorative slots.
+            <span key={index} className={`h-6 rounded-lg bg-layer-1 ${width}`} />
+          ))}
         </div>
       )}
-      {range(cardsInColumn).map((cardIndex) => (
-        <KanbanIssueBlockLoader key={cardIndex} cardHeight={cardHeight} shouldAnimate={shouldAnimate} />
-      ))}
+      {(displayProperties.assignee || showFooterProperties) && (
+        <div
+          data-kanban-skeleton-footer=""
+          className="flex min-h-6 items-center justify-between border-t border-subtle pt-1.5"
+        >
+          {displayProperties.assignee && <span className="size-5 rounded-full bg-layer-3" />}
+          {showFooterProperties && <span className="ms-auto h-5 w-14 rounded-lg bg-layer-3" />}
+        </div>
+      )}
     </div>
   );
 }
 
-KanbanIssueBlockLoader.displayName = "KanbanIssueBlockLoader";
+const columns = ["first", "second", "third", "fourth", "fifth"];
+const cards = ["first", "second", "third"];
 
-const SKELETON_COLUMNS = [
-  { id: "first", count: 2 },
-  { id: "second", count: 3 },
-  { id: "third", count: 4 },
-];
-export function KanbanLayoutLoader() {
+export function KanbanLayoutLoader({ displayProperties }: CardProps) {
   return (
-    <ContentWrapper className="h-full flex-row gap-4 overflow-hidden p-3!">
-      {SKELETON_COLUMNS.map((column) => (
-        <KanbanColumnLoader key={column.id} cardsInColumn={column.count} />
-      ))}
-    </ContentWrapper>
+    <div
+      aria-hidden="true"
+      className="horizontal-scrollbar pointer-events-none scrollbar-md h-full overflow-x-auto overflow-y-hidden bg-surface-2"
+      inert
+    >
+      <ContentWrapper className="h-full w-max! min-w-full flex-row gap-4 overflow-hidden p-4!">
+        {columns.map((column) => (
+          <div key={column} className="flex h-full w-[336px] shrink-0 flex-col rounded-xl bg-layer-1 py-2">
+            <div className="flex h-[34px] shrink-0 items-center gap-1 px-3 motion-safe:animate-pulse">
+              <span className="size-5 rounded-sm bg-layer-3" />
+              <span className="h-3.5 w-16 rounded-sm bg-layer-3" />
+              <span className="ms-2 size-3 rounded-sm bg-layer-3" />
+            </div>
+            <div className="vertical-scrollbar scrollbar-md min-h-0 flex-1 [scrollbar-gutter:stable_both-edges] space-y-2 overflow-hidden pt-2">
+              {cards.map((card) => (
+                <KanbanIssueBlockLoader key={card} displayProperties={displayProperties} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </ContentWrapper>
+    </div>
   );
 }

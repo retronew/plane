@@ -175,7 +175,7 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
   // Route context changes before the fetch effect resets the shared profile store.
   // Never reconcile the previous tab's cards with the destination tab's permissions/actions.
   if (viewId && "currentView" in issues && issues.currentView !== viewId) {
-    return <IssueLayoutLoader layout={EIssueLayoutTypes.KANBAN} />;
+    return <IssueLayoutLoader layout={EIssueLayoutTypes.KANBAN} displayProperties={displayProperties} />;
   }
 
   return (
