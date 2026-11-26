@@ -141,6 +141,7 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
               <div className={sub_group_by ? "h-full min-h-[120px]" : "min-h-0 flex-1"}>
                 <KanbanGroup
                   groupId={subList.id}
+                  deferCards={storeType === EIssuesStoreType.PROFILE}
                   issuesMap={issuesMap}
                   groupedIssueIds={groupedIssueIds}
                   displayProperties={displayProperties}

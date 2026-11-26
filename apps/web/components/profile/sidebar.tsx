@@ -7,7 +7,6 @@
 import { useRef } from "react";
 import { useDialogDismissal } from "@plane/hooks";
 import { observer } from "mobx-react";
-import { useParams } from "next/navigation";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { ProjectLogo } from "@plane/blocks/emoji-icon-picker";
@@ -32,6 +31,7 @@ import { ProfileProjectProgress } from "./project-progress";
 import styles from "./sidebar.module.css";
 
 type TProfileSidebar = {
+  userId: string;
   userProjectsData: IUserProfileProjectSegregation | undefined;
   className?: string;
   closeMobile?: () => void;
@@ -41,8 +41,7 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
   const { userProjectsData, closeMobile, className = "" } = props;
   const panelRef = useRef<HTMLElement>(null);
   useDialogDismissal({ isOpen: !!closeMobile, handleClose: closeMobile, onOutsideClick: closeMobile, panelRef });
-  // router
-  const { userId } = useParams();
+  const { userId } = props;
   // store hooks
   const { data: currentUser } = useUser();
   const { getProjectById } = useProject();

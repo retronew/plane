@@ -107,6 +107,7 @@ export interface IBaseIssuesStore {
   //actions
   removeIssue: (workspaceSlug: string, projectId: string, issueId: string) => Promise<void>;
   clear(shouldClearPaginationOptions?: boolean): void;
+  resumePagination(): void;
   // helper methods
   getIssueIds: (groupId?: string, subGroupId?: string) => string[] | undefined;
   issuesSortWithOrderBy(issueIds: string[], key: Partial<TIssueOrderByOptions>): string[];
@@ -278,6 +279,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       onfetchIssues: actionBound,
       onfetchNexIssues: actionBound,
       clear: actionBound,
+      resumePagination: actionBound,
       setLoader: actionBound,
       addIssue: actionBound,
       removeIssueFromList: actionBound,
@@ -335,6 +337,14 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     if (!displayFilters) return;
 
     return displayFilters?.order_by;
+  }
+
+  /** Empty replay after suspension keeps the applied query. Its cancelled transport
+   * and loaders must not be reused by the next page of any column. */
+  resumePagination() {
+    if (!this.controller.signal.aborted) return;
+    this.controller = new AbortController();
+    this.loader = {};
   }
 
   beginIssueRequest(entity: string, loadType: TLoader, existingPagination: boolean) {

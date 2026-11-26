@@ -43,11 +43,15 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
   const { allowPermissions } = useUserPermissions();
 
   // filter projects based on search query
-  const filteredProjects = joinedProjects.filter((projectId) => {
-    const project = getPartialProjectById(projectId);
-    if (!project) return false;
-    return project.name.toLowerCase().includes(searchQuery.toLowerCase()) || project.identifier.includes(searchQuery);
-  });
+  const filteredProjects = isExtendedProjectSidebarOpened
+    ? joinedProjects.filter((projectId) => {
+        const project = getPartialProjectById(projectId);
+        if (!project) return false;
+        return (
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) || project.identifier.includes(searchQuery)
+        );
+      })
+    : [];
 
   const sorting = useSidebarProjectSorting(workspaceSlug?.toString() ?? "", filteredProjects, "extended");
 
@@ -79,73 +83,75 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
           workspaceSlug={workspaceSlug.toString()}
         />
       )}
-      <ExtendedSidebarWrapper
-        isExtendedSidebarOpened={!!isExtendedProjectSidebarOpened}
-        extendedSidebarRef={extendedProjectSidebarRef}
-        handleClose={handleClose}
-        excludedElementId="extended-project-sidebar-toggle"
-        className="px-0"
-      >
-        <div className="sticky top-4 flex w-full flex-col gap-1 px-4">
-          <div className="flex items-center justify-between">
-            <span className="py-1.5 text-13 font-semibold text-tertiary">{t("web.projects")}</span>
-            {isAuthorizedUser && (
-              <Tooltip label={t("create_project")}>
-                <button
-                  type="button"
-                  aria-label={t("create_project")}
-                  className="flex-shrink-0 rounded-sm p-0.5 text-tertiary transition-colors hover:bg-layer-1 hover:text-secondary"
-                  onClick={() => {
-                    setIsProjectModalOpen(true);
-                  }}
-                >
-                  <AddOutline className="size-3" />
-                </button>
-              </Tooltip>
-            )}
-          </div>
-          <div className="w-full">
-            <InputGroup size="lg">
-              <Icon icon={SearchOutline} tint="placeholder" />
-              <Input
-                size="lg"
-                type="text"
-                placeholder={t("search")}
-                value={searchQuery}
-                // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
-                autoFocus
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </InputGroup>
-          </div>
-        </div>
-        {filteredProjects.length === 0 ? (
-          <div className="mt-4 flex flex-col items-center p-10">
-            <EmptyStateCompact
-              title={t("common_empty_state.search.title")}
-              description={t("common_empty_state.search.description")}
-              assetKey="search"
-              assetClassName="size-20"
-              align="center"
-            />
-          </div>
-        ) : (
-          <div className="vertical-scrollbar mt-4 scrollbar-sm flex flex-grow flex-col gap-px overflow-x-hidden overflow-y-auto pr-2 pl-3">
-            <SortableProvider onSortEnd={sorting.onSortEnd} disabled={sorting.isSaving}>
-              {filteredProjects.map((projectId, index) => (
-                <SidebarProjectsListItem
-                  key={projectId}
-                  projectId={projectId}
-                  handleCopyText={() => handleCopyText(projectId)}
-                  index={index}
-                  group={sorting.group}
-                  disabled={sorting.isSaving}
+      {isExtendedProjectSidebarOpened && (
+        <ExtendedSidebarWrapper
+          isExtendedSidebarOpened={!!isExtendedProjectSidebarOpened}
+          extendedSidebarRef={extendedProjectSidebarRef}
+          handleClose={handleClose}
+          excludedElementId="extended-project-sidebar-toggle"
+          className="px-0"
+        >
+          <div className="sticky top-4 flex w-full flex-col gap-1 px-4">
+            <div className="flex items-center justify-between">
+              <span className="py-1.5 text-13 font-semibold text-tertiary">{t("web.projects")}</span>
+              {isAuthorizedUser && (
+                <Tooltip label={t("create_project")}>
+                  <button
+                    type="button"
+                    aria-label={t("create_project")}
+                    className="flex-shrink-0 rounded-sm p-0.5 text-tertiary transition-colors hover:bg-layer-1 hover:text-secondary"
+                    onClick={() => {
+                      setIsProjectModalOpen(true);
+                    }}
+                  >
+                    <AddOutline className="size-3" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+            <div className="w-full">
+              <InputGroup size="lg">
+                <Icon icon={SearchOutline} tint="placeholder" />
+                <Input
+                  size="lg"
+                  type="text"
+                  placeholder={t("search")}
+                  value={searchQuery}
+                  // oxlint-disable-next-line jsx-a11y/no-autofocus -- intentional focus on open
+                  autoFocus
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              ))}
-            </SortableProvider>
+              </InputGroup>
+            </div>
           </div>
-        )}
-      </ExtendedSidebarWrapper>
+          {filteredProjects.length === 0 ? (
+            <div className="mt-4 flex flex-col items-center p-10">
+              <EmptyStateCompact
+                title={t("common_empty_state.search.title")}
+                description={t("common_empty_state.search.description")}
+                assetKey="search"
+                assetClassName="size-20"
+                align="center"
+              />
+            </div>
+          ) : (
+            <div className="vertical-scrollbar mt-4 scrollbar-sm flex flex-grow flex-col gap-px overflow-x-hidden overflow-y-auto pr-2 pl-3">
+              <SortableProvider onSortEnd={sorting.onSortEnd} disabled={sorting.isSaving}>
+                {filteredProjects.map((projectId, index) => (
+                  <SidebarProjectsListItem
+                    key={projectId}
+                    projectId={projectId}
+                    handleCopyText={() => handleCopyText(projectId)}
+                    index={index}
+                    group={sorting.group}
+                    disabled={sorting.isSaving}
+                  />
+                ))}
+              </SortableProvider>
+            </div>
+          )}
+        </ExtendedSidebarWrapper>
+      )}
     </>
   );
 });

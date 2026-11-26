@@ -44,7 +44,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 it("opens each project independently and keeps the completion count and details", async () => {
-  render(<ProfileSidebar userProjectsData={data} />);
+  render(<ProfileSidebar userId="self" userProjectsData={data} />);
   const first = screen.getByRole("button", { name: /Project One/ });
   const second = screen.getByRole("button", { name: /Project Two/ });
   fireEvent.click(first);
@@ -57,7 +57,7 @@ it("opens each project independently and keeps the completion count and details"
   expect(first.getAttribute("aria-expanded")).toBe("false");
 });
 it("opens profile editing from the current user's card", () => {
-  render(<ProfileSidebar userProjectsData={data} />);
+  render(<ProfileSidebar userId="self" userProjectsData={data} />);
   fireEvent.click(screen.getByRole("button", { name: "common.edit" }));
   expect(mock.edit).toHaveBeenCalledWith({ activeTab: "general", isOpen: true });
 });

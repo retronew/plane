@@ -53,7 +53,9 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
   const { isExtendedProjectSidebarOpened, toggleExtendedProjectSidebar, toggleAnySidebarDropdown } = useAppTheme();
 
   // states
-  const [isMenuActive, setIsMenuActive] = useState(false);
+  // Keep an accessed menu mounted so its dialog survives the menu's exit transition.
+  const [menuState, setMenuState] = useState<"unused" | "open" | "closed">("unused");
+  const isMenuActive = menuState === "open";
   const isProjectListOpen = getIsProjectListOpen(projectId);
   const projectRef = useRef<HTMLDivElement | null>(null);
   // router
@@ -213,10 +215,10 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                 >
                   <Menu
                     onOpenChange={(open) => {
-                      if (open) setIsMenuActive(true);
+                      if (open) setMenuState("open");
                     }}
                     onOpenChangeComplete={(open) => {
-                      if (!open) setIsMenuActive(false);
+                      if (!open) setMenuState((previous) => (previous === "unused" ? previous : "closed"));
                     }}
                   >
                     <MenuTrigger
@@ -232,11 +234,13 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                         />
                       }
                     />
-                    <SidebarProjectQuickActions
-                      workspaceSlug={workspaceSlug.toString()}
-                      project={project}
-                      onCopyLink={handleCopyText}
-                    />
+                    {menuState !== "unused" && (
+                      <SidebarProjectQuickActions
+                        workspaceSlug={workspaceSlug.toString()}
+                        project={project}
+                        onCopyLink={handleCopyText}
+                      />
+                    )}
                   </Menu>
                 </div>
                 {isAccordionMode && (

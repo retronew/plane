@@ -4,15 +4,18 @@
  * See the LICENSE file for details.
  */
 
-import type { MutableRefObject } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import type { TIssue, IIssueDisplayProperties, IIssueMap } from "@plane/types";
 // local imports
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { KanbanIssueBlock } from "./block";
+import { createCardObserver } from "./card-viewport";
+import { DeferredKanbanCard } from "./deferred-card";
 
 interface IssueBlocksListProps {
+  deferCards?: boolean;
   sub_group_id: string;
   groupId: string;
   /** dnd-kit column id of this list. */
@@ -27,7 +30,6 @@ interface IssueBlocksListProps {
   quickActions: TRenderQuickActions;
   canEditProperties: (projectId: string | undefined) => boolean;
   canDragIssuesInCurrentGrouping: boolean;
-  scrollableContainerRef?: MutableRefObject<HTMLDivElement | null>;
 }
 
 export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(props: IssueBlocksListProps) {
@@ -46,38 +48,49 @@ export const KanbanIssueBlocksList = observer(function KanbanIssueBlocksList(pro
     canEditProperties,
   } = props;
 
-  return (
-    <>
-      {issueIds && issueIds.length > 0 ? (
-        <>
-          {issueIds.map((issueId, index) => {
-            if (!issueId) return null;
+  const observe = useMemo(createCardObserver, []);
+  // A portaled editor may take focus outside the card. Keep its owner until another card takes over.
+  const [interactionOwner, setInteractionOwner] = useState<string | null>(null);
 
-            // the dragged card renders in the column it is passing through, but stays the same sortable
-            const homeColumnId = issueId === activeIssueId && activeSourceColumnId ? activeSourceColumnId : columnId;
-            const draggableId = `${issueId}__${homeColumnId}`;
-
-            return (
-              <KanbanIssueBlock
-                // keyed by the work item alone: the sortable id changes column on drop, the card must not remount
-                key={issueId}
-                issueId={issueId}
-                groupId={groupId}
-                subGroupId={sub_group_id}
-                issuesMap={issuesMap}
-                displayProperties={displayProperties}
-                updateIssue={updateIssue}
-                quickActions={quickActions}
-                draggableId={draggableId}
-                index={index}
-                columnId={columnId}
-                canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
-                canEditProperties={canEditProperties}
-              />
-            );
-          })}
-        </>
-      ) : null}
-    </>
-  );
+  return issueIds.map((issueId, index) => {
+    if (!issueId) return null;
+    const homeColumnId = issueId === activeIssueId && activeSourceColumnId ? activeSourceColumnId : columnId;
+    const card = (
+      <KanbanIssueBlock
+        key={issueId}
+        issueId={issueId}
+        groupId={groupId}
+        subGroupId={sub_group_id}
+        issuesMap={issuesMap}
+        displayProperties={displayProperties}
+        updateIssue={updateIssue}
+        quickActions={quickActions}
+        draggableId={`${issueId}__${homeColumnId}`}
+        index={index}
+        columnId={columnId}
+        canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
+        canEditProperties={canEditProperties}
+        hasRowWrapper={props.deferCards}
+      />
+    );
+    if (!props.deferCards) return card;
+    const issue = issuesMap[issueId];
+    if (!issue) return null;
+    return (
+      <DeferredKanbanCard
+        key={issueId}
+        issueId={issueId}
+        groupId={groupId}
+        subGroupId={sub_group_id}
+        name={issue.name}
+        observe={observe}
+        enabled={!issue.tempId}
+        revealBeforePaint={index < 2}
+        pinned={issueId === activeIssueId || issueId === interactionOwner}
+        pin={setInteractionOwner}
+      >
+        {card}
+      </DeferredKanbanCard>
+    );
+  });
 });

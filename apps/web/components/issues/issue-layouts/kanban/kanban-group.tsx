@@ -40,6 +40,7 @@ import { useKanbanColumnDnd } from "./kanban-dnd";
 import { getKanbanColumnId } from "./kanban-dnd-utils";
 
 interface IKanbanGroup {
+  deferCards: boolean;
   groupId: string;
   issuesMap: IIssueMap;
   groupedIssueIds: TGroupedIssues | TSubGroupedIssues;
@@ -322,7 +323,7 @@ export const KanbanGroup = observer(function KanbanGroup(props: IKanbanGroup) {
           updateIssue={updateIssue}
           quickActions={quickActions}
           canEditProperties={canEditProperties}
-          scrollableContainerRef={scrollableContainerRef}
+          deferCards={props.deferCards}
           canDragIssuesInCurrentGrouping={canDragIssuesInCurrentGrouping}
         />
 

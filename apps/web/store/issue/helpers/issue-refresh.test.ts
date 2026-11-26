@@ -117,6 +117,43 @@ function setup(scope: string, paginationOptions = options) {
   return { store, root, filters, api, fetch, next, realtime };
 }
 
+it("continues a profile column from its applied cursor after suspension, ignoring a late cancelled page", async () => {
+  const { store, filters, api, fetch, next } = setup("profile", { canGroup: true, perPageCount: 8 });
+  filters.issueFilters!.displayFilters!.group_by = "priority";
+  const rows = (offset: number) => Array.from({ length: 8 }, (_, i) => ({ id: String(offset + i) }));
+  const slice = (offset: number) => ({ ...response(""), results: rows(offset), total_results: 26 }) as TIssuesResponse;
+  api.mockResolvedValueOnce({
+    ...slice(0),
+    results: { urgent: { results: rows(0), total_results: 26 } },
+  } as unknown as TIssuesResponse);
+  await fetch();
+  api.mockResolvedValueOnce(slice(8));
+  await next("urgent");
+  expect(store.getIssueIds("urgent")).toHaveLength(16);
+  const stale = deferred();
+  api.mockReturnValueOnce(stale.promise);
+  const cancelledPage = next("urgent");
+  store.controller.abort();
+  store.resumePagination();
+  expect(store.getIssueLoader("urgent")).toBeUndefined();
+  expect(store.controller.signal.aborted).toBe(false);
+  const fresh = deferred();
+  api.mockReturnValueOnce(fresh.promise);
+  const retry = next("urgent");
+  expect(api.mock.lastCall?.[2]).toMatchObject({ cursor: "8:2:0" });
+  stale.resolve(slice(999));
+  await cancelledPage;
+  expect(store.getIssueLoader("urgent")).toBe("pagination");
+  expect(store.getIssueIds("urgent")).toHaveLength(16);
+  fresh.resolve(slice(16));
+  await retry;
+  expect(store.getIssueLoader("urgent")).toBeUndefined();
+  expect(store.getIssueIds("urgent")).toEqual([...rows(0), ...rows(8), ...rows(16)].map(({ id }) => id));
+  const controller = store.controller;
+  store.resumePagination();
+  expect(store.controller).toBe(controller);
+});
+
 describe.each(["project", "cycle", "module", "view", "workspace", "profile", "archived"])("%s refresh", (scope) => {
   it.each(["flat", "group", "subgroup"])(
     "loads unknown dictionaries once per project for %s snapshots",

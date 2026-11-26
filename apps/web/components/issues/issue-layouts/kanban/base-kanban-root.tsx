@@ -8,8 +8,7 @@ import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import type { EIssuesStoreType } from "@plane/types";
-import { EIssueLayoutTypes } from "@plane/types";
+import { EIssueLayoutTypes, EIssuesStoreType } from "@plane/types";
 //hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -21,7 +20,7 @@ import { useIssuesActions } from "@/hooks/use-issues-actions";
 // ui
 // types
 import { DeleteIssueModal } from "../../delete-issue-modal";
-import { IssueLayoutHOC } from "../issue-layout-HOC";
+import { IssueLayoutHOC, IssueLayoutLoader } from "../issue-layout-HOC";
 import type { IQuickActionProps, TRenderQuickActions } from "../list/list-view-types";
 //components
 import { KanBan } from "./default";
@@ -79,7 +78,10 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
 
   useEffect(() => {
     if (issuesFilter.issueFilters?.displayFilters?.layout !== EIssueLayoutTypes.KANBAN) return;
-    fetchIssues("init-loader", { canGroup: true, perPageCount: displayFilters?.sub_group_by ? 10 : 30 }, viewId);
+    // The API returns this limit *per column*, not per board. Subsequent pages
+    // are loaded by the existing column sentinel and use the same cursor size.
+    const perPageCount = storeType === EIssuesStoreType.PROFILE ? 8 : displayFilters?.sub_group_by ? 10 : 30;
+    fetchIssues("init-loader", { canGroup: true, perPageCount }, viewId);
   }, [
     fetchIssues,
     issuesFilter,
@@ -169,6 +171,12 @@ export const BaseKanBanRoot = observer(function BaseKanBanRoot(props: IBaseKanBa
       setDraggedIssueId(undefined);
     }
   };
+
+  // Route context changes before the fetch effect resets the shared profile store.
+  // Never reconcile the previous tab's cards with the destination tab's permissions/actions.
+  if (viewId && "currentView" in issues && issues.currentView !== viewId) {
+    return <IssueLayoutLoader layout={EIssueLayoutTypes.KANBAN} />;
+  }
 
   return (
     <>

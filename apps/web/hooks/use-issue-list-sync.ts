@@ -35,7 +35,12 @@ export function useIssueListSync(storeType: EIssuesStoreType, actions: IssueActi
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Route changes invalidate pending responses and dispose the previous route subscription.
     [routeKey]
   );
-  const [fetched, setFetched] = useState<{ routeKey: string; viewId?: string }>();
+  const [fetched, setFetched] = useState<{
+    routeKey: string;
+    viewId?: string;
+    snapshotRevision?: number;
+    retryInitial?: () => ReturnType<IssueActions["fetchIssues"]>;
+  }>();
   useEffect(() => {
     if (!fetched || fetched.routeKey !== routeKey || !workspace) return;
     const { viewId } = fetched;
@@ -68,33 +73,59 @@ export function useIssueListSync(storeType: EIssuesStoreType, actions: IssueActi
         ) => Promise<unknown>;
       }
     ).fetchIssuesWithExistingPagination;
+    // A clean foreground replay need not fetch the list. Re-arm its existing
+    // pagination only on return to a visible, online document.
+    const resumePagination = () => {
+      if (!document.hidden && navigator.onLine && activeStore.requestEntity === entity && "resumePagination" in issues)
+        issues.resumePagination();
+    };
+    document.addEventListener("visibilitychange", resumePagination);
+    window.addEventListener("pageshow", resumePagination);
+    window.addEventListener("online", resumePagination);
+    let retryInitial = fetched.retryInitial;
     const unsubscribeMutation = onIssueSyncMutation(() => activeStore.controller.abort());
-    const unsubscribe = issueSync.subscribe({
-      key: JSON.stringify(["list", storeType, entity]),
-      projectId: storeType === EIssuesStoreType.PROFILE || storeType === EIssuesStoreType.GLOBAL ? undefined : project,
-      abort: () => activeStore.controller.abort(),
-      refresh: async (context) => {
-        if (activeStore.requestEntity !== entity) return;
-        switch (storeType) {
-          case EIssuesStoreType.CYCLE:
-          case EIssuesStoreType.MODULE:
-            if (viewId) return refresh(workspace, scope, "mutation", viewId, true, context);
-            return;
-          case EIssuesStoreType.PROJECT_VIEW:
-            if (viewId) return refresh(workspace, scope, viewId, "mutation", true, context);
-            return;
-          default:
-            if ("fetchIssuesWithExistingPagination" in issues)
-              return refresh(workspace, scope, "mutation", true, context);
-        }
+    const unsubscribe = issueSync.subscribe(
+      {
+        key: JSON.stringify(["list", storeType, entity]),
+        projectId:
+          storeType === EIssuesStoreType.PROFILE || storeType === EIssuesStoreType.GLOBAL ? undefined : project,
+        abort: () => activeStore.controller.abort(),
+        refresh: async (context) => {
+          if (activeStore.requestEntity !== entity) return;
+          if (retryInitial) {
+            // Replay needs an applied query. Recover the discarded first page under the engine's mutation holds.
+            const revision = issueSync.revision;
+            const response = await retryInitial();
+            if (response === undefined || revision !== issueSync.revision)
+              throw new DOMException("Profile initial query superseded", "AbortError");
+            retryInitial = undefined;
+            if (disposed || activeStore.requestEntity !== entity) return;
+          }
+          switch (storeType) {
+            case EIssuesStoreType.CYCLE:
+            case EIssuesStoreType.MODULE:
+              if (viewId) return refresh(workspace, scope, "mutation", viewId, true, context);
+              return;
+            case EIssuesStoreType.PROJECT_VIEW:
+              if (viewId) return refresh(workspace, scope, viewId, "mutation", true, context);
+              return;
+            default:
+              if ("fetchIssuesWithExistingPagination" in issues)
+                return refresh(workspace, scope, "mutation", true, context);
+          }
+        },
       },
-    });
+      fetched.snapshotRevision
+    );
     let disposed = false;
     const dispose = () => {
       if (disposed) return;
       disposed = true;
       unsubscribe();
       unsubscribeMutation();
+      document.removeEventListener("visibilitychange", resumePagination);
+      window.removeEventListener("pageshow", resumePagination);
+      window.removeEventListener("online", resumePagination);
     };
     disposeSubscription.current = dispose;
     return dispose;
@@ -114,6 +145,9 @@ export function useIssueListSync(storeType: EIssuesStoreType, actions: IssueActi
       disposeSubscription.current?.();
       disposeSubscription.current = undefined;
       setFetched(undefined);
+      const profileInitial = storeType === EIssuesStoreType.PROFILE && loadType === "init-loader";
+      const snapshotRevision = profileInitial ? issueSync.snapshotRevision : undefined;
+      const revision = issueSync.revision;
       const response = await actions.fetchIssues(loadType, options, viewId);
       if (
         generation === requestGeneration.current &&
@@ -123,7 +157,16 @@ export function useIssueListSync(storeType: EIssuesStoreType, actions: IssueActi
         storeType !== EIssuesStoreType.WORKSPACE_DRAFT &&
         (!needsView || viewId)
       )
-        setFetched({ routeKey, viewId });
+        setFetched({
+          routeKey,
+          viewId,
+          snapshotRevision,
+          // The profile store can return the HTTP response even if its revision guard discarded it.
+          retryInitial:
+            profileInitial && revision !== issueSync.revision
+              ? () => actions.fetchIssues(loadType, options, viewId)
+              : undefined,
+        });
       return response;
     },
     [actions, workspace, project, user, globalView, storeType, routeKey]

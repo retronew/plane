@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { startTransition, useOptimistic } from "react";
+import { useNavigate } from "react-router";
 import { useParams, usePathname } from "next/navigation";
 // plane imports
 import { PROFILE_VIEWER_TAB, PROFILE_ADMINS_TAB } from "@plane/constants";
@@ -30,6 +32,9 @@ export function ProfileNavbar(props: Props) {
     tabsList.find((tab) => pathname.replace(/\/$/, "") === `${basePath}/${tab.route}`.replace(/\/$/, ""))?.key ??
     "summary";
 
+  const navigate = useNavigate();
+  const [selectedTab, selectTab] = useOptimistic(activeTab);
+
   return (
     <Header
       variant={EHeaderVariant.SECONDARY}
@@ -37,7 +42,7 @@ export function ProfileNavbar(props: Props) {
       setHeight={false}
       className="h-12 shrink-0 items-center"
     >
-      <AnimatedUnderlineTabs fillHeight value={activeTab} motionKey={basePath}>
+      <AnimatedUnderlineTabs fillHeight value={selectedTab} motionKey={basePath}>
         <TabsList>
           {tabsList.map((tab) => (
             <UnderlineTabLink
@@ -45,6 +50,25 @@ export function ProfileNavbar(props: Props) {
               value={tab.key}
               label={t(tab.i18n_label)}
               to={`${basePath}/${tab.route}${tab.route ? "/" : ""}`}
+              linkProps={{
+                onClick(event) {
+                  if (
+                    event.defaultPrevented ||
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  )
+                    return;
+                  event.preventDefault();
+                  const destination = event.currentTarget.pathname;
+                  startTransition(async () => {
+                    selectTab(tab.key);
+                    await navigate(destination, { replace: destination === pathname });
+                  });
+                },
+              }}
             />
           ))}
         </TabsList>

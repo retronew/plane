@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane helpers
@@ -62,6 +62,7 @@ const PRIORITY_CHIP_CLASSNAME =
 const ASSIGNEE_DROPDOWN_PLACEMENT = { side: "bottom", align: "start" } as const;
 
 interface IssueBlockProps {
+  hasRowWrapper?: boolean;
   issueId: string;
   groupId: string;
   subGroupId: string;
@@ -366,13 +367,21 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
     disabled: !isDragAllowed,
   });
 
+  // Sortable elements must be siblings even when the column reserves a row for each card.
+  const setSortableElement = useCallback(
+    (node: HTMLDivElement | null) => {
+      sortableRef(props.hasRowWrapper ? (node?.parentElement ?? null) : node);
+    },
+    [props.hasRowWrapper, sortableRef]
+  );
+
   if (!issue) return null;
 
   return (
     <>
       <div
         id={`issue-${issueId}`}
-        ref={sortableRef}
+        ref={setSortableElement}
         data-dragging={isDragSource || undefined}
         className="group/kanban-block relative mb-2"
         // a card that can't move explains why instead of silently ignoring the press-and-drag

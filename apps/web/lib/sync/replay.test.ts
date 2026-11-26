@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop -- Drain chained async replay work without advancing timers. */
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { SyncEngine } from "./engine";
+import { SyncEngine } from "./engine";
 import { ReplayCoordinator, type ReplayPage } from "./replay";
 const page = (cursor: string, events: ReplayPage["events"] = [], has_more = false): ReplayPage => ({
   cursor,
@@ -108,6 +108,30 @@ it("coalesces a page of 100 commits into one project application", async () => {
   expect(engine.apply.mock.calls[0][1].changedFields).toEqual(["name"]);
   replay.dispose();
 });
+it.each(["before", "after"])(
+  "refreshes a newly fetched list when retention reset arrives %s registration",
+  async (timing) => {
+    const engine = new SyncEngine(vi.fn());
+    const source = vi.fn().mockResolvedValue(page("10"));
+    const replay = new ReplayCoordinator(engine, source);
+    engine.setReplay(replay.wake);
+    replay.resume();
+    await drain();
+    const revision = engine.snapshotRevision;
+    source.mockResolvedValueOnce({ ...page("50"), reset_required: true }).mockResolvedValue(page("50"));
+    if (timing === "before") {
+      replay.wake();
+      await drain();
+    }
+    const refresh = vi.fn().mockResolvedValue(undefined);
+    engine.subscribe({ key: "profile", refresh }, revision);
+    await vi.runAllTimersAsync();
+    expect(refresh).toHaveBeenCalledExactlyOnceWith({ reset: true });
+    expect(source.mock.lastCall?.[0]).toBe("50");
+    replay.dispose();
+  }
+);
+
 it("recalibrates a retention gap from the returned baseline", async () => {
   const { engine, source, replay } = setup();
   replay.resume();

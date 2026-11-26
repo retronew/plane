@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { SyncEngine, type SyncSubscription } from "@/lib/sync/engine";
 import { EIssuesStoreType } from "@plane/types";
 import type { IssueActions } from "./use-issues-actions";
 import { useIssueListSync } from "./use-issue-list-sync";
@@ -11,20 +12,115 @@ const mocks = vi.hoisted(() => ({
   store: {
     requestEntity: JSON.stringify(["w", "p", "v"]),
     controller: new AbortController(),
+    resumePagination: vi.fn(),
     fetchIssuesWithExistingPagination: vi.fn(),
   },
 }));
-vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w", projectId: "p" }) }));
+let engine: SyncEngine;
+vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w", projectId: "p", userId: "u" }) }));
 vi.mock("./store/use-issues", () => ({ useIssues: () => ({ issues: mocks.store }) }));
-vi.mock("@/lib/sync/issue-sync", () => ({ issueSync: { subscribe: mocks.subscribe } }));
+vi.mock("@/lib/sync/issue-sync", () => ({
+  issueSync: {
+    subscribe: mocks.subscribe,
+    get snapshotRevision() {
+      return engine.snapshotRevision;
+    },
+    get revision() {
+      return engine.revision;
+    },
+  },
+}));
 vi.mock("@/services/issue-sync-mutation", () => ({ onIssueSyncMutation: mocks.mutation }));
+afterEach(() => vi.useRealTimers());
 beforeEach(() => {
+  engine = new SyncEngine(vi.fn());
   vi.clearAllMocks();
   mocks.subscribe.mockReturnValue(mocks.cleanup);
   mocks.mutation.mockReturnValue(() => {});
   mocks.store.requestEntity = JSON.stringify(["w", "p", "v"]);
 });
 const actions = { fetchIssues: vi.fn().mockResolvedValue({ results: [] }) } as unknown as IssueActions;
+const options = { canGroup: false, perPageCount: 100 };
+function profileList() {
+  vi.useFakeTimers();
+  engine.updateProjects(["p"]);
+  mocks.subscribe.mockImplementation((sub: SyncSubscription, revision?: number) => engine.subscribe(sub, revision));
+  const fetch = vi.fn(async (_load: unknown, _options: unknown, view: string) => {
+    mocks.store.requestEntity = JSON.stringify(["w", "u", view]);
+    return { results: [] };
+  });
+  const hook = renderHook(() =>
+    useIssueListSync(EIssuesStoreType.PROFILE, { fetchIssues: fetch } as unknown as IssueActions)
+  );
+  return { hook, fetch };
+}
+
+it("fetches each profile tab once on empty replay and still refreshes the active tab on invalidation", async () => {
+  const { hook, fetch } = profileList();
+  const wake = vi.fn();
+  engine.setReplay(wake);
+  await act(() => hook.result.current.fetchIssues("init-loader", options, "assigned"));
+  await vi.runAllTimersAsync();
+  await act(() => hook.result.current.fetchIssues("init-loader", options, "created"));
+  await vi.runAllTimersAsync();
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(wake).toHaveBeenCalledTimes(2);
+  expect(mocks.store.fetchIssuesWithExistingPagination).not.toHaveBeenCalled();
+  const context = { issueIds: ["i"], changedFields: ["name"] };
+  const applied = engine.apply("p", context);
+  await vi.runAllTimersAsync();
+  await applied;
+  expect(mocks.store.fetchIssuesWithExistingPagination).toHaveBeenCalledExactlyOnceWith(
+    "w",
+    "u",
+    "mutation",
+    true,
+    context
+  );
+  hook.unmount();
+});
+
+it.each(["fetch", "registration"])("catches replay applied with no subscriber during %s", async (phase) => {
+  const { hook, fetch } = profileList();
+  const applyEvent = () => engine.apply("p", { issueIds: ["i"], changedFields: ["name"] });
+  if (phase === "fetch") {
+    fetch.mockImplementationOnce(async () => {
+      mocks.store.requestEntity = JSON.stringify(["w", "u", "assigned"]);
+      await applyEvent();
+      return { results: [] };
+    });
+  } else {
+    mocks.subscribe.mockImplementationOnce((sub: SyncSubscription, revision?: number) => {
+      void applyEvent();
+      return engine.subscribe(sub, revision);
+    });
+  }
+  await act(() => hook.result.current.fetchIssues("init-loader", options, "assigned"));
+  await vi.runAllTimersAsync();
+  expect(mocks.store.fetchIssuesWithExistingPagination).toHaveBeenCalledExactlyOnceWith("w", "u", "mutation", true, {
+    reset: true,
+  });
+  hook.unmount();
+});
+
+it("re-establishes the initial query when a mutation revision prevented the profile snapshot from applying", async () => {
+  const { hook, fetch } = profileList();
+  let release!: () => void;
+  fetch.mockImplementationOnce(async () => {
+    mocks.store.requestEntity = JSON.stringify(["w", "u", "assigned"]);
+    release = engine.pause();
+    return { results: [] };
+  });
+  await act(() => hook.result.current.fetchIssues("init-loader", options, "assigned"));
+  await vi.runAllTimersAsync();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  release();
+  await vi.runAllTimersAsync();
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(mocks.store.fetchIssuesWithExistingPagination).toHaveBeenCalledOnce();
+  hook.unmount();
+});
+
 it("does not subscribe unfetched consumers and cleans up the fetched owner", async () => {
   const owner = renderHook(() => useIssueListSync(EIssuesStoreType.PROJECT_VIEW, actions));
   const unused = renderHook(() => useIssueListSync(EIssuesStoreType.PROJECT_VIEW, actions));
@@ -94,6 +190,29 @@ it("aborts the current store request when the engine suspends", async () => {
   hook.unmount();
 });
 
+it("re-arms only the active visible list's pagination on foreground, without a list refresh", async () => {
+  const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+  const hook = renderHook(() => useIssueListSync(EIssuesStoreType.PROJECT_VIEW, actions));
+  try {
+    await act(() => hook.result.current.fetchIssues("init-loader", options, "v"));
+    document.dispatchEvent(new Event("visibilitychange"));
+    expect(mocks.store.resumePagination).not.toHaveBeenCalled();
+    hidden.mockReturnValue(false);
+    document.dispatchEvent(new Event("visibilitychange"));
+    expect(mocks.store.resumePagination).toHaveBeenCalledOnce();
+    mocks.store.requestEntity = "another";
+    window.dispatchEvent(new Event("online"));
+    expect(mocks.store.resumePagination).toHaveBeenCalledOnce();
+    expect(mocks.store.fetchIssuesWithExistingPagination).not.toHaveBeenCalled();
+  } finally {
+    hook.unmount();
+    hidden.mockRestore();
+  }
+  mocks.store.requestEntity = JSON.stringify(["w", "p", "v"]);
+  window.dispatchEvent(new Event("pageshow"));
+  expect(mocks.store.resumePagination).toHaveBeenCalledOnce();
+});
+
 it("passes display-only replay metadata to the loaded-window refresh", async () => {
   const hook = renderHook(() => useIssueListSync(EIssuesStoreType.PROJECT_VIEW, actions));
   await act(() => hook.result.current.fetchIssues("init-loader", { canGroup: false, perPageCount: 100 }, "v"));
@@ -135,7 +254,6 @@ it("removes the old subscription immediately and ignores superseded or unapplied
   const hook = renderHook(() =>
     useIssueListSync(EIssuesStoreType.PROJECT_VIEW, { fetchIssues: fetch } as unknown as IssueActions)
   );
-  const options = { canGroup: false, perPageCount: 100 };
   await act(() => hook.result.current.fetchIssues("init-loader", options, "v"));
   let first!: Promise<unknown>;
   let second!: Promise<unknown>;

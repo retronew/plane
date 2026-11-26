@@ -100,7 +100,11 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
                   leaveClassName=""
                   leaveDurationMs={300}
                 >
-                  <ProfileSidebar userProjectsData={userProjectsData} closeMobile={sidebar.closeMobile} />
+                  <ProfileSidebar
+                    userId={userId}
+                    userProjectsData={userProjectsData}
+                    closeMobile={sidebar.closeMobile}
+                  />
                 </CssTransition>
               )}
             </div>
@@ -116,7 +120,7 @@ function UseProfileLayout({ params }: Route.ComponentProps) {
             leaveClassName=""
             leaveDurationMs={300}
           >
-            <ProfileSidebar userProjectsData={userProjectsData} />
+            <ProfileSidebar userId={userId} userProjectsData={userProjectsData} />
           </CssTransition>
         )}
       </div>

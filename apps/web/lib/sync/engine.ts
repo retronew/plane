@@ -99,6 +99,12 @@ export class SyncEngine {
   private ready = false;
   private pauses = 0;
   private mutationRevision = 0;
+  private invalidations = 0;
+  /** Workspace-wide because profile lists span projects. Both counters are monotonic,
+   * including while a list has no subscribers. */
+  get snapshotRevision() {
+    return this.mutationRevision + this.invalidations;
+  }
   // Different query keys share entity and dictionary stores. Start each snapshot
   // only after the preceding one has committed, so a slow detail cannot undo a list.
   private refreshQueue: Promise<unknown> = Promise.resolve();
@@ -151,7 +157,7 @@ export class SyncEngine {
     private reportError: (error: unknown) => void = (error) => console.warn("Task synchronization failed", error)
   ) {}
 
-  subscribe(subscription: SyncSubscription) {
+  subscribe(subscription: SyncSubscription, snapshotRevision?: number) {
     let cancel!: () => void;
     const cancelled = new Promise<void>((resolve) => {
       cancel = resolve;
@@ -160,10 +166,15 @@ export class SyncEngine {
     const entry = this.entries.get(subscription.key) ?? { subscribers: [], dirty: false, running: false, failures: 0 };
     entry.subscribers.push(subscriber);
     this.entries.set(subscription.key, entry);
-    if (this.ready) {
+    const missedInvalidation = snapshotRevision !== undefined && snapshotRevision !== this.snapshotRevision;
+    if (missedInvalidation || (this.ready && (snapshotRevision === undefined || !this.wakeReplay))) {
+      // A missed event may be a retention reset, even if the last replay page was empty.
+      if (missedInvalidation) entry.context = { reset: true };
       entry.dirty = true;
       this.schedule();
     }
+    // Check for commits whose socket wakeup was missed, using the existing replay cursor.
+    if (snapshotRevision !== undefined && !this.suspended) this.wakeReplay?.();
     return () => {
       if (subscriber.refreshing) subscriber.abort?.();
       subscriber.cancel();
@@ -187,6 +198,7 @@ export class SyncEngine {
   }
 
   invalidate(projectId?: string, context?: SyncRefreshContext) {
+    this.invalidations++;
     for (const entry of this.entries.values()) {
       const subscription = entry.subscribers.at(-1);
       if (subscription && (!projectId || !subscription.projectId || subscription.projectId === projectId)) {

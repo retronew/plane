@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
+
+import { isInKanbanViewport } from "./card-viewport";
 
 type Props = {
   children: ReactNode;
@@ -18,6 +20,9 @@ type Props = {
 export function DeferredKanbanColumn({ children, className, name, root }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const [visited, setVisited] = useState(() => typeof IntersectionObserver === "undefined");
+  useLayoutEffect(() => {
+    if (element.current && isInKanbanViewport(element.current)) setVisited(true);
+  }, []);
   useEffect(() => {
     if (visited || !element.current) return;
     const observer = new IntersectionObserver(

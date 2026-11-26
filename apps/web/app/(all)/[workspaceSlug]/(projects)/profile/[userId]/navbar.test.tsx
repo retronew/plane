@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ProfileNavbar } from "./navbar";
 
@@ -33,6 +33,31 @@ it("uses shared route tabs and selects the current profile view with or without 
     </MemoryRouter>
   );
   expect(screen.getByRole("tab", { selected: true }).getAttribute("href")).toBe("/workspace/profile/user/created/");
+});
+it("selects the destination while the route is still loading", async () => {
+  const base = "/workspace/profile/user";
+  route.pathname = `${base}/created/`;
+  let finish!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  const router = createMemoryRouter(
+    [
+      {
+        path: base,
+        element: <ProfileNavbar isAuthorized />,
+        children: [{ path: "created/" }, { path: "assigned/", loader: () => pending }],
+      },
+    ],
+    { initialEntries: [route.pathname] }
+  );
+  render(<RouterProvider router={router} />);
+  fireEvent.click(screen.getByRole("tab", { name: "profile.tabs.assigned" }));
+  expect(screen.getByRole("tab", { selected: true }).getAttribute("href")).toBe(`${base}/assigned/`);
+  expect(router.state.location.pathname).toBe(`${base}/created/`);
+  route.pathname = `${base}/assigned/`;
+  await act(async () => finish());
+  expect(router.state.location.pathname).toBe(route.pathname);
 });
 it("only exposes the summary tab to visitors without workspace permissions", () => {
   render(
