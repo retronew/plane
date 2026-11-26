@@ -112,7 +112,7 @@ export interface MenuItemFactoryProps {
   handleUpdate?: (data: TIssue) => Promise<void>;
   handleArchive?: () => Promise<void>;
   /** "Create related" and subscription rows from `useRelatedMenuItems`; the caller renders their modals. */
-  relatedMenuItems?: TContextMenuItem[];
+  getRelatedMenuItems?: () => TContextMenuItem[];
   // Context-specific data
   cycleId?: string;
   moduleId?: string;
@@ -201,13 +201,6 @@ export const useIssueActionHandlers = (props: MenuItemFactoryProps) => {
 export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
   const { t } = useTranslation();
   const actionHandlers = useIssueActionHandlers(props);
-  // the board/list handlers forward this straight to `updateIssue`, which takes a partial payload
-  const { handleUpdate } = props;
-  const propertyMenuItems = usePropertyMenuItems({
-    issue: props.issue,
-    isEditingAllowed: props.isEditingAllowed,
-    onUpdate: handleUpdate ? (data) => handleUpdate(data as TIssue) : undefined,
-  });
 
   const {
     issue,
@@ -350,12 +343,12 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     shouldRender: isDeletingAllowed,
   });
 
+  const relatedMenuItems = props.getRelatedMenuItems?.() ?? [];
   return {
     ...actionHandlers,
-    propertyMenuItems,
-    relatedMenuItems: (props.relatedMenuItems ?? []).filter((item) => item.section !== "notify"),
+    relatedMenuItems: relatedMenuItems.filter((item) => item.section !== "notify"),
     // Linear keeps subscribe/unsubscribe in its own group near the bottom, above the lifecycle rows
-    subscriptionMenuItems: (props.relatedMenuItems ?? []).filter((item) => item.section === "notify"),
+    subscriptionMenuItems: relatedMenuItems.filter((item) => item.section === "notify"),
     createEditMenuItem,
     createCopyMenuItem,
     createOpenInNewTabMenuItem,
@@ -370,12 +363,21 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
 };
 
 // Predefined menu item sets for different contexts
+function useIssuePropertyMenuItems({ issue, isEditingAllowed, handleUpdate }: MenuItemFactoryProps) {
+  return usePropertyMenuItems({
+    issue,
+    isEditingAllowed,
+    onUpdate: handleUpdate ? (data) => handleUpdate(data as TIssue) : undefined,
+  });
+}
+
 export const useProjectIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
+  const propertyMenuItems = useIssuePropertyMenuItems(props);
   const factory = useMenuItemFactory(props);
 
   return useMemo(
     () => [
-      ...factory.propertyMenuItems,
+      ...propertyMenuItems,
       factory.createEditMenuItem(),
       ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
@@ -385,7 +387,7 @@ export const useProjectIssueMenuItems = (props: MenuItemFactoryProps): TContextM
       factory.createArchiveMenuItem(),
       factory.createDeleteMenuItem(),
     ],
-    [factory]
+    [factory, propertyMenuItems]
   );
 };
 
@@ -405,26 +407,10 @@ export const useWorkItemDetailMenuItems = (props: MenuItemFactoryProps): TContex
   );
 };
 
-export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
-  const factory = useMenuItemFactory(props);
-
-  return useMemo(
-    () => [
-      ...factory.propertyMenuItems,
-      factory.createEditMenuItem(),
-      ...factory.relatedMenuItems,
-      factory.createOpenInNewTabMenuItem(),
-      factory.createCopySubmenuItem(),
-      factory.createCopyMenuItem(),
-      ...factory.subscriptionMenuItems,
-      factory.createArchiveMenuItem(),
-      factory.createDeleteMenuItem(),
-    ],
-    [factory]
-  );
-};
+export const useAllIssueMenuItems = useProjectIssueMenuItems;
 
 export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
+  const propertyMenuItems = useIssuePropertyMenuItems(props);
   const factory = useMenuItemFactory(props);
   const { issue, cycleId, setIssueToEdit, setCreateUpdateIssueModal } = props;
 
@@ -438,7 +424,7 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
 
   return useMemo(
     () => [
-      ...factory.propertyMenuItems,
+      ...propertyMenuItems,
       factory.createEditMenuItem(customEditAction),
       ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
@@ -450,11 +436,12 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
       factory.createDeleteMenuItem(),
     ],
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [factory, customEditAction]
+    [factory, propertyMenuItems, customEditAction]
   );
 };
 
 export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuItem[] => {
+  const propertyMenuItems = useIssuePropertyMenuItems(props);
   const factory = useMenuItemFactory(props);
   const { issue, moduleId, setIssueToEdit, setCreateUpdateIssueModal } = props;
 
@@ -468,7 +455,7 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
 
   return useMemo(
     () => [
-      ...factory.propertyMenuItems,
+      ...propertyMenuItems,
       factory.createEditMenuItem(customEditAction),
       ...factory.relatedMenuItems,
       factory.createOpenInNewTabMenuItem(),
@@ -480,7 +467,7 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
       factory.createDeleteMenuItem(),
     ],
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [factory, customEditAction]
+    [factory, propertyMenuItems, customEditAction]
   );
 };
 

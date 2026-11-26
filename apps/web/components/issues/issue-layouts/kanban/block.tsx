@@ -202,7 +202,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
                 <StateSelect
                   issueTypeId={issue.type_id}
                   value={issue.state_id}
-                  onChange={(stateId) => void updateIssue?.(issue.project_id, issue.id, { state_id: stateId })}
+                  onChange={(stateId) => updateIssue?.(issue.project_id, issue.id, { state_id: stateId })}
                   projectId={issue.project_id ?? undefined}
                   disabled={isReadOnly}
                   variant="icon-sm"

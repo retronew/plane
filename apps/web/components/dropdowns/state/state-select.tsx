@@ -5,7 +5,7 @@
  */
 
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useSWRConfig } from "swr";
 import { useParams } from "next/navigation";
@@ -14,11 +14,11 @@ import { StateSelect as StateSelectBlock } from "@plane/blocks/property-select";
 import type { StateOption } from "@plane/blocks/property-select";
 import type { SelectPaginationParams, SelectTooltip, SelectTooltipOverride, SelectVariant } from "@plane/blocks/select";
 import { useTranslation } from "@plane/i18n";
-import type { IState, TPaginatedResponse } from "@plane/types";
+import type { IState, TPaginatedResponse, TProjectWorkflow } from "@plane/types";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
-import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useProjectWorkflowStore } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
 import { workflowAllowsCreation, workflowAllowsTransition, workflowIsActive } from "@/helpers/workflow";
 import { getWorkflowErrorCode, getWorkflowErrorReason, workflowRequiresApproval } from "@/helpers/workflow";
@@ -92,33 +92,32 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   // store hooks
   const { getProjectStateIds, getStateById, fetchProjectStates, getStatePercentageInGroup } = useProjectState();
   const { getProjectById } = useProject();
-  const workflowStore = useProjectWorkflow(bypassWorkflow ? undefined : projectId);
+  const workflowStore = useProjectWorkflowStore();
+  const [open, setOpen] = useState(false);
   const { data: user } = useUser();
-  const currentWorkflow = workflowStore.resolve(projectId ?? "", issueTypeId);
-  const allowedStateIds = bypassWorkflow
-    ? null
-    : isForWorkItemCreation
+  const currentWorkflow =
+    open && !bypassWorkflow && projectId ? workflowStore.resolve(projectId, issueTypeId) : undefined;
+  const allowsState = useCallback(
+    (workflow: TProjectWorkflow | undefined, state: IState) => {
+      if (bypassWorkflow) return true;
+      if (!workflow) return false;
+      return isForWorkItemCreation || !value || getStateById(value) === undefined
+        ? workflowAllowsCreation(workflow, state.id, state, getProjectById(projectId)?.disabled_state_groups)
+        : workflowAllowsTransition(workflow, value, state.id, user?.id);
+    },
+    [bypassWorkflow, isForWorkItemCreation, value, getStateById, getProjectById, projectId, user?.id]
+  );
+
+  // Keep an open popup reactive if its workflow changes after the options have been fetched.
+  const allowedStateIds =
+    open && !bypassWorkflow && (!currentWorkflow || isForWorkItemCreation || workflowIsActive(currentWorkflow))
       ? new Set(
-          (getProjectStateIds(projectId) ?? []).filter((id) =>
-            workflowAllowsCreation(
-              currentWorkflow,
-              id,
-              getStateById(id),
-              getProjectById(projectId)?.disabled_state_groups
-            )
-          )
+          (getProjectStateIds(projectId) ?? []).filter((id) => {
+            const state = getStateById(id);
+            return state && allowsState(currentWorkflow, state);
+          })
         )
-      : !workflowIsActive(currentWorkflow)
-        ? null
-        : new Set(
-            currentWorkflow!.states
-              .filter((state) =>
-                isForWorkItemCreation || !value || getStateById(value) === undefined
-                  ? workflowAllowsCreation(currentWorkflow, state.id)
-                  : workflowAllowsTransition(currentWorkflow, value, state.id, user?.id)
-              )
-              .map((state) => state.id)
-          );
+      : null;
   // translation
   const { t } = useTranslation();
   const resolvedTooltip = useMemo<SelectTooltipOverride | undefined>(() => {
@@ -133,12 +132,9 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const getValues = useCallback(
     async ({ search }: SelectPaginationParams): Promise<TPaginatedResponse<StateOption[]>> => {
       if (!workspaceSlug || !projectId) return { results: [] };
-      if (!bypassWorkflow)
-        await Promise.all([
-          workflowStore.fetchList(workspaceSlug.toString(), projectId),
-          workflowStore.fetchTypes(workspaceSlug.toString(), projectId),
-        ]);
-      const workflow = bypassWorkflow ? undefined : workflowStore.resolve(projectId, issueTypeId);
+      const workflow = bypassWorkflow
+        ? undefined
+        : await workflowStore.loadPolicy(workspaceSlug.toString(), projectId, issueTypeId);
       let stateIds = getProjectStateIds(projectId);
       if (!stateIds) {
         await fetchProjectStates(workspaceSlug.toString(), projectId);
@@ -151,13 +147,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
         .map((stateId) => getStateById(stateId))
         .filter((state): state is IState => !!state)
         .filter((state) => !excluded.has(state.id) && (!allowed || allowed.has(state.id)))
-        .filter(
-          (state) =>
-            bypassWorkflow ||
-            (isForWorkItemCreation || !value || getStateById(value) === undefined
-              ? workflowAllowsCreation(workflow, state.id, state, getProjectById(projectId)?.disabled_state_groups)
-              : workflowAllowsTransition(workflow, value, state.id, user?.id))
-        )
+        .filter((state) => allowsState(workflow, state))
         .filter((state) => !query || state.name.toLowerCase().includes(query))
         .map((state) => toOption(state, getStatePercentageInGroup(state.id)));
       return { results, next_page_results: false };
@@ -166,7 +156,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       workspaceSlug,
       projectId,
       getProjectStateIds,
-      getProjectById,
+      allowsState,
       fetchProjectStates,
       getStateById,
       getStatePercentageInGroup,
@@ -175,9 +165,6 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
       excludeStateIds,
       allowedStates,
       issueTypeId,
-      isForWorkItemCreation,
-      value,
-      user?.id,
     ]
   );
 
@@ -188,13 +175,23 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
   const { requestConfirmation, confirmationDialog } = useApprovalTransitionConfirmation();
   const { mutate } = useSWRConfig();
   const changeState = async (stateId: string) => {
-    const needsApproval =
-      !bypassWorkflow &&
-      !isForWorkItemCreation &&
-      stateId !== value &&
-      workflowRequiresApproval(currentWorkflow, stateId);
-    if (needsApproval && !(await requestConfirmation(getStateById(stateId)?.name ?? stateId))) return;
+    if (
+      disabled ||
+      !workspaceSlug ||
+      !projectId ||
+      excludeStateIds?.includes(stateId) ||
+      (allowedStates && !allowedStates.includes(stateId))
+    )
+      return;
     try {
+      const workflow = bypassWorkflow
+        ? undefined
+        : await workflowStore.loadPolicy(workspaceSlug.toString(), projectId, issueTypeId);
+      const state = getStateById(stateId);
+      if (!state || !allowsState(workflow, state)) return;
+      const needsApproval =
+        !bypassWorkflow && !isForWorkItemCreation && stateId !== value && workflowRequiresApproval(workflow, stateId);
+      if (needsApproval && !(await requestConfirmation(getStateById(stateId)?.name ?? stateId))) return;
       await onChange(stateId);
       if (needsApproval)
         await mutate(
@@ -231,6 +228,7 @@ export const StateSelect = observer(function StateSelect(props: StateSelectWebPr
         variant={variant}
         disabled={disabled}
         placeholder={placeholder ?? t("state")}
+        onOpenChange={setOpen}
         onClose={onClose}
         className={className}
         tooltip={resolvedTooltip}

@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Menu, MenuContent } from "@makeplane/propel/components/menu";
 import type { TIssue } from "@plane/types";
 import { useAllIssueMenuItems } from "./helper";
+import { createIssueQuickActionMenu } from "./quick-action-menu";
 import { IssueQuickActionMenuItems } from "./menu-items";
 vi.mock("./property-menu-items", () => ({ usePropertyMenuItems: () => [] }));
 vi.mock("@plane/i18n", () => ({
@@ -87,4 +89,34 @@ it("drops the archive group when archiving is unavailable, and none for read-onl
   );
   expect(screen.getAllByRole("menuitem")).toHaveLength(2);
   expect(screen.queryByRole("separator")).toBeNull();
+});
+
+it.each(["context", "more"])("constructs candidates only when the %s menu opens", async (entry) => {
+  const open = vi.fn();
+  const action = vi.fn();
+  const build = vi.fn(() => [{ key: "edit", title: "Edit", action, onMenuOpen: open }]);
+  const QuickActions = createIssueQuickActionMenu(build);
+  const dialogs = vi.fn(() => null);
+  const Dialogs = dialogs;
+  function Card() {
+    const ref = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={ref}>
+        <span>Card</span>
+        <QuickActions parentRef={ref} menuItemProps={props()} placements="bottom-end">
+          <Dialogs />
+        </QuickActions>
+      </div>
+    );
+  }
+  render(<Card />);
+  expect(dialogs).not.toHaveBeenCalled();
+  expect(build).not.toHaveBeenCalled();
+  expect(open).not.toHaveBeenCalled();
+  if (entry === "context") fireEvent.contextMenu(screen.getByText("Card"));
+  else fireEvent.keyDown(screen.getByRole("button", { name: "aria_labels.common.more_actions" }), { key: "ArrowDown" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
+  expect(dialogs).toHaveBeenCalled();
+  expect(open).toHaveBeenCalledTimes(1);
+  expect(action).toHaveBeenCalledTimes(1);
 });

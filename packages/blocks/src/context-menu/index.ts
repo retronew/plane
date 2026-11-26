@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-export { ContextMenu } from "./context-menu";
+export { ContextMenu, ContextMenuItems } from "./context-menu";
 export type { ContextMenuProps } from "./context-menu";
 export { ContextMenuItem } from "./context-menu-item";
 export { SubmenuSearchList } from "./submenu-search";

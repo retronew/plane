@@ -1,6 +1,26 @@
+import { renderHook, waitFor } from "@testing-library/react";
+import { SWRConfig } from "swr";
 import { describe, expect, it, vi } from "vitest";
 import type { IIssueLabel, IState, IUserLite, TIssue } from "@plane/types";
-import { buildPropertyMenuItems } from "./property-menu-items";
+import { buildPropertyMenuItems, usePropertyMenuItems } from "./property-menu-items";
+
+const policy = vi.hoisted(() => ({ load: vi.fn(), resolve: vi.fn(), states: vi.fn(), toast: vi.fn() }));
+vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w" }) }));
+vi.mock("@/hooks/store/use-project-workflow", () => ({
+  useProjectWorkflowStore: () => ({ loadPolicy: policy.load, resolve: policy.resolve }),
+}));
+vi.mock("@/hooks/store/use-project-state", () => ({ useProjectState: () => ({ getProjectStates: policy.states }) }));
+vi.mock("@/hooks/store/use-label", () => ({ useLabel: () => ({ getProjectLabels: () => [] }) }));
+vi.mock("@/hooks/store/use-cycle", () => ({ useCycle: () => ({ getProjectCycleIds: () => [] }) }));
+vi.mock("@/hooks/store/use-module", () => ({ useModule: () => ({ getProjectModuleIds: () => [] }) }));
+vi.mock("@/hooks/store/use-member", () => ({ useMember: () => ({ project: { getProjectMemberIds: () => [] } }) }));
+vi.mock("@/hooks/store/use-issues", () => ({ useIssues: () => ({ issues: {} }) }));
+vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "me" } }) }));
+vi.mock("@plane/blocks/toast", () => ({ setToast: policy.toast }));
+vi.mock("@plane/i18n", () => ({
+  translate: (key: string) => key,
+  useTranslation: () => ({ t: (key: string) => key, currentLocale: "en-US" }),
+}));
 
 const issue = {
   id: "issue",
@@ -132,4 +152,34 @@ describe("buildPropertyMenuItems", () => {
     const { byKey } = build({ sources: { ...sources, labels: [] } });
     expect(byKey("labels").shouldRender).toBe(false);
   });
+});
+
+it("withholds state choices until the complete policy loads, including failed loads with a cached default", async () => {
+  const workflow = {
+    enabled: true,
+    is_active: true,
+    states: sources.states,
+    transitions: [{ source_id: "todo", destination_id: "done", member_ids: ["other"] }],
+  };
+  policy.states.mockReturnValue(sources.states);
+  policy.resolve.mockReturnValue(workflow);
+  policy.load.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(workflow);
+  const wrapper = ({ children }: React.PropsWithChildren) => (
+    <SWRConfig value={{ provider: () => new Map(), shouldRetryOnError: false }}>{children}</SWRConfig>
+  );
+  const menu = () =>
+    renderHook(() => usePropertyMenuItems({ issue, isEditingAllowed: true, onUpdate: vi.fn() }), { wrapper });
+  const failed = menu();
+  const states = () => failed.result.current.find((item) => item.key === "state");
+  expect(states()?.shouldRender).toBe(false);
+  await waitFor(() => expect(policy.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "error" })));
+  expect(states()?.nestedMenuItems).toEqual([]);
+  expect(policy.states).not.toHaveBeenCalled();
+  failed.unmount();
+  const retry = menu();
+  await waitFor(() =>
+    expect(retry.result.current.find((item) => item.key === "state")?.nestedMenuItems?.map((item) => item.key)).toEqual(
+      ["state-todo"]
+    )
+  );
 });

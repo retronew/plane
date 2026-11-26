@@ -148,3 +148,24 @@ it("refreshes creation choices and the initial state after project state edits, 
   expect(store.workflows.p.states.map((s) => s.id)).toEqual(["new"]);
   expect(store.workflows.p.effective_initial_state_id).toBe("new");
 });
+
+it("resolves type and list together and reads the default endpoint only for implicit workflows", async () => {
+  const store = new ProjectWorkflowStore();
+  api.list.mockResolvedValueOnce({ results: [{ ...data, is_default: true }] }).mockResolvedValueOnce({ results: [] });
+  api.types.mockResolvedValue({ results: [] });
+  await Promise.all([store.loadPolicy("w", "p"), store.loadPolicy("w", "p")]);
+  expect(api.list).toHaveBeenCalledTimes(1);
+  expect(api.types).toHaveBeenCalledTimes(1);
+  expect(api.retrieve).not.toHaveBeenCalled();
+  api.retrieve.mockResolvedValueOnce(data);
+  expect(await store.loadPolicy("w", "legacy")).toMatchObject(data);
+  expect(api.retrieve).toHaveBeenCalledTimes(1);
+});
+
+it("rejects incomplete policy reads and retries a failed type lookup", async () => {
+  const store = new ProjectWorkflowStore();
+  api.list.mockResolvedValue({ results: [{ ...data, is_default: true }] });
+  api.types.mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ results: [] });
+  await expect(store.loadPolicy("w", "p")).rejects.toThrow("offline");
+  expect(await store.loadPolicy("w", "p")).toMatchObject(data);
+});

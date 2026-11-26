@@ -30,6 +30,8 @@ import { useWorkFlowFDragNDrop } from "@/components/workflow";
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { getGroupByColumns, isWorkspaceLevel } from "../utils";
 // components
+import { EIssuesStoreType } from "@plane/types";
+import { DeferredKanbanColumn } from "./deferred-column";
 import { HeaderGroupByCard } from "./headers/group-by-card";
 import { KanbanGroup } from "./kanban-group";
 
@@ -111,14 +113,11 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
         list.map((subList: IGroupByColumn) => {
           if (!showEmptyGroup && (getGroupIssueCount(subList.id, undefined, false) ?? 0) <= 0) return null;
 
-          return (
-            <div
-              key={subList.id}
-              className={cn("group relative flex w-[336px] flex-shrink-0 flex-col", {
-                // no inline padding here: it lives inside the scroll area, so the scrollbar sits at the column edge
-                "h-full rounded-xl bg-layer-1 py-2": sub_group_by === null,
-              })}
-            >
+          const className = cn("group relative flex w-[336px] flex-shrink-0 flex-col", {
+            "h-full rounded-xl bg-layer-1 py-2": sub_group_by === null,
+          });
+          const content = (
+            <>
               {sub_group_by === null && (
                 <div className="sticky top-0 z-[2] w-full flex-shrink-0 bg-layer-1 px-3">
                   <HeaderGroupByCard
@@ -162,6 +161,23 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
                   loadMoreIssues={loadMoreIssues}
                 />
               </div>
+            </>
+          );
+          if (storeType === EIssuesStoreType.PROFILE && !sub_group_by && list.length > 8) {
+            return (
+              <DeferredKanbanColumn
+                key={subList.id}
+                className={className}
+                name={subList.name}
+                root={scrollableContainerRef}
+              >
+                {content}
+              </DeferredKanbanColumn>
+            );
+          }
+          return (
+            <div key={subList.id} className={className}>
+              {content}
             </div>
           );
         })}

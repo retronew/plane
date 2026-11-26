@@ -38,6 +38,7 @@ export type StateSelectProps = {
   placeholder?: string;
   searchPlaceholder?: string;
   onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   className?: string;
   /**
    * When provided, only states whose id is in this set are shown. Pass `null` (or omit) to show all
@@ -97,6 +98,7 @@ export function StateSelect(props: StateSelectProps) {
     placeholder = "",
     searchPlaceholder = t("property_select.search_states"),
     onClose,
+    onOpenChange,
     className,
     allowedStateIds = null,
     showIdentifier = false,
@@ -119,6 +121,7 @@ export function StateSelect(props: StateSelectProps) {
       placeholder={placeholder}
       searchPlaceholder={searchPlaceholder}
       onClose={onClose}
+      onOpenChange={onOpenChange}
       pinSelected={false}
       getOptionValue={(state) => state.id}
       getOptionLabel={(state) => state.name}

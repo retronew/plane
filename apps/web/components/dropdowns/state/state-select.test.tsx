@@ -5,6 +5,8 @@ import { StateSelect } from "./state-select";
 
 const state = vi.hoisted(() => ({
   fetch: vi.fn(),
+  resolve: vi.fn(),
+  listStates: vi.fn(),
   options: vi.fn(),
   toast: vi.fn(),
   select: vi.fn(),
@@ -32,24 +34,16 @@ vi.mock("swr", () => ({ useSWRConfig: () => ({ mutate: state.refresh }) }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ workspaceSlug: "w" }) }));
 vi.mock("@/hooks/store/use-project-state", () => ({
   useProjectState: () => ({
-    getProjectStateIds: () => state.states.map((s) => s.id),
+    getProjectStateIds: state.listStates,
     getStateById: (id: string) => state.states.find((s) => s.id === id),
     fetchProjectStates: vi.fn(),
     getStatePercentageInGroup: (id: string) => (id === "b" ? 50 : 100),
   }),
 }));
 vi.mock("@/hooks/store/use-project-workflow", () => ({
-  useProjectWorkflow: () => ({
-    workflows: { p: state.workflow },
-    fetch: state.fetch,
-    fetchList: state.fetch,
-    fetchTypes: state.fetch,
-    resolve: (_projectId: string, typeId?: string) =>
-      typeId === "custom"
-        ? { ...state.workflow, states: state.workflow.states.filter((item) => item.id !== "b"), transitions: [] }
-        : state.workflow,
-  }),
+  useProjectWorkflowStore: () => ({ loadPolicy: state.fetch, resolve: state.resolve }),
 }));
+vi.mock("@/hooks/store/use-project", () => ({ useProject: () => ({ getProjectById: () => undefined }) }));
 vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "viewer" } }) }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@plane/blocks/toast", () => ({ setToast: state.toast }));
@@ -57,13 +51,19 @@ vi.mock("@plane/blocks/property-select", () => ({
   StateSelect: (props: {
     getValues: (args: object) => Promise<{ results: { id: string; name: string }[] }>;
     onChange: (id: string) => void;
+    onOpenChange: (open: boolean) => void;
     allowedStateIds?: Set<string> | null;
   }) => {
     state.select = props.onChange as typeof state.select;
     return (
       <button
         onClick={async () => {
-          const data = await props.getValues({ search: "" });
+          props.onOpenChange(true);
+          const data = await props.getValues({ search: "" }).catch((error) => {
+            state.toast(error);
+            return undefined;
+          });
+          if (!data) return;
           state.options(data.results);
           state.toast(
             data.results.filter((item) => !props.allowedStateIds || props.allowedStateIds.has(item.id)).map((s) => s.id)
@@ -90,7 +90,15 @@ beforeEach(() => {
     states: state.states.map((s) => ({ ...s, group: s.group as "backlog", allow_creation: s.id !== "c" })),
     transitions: [{ id: "rule", source_id: "a", destination_id: "b", member_ids: [] }],
   };
-  state.fetch.mockReset().mockImplementation(async () => state.workflow);
+  state.listStates.mockReset().mockImplementation(() => state.states.map((s) => s.id));
+  state.resolve
+    .mockReset()
+    .mockImplementation((_project: string, type?: string) =>
+      type === "custom"
+        ? { ...state.workflow, states: state.workflow.states.filter((item) => item.id !== "b"), transitions: [] }
+        : state.workflow
+    );
+  state.fetch.mockReset().mockImplementation(async (_slug, project, type) => state.resolve(project, type));
   state.toast.mockReset();
   state.confirm.mockReset().mockResolvedValue(true);
   state.refresh.mockReset().mockResolvedValue(undefined);
@@ -206,4 +214,34 @@ it("lets the configuration picker use all states except its source without apply
   fireEvent.click(screen.getByText("open"));
   await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["b", "c"]));
   expect(state.fetch).not.toHaveBeenCalled();
+});
+
+it("renders the selected state without loading projects or enumerating candidates", () => {
+  render(
+    <>
+      {Array.from({ length: 18 }, (_, index) => (
+        <StateSelect key={index} projectId={`p${index}`} value="a" onChange={vi.fn()} variant="icon-sm" />
+      ))}
+    </>
+  );
+  expect(state.fetch).not.toHaveBeenCalled();
+  expect(state.resolve).not.toHaveBeenCalled();
+  expect(state.listStates).not.toHaveBeenCalled();
+});
+
+it("propagates a failed load to the picker and rejects unavailable or forbidden transitions", async () => {
+  const offline = new Error("offline");
+  const onChange = vi.fn();
+  render(<StateSelect projectId="p" value="a" onChange={onChange} variant="icon-sm" />);
+  state.fetch.mockRejectedValueOnce(offline).mockRejectedValueOnce(offline);
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(offline));
+  expect(state.options).not.toHaveBeenCalled();
+  state.select("b");
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(expect.objectContaining({ type: "error" })));
+  state.select("c");
+  await waitFor(() => expect(state.fetch).toHaveBeenCalledTimes(3));
+  expect(onChange).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText("open"));
+  await waitFor(() => expect(state.toast).toHaveBeenCalledWith(["a", "b"]));
 });

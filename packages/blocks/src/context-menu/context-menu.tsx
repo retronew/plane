@@ -22,7 +22,9 @@ export type ContextMenuProps = {
   /** The element whose right clicks open the menu. Owned by the consumer, not by this component. */
   parentRef: React.RefObject<HTMLElement | null>;
   /** The rows to render, top to bottom. */
-  items: TContextMenuItem[];
+  items?: TContextMenuItem[];
+  /** Custom rows mounted inside the popup on demand. */
+  children?: React.ReactNode;
   /** Called with the next open state whenever the menu opens or closes. */
   onOpenChange?: (open: boolean) => void;
 };
@@ -68,6 +70,16 @@ const createCursorAnchor = (x: number, y: number) => ({
   getBoundingClientRect: () => new DOMRect(x, y, 0, 0),
 });
 
+export function ContextMenuItems({ items }: { items?: TContextMenuItem[] }) {
+  const renderedItems = getRenderableItems(items);
+  return renderedItems.map((item, index) => (
+    <Fragment key={item.key}>
+      {hasMenuSeparatorBefore(renderedItems, index) && <ContextMenuSeparator />}
+      <ContextMenuItem item={item} />
+    </Fragment>
+  ));
+}
+
 /** Right clicks a menu handed on to the element under its backdrop; every open menu lets them through. */
 const redispatchedEvents = new WeakSet<Event>();
 
@@ -94,7 +106,6 @@ export function ContextMenu(props: ContextMenuProps) {
   // already open — like Linear, the menu follows the cursor on each right click.
   const [anchor, setAnchor] = useState(() => createCursorAnchor(0, 0));
   // derived values
-  const renderedItems = getRenderableItems(items);
   const { isMobile } = usePlatformOS();
 
   // The consumers own the right-click target (passed as `parentRef`), so capture its `contextmenu`
@@ -169,12 +180,7 @@ export function ContextMenu(props: ContextMenuProps) {
   return (
     <PropelContextMenu open={isOpen} onOpenChange={setIsOpen}>
       <ContextMenuContent anchor={anchor} side="bottom" align="start" sideOffset={0} onClick={stopClickPropagation}>
-        {renderedItems.map((item, index) => (
-          <Fragment key={item.key}>
-            {hasMenuSeparatorBefore(renderedItems, index) && <ContextMenuSeparator />}
-            <ContextMenuItem item={item} />
-          </Fragment>
-        ))}
+        {props.children ?? <ContextMenuItems items={items} />}
       </ContextMenuContent>
     </PropelContextMenu>
   );

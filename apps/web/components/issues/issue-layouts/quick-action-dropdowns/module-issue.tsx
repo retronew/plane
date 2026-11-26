@@ -25,8 +25,10 @@ import { CreateUpdateIssueModal } from "../../issue-modal/modal";
 import type { IQuickActionProps } from "../list/list-view-types";
 import type { MenuItemFactoryProps } from "./helper";
 import { useModuleIssueMenuItems } from "./helper";
-import { IssueQuickActionMenu } from "./quick-action-menu";
+import { createIssueQuickActionMenu } from "./quick-action-menu";
 import { useRelatedMenuItems } from "./related-menu-items";
+
+const IssueQuickActionMenu = createIssueQuickActionMenu(useModuleIssueMenuItems);
 
 export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions(props: IQuickActionProps) {
   const {
@@ -65,20 +67,23 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
 
   const activeLayout = `${issuesFilter.issueFilters?.displayFilters?.layout} layout`;
 
-  const duplicateIssuePayload = omit(
-    {
-      ...issue,
-      name: translate("web.runtime.copy_name", { name: issue.name }),
-      sourceIssueId: issue.id,
-    },
-    ["id"]
-  );
+  const duplicateIssuePayload =
+    createUpdateIssueModal && !issueToEdit
+      ? omit(
+          {
+            ...issue,
+            name: translate("web.runtime.copy_name", { name: issue.name }),
+            sourceIssueId: issue.id,
+          },
+          ["id"]
+        )
+      : undefined;
 
   // Menu items and modals using helper
   const related = useRelatedMenuItems({ issue, workspaceSlug: workspaceSlug?.toString(), isEditingAllowed });
 
   const menuItemProps: MenuItemFactoryProps = {
-    relatedMenuItems: related.menuItems,
+    getRelatedMenuItems: related.getMenuItems,
     issue,
     workspaceSlug: workspaceSlug?.toString(),
     projectIdentifier,
@@ -100,11 +105,13 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
     storeType: EIssuesStoreType.MODULE,
   };
 
-  const MENU_ITEMS = useModuleIssueMenuItems(menuItemProps);
-
   return (
-    <>
-      {/* Modals */}
+    <IssueQuickActionMenu
+      parentRef={parentRef}
+      menuItemProps={menuItemProps}
+      placements={placements}
+      customActionButton={customActionButton}
+    >
       {related.modals}
       <ArchiveIssueModal
         data={issue}
@@ -130,13 +137,6 @@ export const ModuleIssueQuickActions = observer(function ModuleIssueQuickActions
         }}
         storeType={EIssuesStoreType.MODULE}
       />
-
-      <IssueQuickActionMenu
-        parentRef={parentRef}
-        menuItems={MENU_ITEMS}
-        placements={placements}
-        customActionButton={customActionButton}
-      />
-    </>
+    </IssueQuickActionMenu>
   );
 });

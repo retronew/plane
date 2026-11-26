@@ -18,7 +18,9 @@ import { DeleteIssueModal } from "../../delete-issue-modal";
 import type { IQuickActionProps } from "../list/list-view-types";
 import type { MenuItemFactoryProps } from "./helper";
 import { useArchivedIssueMenuItems } from "./helper";
-import { IssueQuickActionMenu } from "./quick-action-menu";
+import { createIssueQuickActionMenu } from "./quick-action-menu";
+
+const IssueQuickActionMenu = createIssueQuickActionMenu(useArchivedIssueMenuItems);
 
 export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickActions(props: IQuickActionProps) {
   const {
@@ -61,24 +63,19 @@ export const ArchivedIssueQuickActions = observer(function ArchivedIssueQuickAct
     handleDelete,
   };
 
-  const MENU_ITEMS = useArchivedIssueMenuItems(menuItemProps);
-
   return (
-    <>
-      {/* Modals */}
+    <IssueQuickActionMenu
+      parentRef={parentRef}
+      menuItemProps={menuItemProps}
+      placements={placements}
+      customActionButton={customActionButton}
+    >
       <DeleteIssueModal
         data={issue}
         isOpen={deleteIssueModal}
         handleClose={() => setDeleteIssueModal(false)}
         onSubmit={handleDelete}
       />
-
-      <IssueQuickActionMenu
-        parentRef={parentRef}
-        menuItems={MENU_ITEMS}
-        placements={placements}
-        customActionButton={customActionButton}
-      />
-    </>
+    </IssueQuickActionMenu>
   );
 });

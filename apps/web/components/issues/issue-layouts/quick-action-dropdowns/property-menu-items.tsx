@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import useSWR from "swr";
+import { setToast } from "@plane/blocks/toast";
 import { useParams } from "next/navigation";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import {
@@ -21,7 +23,7 @@ import { useTranslation } from "@plane/i18n";
 import type { ICycle, IIssueLabel, IModule, IState, IUserLite, TIssue, TIssuePriorities } from "@plane/types";
 import { getFileURL, renderFormattedPayloadDate } from "@plane/utils";
 // helpers
-import { workflowAllowsTransition, workflowIsActive } from "@/helpers/workflow";
+import { workflowAllowsTransition } from "@/helpers/workflow";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -29,7 +31,7 @@ import { useLabel } from "@/hooks/store/use-label";
 import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
 import { useProjectState } from "@/hooks/store/use-project-state";
-import { useProjectWorkflow } from "@/hooks/store/use-project-workflow";
+import { useProjectWorkflowStore } from "@/hooks/store/use-project-workflow";
 import { useUser } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 
@@ -238,6 +240,28 @@ export function buildPropertyMenuItems(
   ];
 }
 
+function useMenuStateOptions(issue: TIssue, slug: string | undefined) {
+  const { t } = useTranslation();
+  const { data: user } = useUser();
+  const { getProjectStates } = useProjectState();
+  const store = useProjectWorkflowStore();
+  const projectId = issue.project_id;
+  const { data, error, isValidating } = useSWR(
+    slug && projectId ? (["quick-action-workflow", slug, projectId, issue.type_id] as const) : null,
+    ([, workspace, project, type]) => store.loadPolicy(workspace, project, type),
+    {
+      revalidateOnFocus: false,
+      onError: () => setToast({ type: "error", title: t("error"), message: t("web.workflow_ui.load_failed") }),
+    }
+  );
+  if (!projectId || !data || error || isValidating) return [];
+  const workflow = store.resolve(projectId, issue.type_id);
+  if (!workflow) return [];
+  return (getProjectStates(projectId) ?? []).filter(
+    (state) => !issue.state_id || workflowAllowsTransition(workflow, issue.state_id, state.id, user?.id)
+  );
+}
+
 /** Store-backed wrapper around {@link buildPropertyMenuItems}; call it from an observer component. */
 export const usePropertyMenuItems = (props: TPropertyMenuItemsProps): TContextMenuItem[] => {
   const { issue } = props;
@@ -246,7 +270,6 @@ export const usePropertyMenuItems = (props: TPropertyMenuItemsProps): TContextMe
   const { workspaceSlug } = useParams();
   // store hooks
   const { t, currentLocale } = useTranslation();
-  const { getProjectStates } = useProjectState();
   const { getProjectLabels } = useLabel();
   const {
     getUserDetails,
@@ -258,18 +281,10 @@ export const usePropertyMenuItems = (props: TPropertyMenuItemsProps): TContextMe
   const {
     issues: { addCycleToIssue, removeCycleFromIssue, changeModulesInIssue },
   } = useIssues(storeType);
-  const workflowStore = useProjectWorkflow(projectId);
-  const { data: user } = useUser();
-  // derived values
-  const workflow = workflowStore.resolve(projectId ?? "", issue.type_id);
-  // honour the project workflow the same way the state dropdown does; the API enforces it on save
-  const states = (getProjectStates(projectId) ?? []).filter(
-    (state) =>
-      !workflowIsActive(workflow) ||
-      state.id === issue.state_id ||
-      !issue.state_id ||
-      workflowAllowsTransition(workflow, issue.state_id, state.id, user?.id)
-  );
+  const slug = workspaceSlug?.toString();
+  const canUpdate = props.isEditingAllowed && !!props.onUpdate;
+  const states = useMenuStateOptions(issue, canUpdate ? slug : undefined);
+  if (!canUpdate) return [];
   const members = (projectId ? (getProjectMemberIds(projectId, false) ?? []) : [])
     .map((memberId) => getUserDetails(memberId))
     .filter((member): member is IUserLite => !!member);
@@ -281,7 +296,6 @@ export const usePropertyMenuItems = (props: TPropertyMenuItemsProps): TContextMe
   const modules = (projectId ? (getProjectModuleIds(projectId) ?? []) : [])
     .map((moduleId) => getModuleById(moduleId))
     .filter((module): module is IModule => !!module && !module.archived_at);
-  const slug = workspaceSlug?.toString();
   const membership: TPropertyMenuMembershipActions | undefined =
     slug && projectId
       ? {

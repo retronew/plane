@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildRelatedMenuItems } from "./related-menu-items";
 
+// The row builder does not render the issue editor or its rich-text dependencies.
+vi.mock("../../issue-modal/modal", () => ({ CreateUpdateIssueModal: () => null }));
+vi.mock("@/components/core/modals/existing-issues-list-modal", () => ({ ExistingIssuesListModal: () => null }));
 vi.mock("@/components/relations", () => ({
   ISSUE_RELATION_OPTIONS: Object.fromEntries(
     ["relates_to", "blocked_by", "blocking", "duplicate"].map((key) => [

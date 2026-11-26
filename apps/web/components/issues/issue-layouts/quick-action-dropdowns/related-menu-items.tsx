@@ -108,7 +108,7 @@ type TUseRelatedMenuItemsProps = {
 /** Store-backed rows plus the modals they open; render `modals` next to the quick-action menu. */
 export const useRelatedMenuItems = (
   props: TUseRelatedMenuItemsProps
-): { menuItems: TContextMenuItem[]; modals: React.ReactNode } => {
+): { getMenuItems: () => TContextMenuItem[]; modals: React.ReactNode } => {
   const { issue, workspaceSlug, isEditingAllowed } = props;
   const projectId = issue.project_id ?? undefined;
   // states
@@ -126,11 +126,12 @@ export const useRelatedMenuItems = (
   } = useIssueDetail(EIssueServiceType.ISSUES);
   const subIssueOperations = useSubIssueOperations(EIssueServiceType.ISSUES);
   // derived values
-  const isSubscribed = getSubscriptionByIssueId(issue.id) ?? issue.is_subscribed;
+  const getIsSubscribed = () => getSubscriptionByIssueId(issue.id) ?? issue.is_subscribed;
   const canAct = !!workspaceSlug && !!projectId;
 
   const toggleSubscription = async () => {
     if (!workspaceSlug || !projectId) return;
+    const isSubscribed = getIsSubscribed();
     try {
       if (isSubscribed) await removeSubscription(workspaceSlug, projectId, issue.id);
       else await createSubscription(workspaceSlug, projectId, issue.id);
@@ -157,19 +158,20 @@ export const useRelatedMenuItems = (
     );
   };
 
-  const menuItems = buildRelatedMenuItems({
-    isEditingAllowed: isEditingAllowed && canAct,
-    t,
-    isSubscribed,
-    openCreateSubWorkItem: () => setIsCreateSubOpen(true),
-    openAddExistingSubWorkItems: () => setIsExistingSubOpen(true),
-    openRelation: setRelationType,
-    toggleSubscription: () => void toggleSubscription(),
-    prefetchSubscription: () => {
-      if (canAct && getSubscriptionByIssueId(issue.id) === undefined)
-        void fetchSubscriptions(workspaceSlug, projectId, issue.id).catch(() => undefined);
-    },
-  });
+  const getMenuItems = () =>
+    buildRelatedMenuItems({
+      isEditingAllowed: isEditingAllowed && canAct,
+      t,
+      isSubscribed: getIsSubscribed(),
+      openCreateSubWorkItem: () => setIsCreateSubOpen(true),
+      openAddExistingSubWorkItems: () => setIsExistingSubOpen(true),
+      openRelation: setRelationType,
+      toggleSubscription: () => void toggleSubscription(),
+      prefetchSubscription: () => {
+        if (canAct && getSubscriptionByIssueId(issue.id) === undefined)
+          void fetchSubscriptions(workspaceSlug, projectId, issue.id).catch(() => undefined);
+      },
+    });
 
   const modals = canAct ? (
     <>
@@ -208,5 +210,5 @@ export const useRelatedMenuItems = (
     </>
   ) : null;
 
-  return { menuItems, modals };
+  return { getMenuItems, modals };
 };

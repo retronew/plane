@@ -22,6 +22,15 @@ export class ProjectWorkflowStore {
       this.workflows[projectId]
     );
   };
+  loadPolicy = async (slug: string, projectId: string, typeId?: string | null): Promise<TProjectWorkflow> => {
+    const [list] = await Promise.all([this.fetchList(slug, projectId), this.fetchTypes(slug, projectId)]);
+    // Older projects can have an implicit default that only the default endpoint represents.
+    if (!list.results.some((item) => item.is_default)) await this.fetch(slug, projectId);
+    const workflow = this.resolve(projectId, typeId);
+    if (!workflow || !this.lists[projectId] || !this.issueTypes[projectId])
+      throw new Error("Workflow policy unavailable");
+    return workflow;
+  };
   fetchList = (slug: string, projectId: string, force = false): Promise<TProjectWorkflowList> => {
     const key = `list:${projectId}`;
     const pending = this.listPending.get(projectId);
