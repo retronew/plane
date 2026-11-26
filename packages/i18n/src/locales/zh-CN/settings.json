@@ -221,6 +221,8 @@
   "profile": {
     "label": "个人资料",
     "page_label": "我的工作",
+    "show_details": "展开个人信息",
+    "hide_details": "收起个人信息",
     "work": "工作",
     "details": {
       "joined_on": "加入时间",

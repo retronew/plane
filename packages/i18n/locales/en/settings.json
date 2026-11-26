@@ -221,6 +221,8 @@
   "profile": {
     "label": "Profile",
     "page_label": "Your work",
+    "show_details": "Show profile details",
+    "hide_details": "Hide profile details",
     "work": "Work",
     "details": {
       "joined_on": "Joined on",
