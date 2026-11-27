@@ -350,44 +350,113 @@ class ModuleViewSet(BaseViewSet):
             return Response(module, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def _get_list_queryset(self):
+        """Lightweight module queryset without 12 correlated per-module issue subqueries."""
+        favorite_subquery = UserFavorite.objects.filter(
+            user=self.request.user,
+            entity_type="module",
+            entity_identifier=OuterRef("pk"),
+            project_id=self.kwargs.get("project_id"),
+            workspace__slug=self.kwargs.get("slug"),
+        )
+        return (
+            super()
+            .get_queryset()
+            .filter(project_id=self.kwargs.get("project_id"))
+            .filter(workspace__slug=self.kwargs.get("slug"))
+            .annotate(is_favorite=Exists(favorite_subquery))
+            .annotate(
+                member_ids=Coalesce(
+                    ArrayAgg(
+                        "members__id",
+                        distinct=True,
+                        filter=Q(
+                            members__id__isnull=False,
+                            modulemember__deleted_at__isnull=True,
+                        ),
+                    ),
+                    Value([], output_field=ArrayField(UUIDField())),
+                )
+            )
+            .order_by("-is_favorite", "-created_at")
+        )
+
+    @staticmethod
+    def _fetch_module_issue_stats(module_ids):
+        """Compute all issue counts and point sums for the given modules in one grouped SQL query."""
+        if not module_ids:
+            return {}
+        rows = (
+            Issue.issue_objects.filter(
+                issue_module__module_id__in=module_ids,
+                issue_module__deleted_at__isnull=True,
+            )
+            .values("issue_module__module_id")
+            .annotate(
+                total_issues=Count("pk"),
+                completed_issues=Count("pk", filter=Q(state__group="completed")),
+                cancelled_issues=Count("pk", filter=Q(state__group="cancelled")),
+                started_issues=Count("pk", filter=Q(state__group="started")),
+                unstarted_issues=Count("pk", filter=Q(state__group="unstarted")),
+                backlog_issues=Count("pk", filter=Q(state__group="backlog")),
+                total_estimate_points=Coalesce(
+                    Sum(Cast("estimate_point__value", FloatField()), filter=Q(estimate_point__estimate__type="points")),
+                    Value(0.0, output_field=FloatField()),
+                ),
+                completed_estimate_points=Coalesce(
+                    Sum(
+                        Cast("estimate_point__value", FloatField()),
+                        filter=Q(estimate_point__estimate__type="points", state__group="completed"),
+                    ),
+                    Value(0.0, output_field=FloatField()),
+                ),
+            )
+        )
+        return {row["issue_module__module_id"]: row for row in rows}
+
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def list(self, request, slug, project_id):
-        queryset = self.get_queryset().filter(archived_at__isnull=True)
         if self.fields:
+            queryset = self.get_queryset().filter(archived_at__isnull=True)
             modules = ModuleSerializer(queryset, many=True, fields=self.fields).data
         else:
-            modules = queryset.values(  # Required fields
-                "id",
-                "workspace_id",
-                "project_id",
-                # Model fields
-                "name",
-                "description",
-                "description_text",
-                "description_html",
-                "start_date",
-                "target_date",
-                "status",
-                "lead_id",
-                "member_ids",
-                "view_props",
-                "sort_order",
-                "external_source",
-                "external_id",
-                "logo_props",
-                # computed fields
-                "completed_estimate_points",
-                "total_estimate_points",
-                "total_issues",
-                "is_favorite",
-                "cancelled_issues",
-                "completed_issues",
-                "started_issues",
-                "unstarted_issues",
-                "backlog_issues",
-                "created_at",
-                "updated_at",
+            queryset = self._get_list_queryset().filter(archived_at__isnull=True)
+            modules = list(
+                queryset.values(  # Required fields
+                    "id",
+                    "workspace_id",
+                    "project_id",
+                    # Model fields
+                    "name",
+                    "description",
+                    "description_text",
+                    "description_html",
+                    "start_date",
+                    "target_date",
+                    "status",
+                    "lead_id",
+                    "member_ids",
+                    "view_props",
+                    "sort_order",
+                    "external_source",
+                    "external_id",
+                    "logo_props",
+                    "is_favorite",
+                    "created_at",
+                    "updated_at",
+                )
             )
+            stats_by_module = self._fetch_module_issue_stats([m["id"] for m in modules])
+            for module in modules:
+                stat = stats_by_module.get(module["id"])
+                module["total_issues"] = stat["total_issues"] if stat else 0
+                module["completed_issues"] = stat["completed_issues"] if stat else 0
+                module["cancelled_issues"] = stat["cancelled_issues"] if stat else 0
+                module["started_issues"] = stat["started_issues"] if stat else 0
+                module["unstarted_issues"] = stat["unstarted_issues"] if stat else 0
+                module["backlog_issues"] = stat["backlog_issues"] if stat else 0
+                module["total_estimate_points"] = stat["total_estimate_points"] if stat else 0.0
+                module["completed_estimate_points"] = stat["completed_estimate_points"] if stat else 0.0
             datetime_fields = ["created_at", "updated_at"]
             modules = user_timezone_converter(modules, datetime_fields, request.user.user_timezone)
         return Response(modules, status=status.HTTP_200_OK)
@@ -411,7 +480,8 @@ class ModuleViewSet(BaseViewSet):
             )
         )
 
-        if not queryset.exists():
+        modules = queryset.first()
+        if modules is None:
             return Response({"error": "Module not found"}, status=status.HTTP_404_NOT_FOUND)
 
         estimate_type = Project.objects.filter(
@@ -421,8 +491,7 @@ class ModuleViewSet(BaseViewSet):
             estimate__type="points",
         ).exists()
 
-        data = ModuleDetailSerializer(queryset.first()).data
-        modules = queryset.first()
+        data = ModuleDetailSerializer(modules).data
 
         data["estimate_distribution"] = {}
 

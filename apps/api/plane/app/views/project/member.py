@@ -21,6 +21,7 @@ from plane.app.permissions import WorkspaceUserPermission
 from plane.db.models import Project, ProjectMember, ProjectUserProperty, WorkspaceMember
 from plane.bgtasks.project_add_user_email_task import project_add_user_email
 from plane.services.workflow_lifecycle import workflow_lifecycle_endpoint
+from plane.utils.cache import cache_response, invalidate_cache
 from plane.utils.host import base_host
 from plane.app.permissions.base import allow_permission, ROLE
 
@@ -45,6 +46,9 @@ class ProjectMemberViewSet(BaseViewSet):
         )
 
     @allow_permission([ROLE.ADMIN])
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/members/", url_params=True, user=False, multiple=True
+    )
     @workflow_lifecycle_endpoint("members_changed")
     def create(self, request, slug, project_id):
         # Get the list of members to be added to the project and their roles i.e. the user_id and the role
@@ -156,6 +160,7 @@ class ProjectMemberViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @cache_response(60 * 10, user=False)
     def list(self, request, slug, project_id):
         # Get the list of project members for the project
         project_members = ProjectMember.objects.filter(
@@ -165,7 +170,7 @@ class ProjectMemberViewSet(BaseViewSet):
             is_active=True,
             member__member_workspace__workspace__slug=slug,
             member__member_workspace__is_active=True,
-        ).select_related("project", "member", "workspace")
+        ).only("id", "member_id", "role")
 
         serializer = ProjectMemberRoleSerializer(project_members, fields=("id", "member", "role"), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -205,6 +210,9 @@ class ProjectMemberViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/members/", url_params=True, user=False, multiple=True
+    )
     @workflow_lifecycle_endpoint("members_changed", fields=("role", "is_active"))
     def partial_update(self, request, slug, project_id, pk):
         project_member = ProjectMember.objects.get(pk=pk, workspace__slug=slug, project_id=project_id, is_active=True)
@@ -291,6 +299,9 @@ class ProjectMemberViewSet(BaseViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @allow_permission([ROLE.ADMIN])
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/members/", url_params=True, user=False, multiple=True
+    )
     @workflow_lifecycle_endpoint("members_changed")
     def destroy(self, request, slug, project_id, pk):
         project_member = ProjectMember.objects.get(
@@ -325,6 +336,9 @@ class ProjectMemberViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/members/", url_params=True, user=False, multiple=True
+    )
     @workflow_lifecycle_endpoint("members_changed")
     def leave(self, request, slug, project_id):
         project_member = ProjectMember.objects.get(

@@ -510,6 +510,18 @@ class StaticFileAssetEndpoint(BaseAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request, asset_id):
+        from django.core.cache import cache
+
+        host = request.get_host() if request else ""
+        scheme = request.scheme if request else "http"
+        cache_key = f"static_asset_redirect:{asset_id}:{scheme}:{host}"
+        cached = None if settings.DEBUG else cache.get(cache_key)
+        if cached is not None:
+            signed_url, ttl = cached
+            response = HttpResponseRedirect(signed_url)
+            response["Cache-Control"] = f"public, max-age={ttl}"
+            return response
+
         # get the asset id
         asset = FileAsset.objects.get(id=asset_id)
 
@@ -538,13 +550,20 @@ class StaticFileAssetEndpoint(BaseAPIView):
         storage = S3Storage(request=request)
         asset_mime_type = (asset.attributes.get("type") or "").split(";")[0].strip().lower()
         disposition = "attachment" if asset_mime_type in settings.SCRIPT_CAPABLE_MIME_TYPES else "inline"
-        # Generate a presigned URL to share an S3 object
+        # Use a deterministic filename and cache headers so browser & CDN can cache static assets cleanly.
+        filename = asset.attributes.get("name") or str(asset_id)
         signed_url = storage.generate_presigned_url(
             object_name=asset.asset.name,
             disposition=disposition,
+            filename=filename,
+            response_cache_control="public, max-age=31536000, immutable",
         )
-        # Redirect to the signed URL
-        return HttpResponseRedirect(signed_url)
+        ttl = min(max(storage.signed_url_expiration - 300, 60), 1800)
+        if signed_url and not settings.DEBUG:
+            cache.set(cache_key, (signed_url, ttl), timeout=ttl)
+        response = HttpResponseRedirect(signed_url)
+        response["Cache-Control"] = f"public, max-age={ttl}"
+        return response
 
 
 class AssetRestoreEndpoint(BaseAPIView):

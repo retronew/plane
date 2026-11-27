@@ -84,9 +84,20 @@ class UserEndpoint(BaseViewSet):
         serialized_data = UserMeSettingsSerializer(request.user).data
         return Response(serialized_data, status=status.HTTP_200_OK)
 
+    @method_decorator(cache_control(private=True, max_age=60))
+    @method_decorator(vary_on_cookie)
     def retrieve_instance_admin(self, request):
+        from django.conf import settings
+        from django.core.cache import cache
+
+        cache_key = f"user_instance_admin:{request.user.id}"
+        cached = None if settings.DEBUG else cache.get(cache_key)
+        if cached is not None:
+            return Response({"is_instance_admin": cached}, status=status.HTTP_200_OK)
         instance = Instance.objects.first()
-        is_admin = InstanceAdmin.objects.filter(instance=instance, user=request.user).exists()
+        is_admin = bool(instance and InstanceAdmin.objects.filter(instance=instance, user=request.user).exists())
+        if not settings.DEBUG:
+            cache.set(cache_key, is_admin, timeout=60 * 10)
         return Response({"is_instance_admin": is_admin}, status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):

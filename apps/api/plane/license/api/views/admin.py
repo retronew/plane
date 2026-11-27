@@ -90,6 +90,9 @@ class InstanceAdminEndpoint(BaseAPIView):
         else:
             instance_admin = InstanceAdmin.objects.create(instance=instance, user=user, role=role, is_verified=True)
         serializer = InstanceAdminSerializer(instance_admin)
+        from django.core.cache import cache
+
+        transaction.on_commit(lambda uid=user.id: cache.delete(f"user_instance_admin:{uid}"))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request):
@@ -127,7 +130,12 @@ class InstanceAdminEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        target_user_id = instance_admin.user_id
         instance_admin.delete()
+        from django.core.cache import cache
+
+        if target_user_id:
+            transaction.on_commit(lambda uid=target_user_id: cache.delete(f"user_instance_admin:{uid}"))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

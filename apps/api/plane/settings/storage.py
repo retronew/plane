@@ -4,6 +4,7 @@
 
 # Python imports
 import os
+import threading
 import uuid
 
 # Third party imports
@@ -14,6 +15,30 @@ from urllib.parse import quote
 # Module imports
 from plane.utils.exception_logger import log_exception
 from storages.backends.s3boto3 import S3Boto3Storage
+
+_S3_CLIENT_CACHE = {}
+_S3_CLIENT_CACHE_LOCK = threading.Lock()
+
+
+def _get_cached_s3_client(endpoint_url, region_name, aws_access_key_id, aws_secret_access_key):
+    """Reuse boto3 S3 clients per endpoint/credential tuple to avoid re-parsing botocore models per request."""
+    cache_key = (endpoint_url, region_name, aws_access_key_id, aws_secret_access_key)
+    client = _S3_CLIENT_CACHE.get(cache_key)
+    if client is not None:
+        return client
+    with _S3_CLIENT_CACHE_LOCK:
+        client = _S3_CLIENT_CACHE.get(cache_key)
+        if client is None:
+            client = boto3.client(
+                "s3",
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                region_name=region_name,
+                endpoint_url=endpoint_url,
+                config=boto3.session.Config(signature_version="s3v4"),
+            )
+            _S3_CLIENT_CACHE[cache_key] = client
+        return client
 
 
 class S3Storage(S3Boto3Storage):
@@ -42,24 +67,19 @@ class S3Storage(S3Boto3Storage):
                 endpoint_protocol = "https"
             else:
                 endpoint_protocol = request.scheme if request else "http"
-            # Create an S3 client for MinIO
-            self.s3_client = boto3.client(
-                "s3",
+            endpoint_url = f"{endpoint_protocol}://{request.get_host()}" if request else self.aws_s3_endpoint_url
+            self.s3_client = _get_cached_s3_client(
+                endpoint_url=endpoint_url,
+                region_name=self.aws_region,
                 aws_access_key_id=self.aws_access_key_id,
                 aws_secret_access_key=self.aws_secret_access_key,
-                region_name=self.aws_region,
-                endpoint_url=(f"{endpoint_protocol}://{request.get_host()}" if request else self.aws_s3_endpoint_url),
-                config=boto3.session.Config(signature_version="s3v4"),
             )
         else:
-            # Create an S3 client
-            self.s3_client = boto3.client(
-                "s3",
+            self.s3_client = _get_cached_s3_client(
+                endpoint_url=self.aws_s3_endpoint_url,
+                region_name=self.aws_region,
                 aws_access_key_id=self.aws_access_key_id,
                 aws_secret_access_key=self.aws_secret_access_key,
-                region_name=self.aws_region,
-                endpoint_url=self.aws_s3_endpoint_url,
-                config=boto3.session.Config(signature_version="s3v4"),
             )
 
         # Presigned URLs are opened by the browser, so they must use an address
@@ -69,13 +89,11 @@ class S3Storage(S3Boto3Storage):
         # this client never connects to the public endpoint itself.
         public_endpoint_url = os.environ.get("AWS_S3_PUBLIC_ENDPOINT_URL")
         if public_endpoint_url and os.environ.get("USE_MINIO") != "1":
-            self.presign_client = boto3.client(
-                "s3",
+            self.presign_client = _get_cached_s3_client(
+                endpoint_url=public_endpoint_url,
+                region_name=self.aws_region,
                 aws_access_key_id=self.aws_access_key_id,
                 aws_secret_access_key=self.aws_secret_access_key,
-                region_name=self.aws_region,
-                endpoint_url=public_endpoint_url,
-                config=boto3.session.Config(signature_version="s3v4"),
             )
         else:
             self.presign_client = self.s3_client
@@ -134,19 +152,23 @@ class S3Storage(S3Boto3Storage):
         http_method="GET",
         disposition="inline",
         filename=None,
+        response_cache_control=None,
     ):
         """Generate a presigned URL to share an S3 object"""
         if expiration is None:
             expiration = self.signed_url_expiration
         content_disposition = self._get_content_disposition(disposition, filename)
+        params = {
+            "Bucket": self.aws_storage_bucket_name,
+            "Key": str(object_name),
+            "ResponseContentDisposition": content_disposition,
+        }
+        if response_cache_control:
+            params["ResponseCacheControl"] = response_cache_control
         try:
             response = self.presign_client.generate_presigned_url(
                 "get_object",
-                Params={
-                    "Bucket": self.aws_storage_bucket_name,
-                    "Key": str(object_name),
-                    "ResponseContentDisposition": content_disposition,
-                },
+                Params=params,
                 ExpiresIn=expiration,
                 HttpMethod=http_method,
             )

@@ -21,6 +21,11 @@ class PageFavoriteLiteSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "logo_props", "project_id"]
 
     def get_project_id(self, obj):
+        # Use prefetched projects cache when available to avoid per-row queries
+        prefetched = getattr(obj, "_prefetched_objects_cache", None)
+        if prefetched and "projects" in prefetched:
+            projects = prefetched["projects"]
+            return projects[0].id if projects else None
         project = obj.projects.first()  # This gets the first project related to the Page
         return project.id if project else None
 
@@ -81,6 +86,10 @@ class UserFavoriteSerializer(serializers.ModelSerializer):
 
         entity_model, entity_serializer = get_entity_model_and_serializer(entity_type)
         if entity_model and entity_serializer:
+            entity_map = self.context.get("entity_map")
+            if entity_map is not None:
+                entity = entity_map.get((entity_type, entity_identifier))
+                return entity_serializer(entity).data if entity is not None else None
             try:
                 entity = entity_model.objects.get(pk=entity_identifier)
                 return entity_serializer(entity).data

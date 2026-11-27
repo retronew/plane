@@ -19,7 +19,7 @@ from .. import BaseViewSet, BaseAPIView
 from plane.app.serializers import StateSerializer
 from plane.app.permissions import ROLE, allow_permission
 from plane.db.models import State, Issue, Project
-from plane.utils.cache import invalidate_cache
+from plane.utils.cache import cache_response, invalidate_cache
 from plane.utils.workflow import validate_workflow_state_deletion, validate_state_creation_settings
 from rest_framework.exceptions import ValidationError
 
@@ -159,6 +159,7 @@ class StateViewSet(BaseViewSet):
 
 class IntakeStateEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @cache_response(60 * 30, user=False)
     def get(self, request, slug, project_id):
         state = State.triage_objects.filter(workspace__slug=slug, project_id=project_id).first()
         if not state:

@@ -252,13 +252,16 @@ class ProjectViewSet(BaseViewSet):
                     status=status.HTTP_409_CONFLICT,
                 )
 
-        recent_visited_task.delay(
-            slug=slug,
-            project_id=pk,
-            entity_name="project",
-            entity_identifier=pk,
-            user_id=request.user.id,
-        )
+        from django.core.cache import cache
+
+        if cache.add(f"recent_visit:{slug}:{request.user.id}:project:{pk}", 1, timeout=60):
+            recent_visited_task.delay(
+                slug=slug,
+                project_id=pk,
+                entity_name="project",
+                entity_identifier=pk,
+                user_id=request.user.id,
+            )
 
         serializer = ProjectListSerializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
