@@ -15,7 +15,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TSticky } from "@plane/types";
 // constants
 import type { ToolbarMenuItem } from "@plane/editor";
-import { TOOLBAR_ITEMS } from "@plane/editor";
+import { TOOLBAR_ITEMS } from "@plane/editor/toolbar-items";
 // helpers
 import { ColorPalette } from "./color-palette";
 import { translate, useTranslation } from "@plane/i18n";

@@ -8,7 +8,7 @@ import React from "react";
 import { AttachOutline, TopArrowOutline } from "@makeplane/propel/icons";
 // constants
 import type { ToolbarMenuItem } from "@plane/editor";
-import { IMAGE_ITEM } from "@plane/editor";
+import { IMAGE_ITEM } from "@plane/editor/toolbar-items";
 
 type LiteToolbarProps = {
   onSubmit: (e: React.KeyboardEvent<HTMLDivElement> | React.MouseEvent<HTMLButtonElement>) => void;

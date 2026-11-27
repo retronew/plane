@@ -63,7 +63,7 @@ export default defineConfig(() => ({
                 },
                 {
                   name: "vendor-ui",
-                  test: /node_modules[\\/](@makeplane[\\/]propel|@base-ui|lucide-react|cmdk|next-themes|overlayscrollbars|@tanstack)[\\/]/,
+                  test: /node_modules[\\/](@makeplane[\\/]propel|@base-ui|lucide-react|cmdk|next-themes|overlayscrollbars|@tanstack|@floating-ui)[\\/]/,
                   priority: 40,
                 },
                 {
@@ -73,24 +73,24 @@ export default defineConfig(() => ({
                     return match ? `i18n-${match[1]}` : undefined;
                   },
                   test: /packages[\\/]i18n[\\/]locales[\\/]/,
-                  priority: 25,
+                  priority: 35,
                 },
                 {
                   name: "plane-shared",
-                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state|blocks)[\\/]/,
-                  priority: 20,
+                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state)[\\/]|packages[\\/]blocks[\\/]dist[\\/](?!(charts|emoji-icon-picker|sortable|empty-state)[\\/])/,
+                  priority: 30,
                 },
                 {
                   name: "app-shared",
-                  test: /apps[\\/]web[\\/](store|services|helpers|hooks|lib|layouts)[\\/]/,
+                  test: /apps[\\/]web[\\/](store[\\/](?!pages[\\/])|services|helpers|hooks[\\/](?!(editor|pages|use-collaborative-page-actions))|lib|layouts)/,
                   minShareCount: 2,
-                  priority: 15,
+                  priority: 25,
                 },
                 {
                   name: "app-components",
-                  test: /apps[\\/]web[\\/]components[\\/](?!(editor|pages|analytics|exporter)[\\/])/,
+                  test: /apps[\\/]web[\\/]components[\\/](?!(editor|pages|analytics|active-cycles|exporter|modals|settings|inbox|profile|cycles|modules|views|workflow|comments|stickies|workspace-notifications|project[\\/](create|overview|form)|core[\\/]description-versions|power-k[\\/]ui|issues[\\/](issue-detail|issue-detail-widgets|issue-modal|peek-overview))[\\/])/,
                   minShareCount: 2,
-                  priority: 12,
+                  priority: 20,
                 },
               ],
             },

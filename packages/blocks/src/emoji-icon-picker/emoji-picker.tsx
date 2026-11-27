@@ -4,17 +4,18 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useCallback, useState } from "react";
+import { lazy, Suspense, useMemo, useCallback, useState } from "react";
 import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { Tab, Tabs, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
 import { useTranslation } from "@plane/i18n";
 import { cn } from "@plane/utils";
 import type { Placement, Side, Align } from "../utils/placement";
 import { convertPlacementToSideAndAlign } from "../utils/placement";
-import { EmojiRoot } from "./emoji/emoji";
 import type { ChangeHandlerPayload, EmojiIconPickerType } from "./helper";
 import { emojiToString } from "./helper";
-import { IconRoot } from "./icon/icon-root";
+
+const EmojiRoot = lazy(() => import("./emoji/emoji").then((m) => ({ default: m.EmojiRoot })));
+const IconRoot = lazy(() => import("./icon/icon-root").then((m) => ({ default: m.IconRoot })));
 
 export type EmojiPickerProps = {
   isOpen: boolean;
@@ -213,11 +214,15 @@ export function EmojiPicker(props: EmojiPickerProps) {
               </div>
             )}
             <PopoverBody data-emoji-picker-body="" tabIndex={0}>
-              {tabs.map((tab) => (
-                <TabsPanel key={tab.key} value={tab.key}>
-                  <div className="h-full min-h-0 overflow-hidden">{tab.content}</div>
-                </TabsPanel>
-              ))}
+              {isOpen && (
+                <Suspense fallback={null}>
+                  {tabs.map((tab) => (
+                    <TabsPanel key={tab.key} value={tab.key}>
+                      <div className="h-full min-h-0 overflow-hidden">{tab.content}</div>
+                    </TabsPanel>
+                  ))}
+                </Suspense>
+              )}
             </PopoverBody>
           </Tabs>
         </div>

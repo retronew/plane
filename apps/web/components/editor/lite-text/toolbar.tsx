@@ -20,7 +20,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 // constants
 import { cn } from "@plane/utils";
 import type { ToolbarMenuItem } from "@plane/editor";
-import { TOOLBAR_ITEMS } from "@plane/editor";
+import { TOOLBAR_ITEMS } from "@plane/editor/toolbar-items";
 import { pickCommentImage } from "./comment-image-picker";
 // helpers
 

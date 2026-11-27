@@ -7,14 +7,51 @@
 // Due to some weird issue with the import order, the import of useFontFaceObserver
 // should be after the imported here rather than some below helper functions as it is in the original file
 
-import type { ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { getIconBackgroundStyle } from "./icon-background";
 import useFontFaceObserver from "use-font-face-observer";
 // types
 import type { Logo as LogoType } from "../types/logo";
 // local imports
 import { getEmojiSize, stringToEmoji } from "./helper";
-import { LUCIDE_ICONS_LIST } from "./lucide-icons";
+
+type LucideIconItem = { name: string; element: ComponentType<{ style?: CSSProperties }> };
+let cachedLucideIcons: LucideIconItem[] | null = null;
+let lucideIconsPromise: Promise<LucideIconItem[]> | null = null;
+
+function loadLucideIcons(): Promise<LucideIconItem[]> {
+  if (cachedLucideIcons) return Promise.resolve(cachedLucideIcons);
+  if (!lucideIconsPromise) {
+    lucideIconsPromise = import("./lucide-icons").then((mod) => {
+      cachedLucideIcons = mod.LUCIDE_ICONS_LIST;
+      return cachedLucideIcons;
+    });
+  }
+  return lucideIconsPromise;
+}
+
+function LazyLucideGlyph({ name, color, size }: { name: string; color?: string; size: number }) {
+  const [icons, setIcons] = useState<LucideIconItem[] | null>(() => cachedLucideIcons);
+
+  useEffect(() => {
+    if (icons) return;
+    let mounted = true;
+    void loadLucideIcons().then((list) => {
+      if (mounted) setIcons(list);
+      return undefined;
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [icons]);
+
+  const lucideIcon = icons?.find((item) => item.name === name);
+  if (!lucideIcon) return null;
+
+  const LucideIconElement = lucideIcon.element;
+  return <LucideIconElement style={{ color, height: size, width: size }} />;
+}
 
 export type LogoProps = {
   logo?: LogoType;
@@ -56,13 +93,9 @@ function renderIconLogo({
     </span>
   );
 
-  // Lucide icon
+  // Lucide icon (dynamically loaded so 317 lucide-react icons stay out of initial bundles)
   if (type === "lucide") {
-    const lucideIcon = LUCIDE_ICONS_LIST.find((item) => item.name === value);
-    if (!lucideIcon) return null;
-
-    const LucideIconElement = lucideIcon.element;
-    return frame(<LucideIconElement style={{ color, height: glyphSize, width: glyphSize }} />);
+    return frame(<LazyLucideGlyph name={value} color={color} size={glyphSize} />);
   }
 
   if (!isMaterialSymbolsFontLoaded) return loadingSkeleton;
