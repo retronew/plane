@@ -146,7 +146,7 @@ export function useIssueListSync(storeType: EIssuesStoreType, actions: IssueActi
       disposeSubscription.current = undefined;
       setFetched(undefined);
       const profileInitial = storeType === EIssuesStoreType.PROFILE && loadType === "init-loader";
-      const snapshotRevision = profileInitial ? issueSync.snapshotRevision : undefined;
+      const snapshotRevision = loadType === "init-loader" ? issueSync.snapshotRevision : undefined;
       const revision = issueSync.revision;
       const response = await actions.fetchIssues(loadType, options, viewId);
       if (

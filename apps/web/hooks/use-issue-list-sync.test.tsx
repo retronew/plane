@@ -276,3 +276,21 @@ it("removes the old subscription immediately and ignores superseded or unapplied
   expect(mocks.subscribe).toHaveBeenCalledOnce();
   hook.unmount();
 });
+
+it("avoids immediate duplicate fetch for project and global views when sync is already ready", async () => {
+  vi.useFakeTimers();
+  engine.updateProjects(["p"]);
+  const wake = vi.fn();
+  engine.setReplay(wake);
+  mocks.subscribe.mockImplementation((sub: SyncSubscription, revision?: number) => engine.subscribe(sub, revision));
+  mocks.store.requestEntity = JSON.stringify(["w", "p"]);
+  const fetch = vi.fn().mockResolvedValue({ results: [] });
+  const hook = renderHook(() =>
+    useIssueListSync(EIssuesStoreType.PROJECT, { fetchIssues: fetch } as unknown as IssueActions)
+  );
+  await act(() => hook.result.current.fetchIssues("init-loader", options));
+  await vi.runAllTimersAsync();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(mocks.store.fetchIssuesWithExistingPagination).not.toHaveBeenCalled();
+  hook.unmount();
+});

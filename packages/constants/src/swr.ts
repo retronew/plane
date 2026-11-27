@@ -15,8 +15,9 @@ export const DEFAULT_SWR_CONFIG = {
 
 export const WEB_SWR_CONFIG = {
   refreshWhenHidden: false,
-  revalidateIfStale: true,
-  revalidateOnFocus: true,
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
   revalidateOnMount: true,
+  dedupingInterval: 10000,
   errorRetryCount: 3,
 };

@@ -359,6 +359,8 @@ export class ProjectStore implements IProjectStore {
     }
   };
 
+  private pendingProjectDetailsFetches = new Map<string, Promise<TProject>>();
+
   /**
    * Fetches project details using workspace slug and project id
    * @param workspaceSlug
@@ -366,16 +368,25 @@ export class ProjectStore implements IProjectStore {
    * @returns Promise<TProject>
    */
   fetchProjectDetails = async (workspaceSlug: string, projectId: string) => {
-    try {
-      const response = await this.projectService.getProject(workspaceSlug, projectId);
-      runInAction(() => {
-        update(this.projectMap, [projectId], (p) => ({ ...p, ...response }));
-      });
-      return response;
-    } catch (error) {
-      console.log("Error while fetching project details", error);
-      throw error;
-    }
+    const key = `${workspaceSlug}:${projectId}`;
+    const inflight = this.pendingProjectDetailsFetches.get(key);
+    if (inflight) return inflight;
+    const request = (async () => {
+      try {
+        const response = await this.projectService.getProject(workspaceSlug, projectId);
+        runInAction(() => {
+          update(this.projectMap, [projectId], (p) => ({ ...p, ...response }));
+        });
+        return response;
+      } catch (error) {
+        console.log("Error while fetching project details", error);
+        throw error;
+      } finally {
+        this.pendingProjectDetailsFetches.delete(key);
+      }
+    })();
+    this.pendingProjectDetailsFetches.set(key, request);
+    return request;
   };
 
   /**

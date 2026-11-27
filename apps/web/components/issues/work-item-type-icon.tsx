@@ -13,7 +13,10 @@ export const WorkItemTypeIcon = observer(function WorkItemTypeIcon({
   projectId?: string | null;
   typeId?: string | null;
 }) {
-  const store = useProjectWorkflow(projectId ?? undefined);
+  const store = useProjectWorkflow(projectId ?? undefined, {
+    fetchWorkflows: false,
+    fetchTypes: Boolean(typeId),
+  });
   const type = typeId ? store.issueTypes[projectId ?? ""]?.results.find((item) => item.id === typeId) : undefined;
   const logo = type?.logo_props as TLogoProps | undefined;
   const hasLogo = (logo?.in_use === "emoji" && !!logo.emoji?.value) || (logo?.in_use === "icon" && !!logo.icon?.name);

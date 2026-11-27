@@ -2,20 +2,28 @@ import { render } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { WorkItemTypeIcon } from "./work-item-type-icon";
 
+const workflowHookSpy = vi.fn();
 vi.mock("use-font-face-observer", () => ({ default: () => true }));
 vi.mock("@/hooks/store/use-project-workflow", () => ({
-  useProjectWorkflow: () => ({
-    issueTypes: {
-      alpha: {
-        results: [
-          { id: "bug", name: "Bug", is_active: false, logo_props: { in_use: "emoji", emoji: { value: "128027" } } },
-          { id: "task", name: "Task", is_default: true, logo_props: { in_use: "emoji", emoji: { value: "128203" } } },
-          { id: "feature", name: "Feature", logo_props: { in_use: "icon", icon: { name: "star", color: "#f59e0b" } } },
-        ],
+  useProjectWorkflow: (projectId?: string, options?: { fetchWorkflows?: boolean; fetchTypes?: boolean }) => {
+    workflowHookSpy(projectId, options);
+    return {
+      issueTypes: {
+        alpha: {
+          results: [
+            { id: "bug", name: "Bug", is_active: false, logo_props: { in_use: "emoji", emoji: { value: "128027" } } },
+            { id: "task", name: "Task", is_default: true, logo_props: { in_use: "emoji", emoji: { value: "128203" } } },
+            {
+              id: "feature",
+              name: "Feature",
+              logo_props: { in_use: "icon", icon: { name: "star", color: "#f59e0b" } },
+            },
+          ],
+        },
+        beta: { results: [{ id: "bug", name: "Issue", logo_props: { in_use: "emoji", emoji: { value: "128640" } } }] },
       },
-      beta: { results: [{ id: "bug", name: "Issue", logo_props: { in_use: "emoji", emoji: { value: "128640" } } }] },
-    },
-  }),
+    };
+  },
 }));
 
 it("renders the assigned type's real logo, including inactive types, scoped to its project", () => {
@@ -38,9 +46,14 @@ it("matches the hosted 16px frame, 12px glyph and 25% type-color background", ()
 it.each([null, undefined, "missing"])(
   "uses the work-item fallback for type %s without assigning a default type",
   (typeId) => {
+    workflowHookSpy.mockClear();
     const { container } = render(<WorkItemTypeIcon projectId="alpha" typeId={typeId} />);
     expect(container.querySelector("[data-work-item-type-icon]")?.getAttribute("data-work-item-type-icon")).toBe("");
     expect(container.querySelector("svg")).not.toBeNull();
     expect(container.querySelector("[data-work-item-type-icon]")?.textContent).toBe("");
+    expect(workflowHookSpy).toHaveBeenCalledWith("alpha", {
+      fetchWorkflows: false,
+      fetchTypes: Boolean(typeId),
+    });
   }
 );

@@ -8,11 +8,19 @@ export function useProjectWorkflowStore() {
   return context.workflow;
 }
 
-export function useProjectWorkflow(projectId?: string) {
+type TUseProjectWorkflowOptions = {
+  fetchWorkflows?: boolean;
+  fetchTypes?: boolean;
+};
+
+export function useProjectWorkflow(projectId?: string, options?: TUseProjectWorkflowOptions) {
   const store = useProjectWorkflowStore();
   const { workspaceSlug } = useParams();
+  const shouldFetchWorkflows = options?.fetchWorkflows ?? true;
+  const shouldFetchTypes = options?.fetchTypes ?? true;
   useEffect(() => {
-    if (workspaceSlug && projectId) {
+    if (!workspaceSlug || !projectId) return;
+    if (shouldFetchWorkflows) {
       void store
         .fetchList(workspaceSlug, projectId)
         .then((list) => {
@@ -23,8 +31,10 @@ export function useProjectWorkflow(projectId?: string) {
           return undefined;
         })
         .catch(() => undefined);
+    }
+    if (shouldFetchTypes) {
       void store.fetchTypes(workspaceSlug, projectId).catch(() => undefined);
     }
-  }, [workspaceSlug, projectId, store]);
+  }, [workspaceSlug, projectId, store, shouldFetchWorkflows, shouldFetchTypes]);
   return store;
 }
