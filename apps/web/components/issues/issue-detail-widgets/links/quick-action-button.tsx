@@ -13,7 +13,7 @@ import type { TIssueServiceType } from "@plane/types";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 
 type Props = {
-  customButton?: React.ReactNode;
+  customButton?: React.ReactElement<React.ComponentPropsWithRef<"button">>;
   disabled?: boolean;
   issueServiceType: TIssueServiceType;
 };
@@ -30,9 +30,23 @@ export const IssueLinksActionButton = observer(function IssueLinksActionButton(p
     toggleIssueLinkModal(true);
   };
 
+  if (customButton) {
+    return React.cloneElement(customButton, {
+      disabled: disabled || customButton.props.disabled,
+      onClick: (event) => {
+        event.stopPropagation();
+        customButton.props.onClick?.(event);
+        if (!event.defaultPrevented && !disabled) {
+          event.preventDefault();
+          toggleIssueLinkModal(true);
+        }
+      },
+    });
+  }
+
   return (
     <button type="button" onClick={handleOnClick} disabled={disabled}>
-      {customButton ? customButton : <AddOutline className="h-4 w-4" />}
+      <AddOutline className="h-4 w-4" />
     </button>
   );
 });
