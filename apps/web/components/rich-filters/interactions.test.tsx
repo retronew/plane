@@ -45,6 +45,10 @@ it("preserves punctuation and Chinese text through saved-view serialization", ()
   };
   expect(workItemFiltersAdapter.toExternal(workItemFiltersAdapter.toInternal(expression)!)).toEqual(expression);
 });
+it.each(["one", "one,two"])("round-trips excluded projects (%s) alongside other view filters", (projects) => {
+  const expression = { and: [{ priority__in: "high" }, { excluded_project_id__in: projects }] };
+  expect(workItemFiltersAdapter.toExternal(workItemFiltersAdapter.toInternal(expression)!)).toEqual(expression);
+});
 it("applies a quick value atomically and changing the property emits one complete request", () => {
   const { filter, changed } = instance();
   filter.configManager.registerAll([

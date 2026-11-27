@@ -364,6 +364,16 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [isFilterEnabled, projects, operatorConfigs]
   );
 
+  const excludedProjectFilterConfig = useMemo(
+    () => ({
+      ...projectFilterConfig,
+      id: "excluded_project_id" as const,
+      label: t("web.exclude_projects"),
+      isEnabled: isFilterEnabled("excluded_project_id"),
+    }),
+    [projectFilterConfig, t, isFilterEnabled]
+  );
+
   // Keep the source cache independent of config registration and changing allowed-filter arrays.
   const workspaceRelationLoaders = useMemo(() => {
     const cached = (load: () => Promise<IFilterOption<string>[]>) => {
@@ -466,6 +476,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       assigneeFilterConfig,
       priorityFilterConfig,
       projectFilterConfig,
+      excludedProjectFilterConfig,
       mentionFilterConfig,
       labelFilterConfig,
       ...workspaceRelationConfigs,
@@ -478,6 +489,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     ],
     configMap: {
       project_id: projectFilterConfig,
+      excluded_project_id: excludedProjectFilterConfig,
       state_group: stateGroupFilterConfig,
       state_duration: stateDurationFilterConfig,
       state_id: stateFilterConfig,

@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
+import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { setLanguage } from "@plane/i18n";
 import { useWorkItemFiltersConfig } from "./use-work-item-filters-config";
 const stores = vi.hoisted(() => ({
@@ -50,6 +51,19 @@ it("exposes title, text, cycles and modules with lazy cached workspace data", as
   expect(stores.cycle.fetchWorkspaceCycles).toHaveBeenCalledExactlyOnceWith("workspace");
   expect(await options(result.current.configMap.module_id!)()).toMatchObject([{ value: "module" }]);
   expect(stores.module.fetchWorkspaceModules).toHaveBeenCalledExactlyOnceWith("workspace");
+});
+it.each(["profile_issues", "workspace_issues"])("offers excluded projects on %s", async (page) => {
+  const { result } = renderHook(() =>
+    useWorkItemFiltersConfig({
+      workspaceSlug: "workspace",
+      projectIds: ["project"],
+      allowedFilters: ISSUE_DISPLAY_FILTERS_BY_PAGE[page].filters,
+    })
+  );
+  const config = result.current.configMap.excluded_project_id!;
+  expect(config).toMatchObject({ id: "excluded_project_id", label: "排除项目", isEnabled: true });
+  expect(await options(config)()).toMatchObject([{ label: "项目", value: "project" }]);
+  expect(result.current.configMap.project_id?.isEnabled).toBe(page === "workspace_issues");
 });
 it("retries failed workspace loads and shares in-flight requests", async () => {
   stores.cycle.fetchWorkspaceCycles.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce([]);

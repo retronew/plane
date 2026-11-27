@@ -455,6 +455,7 @@
     "project_name": "项目名称",
     "project_name_should_be_less_than_255_characters": "项目名称应少于 255 个字符",
     "project_settings": "项目设置",
+    "exclude_projects": "排除项目",
     "projects": "项目",
     "properties": "属性",
     "publish_project": "发布项目",

@@ -203,6 +203,8 @@ class IssueFilterSet(BaseFilterSet):
 
     project_id = filters.UUIDFilter(field_name="project_id")
     project_id__in = UUIDInFilter(field_name="project_id", lookup_expr="in")
+    excluded_project_id = filters.UUIDFilter(field_name="project_id", exclude=True)
+    excluded_project_id__in = UUIDInFilter(field_name="project_id", lookup_expr="in", exclude=True)
 
     subscriber_id = filters.UUIDFilter(method="filter_subscriber_id")
     subscriber_id__in = UUIDInFilter(method="filter_subscriber_id_in", lookup_expr="in")

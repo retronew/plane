@@ -4,7 +4,16 @@
 
 import pytest
 
+from plane.utils.filters import IssueFilterSet
 from plane.utils.issue_filters import filter_updated_at
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("key", ["excluded_project_id", "excluded_project_id__exact", "excluded_project_id__in"])
+def test_excluded_project_filter_rejects_invalid_uuid(key):
+    filters = IssueFilterSet(data={key: "invalid-project-id"})
+    assert not filters.is_valid()
+    assert key in filters.errors
 
 
 @pytest.mark.unit

@@ -111,7 +111,7 @@ export type TIssueFiltersToDisplayByPageType = {
 
 export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
   profile_issues: {
-    filters: ["priority", "state_group", "label_id", "start_date", "target_date"],
+    filters: ["excluded_project_id", "priority", "state_group", "label_id", "start_date", "target_date"],
     layoutOptions: {
       list: {
         display_properties: [...ISSUE_DISPLAY_PROPERTIES_KEYS, "time_in_status"],
@@ -189,6 +189,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       "created_by_id",
       "subscriber_id",
       "project_id",
+      "excluded_project_id",
       "cycle_id",
       "module_id",
       "start_date",

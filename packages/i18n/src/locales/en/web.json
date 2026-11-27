@@ -455,6 +455,7 @@
     "project_name": "Project name",
     "project_name_should_be_less_than_255_characters": "Project name should be less than 255 characters",
     "project_settings": "Project settings",
+    "exclude_projects": "Exclude projects",
     "projects": "Projects",
     "properties": "Properties",
     "publish_project": "Publish project",
