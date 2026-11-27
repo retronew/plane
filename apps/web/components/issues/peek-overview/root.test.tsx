@@ -8,12 +8,17 @@ const detail = vi.hoisted(() => ({
   issue: { fetchIssue: vi.fn() },
   setPeekIssue: vi.fn(),
   fetchActivities: vi.fn(),
+  syncSpy: vi.fn(),
+  prefetchSpy: vi.fn(),
 }));
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
 vi.mock("@/hooks/store/use-issue-detail", () => ({ useIssueDetail: () => detail }));
 vi.mock("@/hooks/store/use-issues", () => ({ useIssues: () => ({ issues: {} }) }));
 vi.mock("@/hooks/store/user", () => ({ useUserPermissions: () => ({ allowPermissions: () => true }) }));
-vi.mock("@/hooks/use-issue-detail-sync", () => ({ useIssueDetailSync: () => {} }));
+vi.mock("@/hooks/use-issue-detail-sync", () => ({ useIssueDetailSync: detail.syncSpy }));
+vi.mock("@/services/issue/issue-collaboration.service", () => ({
+  prefetchIssueCollaboration: detail.prefetchSpy,
+}));
 vi.mock("@/hooks/use-issue-layout-store", () => ({ useIssueStoreType: () => "PROFILE" }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/workspace/profile/me/assigned/" }));
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -45,6 +50,16 @@ it("keeps the newly selected work item visible if the previous request fails lat
   detail.peekIssue = { ...detail.peekIssue, issueId: "second" };
   rerender(view());
   await screen.findByText("second ready");
+  expect(detail.prefetchSpy).toHaveBeenCalledWith("workspace", "project", "second");
+  expect(detail.syncSpy).toHaveBeenLastCalledWith(
+    "workspace",
+    "project",
+    "second",
+    expect.any(Function),
+    true,
+    undefined,
+    expect.any(Number)
+  );
   await act(async () => rejectFirst(new Error("first unavailable")));
   expect(screen.getByText("second ready")).toBeTruthy();
 });

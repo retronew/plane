@@ -58,6 +58,7 @@ export type TIssueDetailRoot = {
   projectId: string;
   issueId: string;
   is_archived?: boolean;
+  snapshotRevision?: number;
 };
 
 export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDetailRoot) {
@@ -67,6 +68,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
     projectId: detailProjectId,
     issueId: detailIssueId,
     is_archived = false,
+    snapshotRevision,
   } = props;
   // router
   const router = useAppRouter();
@@ -86,7 +88,15 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
   const {
     issues: { removeIssue: removeArchivedIssue },
   } = useIssues(EIssuesStoreType.ARCHIVED);
-  useIssueDetailSync(detailWorkspaceSlug, detailProjectId, detailIssueId, undefined, true, is_archived);
+  useIssueDetailSync(
+    detailWorkspaceSlug,
+    detailProjectId,
+    detailIssueId,
+    undefined,
+    true,
+    is_archived,
+    snapshotRevision
+  );
   const { allowPermissions } = useUserPermissions();
   const { issueDetailSidebarCollapsed } = useAppTheme();
 

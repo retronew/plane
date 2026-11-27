@@ -4,14 +4,13 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { observer } from "mobx-react";
 import { useTheme } from "next-themes";
 import useSWR from "swr";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import type { TIssue, TProject } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
 // assets
 import emptyIssueDark from "@/app/assets/empty-state/search/issues-dark.webp?url";
 import emptyIssueLight from "@/app/assets/empty-state/search/issues-light.webp?url";
@@ -24,10 +23,11 @@ import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { issueSync } from "@/lib/sync/issue-sync";
+import { prefetchIssueCollaboration } from "@/services/issue/issue-collaboration.service";
 // layouts
 import { ProjectAuthWrapper } from "@/layouts/auth-layout/project-wrapper";
 // plane web imports
-import { useWorkItemProperties } from "@/hooks/use-issue-properties";
 import { WorkItemDetailRoot } from "@/components/browse/workItem-detail";
 
 import type { Route } from "./+types/page";
@@ -119,15 +119,28 @@ const IssueDetailErrorState = ({ resolvedTheme, onGoToAllIssues }: IssueDetailEr
 
 type WorkItemDetailContainerProps = WorkItemDetailRoute & {
   issue: TIssue | undefined;
+  snapshotRevision?: number;
 };
 
-const WorkItemDetailContainer = ({ workspaceSlug, projectId, issueId, issue }: WorkItemDetailContainerProps) => (
+const WorkItemDetailContainer = ({
+  workspaceSlug,
+  projectId,
+  issueId,
+  issue,
+  snapshotRevision,
+}: WorkItemDetailContainerProps) => (
   <ProjectAuthWrapper
     workspaceSlug={workspaceSlug}
     projectId={projectId}
     loadingFallback={<IssueDetailSkeleton hasParent={!!issue?.parent_id} />}
   >
-    <WorkItemDetailRoot workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} issue={issue} />
+    <WorkItemDetailRoot
+      workspaceSlug={workspaceSlug}
+      projectId={projectId}
+      issueId={issueId}
+      issue={issue}
+      snapshotRevision={snapshotRevision}
+    />
   </ProjectAuthWrapper>
 );
 
@@ -140,17 +153,23 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   // store hooks
   const {
     fetchIssueWithIdentifier,
-    issue: { getIssueById },
+    issue: { getIssueById, getIssueIdByIdentifier },
   } = useIssueDetail();
   const { getProjectById, getProjectByIdentifier } = useProject();
   const { toggleIssueDetailSidebar, issueDetailSidebarCollapsed } = useAppTheme();
 
   const [projectIdentifier, sequence_id] = workItem.split("-");
+  const detailKey = `ISSUE_DETAIL_${workspaceSlug}_${projectIdentifier}_${sequence_id}`;
+  const snapshotRevisionsRef = useRef(new Map<string, number>());
 
   // fetching issue details
   const { data, isLoading, error } = useSWR<TIssue, Error>(
-    `ISSUE_DETAIL_${workspaceSlug}_${projectIdentifier}_${sequence_id}`,
-    () => fetchIssueWithIdentifier(workspaceSlug.toString(), projectIdentifier, sequence_id)
+    detailKey,
+    () => {
+      snapshotRevisionsRef.current.set(detailKey, issueSync.snapshotRevision);
+      return fetchIssueWithIdentifier(workspaceSlug.toString(), projectIdentifier, sequence_id);
+    },
+    { revalidateOnFocus: false }
   );
 
   // derived values
@@ -163,7 +182,12 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     getProjectByIdentifier
   );
 
-  useWorkItemProperties(projectId, workspaceSlug.toString(), issueId, EIssueServiceType.ISSUES);
+  const knownIssueId = issueId ?? getIssueIdByIdentifier(workItem);
+  useEffect(() => {
+    if (projectId && knownIssueId && !issue?.archived_at) {
+      prefetchIssueCollaboration(workspaceSlug.toString(), projectId, knownIssueId);
+    }
+  }, [workspaceSlug, projectId, knownIssueId, issue?.archived_at]);
 
   useEffect(() => {
     const handleToggleIssueDetailSidebar = () =>
@@ -200,11 +224,12 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   }
 
   const detailRoute = getWorkItemDetailRoute(workspaceSlug, projectId, issueId);
+  const snapshotRevision = snapshotRevisionsRef.current.get(detailKey);
 
   return (
     <>
       <PageHead title={pageTitle} />
-      {detailRoute && <WorkItemDetailContainer {...detailRoute} issue={issue} />}
+      {detailRoute && <WorkItemDetailContainer {...detailRoute} issue={issue} snapshotRevision={snapshotRevision} />}
     </>
   );
 });

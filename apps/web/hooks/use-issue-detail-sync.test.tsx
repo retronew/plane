@@ -269,3 +269,9 @@ it("passes the complete descendant snapshot to the guarded store commit", async 
   expect(detail.subIssues.applySubIssues).toHaveBeenCalledWith("i", snapshot);
   hook.unmount();
 });
+
+it("forwards the initial snapshotRevision to issueSync.subscribe to skip redundant mount refreshes", () => {
+  const hook = renderHook(() => useIssueDetailSync("w", "p", "i", undefined, true, false, 42));
+  expect(mocks.sync.subscribe).toHaveBeenCalledWith(expect.any(Object), 42);
+  hook.unmount();
+});

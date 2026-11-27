@@ -13,6 +13,11 @@ import { IssueArchiveService, WorkspaceDraftService, IssueService } from "@/serv
 // types
 import type { IIssueDetail } from "./root.store";
 
+const EMPTY_SUB_ISSUES = {
+  sub_issues: [],
+  state_distribution: { backlog: [], unstarted: [], started: [], completed: [], cancelled: [] },
+};
+
 export interface IIssueStoreActions {
   // actions
   fetchIssue: (workspaceSlug: string, projectId: string, issueId: string) => Promise<TIssue>;
@@ -122,15 +127,21 @@ export class IssueStore implements IIssueStore {
     // fetch issue comments
     this.rootIssueDetailStore.comment.fetchComments(workspaceSlug, projectId, issueId);
 
-    // fetch sub issues
-    this.rootIssueDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+    // fetch sub issues only when the issue actually has children
+    if ((issue.sub_issues_count ?? 0) > 0) {
+      this.rootIssueDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+    } else {
+      this.rootIssueDetailStore.subIssues.applySubIssues(issueId, EMPTY_SUB_ISSUES);
+    }
 
     // fetch issue relations
     this.rootIssueDetailStore.relation.fetchRelations(workspaceSlug, projectId, issueId);
 
-    // fetching states
-    // TODO: check if this function is required
-    this.rootIssueDetailStore.rootIssueStore.rootStore.state.fetchProjectStates(workspaceSlug, projectId);
+    // fetching states only when not already loaded for this project
+    const stateStore = this.rootIssueDetailStore.rootIssueStore.rootStore.state;
+    if (!stateStore.fetchedMap[projectId]) {
+      stateStore.fetchProjectStates(workspaceSlug, projectId);
+    }
 
     return issue;
   };
@@ -282,21 +293,9 @@ export class IssueStore implements IIssueStore {
     rootWorkItemDetailStore.rootIssueStore.issues.addIssueIdentifier(issueIdentifier, issueId);
 
     // add related data
-    if (issue.issue_reactions) rootWorkItemDetailStore.addReactions(issue.id, issue.issue_reactions);
-    if (issue.issue_link) rootWorkItemDetailStore.addLinks(issue.id, issue.issue_link);
-    if (issue.issue_attachments) rootWorkItemDetailStore.addAttachments(issue.id, issue.issue_attachments);
-    rootWorkItemDetailStore.addSubscription(issue.id, issue.is_subscribed);
-
-    // fetch related data
-    // issue reactions
     if (issue.issue_reactions) rootWorkItemDetailStore.addReactions(issueId, issue.issue_reactions);
-
-    // fetch issue links
     if (issue.issue_link) rootWorkItemDetailStore.addLinks(issueId, issue.issue_link);
-
-    // fetch issue attachments
     if (issue.issue_attachments) rootWorkItemDetailStore.addAttachments(issueId, issue.issue_attachments);
-
     rootWorkItemDetailStore.addSubscription(issueId, issue.is_subscribed);
 
     // fetch issue activity
@@ -305,15 +304,21 @@ export class IssueStore implements IIssueStore {
     // fetch issue comments
     rootWorkItemDetailStore.comment.fetchComments(workspaceSlug, projectId, issueId);
 
-    // fetch sub issues
-    rootWorkItemDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+    // fetch sub issues only when the issue actually has children
+    if ((issue.sub_issues_count ?? 0) > 0) {
+      rootWorkItemDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+    } else {
+      rootWorkItemDetailStore.subIssues.applySubIssues(issueId, EMPTY_SUB_ISSUES);
+    }
 
     // fetch issue relations
     rootWorkItemDetailStore.relation.fetchRelations(workspaceSlug, projectId, issueId);
 
-    // fetching states
-    // TODO: check if this function is required
-    rootWorkItemDetailStore.rootIssueStore.rootStore.state.fetchProjectStates(workspaceSlug, projectId);
+    // fetching states only when not already loaded for this project
+    const stateStore = rootWorkItemDetailStore.rootIssueStore.rootStore.state;
+    if (!stateStore.fetchedMap[projectId]) {
+      stateStore.fetchProjectStates(workspaceSlug, projectId);
+    }
 
     return issue;
   };

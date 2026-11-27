@@ -61,7 +61,7 @@ export const SubIssuesCollapsibleContent = observer(function SubIssuesCollapsibl
   const {
     toggleCreateIssueModal,
     toggleDeleteIssueModal,
-    subIssues: { subIssueHelpersByIssueId, setSubIssueHelpers },
+    subIssues: { subIssuesByIssueId, subIssueHelpersByIssueId, setSubIssueHelpers },
   } = useIssueDetail(issueServiceType);
 
   // helpers
@@ -95,6 +95,11 @@ export const SubIssuesCollapsibleContent = observer(function SubIssuesCollapsibl
       return;
     }
 
+    if (subIssuesByIssueId(parentIssueId) !== undefined) {
+      setSubIssueHelpers(helperId, "issue_visibility", parentIssueId);
+      return;
+    }
+
     try {
       setSubIssueHelpers(helperId, "preview_loader", parentIssueId);
       await subIssueOperations.fetchSubIssues(workspaceSlug, projectId, parentIssueId);
@@ -108,7 +113,15 @@ export const SubIssuesCollapsibleContent = observer(function SubIssuesCollapsibl
         setSubIssueHelpers(helperId, "preview_loader", parentIssueId);
       }
     }
-  }, [parentIssueId, projectId, setSubIssueHelpers, subIssueHelpersByIssueId, subIssueOperations, workspaceSlug]);
+  }, [
+    parentIssueId,
+    projectId,
+    setSubIssueHelpers,
+    subIssueHelpersByIssueId,
+    subIssueOperations,
+    subIssuesByIssueId,
+    workspaceSlug,
+  ]);
 
   useEffect(() => {
     handleFetchSubIssues();

@@ -52,7 +52,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   const [isJoiningProject, setIsJoiningProject] = useState(false);
   // store hooks
   const { fetchUserProjectInfo, allowPermissions, getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
-  const { fetchProjectDetails } = useProject();
+  const { fetchProjectDetails, getProjectById } = useProject();
   const { joinProject } = useUserPermissions();
   const { fetchAllCycles } = useCycle();
   const { fetchModulesSlim, fetchModules } = useModule();
@@ -143,7 +143,9 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     joinProject(workspaceSlug, projectId).finally(() => setIsJoiningProject(false));
   };
 
-  const isProjectLoading = (isParentLoading || isProjectDetailsLoading) && !projectDetailsError;
+  const hasCachedProjectAccess = Boolean(getProjectById(projectId)) && currentProjectRole !== undefined;
+  const isProjectLoading =
+    (isParentLoading || (isProjectDetailsLoading && !hasCachedProjectAccess)) && !projectDetailsError;
 
   if (isProjectLoading) return <>{props.loadingFallback}</>;
 

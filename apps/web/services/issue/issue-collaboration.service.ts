@@ -1,3 +1,4 @@
+import { preload } from "swr";
 import { API_BASE_URL } from "@plane/constants";
 import { APIService } from "@/services/api.service";
 
@@ -48,4 +49,18 @@ export class IssueCollaborationService extends APIService {
     );
     return parseIssueCollaborationDocument(response.data);
   }
+}
+
+export const issueCollaborationService = new IssueCollaborationService();
+
+export const issueCollaborationKey = (workspaceSlug: string, projectId: string, issueId: string) =>
+  ["issue-description-collaboration", workspaceSlug, projectId, issueId] as const;
+
+export function prefetchIssueCollaboration(workspaceSlug?: string, projectId?: string, issueId?: string) {
+  if (!workspaceSlug || !projectId || !issueId) return;
+  void Promise.resolve(
+    preload(issueCollaborationKey(workspaceSlug, projectId, issueId), () =>
+      issueCollaborationService.retrieve(workspaceSlug, projectId, issueId)
+    )
+  ).catch(() => undefined);
 }

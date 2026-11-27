@@ -8,6 +8,7 @@ export function useIssueHierarchy(projectId?: string | null) {
   const { workspaceSlug } = useParams();
   return useSWR(
     workspaceSlug && projectId ? ["issue-hierarchy", workspaceSlug, projectId] : null,
-    ([, slug, project]: [string, string, string]) => service.hierarchy(slug, project)
+    ([, slug, project]: [string, string, string]) => service.hierarchy(slug, project),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
 }

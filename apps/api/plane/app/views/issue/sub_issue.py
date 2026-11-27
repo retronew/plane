@@ -65,6 +65,8 @@ class SubIssuesEndpoint(BaseAPIView):
     @method_decorator(gzip_page)
     def get(self, request, slug, project_id, issue_id):
         include_descendants = request.GET.get("include_descendants", "").lower() == "true"
+        group_by = request.GET.get("group_by", False)
+        empty_response = {"sub_issues": {} if group_by else [], "state_distribution": {}}
         issues = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id)
         # Permission checks cover the URL project, so validate the root itself as
         # well: corrupt cross-project parent edges must not expose local children.
@@ -76,11 +78,19 @@ class SubIssuesEndpoint(BaseAPIView):
             parents = parents.exclude(is_draft=True).exclude(state__group=StateGroup.TRIAGE.value).exclude(
                 project__archived_at__isnull=False
             )
+        if not parents.filter(pk=issue_id).exists():
+            return Response(empty_response, status=status.HTTP_200_OK)
+        has_direct_children = (
+            issues.exclude(pk=issue_id).filter(parent_id=issue_id).exists()
+            if include_descendants
+            else issues.filter(parent_id=issue_id).exists()
+        )
+        if not has_direct_children:
+            return Response(empty_response, status=status.HTTP_200_OK)
+        if include_descendants:
             sub_issues = issues.filter(pk__in=_descendant_ids(issues, issue_id))
         else:
             sub_issues = issues.filter(parent_id=issue_id)
-        if not parents.filter(pk=issue_id).exists():
-            sub_issues = sub_issues.none()
         sub_issues = (
             sub_issues.annotate(
                 cycle_id=Subquery(
@@ -177,7 +187,6 @@ class SubIssuesEndpoint(BaseAPIView):
 
         # Ordering
         order_by_param = request.GET.get("order_by", "-created_at")
-        group_by = request.GET.get("group_by", False)
 
         if order_by_param:
             sub_issues, order_by_param = order_issue_queryset(sub_issues, order_by_param)

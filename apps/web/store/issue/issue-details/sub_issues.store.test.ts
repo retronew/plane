@@ -159,4 +159,22 @@ describe("sub-work item hierarchy", () => {
     expect(store.subIssues.root).toEqual(["visible"]);
     expect(store.filters.getFilteredSubWorkItems("root", {}).map((item) => item.id)).toEqual(["visible"]);
   });
+
+  it("deduplicates concurrent in-flight sub-issue fetches for the same parent", async () => {
+    const { store } = setup();
+    let resolveFetch!: (value: TIssueSubIssues) => void;
+    vi.mocked(store.issueService.subIssues).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+    const first = store.fetchSubIssues("workspace", "project", "root");
+    const second = store.fetchSubIssues("workspace", "project", "root");
+    expect(store.issueService.subIssues).toHaveBeenCalledTimes(1);
+    resolveFetch(response([issue("a", "root")]));
+    const [r1, r2] = await Promise.all([first, second]);
+    expect(r1).toBe(r2);
+    expect(store.subIssues.root).toEqual(["a"]);
+  });
 });

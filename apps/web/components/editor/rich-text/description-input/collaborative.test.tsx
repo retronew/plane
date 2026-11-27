@@ -184,3 +184,13 @@ it("keeps read-only permission after successful reconnect", async () => {
   expect(state.mutate).toHaveBeenCalledWith(state.data, { revalidate: false });
   expect(state.editable).toBe(false);
 });
+
+it("skips redundant issue refresh when connected saved acknowledgement matches the loaded snapshot", () => {
+  state.data = { ...state.data, epoch: 1, revision: 5 } as typeof state.data & { revision: number };
+  render(<CollaborativeDescriptionInput {...props()} />);
+  act(() => state.config?.onStateless?.('{"type":"saved","epoch":1,"revision":5}'));
+  expect(state.fetchIssue).not.toHaveBeenCalled();
+
+  act(() => state.config?.onStateless?.('{"type":"saved","epoch":1,"revision":6}'));
+  expect(state.fetchIssue).toHaveBeenCalledExactlyOnceWith("workspace", "project", "issue");
+});

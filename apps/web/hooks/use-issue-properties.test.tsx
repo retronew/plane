@@ -70,3 +70,11 @@ it("uses canonical server values for submitted keys without replacing other fiel
   });
   expect(result.current.values).toEqual({ a: "canonical", b: 0 });
 });
+
+it("skips fetching work item custom property values when the project defines no active properties", async () => {
+  mocks.list.mockResolvedValueOnce({ results: [], count: 0, can_manage: false });
+  const { result } = renderHook(() => useWorkItemProperties("p", "w", "i"), { wrapper });
+  await waitFor(() => expect(result.current.isLoading).toBe(false));
+  expect(result.current.properties).toEqual([]);
+  expect(mocks.values).not.toHaveBeenCalled();
+});

@@ -5,7 +5,7 @@ import { useIssueDetailSync } from "@/hooks/use-issue-detail-sync";
  * See the LICENSE file for details.
  */
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 // Plane imports
@@ -21,6 +21,8 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useUserPermissions } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { getWorkflowErrorCode, getWorkflowErrorReason } from "@/helpers/workflow";
+import { issueSync } from "@/lib/sync/issue-sync";
+import { prefetchIssueCollaboration } from "@/services/issue/issue-collaboration.service";
 // local imports
 import type { TIssueOperations } from "../issue-detail";
 import { IssueView } from "./view";
@@ -58,14 +60,8 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
     if (embedIssue) embedRemoveCurrentNotification?.();
   }, [embedIssue, embedRemoveCurrentNotification, setPeekIssue]);
 
-  useIssueDetailSync(
-    peekIssue?.workspaceSlug,
-    peekIssue?.projectId,
-    peekIssue?.issueId,
-    removeRoutePeekId,
-    !is_draft && !closing,
-    peekIssue?.isArchived
-  );
+  const snapshotRevisionsRef = useRef(new Map<string, number>());
+  const peekKey = peekIssue ? `${peekIssue.workspaceSlug}:${peekIssue.projectId}:${peekIssue.issueId}` : undefined;
 
   const issueOperations: TIssueOperations = useMemo(
     () => ({
@@ -218,13 +214,32 @@ export const IssuePeekOverview = observer(function IssuePeekOverview(props: IWor
 
   const { isLoading, error } = useSWR(
     peekIssue ? ["peek-issue", peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId] : null,
-    () => peekIssue && issueOperations.fetch(peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId),
+    async () => {
+      if (!peekIssue) return;
+      const key = `${peekIssue.workspaceSlug}:${peekIssue.projectId}:${peekIssue.issueId}`;
+      snapshotRevisionsRef.current.set(key, issueSync.snapshotRevision);
+      if (!is_draft && !peekIssue.isArchived) {
+        prefetchIssueCollaboration(peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId);
+      }
+      await issueOperations.fetch(peekIssue.workspaceSlug, peekIssue.projectId, peekIssue.issueId);
+    },
     {
       revalidateIfStale: false,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       shouldRetryOnError: false,
     }
+  );
+
+  const peekSnapshotRevision = peekKey ? snapshotRevisionsRef.current.get(peekKey) : undefined;
+  useIssueDetailSync(
+    peekIssue?.workspaceSlug,
+    peekIssue?.projectId,
+    peekIssue?.issueId,
+    removeRoutePeekId,
+    !is_draft && !closing && !isLoading,
+    peekIssue?.isArchived,
+    peekSnapshotRevision
   );
 
   if (!displayedPeek?.workspaceSlug || !displayedPeek?.projectId || !displayedPeek?.issueId) return <></>;

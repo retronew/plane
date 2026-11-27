@@ -259,15 +259,17 @@ export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
     workflow = store.resolve(projectId, issue?.type_id);
   const { data: currentUser } = useUser();
   const relevant = !!issue;
+  const historyRevision = store.historyRevision?.[projectId] ?? 0;
   const {
     data,
     error: loadError,
     mutate,
   } = useSWR(
     relevant
-      ? ["workflow-approvals", workspaceSlug, projectId, issueId, issue?.state_id, issue?.type_id, workflow?.version]
+      ? ["workflow-approvals", workspaceSlug, projectId, issueId, issue?.state_id, issue?.type_id, historyRevision]
       : null,
-    () => store.service.approvals(workspaceSlug, projectId, issueId)
+    () => store.service.approvals(workspaceSlug, projectId, issueId),
+    { revalidateOnFocus: false }
   );
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<TApprovalDecisionConfirmation | null>(null);

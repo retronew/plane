@@ -66,6 +66,7 @@ export class StateStore implements IStateStore {
   //loaders
   fetchedMap: Record<string, boolean> = {};
   fetchedIntakeMap: Record<string, boolean> = {};
+  private pendingProjectStates = new Map<string, Promise<IState[]>>();
   rootStore: RootStore;
   router;
   stateService: ProjectStateService;
@@ -221,14 +222,25 @@ export class StateStore implements IStateStore {
    * @returns
    */
   fetchProjectStates = async (workspaceSlug: string, projectId: string) => {
-    const statesResponse = await this.stateService.getStates(workspaceSlug, projectId);
-    runInAction(() => {
-      statesResponse.forEach((state) => {
-        set(this.stateMap, [state.id], state);
+    const key = `${workspaceSlug}:${projectId}`;
+    const pending = this.pendingProjectStates.get(key);
+    if (pending) return pending;
+    const request = this.stateService
+      .getStates(workspaceSlug, projectId)
+      .then((statesResponse) => {
+        runInAction(() => {
+          statesResponse.forEach((state) => {
+            set(this.stateMap, [state.id], state);
+          });
+          set(this.fetchedMap, projectId, true);
+        });
+        return statesResponse;
+      })
+      .finally(() => {
+        this.pendingProjectStates.delete(key);
       });
-      set(this.fetchedMap, projectId, true);
-    });
-    return statesResponse;
+    this.pendingProjectStates.set(key, request);
+    return request;
   };
 
   /**

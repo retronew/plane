@@ -17,7 +17,7 @@ export function useCustomPropertyDefinitions(
   const result = useSWR(
     workspaceSlug && projectId ? ["custom-properties", workspaceSlug, projectId, typeId ?? "all"] : null,
     () => service.list(workspaceSlug!, projectId!, typeId ?? undefined),
-    { keepPreviousData: false }
+    { keepPreviousData: false, revalidateOnFocus: false, dedupingInterval: 30000 }
   );
   const properties = useMemo(() => activeCustomProperties(result.data?.results ?? []), [result.data]);
   return { ...result, properties };
@@ -36,11 +36,13 @@ export const useWorkItemProperties = (
   const issue = workItemId ? getIssueById(workItemId) : undefined;
   const enabled = issueServiceType === EIssueServiceType.ISSUES;
   const definitions = useCustomPropertyDefinitions(enabled ? workspaceSlug : null, projectId, issue?.type_id);
+  const hasDefinitions = definitions.properties.length > 0;
   const values = useSWR(
-    enabled && workspaceSlug && projectId && workItemId
+    enabled && workspaceSlug && projectId && workItemId && hasDefinitions
       ? ["custom-property-values", workspaceSlug, projectId, workItemId]
       : null,
-    () => service.values(workspaceSlug!, projectId!, workItemId!)
+    () => service.values(workspaceSlug!, projectId!, workItemId!),
+    { revalidateOnFocus: false }
   );
   const [isSaving, setIsSaving] = useState(false);
   const save = async (patch: TCustomPropertyValues) => {

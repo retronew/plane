@@ -70,6 +70,7 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
   subIssues: TIssueSubIssuesIdMap = {};
   subIssueHelpers: Record<string, TSubIssueHelpers> = {};
   loader: TLoader = undefined;
+  private pendingSubIssues = new Map<string, Promise<TIssueSubIssues>>();
 
   filters: IWorkItemSubIssueFiltersStore;
   // root store
@@ -128,19 +129,29 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
   };
 
   fetchSubIssues = async (workspaceSlug: string, projectId: string, parentIssueId: string) => {
+    const key = `${workspaceSlug}:${projectId}:${parentIssueId}`;
+    const pending = this.pendingSubIssues.get(key);
+    if (pending) return pending;
     this.loader = "init-loader";
-    const response = await this.issueService.subIssues(workspaceSlug, projectId, parentIssueId, {
-      include_descendants: true,
-    });
-
-    this.applySubIssues(parentIssueId, response);
-    const issueList = Array.isArray(response.sub_issues) ? response.sub_issues : [];
-    const otherProjectIds = uniq(
-      issueList.map((issue) => issue.project_id).filter((id) => !!id && id !== projectId)
-    ) as string[];
-    this.fetchOtherProjectProperties(workspaceSlug, otherProjectIds);
-    this.loader = undefined;
-    return response;
+    const request = this.issueService
+      .subIssues(workspaceSlug, projectId, parentIssueId, {
+        include_descendants: true,
+      })
+      .then((response) => {
+        this.applySubIssues(parentIssueId, response);
+        const issueList = Array.isArray(response.sub_issues) ? response.sub_issues : [];
+        const otherProjectIds = uniq(
+          issueList.map((issue) => issue.project_id).filter((id) => !!id && id !== projectId)
+        ) as string[];
+        this.fetchOtherProjectProperties(workspaceSlug, otherProjectIds);
+        return response;
+      })
+      .finally(() => {
+        this.pendingSubIssues.delete(key);
+        this.loader = undefined;
+      });
+    this.pendingSubIssues.set(key, request);
+    return request;
   };
 
   // Commit only after the caller's request/revision guard has accepted the complete snapshot.

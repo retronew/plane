@@ -7,7 +7,7 @@ import json
 
 # Django imports
 from django.utils import timezone
-from django.db.models import Q, OuterRef, F, Func, UUIDField, Value, CharField, Subquery
+from django.db.models import Q, OuterRef, UUIDField, Value, Subquery
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates import ArrayAgg
@@ -25,9 +25,8 @@ from plane.db.models import (
     Project,
     IssueRelation,
     Issue,
-    FileAsset,
-    IssueLink,
-    CycleIssue,
+    IssueLabel,
+    IssueAssignee,
 )
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.issue_relation_mapper import get_actual_relation
@@ -40,120 +39,75 @@ class IssueRelationViewSet(BaseViewSet):
     permission_classes = [ProjectEntityPermission]
 
     def list(self, request, slug, project_id, issue_id):
-        issue_relations = (
-            IssueRelation.objects.filter(Q(issue_id=issue_id) | Q(related_issue=issue_id))
-            .filter(workspace__slug=self.kwargs.get("slug"))
-            .select_related("project")
-            .select_related("workspace")
-            .select_related("issue")
+        issue_id_str = str(issue_id)
+        relation_rows = list(
+            IssueRelation.objects.filter(
+                Q(issue_id=issue_id) | Q(related_issue_id=issue_id),
+                workspace__slug=slug,
+            )
             .order_by("-created_at")
-            .distinct()
-        )
-        # get all blocking issues
-        blocking_issues = issue_relations.filter(relation_type="blocked_by", related_issue_id=issue_id).values_list(
-            "issue_id", flat=True
+            .values("issue_id", "related_issue_id", "relation_type")
         )
 
-        # get all blocked by issues
-        blocked_by_issues = issue_relations.filter(relation_type="blocked_by", issue_id=issue_id).values_list(
-            "related_issue_id", flat=True
-        )
+        buckets = {
+            "blocking": [],
+            "blocked_by": [],
+            "duplicate": [],
+            "relates_to": [],
+            "start_after": [],
+            "start_before": [],
+            "finish_after": [],
+            "finish_before": [],
+        }
 
-        # get all duplicate issues
-        duplicate_issues = issue_relations.filter(issue_id=issue_id, relation_type="duplicate").values_list(
-            "related_issue_id", flat=True
-        )
+        if not relation_rows:
+            return Response(buckets, status=status.HTTP_200_OK)
 
-        # get all relates to issues
-        duplicate_issues_related = issue_relations.filter(
-            related_issue_id=issue_id, relation_type="duplicate"
-        ).values_list("issue_id", flat=True)
+        seen_per_bucket = {key: set() for key in buckets}
+        all_related_ids = set()
 
-        # get all relates to issues
-        relates_to_issues = issue_relations.filter(issue_id=issue_id, relation_type="relates_to").values_list(
-            "related_issue_id", flat=True
-        )
+        def add_to_bucket(bucket_key, target_id):
+            if target_id not in seen_per_bucket[bucket_key]:
+                seen_per_bucket[bucket_key].add(target_id)
+                buckets[bucket_key].append(target_id)
+                all_related_ids.add(target_id)
 
-        # get all relates to issues
-        relates_to_issues_related = issue_relations.filter(
-            related_issue_id=issue_id, relation_type="relates_to"
-        ).values_list("issue_id", flat=True)
+        for row in relation_rows:
+            rel_type = row["relation_type"]
+            src_id = row["issue_id"]
+            dst_id = row["related_issue_id"]
+            is_src = str(src_id) == issue_id_str
+            is_dst = str(dst_id) == issue_id_str
 
-        # get all start after issues
-        start_after_issues = issue_relations.filter(
-            relation_type="start_before", related_issue_id=issue_id
-        ).values_list("issue_id", flat=True)
+            if rel_type == "blocked_by":
+                if is_dst:
+                    add_to_bucket("blocking", src_id)
+                if is_src:
+                    add_to_bucket("blocked_by", dst_id)
+            elif rel_type == "duplicate":
+                if is_src:
+                    add_to_bucket("duplicate", dst_id)
+                if is_dst:
+                    add_to_bucket("duplicate", src_id)
+            elif rel_type == "relates_to":
+                if is_src:
+                    add_to_bucket("relates_to", dst_id)
+                if is_dst:
+                    add_to_bucket("relates_to", src_id)
+            elif rel_type == "start_before":
+                if is_dst:
+                    add_to_bucket("start_after", src_id)
+                if is_src:
+                    add_to_bucket("start_before", dst_id)
+            elif rel_type == "finish_before":
+                if is_dst:
+                    add_to_bucket("finish_after", src_id)
+                if is_src:
+                    add_to_bucket("finish_before", dst_id)
 
-        # get all start_before issues
-        start_before_issues = issue_relations.filter(relation_type="start_before", issue_id=issue_id).values_list(
-            "related_issue_id", flat=True
-        )
+        if not all_related_ids:
+            return Response(buckets, status=status.HTTP_200_OK)
 
-        # get all finish after issues
-        finish_after_issues = issue_relations.filter(
-            relation_type="finish_before", related_issue_id=issue_id
-        ).values_list("issue_id", flat=True)
-
-        # get all finish before issues
-        finish_before_issues = issue_relations.filter(relation_type="finish_before", issue_id=issue_id).values_list(
-            "related_issue_id", flat=True
-        )
-
-        queryset = (
-            Issue.issue_objects.filter(workspace__slug=slug)
-            .select_related("workspace", "project", "state", "parent")
-            .prefetch_related("assignees", "labels", "issue_module__module")
-            .annotate(
-                cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
-                )
-            )
-            .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
-                .order_by()
-                .annotate(count=Func(F("id"), function="Count"))
-                .values("count")
-            )
-            .annotate(
-                attachment_count=FileAsset.objects.filter(
-                    issue_id=OuterRef("id"),
-                    entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
-                )
-                .order_by()
-                .annotate(count=Func(F("id"), function="Count"))
-                .values("count")
-            )
-            .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
-                .order_by()
-                .annotate(count=Func(F("id"), function="Count"))
-                .values("count")
-            )
-            .annotate(
-                label_ids=Coalesce(
-                    ArrayAgg(
-                        "labels__id",
-                        distinct=True,
-                        filter=Q(~Q(labels__id__isnull=True) & (Q(label_issue__deleted_at__isnull=True))),
-                    ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-                assignee_ids=Coalesce(
-                    ArrayAgg(
-                        "assignees__id",
-                        distinct=True,
-                        filter=Q(
-                            ~Q(assignees__id__isnull=True)
-                            & Q(assignees__member_project__is_active=True)
-                            & Q(issue_assignee__deleted_at__isnull=True)
-                        ),
-                    ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-            )
-        ).distinct()
-
-        # Fields
         fields = [
             "id",
             "name",
@@ -169,40 +123,49 @@ class IssueRelationViewSet(BaseViewSet):
             "updated_at",
             "created_by",
             "updated_by",
-            "relation_type",
         ]
 
+        related_issues = (
+            Issue.issue_objects.filter(workspace__slug=slug, pk__in=all_related_ids)
+            .annotate(
+                label_ids=Coalesce(
+                    Subquery(
+                        IssueLabel.objects.filter(issue_id=OuterRef("id"), deleted_at__isnull=True)
+                        .order_by()
+                        .values("issue_id")
+                        .annotate(arr=ArrayAgg("label_id", distinct=True))
+                        .values("arr"),
+                        output_field=ArrayField(UUIDField()),
+                    ),
+                    Value([], output_field=ArrayField(UUIDField())),
+                ),
+                assignee_ids=Coalesce(
+                    Subquery(
+                        IssueAssignee.objects.filter(
+                            issue_id=OuterRef("id"),
+                            assignee__member_project__is_active=True,
+                            deleted_at__isnull=True,
+                        )
+                        .order_by()
+                        .values("issue_id")
+                        .annotate(arr=ArrayAgg("assignee_id", distinct=True))
+                        .values("arr"),
+                        output_field=ArrayField(UUIDField()),
+                    ),
+                    Value([], output_field=ArrayField(UUIDField())),
+                ),
+            )
+            .values(*fields)
+        )
+        issues_by_id = {item["id"]: item for item in related_issues}
+
         response_data = {
-            "blocking": queryset.filter(pk__in=blocking_issues)
-            .annotate(relation_type=Value("blocking", output_field=CharField()))
-            .values(*fields),
-            "blocked_by": queryset.filter(pk__in=blocked_by_issues)
-            .annotate(relation_type=Value("blocked_by", output_field=CharField()))
-            .values(*fields),
-            "duplicate": queryset.filter(pk__in=duplicate_issues)
-            .annotate(relation_type=Value("duplicate", output_field=CharField()))
-            .values(*fields)
-            | queryset.filter(pk__in=duplicate_issues_related)
-            .annotate(relation_type=Value("duplicate", output_field=CharField()))
-            .values(*fields),
-            "relates_to": queryset.filter(pk__in=relates_to_issues)
-            .annotate(relation_type=Value("relates_to", output_field=CharField()))
-            .values(*fields)
-            | queryset.filter(pk__in=relates_to_issues_related)
-            .annotate(relation_type=Value("relates_to", output_field=CharField()))
-            .values(*fields),
-            "start_after": queryset.filter(pk__in=start_after_issues)
-            .annotate(relation_type=Value("start_after", output_field=CharField()))
-            .values(*fields),
-            "start_before": queryset.filter(pk__in=start_before_issues)
-            .annotate(relation_type=Value("start_before", output_field=CharField()))
-            .values(*fields),
-            "finish_after": queryset.filter(pk__in=finish_after_issues)
-            .annotate(relation_type=Value("finish_after", output_field=CharField()))
-            .values(*fields),
-            "finish_before": queryset.filter(pk__in=finish_before_issues)
-            .annotate(relation_type=Value("finish_before", output_field=CharField()))
-            .values(*fields),
+            relation_key: [
+                {**issues_by_id[target_id], "relation_type": relation_key}
+                for target_id in target_ids
+                if target_id in issues_by_id
+            ]
+            for relation_key, target_ids in buckets.items()
         }
 
         return Response(response_data, status=status.HTTP_200_OK)

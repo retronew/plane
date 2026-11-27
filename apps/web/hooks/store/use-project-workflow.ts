@@ -13,8 +13,16 @@ export function useProjectWorkflow(projectId?: string) {
   const { workspaceSlug } = useParams();
   useEffect(() => {
     if (workspaceSlug && projectId) {
-      void store.fetch(workspaceSlug, projectId).catch(() => undefined);
-      void store.fetchList(workspaceSlug, projectId).catch(() => undefined);
+      void store
+        .fetchList(workspaceSlug, projectId)
+        .then((list) => {
+          // Only fall back to the default endpoint when the list lacks an explicit default workflow.
+          if (!list.results.some((item) => item.is_default)) {
+            return store.fetch(workspaceSlug, projectId);
+          }
+          return undefined;
+        })
+        .catch(() => undefined);
       void store.fetchTypes(workspaceSlug, projectId).catch(() => undefined);
     }
   }, [workspaceSlug, projectId, store]);

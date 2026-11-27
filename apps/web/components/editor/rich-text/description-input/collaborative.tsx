@@ -95,6 +95,19 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
     () => service.retrieve(workspaceSlug, projectId, entityId),
     { revalidateOnFocus: false, revalidateOnReconnect: false, shouldRetryOnError: false }
   );
+  const knownSnapshotRef = useRef<{ entityId: string; epoch?: number; revision?: number }>({ entityId });
+  if (knownSnapshotRef.current.entityId !== entityId) {
+    knownSnapshotRef.current = { entityId };
+  }
+  if (
+    data?.epoch !== undefined &&
+    data?.revision !== undefined &&
+    (knownSnapshotRef.current.epoch === undefined ||
+      knownSnapshotRef.current.epoch !== data.epoch ||
+      (knownSnapshotRef.current.revision ?? -1) < data.revision)
+  ) {
+    knownSnapshotRef.current = { entityId, epoch: data.epoch, revision: data.revision };
+  }
   const workspace = getWorkspaceBySlug(workspaceSlug);
   const onStateless = useCallback(
     (payload: string) => {
@@ -111,11 +124,28 @@ export const CollaborativeDescriptionInput = observer(function CollaborativeDesc
       }
       if (message.type === "saved") {
         setSaveError(false);
-        if (pendingSave.current) {
+        const hadPendingSave = pendingSave.current;
+        if (hadPendingSave) {
           pendingSave.current = false;
           submittingRef.current("submitted");
         }
-        void refreshSavedIssue();
+        const savedEpoch = "epoch" in message && typeof message.epoch === "number" ? message.epoch : undefined;
+        const savedRevision =
+          "revision" in message && typeof message.revision === "number" ? message.revision : undefined;
+        const matchesLoadedSnapshot =
+          !hadPendingSave &&
+          savedEpoch !== undefined &&
+          savedRevision !== undefined &&
+          knownSnapshotRef.current.epoch === savedEpoch &&
+          knownSnapshotRef.current.revision === savedRevision;
+        if (savedEpoch !== undefined && savedRevision !== undefined) {
+          knownSnapshotRef.current = {
+            entityId: refreshContext.current.entityId,
+            epoch: savedEpoch,
+            revision: savedRevision,
+          };
+        }
+        if (!matchesLoadedSnapshot) void refreshSavedIssue();
       }
       if (message.type === "save-error") setSaveError(true);
       if (message.type === "fenced") {
