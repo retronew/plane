@@ -43,7 +43,7 @@ export function TableLoader({ columns, rows }: TableSkeletonProps) {
           <TableRow key={rowKey}>
             {columns.map((column) => (
               <TableCell key={getColumnKey(column)} pinned="none" padding="cell">
-                <Loader.Item height="20px" width="100%" />
+                <Loader.Item height="20px" width="100%" className="motion-safe:animate-pulse" />
               </TableCell>
             ))}
           </TableRow>

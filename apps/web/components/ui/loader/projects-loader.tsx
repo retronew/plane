@@ -2,13 +2,12 @@ import { Skeleton, SkeletonItem } from "@makeplane/propel/components/skeleton";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectLayout } from "@plane/types";
 import { cn } from "@plane/utils";
-import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 
 function CardPlaceholder() {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-subtle bg-layer-1 p-1">
-      <div className="relative h-[108px] rounded-lg bg-[#262626]">
-        <div className="absolute top-3 left-3 size-9 rounded-md bg-white/10" />
+    <div className="flex flex-col gap-2 rounded-xl border border-subtle bg-surface-1 p-1">
+      <div className="relative h-[108px] rounded-lg bg-layer-3">
+        <div className="absolute top-3 left-3 size-9 rounded-md bg-surface-1/60" />
       </div>
       <div className="flex flex-col gap-2 p-2">
         <SkeletonItem blockSize="14px" inlineSize="60%" />
@@ -22,10 +21,9 @@ function CardPlaceholder() {
     </div>
   );
 }
+
 export function ProjectsLoader({ layout = "gallery" }: { layout?: TProjectLayout }) {
   const { t } = useTranslation();
-  const showSkeleton = useDelayedLoading(true);
-  if (!showSkeleton) return <div className="size-full" aria-busy="true" />;
   return (
     <div
       data-project-loader={layout}
@@ -34,7 +32,7 @@ export function ProjectsLoader({ layout = "gallery" }: { layout?: TProjectLayout
       <Skeleton aria-label={t("loading")}>
         {layout === "gallery" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <CardPlaceholder key={i} />
             ))}
           </div>
@@ -42,7 +40,10 @@ export function ProjectsLoader({ layout = "gallery" }: { layout?: TProjectLayout
         {layout === "board" && (
           <div className="flex gap-4">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="flex w-[336px] shrink-0 flex-col gap-3 rounded-xl bg-layer-1 p-2">
+              <div
+                key={i}
+                className="flex w-[336px] shrink-0 flex-col gap-3 rounded-xl border border-subtle bg-surface-2 p-2"
+              >
                 <SkeletonItem blockSize="24px" inlineSize="40%" />
                 <CardPlaceholder />
                 <CardPlaceholder />
@@ -52,7 +53,7 @@ export function ProjectsLoader({ layout = "gallery" }: { layout?: TProjectLayout
         )}
         {layout === "list" && (
           <div>
-            <div className="border-b border-subtle bg-layer-1 px-6 py-2">
+            <div className="border-b border-subtle bg-surface-2 px-6 py-2">
               <SkeletonItem blockSize="20px" inlineSize="90px" />
             </div>
             {[0, 1, 2, 3, 4].map((i) => (

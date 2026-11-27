@@ -23,6 +23,7 @@ import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Avatar } from "@makeplane/propel/components/avatar";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
+import { Loader } from "@plane/blocks/skeleton";
 import { CircularProgress } from "@makeplane/propel/components/circular-progress";
 import { ActionMenuContent } from "@plane/blocks/common";
 import { EmptyStateDetailed, getCompactAsset } from "@plane/blocks/empty-state";
@@ -570,7 +571,24 @@ function UpdatesFeedback({
   const { t } = useTranslation();
   return (
     <>
-      {isLoading && !error && <output className="text-13 text-tertiary">{t("loading")}</output>}
+      {isLoading && !error && (
+        <Loader className="space-y-4 py-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            // oxlint-disable-next-line react/no-array-index-key
+            <div key={index} className="space-y-3 rounded-xl border border-subtle bg-surface-1 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Loader.Item width="26px" height="26px" className="rounded-full" />
+                  <Loader.Item width="130px" height="14px" />
+                </div>
+                <Loader.Item width="72px" height="20px" className="rounded-full" />
+              </div>
+              <Loader.Item width="90%" height="14px" />
+              <Loader.Item width="65%" height="14px" />
+            </div>
+          ))}
+        </Loader>
+      )}
       {Boolean(error) && (
         <div role="alert" className="mb-3 space-y-2 text-13 text-danger-primary">
           <p>{t(`${key}.load_error`)}</p>

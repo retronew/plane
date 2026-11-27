@@ -246,7 +246,7 @@ function useMenuStateOptions(issue: TIssue, slug: string | undefined) {
   const { getProjectStates } = useProjectState();
   const store = useProjectWorkflowStore();
   const projectId = issue.project_id;
-  const { data, error, isValidating } = useSWR(
+  const { data, error, isLoading } = useSWR(
     slug && projectId ? (["quick-action-workflow", slug, projectId, issue.type_id] as const) : null,
     ([, workspace, project, type]) => store.loadPolicy(workspace, project, type),
     {
@@ -254,7 +254,7 @@ function useMenuStateOptions(issue: TIssue, slug: string | undefined) {
       onError: () => setToast({ type: "error", title: t("error"), message: t("web.workflow_ui.load_failed") }),
     }
   );
-  if (!projectId || !data || error || isValidating) return [];
+  if (!projectId || !data || error || isLoading) return [];
   const workflow = store.resolve(projectId, issue.type_id);
   if (!workflow) return [];
   return (getProjectStates(projectId) ?? []).filter(

@@ -26,6 +26,7 @@ import {
   DrawerBody,
 } from "@makeplane/propel/components/drawer";
 import { E_SORT_ORDER } from "@plane/constants";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import type { TWorkflowActivity, TWorkflowHistoryPage } from "@plane/types";
 import { calculateTimeAgo, renderFormattedDate, renderFormattedTime } from "@plane/utils";
@@ -163,7 +164,7 @@ export const WorkflowHistory = observer(function WorkflowHistory({
     { t } = useTranslation();
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
   const revision = store.historyRevision[projectId] ?? 0;
-  const { data, error, isValidating, size, setSize, mutate } = useSWRInfinite<TWorkflowHistoryPage>(
+  const { data, error, isLoading, isValidating, size, setSize, mutate } = useSWRInfinite<TWorkflowHistoryPage>(
     (index, previous: TWorkflowHistoryPage | null) =>
       !open || (previous && previous.next_offset === null && !previous.next_cursor)
         ? null
@@ -289,7 +290,7 @@ export const WorkflowHistory = observer(function WorkflowHistory({
                 );
               })}
             </ol>
-            {!isValidating && !entries.length && !error && (
+            {!isLoading && !entries.length && !error && (
               <p className="text-body-xs-regular text-tertiary">{t("web.workflow_ui.no_history")}</p>
             )}
             {error && (
@@ -301,8 +302,19 @@ export const WorkflowHistory = observer(function WorkflowHistory({
                 label={t("common.retry")}
               />
             )}
-            {isValidating ? (
-              <output className="text-body-xs-regular text-tertiary">{t("loading")}</output>
+            {isLoading || (isValidating && size > (data?.length ?? 0)) ? (
+              <Loader className="space-y-3 py-1">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  // oxlint-disable-next-line react/no-array-index-key
+                  <div key={idx} className="flex items-start gap-3">
+                    <Loader.Item width="24px" height="24px" className="shrink-0 rounded-full" />
+                    <div className="flex-1 space-y-1.5">
+                      <Loader.Item width="80%" height="14px" />
+                      <Loader.Item width="40%" height="12px" />
+                    </div>
+                  </div>
+                ))}
+              </Loader>
             ) : (
               (last?.next_cursor || last?.next_offset != null) &&
               !error && (

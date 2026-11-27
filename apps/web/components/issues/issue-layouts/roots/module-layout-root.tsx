@@ -18,6 +18,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ModuleCalendarLayout } from "../calendar/roots/module-root";
 import { BaseGanttRoot } from "../gantt";
@@ -66,7 +67,9 @@ export const ModuleLayoutRoot = observer(function ModuleLayoutRoot() {
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
-  if (!workspaceSlug || !projectId || !moduleId || !workItemFilters) return <></>;
+  if (!workspaceSlug || !projectId || !moduleId || !workItemFilters) {
+    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+  }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.MODULE}>
       <ProjectLevelWorkItemFiltersHOC

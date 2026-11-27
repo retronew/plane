@@ -27,7 +27,7 @@ export function KanbanIssueBlockLoader({ displayProperties = defaultProperties }
     <div
       data-kanban-card-skeleton=""
       aria-hidden="true"
-      className="space-y-2 rounded-xl border border-transparent bg-layer-2 p-2.5 pb-2 shadow-raised-100 motion-safe:animate-pulse"
+      className="space-y-2 rounded-xl border border-subtle bg-surface-1 p-2.5 pb-2 shadow-raised-100 motion-safe:animate-pulse"
     >
       <div className="flex min-h-6 items-center gap-1.5">
         {displayProperties.key && <span className="h-3 w-14 rounded-sm bg-layer-3" />}
@@ -41,7 +41,7 @@ export function KanbanIssueBlockLoader({ displayProperties = defaultProperties }
         <div data-kanban-skeleton-properties="" className="flex flex-wrap gap-1.5">
           {["w-16", "w-20", "w-14", "w-12", "w-16", "w-14"].slice(0, bodyCount).map((width, index) => (
             // oxlint-disable-next-line react/no-array-index-key -- Fixed decorative slots.
-            <span key={index} className={`h-6 rounded-lg bg-layer-1 ${width}`} />
+            <span key={index} className={`h-6 rounded-lg bg-layer-3 ${width}`} />
           ))}
         </div>
       )}
@@ -65,12 +65,15 @@ export function KanbanLayoutLoader({ displayProperties }: CardProps) {
   return (
     <div
       aria-hidden="true"
-      className="horizontal-scrollbar pointer-events-none scrollbar-md h-full overflow-x-auto overflow-y-hidden bg-surface-2"
+      className="horizontal-scrollbar pointer-events-none scrollbar-md h-full overflow-x-auto overflow-y-hidden bg-surface-1"
       inert
     >
       <ContentWrapper className="h-full w-max! min-w-full flex-row gap-4 overflow-hidden p-4!">
         {columns.map((column) => (
-          <div key={column} className="flex h-full w-[336px] shrink-0 flex-col rounded-xl bg-layer-1 py-2">
+          <div
+            key={column}
+            className="flex h-full w-[336px] shrink-0 flex-col rounded-xl border border-subtle bg-surface-2 p-2"
+          >
             <div className="flex h-[34px] shrink-0 items-center gap-1 px-3 motion-safe:animate-pulse">
               <span className="size-5 rounded-sm bg-layer-3" />
               <span className="h-3.5 w-16 rounded-sm bg-layer-3" />

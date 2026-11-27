@@ -18,6 +18,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ProjectViewCalendarLayout } from "../calendar/roots/project-view-root";
 import { BaseGanttRoot } from "../gantt";
@@ -83,7 +84,9 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
     [issuesFilter, workspaceSlug, viewId]
   );
 
-  if (!workspaceSlug || !projectId || !viewId || !workItemFilters) return <></>;
+  if (!workspaceSlug || !projectId || !viewId || !workItemFilters) {
+    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+  }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.PROJECT_VIEW}>
       <ProjectLevelWorkItemFiltersHOC

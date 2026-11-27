@@ -27,7 +27,9 @@ function InsightCard(props: InsightCardProps) {
           <div className="text-24 font-medium text-primary tabular-nums">{count}</div>
         </div>
       ) : (
-        <Loader.Item height="50px" width="100%" />
+        <Loader>
+          <Loader.Item height="36px" width="100%" />
+        </Loader>
       )}
     </div>
   );

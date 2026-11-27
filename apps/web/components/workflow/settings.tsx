@@ -17,6 +17,7 @@ import { ActionMenuContent } from "@plane/blocks/common";
 import { Breadcrumbs } from "@plane/blocks/breadcrumb";
 import { Logo } from "@plane/blocks/emoji-icon-picker";
 import { StateGroupIcon } from "@plane/blocks/icons";
+import { Loader } from "@plane/blocks/skeleton";
 import { setToast } from "@plane/blocks/toast";
 import { useTranslation } from "@plane/i18n";
 import type {
@@ -265,17 +266,21 @@ function WorkflowSettingsAside(props: {
 }
 
 function WorkflowLoadState({ failed, onRetry, t }: { failed: boolean; onRetry: () => void; t: Translate }) {
+  if (failed) {
+    return (
+      <output className="mt-8 block rounded-lg border border-subtle p-6 text-body-xs-regular text-secondary">
+        <p>{t("web.workflow_ui.load_failed")}</p>
+        <Button stretch="auto" variant="ghost" size="md" onClick={onRetry} label={t("common.retry")} />
+      </output>
+    );
+  }
   return (
-    <output className="mt-8 block rounded-lg border border-subtle p-6 text-body-xs-regular text-secondary">
-      {failed ? (
-        <>
-          <p>{t("web.workflow_ui.load_failed")}</p>
-          <Button stretch="auto" variant="ghost" size="md" onClick={onRetry} label={t("common.retry")} />
-        </>
-      ) : (
-        t("loading")
-      )}
-    </output>
+    <Loader className="mt-8 space-y-4 rounded-lg border border-subtle bg-surface-1 p-6">
+      <Loader.Item width="200px" height="18px" />
+      <Loader.Item width="100%" height="48px" />
+      <Loader.Item width="100%" height="48px" />
+      <Loader.Item width="85%" height="48px" />
+    </Loader>
   );
 }
 

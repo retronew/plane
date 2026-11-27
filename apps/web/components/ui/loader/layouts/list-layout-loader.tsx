@@ -29,18 +29,18 @@ export const ListLoaderItemRow = forwardRef(function ListLoaderItemRow(
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <span className="w-20 shrink-0 sm:w-22">
-          <span className="block h-3 w-16 rounded-sm bg-layer-1" />
+          <span className="block h-3 w-16 rounded-sm bg-layer-3" />
         </span>
         <span
-          className="h-3.5 min-w-16 rounded-sm bg-layer-1"
+          className="h-3.5 min-w-16 rounded-sm bg-layer-3"
           style={{ width: titleWidths[index % titleWidths.length] }}
         />
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {Array.from({ length: defaultPropertyCount }, (_, propertyIndex) => (
-          <span key={propertyIndex} className={cn("h-6 rounded-lg bg-layer-1", propertyIndex < 3 ? "w-16" : "w-6")} />
+          <span key={propertyIndex} className={cn("h-6 rounded-lg bg-layer-3", propertyIndex < 3 ? "w-16" : "w-6")} />
         ))}
-        <span className="size-6 rounded-md bg-layer-1" />
+        <span className="size-6 rounded-md bg-layer-3" />
       </div>
     </Row>
   );
@@ -58,10 +58,10 @@ function ListSection({
   return (
     <div className="flex shrink-0 flex-col">
       {grouped && (
-        <Row className="flex h-[42px] shrink-0 items-center gap-2 border-b border-subtle bg-layer-1">
-          <span className="size-4 rounded-full bg-layer-2" />
-          <span className="h-3.5 w-16 rounded-sm bg-layer-2" />
-          <span className="ml-1 h-3 w-4 rounded-sm bg-layer-2" />
+        <Row className="flex h-[42px] shrink-0 items-center gap-2 border-b border-subtle bg-surface-2">
+          <span className="size-4 rounded-full bg-layer-3" />
+          <span className="h-3.5 w-16 rounded-sm bg-layer-3" />
+          <span className="ml-1 h-3 w-4 rounded-sm bg-layer-3" />
         </Row>
       )}
       {Array.from({ length: itemCount }, (_, index) => (

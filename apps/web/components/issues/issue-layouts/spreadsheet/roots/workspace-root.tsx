@@ -18,7 +18,7 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
 // store
-import { IssueLayoutHOC, IssueLayoutLoader } from "../../issue-layout-HOC";
+import { IssueLayoutHOC } from "../../issue-layout-HOC";
 import type { TRenderQuickActions } from "../../list/list-view-types";
 import { SpreadsheetView } from "../spreadsheet-view";
 
@@ -37,7 +37,7 @@ type Props = {
 };
 
 export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRoot(props: Props) {
-  const { isLoading = false, workspaceSlug, globalViewId, fetchNextPages, issuesLoading } = props;
+  const { workspaceSlug, globalViewId, fetchNextPages } = props;
 
   // Custom hooks
   useWorkspaceIssueProperties(workspaceSlug);
@@ -45,7 +45,7 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
   // Store hooks
   const {
     issuesFilter: { filters, updateFilters },
-    issues: { getIssueLoader, getPaginationData, groupedIssueIds },
+    issues: { getPaginationData, groupedIssueIds },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { fetchIssues, updateIssue, removeIssue, archiveIssue } = useIssuesActions(EIssuesStoreType.GLOBAL);
   const { allowPermissions } = useUserPermissions();
@@ -105,13 +105,8 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
     [canEditProperties, removeIssue, updateIssue, archiveIssue]
   );
 
-  // Loading state
-  if ((isLoading && issuesLoading && getIssueLoader() === "init-loader") || !globalViewId || !groupedIssueIds) {
-    return <IssueLayoutLoader layout={EIssueLayoutTypes.SPREADSHEET} />;
-  }
-
   // Computed values
-  const issueIds = groupedIssueIds[ALL_ISSUES];
+  const issueIds = groupedIssueIds?.[ALL_ISSUES];
   const nextPageResults = getPaginationData(ALL_ISSUES, undefined)?.nextPageResults;
 
   // Render spreadsheet

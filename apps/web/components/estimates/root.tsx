@@ -50,7 +50,17 @@ export const EstimateRoot = observer(function EstimateRoot(props: TEstimateRoot)
   );
 
   if (loader === "init-loader" || isSWRLoading) {
-    return <EstimateLoaderScreen />;
+    return (
+      <div>
+        <SettingsHeading
+          title={t("project_settings.estimates.heading")}
+          description={t("project_settings.estimates.description")}
+        />
+        <div className="mt-6">
+          <EstimateLoaderScreen />
+        </div>
+      </div>
+    );
   }
 
   return (

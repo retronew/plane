@@ -66,8 +66,15 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
   // theme hook
   const { resolvedTheme } = useTheme();
   // store hooks
-  const { toggleWidgetSettings, widgetsMap, showWidgetSettings, orderedWidgets, isAnyWidgetEnabled, loading } =
-    useHome();
+  const {
+    toggleWidgetSettings,
+    widgetsMap,
+    showWidgetSettings,
+    orderedWidgets,
+    isAnyWidgetEnabled,
+    loading,
+    hasFetched,
+  } = useHome();
   const { loader } = useProject();
   // plane hooks
   const { t } = useTranslation();
@@ -82,7 +89,7 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
   // derived values
   const isWikiApp = pathname.includes(`/${workspaceSlug.toString()}/pages`);
   if (!workspaceSlug) return null;
-  if (loading || loader !== "loaded") return <HomeLoader />;
+  if (loading || !hasFetched || loader !== "loaded") return <HomeLoader />;
 
   return (
     <div className="relative flex h-full w-full flex-col gap-7">

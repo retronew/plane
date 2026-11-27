@@ -8,6 +8,7 @@ import { observer } from "mobx-react";
 import { usePathname, useParams } from "next/navigation";
 import { Outlet } from "react-router";
 // components
+import { ProjectDetailsFormLoader } from "@/components/project/form-loader";
 import { getProjectActivePath } from "@/components/settings/helper";
 import { SettingsMobileNav } from "@/components/settings/mobile/nav";
 // layouts
@@ -38,7 +39,15 @@ function ProjectDetailSettingsLayout({ params }: Route.ComponentProps) {
           <SettingsDesktopSidebar>
             <ProjectSettingsSidebarRoot projectId={projectId} />
           </SettingsDesktopSidebar>
-          <ProjectAuthWrapper workspaceSlug={workspaceSlug} projectId={projectId}>
+          <ProjectAuthWrapper
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            loadingFallback={
+              <div className="w-full p-8">
+                <ProjectDetailsFormLoader />
+              </div>
+            }
+          >
             <Outlet />
           </ProjectAuthWrapper>
         </div>

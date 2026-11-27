@@ -5,31 +5,29 @@
  */
 
 import { range } from "lodash-es";
-import { translate } from "@plane/i18n";
 
 export function PagesLoader() {
   return (
-    <div className="flex h-full flex-col space-y-5 overflow-hidden p-6">
+    <div className="flex h-full flex-col space-y-5 overflow-hidden p-6 motion-safe:animate-pulse">
       <div className="flex justify-between gap-4">
-        <h3 className="text-20 font-semibold text-primary">{translate("web.pages")}</h3>
+        <div className="h-6 w-28 rounded-sm bg-layer-3" />
       </div>
       <div className="flex items-center gap-3">
         {range(5).map((i) => (
-          <span key={i} className="h-8 w-20 rounded-full bg-layer-1" />
+          <div key={i} className="h-8 w-20 rounded-full bg-layer-3" />
         ))}
       </div>
       <div className="divide-y divide-subtle-1">
         {range(5).map((i) => (
           <div key={i} className="flex h-12 w-full items-center justify-between px-3">
-            <div className="flex items-center gap-1.5">
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
-              <span className="h-5 w-20 rounded-sm bg-layer-1" />
+            <div className="flex items-center gap-2">
+              <div className="size-4 rounded-sm bg-layer-3" />
+              <div className="h-4 w-40 rounded-sm bg-layer-3" />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-5 w-16 rounded-sm bg-layer-1" />
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-16 rounded-sm bg-layer-3" />
+              <div className="size-5 rounded-full bg-layer-3" />
+              <div className="size-5 rounded-sm bg-layer-3" />
             </div>
           </div>
         ))}

@@ -8,17 +8,18 @@ import { range } from "lodash-es";
 
 export function ViewListLoader() {
   return (
-    <div className="flex h-full w-full animate-pulse flex-col">
+    <div className="flex h-full w-full flex-col motion-safe:animate-pulse">
       {range(8).map((i) => (
-        <div key={i} className="group border-b border-subtle">
-          <div className="relative flex w-full items-center justify-between rounded-sm p-4">
-            <div className="flex items-center gap-4">
-              <span className="min-h-10 min-w-10 rounded-sm bg-layer-1" />
-              <span className="h-6 w-28 rounded-sm bg-layer-1" />
+        <div key={i} className="border-b border-subtle">
+          <div className="relative flex min-h-[52px] w-full items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="size-4 shrink-0 rounded-sm bg-layer-3" />
+              <div className="h-4 w-44 rounded-sm bg-layer-3" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
-              <span className="h-5 w-5 rounded-sm bg-layer-1" />
+            <div className="flex items-center gap-3">
+              <div className="h-4 w-20 rounded-sm bg-layer-3" />
+              <div className="size-5 rounded-full bg-layer-3" />
+              <div className="size-4 rounded-sm bg-layer-3" />
             </div>
           </div>
         </div>

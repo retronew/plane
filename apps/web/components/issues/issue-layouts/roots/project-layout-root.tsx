@@ -12,12 +12,16 @@ import useSWR from "swr";
 import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { EIssueLayoutTypes, EIssuesStoreType } from "@plane/types";
 // components
+import { CalendarLayoutLoader } from "@/components/ui/loader/layouts/calendar-layout-loader";
+import { GanttLayoutLoader } from "@/components/ui/loader/layouts/gantt-layout-loader";
+import { SpreadsheetLayoutLoader } from "@/components/ui/loader/layouts/spreadsheet-layout-loader";
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
 import { KanBanLayout } from "../kanban/roots/project-root";
 import { ListLayout } from "../list/roots/project-root";
@@ -38,19 +42,19 @@ function ProjectIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined
       return <KanBanLayout />;
     case EIssueLayoutTypes.CALENDAR:
       return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<CalendarLayoutLoader />}>
           <CalendarLayout />
         </Suspense>
       );
     case EIssueLayoutTypes.GANTT:
       return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<GanttLayoutLoader />}>
           <BaseGanttRoot />
         </Suspense>
       );
     case EIssueLayoutTypes.SPREADSHEET:
       return (
-        <Suspense fallback={null}>
+        <Suspense fallback={<SpreadsheetLayoutLoader />}>
           <ProjectSpreadsheetLayout />
         </Suspense>
       );
@@ -81,7 +85,9 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
-  if (!workspaceSlug || !projectId || !workItemFilters) return <></>;
+  if (!workspaceSlug || !projectId || !workItemFilters) {
+    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+  }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.PROJECT}>
       <ProjectLevelWorkItemFiltersHOC

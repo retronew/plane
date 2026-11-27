@@ -11,6 +11,7 @@ import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { TNameDescriptionLoader } from "@plane/types";
 // components
 import { ContentWrapper } from "@plane/blocks/layout";
+import { IssueDetailSkeleton } from "@/components/common/loaders/issue-detail-skeleton";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
@@ -80,7 +81,7 @@ export const InboxContentRoot = observer(function InboxContentRoot(props: TInbox
   const isOwner = inboxIssue?.issue.created_by === currentUser?.id;
   const readOnly = !isOwner && isGuest;
 
-  if (!inboxIssue) return <></>;
+  if (!inboxIssue) return <IssueDetailSkeleton />;
 
   const isIssueDisabled = [-1, 1, 2].includes(inboxIssue.status);
 

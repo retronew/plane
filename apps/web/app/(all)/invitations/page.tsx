@@ -17,6 +17,7 @@ import { useTranslation } from "@plane/i18n";
 // types
 import { Button } from "@makeplane/propel/components/button";
 import { PlaneLogo } from "@plane/blocks/icons";
+import { Loader } from "@plane/blocks/skeleton";
 import { setToast } from "@plane/blocks/toast";
 import type { IWorkspaceMemberInvitation } from "@plane/types";
 import { truncateText } from "@plane/utils";
@@ -202,7 +203,24 @@ function UserInvitationsPage() {
               />
             </div>
           )
-        ) : null}
+        ) : (
+          <div className="relative flex h-full justify-center px-8 pb-8 sm:w-10/12 sm:items-center sm:justify-start sm:p-0 sm:pr-[8.33%] md:w-9/12 lg:w-4/5">
+            <Loader className="w-full space-y-6 md:w-3/5">
+              <Loader.Item width="65%" height="20px" />
+              <Loader.Item width="40%" height="26px" />
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  // oxlint-disable-next-line react/no-array-index-key
+                  <Loader.Item key={index} width="100%" height="76px" className="rounded-sm" />
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <Loader.Item width="136px" height="36px" />
+                <Loader.Item width="96px" height="36px" />
+              </div>
+            </Loader>
+          </div>
+        )}
       </div>
     </AuthenticationWrapper>
   );

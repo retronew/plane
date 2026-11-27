@@ -156,7 +156,7 @@ export const NotificationsSidebarRoot = observer(function NotificationsSidebarRo
         <AppliedFilters workspaceSlug={workspaceSlug.toString()} />
 
         {/* rendering notifications */}
-        {loader === "init-loader" ? (
+        {loader === "init-loader" || notificationIds === undefined ? (
           <div className="relative h-full w-full overflow-hidden">
             <NotificationsLoader />
           </div>

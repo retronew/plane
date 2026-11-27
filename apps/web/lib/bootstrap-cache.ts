@@ -285,6 +285,7 @@ export function hydrateHomeBootstrap(
         store.home.widgetsMap[widget.key] = widget;
       });
       store.home.loading = false;
+      store.home.hasFetched = true;
     }
 
     if (Array.isArray(data.quick_links)) {

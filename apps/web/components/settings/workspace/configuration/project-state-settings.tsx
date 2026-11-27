@@ -7,6 +7,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import { Button } from "@makeplane/propel/components/button";
 import { SettingsHeading } from "@/components/settings/heading";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import { configurationKey, workspaceConfigurationService as service } from "@/services/workspace-configuration.service";
 import { CategoryManager } from "./category-manager";
@@ -67,7 +68,16 @@ export function ProjectStateSettings() {
           title={t("web.project_states_heading")}
           description={t("web.project_statuses_description")}
         />
-        {data?.enabled ? (
+        {!data && !error ? (
+          <Loader className="space-y-3 rounded-xl border border-subtle bg-surface-1 p-4">
+            {PROJECT_PHASES.map((group) => (
+              <div key={group} className="space-y-2 border-b border-subtle pb-3 last:border-b-0 last:pb-0">
+                <Loader.Item width="120px" height="16px" />
+                <Loader.Item width="100%" height="36px" />
+              </div>
+            ))}
+          </Loader>
+        ) : data?.enabled ? (
           <div className="rounded-xl border border-subtle bg-layer-2 p-3">
             {PROJECT_PHASES.map((group) => (
               <div key={group}>

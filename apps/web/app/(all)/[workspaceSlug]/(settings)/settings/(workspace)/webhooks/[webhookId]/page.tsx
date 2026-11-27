@@ -8,11 +8,11 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import useSWR from "swr";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
+import { Loader } from "@plane/blocks/skeleton";
 import { setToast } from "@plane/blocks/toast";
 import type { IWebhook } from "@plane/types";
 // ui
 // components
-import { LogoSpinner } from "@/components/common/logo-spinner";
 import { PageHead } from "@/components/core/page-title";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
 import { DeleteWebhookModal, WebhookDeleteSection, WebhookForm } from "@/components/web-hooks";
@@ -94,9 +94,26 @@ function WebhookDetailsPage({ params }: Route.ComponentProps) {
 
   if (!currentWebhook)
     return (
-      <div className="grid h-full w-full place-items-center p-4">
-        <LogoSpinner />
-      </div>
+      <SettingsContentWrapper header={<WebhookDetailsWorkspaceSettingsHeader />}>
+        <PageHead title={pageTitle} />
+        <Loader className="w-full space-y-6">
+          <div className="space-y-2">
+            <Loader.Item width="120px" height="16px" />
+            <Loader.Item width="100%" height="38px" />
+          </div>
+          <div className="space-y-2">
+            <Loader.Item width="140px" height="16px" />
+            <Loader.Item width="100%" height="38px" />
+          </div>
+          <div className="space-y-3 pt-2">
+            <Loader.Item width="160px" height="18px" />
+            <Loader.Item width="100%" height="44px" />
+            <Loader.Item width="100%" height="44px" />
+            <Loader.Item width="100%" height="44px" />
+          </div>
+          <Loader.Item width="120px" height="36px" />
+        </Loader>
+      </SettingsContentWrapper>
     );
 
   return (

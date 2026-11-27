@@ -51,16 +51,18 @@ const getIssueDetailState = (
   data: TIssue | undefined,
   isLoading: boolean,
   projectIdentifier: string,
+  workItem: string,
   getIssueById: (issueId: string) => TIssue | undefined,
+  getIssueIdByIdentifier: (identifier: string) => string | undefined,
   getProjectById: (projectId: string | null | undefined) => TProject | undefined,
   getProjectByIdentifier: (projectIdentifier: string) => TProject | undefined
 ): IssueDetailState => {
   const projectDetails = getProjectByIdentifier(projectIdentifier);
-  const issueId = data?.id;
-  const projectId = data?.project_id ?? projectDetails?.id ?? "";
-  const issue = getIssueById(issueId?.toString() || "") || undefined;
-  const project = (issue?.project_id && getProjectById(issue?.project_id)) || undefined;
-  const issueLoader = !issue || isLoading;
+  const issueId = data?.id ?? getIssueIdByIdentifier(workItem);
+  const issue = (issueId && getIssueById(issueId.toString())) || undefined;
+  const projectId = data?.project_id ?? issue?.project_id ?? projectDetails?.id ?? "";
+  const project = (projectId && getProjectById(projectId)) || undefined;
+  const issueLoader = !issue && isLoading;
   const pageTitle = project && issue ? `${project?.identifier}-${issue?.sequence_id} ${issue?.name}` : undefined;
 
   return { issueId, projectId, issue, issueLoader, pageTitle };
@@ -177,12 +179,14 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     data,
     isLoading,
     projectIdentifier,
+    workItem,
     getIssueById,
+    getIssueIdByIdentifier,
     getProjectById,
     getProjectByIdentifier
   );
 
-  const knownIssueId = issueId ?? getIssueIdByIdentifier(workItem);
+  const knownIssueId = issueId;
   useEffect(() => {
     if (projectId && knownIssueId && !issue?.archived_at) {
       prefetchIssueCollaboration(workspaceSlug.toString(), projectId, knownIssueId);
@@ -219,7 +223,7 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
     );
   }
 
-  if (issueLoader) {
+  if (issueLoader || !issue) {
     return <IssueDetailSkeleton hasParent={!!issue?.parent_id} />;
   }
 

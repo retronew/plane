@@ -9,45 +9,36 @@ import { Loader } from "@plane/blocks/skeleton";
 
 export function StickiesLoader() {
   return (
-    <div className="grid grid-cols-4 gap-4 overflow-scroll pb-2">
+    <Loader className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-4 pb-2">
       {["sticky-one", "sticky-two", "sticky-three", "sticky-four"].map((id) => (
-        <Loader key={id} className="space-y-5 rounded-sm border border-subtle p-3">
+        <div key={id} className="space-y-4 rounded-xl border border-subtle bg-surface-1 p-4">
           <div className="space-y-2">
-            <Loader.Item height="20px" />
-            <Loader.Item height="15px" width="75%" />
+            <Loader.Item height="18px" />
+            <Loader.Item height="14px" width="75%" />
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Loader.Item height="15px" width="15px" className="flex-shrink-0" />
-              <Loader.Item height="15px" width="100%" />
+              <Loader.Item height="14px" width="14px" className="shrink-0" />
+              <Loader.Item height="14px" width="100%" />
             </div>
             <div className="flex items-center gap-2">
-              <Loader.Item height="15px" width="15px" className="flex-shrink-0" />
-              <Loader.Item height="15px" width="75%" />
+              <Loader.Item height="14px" width="14px" className="shrink-0" />
+              <Loader.Item height="14px" width="75%" />
             </div>
             <div className="flex items-center gap-2">
-              <Loader.Item height="15px" width="15px" className="flex-shrink-0" />
-              <Loader.Item height="15px" width="90%" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Loader.Item height="15px" width="15px" className="flex-shrink-0" />
-              <Loader.Item height="15px" width="60%" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Loader.Item height="15px" width="15px" className="flex-shrink-0" />
-              <Loader.Item height="15px" width="50%" />
+              <Loader.Item height="14px" width="14px" className="shrink-0" />
+              <Loader.Item height="14px" width="85%" />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 pt-1">
             <div className="flex items-center gap-2">
-              <Loader.Item height="25px" width="25px" />
-              <Loader.Item height="25px" width="25px" />
-              <Loader.Item height="25px" width="25px" />
+              <Loader.Item height="22px" width="22px" />
+              <Loader.Item height="22px" width="22px" />
             </div>
-            <Loader.Item height="25px" width="25px" className="flex-shrink-0" />
+            <Loader.Item height="22px" width="22px" className="shrink-0" />
           </div>
-        </Loader>
+        </div>
       ))}
-    </div>
+    </Loader>
   );
 }

@@ -126,7 +126,7 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
         </Header>
         <InboxIssueAppliedFilters />
 
-        {loader != undefined && loader === "filter-loading" && !inboxIssuePaginationInfo?.next_page_results ? (
+        {loader === "init-loading" || loader === "filter-loading" ? (
           <InboxSidebarLoader />
         ) : (
           <div className="vertical-scrollbar scrollbar-md min-h-0 w-full flex-1 overflow-y-auto" ref={containerRef}>
@@ -181,8 +181,8 @@ export const InboxSidebar = observer(function InboxSidebar(props: IInboxSidebarP
             <div ref={setElementRef}>
               {inboxIssuePaginationInfo?.next_page_results && (
                 <Loader className="mx-auto w-full space-y-4 px-2 py-4">
-                  <Loader.Item height="64px" width="w-100" />
-                  <Loader.Item height="64px" width="w-100" />
+                  <Loader.Item height="64px" width="100%" />
+                  <Loader.Item height="64px" width="100%" />
                 </Loader>
               )}
             </div>

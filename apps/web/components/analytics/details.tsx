@@ -33,7 +33,7 @@ import AnalyticsEmptyState from "./empty-state";
 import { DataTable } from "./insight-table/data-table";
 import type { TInsightTableFeatures } from "./insight-table/table-features";
 import { TableLoader } from "./insight-table/loader";
-import { AnalyticsDetailsLoader } from "./loaders";
+import { AnalyticsDetailsLoader, ChartLoader } from "./loaders";
 
 // recharts is a large dependency; the chart loads when this tab renders.
 const BarChart = lazy(() => import("@plane/blocks/charts/bar-chart").then((mod) => ({ default: mod.BarChart })));
@@ -455,7 +455,7 @@ function AnalyticsChartSection({
     >
       {chart.length ? (
         <div style={{ height: getChartHeight(tab, chart.length, page) }}>
-          <Suspense fallback={<AnalyticsDetailsLoader />}>
+          <Suspense fallback={<ChartLoader height={getChartHeight(tab, chart.length, page)} />}>
             <BarChart
               className="h-full w-full"
               barSize={24}

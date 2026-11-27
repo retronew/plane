@@ -28,7 +28,6 @@ import { PageHead } from "@/components/core/page-title";
 import { CycleAppliedFiltersList } from "@/components/cycles/applied-filters";
 import { CyclesView } from "@/components/cycles/cycles-view";
 import { DetailedEmptyState } from "@/components/empty-state/detailed-empty-state-root";
-import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useCycleFilter } from "@/hooks/store/use-cycle-filter";
@@ -97,8 +96,6 @@ function ProjectCyclesPage({ params }: Route.ComponentProps) {
         />
       </div>
     );
-
-  if (loader) return <CycleModuleListLayoutLoader />;
 
   return (
     <>

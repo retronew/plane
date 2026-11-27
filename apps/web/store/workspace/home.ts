@@ -17,6 +17,7 @@ import { WorkspaceLinkStore } from "./link.store";
 export interface IHomeStore {
   // observables
   loading: boolean;
+  hasFetched: boolean;
   showWidgetSettings: boolean;
   widgetsMap: Record<string, TWidgetEntityData>;
   widgets: THomeWidgetKeys[];
@@ -41,6 +42,7 @@ export class HomeStore implements IHomeStore {
   // observables
   showWidgetSettings = false;
   loading = false;
+  hasFetched = false;
   widgetsMap: Record<string, TWidgetEntityData> = {};
   widgets: THomeWidgetKeys[] = [];
   // stores
@@ -52,6 +54,7 @@ export class HomeStore implements IHomeStore {
     makeObservable(this, {
       // observables
       loading: observable,
+      hasFetched: observable,
       showWidgetSettings: observable,
       widgetsMap: observable,
       widgets: observable,
@@ -93,10 +96,12 @@ export class HomeStore implements IHomeStore {
           this.widgetsMap[widget.key] = widget;
         });
         this.loading = false;
+        this.hasFetched = true;
       });
     } catch (error) {
       console.error("Failed to fetch widgets");
       this.loading = false;
+      this.hasFetched = true;
       throw error;
     }
   };

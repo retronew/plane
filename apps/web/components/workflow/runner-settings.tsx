@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "react-router";
 import { Code2 } from "lucide-react";
 import { Button } from "@makeplane/propel/components/button";
 import { Breadcrumbs } from "@plane/blocks/breadcrumb";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectWorkflow } from "@plane/types";
 import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
@@ -34,17 +35,22 @@ function resolveWorkflowName(
 function RunnerLoadState({ hasError, onRetry }: { hasError: boolean; onRetry: () => void }) {
   const { t } = useTranslation();
 
+  if (hasError) {
+    return (
+      <output className="mt-8 block rounded-lg border border-subtle p-6 text-body-xs-regular text-secondary">
+        <p>{t("web.workflow_ui.load_failed")}</p>
+        <Button stretch="auto" variant="ghost" size="md" label={t("common.retry")} onClick={onRetry} />
+      </output>
+    );
+  }
+
   return (
-    <output className="mt-8 block rounded-lg border border-subtle p-6 text-body-xs-regular text-secondary">
-      {hasError ? (
-        <>
-          <p>{t("web.workflow_ui.load_failed")}</p>
-          <Button stretch="auto" variant="ghost" size="md" label={t("common.retry")} onClick={onRetry} />
-        </>
-      ) : (
-        t("loading")
-      )}
-    </output>
+    <Loader className="mt-8 space-y-4 rounded-lg border border-subtle bg-surface-1 p-6">
+      <Loader.Item width="200px" height="18px" />
+      <Loader.Item width="100%" height="44px" />
+      <Loader.Item width="100%" height="44px" />
+      <Loader.Item width="80%" height="44px" />
+    </Loader>
   );
 }
 

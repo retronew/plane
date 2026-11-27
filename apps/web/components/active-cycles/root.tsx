@@ -9,7 +9,7 @@ import { useTranslation } from "@plane/i18n";
 import type { IWorkspaceActiveCyclesResponse } from "@plane/types";
 import { useUserPermissions } from "@/hooks/store/user";
 import { CycleService } from "@/services/cycle.service";
-import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
+import { ActiveCyclesLoader } from "@/components/ui/loader/active-cycles-loader";
 import { WorkspaceCycleCard } from "./cycle-card";
 
 const cycleService = new CycleService();
@@ -58,7 +58,7 @@ export const WorkspaceActiveCycles = observer(function WorkspaceActiveCycles() {
         {t("workspace_cycles.permission_denied")}
       </p>
     );
-  if (isLoading) return <CycleModuleListLayoutLoader />;
+  if (isLoading) return <ActiveCyclesLoader />;
 
   return (
     <div className="vertical-scrollbar scrollbar-lg flex h-full w-full flex-col gap-4 overflow-y-auto px-page-x py-page-y">

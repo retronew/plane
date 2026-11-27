@@ -10,6 +10,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { SortAscendingOutline, SortDescendingOutline } from "@makeplane/propel/icons";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import type { TProjectActivityOrder, TProjectOverviewActivity, TProjectOverviewActivityPage } from "@plane/types";
 import { projectOverviewService } from "@/services/project/project-overview.service";
@@ -110,7 +111,20 @@ function ActivityFeed({
           />
         </Tooltip>
       </div>
-      {!data && !error && <output className="text-13 text-tertiary">{t("loading")}</output>}
+      {!data && !error && (
+        <Loader className="space-y-3 pt-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            // oxlint-disable-next-line react/no-array-index-key
+            <div key={index} className="flex items-start gap-3">
+              <Loader.Item width="26px" height="26px" className="shrink-0 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Loader.Item width="75%" height="14px" />
+                <Loader.Item width="35%" height="12px" />
+              </div>
+            </div>
+          ))}
+        </Loader>
+      )}
       {data && !error && entries.length === 0 && <p className="text-13 text-tertiary">{t(`${key}.no_activity`)}</p>}
       <ol aria-label={orderLabel} className="min-w-0 pt-3 pb-5">
         {entries.map((entry, index) => (

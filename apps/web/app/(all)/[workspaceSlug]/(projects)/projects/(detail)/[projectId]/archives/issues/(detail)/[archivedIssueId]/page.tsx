@@ -66,42 +66,29 @@ function ArchivedIssueDetailsPage({ params }: Route.ComponentProps) {
   }
   if (!issue) return <IssueDetailSkeleton />;
 
-  const issueLoader = !issue || isLoading;
-
   return (
     <>
       <PageHead title={pageTitle} />
-      {issueLoader ? (
-        <IssueDetailSkeleton />
-      ) : (
-        <>
-          <Banner
-            placement="page"
-            variant="warning"
-            title={t("issue.archive.banner_message")}
-            icon={<Icon icon={ArchiveOutline} />}
-            actions={
-              <Button
-                variant="secondary"
-                size="sm"
-                stretch="auto"
-                label={t("issue.archive.go_to_archives")}
-                onClick={() => router.push(`/${workspaceSlug}/projects/${projectId}/archives/issues/`)}
-              />
-            }
+      <Banner
+        placement="page"
+        variant="warning"
+        title={t("issue.archive.banner_message")}
+        icon={<Icon icon={ArchiveOutline} />}
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            stretch="auto"
+            label={t("issue.archive.go_to_archives")}
+            onClick={() => router.push(`/${workspaceSlug}/projects/${projectId}/archives/issues/`)}
           />
-          <div className="flex h-full overflow-hidden">
-            <div className="h-full w-full space-y-3 divide-y-2 divide-subtle-1 overflow-y-auto">
-              <IssueDetailRoot
-                workspaceSlug={workspaceSlug}
-                projectId={projectId}
-                issueId={archivedIssueId}
-                is_archived
-              />
-            </div>
-          </div>
-        </>
-      )}
+        }
+      />
+      <div className="flex h-full overflow-hidden">
+        <div className="h-full w-full space-y-3 divide-y-2 divide-subtle-1 overflow-y-auto">
+          <IssueDetailRoot workspaceSlug={workspaceSlug} projectId={projectId} issueId={archivedIssueId} is_archived />
+        </div>
+      </div>
     </>
   );
 }

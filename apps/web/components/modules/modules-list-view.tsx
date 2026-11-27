@@ -32,9 +32,8 @@ const toSlug = (value: string | string[] | undefined) => value?.toString() ?? ""
 
 function ModulesLoader({ layout }: { layout: TModuleLayoutOptions | undefined }) {
   if (layout === "list") return <CycleModuleListLayoutLoader />;
-  if (layout === "board") return <CycleModuleBoardLayoutLoader />;
   if (layout === "gantt") return <GanttLayoutLoader />;
-  return null;
+  return <CycleModuleBoardLayoutLoader />;
 }
 
 function ModulesLayoutView({

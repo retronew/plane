@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@plane/utils";
 import { useDelayedLoading } from "@/hooks/use-delayed-loading";
@@ -13,6 +14,10 @@ type Props = {
 /** Reserve geometry immediately, show a skeleton only for slow requests, enter real content once ready. */
 export function AsyncContent({ loading, children, skeleton, className, minHeight }: Props) {
   const showSkeleton = useDelayedLoading(loading);
+  const [hasShownLoading, setHasShownLoading] = useState(loading);
+  if (loading && !hasShownLoading) {
+    setHasShownLoading(true);
+  }
   return (
     <div
       aria-busy={loading}
@@ -25,7 +30,7 @@ export function AsyncContent({ loading, children, skeleton, className, minHeight
           <div data-loading-skeleton="">{skeleton}</div>
         ) : null
       ) : (
-        <div className={styles.ready}>{children}</div>
+        <div className={hasShownLoading ? styles.ready : undefined}>{children}</div>
       )}
     </div>
   );

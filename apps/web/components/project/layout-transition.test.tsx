@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ProjectLayoutTransition } from "./layout-transition";
 import { ProjectsLoader } from "../ui/loader/projects-loader";
@@ -38,13 +38,9 @@ it("switches immediately with reduced motion without waiting for animation event
 it.each(["gallery", "board", "list", "timeline"] as const)(
   "provides an accessible %s skeleton with no fake actions",
   (layout) => {
-    vi.useFakeTimers();
     const { container } = render(<ProjectsLoader layout={layout} />);
-    expect(container.querySelector("[data-project-loader]")).toBeNull();
-    act(() => vi.advanceTimersByTime(180));
     expect(container.querySelector(`[data-project-loader="${layout}"]`)).toBeTruthy();
     expect(screen.getByRole("status", { name: "Loading projects" })).toBeTruthy();
     expect(screen.queryByRole("button")).toBeNull();
-    vi.useRealTimers();
   }
 );
