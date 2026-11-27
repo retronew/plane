@@ -233,9 +233,7 @@ class CycleViewSet(BaseViewSet):
             )
             datetime_fields = ["start_date", "end_date"]
             data = user_timezone_converter(data, datetime_fields, project_timezone)
-
-            if data:
-                return Response(data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
 
         data = queryset.values(
             # necessary fields
@@ -415,7 +413,6 @@ class CycleViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def retrieve(self, request, slug, project_id, pk):
-        queryset = self.get_queryset().filter(archived_at__isnull=True).filter(pk=pk)
         data = (
             self.get_queryset()
             .filter(pk=pk)
@@ -465,10 +462,10 @@ class CycleViewSet(BaseViewSet):
         if data is None:
             return Response({"error": "Cycle not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        queryset = queryset.first()
-        # Fetch the project timezone
-        project = Project.objects.get(id=self.kwargs.get("project_id"))
-        project_timezone = project.timezone
+        project_timezone = (
+            Project.objects.filter(id=self.kwargs.get("project_id")).values_list("timezone", flat=True).first()
+            or "UTC"
+        )
         datetime_fields = ["start_date", "end_date"]
         data = user_timezone_converter(data, datetime_fields, project_timezone)
 
@@ -725,52 +722,25 @@ class CycleProgressEndpoint(BaseAPIView):
             completed_issues = cycle.progress_snapshot.get("completed_issues", 0)
             total_issues = cycle.progress_snapshot.get("total_issues", 0)
         else:
-            backlog_issues = Issue.issue_objects.filter(
+            issue_counts = Issue.issue_objects.filter(
                 issue_cycle__cycle_id=cycle_id,
                 issue_cycle__deleted_at__isnull=True,
                 workspace__slug=slug,
                 project_id=project_id,
-                state__group="backlog",
-            ).count()
-
-            unstarted_issues = Issue.issue_objects.filter(
-                issue_cycle__cycle_id=cycle_id,
-                issue_cycle__deleted_at__isnull=True,
-                workspace__slug=slug,
-                project_id=project_id,
-                state__group="unstarted",
-            ).count()
-
-            started_issues = Issue.issue_objects.filter(
-                issue_cycle__cycle_id=cycle_id,
-                issue_cycle__deleted_at__isnull=True,
-                workspace__slug=slug,
-                project_id=project_id,
-                state__group="started",
-            ).count()
-
-            cancelled_issues = Issue.issue_objects.filter(
-                issue_cycle__cycle_id=cycle_id,
-                issue_cycle__deleted_at__isnull=True,
-                workspace__slug=slug,
-                project_id=project_id,
-                state__group="cancelled",
-            ).count()
-
-            completed_issues = Issue.issue_objects.filter(
-                issue_cycle__cycle_id=cycle_id,
-                issue_cycle__deleted_at__isnull=True,
-                workspace__slug=slug,
-                project_id=project_id,
-                state__group="completed",
-            ).count()
-
-            total_issues = Issue.issue_objects.filter(
-                issue_cycle__cycle_id=cycle_id,
-                issue_cycle__deleted_at__isnull=True,
-                workspace__slug=slug,
-                project_id=project_id,
-            ).count()
+            ).aggregate(
+                backlog_issues=Count("id", filter=Q(state__group="backlog")),
+                unstarted_issues=Count("id", filter=Q(state__group="unstarted")),
+                started_issues=Count("id", filter=Q(state__group="started")),
+                cancelled_issues=Count("id", filter=Q(state__group="cancelled")),
+                completed_issues=Count("id", filter=Q(state__group="completed")),
+                total_issues=Count("id"),
+            )
+            backlog_issues = issue_counts["backlog_issues"] or 0
+            unstarted_issues = issue_counts["unstarted_issues"] or 0
+            started_issues = issue_counts["started_issues"] or 0
+            cancelled_issues = issue_counts["cancelled_issues"] or 0
+            completed_issues = issue_counts["completed_issues"] or 0
+            total_issues = issue_counts["total_issues"] or 0
 
         return Response(
             {

@@ -6,7 +6,9 @@ from django.urls import path
 from plane.app.views.bootstrap import (
     AppBootstrapEndpoint,
     ProjectBootstrapEndpoint,
+    WorkItemBootstrapEndpoint,
     WorkspaceBootstrapEndpoint,
+    WorkspaceHomeBootstrapEndpoint,
     WorkspaceViewBootstrapEndpoint,
 )
 from plane.app.views.workspace_sync import (
@@ -40,6 +42,16 @@ from .workflow import urlpatterns as workflow_urls
 urlpatterns = [
     path("bootstrap/", AppBootstrapEndpoint.as_view(), name="app-bootstrap"),
     path("workspaces/<str:slug>/bootstrap/", WorkspaceBootstrapEndpoint.as_view(), name="workspace-bootstrap"),
+    path(
+        "workspaces/<str:slug>/home-bootstrap/",
+        WorkspaceHomeBootstrapEndpoint.as_view(),
+        name="workspace-home-bootstrap",
+    ),
+    path(
+        "workspaces/<str:slug>/work-items/<str:identifier>/bootstrap/",
+        WorkItemBootstrapEndpoint.as_view(),
+        name="work-item-bootstrap",
+    ),
     path(
         "workspaces/<str:slug>/view-bootstrap/",
         WorkspaceViewBootstrapEndpoint.as_view(),

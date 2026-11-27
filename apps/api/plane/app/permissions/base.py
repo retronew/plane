@@ -16,18 +16,64 @@ class ROLE(Enum):
     GUEST = 5
 
 
+def get_request_perm_cache(request):
+    """Return a per-HTTP-request permission cache dict shared across bootstrap sub-requests."""
+    raw = getattr(request, "_request", request)
+    cache = getattr(raw, "_perm_cache", None)
+    if cache is None:
+        cache = {}
+        raw._perm_cache = cache
+    return cache
+
+
+def get_cached_workspace_role(request, slug):
+    user_id = getattr(request.user, "id", None)
+    if not user_id:
+        return None
+    cache = get_request_perm_cache(request)
+    key = ("ws_role", str(user_id), slug)
+    if key not in cache:
+        cache[key] = (
+            WorkspaceMember.objects.filter(
+                member=request.user,
+                workspace__slug=slug,
+                is_active=True,
+            )
+            .values_list("role", flat=True)
+            .first()
+        )
+    return cache[key]
+
+
+def get_cached_project_role(request, slug, project_id):
+    user_id = getattr(request.user, "id", None)
+    if not user_id:
+        return None
+    cache = get_request_perm_cache(request)
+    key = ("proj_role", str(user_id), slug, str(project_id))
+    if key not in cache:
+        cache[key] = (
+            ProjectMember.objects.filter(
+                member=request.user,
+                workspace__slug=slug,
+                project_id=project_id,
+                is_active=True,
+            )
+            .values_list("role", flat=True)
+            .first()
+        )
+    return cache[key]
+
+
 def allow_permission(allowed_roles, level="PROJECT", creator=False, model=None):
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(instance, request, *args, **kwargs):
+            slug = kwargs["slug"]
             # Check for creator if required
             if creator and model:
                 # check if the user is part of the workspace or not
-                if not WorkspaceMember.objects.filter(
-                    member=request.user,
-                    workspace__slug=kwargs["slug"],
-                    is_active=True,
-                ).exists():
+                if get_cached_workspace_role(request, slug) is None:
                     return Response(
                         {"error": "You don't have the required permissions."},
                         status=status.HTTP_403_FORBIDDEN,
@@ -42,39 +88,14 @@ def allow_permission(allowed_roles, level="PROJECT", creator=False, model=None):
 
             # Check role permissions
             if level == "WORKSPACE":
-                if WorkspaceMember.objects.filter(
-                    member=request.user,
-                    workspace__slug=kwargs["slug"],
-                    role__in=allowed_role_values,
-                    is_active=True,
-                ).exists():
+                ws_role = get_cached_workspace_role(request, slug)
+                if ws_role in allowed_role_values:
                     return view_func(instance, request, *args, **kwargs)
             else:
-                is_user_has_allowed_role = ProjectMember.objects.filter(
-                    member=request.user,
-                    workspace__slug=kwargs["slug"],
-                    project_id=kwargs["project_id"],
-                    role__in=allowed_role_values,
-                    is_active=True,
-                ).exists()
-
-                # Return if the user has the allowed role else if they are workspace admin and part of the project regardless of the role # noqa: E501
-                if is_user_has_allowed_role:
+                project_role = get_cached_project_role(request, slug, kwargs["project_id"])
+                if project_role in allowed_role_values:
                     return view_func(instance, request, *args, **kwargs)
-                elif (
-                    ProjectMember.objects.filter(
-                        member=request.user,
-                        workspace__slug=kwargs["slug"],
-                        project_id=kwargs["project_id"],
-                        is_active=True,
-                    ).exists()
-                    and WorkspaceMember.objects.filter(
-                        member=request.user,
-                        workspace__slug=kwargs["slug"],
-                        role=ROLE.ADMIN.value,
-                        is_active=True,
-                    ).exists()
-                ):
+                elif project_role is not None and get_cached_workspace_role(request, slug) == ROLE.ADMIN.value:
                     return view_func(instance, request, *args, **kwargs)
 
             # Return permission denied if no conditions are met

@@ -4,6 +4,7 @@
 
 # Python imports
 import re
+import time
 import uuid
 
 # Django imports
@@ -509,9 +510,12 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
             object_name=asset.asset.name,
             disposition="attachment",
             filename=asset.attributes.get("name"),
+            response_cache_control="private, max-age=31536000, immutable",
         )
-        # Redirect to the signed URL
-        return HttpResponseRedirect(signed_url)
+        # Redirect to the signed URL (asset UUID is immutable; private prevents shared proxy caching)
+        response = HttpResponseRedirect(signed_url)
+        response["Cache-Control"] = "private, max-age=600"
+        return response
 
 
 class StaticFileAssetEndpoint(BaseAPIView):
@@ -524,13 +528,16 @@ class StaticFileAssetEndpoint(BaseAPIView):
 
         host = request.get_host() if request else ""
         scheme = request.scheme if request else "http"
-        cache_key = f"static_asset_redirect:{asset_id}:{scheme}:{host}"
+        cache_key = f"static_asset_redirect_v2:{asset_id}:{scheme}:{host}"
+        now = time.time()
         cached = None if settings.DEBUG else cache.get(cache_key)
         if cached is not None:
-            signed_url, ttl = cached
-            response = HttpResponseRedirect(signed_url)
-            response["Cache-Control"] = f"public, max-age={ttl}"
-            return response
+            signed_url, expires_at = cached
+            remaining = int(expires_at - now)
+            if remaining >= 60:
+                response = HttpResponseRedirect(signed_url)
+                response["Cache-Control"] = f"public, max-age={remaining}"
+                return response
 
         # get the asset id
         asset = FileAsset.objects.get(id=asset_id)
@@ -568,9 +575,10 @@ class StaticFileAssetEndpoint(BaseAPIView):
             filename=filename,
             response_cache_control="public, max-age=31536000, immutable",
         )
-        ttl = min(max(storage.signed_url_expiration - 300, 60), 1800)
+        ttl = min(max(storage.signed_url_expiration - 300, 60), 3600)
+        expires_at = now + ttl
         if signed_url and not settings.DEBUG:
-            cache.set(cache_key, (signed_url, ttl), timeout=ttl)
+            cache.set(cache_key, (signed_url, expires_at), timeout=ttl)
         response = HttpResponseRedirect(signed_url)
         response["Cache-Control"] = f"public, max-age={ttl}"
         return response
@@ -914,9 +922,12 @@ class ProjectAssetEndpoint(BaseAPIView):
             object_name=asset.asset.name,
             disposition="attachment",
             filename=asset.attributes.get("name"),
+            response_cache_control="private, max-age=31536000, immutable",
         )
         # Redirect to the signed URL
-        return HttpResponseRedirect(signed_url)
+        response = HttpResponseRedirect(signed_url)
+        response["Cache-Control"] = "private, max-age=600"
+        return response
 
 
 class ProjectBulkAssetEndpoint(BaseAPIView):

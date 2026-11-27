@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { IWorkspaceBootstrapResponse } from "@/services/bootstrap.service";
-import { clearAllBootstrapCache, readWorkspaceBootstrapCache, writeWorkspaceBootstrapCache } from "./bootstrap-cache";
+import type { IWorkspaceBootstrapResponse, IWorkspaceHomeBootstrapResponse } from "@/services/bootstrap.service";
+import type { CoreRootStore } from "@/store/root.store";
+import {
+  clearAllBootstrapCache,
+  hydrateHomeBootstrap,
+  readWorkspaceBootstrapCache,
+  writeWorkspaceBootstrapCache,
+} from "./bootstrap-cache";
 
 const sampleData: IWorkspaceBootstrapResponse = {
   workspace_member_me: null,
@@ -60,5 +66,30 @@ describe("bootstrap-cache", () => {
     clearAllBootstrapCache();
     expect(readWorkspaceBootstrapCache("u1", "ws-a", t0 + 1000)).toBeNull();
     expect(window.localStorage.getItem("unrelated_key")).toBe("keep");
+  });
+
+  it("hydrates home widgets, quick links, and stickies from home-bootstrap", () => {
+    const addLinks = vi.fn();
+    const store = {
+      home: { widgets: [], widgetsMap: {}, loading: true, quickLinks: { addLinks } },
+      stickyStore: { stickies: {}, workspaceStickies: {}, paginationInfo: undefined, loader: "init-loader" },
+    } as unknown as CoreRootStore;
+    const homeData: IWorkspaceHomeBootstrapResponse = {
+      home_preferences: [
+        { key: "recents", is_enabled: true, sort_order: 200 } as never,
+        { key: "quick_links", is_enabled: true, sort_order: 100 } as never,
+      ],
+      quick_links: [{ id: "l1", title: "Docs", url: "https://example.com" } as never],
+      recent_visits: [],
+      stickies: { results: [{ id: "s1", name: "Note" } as never], total_pages: 1 },
+    };
+
+    hydrateHomeBootstrap(store, "ws-a", homeData);
+
+    expect(store.home.loading).toBe(false);
+    expect(store.home.widgets).toEqual(["recents", "quick_links"]);
+    expect(addLinks).toHaveBeenCalledWith("ws-a", homeData.quick_links);
+    expect(store.stickyStore.workspaceStickies["ws-a"]).toEqual(["s1"]);
+    expect(store.stickyStore.loader).toBe("loaded");
   });
 });

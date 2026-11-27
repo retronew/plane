@@ -28,7 +28,9 @@ function defer(callback: () => void) {
 /** One connection per authenticated workspace, shared by all mounted issue views. */
 export const IssueSyncProvider = observer(function IssueSyncProvider() {
   const store = useContext(StoreContext);
-  const workspaceSlug = store.router.workspaceSlug;
+  const rawWorkspaceSlug = store.router.workspaceSlug;
+  const currentWorkspace = rawWorkspaceSlug ? store.workspaceRoot.getWorkspaceBySlug(rawWorkspaceSlug) : undefined;
+  const workspaceSlug = currentWorkspace ? rawWorkspaceSlug : undefined;
   const userId = store.user.data?.id;
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export const IssueSyncProvider = observer(function IssueSyncProvider() {
         throw error;
       }
     });
-    issueSync.setReplay(replay.wake);
+    issueSync.setReplay(replay.wake, replay.wakeIfIdle);
     if (document.hidden || !navigator.onLine) issueSync.suspend();
     issueSync.connect(url.toString());
 

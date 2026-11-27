@@ -4,12 +4,16 @@
  * See the LICENSE file for details.
  */
 
-import { makeObservable, observableRef } from "mobx";
+import { set } from "lodash-es";
+import { makeObservable, observableRef, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
+import { mutate } from "swr";
 // types
-import type { TIssue, TIssueServiceType } from "@plane/types";
+import type { TIssue, TIssueRelation, TIssueServiceType } from "@plane/types";
 // services
+import { bootstrapService } from "@/services/bootstrap.service";
 import { IssueArchiveService, WorkspaceDraftService, IssueService } from "@/services/issue";
+import { issueCollaborationKey } from "@/services/issue/issue-collaboration.service";
 // types
 import type { IIssueDetail } from "./root.store";
 
@@ -267,11 +271,21 @@ export class IssueStore implements IIssueStore {
   };
 
   fetchIssueWithIdentifier = async (workspaceSlug: string, project_identifier: string, sequence_id: string) => {
+    const issueIdentifier = `${project_identifier}-${sequence_id}`;
     const query = {
       expand: "issue_reactions,issue_attachments,issue_link,parent",
     };
-    const issue = await this.issueService.retrieveWithIdentifier(workspaceSlug, project_identifier, sequence_id, query);
-    const issueIdentifier = `${project_identifier}-${sequence_id}`;
+
+    let bootstrapData: Awaited<ReturnType<typeof bootstrapService.getWorkItemBootstrap>> | null = null;
+    try {
+      bootstrapData = await bootstrapService.getWorkItemBootstrap(workspaceSlug, issueIdentifier);
+    } catch {
+      bootstrapData = null;
+    }
+
+    const issue =
+      bootstrapData?.issue ??
+      (await this.issueService.retrieveWithIdentifier(workspaceSlug, project_identifier, sequence_id, query));
     const issueId = issue?.id;
     const projectId = issue?.project_id;
     const rootWorkItemDetailStore = this.rootIssueDetailStore.rootIssueStore.issueDetail;
@@ -281,7 +295,7 @@ export class IssueStore implements IIssueStore {
     const issuePayload = this.addIssueToStore(issue);
     this.rootIssueDetailStore.rootIssueStore.issues.addIssue([issuePayload]);
 
-    // handle parent issue if exists
+    // handle parent issue if exists (use expanded parent if already complete, otherwise fetch)
     if (issue?.parent && issue?.parent?.id && issue?.parent?.project_id) {
       this.issueService.retrieve(workspaceSlug, issue.parent.project_id, issue.parent.id).then((res) => {
         this.rootIssueDetailStore.rootIssueStore.issues.addIssue([res]);
@@ -298,26 +312,64 @@ export class IssueStore implements IIssueStore {
     if (issue.issue_attachments) rootWorkItemDetailStore.addAttachments(issueId, issue.issue_attachments);
     rootWorkItemDetailStore.addSubscription(issueId, issue.is_subscribed);
 
-    // fetch issue activity
-    rootWorkItemDetailStore.activity.fetchActivities(workspaceSlug, projectId, issueId);
+    // Hydrate sub-resources directly from work-item bootstrap when available, avoiding 6 extra requests
+    if (bootstrapData && Array.isArray(bootstrapData.activities)) {
+      const activities = bootstrapData.activities;
+      runInAction(() => {
+        rootWorkItemDetailStore.activity.activities[issueId] = activities.map((activity) => activity.id);
+        activities.forEach((activity) => {
+          set(rootWorkItemDetailStore.activity.activityMap, activity.id, activity);
+        });
+        rootWorkItemDetailStore.activity.loader = undefined;
+      });
+    } else {
+      rootWorkItemDetailStore.activity.fetchActivities(workspaceSlug, projectId, issueId);
+    }
 
-    // fetch issue comments
-    rootWorkItemDetailStore.comment.fetchComments(workspaceSlug, projectId, issueId);
+    if (bootstrapData && Array.isArray(bootstrapData.comments)) {
+      const comments = bootstrapData.comments;
+      runInAction(() => {
+        rootWorkItemDetailStore.comment.comments[issueId] = comments.map((comment) => comment.id);
+        comments.forEach((comment) => {
+          rootWorkItemDetailStore.commentReaction.applyCommentReactions(comment.id, comment?.comment_reactions || []);
+          set(rootWorkItemDetailStore.comment.commentMap, comment.id, comment);
+        });
+        rootWorkItemDetailStore.comment.loader = undefined;
+      });
+    } else {
+      rootWorkItemDetailStore.comment.fetchComments(workspaceSlug, projectId, issueId);
+    }
 
-    // fetch sub issues only when the issue actually has children
     if ((issue.sub_issues_count ?? 0) > 0) {
-      rootWorkItemDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+      if (bootstrapData?.sub_issues) {
+        rootWorkItemDetailStore.subIssues.applySubIssues(issueId, bootstrapData.sub_issues);
+      } else {
+        rootWorkItemDetailStore.subIssues.fetchSubIssues(workspaceSlug, projectId, issueId);
+      }
     } else {
       rootWorkItemDetailStore.subIssues.applySubIssues(issueId, EMPTY_SUB_ISSUES);
     }
 
-    // fetch issue relations
-    rootWorkItemDetailStore.relation.fetchRelations(workspaceSlug, projectId, issueId);
+    if (bootstrapData?.relations) {
+      const relations = bootstrapData.relations;
+      runInAction(() => {
+        rootWorkItemDetailStore.relation.relationMap[issueId] = Object.fromEntries(
+          Object.entries(relations).map(([key, relatedIssues]) => [
+            key,
+            relatedIssues.flat().map((related) => related.id),
+          ])
+        ) as Record<keyof TIssueRelation, string[]>;
+        rootWorkItemDetailStore.rootIssueStore.issues.addIssue(Object.values(relations).flat());
+      });
+    } else {
+      rootWorkItemDetailStore.relation.fetchRelations(workspaceSlug, projectId, issueId);
+    }
 
-    // fetching states only when not already loaded for this project
-    const stateStore = rootWorkItemDetailStore.rootIssueStore.rootStore.state;
-    if (!stateStore.fetchedMap[projectId]) {
-      stateStore.fetchProjectStates(workspaceSlug, projectId);
+    if (bootstrapData?.collaboration) {
+      void mutate(issueCollaborationKey(workspaceSlug, projectId, issueId), bootstrapData.collaboration, false);
+    }
+    if (bootstrapData?.description_versions) {
+      void mutate(`DESCRIPTION_VERSIONS_LIST_${issueId}`, bootstrapData.description_versions, false);
     }
 
     return issue;

@@ -33,10 +33,11 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
 
   const showLabel = preferences.displayMode === "icon_with_label";
 
-  // Fetch notification count
+  // Fetch notification count (primed by workspace bootstrap)
   useSWR(
     workspaceSlug ? "WORKSPACE_UNREAD_NOTIFICATION_COUNT" : null,
-    workspaceSlug ? () => getUnreadNotificationsCount(workspaceSlug.toString()) : null
+    workspaceSlug ? () => getUnreadNotificationsCount(workspaceSlug.toString()) : null,
+    { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
   // Calculate notification count

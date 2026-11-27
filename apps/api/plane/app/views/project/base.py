@@ -9,7 +9,7 @@ import json
 # Django imports
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
-from django.db.models import Exists, F, OuterRef, Prefetch, Q, Subquery, Count
+from django.db.models import Exists, F, Max, OuterRef, Prefetch, Q, Subquery, Count
 from django.utils import timezone
 
 # Third Party imports
@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 # Module imports
 from plane.app.permissions import ROLE, ProjectMemberPermission, allow_permission
+from plane.app.permissions.base import get_cached_workspace_role
 from plane.app.serializers import (
     DeployBoardSerializer,
     ProjectListSerializer,
@@ -37,6 +38,7 @@ from plane.db.models import (
     UserFavorite,
     DeployBoard,
     Intake,
+    IssueSequence,
     Project,
     ProjectIdentifier,
     ProjectMember,
@@ -63,11 +65,18 @@ class ProjectViewSet(BaseViewSet):
             project_id=OuterRef("pk"),
             workspace__slug=self.kwargs.get("slug"),
         ).values("sort_order")
+        max_issue_sequence = (
+            IssueSequence.objects.filter(project_id=OuterRef("pk"))
+            .order_by()
+            .values("project_id")
+            .annotate(max_seq=Max("sequence"))
+            .values("max_seq")[:1]
+        )
         return self.filter_queryset(
             super()
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
-            .select_related("workspace", "workspace__owner", "default_assignee", "project_lead")
+            .select_related("workspace", "workspace__owner", "default_assignee", "project_lead", "cover_image_asset")
             .annotate(
                 is_favorite=Exists(
                     UserFavorite.objects.filter(
@@ -93,6 +102,7 @@ class ProjectViewSet(BaseViewSet):
                 ).values("anchor")
             )
             .annotate(sort_order=Subquery(sort_order))
+            .annotate(max_issue_sequence=Subquery(max_issue_sequence))
             .prefetch_related(
                 "labels",
                 Prefetch(
@@ -110,23 +120,13 @@ class ProjectViewSet(BaseViewSet):
     def list_detail(self, request, slug):
         fields = [field for field in request.GET.get("fields", "").split(",") if field]
         projects = self.get_queryset().order_by("sort_order", "name")
-        if WorkspaceMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            is_active=True,
-            role=ROLE.GUEST.value,
-        ).exists():
+        ws_role = get_cached_workspace_role(request, slug)
+        if ws_role == ROLE.GUEST.value:
             projects = projects.filter(
                 project_projectmember__member=self.request.user,
                 project_projectmember__is_active=True,
             )
-
-        if WorkspaceMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            is_active=True,
-            role=ROLE.MEMBER.value,
-        ).exists():
+        elif ws_role == ROLE.MEMBER.value:
             projects = projects.filter(
                 Q(
                     project_projectmember__member=self.request.user,
@@ -205,23 +205,13 @@ class ProjectViewSet(BaseViewSet):
             "updated_by",
         )
 
-        if WorkspaceMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            is_active=True,
-            role=ROLE.GUEST.value,
-        ).exists():
+        ws_role = get_cached_workspace_role(request, slug)
+        if ws_role == ROLE.GUEST.value:
             projects = projects.filter(
                 project_projectmember__member=self.request.user,
                 project_projectmember__is_active=True,
             )
-
-        if WorkspaceMember.objects.filter(
-            member=request.user,
-            workspace__slug=slug,
-            is_active=True,
-            role=ROLE.MEMBER.value,
-        ).exists():
+        elif ws_role == ROLE.MEMBER.value:
             projects = projects.filter(
                 Q(
                     project_projectmember__member=self.request.user,

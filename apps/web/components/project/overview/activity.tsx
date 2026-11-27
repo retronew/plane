@@ -62,7 +62,7 @@ function ActivityFeed({
     },
     ([, slug, id, , order, cursor]: ActivityKey) =>
       projectOverviewService.getActivities(slug, id, cursor || undefined, order),
-    { revalidateOnFocus: true, revalidateOnMount: true, revalidateAll: true }
+    { revalidateOnFocus: false, revalidateAll: false }
   );
   const seen = new Set<string>();
   const entries = (data ?? [])

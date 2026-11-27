@@ -203,7 +203,10 @@ class ProjectListSerializer(DynamicBaseSerializer):
 
     def get_next_work_item_sequence(self, obj):
         """Get the next sequence ID that will be assigned to a new issue"""
-        max_sequence = IssueSequence.objects.filter(project_id=obj.id).aggregate(max_seq=Max("sequence"))["max_seq"]
+        if hasattr(obj, "max_issue_sequence"):
+            max_sequence = obj.max_issue_sequence
+        else:
+            max_sequence = IssueSequence.objects.filter(project_id=obj.id).aggregate(max_seq=Max("sequence"))["max_seq"]
         return (max_sequence + 1) if max_sequence else 1
 
     class Meta:

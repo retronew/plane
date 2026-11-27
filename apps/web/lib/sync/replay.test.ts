@@ -144,3 +144,22 @@ it("recalibrates a retention gap from the returned baseline", async () => {
   expect(source.mock.calls.at(-1)?.[0]).toBe("50");
   replay.dispose();
 });
+
+it("wakeIfIdle skips redundant mount replay right after cold baseline and wakes once stale", async () => {
+  const { source, replay } = setup();
+  replay.resume();
+  await drain();
+  expect(source).toHaveBeenCalledTimes(1);
+
+  // Within 1500ms of baseline completion, passive wakeIfIdle does not trigger duplicate /sync/changes/
+  replay.wakeIfIdle();
+  await drain();
+  expect(source).toHaveBeenCalledTimes(1);
+
+  // After coalescing window elapses, wakeIfIdle polls normally
+  await vi.advanceTimersByTimeAsync(1600);
+  replay.wakeIfIdle();
+  await drain();
+  expect(source).toHaveBeenCalledTimes(2);
+  replay.dispose();
+});

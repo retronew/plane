@@ -88,17 +88,48 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needGantt]);
 
-  // Build route-scoped include list for the single project bootstrap endpoint
+  // Build route-scoped include list filtered to resources not yet hydrated in MobX so
+  // switching tabs inside the same project (Issues <-> Browse <-> Cycles <-> Modules) never re-runs full bootstrap.
+  const hasCoreHydrated = Boolean(
+    rootStore?.projectRoot.project.projectMap[projectId] &&
+    rootStore?.user.permission.projectUserInfo[workspaceSlug]?.[projectId]
+  );
   const bootstrapIncludes = useMemo(() => {
     const list: string[] = [];
-    if (needStates) list.push("states");
-    if (needLabels) list.push("labels");
-    if (needMembers) list.push("members");
-    if (needUserProperties && currentUserData?.id) list.push("user_properties");
-    if (needEstimates && (projectDetails ? Boolean(projectDetails.estimate) : true)) list.push("estimates");
-    if (needCycles && (projectDetails ? Boolean(projectDetails.cycle_view) : true)) list.push("cycles");
-    if (needModules && (projectDetails ? Boolean(projectDetails.module_view) : true)) list.push("modules");
-    if (needViews && (projectDetails ? Boolean(projectDetails.issue_views_view) : true)) list.push("views");
+    if (needStates && !rootStore?.state.fetchedMap[projectId]) list.push("states");
+    if (needLabels && !rootStore?.label.fetchedMap[projectId]) list.push("labels");
+    if (needMembers && !rootStore?.memberRoot.project.projectMemberFetchStatusMap[projectId]) list.push("members");
+    if (
+      needUserProperties &&
+      currentUserData?.id &&
+      !rootStore?.memberRoot.project.projectUserPropertiesMap[projectId]
+    ) {
+      list.push("user_properties");
+    }
+    if (needEstimates && (projectDetails ? Boolean(projectDetails.estimate) : true) && !hasCoreHydrated) {
+      list.push("estimates");
+    }
+    if (
+      needCycles &&
+      (projectDetails ? Boolean(projectDetails.cycle_view) : true) &&
+      !rootStore?.cycle.fetchedMap[projectId]
+    ) {
+      list.push("cycles");
+    }
+    if (
+      needModules &&
+      (projectDetails ? Boolean(projectDetails.module_view) : true) &&
+      !rootStore?.module.fetchedMap[projectId]
+    ) {
+      list.push("modules");
+    }
+    if (
+      needViews &&
+      (projectDetails ? Boolean(projectDetails.issue_views_view) : true) &&
+      !rootStore?.projectView.fetchedMap[projectId]
+    ) {
+      list.push("views");
+    }
     return list;
   }, [
     needStates,
@@ -111,12 +142,18 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     needModules,
     needViews,
     projectDetails,
+    projectId,
+    hasCoreHydrated,
+    rootStore,
   ]);
   const includeKey = bootstrapIncludes.join(",");
+  const shouldFetchProjectBootstrap = Boolean(
+    workspaceSlug && projectId && (!hasCoreHydrated || bootstrapIncludes.length > 0)
+  );
 
   // Single aggregated project bootstrap (merges project details, role, states, labels, members, user-properties, cycles/modules/views/estimates)
   const { isLoading: isProjectDetailsLoading, error: projectDetailsError } = useSWR(
-    workspaceSlug && projectId ? `PROJECT_BOOTSTRAP_${workspaceSlug}_${projectId}_${includeKey}` : null,
+    shouldFetchProjectBootstrap ? `PROJECT_BOOTSTRAP_${workspaceSlug}_${projectId}_${includeKey}` : null,
     async () => {
       const data = await bootstrapService.getProjectBootstrap(workspaceSlug, projectId, bootstrapIncludes);
       if (rootStore) {

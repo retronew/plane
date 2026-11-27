@@ -4,12 +4,24 @@
  * See the LICENSE file for details.
  */
 
-// plane imports
-import { LogoSpinner as BaseLogoSpinner } from "@plane/blocks/common";
-// assets
-import LogoSpinnerDark from "@/app/assets/images/logo-spinner-dark.gif?url";
-import LogoSpinnerLight from "@/app/assets/images/logo-spinner-light.gif?url";
-
 export function LogoSpinner() {
-  return <BaseLogoSpinner lightSrc={LogoSpinnerLight} darkSrc={LogoSpinnerDark} />;
+  return (
+    <output className="flex items-center justify-center" aria-label="Loading">
+      <svg
+        className="size-10 animate-spin text-accent-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle className="opacity-20" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" />
+        <path
+          className="opacity-90"
+          d="M21 12a9 9 0 0 0-9-9"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    </output>
+  );
 }

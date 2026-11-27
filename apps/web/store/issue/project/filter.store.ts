@@ -13,6 +13,7 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  IProjectUserPropertiesResponse,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -43,6 +44,11 @@ export interface IProjectIssuesFilter extends IBaseIssueFilterStore {
   getIssueFilters(projectId: string): IIssueFilters | undefined;
   // action
   fetchFilters: (workspaceSlug: string, projectId: string) => Promise<void>;
+  hydrateFromUserProperties: (
+    workspaceSlug: string,
+    projectId: string,
+    userProperties: IProjectUserPropertiesResponse | undefined
+  ) => void;
   updateFilterExpression: (
     workspaceSlug: string,
     projectId: string,
@@ -74,6 +80,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       appliedFilters: computed,
       // actions
       fetchFilters: action,
+      hydrateFromUserProperties: action,
       updateFilterExpression: action,
       updateFilters: action,
     });
@@ -134,12 +141,11 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     }
   );
 
-  fetchFilters = async (workspaceSlug: string, projectId: string) => {
-    const _filters = await this.rootIssueStore.rootStore.memberRoot.project.fetchProjectUserProperties(
-      workspaceSlug,
-      projectId
-    );
-
+  hydrateFromUserProperties = (
+    workspaceSlug: string,
+    projectId: string,
+    _filters: IProjectUserPropertiesResponse | undefined
+  ) => {
     const richFilters = _filters?.rich_filters;
     const displayFilters = this.computedDisplayFilters(_filters?.display_filters);
     const displayProperties = this.computedDisplayProperties(_filters?.display_properties);
@@ -167,6 +173,14 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       set(this.filters, [projectId, "displayProperties"], displayProperties);
       set(this.filters, [projectId, "kanbanFilters"], kanbanFilters);
     });
+  };
+
+  fetchFilters = async (workspaceSlug: string, projectId: string) => {
+    const _filters = await this.rootIssueStore.rootStore.memberRoot.project.fetchProjectUserProperties(
+      workspaceSlug,
+      projectId
+    );
+    this.hydrateFromUserProperties(workspaceSlug, projectId, _filters);
   };
 
   /**

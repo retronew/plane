@@ -200,9 +200,9 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
     }
   }, [rootStore, currentUser?.id, slug]);
 
-  // Single aggregated workspace bootstrap (replaces 8 parallel shell requests)
+  // Single aggregated workspace bootstrap (stable key avoids re-running all 9 endpoints on Home <-> Projects navigation)
   const { isLoading: isWorkspaceBootstrapLoading } = useSWR(
-    fetchSlug ? `WORKSPACE_BOOTSTRAP_${fetchSlug}_${isProjectsListRoute ? "full" : "partial"}` : null,
+    fetchSlug ? `WORKSPACE_BOOTSTRAP_${fetchSlug}` : null,
     async () => {
       if (!fetchSlug) return null;
       const data = await bootstrapService.getWorkspaceBootstrap(fetchSlug, isProjectsListRoute);

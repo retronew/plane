@@ -26,7 +26,8 @@ export const NotificationAppSidebarOption = observer(function NotificationAppSid
 
   useSWR(
     workspaceSlug ? "WORKSPACE_UNREAD_NOTIFICATION_COUNT" : null,
-    workspaceSlug ? () => getUnreadNotificationsCount(workspaceSlug) : null
+    workspaceSlug ? () => getUnreadNotificationsCount(workspaceSlug) : null,
+    { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
   // derived values

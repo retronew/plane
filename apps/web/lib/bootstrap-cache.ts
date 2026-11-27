@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { set, update } from "lodash-es";
+import { orderBy, set, update } from "lodash-es";
 import { runInAction } from "mobx";
 import { mutate } from "swr";
 import {
@@ -38,6 +38,7 @@ import type {
   IAppBootstrapResponse,
   IProjectBootstrapResponse,
   IWorkspaceBootstrapResponse,
+  IWorkspaceHomeBootstrapResponse,
   IWorkspaceViewBootstrapResponse,
 } from "@/services/bootstrap.service";
 import { Estimate } from "@/store/estimates/estimate";
@@ -157,6 +158,9 @@ export function hydrateAppBootstrap(store: CoreRootStore, data: IAppBootstrapRes
   }
   if (data.authenticated && data.user?.id) {
     void mutate("USER_INFORMATION", data.user, false);
+    if (Array.isArray(data.invitations)) {
+      void mutate(["USER_WORKSPACE_INVITATIONS", data.user.id], data.invitations, false);
+    }
   }
   if (data.instance_admin !== null && data.instance_admin !== undefined) {
     void mutate("CURRENT_USER_INSTANCE_ADMIN_STATUS", data.instance_admin, false);
@@ -229,6 +233,10 @@ export function hydrateWorkspaceBootstrap(
     if (data.user_properties) {
       store.workspaceRoot.projectNavigationPreferencesMap[workspaceSlug] = data.user_properties;
     }
+
+    if (data.unread_notifications) {
+      store.workspaceNotification.unreadNotificationsCount = data.unread_notifications;
+    }
   });
 
   if (!primeSwr) return;
@@ -259,6 +267,49 @@ export function hydrateWorkspaceBootstrap(
   }
   if (data.user_properties) {
     void mutate(WORKSPACE_PROJECT_NAVIGATION_PREFERENCES(workspaceSlug), data.user_properties, false);
+  }
+  if (data.unread_notifications) {
+    void mutate("WORKSPACE_UNREAD_NOTIFICATION_COUNT", data.unread_notifications, false);
+  }
+}
+
+export function hydrateHomeBootstrap(
+  store: CoreRootStore,
+  workspaceSlug: string,
+  data: IWorkspaceHomeBootstrapResponse
+): void {
+  runInAction(() => {
+    if (Array.isArray(data.home_preferences)) {
+      store.home.widgets = orderBy(data.home_preferences, "sort_order", "desc").map((widget) => widget.key);
+      data.home_preferences.forEach((widget) => {
+        store.home.widgetsMap[widget.key] = widget;
+      });
+      store.home.loading = false;
+    }
+
+    if (Array.isArray(data.quick_links)) {
+      store.home.quickLinks.addLinks(workspaceSlug, data.quick_links);
+    }
+
+    if (data.stickies && Array.isArray(data.stickies.results)) {
+      const { results, ...paginationInfo } = data.stickies;
+      results.forEach((sticky) => {
+        store.stickyStore.stickies[sticky.id] = sticky;
+      });
+      store.stickyStore.workspaceStickies[workspaceSlug] = results.map((sticky) => sticky.id);
+      set(store.stickyStore, "paginationInfo", paginationInfo);
+      store.stickyStore.loader = "loaded";
+    }
+  });
+
+  if (Array.isArray(data.quick_links)) {
+    void mutate(`HOME_LINKS_${workspaceSlug}`, data.quick_links, false);
+  }
+  if (Array.isArray(data.recent_visits)) {
+    void mutate(`WORKSPACE_RECENT_ACTIVITY_${workspaceSlug}_all item`, data.recent_visits, false);
+  }
+  if (data.stickies && Array.isArray(data.stickies.results)) {
+    void mutate(`WORKSPACE_STICKIES_${workspaceSlug}`, data.stickies, false);
   }
 }
 
@@ -360,6 +411,7 @@ export function hydrateProjectBootstrap(
 
     if (data.user_properties) {
       set(store.memberRoot.project.projectUserPropertiesMap, [projectId], data.user_properties);
+      store.issue.projectIssuesFilter.hydrateFromUserProperties(workspaceSlug, projectId, data.user_properties);
     }
 
     if (Array.isArray(data.cycles)) {

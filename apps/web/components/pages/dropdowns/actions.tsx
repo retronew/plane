@@ -205,13 +205,22 @@ export const PageActions = observer(function PageActions(props: Props) {
 
   return (
     <>
-      <MovePageModal isOpen={movePageModal} onClose={() => setMovePageModal(false)} page={page} storeType={storeType} />
-      <DeletePageModal
-        isOpen={deletePageModal}
-        onClose={() => setDeletePageModal(false)}
-        page={page}
-        storeType={storeType}
-      />
+      {movePageModal && (
+        <MovePageModal
+          isOpen={movePageModal}
+          onClose={() => setMovePageModal(false)}
+          page={page}
+          storeType={storeType}
+        />
+      )}
+      {deletePageModal && (
+        <DeletePageModal
+          isOpen={deletePageModal}
+          onClose={() => setDeletePageModal(false)}
+          page={page}
+          storeType={storeType}
+        />
+      )}
       {parentRef && <ContextMenu parentRef={parentRef} items={arrangedOptions} />}
       <Menu>
         <MenuTrigger

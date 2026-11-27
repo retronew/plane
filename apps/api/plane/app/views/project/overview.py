@@ -138,7 +138,7 @@ class ProjectOverviewResourceEndpoint(BaseAPIView):
 
     def get_resources(self, project):
         return self.model.objects.filter(project=project, workspace_id=project.workspace_id).select_related(
-            "created_by"
+            "created_by", "created_by__avatar_asset"
         )
 
     def get_resource(self, project, pk):
@@ -391,7 +391,7 @@ class ProjectReactionEndpoint(BaseAPIView):
     def get(self, request, slug, project_id):
         project, _, _ = get_project_overview_access(request.user, slug, project_id)
         reactions = ProjectReaction.objects.filter(project=project, workspace_id=project.workspace_id).select_related(
-            "actor"
+            "actor", "actor__avatar_asset"
         )
         return Response(ProjectReactionSerializer(reactions.order_by("-created_at", "-id"), many=True).data)
 
@@ -446,7 +446,7 @@ class ProjectActivityEndpoint(BaseAPIView):
             raise ParseError("order_by must be '-created_at' or 'created_at'.")
         id_order = "-id" if order_by.startswith("-") else "id"
         activities = ProjectActivity.objects.filter(project=project, workspace_id=project.workspace_id).select_related(
-            "actor"
+            "actor", "actor__avatar_asset"
         )
         return self.paginate(
             request=request,

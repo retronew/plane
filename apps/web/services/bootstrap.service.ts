@@ -23,14 +23,27 @@ import type {
   IWorkspace,
   IWorkspaceMember,
   IWorkspaceMemberMe,
+  IWorkspaceMemberInvitation,
   IWorkspaceSidebarNavigation,
   IWorkspaceUserPropertiesResponse,
   IWorkspaceView,
+  TActivityEntityData,
+  TDescriptionVersion,
+  TIssue,
+  TIssueActivity,
+  TIssueComment,
+  TIssueRelation,
+  TIssueSubIssues,
+  TLink,
   TPartialProject,
   TProjectMembership,
+  TSticky,
+  TUnreadNotificationsCount,
   TUserProfile,
+  TWidgetEntityData,
 } from "@plane/types";
 import { APIService } from "@/services/api.service";
+import type { IssueCollaborationDocument } from "@/services/issue/issue-collaboration.service";
 
 export interface IAppBootstrapResponse {
   authenticated: boolean;
@@ -40,6 +53,7 @@ export interface IAppBootstrapResponse {
   settings: IUserSettings | null;
   workspaces: IWorkspace[] | null;
   instance_admin: { is_instance_admin: boolean } | null;
+  invitations?: IWorkspaceMemberInvitation[] | null;
 }
 
 export interface IWorkspaceBootstrapResponse {
@@ -52,6 +66,24 @@ export interface IWorkspaceBootstrapResponse {
   states: IState[] | null;
   sidebar_preferences: IWorkspaceSidebarNavigation | null;
   user_properties: IWorkspaceUserPropertiesResponse | null;
+  unread_notifications?: TUnreadNotificationsCount | null;
+}
+
+export interface IWorkspaceHomeBootstrapResponse {
+  home_preferences: TWidgetEntityData[] | null;
+  quick_links: TLink[] | null;
+  recent_visits: TActivityEntityData[] | null;
+  stickies: { results: TSticky[]; total_pages?: number; next_cursor?: string; next_page_results?: boolean } | null;
+}
+
+export interface IWorkItemBootstrapResponse {
+  issue: TIssue | null;
+  activities: TIssueActivity[] | null;
+  comments: TIssueComment[] | null;
+  relations: TIssueRelation | null;
+  sub_issues: TIssueSubIssues | null;
+  collaboration: IssueCollaborationDocument | null;
+  description_versions: { results?: TDescriptionVersion[] } | TDescriptionVersion[] | null;
 }
 
 export interface IWorkspaceViewBootstrapResponse {
@@ -78,12 +110,17 @@ export interface IProjectBootstrapResponse {
 export class BootstrapService extends APIService {
   private inflightApp: Promise<IAppBootstrapResponse> | null = null;
   private inflightWorkspace = new Map<string, Promise<IWorkspaceBootstrapResponse>>();
+  private inflightWorkspaceHome = new Map<string, Promise<IWorkspaceHomeBootstrapResponse>>();
   private inflightWorkspaceView = new Map<string, Promise<IWorkspaceViewBootstrapResponse>>();
   private inflightProject = new Map<string, Promise<IProjectBootstrapResponse>>();
+  private inflightWorkItem = new Map<string, Promise<IWorkItemBootstrapResponse>>();
 
   constructor() {
     super(API_BASE_URL);
   }
+
+  isFullWorkspaceBootstrapInflight = (workspaceSlug: string): boolean =>
+    this.inflightWorkspace.has(`${workspaceSlug}:full`);
 
   getAppBootstrap = async (): Promise<IAppBootstrapResponse> => {
     if (this.inflightApp) return this.inflightApp;
@@ -110,6 +147,31 @@ export class BootstrapService extends APIService {
         this.inflightWorkspace.delete(key);
       });
     this.inflightWorkspace.set(key, req);
+    return req;
+  };
+
+  getHomeBootstrap = async (workspaceSlug: string): Promise<IWorkspaceHomeBootstrapResponse> => {
+    const existing = this.inflightWorkspaceHome.get(workspaceSlug);
+    if (existing) return existing;
+    const req = this.get(`/api/workspaces/${workspaceSlug}/home-bootstrap/`)
+      .then((res) => res.data as IWorkspaceHomeBootstrapResponse)
+      .finally(() => {
+        this.inflightWorkspaceHome.delete(workspaceSlug);
+      });
+    this.inflightWorkspaceHome.set(workspaceSlug, req);
+    return req;
+  };
+
+  getWorkItemBootstrap = async (workspaceSlug: string, identifier: string): Promise<IWorkItemBootstrapResponse> => {
+    const key = `${workspaceSlug}:${identifier}`;
+    const existing = this.inflightWorkItem.get(key);
+    if (existing) return existing;
+    const req = this.get(`/api/workspaces/${workspaceSlug}/work-items/${identifier}/bootstrap/`)
+      .then((res) => res.data as IWorkItemBootstrapResponse)
+      .finally(() => {
+        this.inflightWorkItem.delete(key);
+      });
+    this.inflightWorkItem.set(key, req);
     return req;
   };
 

@@ -22,47 +22,41 @@ class WorkspaceHomePreferenceViewSet(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def get(self, request, slug):
-        workspace = Workspace.objects.get(slug=slug)
-
-        get_preference = WorkspaceHomePreference.objects.filter(user=request.user, workspace_id=workspace.id)
-
-        create_preference_keys = []
-
-        keys = [
+        existing = list(
+            WorkspaceHomePreference.objects.filter(user=request.user, workspace__slug=slug).values(
+                "key", "is_enabled", "config", "sort_order"
+            )
+        )
+        existing_keys = {row["key"] for row in existing}
+        expected_keys = [
             key
             for key, _ in WorkspaceHomePreference.HomeWidgetKeys.choices
             if key not in ["quick_tutorial", "new_at_plane"]
         ]
+        missing_keys = [key for key in expected_keys if key not in existing_keys]
 
-        sort_order_counter = 1
-
-        for preference in keys:
-            if preference not in get_preference.values_list("key", flat=True):
-                create_preference_keys.append(preference)
-
-                sort_order = 1000 - sort_order_counter
-
-                preference = WorkspaceHomePreference.objects.bulk_create(
-                    [
-                        WorkspaceHomePreference(
-                            key=key,
-                            user=request.user,
-                            workspace=workspace,
-                            sort_order=sort_order,
-                        )
-                        for key in create_preference_keys
-                    ],
-                    batch_size=10,
-                    ignore_conflicts=True,
+        if missing_keys:
+            workspace = Workspace.objects.get(slug=slug)
+            WorkspaceHomePreference.objects.bulk_create(
+                [
+                    WorkspaceHomePreference(
+                        key=key,
+                        user=request.user,
+                        workspace=workspace,
+                        sort_order=1000 - (idx + 1),
+                    )
+                    for idx, key in enumerate(missing_keys)
+                ],
+                batch_size=10,
+                ignore_conflicts=True,
+            )
+            existing = list(
+                WorkspaceHomePreference.objects.filter(user=request.user, workspace_id=workspace.id).values(
+                    "key", "is_enabled", "config", "sort_order"
                 )
-                sort_order_counter += 1
+            )
 
-        preference = WorkspaceHomePreference.objects.filter(user=request.user, workspace_id=workspace.id)
-
-        return Response(
-            preference.values("key", "is_enabled", "config", "sort_order"),
-            status=status.HTTP_200_OK,
-        )
+        return Response(existing, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def patch(self, request, slug, key):
