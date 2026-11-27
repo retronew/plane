@@ -12,14 +12,20 @@
   ],
   "license": "AGPL-3.0",
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./collaborative-events": "./dist/collaborative-events.js",
     "./lib": "./dist/lib.js",
     "./plate": "./dist/plate.js",
     "./plate-headless": "./dist/plate-headless.js",
+    "./preferences": "./dist/preferences.js",
+    "./toolbar-items": "./dist/toolbar-items.js",
     "./package.json": "./package.json",
     "./plate.css": "./dist/plate.css",
     "./styles.css": "./dist/styles/index.css",

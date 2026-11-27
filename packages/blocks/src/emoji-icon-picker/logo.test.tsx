@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Logo } from "./logo";
 import { LUCIDE_ICONS_LIST } from "./lucide-icons";
@@ -27,15 +27,17 @@ const BRAND_ICON_NAMES = [
 ];
 
 describe("Logo with a lucide icon", () => {
-  it.each(BRAND_ICON_NAMES)("still renders the %s brand icon", (name) => {
+  it.each(BRAND_ICON_NAMES)("still renders the %s brand icon", async (name) => {
     expect(LUCIDE_ICONS_LIST.some((icon) => icon.name === name)).toBe(true);
 
     const { container } = render(
       <Logo logo={{ in_use: "icon", icon: { name, color: "#ff0000" } }} type="lucide" size={16} />
     );
-    const svg = container.querySelector("svg");
-    expect(svg).not.toBeNull();
-    expect(svg?.querySelectorAll("path, rect, circle, line, polygon, polyline").length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const svg = container.querySelector("svg");
+      expect(svg).not.toBeNull();
+      expect(svg?.querySelectorAll("path, rect, circle, line, polygon, polyline").length).toBeGreaterThan(0);
+    });
   });
 
   it("gives every listed icon a unique name", () => {

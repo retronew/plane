@@ -6,7 +6,6 @@
 
 import { forwardRef } from "react";
 // plane imports
-import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { IEditorPropsExtended, EditorRefApi, IDocumentEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional, TSearchEntityRequestPayload, TSearchResponse } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -17,6 +16,7 @@ import { useParseEditorContent } from "@/hooks/use-parse-editor-content";
 import { useEditorFlagging } from "@/hooks/use-editor-flagging";
 // local imports
 import { EditorMentionsRoot } from "../embeds/mentions";
+import { LazyPlateEditor } from "../lazy-plate-editor";
 
 type DocumentEditorWrapperProps = MakeOptional<
   Omit<IDocumentEditorProps, "fileHandler" | "mentionHandler" | "user" | "extendedEditorProps">,
@@ -74,7 +74,7 @@ export const DocumentEditor = forwardRef(function DocumentEditor(
   const { getEditorFileHandlers } = useEditorConfig();
 
   return (
-    <PlateEditorWithRef
+    <LazyPlateEditor
       mode="document"
       toolbar="floating"
       ref={ref}

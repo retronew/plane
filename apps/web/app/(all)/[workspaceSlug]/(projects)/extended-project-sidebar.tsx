@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
@@ -18,8 +18,11 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { Input, InputGroup } from "@makeplane/propel/components/input";
 import { copyUrlToClipboard } from "@plane/utils";
 // components
-import { CreateProjectModal } from "@/components/project/create-project-modal";
 import { SidebarProjectsListItem } from "@/components/workspace/sidebar/projects-list-item";
+
+const CreateProjectModal = lazy(() =>
+  import("@/components/project/create-project-modal").then((m) => ({ default: m.CreateProjectModal }))
+);
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useProject } from "@/hooks/store/use-project";
@@ -75,13 +78,15 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
   };
   return (
     <>
-      {workspaceSlug && (
-        <CreateProjectModal
-          isOpen={isProjectModalOpen}
-          onClose={() => setIsProjectModalOpen(false)}
-          setToFavorite={false}
-          workspaceSlug={workspaceSlug.toString()}
-        />
+      {workspaceSlug && isProjectModalOpen && (
+        <Suspense fallback={null}>
+          <CreateProjectModal
+            isOpen={isProjectModalOpen}
+            onClose={() => setIsProjectModalOpen(false)}
+            setToFavorite={false}
+            workspaceSlug={workspaceSlug.toString()}
+          />
+        </Suspense>
       )}
       {isExtendedProjectSidebarOpened && (
         <ExtendedSidebarWrapper

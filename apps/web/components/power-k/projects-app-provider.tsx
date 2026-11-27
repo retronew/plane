@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // hooks
@@ -20,8 +20,29 @@ import { WorkspaceLevelModals } from "@/components/modals/workspace-level";
 import { useProjectsAppPowerKCommands } from "./config/commands";
 import type { TPowerKCommandConfig, TPowerKContext } from "./core/types";
 import { GlobalShortcutsProvider } from "./global-shortcuts";
-import { ProjectsAppPowerKCommandsList } from "./ui/modal/commands-list";
-import { ProjectsAppPowerKModalWrapper } from "./ui/modal/wrapper";
+
+const ProjectsAppPowerKModal = lazy(async () => {
+  const [{ ProjectsAppPowerKModalWrapper }, { ProjectsAppPowerKCommandsList }] = await Promise.all([
+    import("./ui/modal/wrapper"),
+    import("./ui/modal/commands-list"),
+  ]);
+  return {
+    default: function LazyProjectsAppPowerKModal(props: {
+      context: TPowerKContext;
+      isOpen: boolean;
+      onClose: () => void;
+    }) {
+      return (
+        <ProjectsAppPowerKModalWrapper
+          commandsListComponent={ProjectsAppPowerKCommandsList}
+          context={props.context}
+          isOpen={props.isOpen}
+          onClose={props.onClose}
+        />
+      );
+    },
+  };
+});
 
 /**
  * Projects App PowerK provider
@@ -84,12 +105,15 @@ export const ProjectsAppPowerKProvider = observer(function ProjectsAppPowerKProv
         <ProjectLevelModals workspaceSlug={workspaceSlug.toString()} projectId={projectId.toString()} />
       )}
       <WorkItemLevelModals workItemIdentifier={workItemIdentifier?.toString()} />
-      <ProjectsAppPowerKModalWrapper
-        commandsListComponent={ProjectsAppPowerKCommandsList}
-        context={context}
-        isOpen={isPowerKModalOpen}
-        onClose={() => togglePowerKModal(false)}
-      />
+      {isPowerKModalOpen && (
+        <Suspense fallback={null}>
+          <ProjectsAppPowerKModal
+            context={context}
+            isOpen={isPowerKModalOpen}
+            onClose={() => togglePowerKModal(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 });

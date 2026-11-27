@@ -6,13 +6,13 @@
 
 import { forwardRef } from "react";
 // plane imports
-import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { PlateCollaborationConfig } from "@plane/editor/plate";
 import type { EditorRefApi, IRichTextEditorProps, TFileHandler } from "@plane/editor";
 import type { MakeOptional, TSearchEntityRequestPayload, TSearchResponse } from "@plane/types";
 import { cn } from "@plane/utils";
 // components
 import { EditorMentionsRoot } from "@/components/editor/embeds/mentions";
+import { LazyPlateEditor } from "@/components/editor/lazy-plate-editor";
 // hooks
 import { useEditorConfig, useEditorMention } from "@/hooks/editor";
 import { useMember } from "@/hooks/store/use-member";
@@ -74,7 +74,7 @@ export const RichTextEditor = forwardRef(function RichTextEditor(
   });
 
   return (
-    <PlateEditorWithRef
+    <LazyPlateEditor
       mode="rich"
       toolbar="floating"
       ref={ref}

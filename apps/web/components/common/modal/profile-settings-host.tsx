@@ -12,7 +12,7 @@ const ProfileSettingsModal = lazy(() =>
 
 export const ProfileSettingsHost = observer(function ProfileSettingsHost() {
   const { data: user } = useUser();
-  const { toggleProfileSettingsModal } = useCommandPalette();
+  const { profileSettingsModal, toggleProfileSettingsModal } = useCommandPalette();
   const { pathname, search, hash } = useLocation();
   const navigate = useNavigate();
   const pendingTab = useRef<TProfileSettingsTabs | null>(null);
@@ -34,7 +34,7 @@ export const ProfileSettingsHost = observer(function ProfileSettingsHost() {
     void navigate(`${pathname}${query ? `?${query}` : ""}${hash}`, { replace: true });
   }, [user, pathname, search, hash, navigate, toggleProfileSettingsModal]);
 
-  if (!user) return null;
+  if (!user || !profileSettingsModal.isOpen) return null;
   return (
     <Suspense fallback={null}>
       <ProfileSettingsModal />

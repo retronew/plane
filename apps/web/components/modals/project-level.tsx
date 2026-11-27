@@ -4,16 +4,25 @@
  * See the LICENSE file for details.
  */
 
+import { lazy, Suspense } from "react";
 import { observer } from "mobx-react";
-// components
-import { CycleCreateUpdateModal } from "@/components/cycles/modal";
-import { CreateUpdateModuleModal } from "@/components/modules";
-import { CreatePageModal } from "@/components/pages/modals/create-page-modal";
-import { CreateUpdateProjectViewModal } from "@/components/views/modal";
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 // plane web hooks
 import { EPageStoreType } from "@/hooks/store";
+
+const CycleCreateUpdateModal = lazy(() =>
+  import("@/components/cycles/modal").then((m) => ({ default: m.CycleCreateUpdateModal }))
+);
+const CreateUpdateModuleModal = lazy(() =>
+  import("@/components/modules").then((m) => ({ default: m.CreateUpdateModuleModal }))
+);
+const CreatePageModal = lazy(() =>
+  import("@/components/pages/modals/create-page-modal").then((m) => ({ default: m.CreatePageModal }))
+);
+const CreateUpdateProjectViewModal = lazy(() =>
+  import("@/components/views/modal").then((m) => ({ default: m.CreateUpdateProjectViewModal }))
+);
 
 export type TProjectLevelModalsProps = {
   workspaceSlug: string;
@@ -34,35 +43,47 @@ export const ProjectLevelModals = observer(function ProjectLevelModals(props: TP
     toggleCreatePageModal,
   } = useCommandPalette();
 
+  if (!isCreateCycleModalOpen && !isCreateModuleModalOpen && !isCreateViewModalOpen && !createPageModal.isOpen) {
+    return null;
+  }
+
   return (
-    <>
-      <CycleCreateUpdateModal
-        isOpen={isCreateCycleModalOpen}
-        handleClose={() => toggleCreateCycleModal(false)}
-        workspaceSlug={workspaceSlug.toString()}
-        projectId={projectId.toString()}
-      />
-      <CreateUpdateModuleModal
-        isOpen={isCreateModuleModalOpen}
-        onClose={() => toggleCreateModuleModal(false)}
-        workspaceSlug={workspaceSlug.toString()}
-        projectId={projectId.toString()}
-      />
-      <CreateUpdateProjectViewModal
-        isOpen={isCreateViewModalOpen}
-        onClose={() => toggleCreateViewModal(false)}
-        workspaceSlug={workspaceSlug.toString()}
-        projectId={projectId.toString()}
-      />
-      <CreatePageModal
-        workspaceSlug={workspaceSlug.toString()}
-        projectId={projectId.toString()}
-        isModalOpen={createPageModal.isOpen}
-        pageAccess={createPageModal.pageAccess}
-        handleModalClose={() => toggleCreatePageModal({ isOpen: false })}
-        redirectionEnabled
-        storeType={EPageStoreType.PROJECT}
-      />
-    </>
+    <Suspense fallback={null}>
+      {isCreateCycleModalOpen && (
+        <CycleCreateUpdateModal
+          isOpen={isCreateCycleModalOpen}
+          handleClose={() => toggleCreateCycleModal(false)}
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={projectId.toString()}
+        />
+      )}
+      {isCreateModuleModalOpen && (
+        <CreateUpdateModuleModal
+          isOpen={isCreateModuleModalOpen}
+          onClose={() => toggleCreateModuleModal(false)}
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={projectId.toString()}
+        />
+      )}
+      {isCreateViewModalOpen && (
+        <CreateUpdateProjectViewModal
+          isOpen={isCreateViewModalOpen}
+          onClose={() => toggleCreateViewModal(false)}
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={projectId.toString()}
+        />
+      )}
+      {createPageModal.isOpen && (
+        <CreatePageModal
+          workspaceSlug={workspaceSlug.toString()}
+          projectId={projectId.toString()}
+          isModalOpen={createPageModal.isOpen}
+          pageAccess={createPageModal.pageAccess}
+          handleModalClose={() => toggleCreatePageModal({ isOpen: false })}
+          redirectionEnabled
+          storeType={EPageStoreType.PROJECT}
+        />
+      )}
+    </Suspense>
   );
 });

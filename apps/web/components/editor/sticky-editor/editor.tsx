@@ -8,9 +8,9 @@ import React, { useState, useCallback } from "react";
 // plane constants
 import type { EIssueCommentAccessSpecifier } from "@plane/constants";
 // plane editor
-import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, ILiteTextEditorProps, TFileHandler } from "@plane/editor";
 // components
+import { LazyPlateEditor } from "@/components/editor/lazy-plate-editor";
 import type { TSticky } from "@plane/types";
 // helpers
 import { cn } from "@plane/utils";
@@ -92,7 +92,7 @@ export const StickyEditor = React.forwardRef(function StickyEditor(
       onFocus={() => !showToolbarInitially && setIsFocused(true)}
       onBlur={() => !showToolbarInitially && setIsFocused(false)}
     >
-      <PlateEditorWithRef
+      <LazyPlateEditor
         mode="lite"
         toolbar="floating"
         ref={setEditorRef}

@@ -8,13 +8,13 @@ import React, { useState } from "react";
 // plane constants
 import type { EIssueCommentAccessSpecifier } from "@plane/constants";
 // plane imports
-import { PlateEditorWithRef } from "@plane/editor/plate";
 import type { EditorRefApi, ILiteTextEditorProps, TFileHandler } from "@plane/editor";
 import { useTranslation } from "@plane/i18n";
 import type { MakeOptional } from "@plane/types";
 import { cn, isCommentEmpty } from "@plane/utils";
 // components
 import { EditorMentionsRoot } from "@/components/editor/embeds/mentions";
+import { LazyPlateEditor } from "@/components/editor/lazy-plate-editor";
 import { IssueCommentToolbar } from "@/components/editor/lite-text/toolbar";
 // hooks
 import { useEditorConfig, useEditorMention } from "@/hooks/editor";
@@ -188,7 +188,7 @@ export const LiteTextEditor = React.forwardRef(function LiteTextEditor(
       <div className={cn(isLiteVariant && editable ? "flex items-end gap-1" : "")}>
         {/* Main Editor - always rendered once */}
         <div className={cn(isLiteVariant && editable ? "min-w-0 flex-1" : "", commentClasses.editor)}>
-          <PlateEditorWithRef
+          <LazyPlateEditor
             mode="lite"
             toolbar="floating"
             ref={attachEditor}

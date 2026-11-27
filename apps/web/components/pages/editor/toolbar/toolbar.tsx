@@ -21,7 +21,7 @@ import {
 import { Tooltip, TooltipProvider } from "@makeplane/propel/components/tooltip";
 // constants
 import type { ToolbarMenuItem } from "@plane/editor";
-import { TOOLBAR_ITEMS, TYPOGRAPHY_ITEMS } from "@plane/editor";
+import { TOOLBAR_ITEMS, TYPOGRAPHY_ITEMS } from "@plane/editor/toolbar-items";
 // local imports
 import { ColorDropdown } from "./color-dropdown";
 import { translate } from "@plane/i18n";
