@@ -80,7 +80,7 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
   const { data: adminStatus } = useSWR(
     currentUser?.id ? "CURRENT_USER_INSTANCE_ADMIN_STATUS" : null,
     () => userService.currentUserInstanceAdminStatus(),
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+    { revalidateIfStale: false, revalidateOnFocus: false, shouldRetryOnError: false }
   );
   const isUserInstanceAdmin = adminStatus?.is_instance_admin === true;
   // translation
