@@ -35,4 +35,4 @@ python manage.py clear_cache
 # Collect static files
 python manage.py collectstatic --noinput
 
-exec gunicorn -w "${GUNICORN_WORKERS:-2}" -k gthread --threads "${GUNICORN_THREADS:-4}" plane.wsgi:application --bind 0.0.0.0:"${PORT:-8000}" --max-requests 1200 --max-requests-jitter 1000 --access-logfile -
+exec gunicorn --preload -w "${GUNICORN_WORKERS:-2}" -k gthread --threads "${GUNICORN_THREADS:-4}" plane.wsgi:application --bind 0.0.0.0:"${PORT:-8000}" --max-requests 1200 --max-requests-jitter 1000 --access-logfile -

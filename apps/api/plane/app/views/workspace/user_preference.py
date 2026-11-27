@@ -8,11 +8,21 @@ from plane.db.models.workspace import WorkspaceUserPreference
 from plane.app.serializers.workspace import WorkspaceUserPreferenceSerializer
 from plane.app.permissions import allow_permission, ROLE
 from plane.db.models import Workspace
+from plane.utils.cache import cache_response, invalidate_cache
 
 
 # Third party imports
 from rest_framework.response import Response
 from rest_framework import status
+
+DEFAULT_PINNED_KEYS = frozenset(
+    [
+        WorkspaceUserPreference.UserPreferenceKeys.DRAFTS,
+        WorkspaceUserPreference.UserPreferenceKeys.YOUR_WORK,
+        WorkspaceUserPreference.UserPreferenceKeys.STICKIES,
+        WorkspaceUserPreference.UserPreferenceKeys.ACTIVE_CYCLES,
+    ]
+)
 
 
 class WorkspaceUserPreferenceViewSet(BaseAPIView):
@@ -23,63 +33,54 @@ class WorkspaceUserPreferenceViewSet(BaseAPIView):
         return WorkspaceUserPreferenceSerializer
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
+    @cache_response(60 * 10, user=True)
     def get(self, request, slug):
-        workspace = Workspace.objects.get(slug=slug)
-
-        get_preference = WorkspaceUserPreference.objects.filter(user=request.user, workspace_id=workspace.id)
-
-        create_preference_keys = []
-
-        keys = [key for key, _ in WorkspaceUserPreference.UserPreferenceKeys.choices]
-
-        for preference in keys:
-            if preference not in get_preference.values_list("key", flat=True):
-                create_preference_keys.append(preference)
-
-                preference = WorkspaceUserPreference.objects.bulk_create(
-                    [
-                        WorkspaceUserPreference(
-                            key=key,
-                            user=request.user,
-                            workspace=workspace,
-                            sort_order=(65535 + (i * 10000)),
-                            is_pinned=(
-                                True
-                                if key
-                                in [
-                                    WorkspaceUserPreference.UserPreferenceKeys.DRAFTS,
-                                    WorkspaceUserPreference.UserPreferenceKeys.YOUR_WORK,
-                                    WorkspaceUserPreference.UserPreferenceKeys.STICKIES,
-                                    WorkspaceUserPreference.UserPreferenceKeys.ACTIVE_CYCLES,
-                                ]
-                                else False
-                            ),
-                        )
-                        for i, key in enumerate(create_preference_keys)
-                    ],
-                    batch_size=10,
-                    ignore_conflicts=True,
-                )
-
-        preferences = (
-            WorkspaceUserPreference.objects.filter(user=request.user, workspace_id=workspace.id)
+        preferences = list(
+            WorkspaceUserPreference.objects.filter(user=request.user, workspace__slug=slug)
             .order_by("sort_order")
             .values("key", "is_pinned", "sort_order")
         )
 
-        user_preferences = {}
+        keys = [key for key, _ in WorkspaceUserPreference.UserPreferenceKeys.choices]
+        existing_keys = {pref["key"] for pref in preferences}
+        missing_keys = [key for key in keys if key not in existing_keys]
 
-        for preference in preferences:
-            user_preferences[(str(preference["key"]))] = {
+        if missing_keys:
+            workspace = Workspace.objects.only("id").get(slug=slug)
+            WorkspaceUserPreference.objects.bulk_create(
+                [
+                    WorkspaceUserPreference(
+                        key=key,
+                        user=request.user,
+                        workspace=workspace,
+                        sort_order=(65535 + (i * 10000)),
+                        is_pinned=(key in DEFAULT_PINNED_KEYS),
+                    )
+                    for i, key in enumerate(missing_keys)
+                ],
+                batch_size=10,
+                ignore_conflicts=True,
+            )
+            preferences = list(
+                WorkspaceUserPreference.objects.filter(user=request.user, workspace_id=workspace.id)
+                .order_by("sort_order")
+                .values("key", "is_pinned", "sort_order")
+            )
+
+        user_preferences = {
+            str(preference["key"]): {
                 "is_pinned": preference["is_pinned"],
                 "sort_order": preference["sort_order"],
             }
+            for preference in preferences
+        }
         return Response(
             user_preferences,
             status=status.HTTP_200_OK,
         )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
+    @invalidate_cache(path="/api/workspaces/:slug/sidebar-preferences/", url_params=True, user=True, multiple=True)
     def patch(self, request, slug):
         for data in request.data:
             key = data.pop("key", None)

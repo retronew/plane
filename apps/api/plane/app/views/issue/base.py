@@ -9,6 +9,7 @@ import json
 # Django imports
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
+from django.core.cache import cache
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import (
     Count,
@@ -61,6 +62,7 @@ from plane.db.models import (
     ProjectMember,
     UserRecentVisit,
 )
+from plane.utils.cache import cache_response, invalidate_cache
 from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.utils.global_paginator import paginate
 from plane.utils.grouper import (
@@ -162,13 +164,14 @@ class IssueListEndpoint(BaseAPIView):
         # issue queryset
         issue_queryset = issue_queryset_grouper(queryset=issue_queryset, group_by=group_by, sub_group_by=sub_group_by)
 
-        recent_visited_task.delay(
-            slug=slug,
-            project_id=project_id,
-            entity_name="project",
-            entity_identifier=project_id,
-            user_id=request.user.id,
-        )
+        if cache.add(f"recent_visit:{slug}:{request.user.id}:project:{project_id}", 1, timeout=60):
+            recent_visited_task.delay(
+                slug=slug,
+                project_id=project_id,
+                entity_name="project",
+                entity_identifier=project_id,
+                user_id=request.user.id,
+            )
 
         if self.fields or self.expand:
             issues = IssueSerializer(issue_queryset, many=True, fields=self.fields, expand=self.expand).data
@@ -304,13 +307,14 @@ class IssueViewSet(BaseViewSet):
         # issue queryset
         issue_queryset = issue_queryset_grouper(queryset=issue_queryset, group_by=group_by, sub_group_by=sub_group_by)
 
-        recent_visited_task.delay(
-            slug=slug,
-            project_id=project_id,
-            entity_name="project",
-            entity_identifier=project_id,
-            user_id=request.user.id,
-        )
+        if cache.add(f"recent_visit:{slug}:{request.user.id}:project:{project_id}", 1, timeout=60):
+            recent_visited_task.delay(
+                slug=slug,
+                project_id=project_id,
+                entity_name="project",
+                entity_identifier=project_id,
+                user_id=request.user.id,
+            )
         if (
             ProjectMember.objects.filter(
                 workspace__slug=slug,
@@ -754,6 +758,9 @@ class IssueViewSet(BaseViewSet):
 
 class ProjectUserDisplayPropertyEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/user-properties/", url_params=True, user=True, multiple=True
+    )
     def patch(self, request, slug, project_id):
         try:
             issue_property = ProjectUserProperty.objects.get(user=request.user, project_id=project_id)
@@ -766,6 +773,7 @@ class ProjectUserDisplayPropertyEndpoint(BaseAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    @cache_response(60 * 10, user=True)
     def get(self, request, slug, project_id):
         issue_property, _ = ProjectUserProperty.objects.get_or_create(user=request.user, project_id=project_id)
         serializer = ProjectUserPropertySerializer(issue_property)

@@ -222,6 +222,22 @@ class GroupedOffsetPaginator(OffsetPaginator):
         "issue_module__module_id": "module_ids",
     }
 
+    # Group fields that exist directly on the unannotated Issue model/relations (safe on total_count_queryset)
+    _UNANNOTATED_GROUP_FIELDS = frozenset(
+        {
+            "state_id",
+            "priority",
+            "created_by",
+            "project_id",
+            "labels__id",
+            "assignees__id",
+            "issue_module__module_id",
+            "target_date",
+            "start_date",
+            "state__group",
+        }
+    )
+
     def __init__(
         self,
         queryset,
@@ -232,8 +248,8 @@ class GroupedOffsetPaginator(OffsetPaginator):
         *args,
         **kwargs,
     ):
-        # Initiate the parent class for all the parameters
-        super().__init__(queryset, *args, **kwargs)
+        # Initiate the parent class for all the parameters (preserve total_count_queryset!)
+        super().__init__(queryset, *args, total_count_queryset=total_count_queryset, **kwargs)
 
         # Set the group by field name
         self.group_by_field_name = group_by_field_name
@@ -291,25 +307,30 @@ class GroupedOffsetPaginator(OffsetPaginator):
             F("id").asc(),
         )
 
-        # Adjust cursors based on the grouped results for pagination
-        next_cursor = Cursor(
-            limit, page + getattr(self, "window_depth", 1), False, queryset.filter(row_number__gte=stop).exists()
-        )
-
-        # Add previous cursors
-        prev_cursor = Cursor(limit, page - 1, True, page > 0)
-
-        # Count on the base queryset without the Window(RowNumber()) wrapper.
-        count = self.queryset.count()
+        # Count on the unannotated base queryset when provided (avoids correlated subqueries).
+        count_base = self.total_count_queryset if self.total_count_queryset is not None else self.queryset
+        count = count_base.count()
 
         results = self.bound_window(results)
-        # Reuse one GROUP BY query for both max_hits and __get_total_dict().
+        # Reuse one GROUP BY query for max_hits, __get_total_dict(), and has_next (when count_filter is None).
         if count > 0:
             group_rows = self._get_total_rows()
             max_group_count = max((row["count"] for row in group_rows), default=0)
             max_hits = math.ceil(max_group_count / limit) if max_group_count else 0
+            if self.count_filter is None:
+                has_next = max_group_count >= stop
+            else:
+                has_next = queryset.filter(row_number__gte=stop).exists()
         else:
             max_hits = 0
+            has_next = False
+
+        # Adjust cursors based on the grouped results for pagination
+        next_cursor = Cursor(limit, page + getattr(self, "window_depth", 1), False, has_next)
+
+        # Add previous cursors
+        prev_cursor = Cursor(limit, page - 1, True, page > 0)
+
         return CursorResult(
             results=results,
             next=next_cursor,
@@ -319,9 +340,14 @@ class GroupedOffsetPaginator(OffsetPaginator):
         )
 
     def __get_total_queryset(self):
-        # Get total items for each group
+        # Prefer the unannotated total_count_queryset for GROUP BY when the group field doesn't require annotations
+        base_qs = (
+            self.total_count_queryset
+            if self.total_count_queryset is not None and self.group_by_field_name in self._UNANNOTATED_GROUP_FIELDS
+            else self.queryset
+        )
         return (
-            self.queryset.values(self.group_by_field_name)
+            base_qs.values(self.group_by_field_name)
             .annotate(count=Count("id", filter=self.count_filter, distinct=True))
             .order_by()
         )

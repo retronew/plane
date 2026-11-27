@@ -22,7 +22,7 @@ from plane.app.serializers import (
     EstimatePointSerializer,
     EstimateReadSerializer,
 )
-from plane.utils.cache import invalidate_cache
+from plane.utils.cache import cache_response, invalidate_cache
 from plane.bgtasks.issue_activities_task import issue_activity
 
 
@@ -51,6 +51,7 @@ class BulkEstimatePointEndpoint(BaseViewSet):
     model = Estimate
     serializer_class = EstimateSerializer
 
+    @cache_response(60 * 15, user=False)
     def list(self, request, slug, project_id):
         estimates = (
             Estimate.objects.filter(workspace__slug=slug, project_id=project_id)
@@ -61,6 +62,9 @@ class BulkEstimatePointEndpoint(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     def create(self, request, slug, project_id):
         estimate = request.data.get("estimate")
         estimate_name = estimate.get("name", generate_random_name())
@@ -106,6 +110,9 @@ class BulkEstimatePointEndpoint(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     def partial_update(self, request, slug, project_id, estimate_id):
         if not len(request.data.get("estimate_points", [])):
             return Response(
@@ -144,6 +151,9 @@ class BulkEstimatePointEndpoint(BaseViewSet):
         return Response(estimate_serializer.data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     def destroy(self, request, slug, project_id, estimate_id):
         estimate = Estimate.objects.get(pk=estimate_id, workspace__slug=slug, project_id=project_id)
         estimate.delete()
@@ -151,6 +161,10 @@ class BulkEstimatePointEndpoint(BaseViewSet):
 
 
 class EstimatePointEndpoint(BaseViewSet):
+    @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def create(self, request, slug, project_id, estimate_id):
         #  TODO: add a key validation if the same key already exists
@@ -178,6 +192,10 @@ class EstimatePointEndpoint(BaseViewSet):
         serializer = EstimatePointSerializer(estimate_point).data
         return Response(serializer, status=status.HTTP_200_OK)
 
+    @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def partial_update(self, request, slug, project_id, estimate_id, estimate_point_id):
         #  TODO: add a key validation if the same key already exists
@@ -193,6 +211,10 @@ class EstimatePointEndpoint(BaseViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @invalidate_cache(path="/api/workspaces/:slug/estimates/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/estimates/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, estimate_id, estimate_point_id):
         new_estimate_id = request.data.get("new_estimate_id", None)

@@ -33,8 +33,8 @@ class InstanceEndpoint(BaseAPIView):
             return [InstanceAdminPermission()]
         return [AllowAny()]
 
+    @method_decorator(cache_control(public=True, max_age=30))
     @cache_response(60 * 60 * 2, user=False)
-    @method_decorator(cache_control(private=True, max_age=12))
     def get(self, request):
         instance = Instance.objects.first()
 
@@ -166,7 +166,7 @@ class InstanceEndpoint(BaseAPIView):
         data["is_self_managed"] = settings.IS_SELF_MANAGED
 
         instance_data = serializer.data
-        instance_data["workspaces_exist"] = Workspace.objects.count() >= 1
+        instance_data["workspaces_exist"] = Workspace.objects.exists()
 
         response_data = {"config": data, "instance": instance_data}
         return Response(response_data, status=status.HTTP_200_OK)

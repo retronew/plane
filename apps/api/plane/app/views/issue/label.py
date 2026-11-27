@@ -17,7 +17,7 @@ from .. import BaseViewSet, BaseAPIView
 from plane.app.serializers import LabelSerializer
 from plane.app.permissions import allow_permission, ProjectBasePermission, ROLE
 from plane.db.models import Project, Label
-from plane.utils.cache import invalidate_cache
+from plane.utils.cache import cache_response, invalidate_cache
 
 
 class LabelViewSet(BaseViewSet):
@@ -31,15 +31,18 @@ class LabelViewSet(BaseViewSet):
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
             .filter(project_id=self.kwargs.get("project_id"))
-            .filter(project__project_projectmember__member=self.request.user)
-            .select_related("project")
-            .select_related("workspace")
-            .select_related("parent")
-            .distinct()
+            .select_related("project", "workspace", "parent")
             .order_by("sort_order")
         )
 
+    @cache_response(60 * 15, user=False)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
     @invalidate_cache(path="/api/workspaces/:slug/labels/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/issue-labels/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN])
     def create(self, request, slug, project_id):
         try:
@@ -55,6 +58,9 @@ class LabelViewSet(BaseViewSet):
             )
 
     @invalidate_cache(path="/api/workspaces/:slug/labels/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/issue-labels/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN])
     def partial_update(self, request, *args, **kwargs):
         # Check if the label name is unique within the project
@@ -82,6 +88,9 @@ class LabelViewSet(BaseViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @invalidate_cache(path="/api/workspaces/:slug/labels/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/issue-labels/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN])
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
@@ -89,6 +98,9 @@ class LabelViewSet(BaseViewSet):
 
 class BulkCreateIssueLabelsEndpoint(BaseAPIView):
     @invalidate_cache(path="/api/workspaces/:slug/labels/", url_params=True, user=False, multiple=True)
+    @invalidate_cache(
+        path="/api/workspaces/:slug/projects/:project_id/issue-labels/", url_params=True, user=False, multiple=True
+    )
     @allow_permission([ROLE.ADMIN])
     def post(self, request, slug, project_id):
         label_data = request.data.get("label_data", [])

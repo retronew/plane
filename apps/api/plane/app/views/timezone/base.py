@@ -4,11 +4,12 @@
 
 # Python imports
 import pytz
-from datetime import datetime
+from datetime import datetime, timezone as dt_timezone
 
 # Django imports
+from django.core.cache import cache
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control
 
 # Third party imports
 from rest_framework import status
@@ -19,14 +20,28 @@ from rest_framework.views import APIView
 # Module imports
 from plane.authentication.rate_limit import AuthenticationThrottle
 
+_TIMEZONE_CACHE_ENTRY = {"hour": None, "data": None}
+
 
 class TimezoneEndpoint(APIView):
     permission_classes = [AllowAny]
 
     throttle_classes = [AuthenticationThrottle]
 
-    @method_decorator(cache_page(60 * 60 * 2))
+    @method_decorator(cache_control(public=True, max_age=60 * 60 * 6))
     def get(self, request):
+        now = datetime.now(dt_timezone.utc)
+        hour_bucket = now.strftime("%Y-%m-%dT%H")
+        if _TIMEZONE_CACHE_ENTRY["hour"] == hour_bucket and _TIMEZONE_CACHE_ENTRY["data"] is not None:
+            return Response({"timezones": _TIMEZONE_CACHE_ENTRY["data"]}, status=status.HTTP_200_OK)
+
+        redis_key = f"plane:timezones:{hour_bucket}"
+        cached_list = cache.get(redis_key)
+        if cached_list is not None:
+            _TIMEZONE_CACHE_ENTRY["hour"] = hour_bucket
+            _TIMEZONE_CACHE_ENTRY["data"] = cached_list
+            return Response({"timezones": cached_list}, status=status.HTTP_200_OK)
+
         timezone_locations = [
             ("Midway Island", "Pacific/Midway"),  # UTC-11:00
             ("American Samoa", "Pacific/Pago_Pago"),  # UTC-11:00
@@ -178,7 +193,6 @@ class TimezoneEndpoint(APIView):
         ]
 
         timezone_list = []
-        now = datetime.now()
 
         # Process timezone mapping
         for friendly_name, tz_identifier in timezone_locations:
@@ -211,5 +225,9 @@ class TimezoneEndpoint(APIView):
         # Remove offset from final output
         for tz in timezone_list:
             del tz["offset"]
+
+        _TIMEZONE_CACHE_ENTRY["hour"] = hour_bucket
+        _TIMEZONE_CACHE_ENTRY["data"] = timezone_list
+        cache.set(redis_key, timezone_list, timeout=60 * 60 * 2)
 
         return Response({"timezones": timezone_list}, status=status.HTTP_200_OK)
