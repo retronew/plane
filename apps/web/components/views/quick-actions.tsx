@@ -151,24 +151,30 @@ export const ViewQuickActions = observer(function ViewQuickActions(props: Props)
 
   return (
     <>
-      <CreateUpdateProjectViewModal
-        isOpen={createUpdateViewModal}
-        onClose={() => setCreateUpdateViewModal(false)}
-        workspaceSlug={workspaceSlug}
-        projectId={projectId}
-        data={view}
-      />
-      <DeleteProjectViewModal data={view} isOpen={deleteViewModal} onClose={() => setDeleteViewModal(false)} />
-      <ScopedWorkItemExportModal
-        workspaceSlug={workspaceSlug}
-        projectId={projectId}
-        entityType="view"
-        entityId={view.id}
-        entityName={view.name}
-        richFilters={view.rich_filters}
-        open={exportModal}
-        onClose={() => setExportModal(false)}
-      />
+      {createUpdateViewModal && (
+        <CreateUpdateProjectViewModal
+          isOpen={createUpdateViewModal}
+          onClose={() => setCreateUpdateViewModal(false)}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          data={view}
+        />
+      )}
+      {deleteViewModal && (
+        <DeleteProjectViewModal data={view} isOpen={deleteViewModal} onClose={() => setDeleteViewModal(false)} />
+      )}
+      {exportModal && (
+        <ScopedWorkItemExportModal
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          entityType="view"
+          entityId={view.id}
+          entityName={view.name}
+          richFilters={view.rich_filters}
+          open={exportModal}
+          onClose={() => setExportModal(false)}
+        />
+      )}
       {additionalModals}
       <ContextMenu parentRef={parentRef} items={CONTEXT_MENU_ITEMS} />
       <Menu>

@@ -9,6 +9,6 @@ export function useWorkspaceInvitations() {
   return useSWR(
     user ? ["USER_WORKSPACE_INVITATIONS", user.id] : null,
     () => workspaceService.userWorkspaceInvitations(),
-    { refreshInterval: 30_000, revalidateOnFocus: true }
+    { refreshInterval: 300_000, revalidateIfStale: false, revalidateOnFocus: false }
   );
 }

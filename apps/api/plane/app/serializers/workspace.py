@@ -267,6 +267,9 @@ class IssueRecentVisitSerializer(serializers.ModelSerializer):
         return project.identifier if project else None
 
     def get_assignees(self, obj):
+        assignees_map = self.context.get("issue_assignees_map")
+        if assignees_map is not None:
+            return list(assignees_map.get(str(obj.id), []))
         return list(obj.assignees.filter(issue_assignee__deleted_at__isnull=True).values_list("id", flat=True))
 
 
@@ -278,6 +281,9 @@ class ProjectRecentVisitSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "logo_props", "project_members", "identifier"]
 
     def get_project_members(self, obj):
+        members_map = self.context.get("project_members_map")
+        if members_map is not None:
+            return list(members_map.get(str(obj.id), []))
         members = ProjectMember.objects.filter(project_id=obj.id, member__is_bot=False, is_active=True).values_list(
             "member", flat=True
         )
@@ -300,12 +306,18 @@ class PageRecentVisitSerializer(serializers.ModelSerializer):
             "project_identifier",
         ]
 
+    def _first_project(self, obj):
+        projects = list(obj.projects.all())
+        return projects[0] if projects else None
+
     def get_project_id(self, obj):
-        return obj.project_id if hasattr(obj, "project_id") else obj.projects.values_list("id", flat=True).first()
+        if hasattr(obj, "project_id"):
+            return obj.project_id
+        project = self._first_project(obj)
+        return project.id if project else None
 
     def get_project_identifier(self, obj):
-        project = obj.projects.first()
-
+        project = self._first_project(obj)
         return project.identifier if project else None
 
 
@@ -333,10 +345,16 @@ class WorkspaceRecentVisitSerializer(BaseSerializer):
         entity_model, entity_serializer = get_entity_model_and_serializer(entity_name)
 
         if entity_model and entity_serializer:
+            preloaded = self.context.get("preloaded_entities")
+            if preloaded is not None:
+                entity = preloaded.get(entity_name, {}).get(str(entity_identifier))
+                if entity is None:
+                    return None
+                return entity_serializer(entity, context=self.context).data
             try:
                 entity = entity_model.objects.get(pk=entity_identifier)
 
-                return entity_serializer(entity).data
+                return entity_serializer(entity, context=self.context).data
             except entity_model.DoesNotExist:
                 return None
         return None

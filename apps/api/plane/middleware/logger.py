@@ -58,9 +58,13 @@ class RequestLoggerMiddleware:
         if not log_true:
             return response
 
-        user_id = (
-            request.user.id if getattr(request, "user") and getattr(request.user, "is_authenticated", False) else None
-        )
+        # Avoid forcing lazy session/user DB lookups on AllowAny static asset redirects.
+        if request.path.startswith("/api/assets/v2/static/"):
+            cached_user = getattr(request, "_cached_user", None)
+            user_id = cached_user.id if cached_user and getattr(cached_user, "is_authenticated", False) else None
+        else:
+            user = getattr(request, "user", None)
+            user_id = user.id if user and getattr(user, "is_authenticated", False) else None
 
         user_agent = request.META.get("HTTP_USER_AGENT", "")
 

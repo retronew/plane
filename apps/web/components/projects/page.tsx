@@ -12,6 +12,7 @@ import { ProjectRoot } from "@/components/project/root";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useWorkspace } from "@/hooks/store/use-workspace";
+import { bootstrapService } from "@/services/bootstrap.service";
 
 export const ProjectPageRoot = observer(function ProjectPageRoot() {
   // router
@@ -19,12 +20,15 @@ export const ProjectPageRoot = observer(function ProjectPageRoot() {
   // store
   const { currentWorkspace } = useWorkspace();
   const { fetchProjects, fetchStatus } = useProject();
-  // Skip redundant /projects/details/ fetch if workspace bootstrap already hydrated full projects
-  useSWR(
-    workspaceSlug && currentWorkspace && fetchStatus !== "complete" ? `WORKSPACE_PROJECTS_${workspaceSlug}` : null,
-    workspaceSlug && currentWorkspace ? () => fetchProjects(workspaceSlug.toString()) : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
+  const slug = workspaceSlug?.toString();
+  // Skip redundant /projects/details/ fetch when workspace bootstrap already hydrated or is currently fetching full projects
+  const shouldFetchFullProjects = Boolean(
+    slug && currentWorkspace && fetchStatus !== "complete" && !bootstrapService.isFullWorkspaceBootstrapInflight(slug)
   );
+  useSWR(shouldFetchFullProjects ? `WORKSPACE_PROJECTS_${slug}` : null, slug ? () => fetchProjects(slug) : null, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+  });
 
   return <ProjectRoot />;
 });

@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { lazy, Suspense } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -18,11 +19,16 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
 import { IssuePeekOverview } from "../../peek-overview";
-import { CalendarLayout } from "../calendar/roots/project-root";
-import { BaseGanttRoot } from "../gantt";
 import { KanBanLayout } from "../kanban/roots/project-root";
 import { ListLayout } from "../list/roots/project-root";
-import { ProjectSpreadsheetLayout } from "../spreadsheet/roots/project-root";
+
+const CalendarLayout = lazy(() =>
+  import("../calendar/roots/project-root").then((m) => ({ default: m.CalendarLayout }))
+);
+const BaseGanttRoot = lazy(() => import("../gantt").then((m) => ({ default: m.BaseGanttRoot })));
+const ProjectSpreadsheetLayout = lazy(() =>
+  import("../spreadsheet/roots/project-root").then((m) => ({ default: m.ProjectSpreadsheetLayout }))
+);
 
 function ProjectIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined }) {
   switch (props.activeLayout) {
@@ -31,11 +37,23 @@ function ProjectIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined
     case EIssueLayoutTypes.KANBAN:
       return <KanBanLayout />;
     case EIssueLayoutTypes.CALENDAR:
-      return <CalendarLayout />;
+      return (
+        <Suspense fallback={null}>
+          <CalendarLayout />
+        </Suspense>
+      );
     case EIssueLayoutTypes.GANTT:
-      return <BaseGanttRoot />;
+      return (
+        <Suspense fallback={null}>
+          <BaseGanttRoot />
+        </Suspense>
+      );
     case EIssueLayoutTypes.SPREADSHEET:
-      return <ProjectSpreadsheetLayout />;
+      return (
+        <Suspense fallback={null}>
+          <ProjectSpreadsheetLayout />
+        </Suspense>
+      );
     default:
       return null;
   }
@@ -52,8 +70,9 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
   const workItemFilters = projectId ? issuesFilter?.getIssueFilters(projectId) : undefined;
   const activeLayout = workItemFilters?.displayFilters?.layout;
 
+  // Skip redundant /user-properties/ fetch when ProjectBootstrap already hydrated filters
   useSWR(
-    workspaceSlug && projectId ? `PROJECT_ISSUES_${workspaceSlug}_${projectId}` : null,
+    workspaceSlug && projectId && !workItemFilters ? `PROJECT_ISSUES_${workspaceSlug}_${projectId}` : null,
     async () => {
       if (workspaceSlug && projectId) {
         await issuesFilter?.fetchFilters(workspaceSlug, projectId);

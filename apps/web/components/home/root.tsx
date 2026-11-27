@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useContext } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -12,6 +13,9 @@ import { ContentWrapper } from "@plane/blocks/layout";
 // hooks
 import { useHome } from "@/hooks/store/use-home";
 import { useUserProfile, useUser } from "@/hooks/store/user";
+import { hydrateHomeBootstrap } from "@/lib/bootstrap-cache";
+import { StoreContext } from "@/lib/store-context";
+import { bootstrapService } from "@/services/bootstrap.service";
 // plane web imports
 import { TourRoot } from "@/components/onboarding/tour/root";
 // local imports
@@ -22,13 +26,28 @@ import { HomePeekOverviewsRoot } from "../issues/peek-overview/peek-overviews";
 export const WorkspaceHomeView = observer(function WorkspaceHomeView() {
   // store hooks
   const { workspaceSlug } = useParams();
+  const rootStore = useContext(StoreContext);
   const { data: currentUser } = useUser();
   const { data: currentUserProfile, updateTourCompleted } = useUserProfile();
   const { fetchWidgets } = useHome();
 
   useSWR(
-    workspaceSlug ? `HOME_DASHBOARD_WIDGETS_${workspaceSlug}` : null,
-    workspaceSlug ? () => fetchWidgets(workspaceSlug?.toString()) : null,
+    workspaceSlug ? `HOME_BOOTSTRAP_${workspaceSlug}` : null,
+    workspaceSlug
+      ? async () => {
+          const slug = workspaceSlug.toString();
+          try {
+            const data = await bootstrapService.getHomeBootstrap(slug);
+            if (rootStore) {
+              hydrateHomeBootstrap(rootStore, slug, data);
+            }
+            return data;
+          } catch {
+            await fetchWidgets(slug);
+            return null;
+          }
+        }
+      : null,
     {
       revalidateIfStale: true,
       revalidateOnFocus: false,

@@ -392,7 +392,13 @@ class UpdateUserTourCompletedEndpoint(BaseAPIView):
 class UserActivityEndpoint(BaseAPIView, BasePaginator):
     def get(self, request):
         queryset = IssueActivity.objects.filter(actor=request.user).select_related(
-            "actor", "workspace", "issue", "project"
+            "actor",
+            "actor__avatar_asset",
+            "workspace",
+            "workspace__logo_asset",
+            "issue",
+            "project",
+            "project__cover_image_asset",
         )
 
         return self.paginate(

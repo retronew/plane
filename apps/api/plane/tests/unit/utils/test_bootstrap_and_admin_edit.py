@@ -6,7 +6,17 @@ from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
-from plane.db.models import FileAsset, Project, ProjectMember, User, Workspace, WorkspaceMember
+from plane.db.models import (
+    FileAsset,
+    Issue,
+    Project,
+    ProjectMember,
+    State,
+    User,
+    UserRecentVisit,
+    Workspace,
+    WorkspaceMember,
+)
 
 
 @pytest.mark.unit
@@ -156,6 +166,7 @@ class TestBootstrapEndpoints:
         assert auth_json["user"]["id"] == str(user.id)
         assert "workspaces" in auth_json
         assert "instance_admin" in auth_json
+        assert "invitations" in auth_json
 
     def test_workspace_view_and_project_bootstrap(self):
         user = User.objects.create_user(
@@ -174,11 +185,30 @@ class TestBootstrapEndpoints:
         WorkspaceMember.objects.create(workspace=workspace, member=user, role=20, is_active=True)
         project = Project.objects.create(workspace=workspace, name="Boot Proj", identifier="BOOT", created_by=user)
         ProjectMember.objects.create(workspace=workspace, project=project, member=user, role=20, is_active=True)
+        state = State.objects.create(
+            workspace=workspace, project=project, name="Todo", color="#3b82f6", group="unstarted", default=True
+        )
+        issue = Issue.objects.create(
+            workspace=workspace, project=project, name="Bootstrap Issue", state=state, created_by=user
+        )
+        UserRecentVisit.objects.create(
+            workspace=workspace, user=user, entity_name="issue", entity_identifier=issue.id
+        )
+        UserRecentVisit.objects.create(
+            workspace=workspace, user=user, entity_name="project", entity_identifier=project.id
+        )
 
         outsider_client = APIClient()
         outsider_client.force_authenticate(user=outsider)
         assert outsider_client.get(f"/api/workspaces/{workspace.slug}/bootstrap/").status_code == 403
+        assert outsider_client.get(f"/api/workspaces/{workspace.slug}/home-bootstrap/").status_code == 403
         assert outsider_client.get(f"/api/workspaces/{workspace.slug}/view-bootstrap/").status_code == 403
+        assert (
+            outsider_client.get(
+                f"/api/workspaces/{workspace.slug}/work-items/{project.identifier}-{issue.sequence_id}/bootstrap/"
+            ).status_code
+            == 403
+        )
 
         client = APIClient()
         client.force_authenticate(user=user)
@@ -191,6 +221,28 @@ class TestBootstrapEndpoints:
         assert "members" in ws_resp.data
         assert "states" in ws_resp.data
         assert "sidebar_preferences" in ws_resp.data
+        assert "unread_notifications" in ws_resp.data
+        assert ws_resp.data["unread_notifications"]["total_unread_notifications_count"] == 0
+
+        home_resp = client.get(f"/api/workspaces/{workspace.slug}/home-bootstrap/")
+        assert home_resp.status_code == 200
+        home_json = home_resp.json()
+        for key in ("home_preferences", "quick_links", "recent_visits", "stickies"):
+            assert key in home_json
+        assert len(home_json["recent_visits"]) == 2
+        visit_types = {v["entity_name"]: v["entity_data"] for v in home_json["recent_visits"]}
+        assert visit_types["issue"]["id"] == str(issue.id)
+        assert visit_types["issue"]["project_identifier"] == "BOOT"
+        assert visit_types["project"]["id"] == str(project.id)
+
+        wi_resp = client.get(
+            f"/api/workspaces/{workspace.slug}/work-items/{project.identifier}-{issue.sequence_id}/bootstrap/"
+        )
+        assert wi_resp.status_code == 200
+        wi_json = wi_resp.json()
+        assert wi_json["issue"]["id"] == str(issue.id)
+        for key in ("activities", "comments", "relations", "collaboration", "description_versions"):
+            assert key in wi_json
 
         view_resp = client.get(f"/api/workspaces/{workspace.slug}/view-bootstrap/")
         assert view_resp.status_code == 200

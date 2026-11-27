@@ -10,7 +10,6 @@ import emptyCycle from "@/app/assets/empty-state/cycle.svg?url";
 // components
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHead } from "@/components/core/page-title";
-import useCyclesDetails from "@/components/cycles/active-cycle/use-cycles-details";
 import { CycleDetailsSidebar } from "@/components/cycles/analytics-sidebar";
 import { CycleDetailsPanel } from "@/components/cycles/cycle-details-panel";
 import { CycleLayoutRoot } from "@/components/issues/issue-layouts/roots/cycle-layout-root";
@@ -29,15 +28,8 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
   // store hooks
   const { getCycleById, loader } = useCycle();
   const { getProjectById } = useProject();
-  // const { issuesFilter } = useIssues(EIssuesStoreType.CYCLE);
   // hooks
   const { setValue, storedValue } = useLocalStorage("cycle_sidebar_collapsed", false);
-
-  useCyclesDetails({
-    workspaceSlug,
-    projectId,
-    cycleId,
-  });
   // derived values
   const isSidebarCollapsed = storedValue === true;
   const cycle = getCycleById(cycleId);

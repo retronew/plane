@@ -16,8 +16,15 @@ type NextLinkProps = React.ComponentProps<"a"> & {
   shallow?: boolean; // next.js prop, ignored
 };
 
-function Link({ href, replace, prefetch: _prefetch, scroll: _scroll, shallow: _shallow, ...rest }: NextLinkProps) {
-  return <RRLink to={ensureTrailingSlash(href)} replace={replace} {...rest} />;
+function Link({ href, replace, prefetch, scroll: _scroll, shallow: _shallow, ...rest }: NextLinkProps) {
+  return (
+    <RRLink
+      to={ensureTrailingSlash(href)}
+      replace={replace}
+      prefetch={prefetch === false ? "none" : "intent"}
+      {...rest}
+    />
+  );
 }
 
 export default Link;

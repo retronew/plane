@@ -258,7 +258,7 @@ export const WorkflowApprovalCard = observer(function WorkflowApprovalCard({
   const issue = getIssueById(issueId),
     workflow = store.resolve(projectId, issue?.type_id);
   const { data: currentUser } = useUser();
-  const relevant = !!issue;
+  const relevant = Boolean(issue && workflow);
   const historyRevision = store.historyRevision?.[projectId] ?? 0;
   const {
     data,

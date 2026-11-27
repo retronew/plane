@@ -71,8 +71,8 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
     () => fetchPageDetails(workspaceSlug, projectId, pageId),
     {
       revalidateIfStale: true,
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
     }
   );
   // page root handlers

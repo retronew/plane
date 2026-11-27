@@ -38,6 +38,10 @@ class SessionMiddleware(MiddlewareMixin):
         try:
             accessed = request.session.accessed
             modified = request.session.modified
+            # Public static asset redirects never touch sessions; skip loading session/Vary: Cookie
+            # so browser/CDN caches can store the 302 redirect cleanly without DB/Redis session hits.
+            if not accessed and not modified and request.path.startswith("/api/assets/v2/static/"):
+                return response
             empty = request.session.is_empty()
         except AttributeError:
             return response

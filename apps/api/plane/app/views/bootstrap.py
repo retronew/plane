@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from plane.app.permissions import ROLE
+from plane.app.permissions.base import get_request_perm_cache
 from plane.db.models import WorkspaceMember
 
 from .base import BaseAPIView
@@ -54,6 +55,9 @@ def _invoke_sub_get(request, path: str, query_string: str = ""):
         sub._cached_user = raw._cached_user
     if hasattr(request, "auth"):
         sub.auth = request.auth
+    # Share per-request permission cache across bootstrap sub-requests so @allow_permission
+    # does not repeat the same WorkspaceMember / ProjectMember lookup 8-10 times.
+    sub._perm_cache = get_request_perm_cache(request)
     # Bypass DRF CSRF enforcement on internal GET sub-requests
     sub._dont_enforce_csrf_checks = True
 
@@ -94,6 +98,7 @@ class AppBootstrapEndpoint(BaseAPIView):
                     "settings": None,
                     "workspaces": None,
                     "instance_admin": None,
+                    "invitations": None,
                 },
                 status=status.HTTP_200_OK,
             )
@@ -107,13 +112,14 @@ class AppBootstrapEndpoint(BaseAPIView):
                 "settings": _invoke_sub_get(request, "/api/users/me/settings/"),
                 "workspaces": _invoke_sub_get(request, "/api/users/me/workspaces/"),
                 "instance_admin": _invoke_sub_get(request, "/api/users/me/instance-admin/"),
+                "invitations": _invoke_sub_get(request, "/api/users/me/workspaces/invitations/"),
             },
             status=status.HTTP_200_OK,
         )
 
 
 class WorkspaceBootstrapEndpoint(BaseAPIView):
-    """Aggregate workspace shell bootstrap payload (9 requests -> 1)."""
+    """Aggregate workspace shell bootstrap payload (10 requests -> 1)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -128,6 +134,8 @@ class WorkspaceBootstrapEndpoint(BaseAPIView):
                 {"error": "You don't have the required permissions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
+        get_request_perm_cache(request)[("ws_role", str(request.user.id), slug)] = workspace_member.role
 
         projects_mode = "full" if request.GET.get("projects") == "full" else "partial"
         projects_path = (
@@ -153,9 +161,99 @@ class WorkspaceBootstrapEndpoint(BaseAPIView):
                 "states": _invoke_sub_get(request, f"/api/workspaces/{slug}/states/"),
                 "sidebar_preferences": _invoke_sub_get(request, f"/api/workspaces/{slug}/sidebar-preferences/"),
                 "user_properties": _invoke_sub_get(request, f"/api/workspaces/{slug}/user-properties/"),
+                "unread_notifications": _invoke_sub_get(
+                    request, f"/api/workspaces/{slug}/users/notifications/unread/"
+                ),
             },
             status=status.HTTP_200_OK,
         )
+
+
+class WorkspaceHomeBootstrapEndpoint(BaseAPIView):
+    """Aggregate Home dashboard widgets payload (4 requests across 2 serial hops -> 1)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug):
+        workspace_member = WorkspaceMember.objects.filter(
+            workspace__slug=slug,
+            member=request.user,
+            is_active=True,
+        ).first()
+        if not workspace_member:
+            return Response(
+                {"error": "You don't have the required permissions."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        get_request_perm_cache(request)[("ws_role", str(request.user.id), slug)] = workspace_member.role
+
+        return Response(
+            {
+                "home_preferences": _invoke_sub_get(request, f"/api/workspaces/{slug}/home-preferences/"),
+                "quick_links": _invoke_sub_get(request, f"/api/workspaces/{slug}/quick-links/"),
+                "recent_visits": _invoke_sub_get(request, f"/api/workspaces/{slug}/recent-visits/"),
+                "stickies": _invoke_sub_get(request, f"/api/workspaces/{slug}/stickies/", "cursor=30:0:0&per_page=30"),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class WorkItemBootstrapEndpoint(BaseAPIView):
+    """Aggregate work-item detail bootstrap payload (7 requests across 2 serial hops -> 1)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug, identifier):
+        workspace_member = WorkspaceMember.objects.filter(
+            workspace__slug=slug,
+            member=request.user,
+            is_active=True,
+        ).first()
+        if not workspace_member:
+            return Response(
+                {"error": "You don't have the required permissions."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        get_request_perm_cache(request)[("ws_role", str(request.user.id), slug)] = workspace_member.role
+
+        issue = _invoke_sub_get(
+            request,
+            f"/api/workspaces/{slug}/work-items/{identifier}/",
+            "expand=issue_reactions,issue_attachments,issue_link,parent",
+        )
+        if not issue or not isinstance(issue, dict) or not issue.get("id") or not issue.get("project_id"):
+            return Response({"error": "Issue does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        project_id = issue["project_id"]
+        issue_id = issue["id"]
+        is_intake_or_archived = bool(issue.get("is_intake") or issue.get("archived_at"))
+
+        payload = {
+            "issue": issue,
+            "activities": None,
+            "comments": None,
+            "relations": None,
+            "sub_issues": None,
+            "collaboration": None,
+            "description_versions": None,
+        }
+
+        if not is_intake_or_archived:
+            base = f"/api/workspaces/{slug}/projects/{project_id}/issues/{issue_id}"
+            payload["activities"] = _invoke_sub_get(request, f"{base}/history/", "activity_type=issue-property")
+            payload["comments"] = _invoke_sub_get(request, f"{base}/history/", "activity_type=issue-comment")
+            payload["relations"] = _invoke_sub_get(request, f"{base}/issue-relation/")
+            if (issue.get("sub_issues_count") or 0) > 0:
+                payload["sub_issues"] = _invoke_sub_get(request, f"{base}/sub-issues/")
+            payload["collaboration"] = _invoke_sub_get(request, f"{base}/collaboration/")
+            payload["description_versions"] = _invoke_sub_get(
+                request,
+                f"/api/workspaces/{slug}/projects/{project_id}/work-items/{issue_id}/description-versions/",
+            )
+
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 class WorkspaceViewBootstrapEndpoint(BaseAPIView):
@@ -164,16 +262,18 @@ class WorkspaceViewBootstrapEndpoint(BaseAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, slug):
-        is_member = WorkspaceMember.objects.filter(
+        workspace_member = WorkspaceMember.objects.filter(
             workspace__slug=slug,
             member=request.user,
             is_active=True,
-        ).exists()
-        if not is_member:
+        ).first()
+        if not workspace_member:
             return Response(
                 {"error": "You don't have the required permissions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
+        get_request_perm_cache(request)[("ws_role", str(request.user.id), slug)] = workspace_member.role
 
         return Response(
             {
@@ -193,16 +293,18 @@ class ProjectBootstrapEndpoint(BaseAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, slug, project_id):
-        is_member = WorkspaceMember.objects.filter(
+        workspace_member = WorkspaceMember.objects.filter(
             workspace__slug=slug,
             member=request.user,
             is_active=True,
-        ).exists()
-        if not is_member:
+        ).first()
+        if not workspace_member:
             return Response(
                 {"error": "You don't have the required permissions."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
+        get_request_perm_cache(request)[("ws_role", str(request.user.id), slug)] = workspace_member.role
 
         include_raw = request.GET.get("include", "")
         include = {part.strip() for part in include_raw.split(",") if part.strip()}

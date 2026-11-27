@@ -77,7 +77,7 @@ export default defineConfig(() => ({
                 },
                 {
                   name: "plane-shared",
-                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state)[\\/]|packages[\\/]blocks[\\/]dist[\\/](?!(charts|emoji-icon-picker|sortable|empty-state)[\\/])/,
+                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state)[\\/]|packages[\\/]blocks[\\/]dist[\\/](auth|breadcrumb|card|common|context-menu|dialog|emoji-reaction|icons|layout|pill-button|portal|property-select|select|skeleton|spinner|toast|types|utils|virtual-list)[\\/]/,
                   priority: 30,
                 },
                 {

@@ -199,43 +199,53 @@ export const CycleQuickActions = observer(function CycleQuickActions(props: Prop
     <>
       {cycleDetails && (
         <div className="fixed">
-          <CycleCreateUpdateModal
-            data={cycleDetails}
-            isOpen={updateModal}
-            handleClose={() => setUpdateModal(false)}
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-          />
-          <ArchiveCycleModal
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            cycleId={cycleId}
-            isOpen={archiveCycleModal}
-            handleClose={() => setArchiveCycleModal(false)}
-          />
-          <CycleDeleteModal
-            cycle={cycleDetails}
-            isOpen={deleteModal}
-            handleClose={() => setDeleteModal(false)}
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-          />
-          <CycleCompleteModal
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            cycleId={cycleId}
-            cycleName={cycleDetails.name}
-            open={completeModal}
-            onClose={() => setCompleteModal(false)}
-          />
-          <CycleExportModal
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            cycleId={cycleId}
-            cycleName={cycleDetails.name}
-            open={exportModal}
-            onClose={() => setExportModal(false)}
-          />
+          {updateModal && (
+            <CycleCreateUpdateModal
+              data={cycleDetails}
+              isOpen={updateModal}
+              handleClose={() => setUpdateModal(false)}
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+            />
+          )}
+          {archiveCycleModal && (
+            <ArchiveCycleModal
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              cycleId={cycleId}
+              isOpen={archiveCycleModal}
+              handleClose={() => setArchiveCycleModal(false)}
+            />
+          )}
+          {deleteModal && (
+            <CycleDeleteModal
+              cycle={cycleDetails}
+              isOpen={deleteModal}
+              handleClose={() => setDeleteModal(false)}
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+            />
+          )}
+          {completeModal && (
+            <CycleCompleteModal
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              cycleId={cycleId}
+              cycleName={cycleDetails.name}
+              open={completeModal}
+              onClose={() => setCompleteModal(false)}
+            />
+          )}
+          {exportModal && (
+            <CycleExportModal
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              cycleId={cycleId}
+              cycleName={cycleDetails.name}
+              open={exportModal}
+              onClose={() => setExportModal(false)}
+            />
+          )}
           {additionalModals}
         </div>
       )}

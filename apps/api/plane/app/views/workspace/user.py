@@ -385,7 +385,15 @@ class WorkspaceUserActivityEndpoint(BaseAPIView):
             project__project_projectmember__is_active=True,
             project__archived_at__isnull=True,
             actor=user_id,
-        ).select_related("actor", "workspace", "issue", "project")
+        ).select_related(
+            "actor",
+            "actor__avatar_asset",
+            "workspace",
+            "workspace__logo_asset",
+            "issue",
+            "project",
+            "project__cover_image_asset",
+        )
 
         if projects:
             queryset = queryset.filter(project__in=projects)
@@ -406,7 +414,7 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
     def get(self, request, slug, user_id):
         filters = issue_filters(request.query_params, "GET")
 
-        state_distribution = (
+        state_distribution = list(
             Issue.issue_objects.filter(
                 (Q(assignees__in=[user_id]) & Q(issue_assignee__deleted_at__isnull=True)),
                 workspace__slug=slug,
@@ -418,6 +426,15 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
             .values("state_group")
             .annotate(state_count=Count("state_group"))
             .order_by("state_group")
+        )
+
+        # Derive assigned/pending/completed totals directly from state_distribution (saves 3 COUNT queries)
+        assigned_issues_count = sum(row["state_count"] for row in state_distribution)
+        completed_issues_count = sum(
+            row["state_count"] for row in state_distribution if row["state_group"] == "completed"
+        )
+        pending_issues_count = sum(
+            row["state_count"] for row in state_distribution if row["state_group"] not in ("completed", "cancelled")
         )
 
         priority_order = ["urgent", "high", "medium", "low", "none"]
@@ -454,41 +471,6 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
             .count()
         )
 
-        assigned_issues_count = (
-            Issue.issue_objects.filter(
-                (Q(assignees__in=[user_id]) & Q(issue_assignee__deleted_at__isnull=True)),
-                workspace__slug=slug,
-                project__project_projectmember__member=request.user,
-                project__project_projectmember__is_active=True,
-            )
-            .filter(**filters)
-            .count()
-        )
-
-        pending_issues_count = (
-            Issue.issue_objects.filter(
-                ~Q(state__group__in=["completed", "cancelled"]),
-                (Q(assignees__in=[user_id]) & Q(issue_assignee__deleted_at__isnull=True)),
-                workspace__slug=slug,
-                project__project_projectmember__member=request.user,
-                project__project_projectmember__is_active=True,
-            )
-            .filter(**filters)
-            .count()
-        )
-
-        completed_issues_count = (
-            Issue.issue_objects.filter(
-                (Q(assignees__in=[user_id]) & Q(issue_assignee__deleted_at__isnull=True)),
-                workspace__slug=slug,
-                state__group="completed",
-                project__project_projectmember__member=request.user,
-                project__project_projectmember__is_active=True,
-            )
-            .filter(**filters)
-            .count()
-        )
-
         subscribed_issues_count = (
             IssueSubscriber.objects.filter(
                 workspace__slug=slug,
@@ -501,20 +483,29 @@ class WorkspaceUserProfileStatsEndpoint(BaseAPIView):
             .count()
         )
 
-        upcoming_cycles = CycleIssue.objects.filter(
-            workspace__slug=slug,
-            cycle__start_date__gt=timezone.now(),
-            cycle__completed_at__isnull=True,
-            issue__assignees__in=[user_id],
-        ).values("cycle__name", "cycle__id", "cycle__project_id")
+        now = timezone.now()
+        upcoming_cycles = (
+            CycleIssue.objects.filter(
+                workspace__slug=slug,
+                cycle__start_date__gt=now,
+                cycle__completed_at__isnull=True,
+                issue__assignees__in=[user_id],
+            )
+            .values("cycle__name", "cycle__id", "cycle__project_id")
+            .distinct()
+        )
 
-        present_cycle = CycleIssue.objects.filter(
-            workspace__slug=slug,
-            cycle__start_date__lt=timezone.now(),
-            cycle__end_date__gt=timezone.now(),
-            cycle__completed_at__isnull=True,
-            issue__assignees__in=[user_id],
-        ).values("cycle__name", "cycle__id", "cycle__project_id")
+        present_cycle = (
+            CycleIssue.objects.filter(
+                workspace__slug=slug,
+                cycle__start_date__lt=now,
+                cycle__end_date__gt=now,
+                cycle__completed_at__isnull=True,
+                issue__assignees__in=[user_id],
+            )
+            .values("cycle__name", "cycle__id", "cycle__project_id")
+            .distinct()
+        )
 
         return Response(
             {

@@ -97,6 +97,7 @@ export class SyncEngine {
   private suspended = false;
   private awaitingReady = false;
   private ready = false;
+  private hadPriorReady = false;
   private pauses = 0;
   private mutationRevision = 0;
   private invalidations = 0;
@@ -117,9 +118,11 @@ export class SyncEngine {
   private allowedProjects?: Set<string>;
   private seen = new Set<string>();
   private wakeReplay?: () => void;
+  private wakeReplayOnSubscribe?: () => void;
   private waiters = new Set<{ resolve: () => void; reject: (error: unknown) => void }>();
-  setReplay(wake?: () => void) {
+  setReplay(wake?: () => void, wakeOnSubscribe?: () => void) {
     this.wakeReplay = wake;
+    this.wakeReplayOnSubscribe = wakeOnSubscribe ?? wake;
   }
   reconcile() {
     if (this.suspended) return;
@@ -174,7 +177,7 @@ export class SyncEngine {
       this.schedule();
     }
     // Check for commits whose socket wakeup was missed, using the existing replay cursor.
-    if (snapshotRevision !== undefined && !this.suspended) this.wakeReplay?.();
+    if (snapshotRevision !== undefined && !this.suspended) this.wakeReplayOnSubscribe?.();
     return () => {
       if (subscriber.refreshing) subscriber.abort?.();
       subscriber.cancel();
@@ -273,6 +276,7 @@ export class SyncEngine {
     this.refreshQueue = Promise.resolve();
     this.url = undefined;
     this.ready = false;
+    this.hadPriorReady = false;
     this.awaitingReady = false;
     clearTimeout(this.timer);
     clearTimeout(this.reconnectTimer);
@@ -317,10 +321,18 @@ export class SyncEngine {
           this.allowedProjects = projects;
         }
         if (message.type === "ready") {
+          const isInitialReady = !this.hadPriorReady;
+          this.hadPriorReady = true;
           this.attempts = 0;
           this.ready = true;
           this.awaitingReady = false;
           this.schedule();
+          // On initial workspace boot, ReplayCoordinator.resume() already initiated the baseline REST call;
+          // route initial ready through wakeReplayOnSubscribe (wakeIfIdle in app, wake in unit tests).
+          if (isInitialReady && this.wakeReplayOnSubscribe) {
+            this.wakeReplayOnSubscribe();
+            return;
+          }
         }
         if (message.event_id) {
           if (this.seen.has(message.event_id)) return;

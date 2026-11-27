@@ -49,6 +49,13 @@ class GlobalSearchEndpoint(BaseAPIView):
     also show related workspace if found
     """
 
+    def _get_visible_projects(self, slug):
+        cached = getattr(self, "_visible_projects_cache", None)
+        if cached is None:
+            cached = visible_projects(slug, self.request.user)
+            self._visible_projects_cache = cached
+        return cached
+
     def filter_workspaces(self, query, _slug, _project_id, _workspace_search):
         fields = ["name"]
         q = Q()
@@ -59,7 +66,7 @@ class GlobalSearchEndpoint(BaseAPIView):
             Workspace.objects.filter(q, workspace_member__member=self.request.user)
             .order_by("-created_at")
             .distinct()
-            .values("name", "id", "slug")
+            .values("name", "id", "slug")[:50]
         )
 
     def filter_projects(self, query, slug, _project_id, _workspace_search):
@@ -78,7 +85,7 @@ class GlobalSearchEndpoint(BaseAPIView):
             )
             .order_by("-created_at")
             .distinct()
-            .values("name", "id", "identifier", "workspace__slug")
+            .values("name", "id", "identifier", "workspace__slug")[:50]
         )
 
     def filter_issues(self, query, slug, project_id, workspace_search):
@@ -130,7 +137,7 @@ class GlobalSearchEndpoint(BaseAPIView):
         return (
             cycles.order_by("-created_at")
             .distinct()
-            .values("name", "id", "project_id", "project__identifier", "workspace__slug")
+            .values("name", "id", "project_id", "project__identifier", "workspace__slug")[:50]
         )
 
     def filter_modules(self, query, slug, project_id, workspace_search):
@@ -154,7 +161,7 @@ class GlobalSearchEndpoint(BaseAPIView):
         return (
             modules.order_by("-created_at")
             .distinct()
-            .values("name", "id", "project_id", "project__identifier", "workspace__slug")
+            .values("name", "id", "project_id", "project__identifier", "workspace__slug")[:50]
         )
 
     def filter_pages(self, query, slug, project_id, workspace_search):
@@ -165,7 +172,7 @@ class GlobalSearchEndpoint(BaseAPIView):
                 q |= Q(**{f"{field}__icontains": query})
 
         user = self.request.user
-        full, restricted = visible_projects(slug, user)
+        full, restricted = self._get_visible_projects(slug)
         pages = (
             Page.objects.filter(
                 q,
@@ -204,7 +211,7 @@ class GlobalSearchEndpoint(BaseAPIView):
         return (
             pages.order_by("-created_at")
             .distinct()
-            .values("name", "id", "project_ids", "project_identifiers", "workspace__slug")
+            .values("name", "id", "project_ids", "project_identifiers", "workspace__slug")[:50]
         )
 
     def filter_views(self, query, slug, project_id, workspace_search):
@@ -215,7 +222,7 @@ class GlobalSearchEndpoint(BaseAPIView):
                 q |= Q(**{f"{field}__icontains": query})
 
         user = self.request.user
-        full, restricted = visible_projects(slug, user)
+        full, restricted = self._get_visible_projects(slug)
         issue_views = (
             IssueView.objects.filter(q, workspace__slug=slug)
             # Views use access 1 for public; private views belong to their owner only
@@ -229,7 +236,7 @@ class GlobalSearchEndpoint(BaseAPIView):
         return (
             issue_views.order_by("-created_at")
             .distinct()
-            .values("name", "id", "project_id", "project__identifier", "workspace__slug")
+            .values("name", "id", "project_id", "project__identifier", "workspace__slug")[:50]
         )
 
     def filter_intakes(self, query, slug, project_id, workspace_search):
@@ -245,7 +252,7 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        full, restricted = visible_projects(slug, self.request.user)
+        full, restricted = self._get_visible_projects(slug)
         issues = (
             Issue.objects.filter(q, workspace__slug=slug).filter(
                 Q(project_id__in=full) | Q(project_id__in=restricted, created_by=self.request.user)

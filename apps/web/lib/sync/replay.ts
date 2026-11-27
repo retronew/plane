@@ -25,6 +25,7 @@ export type ReplaySource = (cursor: string | undefined, signal: AbortSignal) => 
 export class ReplayCoordinator {
   private cursor?: string;
   private hasBaseline = false;
+  private lastBaselineAt = 0;
   private active = false;
   private running = false;
   private pending = false;
@@ -51,11 +52,18 @@ export class ReplayCoordinator {
     this.suspend();
     this.cursor = undefined;
     this.hasBaseline = false;
+    this.lastBaselineAt = 0;
   }
   wake = () => {
     if (!this.active) return;
     this.pending = true;
     if (!this.running) void this.run();
+  };
+  /** Passive mount wakeup: skip if a replay is already in-flight or a cold baseline just completed. */
+  wakeIfIdle = () => {
+    if (!this.active || this.running) return;
+    if (this.hasBaseline && Date.now() - this.lastBaselineAt < 1500) return;
+    this.wake();
   };
   private async run() {
     this.running = true;
@@ -78,6 +86,7 @@ export class ReplayCoordinator {
           const baseline = page.cursor;
           const isInitialColdBaseline = !this.hasBaseline && !page.reset_required;
           this.hasBaseline = true;
+          this.lastBaselineAt = Date.now();
           if (isInitialColdBaseline) {
             this.cursor = baseline;
             continue;

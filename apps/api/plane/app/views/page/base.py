@@ -306,7 +306,9 @@ class PageViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, slug, project_id):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().defer(
+            "description_binary", "description_html", "description_json", "description_stripped"
+        )
         label_ids = filter_valid_uuids(label.strip() for label in request.query_params.get("labels", "").split(","))
         if label_ids:
             queryset = queryset.filter(

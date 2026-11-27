@@ -163,30 +163,38 @@ export const ModuleQuickActions = observer(function ModuleQuickActions(props: Pr
     <>
       {moduleDetails && (
         <div className="fixed">
-          <CreateUpdateModuleModal
-            isOpen={editModal}
-            onClose={() => setEditModal(false)}
-            data={moduleDetails}
-            projectId={projectId}
-            workspaceSlug={workspaceSlug}
-          />
-          <ArchiveModuleModal
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            moduleId={moduleId}
-            isOpen={archiveModuleModal}
-            handleClose={() => setArchiveModuleModal(false)}
-          />
-          <DeleteModuleModal data={moduleDetails} isOpen={deleteModal} onClose={() => setDeleteModal(false)} />
-          <ScopedWorkItemExportModal
-            workspaceSlug={workspaceSlug}
-            projectId={projectId}
-            entityType="module"
-            entityId={moduleId}
-            entityName={moduleDetails.name}
-            open={exportModal}
-            onClose={() => setExportModal(false)}
-          />
+          {editModal && (
+            <CreateUpdateModuleModal
+              isOpen={editModal}
+              onClose={() => setEditModal(false)}
+              data={moduleDetails}
+              projectId={projectId}
+              workspaceSlug={workspaceSlug}
+            />
+          )}
+          {archiveModuleModal && (
+            <ArchiveModuleModal
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              moduleId={moduleId}
+              isOpen={archiveModuleModal}
+              handleClose={() => setArchiveModuleModal(false)}
+            />
+          )}
+          {deleteModal && (
+            <DeleteModuleModal data={moduleDetails} isOpen={deleteModal} onClose={() => setDeleteModal(false)} />
+          )}
+          {exportModal && (
+            <ScopedWorkItemExportModal
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              entityType="module"
+              entityId={moduleId}
+              entityName={moduleDetails.name}
+              open={exportModal}
+              onClose={() => setExportModal(false)}
+            />
+          )}
           {additionalModals}
         </div>
       )}

@@ -77,11 +77,18 @@ class AdvanceAnalyticsEndpoint(AdvanceAnalyticsBaseView):
                 ).values("member_id")
             )
 
+        member_counts = members_query.aggregate(
+            total_users=Count("id"),
+            total_admins=Count("id", filter=Q(role=ROLE.ADMIN.value)),
+            total_members=Count("id", filter=Q(role=ROLE.MEMBER.value)),
+            total_guests=Count("id", filter=Q(role=ROLE.GUEST.value)),
+        )
+
         return {
-            "total_users": {"count": members_query.count()},
-            "total_admins": {"count": members_query.filter(role=ROLE.ADMIN.value).count()},
-            "total_members": {"count": members_query.filter(role=ROLE.MEMBER.value).count()},
-            "total_guests": {"count": members_query.filter(role=ROLE.GUEST.value).count()},
+            "total_users": {"count": member_counts["total_users"] or 0},
+            "total_admins": {"count": member_counts["total_admins"] or 0},
+            "total_members": {"count": member_counts["total_members"] or 0},
+            "total_guests": {"count": member_counts["total_guests"] or 0},
             "total_projects": {"count": Project.objects.filter(**self.filters["project_filters"]).count()},
             "total_work_items": self.get_filtered_counts(Issue.issue_objects.filter(**self.filters["base_filters"])),
             "total_cycles": {"count": Cycle.objects.filter(**self.filters["base_filters"]).count()},
@@ -94,13 +101,25 @@ class AdvanceAnalyticsEndpoint(AdvanceAnalyticsBaseView):
 
     def get_work_items_stats(self) -> Dict[str, Dict[str, int]]:
         base_queryset = Issue.issue_objects.filter(**self.filters["base_filters"])
+        if self.filters["analytics_date_range"]:
+            base_queryset = base_queryset.filter(
+                created_at__date__gte=self.filters["analytics_date_range"]["current"]["gte"].date(),
+                created_at__date__lte=self.filters["analytics_date_range"]["current"]["lte"].date(),
+            )
+        counts = base_queryset.aggregate(
+            total_work_items=Count("id"),
+            started_work_items=Count("id", filter=Q(state__group="started")),
+            backlog_work_items=Count("id", filter=Q(state__group="backlog")),
+            un_started_work_items=Count("id", filter=Q(state__group="unstarted")),
+            completed_work_items=Count("id", filter=Q(state__group="completed")),
+        )
 
         return {
-            "total_work_items": self.get_filtered_counts(base_queryset),
-            "started_work_items": self.get_filtered_counts(base_queryset.filter(state__group="started")),
-            "backlog_work_items": self.get_filtered_counts(base_queryset.filter(state__group="backlog")),
-            "un_started_work_items": self.get_filtered_counts(base_queryset.filter(state__group="unstarted")),
-            "completed_work_items": self.get_filtered_counts(base_queryset.filter(state__group="completed")),
+            "total_work_items": {"count": counts["total_work_items"] or 0},
+            "started_work_items": {"count": counts["started_work_items"] or 0},
+            "backlog_work_items": {"count": counts["backlog_work_items"] or 0},
+            "un_started_work_items": {"count": counts["un_started_work_items"] or 0},
+            "completed_work_items": {"count": counts["completed_work_items"] or 0},
         }
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")

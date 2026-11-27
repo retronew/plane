@@ -114,27 +114,26 @@ class UserMeSettingsSerializer(BaseSerializer):
 
         # profile
         profile = Profile.objects.get(user=obj)
-        if (
-            profile.last_workspace_id is not None
-            and Workspace.objects.filter(
+        workspace = (
+            Workspace.objects.filter(
                 pk=profile.last_workspace_id,
                 workspace_member__member=obj.id,
                 workspace_member__is_active=True,
-            ).exists()
-        ):
-            workspace = Workspace.objects.filter(
-                pk=profile.last_workspace_id,
-                workspace_member__member=obj.id,
-                workspace_member__is_active=True,
-            ).first()
+            )
+            .select_related("logo_asset")
+            .first()
+            if profile.last_workspace_id is not None
+            else None
+        )
+        if workspace is not None:
             logo_asset_url = workspace.logo_asset.asset_url if workspace.logo_asset is not None else ""
             return {
                 "last_workspace_id": profile.last_workspace_id,
-                "last_workspace_slug": (workspace.slug if workspace is not None else ""),
-                "last_workspace_name": (workspace.name if workspace is not None else ""),
-                "last_workspace_logo": (logo_asset_url),
+                "last_workspace_slug": workspace.slug,
+                "last_workspace_name": workspace.name,
+                "last_workspace_logo": logo_asset_url,
                 "fallback_workspace_id": profile.last_workspace_id,
-                "fallback_workspace_slug": (workspace.slug if workspace is not None else ""),
+                "fallback_workspace_slug": workspace.slug,
                 "invites": workspace_invites,
             }
         else:

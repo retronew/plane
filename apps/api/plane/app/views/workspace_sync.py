@@ -52,37 +52,32 @@ class WorkspaceSyncAccessEndpoint(BaseAPIView):
         )
 
 
-def sync_access(user, slug):
-    # Authorization locks serialize concurrent revocations with response construction.
-    member = (
-        WorkspaceMember.objects.select_for_update(no_key=True)
-        .filter(
-            workspace__slug=slug,
-            workspace__deleted_at__isnull=True,
-            member=user,
-            is_active=True,
-        )
-        .first()
-    )
+def sync_access(user, slug, *, lock=False):
+    # Read-only change polling does not need write row locks on every member row.
+    ws_qs = WorkspaceMember.objects.select_for_update(no_key=True) if lock else WorkspaceMember.objects
+    member = ws_qs.filter(
+        workspace__slug=slug,
+        workspace__deleted_at__isnull=True,
+        member=user,
+        is_active=True,
+    ).first()
     if member is None:
         raise PermissionDenied("Workspace access revoked")
+    pm_qs = ProjectMember.objects.select_for_update(no_key=True) if lock else ProjectMember.objects
     projects = list(
-        ProjectMember.objects.select_for_update(no_key=True)
-        .filter(
+        pm_qs.filter(
             workspace_id=member.workspace_id,
             project__workspace_id=member.workspace_id,
             project__deleted_at__isnull=True,
             member=user,
             is_active=True,
             role__gte=15,
-        )
-        .values_list("project_id", flat=True)
+        ).values_list("project_id", flat=True)
     )
     return member.workspace_id, projects
 
 
 class WorkspaceSyncChangesEndpoint(BaseAPIView):
-    @transaction.atomic
     def get(self, request, slug):
         workspace_id, projects = sync_access(request.user, slug)
         # Read cursor without acquiring an exclusive FOR UPDATE lock so 30s polls

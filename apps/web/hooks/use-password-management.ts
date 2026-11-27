@@ -25,7 +25,7 @@ export const usePasswordManagement = () => {
   const { data: adminStatus, isLoading } = useSWR(
     config && !isPasswordLoginEnabled ? "CURRENT_USER_INSTANCE_ADMIN_STATUS" : null,
     () => userService.currentUserInstanceAdminStatus(),
-    { revalidateOnFocus: false, shouldRetryOnError: false }
+    { revalidateIfStale: false, revalidateOnFocus: false, shouldRetryOnError: false }
   );
 
   return {

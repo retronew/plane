@@ -173,11 +173,11 @@ class WorkflowBaseView(BaseAPIView):
                     "id": r.id,
                     "source_id": r.source_id,
                     "destination_id": r.destination_id,
-                    "member_ids": list(r.members.values_list("id", flat=True)),
+                    "member_ids": [m.id for m in r.members.all()],
                     "kind": r.kind,
                     "reject_state_id": r.reject_state_id,
                     "approver_mode": r.approver_mode,
-                    "approver_ids": list(r.approvers.values_list("id", flat=True)),
+                    "approver_ids": [a.id for a in r.approvers.all()],
                     "version": r.version,
                     "steps": r.steps,
                 }

@@ -48,7 +48,7 @@ export function ProjectOverviewSidebar(props: { project: IProject; workspaceSlug
             <ProjectOverviewProperties {...props} />
           </div>
         </TabsPanel>
-        <TabsPanel value="updates" keepMounted>
+        <TabsPanel value="updates">
           <div className="pt-4">
             <ProjectOverviewUpdates project={props.project} workspaceSlug={props.workspaceSlug} />
           </div>
