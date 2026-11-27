@@ -337,6 +337,16 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
         """
         if asset.project_id is None:
             return True
+        if (
+            asset.entity_type == FileAsset.EntityTypeContext.PROJECT_COVER
+            and WorkspaceMember.objects.filter(
+                member=request.user,
+                workspace_id=asset.workspace_id,
+                role=ROLE.ADMIN.value,
+                is_active=True,
+            ).exists()
+        ):
+            return True
         # Scope the membership lookup to the asset's workspace as well as its
         # project, mirroring allow_permission's PROJECT branch. This prevents a
         # member of the same project in a different workspace from passing the

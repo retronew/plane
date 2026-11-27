@@ -6,7 +6,7 @@ from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
-from plane.db.models import Project, ProjectMember, User, Workspace, WorkspaceMember
+from plane.db.models import FileAsset, Project, ProjectMember, User, Workspace, WorkspaceMember
 
 
 @pytest.mark.unit
@@ -91,6 +91,45 @@ class TestWorkspaceAdminUnjoinedProjectEdit:
             format="json",
         )
         assert resp.status_code == 400
+
+    def test_workspace_admin_can_confirm_unjoined_project_cover_asset(self):
+        admin_user, member_user, workspace, project = self._setup_workspace_and_project()
+        cover_asset = FileAsset.objects.create(
+            workspace=workspace,
+            project=project,
+            created_by=admin_user,
+            entity_type=FileAsset.EntityTypeContext.PROJECT_COVER,
+            asset=f"{workspace.id}/cover-test.jpg",
+            attributes={"name": "cover-test.jpg", "type": "image/jpeg", "size": 1024},
+            size=1024,
+            storage_metadata={"verified": True},
+        )
+        issue_asset = FileAsset.objects.create(
+            workspace=workspace,
+            project=project,
+            created_by=admin_user,
+            entity_type=FileAsset.EntityTypeContext.ISSUE_DESCRIPTION,
+            asset=f"{workspace.id}/issue-test.jpg",
+            attributes={"name": "issue-test.jpg", "type": "image/jpeg", "size": 1024},
+            size=1024,
+            storage_metadata={"verified": True},
+        )
+
+        # Non-admin non-member cannot confirm PROJECT_COVER
+        member_client = APIClient()
+        member_client.force_authenticate(user=member_user)
+        assert member_client.patch(f"/api/assets/v2/workspaces/{workspace.slug}/{cover_asset.id}/").status_code == 403
+
+        # Workspace admin CAN confirm PROJECT_COVER without joining
+        admin_client = APIClient()
+        admin_client.force_authenticate(user=admin_user)
+        resp = admin_client.patch(f"/api/assets/v2/workspaces/{workspace.slug}/{cover_asset.id}/")
+        assert resp.status_code == 204
+        project.refresh_from_db()
+        assert project.cover_image_asset_id == cover_asset.id
+
+        # Workspace admin still cannot confirm non-cover project assets (ISSUE_DESCRIPTION) without joining
+        assert admin_client.patch(f"/api/assets/v2/workspaces/{workspace.slug}/{issue_asset.id}/").status_code == 403
 
 
 @pytest.mark.unit
