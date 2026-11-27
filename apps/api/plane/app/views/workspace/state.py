@@ -11,6 +11,7 @@ from plane.app.serializers import StateSerializer
 from plane.app.views.base import BaseAPIView
 from plane.db.models import State
 from plane.app.permissions import WorkspaceEntityPermission
+from plane.utils.cache import cache_response
 from collections import defaultdict
 
 
@@ -18,6 +19,7 @@ class WorkspaceStatesEndpoint(BaseAPIView):
     permission_classes = [WorkspaceEntityPermission]
     use_read_replica = True
 
+    @cache_response(60 * 3)
     def get(self, request, slug):
         states = State.objects.filter(
             workspace__slug=slug,

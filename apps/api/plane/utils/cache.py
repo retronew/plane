@@ -8,6 +8,7 @@ from functools import wraps
 # Django imports
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 
 # Third party imports
 from rest_framework.response import Response
@@ -64,7 +65,12 @@ def invalidate_cache_directly(path=None, url_params=False, user=True, request=No
     key = generate_cache_key(custom_path, auth_header)
 
     if multiple:
-        cache.delete_many(keys=cache.keys(f"*{key}*"))
+        if hasattr(cache, "delete_pattern"):
+            cache.delete_pattern(f"*{key}*")
+        elif hasattr(cache, "keys"):
+            cache.delete_many(keys=cache.keys(f"*{key}*"))
+        else:
+            cache.delete(key)
     else:
         cache.delete(key)
 
@@ -73,15 +79,20 @@ def invalidate_cache(path=None, url_params=False, user=True, multiple=False):
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(instance, request, *args, **kwargs):
-            # invalidate the cache
-            invalidate_cache_directly(
-                path=path,
-                url_params=url_params,
-                user=user,
-                request=request,
-                multiple=multiple,
-            )
-            return view_func(instance, request, *args, **kwargs)
+            response = view_func(instance, request, *args, **kwargs)
+            status_code = getattr(response, "status_code", 200)
+            if 200 <= status_code < 400:
+                # Invalidate after the write commits to avoid stale repopulation races.
+                transaction.on_commit(
+                    lambda: invalidate_cache_directly(
+                        path=path,
+                        url_params=url_params,
+                        user=user,
+                        request=request,
+                        multiple=multiple,
+                    )
+                )
+            return response
 
         return _wrapped_view
 

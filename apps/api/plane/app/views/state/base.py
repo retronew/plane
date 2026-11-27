@@ -45,7 +45,7 @@ class StateViewSet(BaseViewSet):
             .distinct()
         )
 
-    @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
+    @invalidate_cache(path="/api/workspaces/:slug/states/", url_params=True, user=False, multiple=True)
     @allow_permission([ROLE.ADMIN])
     @transaction.atomic
     def create(self, request, slug, project_id):
@@ -66,6 +66,7 @@ class StateViewSet(BaseViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+    @invalidate_cache(path="/api/workspaces/:slug/states/", url_params=True, user=False, multiple=True)
     @allow_permission([ROLE.ADMIN])
     @transaction.atomic
     def partial_update(self, request, slug, project_id, pk):
@@ -114,7 +115,7 @@ class StateViewSet(BaseViewSet):
 
         return Response(states, status=status.HTTP_200_OK)
 
-    @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
+    @invalidate_cache(path="/api/workspaces/:slug/states/", url_params=True, user=False, multiple=True)
     @allow_permission([ROLE.ADMIN])
     @transaction.atomic
     def mark_as_default(self, request, slug, project_id, pk):
@@ -128,7 +129,7 @@ class StateViewSet(BaseViewSet):
         validate_state_creation_settings(project_id, list(State.objects.filter(project_id=project_id)))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @invalidate_cache(path="workspaces/:slug/states/", url_params=True, user=False)
+    @invalidate_cache(path="/api/workspaces/:slug/states/", url_params=True, user=False, multiple=True)
     @allow_permission([ROLE.ADMIN])
     @transaction.atomic
     def destroy(self, request, slug, project_id, pk):
