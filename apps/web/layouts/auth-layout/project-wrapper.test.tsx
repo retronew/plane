@@ -5,6 +5,7 @@ import { EUserPermissions } from "@plane/constants";
 import { ProjectAuthWrapper } from "./project-wrapper";
 
 const mocks = vi.hoisted(() => ({
+  pathname: "/ws/projects/p1/issues/",
   role: undefined as EUserPermissions | undefined,
   hasPermission: true,
   projectDetails: undefined as
@@ -33,6 +34,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
+vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
 vi.mock("@/components/auth-screens/project/project-access-restriction", () => ({
   ProjectAccessRestriction: () => <div>restricted</div>,
 }));
@@ -78,12 +80,13 @@ vi.mock("@/hooks/use-timeline-chart", () => ({ useTimeLineChart: () => ({ initGa
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.pathname = "/ws/projects/p1/issues/";
   mocks.role = undefined;
   mocks.hasPermission = true;
   mocks.projectDetails = undefined;
 });
 
-it("waits for project role before fetching sub-resources and skips disabled modules/features", () => {
+it("waits for project role and details before fetching sub-resources and skips disabled features", () => {
   const wrap = () => (
     <SWRConfig value={{ provider: () => new Map() }}>
       <ProjectAuthWrapper workspaceSlug="ws" projectId="p1">
@@ -101,14 +104,26 @@ it("waits for project role before fetching sub-resources and skips disabled modu
   expect(mocks.fetchModules).not.toHaveBeenCalled();
   expect(mocks.fetchModulesSlim).not.toHaveBeenCalled();
 
+  // Role ready but projectDetails still undefined: feature-flagged endpoints must NOT fire prematurely
   mocks.role = EUserPermissions.ADMIN;
+  rerender(
+    <ProjectAuthWrapper workspaceSlug="ws" projectId="p1">
+      <div>ok</div>
+    </ProjectAuthWrapper>
+  );
+  expect(mocks.fetchProjectIntakeState).not.toHaveBeenCalled();
+  expect(mocks.getProjectEstimates).not.toHaveBeenCalled();
+  expect(mocks.fetchAllCycles).not.toHaveBeenCalled();
+  expect(mocks.fetchModules).not.toHaveBeenCalled();
+  expect(mocks.fetchViews).not.toHaveBeenCalled();
+
   mocks.projectDetails = {
     id: "p1",
     inbox_view: false,
     estimate: null,
     cycle_view: false,
     module_view: true,
-    issue_views_view: false,
+    issue_views_view: true,
   };
   rerender(
     <ProjectAuthWrapper workspaceSlug="ws" projectId="p1">
@@ -126,4 +141,34 @@ it("waits for project role before fetching sub-resources and skips disabled modu
   expect(mocks.getProjectEstimates).not.toHaveBeenCalled();
   expect(mocks.fetchAllCycles).not.toHaveBeenCalled();
   expect(mocks.fetchViews).not.toHaveBeenCalled();
+});
+
+it("skips unrelated sub-resources on project settings and pages routes", () => {
+  mocks.pathname = "/ws/settings/projects/p1/";
+  mocks.role = EUserPermissions.ADMIN;
+  mocks.projectDetails = {
+    id: "p1",
+    inbox_view: true,
+    estimate: "est-1",
+    cycle_view: true,
+    module_view: true,
+    issue_views_view: true,
+  };
+
+  render(
+    <SWRConfig value={{ provider: () => new Map() }}>
+      <ProjectAuthWrapper workspaceSlug="ws" projectId="p1">
+        <div>ok</div>
+      </ProjectAuthWrapper>
+    </SWRConfig>
+  );
+
+  expect(mocks.fetchProjectDetails).toHaveBeenCalledTimes(1);
+  expect(mocks.fetchUserProjectInfo).not.toHaveBeenCalled();
+  expect(mocks.fetchAllCycles).not.toHaveBeenCalled();
+  expect(mocks.fetchModules).not.toHaveBeenCalled();
+  expect(mocks.fetchViews).not.toHaveBeenCalled();
+  expect(mocks.fetchProjectIntakeState).not.toHaveBeenCalled();
+  expect(mocks.fetchProjectUserProperties).not.toHaveBeenCalled();
+  expect(mocks.initGantt).not.toHaveBeenCalled();
 });

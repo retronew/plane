@@ -72,6 +72,8 @@ export const NameColumn = observer(function NameColumn(props: NameProps) {
               <span className="relative flex size-6 items-center justify-center rounded-full text-on-color capitalize">
                 <img
                   src={getFileURL(avatar_url)}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute top-0 left-0 h-full w-full rounded-full object-cover"
                   alt={display_name || email}
                 />

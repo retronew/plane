@@ -100,15 +100,19 @@ export const WorkspaceMembersList = observer(function WorkspaceMembersList(props
       getWorkspaceMemberDetails,
     },
   } = useMember();
-  // fetching workspace invitations
+  // fetching workspace invitations (WorkspaceAuthWrapper already loads workspace members)
   useSWR(
     workspaceSlug ? `WORKSPACE_MEMBERS_AND_MEMBER_INVITATIONS_${workspaceSlug.toString()}` : null,
     workspaceSlug
       ? async () => {
-          await fetchWorkspaceMemberInvitations(workspaceSlug.toString());
-          await fetchWorkspaceMembers(workspaceSlug.toString());
+          const slug = workspaceSlug.toString();
+          await Promise.all([
+            fetchWorkspaceMemberInvitations(slug),
+            ...(workspaceMemberIds?.length ? [] : [fetchWorkspaceMembers(slug)]),
+          ]);
         }
-      : null
+      : null,
+    { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
   if (!workspaceMemberIds && !workspaceMemberInvitationIds) return <MembersSettingsLoader />;

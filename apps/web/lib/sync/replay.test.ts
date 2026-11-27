@@ -29,12 +29,12 @@ function setup() {
   const replay = new ReplayCoordinator(engine as unknown as SyncEngine, source);
   return { engine, source, replay };
 }
-it("fixes baseline before snapshots, recovers missed notifications and drains pages", async () => {
+it("fixes initial cold baseline without redundant reset storm, then drains subsequent pages", async () => {
   const { engine, source, replay } = setup();
   replay.resume();
   await drain();
-  expect(source.mock.calls.map((call) => call[0])).toEqual([undefined, "10"]);
-  expect(engine.apply).toHaveBeenCalledWith(undefined, { reset: true });
+  expect(source.mock.calls.map((call) => call[0])).toEqual([undefined]);
+  expect(engine.apply).not.toHaveBeenCalled();
   source.mockResolvedValueOnce(page("12", [event("12")], true)).mockResolvedValueOnce(page("14", [event("14")]));
   replay.wake();
   await drain();

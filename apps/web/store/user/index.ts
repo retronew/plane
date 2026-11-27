@@ -117,13 +117,27 @@ export class UserStore implements IUserStore {
         this.isLoading = true;
         this.error = undefined;
       });
-      const user = await this.userService.currentUser();
+      // Fire independent session-authenticated bootstrap calls in parallel to remove a serial waterfall hop.
+      const userPromise = this.userService.currentUser();
+      const profilePromise = this.userProfile.fetchUserProfile().catch(() => undefined);
+      const settingsPromise = this.userSettings.fetchCurrentUserSettings().catch(() => undefined);
+      const workspacesPromise = this.store.workspaceRoot.fetchWorkspaces().catch(() => undefined);
+
+      const user = await userPromise;
       if (user && user?.id) {
-        await Promise.all([
-          this.userProfile.fetchUserProfile(),
-          this.userSettings.fetchCurrentUserSettings(),
-          this.store.workspaceRoot.fetchWorkspaces(),
+        const [profileRes, settingsRes, workspacesRes] = await Promise.all([
+          profilePromise,
+          settingsPromise,
+          workspacesPromise,
         ]);
+        // Retry any bootstrap call that failed transiently only if user is confirmed authenticated
+        if (!profileRes || !settingsRes || !workspacesRes) {
+          await Promise.all([
+            ...(profileRes ? [] : [this.userProfile.fetchUserProfile()]),
+            ...(settingsRes ? [] : [this.userSettings.fetchCurrentUserSettings()]),
+            ...(workspacesRes ? [] : [this.store.workspaceRoot.fetchWorkspaces()]),
+          ]);
+        }
         if (!this.userProfile.data.timezone_auto_set) {
           try {
             const timezone = getBrowserTimezone();

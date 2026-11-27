@@ -446,6 +446,8 @@ export class BaseProjectMemberStore implements IBaseProjectMemberStore {
     (projectId: string): IProjectUserPropertiesResponse | null => this.projectUserPropertiesMap[projectId] || null
   );
 
+  private inFlightUserProperties = new Map<string, Promise<IProjectUserPropertiesResponse>>();
+
   /**
    * @description fetch project member preferences
    * @param workspaceSlug
@@ -456,11 +458,23 @@ export class BaseProjectMemberStore implements IBaseProjectMemberStore {
     workspaceSlug: string,
     projectId: string
   ): Promise<IProjectUserPropertiesResponse> => {
-    const response = await this.projectService.getProjectUserProperties(workspaceSlug, projectId);
-    runInAction(() => {
-      set(this.projectUserPropertiesMap, [projectId], response);
-    });
-    return response;
+    const key = `${workspaceSlug}:${projectId}`;
+    const existing = this.inFlightUserProperties.get(key);
+    if (existing) return existing;
+
+    const promise = this.projectService
+      .getProjectUserProperties(workspaceSlug, projectId)
+      .then((response) => {
+        runInAction(() => {
+          set(this.projectUserPropertiesMap, [projectId], response);
+        });
+        return response;
+      })
+      .finally(() => {
+        this.inFlightUserProperties.delete(key);
+      });
+    this.inFlightUserProperties.set(key, promise);
+    return promise;
   };
 
   /**

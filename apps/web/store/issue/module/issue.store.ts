@@ -95,9 +95,10 @@ export class ModuleIssues extends BaseIssuesStore implements IModuleIssues {
    */
   fetchParentStats = (workspaceSlug: string, projectId?: string, id?: string) => {
     const moduleId = id ?? this.moduleId;
-    if (projectId && moduleId) {
-      this.rootIssueStore.rootStore.module.fetchModuleDetails(workspaceSlug, projectId, moduleId);
-    }
+    if (!projectId || !moduleId) return;
+    // Skip redundant module details refetch on initial list load when module details already exist
+    if (!this.applyingSyncResponse && this.rootIssueStore.rootStore.module.moduleMap[moduleId]) return;
+    this.rootIssueStore.rootStore.module.fetchModuleDetails(workspaceSlug, projectId, moduleId);
   };
 
   /**

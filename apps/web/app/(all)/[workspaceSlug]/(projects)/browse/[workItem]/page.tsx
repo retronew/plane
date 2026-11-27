@@ -224,6 +224,9 @@ export const IssueDetailsPage = observer(function IssueDetailsPage({ params }: R
   }
 
   const detailRoute = getWorkItemDetailRoute(workspaceSlug, projectId, issueId);
+  if (data && !snapshotRevisionsRef.current.has(detailKey)) {
+    snapshotRevisionsRef.current.set(detailKey, issueSync.snapshotRevision);
+  }
   const snapshotRevision = snapshotRevisionsRef.current.get(detailKey);
 
   return (
