@@ -22,7 +22,57 @@ export default defineConfig(() => ({
     "process.env": JSON.stringify(viteEnv),
   },
   build: {
-    assetsInlineLimit: 0,
+    assetsInlineLimit: 4096,
+  },
+  environments: {
+    client: {
+      build: {
+        rolldownOptions: {
+          output: {
+            codeSplitting: {
+              minSize: 30_000,
+              groups: [
+                {
+                  name: "vendor-react",
+                  test: /node_modules[\\/](react|react-dom|react-router|scheduler|swr)[\\/]/,
+                  priority: 50,
+                },
+                {
+                  name: "vendor-state",
+                  test: /node_modules[\\/](mobx|mobx-react|mobx-utils|axios|lodash-es|date-fns|clsx|uuid)[\\/]/,
+                  priority: 45,
+                },
+                {
+                  name: "vendor-ui",
+                  test: /node_modules[\\/](@makeplane[\\/]propel|@base-ui|lucide-react|next-themes|@floating-ui)[\\/]/,
+                  priority: 40,
+                },
+                {
+                  debugName: "i18n-locale",
+                  name: (id: string) => {
+                    const match = id.match(/packages[\\/]i18n[\\/]locales[\\/]([^\\/]+)[\\/]/);
+                    return match ? `i18n-${match[1]}` : undefined;
+                  },
+                  test: /packages[\\/]i18n[\\/]locales[\\/]/,
+                  priority: 35,
+                },
+                {
+                  name: "plane-shared",
+                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state|blocks)[\\/]/,
+                  priority: 30,
+                },
+                {
+                  name: "app-shared",
+                  test: /apps[\\/]admin[\\/](core|ce)[\\/]/,
+                  minShareCount: 2,
+                  priority: 20,
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
   },
   plugins: [
     {

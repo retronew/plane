@@ -9,8 +9,10 @@
 :3000 {
 	root * /usr/share/caddy/html
 
+	encode zstd gzip
+
 	# Per-client-IP rate limiting for page requests. Hashed build assets are
-	# excluded: the first load fetches hundreds of JS/CSS chunks, and users
+	# excluded: the first load fetches JS/CSS chunks, and users
 	# behind one NAT/gateway IP would otherwise hit 429 almost immediately.
 	rate_limit {
 		zone pages {
@@ -28,6 +30,20 @@
 		X-Frame-Options "DENY"
 		X-Content-Type-Options "nosniff"
 		X-XSS-Protection "1; mode=block"
+	}
+
+	# Content-hashed build assets are safe to cache immutably.
+	@hashed_assets path /god-mode/assets/*
+	header @hashed_assets {
+		Cache-Control "public, max-age=31536000, immutable"
+	}
+
+	# SPA HTML shell should revalidate on each navigation.
+	@no_cache {
+		not path /god-mode/assets/*
+	}
+	header @no_cache {
+		Cache-Control "no-cache"
 	}
 
 	# SPA fallback: the admin build is served from /god-mode
