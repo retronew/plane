@@ -75,6 +75,11 @@ class FileAsset(BaseModel):
             models.Index(fields=["entity_identifier"], name="asset_entity_identifier_idx"),
             models.Index(fields=["entity_type", "entity_identifier"], name="asset_entity_idx"),
             models.Index(fields=["asset"], name="asset_asset_idx"),
+            models.Index(
+                fields=["issue", "entity_type"],
+                condition=models.Q(issue__isnull=False),
+                name="asset_issue_type_idx",
+            ),
         ]
 
     def __str__(self):

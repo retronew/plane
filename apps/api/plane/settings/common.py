@@ -204,9 +204,10 @@ SITE_ID = 1
 AUTH_USER_MODEL = "db.User"
 
 # Database
+DB_CONN_MAX_AGE = int(os.environ.get("DB_CONN_MAX_AGE", 60))
 if bool(os.environ.get("DATABASE_URL")):
     # Parse database configuration from $DATABASE_URL
-    DATABASES = {"default": dj_database_url.config()}
+    DATABASES = {"default": dj_database_url.config(conn_max_age=DB_CONN_MAX_AGE, conn_health_checks=True)}
 else:
     DATABASES = {
         "default": {
@@ -216,6 +217,8 @@ else:
             "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
             "HOST": os.environ.get("POSTGRES_HOST"),
             "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+            "CONN_MAX_AGE": DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": True,
         }
     }
 
@@ -223,7 +226,11 @@ else:
 if os.environ.get("ENABLE_READ_REPLICA", "0") == "1":
     if bool(os.environ.get("DATABASE_READ_REPLICA_URL")):
         # Parse database configuration from $DATABASE_URL
-        DATABASES["replica"] = dj_database_url.parse(os.environ.get("DATABASE_READ_REPLICA_URL"))
+        DATABASES["replica"] = dj_database_url.parse(
+            os.environ.get("DATABASE_READ_REPLICA_URL"),
+            conn_max_age=DB_CONN_MAX_AGE,
+            conn_health_checks=True,
+        )
     else:
         DATABASES["replica"] = {
             "ENGINE": "django.db.backends.postgresql",
@@ -232,6 +239,8 @@ if os.environ.get("ENABLE_READ_REPLICA", "0") == "1":
             "PASSWORD": os.environ.get("POSTGRES_READ_REPLICA_PASSWORD"),
             "HOST": os.environ.get("POSTGRES_READ_REPLICA_HOST"),
             "PORT": os.environ.get("POSTGRES_READ_REPLICA_PORT", "5432"),
+            "CONN_MAX_AGE": DB_CONN_MAX_AGE,
+            "CONN_HEALTH_CHECKS": True,
         }
 
     # Database Routers
@@ -244,25 +253,21 @@ if os.environ.get("ENABLE_READ_REPLICA", "0") == "1":
 REDIS_URL = os.environ.get("REDIS_URL")
 REDIS_SSL = REDIS_URL and "rediss" in REDIS_URL
 
+REDIS_OPTIONS = {
+    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    "SOCKET_CONNECT_TIMEOUT": 2,
+    "SOCKET_TIMEOUT": 2,
+}
 if REDIS_SSL:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": REDIS_URL,
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": False},
-            },
-        }
+    REDIS_OPTIONS["CONNECTION_POOL_KWARGS"] = {"ssl_cert_reqs": False}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": REDIS_OPTIONS,
     }
-else:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": REDIS_URL,
-            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
-        }
-    }
+}
 
 # Password validations
 AUTH_PASSWORD_VALIDATORS = [
@@ -383,6 +388,7 @@ SESSION_COOKIE_AGE = int(os.environ.get("SESSION_COOKIE_AGE", 2592000))
 SESSION_COOKIE_NAME = os.environ.get("SESSION_COOKIE_NAME", "session-id")
 SESSION_COOKIE_DOMAIN = os.environ.get("COOKIE_DOMAIN", None)
 SESSION_SAVE_EVERY_REQUEST = os.environ.get("SESSION_SAVE_EVERY_REQUEST", "1") == "1"
+SESSION_TOUCH_INTERVAL = int(os.environ.get("SESSION_TOUCH_INTERVAL", 300))
 
 # Admin Cookie
 ADMIN_SESSION_COOKIE_NAME = "admin-session-id"

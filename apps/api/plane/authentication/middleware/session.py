@@ -57,9 +57,22 @@ class SessionMiddleware(MiddlewareMixin):
         else:
             if accessed:
                 patch_vary_headers(response, ("Cookie",))
-            # When enabled, every authenticated request extends the session (sliding expiry)
+            # When enabled, extend the session (sliding expiry), throttled so read-only GET bursts
+            # do not trigger an UPDATE sessions write on every single request.
             _, _, save_every_request = get_session_config()
-            if (modified or save_every_request) and not empty:
+            should_touch = False
+            if save_every_request and not modified and not empty:
+                touch_interval = getattr(settings, "SESSION_TOUCH_INTERVAL", 300)
+                last_touched = request.session.get("_last_touched")
+                now_ts = int(time.time())
+                if (
+                    touch_interval <= 0
+                    or not isinstance(last_touched, (int, float))
+                    or (now_ts - last_touched) >= touch_interval
+                ):
+                    should_touch = True
+
+            if (modified or should_touch) and not empty:
                 if request.session.get_expire_at_browser_close():
                     max_age = None
                     expires = None
@@ -72,6 +85,8 @@ class SessionMiddleware(MiddlewareMixin):
 
                 # Save the session data and refresh the client cookie.
                 if response.status_code < 500:
+                    if save_every_request:
+                        request.session["_last_touched"] = int(time.time())
                     try:
                         request.session.save()
                     except UpdateError:

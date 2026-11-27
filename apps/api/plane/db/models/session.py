@@ -6,7 +6,7 @@
 import string
 
 # Django imports
-from django.contrib.sessions.backends.db import SessionStore as DBSessionStore
+from django.contrib.sessions.backends.cached_db import SessionStore as CachedDBSessionStore
 from django.contrib.sessions.base_session import AbstractBaseSession
 from django.db import models
 from django.utils.crypto import get_random_string
@@ -27,7 +27,7 @@ class Session(AbstractBaseSession):
         db_table = "sessions"
 
 
-class SessionStore(DBSessionStore):
+class SessionStore(CachedDBSessionStore):
     @classmethod
     def get_model_class(cls):
         return Session

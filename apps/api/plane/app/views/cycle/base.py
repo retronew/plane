@@ -66,6 +66,13 @@ class CycleViewSet(BaseViewSet):
     model = Cycle
     webhook_event = "cycle"
 
+    def _get_project(self):
+        if getattr(self, "_cached_project", None) is None or str(self._cached_project.id) != str(
+            self.kwargs.get("project_id")
+        ):
+            self._cached_project = Project.objects.only("id", "timezone").get(id=self.kwargs.get("project_id"))
+        return self._cached_project
+
     def get_queryset(self):
         favorite_subquery = UserFavorite.objects.filter(
             user=self.request.user,
@@ -75,7 +82,7 @@ class CycleViewSet(BaseViewSet):
             workspace__slug=self.kwargs.get("slug"),
         )
 
-        project = Project.objects.get(id=self.kwargs.get("project_id"))
+        project = self._get_project()
 
         # Fetch project for the specific record or pass project_id dynamically
         project_timezone = project.timezone
@@ -87,7 +94,7 @@ class CycleViewSet(BaseViewSet):
         # Convert project local time back to UTC for comparison (start_date is stored in UTC)
         current_time_in_utc = current_time_in_project_tz.astimezone(pytz.utc)
 
-        return self.filter_queryset(
+        base_qs = (
             super()
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
@@ -97,20 +104,26 @@ class CycleViewSet(BaseViewSet):
                 project__project_projectmember__is_active=True,
             )
             .filter(project__archived_at__isnull=True)
-            .select_related("project", "workspace", "owned_by")
-            .prefetch_related(
-                Prefetch(
-                    "issue_cycle__issue__assignees",
-                    queryset=User.objects.only("avatar_asset", "first_name", "id").distinct(),
+        )
+        if getattr(self, "action", None) != "list":
+            base_qs = (
+                base_qs.select_related("project", "workspace", "owned_by")
+                .prefetch_related(
+                    Prefetch(
+                        "issue_cycle__issue__assignees",
+                        queryset=User.objects.only("avatar_asset", "first_name", "id").distinct(),
+                    )
+                )
+                .prefetch_related(
+                    Prefetch(
+                        "issue_cycle__issue__labels",
+                        queryset=Label.objects.only("name", "color", "id").distinct(),
+                    )
                 )
             )
-            .prefetch_related(
-                Prefetch(
-                    "issue_cycle__issue__labels",
-                    queryset=Label.objects.only("name", "color", "id").distinct(),
-                )
-            )
-            .annotate(is_favorite=Exists(favorite_subquery))
+
+        return self.filter_queryset(
+            base_qs.annotate(is_favorite=Exists(favorite_subquery))
             .annotate(
                 total_issues=Count(
                     "issue_cycle__issue__id",
@@ -173,7 +186,7 @@ class CycleViewSet(BaseViewSet):
         # Update the order by
         queryset = queryset.order_by("-is_favorite", "-created_at")
 
-        project = Project.objects.get(id=self.kwargs.get("project_id"))
+        project = self._get_project()
 
         # Fetch project for the specific record or pass project_id dynamically
         project_timezone = project.timezone

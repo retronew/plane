@@ -218,6 +218,24 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         verbose_name_plural = "Issues"
         db_table = "issues"
         ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=["project", "-created_at"],
+                condition=Q(deleted_at__isnull=True, archived_at__isnull=True, is_draft=False),
+                name="issue_active_proj_created_idx",
+            ),
+            models.Index(
+                fields=["project", "state", "sort_order"],
+                condition=Q(deleted_at__isnull=True, archived_at__isnull=True, is_draft=False),
+                name="issue_active_proj_state_idx",
+            ),
+            models.Index(
+                fields=["workspace", "-created_at"],
+                condition=Q(deleted_at__isnull=True, archived_at__isnull=True, is_draft=False),
+                name="issue_active_ws_created_idx",
+            ),
+            models.Index(fields=["project", "sequence_id"], name="issue_proj_seq_idx"),
+        ]
 
     def save(self, *args, **kwargs):
         self._ensure_default_state()
@@ -503,6 +521,9 @@ class IssueActivity(ProjectBaseModel):
         verbose_name_plural = "Issue Activities"
         db_table = "issue_activities"
         ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=["issue", "created_at"], name="activity_issue_created_idx"),
+        ]
 
     def __str__(self):
         """Return issue of the comment"""
@@ -595,6 +616,9 @@ class IssueComment(ChangeTrackerMixin, ProjectBaseModel):
         verbose_name_plural = "Issue Comments"
         db_table = "issue_comments"
         ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=["issue", "created_at"], name="comment_issue_created_idx"),
+        ]
 
     def __str__(self):
         """Return issue of the comment"""

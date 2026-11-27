@@ -20,4 +20,7 @@ class WorkspaceSyncEvent(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["workspace", "cursor"], name="workspace_sync_cursor_unique")]
-        indexes = [models.Index(fields=["published_at", "id"], name="sync_unpublished_idx")]
+        indexes = [
+            models.Index(fields=["published_at", "id"], name="sync_unpublished_idx"),
+            models.Index(fields=["workspace", "created_at"], name="sync_ws_created_idx"),
+        ]

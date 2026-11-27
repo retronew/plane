@@ -162,8 +162,6 @@ class OffsetPaginator:
             raise BadPaginationError("Pagination offset cannot be negative")
 
         results = queryset[offset:stop]
-        # Duplicate the queryset so it does not evaluate on any python ops
-        page_results = queryset[offset:stop].values("id")
 
         # Only slice from the end if we're going backwards (previous page)
         if cursor.value != limit and cursor.is_prev:
@@ -171,20 +169,26 @@ class OffsetPaginator:
 
         total_count = self.total_count_queryset.count() if self.total_count_queryset else queryset.count()
 
-        # Check if there are more results available after the current page
+        # Check if there are more results available after the current page.
+        # Reuse total_count when total_count_queryset is not overridden to avoid an extra SQL query.
+        page_size = limit * getattr(self, "window_depth", 1)
+        if self.total_count_queryset is None and not (cursor.value != limit and cursor.is_prev):
+            has_next = total_count > offset + page_size
+        else:
+            has_next = queryset[offset:stop].values("id").count() > page_size
 
         # Adjust cursors based on the results for pagination
         next_cursor = Cursor(
             limit,
             page + getattr(self, "window_depth", 1),
             False,
-            page_results.count() > limit * getattr(self, "window_depth", 1),
+            has_next,
         )
         # If the page is greater than 0, then set the previous cursor
         prev_cursor = Cursor(limit, page - 1, True, page > 0)
 
         # Process the results
-        results = results[: limit * getattr(self, "window_depth", 1)]
+        results = results[:page_size]
 
         results = self.bound_window(results)
         # Process the results
@@ -295,19 +299,15 @@ class GroupedOffsetPaginator(OffsetPaginator):
         # Add previous cursors
         prev_cursor = Cursor(limit, page - 1, True, page > 0)
 
-        # Count the queryset
-        count = queryset.count()
+        # Count on the base queryset without the Window(RowNumber()) wrapper.
+        count = self.queryset.count()
 
         results = self.bound_window(results)
-        # Optionally, calculate the total count and max_hits if needed
-        # This might require adjustments based on specific use cases
-        if results:
-            max_hits = math.ceil(
-                queryset.values(self.group_by_field_name)
-                .annotate(count=Count("id", filter=self.count_filter, distinct=True))
-                .order_by("-count")[0]["count"]
-                / limit
-            )
+        # Reuse one GROUP BY query for both max_hits and __get_total_dict().
+        if count > 0:
+            group_rows = self._get_total_rows()
+            max_group_count = max((row["count"] for row in group_rows), default=0)
+            max_hits = math.ceil(max_group_count / limit) if max_group_count else 0
         else:
             max_hits = 0
         return CursorResult(
@@ -326,10 +326,15 @@ class GroupedOffsetPaginator(OffsetPaginator):
             .order_by()
         )
 
+    def _get_total_rows(self):
+        if not hasattr(self, "_cached_total_rows"):
+            self._cached_total_rows = list(self.__get_total_queryset())
+        return self._cached_total_rows
+
     def __get_total_dict(self):
         # Convert the total into dictionary of keys as group name and value as the total
         total_group_dict = {}
-        for group in self.__get_total_queryset():
+        for group in self._get_total_rows():
             total_group_dict[str(group.get(self.group_by_field_name))] = total_group_dict.get(
                 str(group.get(self.group_by_field_name)), 0
             ) + (1 if group.get("count") == 0 else group.get("count"))

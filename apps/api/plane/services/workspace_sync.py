@@ -15,6 +15,38 @@ from django.db import transaction
 logger = logging.getLogger(__name__)
 CHANNEL = "plane:sync:v1"
 _unavailable_until = 0.0
+_redis_client = None
+_redis_client_url = None
+
+
+def _get_redis_client():
+    global _redis_client, _redis_client_url
+    url = settings.REDIS_URL
+    if not url:
+        return None
+    if _redis_client is not None and _redis_client_url == url:
+        return _redis_client
+    _redis_client = redis.Redis.from_url(
+        url,
+        socket_connect_timeout=0.2,
+        socket_timeout=0.2,
+        retry_on_timeout=False,
+        retry=Retry(NoBackoff(), 0),
+        max_connections=16,
+    )
+    _redis_client_url = url
+    return _redis_client
+
+
+def _reset_redis_client():
+    global _redis_client, _redis_client_url
+    if _redis_client is not None:
+        try:
+            _redis_client.close()
+        except Exception:
+            pass
+    _redis_client = None
+    _redis_client_url = None
 SYNC_MODELS = frozenset(
     {
         "issue",
@@ -53,30 +85,18 @@ def publish(workspace_id, workspace_slug, project_id, issue_ids=None):
     }
     if issue_ids:
         payload["issue_ids"] = [str(value) for value in issue_ids][:100]
-    client = None
     try:
-        if not settings.REDIS_URL:
+        client = _get_redis_client()
+        if client is None:
             return
         # An unavailable broker must never hold CRUD hostage or retry indefinitely.
-        client = redis.Redis.from_url(
-            settings.REDIS_URL,
-            socket_connect_timeout=0.2,
-            socket_timeout=0.2,
-            retry_on_timeout=False,
-            retry=Retry(NoBackoff(), 0),
-        )
         client.publish(CHANNEL, json.dumps(payload))
     except Exception:
         # Bound outage latency for requests touching many projects in this worker.
         # Lost best-effort events are covered by reconnect and client calibration.
         _unavailable_until = monotonic() + 5
+        _reset_redis_client()
         logger.warning("Workspace sync publish failed", exc_info=True)
-    finally:
-        if client is not None:
-            try:
-                client.close()
-            except Exception:
-                logger.warning("Workspace sync Redis close failed", exc_info=True)
 
 
 def publish_targets(targets, using):
@@ -145,6 +165,16 @@ def lock_workspaces(workspace_ids, using=None):
         WorkspaceSyncCursor.objects.using(using).get_or_create(workspace_id=workspace_id)
         rows.append(WorkspaceSyncCursor.objects.using(using).select_for_update().get(workspace_id=workspace_id))
     return rows
+
+
+def read_workspace_cursor(workspace_id, using=None):
+    """Read the workspace cursor without acquiring an exclusive FOR UPDATE write lock."""
+    from plane.db.models import WorkspaceSyncCursor
+
+    row = WorkspaceSyncCursor.objects.using(using).filter(workspace_id=workspace_id).first()
+    if row is None:
+        row, _ = WorkspaceSyncCursor.objects.using(using).get_or_create(workspace_id=workspace_id)
+    return row
 
 
 def record_changes(targets, using=None, issue_ids=None, changed_fields=None, scopes=None, operation="unknown"):

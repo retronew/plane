@@ -95,9 +95,11 @@ class APITokenLogMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        request_body = request.body
+        api_key = request.headers.get("X-Api-Key")
+        request_body = request.body if api_key else None
         response = self.get_response(request)
-        self.process_request(request, response, request_body)
+        if api_key:
+            self.process_request(request, response, request_body)
         return response
 
     def _safe_decode_body(self, content):

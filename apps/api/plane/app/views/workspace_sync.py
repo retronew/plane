@@ -20,7 +20,7 @@ from plane.db.models import (
     FileAsset,
 )
 from plane.app.serializers.issue import IssueListDetailSerializer
-from plane.services.workspace_sync import lock_workspaces
+from plane.services.workspace_sync import read_workspace_cursor
 
 
 class WorkspaceSyncAccessEndpoint(BaseAPIView):
@@ -85,9 +85,9 @@ class WorkspaceSyncChangesEndpoint(BaseAPIView):
     @transaction.atomic
     def get(self, request, slug):
         workspace_id, projects = sync_access(request.user, slug)
-        # Serialize retention pruning with this replay page so no deleted rows
-        # can turn a stale cursor into a false empty successful replay.
-        head = lock_workspaces([workspace_id])[0]
+        # Read cursor without acquiring an exclusive FOR UPDATE lock so 30s polls
+        # do not serialize workspace writes or other readers.
+        head = read_workspace_cursor(workspace_id)
         high = head.cursor
         floor = head.retained_from
         expired = (
@@ -169,7 +169,7 @@ class WorkspaceSyncEntitiesEndpoint(BaseAPIView):
             except (ValueError, TypeError, AttributeError):
                 raise ValidationError({"project_ids": "Invalid UUID"})
             projects = [project for project in projects if project in requested]
-        head = lock_workspaces([workspace_id])[0]
+        head = read_workspace_cursor(workspace_id)
         # Unlike the active-list manager, entities must include archived issues
         # so archive windows can reconcile their requested IDs too.
         issues = (
