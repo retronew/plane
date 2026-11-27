@@ -164,10 +164,15 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
   const { data: currentUserSettings } = useUserSettings();
   const { loader: workspacesLoader, workspaces } = useWorkspace();
 
-  const { isLoading: isUserSWRLoading } = useSWR("USER_INFORMATION", async () => await fetchCurrentUser(), {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  const { isLoading: isUserSWRLoading } = useSWR(
+    currentUser?.id ? null : "USER_INFORMATION",
+    async () => await fetchCurrentUser(),
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }
+  );
 
   const isUserOnboard = isUserOnboarded(currentUserProfile);
 

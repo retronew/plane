@@ -18,10 +18,10 @@ export const ProjectPageRoot = observer(function ProjectPageRoot() {
   const { workspaceSlug } = useParams();
   // store
   const { currentWorkspace } = useWorkspace();
-  const { fetchProjects } = useProject();
-  // fetching workspace projects
+  const { fetchProjects, fetchStatus } = useProject();
+  // Skip redundant /projects/details/ fetch if workspace bootstrap already hydrated full projects
   useSWR(
-    workspaceSlug && currentWorkspace ? `WORKSPACE_PROJECTS_${workspaceSlug}` : null,
+    workspaceSlug && currentWorkspace && fetchStatus !== "complete" ? `WORKSPACE_PROJECTS_${workspaceSlug}` : null,
     workspaceSlug && currentWorkspace ? () => fetchProjects(workspaceSlug.toString()) : null,
     { revalidateIfStale: false, revalidateOnFocus: false }
   );

@@ -3,6 +3,12 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.app.views.bootstrap import (
+    AppBootstrapEndpoint,
+    ProjectBootstrapEndpoint,
+    WorkspaceBootstrapEndpoint,
+    WorkspaceViewBootstrapEndpoint,
+)
 from plane.app.views.workspace_sync import (
     WorkspaceSyncAccessEndpoint,
     WorkspaceSyncChangesEndpoint,
@@ -32,6 +38,18 @@ from .exporter import urlpatterns as exporter_urls
 from .workflow import urlpatterns as workflow_urls
 
 urlpatterns = [
+    path("bootstrap/", AppBootstrapEndpoint.as_view(), name="app-bootstrap"),
+    path("workspaces/<str:slug>/bootstrap/", WorkspaceBootstrapEndpoint.as_view(), name="workspace-bootstrap"),
+    path(
+        "workspaces/<str:slug>/view-bootstrap/",
+        WorkspaceViewBootstrapEndpoint.as_view(),
+        name="workspace-view-bootstrap",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/bootstrap/",
+        ProjectBootstrapEndpoint.as_view(),
+        name="project-bootstrap",
+    ),
     path("workspaces/<str:slug>/sync/changes/", WorkspaceSyncChangesEndpoint.as_view(), name="workspace-sync-changes"),
     path(
         "workspaces/<str:slug>/sync/entities/", WorkspaceSyncEntitiesEndpoint.as_view(), name="workspace-sync-entities"

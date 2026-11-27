@@ -17,6 +17,7 @@ import { UserPermissionStore } from "@/store/user/base-permissions.store";
 // services
 import { AuthService } from "@/services/auth.service";
 import { UserService } from "@/services/user.service";
+import { clearAllBootstrapCache } from "@/lib/bootstrap-cache";
 // stores
 import type { IAccountStore } from "@/store/user/account.store";
 import type { IUserProfileStore } from "@/store/user/profile.store";
@@ -273,6 +274,7 @@ export class UserStore implements IUserStore {
    * @returns {void}
    */
   reset = (): void => {
+    clearAllBootstrapCache();
     runInAction(() => {
       this.isAuthenticated = false;
       this.isLoading = false;
@@ -289,6 +291,7 @@ export class UserStore implements IUserStore {
    * @returns {Promise<void>}
    */
   signOut = async (): Promise<void> => {
+    clearAllBootstrapCache();
     await this.authService.signOut(API_BASE_URL);
     this.store.resetOnSignOut();
   };

@@ -5,13 +5,13 @@
  */
 
 import type { ReactNode } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import useSWR from "swr";
 // ui
 import { LogOutOutline } from "@makeplane/propel/icons";
-import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
 import { PlaneLogo } from "@plane/blocks/icons";
 import { setToast } from "@plane/blocks/toast";
@@ -20,26 +20,18 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import WorkSpaceNotAvailable from "@/app/assets/workspace/workspace-not-available.png?url";
 // components
 import { AppLoader } from "@/components/common/app-loader";
-// constants
-import {
-  WORKSPACE_MEMBERS,
-  WORKSPACE_PARTIAL_PROJECTS,
-  WORKSPACE_MEMBER_ME_INFORMATION,
-  WORKSPACE_PROJECTS_ROLES_INFORMATION,
-  WORKSPACE_FAVORITE,
-  WORKSPACE_STATES,
-  WORKSPACE_SIDEBAR_PREFERENCES,
-  WORKSPACE_PROJECT_NAVIGATION_PREFERENCES,
-} from "@plane/constants";
 // hooks
-import { useFavorite } from "@/hooks/store/use-favorite";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
-import { useMember } from "@/hooks/store/use-member";
-import { useProject } from "@/hooks/store/use-project";
-import { useProjectState } from "@/hooks/store/use-project-state";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import {
+  hydrateWorkspaceBootstrap,
+  readWorkspaceBootstrapCache,
+  writeWorkspaceBootstrapCache,
+} from "@/lib/bootstrap-cache";
+import { StoreContext } from "@/lib/store-context";
+import { bootstrapService } from "@/services/bootstrap.service";
 import { translate } from "@plane/i18n";
 // types
 import type { IWorkspace, IWorkspaceMemberMe } from "@plane/types";
@@ -50,24 +42,6 @@ interface IWorkspaceAuthWrapper {
 }
 
 type TWorkspaceSlug = string | string[] | undefined;
-
-type TWorkspaceAuthFetchers = {
-  fetchUserWorkspaceInfo: ReturnType<typeof useUserPermissions>["fetchUserWorkspaceInfo"];
-  fetchUserProjectPermissions: ReturnType<typeof useUserPermissions>["fetchUserProjectPermissions"];
-  fetchPartialProjects: ReturnType<typeof useProject>["fetchPartialProjects"];
-  fetchWorkspaceMembers: ReturnType<typeof useMember>["workspace"]["fetchWorkspaceMembers"];
-  fetchFavorite: ReturnType<typeof useFavorite>["fetchFavorite"];
-  fetchWorkspaceStates: ReturnType<typeof useProjectState>["fetchWorkspaceStates"];
-  fetchSidebarNavigationPreferences: ReturnType<typeof useWorkspace>["fetchSidebarNavigationPreferences"];
-  fetchProjectNavigationPreferences: ReturnType<typeof useWorkspace>["fetchProjectNavigationPreferences"];
-};
-
-type TWorkspaceAuthFetchesProps = {
-  workspaceSlug: TWorkspaceSlug;
-  hasCurrentWorkspace: boolean;
-  canPerformWorkspaceMemberActions: boolean;
-  fetchers: TWorkspaceAuthFetchers;
-};
 
 const SWR_OPTIONS = { revalidateIfStale: false, revalidateOnFocus: false };
 
@@ -80,9 +54,6 @@ const getFetchSlug = (workspaceSlug: TWorkspaceSlug, hasCurrentWorkspace: boolea
   if (!workspaceSlug || !hasCurrentWorkspace) return null;
   return workspaceSlug.toString();
 };
-
-const createFetcher = <T,>(slug: string | null, fetch: (slug: string) => T): (() => T) | null =>
-  slug === null ? null : () => fetch(slug);
 
 const getAllWorkspaces = (workspaces: Record<string, IWorkspace> | undefined): IWorkspace[] | undefined => {
   if (!workspaces) return undefined;
@@ -100,60 +71,6 @@ const getCurrentWorkspaceInfo = (
 ) => {
   if (!workspaceSlug) return workspaceSlug;
   return getWorkspaceInfo(workspaceSlug.toString());
-};
-
-const useWorkspaceAuthFetches = (props: TWorkspaceAuthFetchesProps) => {
-  const { workspaceSlug, hasCurrentWorkspace, canPerformWorkspaceMemberActions, fetchers } = props;
-  const slug = getSlugString(workspaceSlug);
-  const fetchSlug = getFetchSlug(workspaceSlug, hasCurrentWorkspace);
-  const favoriteSlug = canPerformWorkspaceMemberActions ? fetchSlug : null;
-
-  // fetching user workspace information
-  useSWR(
-    fetchSlug ? WORKSPACE_MEMBER_ME_INFORMATION(fetchSlug) : null,
-    createFetcher(fetchSlug, fetchers.fetchUserWorkspaceInfo),
-    SWR_OPTIONS
-  );
-  useSWR(
-    fetchSlug ? WORKSPACE_PROJECTS_ROLES_INFORMATION(fetchSlug) : null,
-    createFetcher(fetchSlug, fetchers.fetchUserProjectPermissions),
-    SWR_OPTIONS
-  );
-
-  // fetching workspace projects
-  useSWR(
-    fetchSlug ? WORKSPACE_PARTIAL_PROJECTS(fetchSlug) : null,
-    createFetcher(fetchSlug, fetchers.fetchPartialProjects),
-    SWR_OPTIONS
-  );
-  // fetch workspace members
-  useSWR(
-    fetchSlug ? WORKSPACE_MEMBERS(fetchSlug) : null,
-    createFetcher(fetchSlug, fetchers.fetchWorkspaceMembers),
-    SWR_OPTIONS
-  );
-  // fetch workspace favorite
-  useSWR(
-    favoriteSlug ? WORKSPACE_FAVORITE(favoriteSlug) : null,
-    createFetcher(favoriteSlug, fetchers.fetchFavorite),
-    SWR_OPTIONS
-  );
-  // fetch workspace states
-  useSWR(slug ? WORKSPACE_STATES(slug) : null, createFetcher(slug, fetchers.fetchWorkspaceStates), SWR_OPTIONS);
-
-  // fetch workspace sidebar preferences
-  useSWR(
-    slug ? WORKSPACE_SIDEBAR_PREFERENCES(slug) : null,
-    createFetcher(slug, fetchers.fetchSidebarNavigationPreferences),
-    SWR_OPTIONS
-  );
-
-  // fetch workspace project navigation preferences
-  useSWR(
-    slug ? WORKSPACE_PROJECT_NAVIGATION_PREFERENCES(slug) : null,
-    createFetcher(slug, fetchers.fetchProjectNavigationPreferences),
-    SWR_OPTIONS
-  );
 };
 
 type TWorkspaceNotFoundViewProps = {
@@ -253,42 +170,50 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
   const { children, isLoading: isParentLoading = false } = props;
   // router params
   const { workspaceSlug } = useParams();
+  const pathname = usePathname() || "";
+  const rootStore = useContext(StoreContext);
   // store hooks
   const { signOut, data: currentUser } = useUser();
-  const { fetchPartialProjects } = useProject();
-  const { fetchFavorite } = useFavorite();
-  const {
-    workspace: { fetchWorkspaceMembers },
-  } = useMember();
-  const { workspaces, fetchSidebarNavigationPreferences, fetchProjectNavigationPreferences } = useWorkspace();
+  const { workspaces } = useWorkspace();
   const { isMobile } = usePlatformOS();
-  const { loader, workspaceInfoBySlug, fetchUserWorkspaceInfo, fetchUserProjectPermissions, allowPermissions } =
-    useUserPermissions();
-  const { fetchWorkspaceStates } = useProjectState();
+  const { loader, workspaceInfoBySlug } = useUserPermissions();
   // derived values
-  const canPerformWorkspaceMemberActions = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
-    EUserPermissionsLevel.WORKSPACE
-  );
+  const slug = getSlugString(workspaceSlug);
   const allWorkspaces = getAllWorkspaces(workspaces);
   const currentWorkspace = getCurrentWorkspace(allWorkspaces, workspaceSlug);
   const currentWorkspaceInfo = getCurrentWorkspaceInfo(workspaceSlug, workspaceInfoBySlug);
+  const fetchSlug = getFetchSlug(workspaceSlug, Boolean(currentWorkspace));
+  const isProjectsListRoute = Boolean(
+    fetchSlug && (pathname === `/${fetchSlug}/projects` || pathname === `/${fetchSlug}/projects/`)
+  );
 
-  useWorkspaceAuthFetches({
-    workspaceSlug,
-    hasCurrentWorkspace: Boolean(currentWorkspace),
-    canPerformWorkspaceMemberActions,
-    fetchers: {
-      fetchUserWorkspaceInfo,
-      fetchUserProjectPermissions,
-      fetchPartialProjects,
-      fetchWorkspaceMembers,
-      fetchFavorite,
-      fetchWorkspaceStates,
-      fetchSidebarNavigationPreferences,
-      fetchProjectNavigationPreferences,
+  // Pre-hydrate from user-scoped localStorage cache for instant paint before network returns
+  const prewarmedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!rootStore || !currentUser?.id || !slug) return;
+    const cacheKey = `${currentUser.id}:${slug}`;
+    if (prewarmedRef.current === cacheKey) return;
+    prewarmedRef.current = cacheKey;
+    const cached = readWorkspaceBootstrapCache(currentUser.id, slug);
+    if (cached) {
+      hydrateWorkspaceBootstrap(rootStore, slug, cached, false);
+    }
+  }, [rootStore, currentUser?.id, slug]);
+
+  // Single aggregated workspace bootstrap (replaces 8 parallel shell requests)
+  const { isLoading: isWorkspaceBootstrapLoading } = useSWR(
+    fetchSlug ? `WORKSPACE_BOOTSTRAP_${fetchSlug}_${isProjectsListRoute ? "full" : "partial"}` : null,
+    async () => {
+      if (!fetchSlug) return null;
+      const data = await bootstrapService.getWorkspaceBootstrap(fetchSlug, isProjectsListRoute);
+      if (rootStore) {
+        hydrateWorkspaceBootstrap(rootStore, fetchSlug, data, true);
+      }
+      writeWorkspaceBootstrapCache(currentUser?.id, fetchSlug, data);
+      return data;
     },
-  });
+    SWR_OPTIONS
+  );
 
   const handleSignOut = async () => {
     await signOut().catch(() =>
@@ -301,7 +226,12 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
   };
 
   // if list of workspaces are not there then we have to render the spinner
-  if (isParentLoading || allWorkspaces === undefined || loader) {
+  if (
+    isParentLoading ||
+    allWorkspaces === undefined ||
+    loader ||
+    (Boolean(fetchSlug) && isWorkspaceBootstrapLoading && !currentWorkspaceInfo)
+  ) {
     return <AppLoader className="grid h-full place-items-center rounded-lg border border-subtle p-4" />;
   }
 
