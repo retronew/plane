@@ -263,7 +263,7 @@ for service in web api admin space live workflow-runner proxy; do docker image r
 rm -f "$DEPLOY_DIR/images.tar.gz"
 ```
 
-确认路径属于本轮 mktemp 创建的目录后，再自行删除独立源码目录；保留构建日志、镜像 manifest 和计时记录便于比较。本地镜像删除不影响已经加载至服务器的镜像。
+确认路径属于本轮 mktemp 创建的目录后，再自行删除独立源码目录；保留构建日志、镜像 manifest 和计时记录便于比较（本地按发布归档在 `.worklogs/deployments/<发布标识>/`）。本地镜像删除不影响已经加载至服务器的镜像。
 
 ## 9. 2026-10-28 实测记录
 

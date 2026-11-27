@@ -76,7 +76,7 @@ def handle(root, payload, state):
     event = payload.get("hook_event_name")
     tool = payload.get("tool_name")
     today = datetime.datetime.now().astimezone().strftime("%Y-%m-%d")
-    log = root / ".worklogs" / ("Plane工作日志-" + today + ".md")
+    log = root / ".worklogs" / "daily" / ("Plane工作日志-" + today + ".md")
     log_hash = digest(log)
     if event == "PreToolUse":
         before = {"log": log_hash, "date": today}

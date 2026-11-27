@@ -155,3 +155,13 @@ docker compose -f docker-compose.yml build
 - **端口被占用**：本地开发发布 5432、6379、8000、9000、9090，前端使用 3000/3001 等端口。检查占用者与运行项目；测试栈本身不发布端口，无需为测试停止开发栈。
 - **测试隔离、镜像或数据问题**：见 [API 测试排错](../apps/api/tests/RUNNING_TESTS.md#troubleshooting)。
 - **依赖版本不符或安装失败**：核对 Node、pnpm、uv 版本及锁文件；不要以更新锁文件掩盖环境版本问题。
+
+## 本地工作日志与验收归档（`.worklogs/`）
+
+仓库根目录的 `.worklogs/` 已被 `.gitignore` 忽略，用于存放本机开发日志、验收证据与生产发布记录（不提交到 Git，不存放密钥）：
+
+- `.worklogs/daily/Plane工作日志-YYYY-MM-DD.md`：每日工作日志（与 `.claude/hooks/worklog-guard.py` 联动）。
+- `.worklogs/deployments/<发布标识>/`：每次生产发布的预检、构建日志、镜像清单、校验和与脚本。
+- `.worklogs/issues/<工作项编号>/`：按工作项归档的验收截图、测试日志与排查脚本。
+- `.worklogs/verification/<专题>/`：跨工单/专题的回归验收证据与探针记录。
+- `.worklogs/notes/`与`.worklogs/archive/`：专题调研说明、工具参考文档与历史快照备份。

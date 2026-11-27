@@ -22,7 +22,7 @@ class WorklogGuardTests(unittest.TestCase):
         (self.root / "app.py").write_text("original\n")
         self.run_git("add", ".")
         self.run_git("commit", "-qm", "initial")
-        self.log = self.root / ".worklogs" / ("Plane工作日志-" + datetime.date.today().isoformat() + ".md")
+        self.log = self.root / ".worklogs" / "daily" / ("Plane工作日志-" + datetime.date.today().isoformat() + ".md")
 
     def run_git(self, *args):
         subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True)
@@ -37,7 +37,7 @@ class WorklogGuardTests(unittest.TestCase):
         return json.loads(result.stdout) if result.stdout.strip() else {}
 
     def write_log(self, text="记录本次改动及测试结果\n"):
-        self.log.parent.mkdir(exist_ok=True)
+        self.log.parent.mkdir(parents=True, exist_ok=True)
         self.log.write_text(text)
 
     def change(self, tool="Bash", path="app.py"):
