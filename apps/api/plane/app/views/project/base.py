@@ -348,7 +348,8 @@ class ProjectViewSet(BaseViewSet):
     @transaction.atomic
     def partial_update(self, request, slug, pk=None):
         project, project_member, workspace_member = get_project_overview_access(request.user, slug, pk, for_update=True)
-        if project_member.role != ROLE.ADMIN.value and workspace_member.role != ROLE.ADMIN.value:
+        is_project_admin = bool(project_member and project_member.role == ROLE.ADMIN.value)
+        if not is_project_admin and workspace_member.role != ROLE.ADMIN.value:
             return Response(
                 {"error": "You don't have the required permissions."},
                 status=status.HTTP_403_FORBIDDEN,

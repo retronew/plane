@@ -29,9 +29,6 @@ import { translate } from "@plane/i18n";
 
 const toOptionalString = (value: string | string[] | undefined) => (value ? value.toString() : undefined);
 
-const getGlobalViewsKey = (workspaceSlug?: string) =>
-  workspaceSlug ? `WORKSPACE_GLOBAL_VIEWS_${workspaceSlug}` : null;
-
 const getGlobalViewIssuesKey = (workspaceSlug?: string, globalViewId?: string) =>
   workspaceSlug && globalViewId ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}` : null;
 
@@ -63,7 +60,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
     issuesFilter: { filters, fetchFilters, updateFilterExpression, updateFilters, requestedLayouts },
     issues: { fetchNextIssues },
   } = useIssues(EIssuesStoreType.GLOBAL);
-  const { fetchAllGlobalViews, getViewDetailsById } = useGlobalView();
+  const { getViewDetailsById } = useGlobalView();
   // Derived values
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
   const workItemFilters = globalViewId ? filters?.[globalViewId] : undefined;
@@ -94,8 +91,8 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
     };
   }, [globalViewId, viewDetails, workItemFilters]);
 
-  // Custom hooks
-  useWorkspaceIssueProperties(workspaceSlug);
+  // Custom hooks (merges views + modules + cycles + labels + estimates into 1 request)
+  const { isLoading: globalViewsLoading } = useWorkspaceIssueProperties(workspaceSlug);
 
   // Route filters
   const routeFilters: { [key: string]: string } = {};
@@ -107,17 +104,6 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const fetchNextPages = useCallback(() => {
     if (workspaceSlug && globalViewId) fetchNextIssues(workspaceSlug, globalViewId);
   }, [fetchNextIssues, workspaceSlug, globalViewId]);
-
-  // Fetch global views
-  const { isLoading: globalViewsLoading } = useSWR(
-    getGlobalViewsKey(workspaceSlug),
-    async () => {
-      if (workspaceSlug) {
-        await fetchAllGlobalViews(workspaceSlug);
-      }
-    },
-    { revalidateIfStale: false, revalidateOnFocus: false }
-  );
 
   // Fetch issues
   const { isLoading: issuesLoading } = useSWR(

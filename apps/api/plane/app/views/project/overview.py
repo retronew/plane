@@ -119,7 +119,7 @@ def get_project_overview_access(user, slug, project_id, for_update=False):
     project_member = ProjectMember.objects.filter(
         project=project, workspace_id=project.workspace_id, member=user, is_active=True
     ).first()
-    if not workspace_member or not project_member:
+    if not workspace_member or (not project_member and workspace_member.role != 20):
         raise PermissionDenied("Active workspace and project membership is required.")
     if for_update and project.archived_at:
         raise ValidationError("Archived projects are read-only.")
@@ -163,7 +163,7 @@ class ProjectOverviewResourceEndpoint(BaseAPIView):
             raise MethodNotAllowed("POST")
         project, member, workspace_member = get_project_overview_access(request.user, slug, project_id, for_update=True)
         self.check_feature_enabled(project)
-        if member.role not in (15, 20) and workspace_member.role != 20:
+        if (not member or member.role not in (15, 20)) and workspace_member.role != 20:
             raise PermissionDenied("Only project members and admins can create resources.")
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -172,7 +172,7 @@ class ProjectOverviewResourceEndpoint(BaseAPIView):
         return Response(self.serialize_resource(resource), status=201)
 
     def check_owner(self, resource, user, member, workspace_member):
-        if resource.created_by_id != user.id and member.role != 20 and workspace_member.role != 20:
+        if resource.created_by_id != user.id and (not member or member.role != 20) and workspace_member.role != 20:
             raise PermissionDenied("Only the owner or an admin can change this resource.")
 
     @transaction.atomic

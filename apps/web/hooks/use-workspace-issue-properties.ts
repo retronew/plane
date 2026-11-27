@@ -4,53 +4,32 @@
  * See the LICENSE file for details.
  */
 
+import { useContext } from "react";
 import useSWR from "swr";
 // plane web imports
-import { WORKSPACE_ESTIMATES, WORKSPACE_CYCLES, WORKSPACE_LABELS, WORKSPACE_MODULES } from "@plane/constants";
 import { useWorkspaceIssuePropertiesExtended } from "@/hooks/use-workspace-issue-properties-extended";
-// plane imports
-import { useProjectEstimates } from "./store/estimates";
-import { useCycle } from "./store/use-cycle";
-import { useLabel } from "./store/use-label";
-import { useModule } from "./store/use-module";
+import { hydrateWorkspaceViewBootstrap } from "@/lib/bootstrap-cache";
+import { StoreContext } from "@/lib/store-context";
+import { bootstrapService } from "@/services/bootstrap.service";
 
 export const useWorkspaceIssueProperties = (workspaceSlug: string | string[] | undefined) => {
-  const { fetchWorkspaceLabels } = useLabel();
+  const rootStore = useContext(StoreContext);
+  const slug = workspaceSlug ? workspaceSlug.toString() : undefined;
 
-  const { getWorkspaceEstimates } = useProjectEstimates();
-
-  const { fetchWorkspaceModules } = useModule();
-
-  const { fetchWorkspaceCycles } = useCycle();
-
-  // fetch workspace Modules
-  useSWR(
-    workspaceSlug ? WORKSPACE_MODULES(workspaceSlug.toString()) : null,
-    workspaceSlug ? () => fetchWorkspaceModules(workspaceSlug.toString()) : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
-  );
-
-  // fetch workspace Cycles
-  useSWR(
-    workspaceSlug ? WORKSPACE_CYCLES(workspaceSlug.toString()) : null,
-    workspaceSlug ? () => fetchWorkspaceCycles(workspaceSlug.toString()) : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
-  );
-
-  // fetch workspace labels
-  useSWR(
-    workspaceSlug ? WORKSPACE_LABELS(workspaceSlug.toString()) : null,
-    workspaceSlug ? () => fetchWorkspaceLabels(workspaceSlug.toString()) : null,
-    { revalidateIfStale: false, revalidateOnFocus: false }
-  );
-
-  // fetch workspace estimates
-  useSWR(
-    workspaceSlug ? WORKSPACE_ESTIMATES(workspaceSlug.toString()) : null,
-    workspaceSlug ? () => getWorkspaceEstimates(workspaceSlug.toString()) : null,
+  // Single aggregated view bootstrap (merges views, modules, cycles, labels, estimates: 5 -> 1)
+  const { isLoading } = useSWR(
+    slug ? `WORKSPACE_VIEW_BOOTSTRAP_${slug}` : null,
+    async () => {
+      if (!slug) return null;
+      const data = await bootstrapService.getWorkspaceViewBootstrap(slug);
+      if (rootStore) hydrateWorkspaceViewBootstrap(rootStore, slug, data);
+      return data;
+    },
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
   // fetch extended issue properties
   useWorkspaceIssuePropertiesExtended(workspaceSlug);
+
+  return { isLoading };
 };

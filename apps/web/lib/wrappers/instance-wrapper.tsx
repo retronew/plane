@@ -5,15 +5,17 @@
  */
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useContext } from "react";
 import { observer } from "mobx-react";
-import useSWR, { preload } from "swr";
+import useSWR from "swr";
 // components
 import { AppLoader } from "@/components/common/app-loader";
 import { InstanceNotReady, MaintenanceView } from "@/components/instance";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
-import { useUser } from "@/hooks/store/user";
+import { hydrateAppBootstrap } from "@/lib/bootstrap-cache";
+import { StoreContext } from "@/lib/store-context";
+import { bootstrapService } from "@/services/bootstrap.service";
 
 type TInstanceWrapper = {
   children: ReactNode;
@@ -22,22 +24,24 @@ type TInstanceWrapper = {
 const InstanceWrapper = observer(function InstanceWrapper(props: TInstanceWrapper) {
   const { children } = props;
   // store
+  const rootStore = useContext(StoreContext);
   const { isLoading, instance, error, fetchInstanceInfo } = useInstance();
-  const { data: currentUser, fetchCurrentUser } = useUser();
 
   const { isLoading: isInstanceSWRLoading, error: instanceSWRError } = useSWR(
-    "INSTANCE_INFORMATION",
-    async () => await fetchInstanceInfo(),
-    { revalidateOnFocus: false }
+    "APP_BOOTSTRAP",
+    async () => {
+      try {
+        const data = await bootstrapService.getAppBootstrap();
+        if (rootStore) hydrateAppBootstrap(rootStore, data);
+        return data;
+      } catch {
+        // Fallback to legacy individual instance fetch if bootstrap endpoint is unavailable
+        await fetchInstanceInfo();
+        return null;
+      }
+    },
+    { revalidateOnFocus: false, revalidateIfStale: false }
   );
-
-  // Kick off user bootstrap in parallel with /api/instances/ so auth wrappers don't wait serially.
-  useEffect(() => {
-    if (!currentUser) {
-      void preload("USER_INFORMATION", () => fetchCurrentUser().catch(() => undefined));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // loading state
   if ((isLoading || isInstanceSWRLoading) && !instance)
