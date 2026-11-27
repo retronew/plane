@@ -42,21 +42,23 @@ export function LayoutTransition<T extends string>({
   layout,
   children,
   waitForReady = false,
+  animateInitial = true,
   onLayoutCommit,
 }: {
   layout: T;
   waitForReady?: boolean;
+  animateInitial?: boolean;
   onLayoutCommit?: (layout: T) => void;
   children: (layout: T) => ReactNode;
 }) {
   const [visibleLayout, setVisibleLayout] = useState(layout);
-  const [isEntering, setEntering] = useState(true);
+  const [isEntering, setEntering] = useState(animateInitial);
   useLayoutEffect(() => {
     // react-doctor-disable-next-line react-doctor/no-prop-callback-in-effect -- notify the parent after the visible layout settles; this is a commit notification, not a prop mirrored into local state
     onLayoutCommit?.(visibleLayout);
   }, [visibleLayout, onLayoutCommit]);
-  const [readyLayout, setReadyLayout] = useState<T>();
-  const enteredLayout = useRef<T | undefined>(undefined);
+  const [readyLayout, setReadyLayout] = useState<T | undefined>(animateInitial ? undefined : layout);
+  const enteredLayout = useRef<T | undefined>(animateInitial ? undefined : layout);
   const reportReady = useCallback(
     (ready: boolean) => {
       if (ready) {

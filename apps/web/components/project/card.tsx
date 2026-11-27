@@ -202,6 +202,8 @@ const ProjectCardCover = observer(function ProjectCardCover({ project, compact }
         <CoverImage
           src={project.cover_image_url}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full scale-[1.02] opacity-95 blur-[1px]"
         />
       )}
@@ -477,8 +479,8 @@ function ProjectCardModals({
 }: ProjectCardModalsProps) {
   return (
     <>
-      <DeleteProjectModal project={project} isOpen={isDeleteModalOpen} onClose={onCloseDelete} />
-      {workspaceSlug && (
+      {isDeleteModalOpen && <DeleteProjectModal project={project} isOpen={isDeleteModalOpen} onClose={onCloseDelete} />}
+      {isJoinModalOpen && workspaceSlug && (
         <JoinProjectModal
           workspaceSlug={workspaceSlug.toString()}
           project={project}
@@ -486,7 +488,7 @@ function ProjectCardModals({
           handleClose={onCloseJoin}
         />
       )}
-      {workspaceSlug && project && (
+      {isRestoreModalOpen && workspaceSlug && project && (
         <ArchiveRestoreProjectModal
           workspaceSlug={workspaceSlug.toString()}
           projectId={project.id}

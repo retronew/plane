@@ -45,6 +45,7 @@ const GanttLayout = lazy(() =>
 export function WorkspaceActiveLayout(props: TWorkspaceLayoutProps) {
   const {
     activeLayout = EIssueLayoutTypes.SPREADSHEET,
+    isDefaultView,
     workspaceSlug,
     globalViewId,
     globalViewsLoading,
@@ -63,10 +64,11 @@ export function WorkspaceActiveLayout(props: TWorkspaceLayoutProps) {
       ),
     [allowPermissions, workspaceSlug]
   );
-  if (globalViewsLoading || issuesLoading || isLoading) return <IssueLayoutLoader layout={activeLayout} />;
+  if ((!isDefaultView && globalViewsLoading) || issuesLoading || isLoading)
+    return <IssueLayoutLoader layout={activeLayout} />;
   const sharedProps = { QuickActions: AllIssueQuickActions, canEditPropertiesBasedOnProject, viewId: globalViewId };
   return (
-    <LayoutTransition layout={activeLayout} waitForReady onLayoutCommit={onLayoutCommit}>
+    <LayoutTransition layout={activeLayout} waitForReady animateInitial={false} onLayoutCommit={onLayoutCommit}>
       {(layout) => (
         <Suspense fallback={<IssueLayoutLoader layout={layout} />}>
           {layout === EIssueLayoutTypes.LIST ? (
