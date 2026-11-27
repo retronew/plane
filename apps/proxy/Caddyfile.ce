@@ -1,4 +1,6 @@
 (plane_proxy) {
+	encode zstd gzip
+
 	reverse_proxy /.well-known/oauth-* api:8000
 
 	request_body {

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { buildVersionPlugin } from "./lib/build-version-plugin";
+import { buildVersionPlugin } from "./lib/build-version-plugin.ts";
 
 const buildId = randomUUID();
 import * as dotenv from "dotenv";
@@ -22,8 +22,82 @@ export default defineConfig(() => ({
     "process.env": JSON.stringify(viteEnv),
     __PLANE_WEB_BUILD_ID__: JSON.stringify(buildId),
   },
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router",
+      "mobx",
+      "mobx-react",
+      "mobx-utils",
+      "swr",
+      "axios",
+      "lodash-es",
+      "date-fns",
+      "clsx",
+      "lucide-react",
+      "@makeplane/propel/icons",
+      "@base-ui/react",
+    ],
+  },
   build: {
-    assetsInlineLimit: 0,
+    assetsInlineLimit: 4096,
+  },
+  environments: {
+    client: {
+      build: {
+        rolldownOptions: {
+          output: {
+            codeSplitting: {
+              minSize: 30_000,
+              groups: [
+                {
+                  name: "vendor-react",
+                  test: /node_modules[\\/](react|react-dom|react-router|scheduler|swr)[\\/]/,
+                  priority: 50,
+                },
+                {
+                  name: "vendor-state",
+                  test: /node_modules[\\/](mobx|mobx-react|mobx-utils|axios|lodash-es|date-fns|clsx|uuid)[\\/]/,
+                  priority: 45,
+                },
+                {
+                  name: "vendor-ui",
+                  test: /node_modules[\\/](@makeplane[\\/]propel|@base-ui|lucide-react|cmdk|next-themes|overlayscrollbars|@tanstack)[\\/]/,
+                  priority: 40,
+                },
+                {
+                  debugName: "i18n-locale",
+                  name: (id: string) => {
+                    const match = id.match(/packages[\\/]i18n[\\/]locales[\\/]([^\\/]+)[\\/]/);
+                    return match ? `i18n-${match[1]}` : undefined;
+                  },
+                  test: /packages[\\/]i18n[\\/]locales[\\/]/,
+                  priority: 25,
+                },
+                {
+                  name: "plane-shared",
+                  test: /packages[\\/](constants|utils|types|hooks|services|shared-state|blocks)[\\/]/,
+                  priority: 20,
+                },
+                {
+                  name: "app-shared",
+                  test: /apps[\\/]web[\\/](store|services|helpers|hooks|lib|layouts)[\\/]/,
+                  minShareCount: 2,
+                  priority: 15,
+                },
+                {
+                  name: "app-components",
+                  test: /apps[\\/]web[\\/]components[\\/](?!(editor|pages|analytics|exporter)[\\/])/,
+                  minShareCount: 2,
+                  priority: 12,
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
   },
   plugins: [reactRouter(), buildVersionPlugin(buildId)],
   resolve: {

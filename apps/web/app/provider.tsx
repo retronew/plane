@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { SWRConfig } from "swr";
 // Plane Imports
 import { WEB_SWR_CONFIG } from "@plane/constants";
@@ -17,19 +17,9 @@ import { EditorPreferencesProvider } from "@/components/editor/preferences-provi
 import { ProfileSettingsHost } from "@/components/common/modal/profile-settings-host";
 import { IssueSyncProvider } from "@/components/issues/sync-provider";
 import { BrowserNotificationProvider } from "@/components/workspace-notifications/browser-notification-provider";
-
-// lazy imports
-const AppProgressBar = lazy(function AppProgressBar() {
-  return import("@/lib/b-progress/AppProgressBar");
-});
-
-const StoreWrapper = lazy(function StoreWrapper() {
-  return import("@/lib/wrappers/store-wrapper");
-});
-
-const InstanceWrapper = lazy(function InstanceWrapper() {
-  return import("@/lib/wrappers/instance-wrapper");
-});
+import AppProgressBar from "@/lib/b-progress/AppProgressBar";
+import StoreWrapper from "@/lib/wrappers/store-wrapper";
+import InstanceWrapper from "@/lib/wrappers/instance-wrapper";
 
 export interface IAppProvider {
   children: React.ReactNode;
