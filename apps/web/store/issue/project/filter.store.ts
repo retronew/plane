@@ -135,7 +135,10 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
   );
 
   fetchFilters = async (workspaceSlug: string, projectId: string) => {
-    const _filters = await this.projectService.getProjectUserProperties(workspaceSlug, projectId);
+    const _filters = await this.rootIssueStore.rootStore.memberRoot.project.fetchProjectUserProperties(
+      workspaceSlug,
+      projectId
+    );
 
     const richFilters = _filters?.rich_filters;
     const displayFilters = this.computedDisplayFilters(_filters?.display_filters);

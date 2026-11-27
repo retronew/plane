@@ -27,10 +27,12 @@ export const PagesListView = observer(function PagesListView(props: TPageView) {
   const { children, pageType, projectId, storeType, workspaceSlug } = props;
   // store hooks
   const { fetchPagesList } = usePageStore(storeType);
-  const { fetchProjectLabels } = useLabel();
-  // Resolve selected label names and colors before any picker has been opened.
-  useSWR(workspaceSlug && projectId ? `PROJECT_PAGE_LABELS_${projectId}` : null, () =>
-    fetchProjectLabels(workspaceSlug, projectId)
+  const { fetchProjectLabels, projectLabels } = useLabel();
+  // ProjectAuthWrapper already fetches project labels; only fetch here if not yet populated.
+  useSWR(
+    workspaceSlug && projectId && projectLabels === undefined ? `PROJECT_PAGE_LABELS_${projectId}` : null,
+    () => fetchProjectLabels(workspaceSlug, projectId),
+    { revalidateIfStale: false, revalidateOnFocus: false }
   );
   // fetching pages list
   useSWR(

@@ -79,7 +79,9 @@ export class ArchivedIssues extends BaseIssuesStore implements IArchivedIssues {
    * @param projectId
    */
   fetchParentStats = async (workspaceSlug: string, projectId?: string) => {
-    if (projectId) this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
+    if (!projectId) return;
+    if (!this.applyingSyncResponse && this.rootIssueStore.rootStore.projectRoot.project.projectMap[projectId]) return;
+    this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
   };
 
   /** */

@@ -85,7 +85,10 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
    * @param projectId
    */
   fetchParentStats = async (workspaceSlug: string, projectId?: string) => {
-    if (projectId) this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
+    if (!projectId) return;
+    // Skip redundant project details refetch on initial list load when already loaded
+    if (!this.applyingSyncResponse && this.rootIssueStore.rootStore.projectRoot.project.projectMap[projectId]) return;
+    this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
   };
 
   /** */

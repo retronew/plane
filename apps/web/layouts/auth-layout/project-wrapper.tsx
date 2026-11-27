@@ -7,6 +7,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
+import { usePathname } from "next/navigation";
 import useSWR from "swr";
 // plane imports
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
@@ -65,6 +66,8 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   const { data: currentUserData } = useUser();
   const { fetchProjectLabels } = useLabel();
   const { getProjectEstimates } = useProjectEstimates();
+  // router
+  const pathname = usePathname() || "";
   // derived values
   const hasPermissionToCurrentProject = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER, EUserPermissions.GUEST],
@@ -76,11 +79,38 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   const isWorkspaceAdmin = allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.WORKSPACE, workspaceSlug);
   const projectDetails = getProjectById(projectId);
   const canFetchProjectResources = currentProjectRole !== undefined && hasPermissionToCurrentProject === true;
-  // Initialize module timeline chart
+
+  // Scope sub-resource preloading by active route so settings/pages/overview/intake don't over-fetch
+  const isSettingsRoute = pathname.includes("/settings/projects/");
+  const isPagesRoute = !isSettingsRoute && pathname.includes("/pages");
+  const isOverviewRoute = !isSettingsRoute && pathname.includes("/overview");
+  const isIntakeRoute = !isSettingsRoute && pathname.includes("/intake");
+  const isBrowseRoute = pathname.includes("/browse/");
+  const isCyclesRoute = !isSettingsRoute && pathname.includes("/cycles");
+  const isModulesRoute = !isSettingsRoute && pathname.includes("/modules");
+  const isViewsRoute = !isSettingsRoute && pathname.includes("/views");
+
+  const needUserProperties = !isSettingsRoute && !isPagesRoute && !isOverviewRoute && !isIntakeRoute && !isBrowseRoute;
+  const needLabels =
+    (!isSettingsRoute && !isOverviewRoute) || pathname.endsWith("/labels") || pathname.endsWith("/labels/");
+  const needMembers = !isSettingsRoute || pathname.endsWith("/members") || pathname.endsWith("/members/");
+  const needStates =
+    (!isSettingsRoute && !isPagesRoute) ||
+    pathname.includes("/states") ||
+    pathname.includes("/workflows") ||
+    pathname.includes("/automations");
+  const needIntakeState = isIntakeRoute;
+  const needEstimates = (!isSettingsRoute && !isPagesRoute && !isOverviewRoute) || pathname.includes("/estimates");
+  const needCycles = !isSettingsRoute && !isPagesRoute && !isOverviewRoute && !isIntakeRoute && !isModulesRoute;
+  const needModules = !isSettingsRoute && !isPagesRoute && !isOverviewRoute && !isIntakeRoute && !isCyclesRoute;
+  const needViews = isViewsRoute;
+  const needGantt = !isSettingsRoute && !isPagesRoute && !isOverviewRoute && !isIntakeRoute && !isBrowseRoute;
+
+  // Initialize module timeline chart only on work-item / cycle / module / view routes
   useEffect(() => {
-    initGantt();
+    if (needGantt) initGantt();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [needGantt]);
 
   // fetching project details
   const { isLoading: isProjectDetailsLoading, error: projectDetailsError } = useSWR(
@@ -88,20 +118,26 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     () => fetchProjectDetails(workspaceSlug, projectId),
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
-  // fetching user project member information
-  useSWR(PROJECT_ME_INFORMATION(workspaceSlug, projectId), () => fetchUserProjectInfo(workspaceSlug, projectId), {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-  });
+  // fetching user project member information only when role is not yet known from workspace roles
+  useSWR(
+    currentProjectRole === undefined ? PROJECT_ME_INFORMATION(workspaceSlug, projectId) : null,
+    () => fetchUserProjectInfo(workspaceSlug, projectId),
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+    }
+  );
   // fetching project member preferences
   useSWR(
-    canFetchProjectResources && currentUserData?.id ? PROJECT_MEMBER_PREFERENCES(projectId, currentProjectRole) : null,
+    canFetchProjectResources && needUserProperties && currentUserData?.id
+      ? PROJECT_MEMBER_PREFERENCES(projectId, currentProjectRole)
+      : null,
     () => fetchProjectUserProperties(workspaceSlug, projectId),
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
   // fetching project labels
   useSWR(
-    canFetchProjectResources ? PROJECT_LABELS(projectId, currentProjectRole) : null,
+    canFetchProjectResources && needLabels ? PROJECT_LABELS(projectId, currentProjectRole) : null,
     () => fetchProjectLabels(workspaceSlug, projectId),
     {
       revalidateIfStale: false,
@@ -110,7 +146,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project members
   useSWR(
-    canFetchProjectResources ? PROJECT_MEMBERS(projectId, currentProjectRole) : null,
+    canFetchProjectResources && needMembers ? PROJECT_MEMBERS(projectId, currentProjectRole) : null,
     () => fetchProjectMembers(workspaceSlug, projectId),
     {
       revalidateIfStale: false,
@@ -119,7 +155,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project states
   useSWR(
-    canFetchProjectResources ? PROJECT_STATES(projectId, currentProjectRole) : null,
+    canFetchProjectResources && needStates ? PROJECT_STATES(projectId, currentProjectRole) : null,
     () => fetchProjectStates(workspaceSlug, projectId),
     {
       revalidateIfStale: false,
@@ -128,7 +164,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project intake state
   useSWR(
-    canFetchProjectResources && projectDetails?.inbox_view !== false
+    canFetchProjectResources && needIntakeState && Boolean(projectDetails?.inbox_view)
       ? PROJECT_INTAKE_STATE(projectId, currentProjectRole)
       : null,
     () => fetchProjectIntakeState(workspaceSlug, projectId),
@@ -139,7 +175,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project estimates
   useSWR(
-    canFetchProjectResources && projectDetails?.estimate !== null
+    canFetchProjectResources && needEstimates && Boolean(projectDetails?.estimate)
       ? PROJECT_ESTIMATES(projectId, currentProjectRole)
       : null,
     () => getProjectEstimates(workspaceSlug, projectId),
@@ -150,7 +186,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project cycles
   useSWR(
-    canFetchProjectResources && projectDetails?.cycle_view !== false
+    canFetchProjectResources && needCycles && Boolean(projectDetails?.cycle_view)
       ? PROJECT_ALL_CYCLES(projectId, currentProjectRole)
       : null,
     () => fetchAllCycles(workspaceSlug, projectId),
@@ -161,7 +197,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project modules
   useSWR(
-    canFetchProjectResources && projectDetails?.module_view !== false
+    canFetchProjectResources && needModules && Boolean(projectDetails?.module_view)
       ? PROJECT_MODULES(projectId, currentProjectRole)
       : null,
     () => fetchModules(workspaceSlug, projectId),
@@ -169,7 +205,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
   );
   // fetching project views
   useSWR(
-    canFetchProjectResources && projectDetails?.issue_views_view !== false
+    canFetchProjectResources && needViews && Boolean(projectDetails?.issue_views_view)
       ? PROJECT_VIEWS(projectId, currentProjectRole)
       : null,
     () => fetchViews(workspaceSlug, projectId),

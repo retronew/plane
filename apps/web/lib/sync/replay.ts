@@ -24,6 +24,7 @@ export type ReplaySource = (cursor: string | undefined, signal: AbortSignal) => 
 /** Only REST pages establish the workspace commit watermark; socket messages are wakeups. */
 export class ReplayCoordinator {
   private cursor?: string;
+  private hasBaseline = false;
   private active = false;
   private running = false;
   private pending = false;
@@ -49,6 +50,7 @@ export class ReplayCoordinator {
   dispose() {
     this.suspend();
     this.cursor = undefined;
+    this.hasBaseline = false;
   }
   wake = () => {
     if (!this.active) return;
@@ -70,8 +72,16 @@ export class ReplayCoordinator {
           throw new Error("Invalid replay page");
         this.engine.updateProjects(page.project_ids);
         if (this.cursor === undefined || page.reset_required) {
-          // Fix the baseline before reading snapshots so concurrent commits remain replayable.
+          // On initial cold boot without a retention gap, establish the baseline cursor without
+          // triggering a full reset storm that duplicates in-flight initial page fetches.
+          // Recalibrations (after a prior baseline or retention gap) still invalidate all subscribers.
           const baseline = page.cursor;
+          const isInitialColdBaseline = !this.hasBaseline && !page.reset_required;
+          this.hasBaseline = true;
+          if (isInitialColdBaseline) {
+            this.cursor = baseline;
+            continue;
+          }
           await this.engine.apply(undefined, { reset: true });
           if (!current()) return;
           this.cursor = baseline;

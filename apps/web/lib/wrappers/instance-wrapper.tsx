@@ -5,13 +5,15 @@
  */
 
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { observer } from "mobx-react";
-import useSWR from "swr";
+import useSWR, { preload } from "swr";
 // components
 import { AppLoader } from "@/components/common/app-loader";
 import { InstanceNotReady, MaintenanceView } from "@/components/instance";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
+import { useUser } from "@/hooks/store/user";
 
 type TInstanceWrapper = {
   children: ReactNode;
@@ -21,12 +23,21 @@ const InstanceWrapper = observer(function InstanceWrapper(props: TInstanceWrappe
   const { children } = props;
   // store
   const { isLoading, instance, error, fetchInstanceInfo } = useInstance();
+  const { data: currentUser, fetchCurrentUser } = useUser();
 
   const { isLoading: isInstanceSWRLoading, error: instanceSWRError } = useSWR(
     "INSTANCE_INFORMATION",
     async () => await fetchInstanceInfo(),
     { revalidateOnFocus: false }
   );
+
+  // Kick off user bootstrap in parallel with /api/instances/ so auth wrappers don't wait serially.
+  useEffect(() => {
+    if (!currentUser) {
+      void preload("USER_INFORMATION", () => fetchCurrentUser().catch(() => undefined));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // loading state
   if ((isLoading || isInstanceSWRLoading) && !instance)
