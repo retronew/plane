@@ -43,7 +43,7 @@ export const WorkItemFiltersHOC = observer(function WorkItemFiltersHOC(props: TW
 type TWorkItemFilterProps = TSharedWorkItemFiltersProps &
   TAdditionalWorkItemFiltersProps & {
     initialWorkItemFilters: IIssueFilters;
-    children: React.ReactNode | ((props: { filter: IWorkItemFilterInstance }) => React.ReactNode);
+    children: React.ReactNode | ((props: { filter: IWorkItemFilterInstance | undefined }) => React.ReactNode);
   };
 
 const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItemFilterProps) {
@@ -61,7 +61,7 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
     ...entityConfigProps
   } = props;
   // store hooks
-  const { getOrCreateFilter, deleteFilter } = useWorkItemFilters();
+  const { getFilter, getOrCreateFilter, deleteFilter } = useWorkItemFilters();
   // derived values
   const workItemEntityID = useMemo(
     () => (isTemporary ? `TEMP-${entityId ?? uuidv4()}` : entityId),
@@ -73,23 +73,33 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
     allowedFilters: filtersToShowByLayout ? filtersToShowByLayout : [],
     ...entityConfigProps,
   });
-  // get or create filter instance
-  const workItemLayoutFilter = useMemo(
-    () =>
-      getOrCreateFilter({
-        entityType,
-        entityId: workItemEntityID,
-        initialExpression: initialUserFilters,
-        onExpressionChange: updateFilters,
-        expressionOptions: {
-          saveViewOptions,
-          updateViewOptions,
-        },
-        showOnMount,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entityType, workItemEntityID, saveViewOptions, updateViewOptions, updateFilters]
-  );
+
+  // Read the registered filter reactively; mutations happen after commit so sibling
+  // MobX observers (e.g. WorkItemFiltersToggle) never update during render.
+  const workItemLayoutFilter = getFilter(entityType, workItemEntityID);
+
+  useEffect(() => {
+    getOrCreateFilter({
+      entityType,
+      entityId: workItemEntityID,
+      initialExpression: initialUserFilters,
+      onExpressionChange: updateFilters,
+      expressionOptions: {
+        saveViewOptions,
+        updateViewOptions,
+      },
+      showOnMount,
+    });
+  }, [
+    entityType,
+    getOrCreateFilter,
+    initialUserFilters,
+    saveViewOptions,
+    showOnMount,
+    updateFilters,
+    updateViewOptions,
+    workItemEntityID,
+  ]);
 
   // StrictMode replays effect cleanup/setup. Do not delete a live instance during
   // that replay; real unmounts and entity changes still release their own key.
@@ -109,13 +119,10 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
   }, [deleteFilter, entityType, workItemEntityID]);
 
   useEffect(() => {
+    if (!workItemLayoutFilter) return;
     workItemLayoutFilter.configManager.setAreConfigsReady(workItemFiltersConfig.areAllConfigsInitialized);
     workItemLayoutFilter.configManager.registerAll(workItemFiltersConfig.configs);
-  }, [
-    workItemFiltersConfig.areAllConfigsInitialized,
-    workItemFiltersConfig.configs,
-    workItemLayoutFilter.configManager,
-  ]);
+  }, [workItemFiltersConfig.areAllConfigsInitialized, workItemFiltersConfig.configs, workItemLayoutFilter]);
 
   return <>{typeof children === "function" ? children({ filter: workItemLayoutFilter }) : children}</>;
 });
