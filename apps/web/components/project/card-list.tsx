@@ -21,6 +21,7 @@ import { useProject } from "@/hooks/store/use-project";
 import { useProjectFilter } from "@/hooks/store/use-project-filter";
 import { useUserPermissions } from "@/hooks/store/user";
 // local imports
+import { ProjectCard } from "./card";
 import { ProjectLayoutTransition } from "./layout-transition";
 import type { IProject, TProjectDisplayFilters, TProjectFilters } from "@plane/types";
 const ProjectLayouts = lazy(() => import("./layouts").then((module) => ({ default: module.ProjectLayouts })));
@@ -112,32 +113,53 @@ export const ProjectCardList = observer(function ProjectCardList(props: TProject
     EUserPermissionsLevel.WORKSPACE
   );
 
-  if (!filteredProjectIds || !workspaceProjectIds || loader === "init-loader" || fetchStatus !== "complete")
+  const hasRenderableProjects =
+    Boolean(filteredProjectIds && workspaceProjectIds) &&
+    (fetchStatus === "complete" || (fetchStatus === "partial" && (workspaceProjectIds?.length ?? 0) > 0));
+
+  if (!hasRenderableProjects || (loader === "init-loader" && (workspaceProjectIds?.length ?? 0) === 0))
     return <ProjectsLoader layout={getProjectLayout(currentWorkspaceDisplayFilters)} />;
 
-  if (workspaceProjectIds.length === 0 && !currentWorkspaceDisplayFilters?.archived_projects)
+  if (workspaceProjectIds!.length === 0 && !currentWorkspaceDisplayFilters?.archived_projects)
     return <ProjectCardListEmptyState canPerformEmptyStateActions={canPerformEmptyStateActions} />;
 
-  if (filteredProjectIds.length === 0)
+  if (filteredProjectIds!.length === 0)
     return <ProjectCardListSearchEmptyState isArchivedProjectsView={isArchivedProjectsView} />;
 
+  const projects = filteredProjectIds!
+    .map((id) => getProjectById(id))
+    .filter((project): project is IProject => !!project);
+
   return (
-    <ProjectLayoutTransition layout={getProjectLayout(currentWorkspaceDisplayFilters)} waitForReady>
-      {(layout) => (
-        <Suspense fallback={<ProjectsLoader layout={layout} />}>
+    <ProjectLayoutTransition
+      layout={getProjectLayout(currentWorkspaceDisplayFilters)}
+      waitForReady
+      animateInitial={false}
+    >
+      {(layout) =>
+        layout === "gallery" ? (
           <LayoutTransitionContent>
-            <ContentWrapper className={["list", "board", "timeline"].includes(layout) ? "p-0!" : "p-4!"}>
-              <ProjectLayouts
-                key={layout}
-                layout={layout}
-                projects={filteredProjectIds
-                  .map((id) => getProjectById(id))
-                  .filter((project): project is IProject => !!project)}
-              />
+            <ContentWrapper className="p-4!">
+              <div
+                data-project-layout="gallery"
+                className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+              >
+                {projects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
             </ContentWrapper>
           </LayoutTransitionContent>
-        </Suspense>
-      )}
+        ) : (
+          <Suspense fallback={<ProjectsLoader layout={layout} />}>
+            <LayoutTransitionContent>
+              <ContentWrapper className={["list", "board", "timeline"].includes(layout) ? "p-0!" : "p-4!"}>
+                <ProjectLayouts key={layout} layout={layout} projects={projects} />
+              </ContentWrapper>
+            </LayoutTransitionContent>
+          </Suspense>
+        )
+      }
     </ProjectLayoutTransition>
   );
 });

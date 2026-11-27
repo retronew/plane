@@ -83,3 +83,23 @@ it("does not replay entry when the current calendar refetches after an option ch
   rerender(draw(true));
   expect(root.getAttribute("data-project-transition")).toBe("idle");
 });
+
+it("starts directly in idle on initial mount when animateInitial is false, then animates subsequent switches", () => {
+  const draw = (layout: string) => (
+    <LayoutTransition layout={layout} waitForReady animateInitial={false}>
+      {(shown) => <Content layout={shown} ready />}
+    </LayoutTransition>
+  );
+  const { container, rerender } = render(draw("gallery"));
+  const root = container.firstElementChild!;
+  expect(root.getAttribute("data-project-transition")).toBe("idle");
+  expect(screen.getByText("Content gallery")).toBeTruthy();
+
+  rerender(draw("board"));
+  expect(root.getAttribute("data-project-transition")).toBe("exit");
+  finish(root, "project-layout-out");
+  expect(screen.getByText("Content board")).toBeTruthy();
+  expect(root.getAttribute("data-project-transition")).toBe("enter");
+  finish(root, "project-layout-in");
+  expect(root.getAttribute("data-project-transition")).toBe("idle");
+});
