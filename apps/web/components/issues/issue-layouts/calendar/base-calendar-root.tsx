@@ -20,6 +20,7 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
 // types
+import { IssueLayoutHOC } from "../issue-layout-HOC";
 import type { IQuickActionProps, TRenderQuickActions } from "../list/list-view-types";
 import { CalendarChart } from "./calendar";
 import { handleDragDrop } from "./utils";
@@ -178,7 +179,7 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
   );
 
   return (
-    <>
+    <IssueLayoutHOC layout={EIssueLayoutTypes.CALENDAR}>
       <div className="h-full w-full overflow-hidden bg-surface-1">
         <CalendarChart
           issuesFilterStore={issuesFilter}
@@ -199,6 +200,6 @@ export const BaseCalendarRoot = observer(function BaseCalendarRoot(props: IBaseC
           canEditProperties={canEditProperties}
         />
       </div>
-    </>
+    </IssueLayoutHOC>
   );
 });

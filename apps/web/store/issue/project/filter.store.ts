@@ -29,6 +29,7 @@ import { createDebouncedFilterSync } from "../helpers/debounced-filter-sync";
 // helpers
 // types
 import type { IIssueRootStore } from "../root.store";
+import { writeCachedIssueLayout } from "@/lib/layout-cache";
 import { ProjectService } from "@/services/project";
 // constants
 // services
@@ -174,6 +175,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       set(this.filters, [projectId, "displayProperties"], displayProperties);
       set(this.filters, [projectId, "kanbanFilters"], kanbanFilters);
     });
+    writeCachedIssueLayout("project", workspaceSlug, projectId, displayFilters.layout);
   };
 
   fetchFilters = async (workspaceSlug: string, projectId: string) => {
@@ -266,11 +268,13 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
             });
           });
 
-          if (previousDisplayFilters.layout !== _filters.displayFilters.layout) {
+          const layoutChanged = previousDisplayFilters.layout !== _filters.displayFilters.layout;
+          if (layoutChanged) {
             this.rootIssueStore.projectIssues.clear(true); // clear issues for local store when some filters like layout changes
+            writeCachedIssueLayout("project", workspaceSlug, projectId, _filters.displayFilters.layout);
           }
 
-          if (this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
+          if (!layoutChanged && this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
             this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
           }
 

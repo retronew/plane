@@ -20,6 +20,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
+import { readCachedIssueLayout } from "@/lib/layout-cache";
 // local imports
 import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
@@ -86,7 +87,8 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
   );
 
   if (!workspaceSlug || !projectId || !workItemFilters) {
-    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+    const cachedLayout = readCachedIssueLayout("project", workspaceSlug, projectId);
+    return <IssueLayoutLoader layout={activeLayout ?? cachedLayout ?? EIssueLayoutTypes.LIST} />;
   }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.PROJECT}>

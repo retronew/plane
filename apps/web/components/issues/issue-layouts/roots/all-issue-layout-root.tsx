@@ -25,6 +25,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useAppRouter } from "@/hooks/use-app-router";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
+import { readCachedIssueLayout } from "@/lib/layout-cache";
 import { translate } from "@plane/i18n";
 
 const toOptionalString = (value: string | string[] | undefined) => (value ? value.toString() : undefined);
@@ -64,8 +65,12 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   // Derived values
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
   const workItemFilters = globalViewId ? filters?.[globalViewId] : undefined;
+  const cachedLayout = readCachedIssueLayout("workspace-view", workspaceSlug, globalViewId);
   const activeLayout =
-    (globalViewId ? requestedLayouts[globalViewId] : undefined) ?? workItemFilters?.displayFilters?.layout;
+    (globalViewId ? requestedLayouts[globalViewId] : undefined) ??
+    workItemFilters?.displayFilters?.layout ??
+    viewDetails?.display_filters?.layout ??
+    cachedLayout;
   const handleLayoutCommit = useCallback(
     (layout: EIssueLayoutTypes) => {
       if (workspaceSlug && globalViewId && layout !== workItemFilters?.displayFilters?.layout) {
@@ -161,6 +166,8 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
               {globalWorkItemsFilter && <WorkItemFiltersRow filter={globalWorkItemsFilter} />}
               <WorkspaceActiveLayout
                 activeLayout={activeLayout ?? EIssueLayoutTypes.SPREADSHEET}
+                displayFilters={workItemFilters?.displayFilters ?? viewDetails?.display_filters}
+                displayProperties={workItemFilters?.displayProperties ?? viewDetails?.display_properties}
                 onLayoutCommit={handleLayoutCommit}
                 isDefaultView={isDefaultView}
                 isLoading={isLoading}

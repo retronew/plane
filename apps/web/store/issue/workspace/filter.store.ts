@@ -24,6 +24,7 @@ import type {
 import { EIssuesStoreType, EIssueLayoutTypes, STATIC_VIEW_TYPES } from "@plane/types";
 import { handleIssueQueryParamsByLayout } from "@plane/utils";
 // services
+import { writeCachedIssueLayout } from "@/lib/layout-cache";
 import { WorkspaceService } from "@/services/workspace.service";
 // local imports
 import type { IBaseIssueFilterStore, IIssueFilterHelperStore } from "../helpers/issue-filter-helper.store";
@@ -208,6 +209,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
       set(this.filters, [viewId, "displayProperties"], displayProperties);
       set(this.filters, [viewId, "kanbanFilters"], kanbanFilters);
     });
+    writeCachedIssueLayout("workspace-view", workspaceSlug, viewId, displayFilters.layout);
   };
 
   /**
@@ -278,7 +280,13 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
             });
           });
 
-          if (this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters))
+          const layoutChanged = previousDisplayFilters.layout !== _filters.displayFilters.layout;
+          if (layoutChanged) {
+            this.rootIssueStore.workspaceIssues.clear?.(true);
+            writeCachedIssueLayout("workspace-view", workspaceSlug, viewId, _filters.displayFilters.layout);
+          }
+
+          if (!layoutChanged && this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters))
             this.rootIssueStore.workspaceIssues.fetchIssuesWithExistingPagination(workspaceSlug, viewId, "mutation");
           if (this.requestedLayouts[viewId] === _filters.displayFilters.layout) {
             runInAction(() => {

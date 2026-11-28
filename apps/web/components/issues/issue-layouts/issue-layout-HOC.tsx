@@ -75,8 +75,10 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   const { issues, issuesFilter } = useIssues(storeType);
 
   const issueCount = issues.getGroupIssueCount(undefined, undefined, false);
+  const appliedLayout = "appliedDisplayFilters" in issues ? issues.appliedDisplayFilters?.layout : undefined;
+  const layoutMismatch = appliedLayout !== undefined && appliedLayout !== layout;
 
-  const loading = issues?.getIssueLoader() === "init-loader" || issueCount === undefined;
+  const loading = issues?.getIssueLoader() === "init-loader" || issueCount === undefined || layoutMismatch;
   useLayoutTransitionReady(!loading);
 
   if (loading) {

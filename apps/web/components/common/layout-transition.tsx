@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -25,7 +24,7 @@ const LayoutReadyContext = createContext<((ready: boolean) => void) | undefined>
 /** Loading layouts report when the real content (or empty state) can enter. */
 export function useLayoutTransitionReady(ready: boolean) {
   const reportReady = useContext(LayoutReadyContext);
-  useEffect(() => {
+  useLayoutEffect(() => {
     reportReady?.(ready);
   }, [ready, reportReady]);
 }
@@ -53,7 +52,10 @@ export function LayoutTransition<T extends string>({
 }) {
   const [visibleLayout, setVisibleLayout] = useState(layout);
   const [isEntering, setEntering] = useState(animateInitial);
+  const lastCommittedRef = useRef<T | undefined>(undefined);
   useLayoutEffect(() => {
+    if (lastCommittedRef.current === visibleLayout) return;
+    lastCommittedRef.current = visibleLayout;
     // react-doctor-disable-next-line react-doctor/no-prop-callback-in-effect -- notify the parent after the visible layout settles; this is a commit notification, not a prop mirrored into local state
     onLayoutCommit?.(visibleLayout);
   }, [visibleLayout, onLayoutCommit]);
@@ -90,6 +92,8 @@ export function LayoutTransition<T extends string>({
       onAnimationEnd={(event) => {
         if (event.target !== event.currentTarget) return;
         if (phase === "exit" && event.animationName === "project-layout-out") {
+          lastCommittedRef.current = layout;
+          onLayoutCommit?.(layout);
           setReadyLayout(undefined);
           setVisibleLayout(layout);
           setEntering(true);

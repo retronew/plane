@@ -37,8 +37,8 @@ export function SpreadsheetIssueRowLoader(props: { columnCount: number }) {
 
 export function SpreadsheetLayoutLoader({ columnCount = 5 }: { columnCount?: number }) {
   return (
-    <div className="horizontal-scroll-enable h-full w-full overflow-y-auto">
-      <table className="skeleton-delayed w-full border-separate border-spacing-0">
+    <div className="skeleton-delayed horizontal-scroll-enable h-full w-full overflow-y-auto">
+      <table className="w-full border-separate border-spacing-0">
         <thead>
           <tr>
             <th
