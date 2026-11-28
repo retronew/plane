@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { EIssueLayoutTypes, type IIssueDisplayProperties } from "@plane/types";
@@ -68,6 +69,9 @@ interface Props {
   layout: EIssueLayoutTypes;
 }
 
+const SKELETON_REVEAL_DELAY_MS = 150;
+const SKELETON_EXIT_DURATION_MS = 180;
+
 export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   const { layout } = props;
 
@@ -81,26 +85,72 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   const loading = issues?.getIssueLoader() === "init-loader" || issueCount === undefined || layoutMismatch;
   useLayoutTransitionReady(!loading);
 
+  const filters = issuesFilter?.issueFilters;
+  const propertyCount = filters?.displayProperties
+    ? Object.entries(filters.displayProperties).filter(([key, enabled]) => key !== "key" && enabled).length
+    : undefined;
+  const loaderProps: IssueLayoutLoaderProps = {
+    layout,
+    grouped: filters?.displayFilters?.group_by != null,
+    displayProperties: filters?.displayProperties,
+    propertyCount,
+    showWeekends: filters?.displayFilters?.calendar?.show_weekends,
+    calendarLayout: filters?.displayFilters?.calendar?.layout,
+  };
+
+  const loadingStartRef = useRef<number | null>(null);
+  const lastLoaderPropsRef = useRef<IssueLayoutLoaderProps>(loaderProps);
+  const [exitingSkeleton, setExitingSkeleton] = useState<IssueLayoutLoaderProps | null>(null);
+
+  useLayoutEffect(() => {
+    if (loading) {
+      lastLoaderPropsRef.current = loaderProps;
+      if (loadingStartRef.current === null) {
+        loadingStartRef.current = performance.now();
+      }
+      setExitingSkeleton(null);
+      return;
+    }
+    if (loadingStartRef.current !== null) {
+      const elapsed = performance.now() - loadingStartRef.current;
+      loadingStartRef.current = null;
+      if (elapsed >= SKELETON_REVEAL_DELAY_MS) {
+        setExitingSkeleton(lastLoaderPropsRef.current);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to loading/layout handoff transitions
+  }, [loading, layout]);
+
+  useEffect(() => {
+    if (!exitingSkeleton) return undefined;
+    const timer = window.setTimeout(() => setExitingSkeleton(null), SKELETON_EXIT_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [exitingSkeleton]);
+
   if (loading) {
-    const filters = issuesFilter?.issueFilters;
-    const propertyCount = filters?.displayProperties
-      ? Object.entries(filters.displayProperties).filter(([key, enabled]) => key !== "key" && enabled).length
-      : undefined;
-    return (
-      <IssueLayoutLoader
-        layout={layout}
-        grouped={filters?.displayFilters?.group_by != null}
-        displayProperties={filters?.displayProperties}
-        propertyCount={propertyCount}
-        showWeekends={filters?.displayFilters?.calendar?.show_weekends}
-        calendarLayout={filters?.displayFilters?.calendar?.layout}
-      />
+    return <IssueLayoutLoader {...loaderProps} />;
+  }
+
+  const content =
+    issues.getGroupIssueCount(undefined, undefined, false) === 0 && layout !== EIssueLayoutTypes.CALENDAR ? (
+      <IssueLayoutEmptyState storeType={storeType} />
+    ) : (
+      <LayoutErrorBoundary key={layout}>{props.children}</LayoutErrorBoundary>
     );
-  }
 
-  if (issues.getGroupIssueCount(undefined, undefined, false) === 0 && layout !== EIssueLayoutTypes.CALENDAR) {
-    return <IssueLayoutEmptyState storeType={storeType} />;
-  }
-
-  return <LayoutErrorBoundary key={layout}>{props.children}</LayoutErrorBoundary>;
+  return (
+    <div className="relative size-full">
+      {content}
+      {exitingSkeleton && (
+        <div
+          data-skeleton-exit=""
+          aria-hidden="true"
+          className="skeleton-exit pointer-events-none absolute inset-0 z-20 overflow-hidden bg-surface-1"
+          onAnimationEnd={() => setExitingSkeleton(null)}
+        >
+          <IssueLayoutLoader {...exitingSkeleton} />
+        </div>
+      )}
+    </div>
+  );
 });

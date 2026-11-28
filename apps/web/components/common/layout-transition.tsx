@@ -36,6 +36,8 @@ export function LayoutTransitionContent({ children }: { children: ReactNode }) {
   return children;
 }
 
+const SKELETON_VISIBLE_THRESHOLD_MS = 150;
+
 /** Finish the outgoing view before mounting the latest requested layout. */
 export function LayoutTransition<T extends string>({
   layout,
@@ -53,6 +55,7 @@ export function LayoutTransition<T extends string>({
   const [visibleLayout, setVisibleLayout] = useState(layout);
   const [isEntering, setEntering] = useState(animateInitial);
   const lastCommittedRef = useRef<T | undefined>(undefined);
+  const loadingStartedAtRef = useRef<number | null>(null);
   useLayoutEffect(() => {
     if (lastCommittedRef.current === visibleLayout) return;
     lastCommittedRef.current = visibleLayout;
@@ -64,8 +67,20 @@ export function LayoutTransition<T extends string>({
   const reportReady = useCallback(
     (ready: boolean) => {
       if (ready) {
+        const loadingElapsed =
+          loadingStartedAtRef.current !== null ? performance.now() - loadingStartedAtRef.current : 0;
+        loadingStartedAtRef.current = null;
         setReadyLayout(visibleLayout);
+        // If a skeleton was already visible during loading, keep the container at opacity: 1
+        // so the skeleton cross-fades directly into content without flashing blank white.
+        if (loadingElapsed >= SKELETON_VISIBLE_THRESHOLD_MS) {
+          enteredLayout.current = visibleLayout;
+          setEntering(false);
+        }
       } else if (enteredLayout.current !== visibleLayout) {
+        if (loadingStartedAtRef.current === null) {
+          loadingStartedAtRef.current = performance.now();
+        }
         setReadyLayout((current) => (current === visibleLayout ? undefined : current));
         setEntering(true);
       }
@@ -94,6 +109,7 @@ export function LayoutTransition<T extends string>({
         if (phase === "exit" && event.animationName === "project-layout-out") {
           lastCommittedRef.current = layout;
           onLayoutCommit?.(layout);
+          loadingStartedAtRef.current = performance.now();
           setReadyLayout(undefined);
           setVisibleLayout(layout);
           setEntering(true);
