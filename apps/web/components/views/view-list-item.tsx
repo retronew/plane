@@ -35,14 +35,16 @@ export const ProjectViewListItem = observer(function ProjectViewListItem(props: 
   return (
     <ListItem
       fullRowLink
+      leftElementClassName="gap-2.5"
+      actionItemContainerClassName="gap-2.5"
       prependTitleElement={
-        <>
+        <span className="grid size-5 shrink-0 place-items-center">
           {view?.logo_props?.in_use ? (
             <Logo logo={view?.logo_props} size={16} type="lucide" />
           ) : (
             <ViewsOutline className="h-4 w-4 text-tertiary" />
           )}
-        </>
+        </span>
       }
       title={view.name}
       itemLink={`/${workspaceSlug}/projects/${projectId}/views/${view.id}`}
