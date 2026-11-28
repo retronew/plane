@@ -76,6 +76,7 @@ export const AddFilterButton = observer(function AddFilterButton<P extends TFilt
     <AddFilterDropdown
       {...props}
       keepOpenOnMultiSelect
+      syncWithApplied
       handleFilterSelect={handleFilterSelect}
       triggerAriaLabel={label ? undefined : t("common.filters")}
       customButton={

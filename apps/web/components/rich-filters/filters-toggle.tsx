@@ -10,9 +10,10 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { FilterToggleButton } from "@/components/common/filter-toggle-button";
 import { useTranslation } from "@plane/i18n";
 import type { IFilterInstance } from "@plane/shared-state";
-import type { TExternalFilter, TFilterProperty } from "@plane/types";
+import type { SingleOrArray, TExternalFilter, TFilterProperty, TFilterValue, TSupportedOperators } from "@plane/types";
+import { LOGICAL_OPERATOR } from "@plane/types";
 // components
-import { AddFilterButton } from "@/components/rich-filters/add-filters/button";
+import { AddFilterDropdown } from "@/components/rich-filters/add-filters/dropdown";
 
 type TFiltersToggleProps<P extends TFilterProperty, E extends TExternalFilter> = {
   filter: IFilterInstance<P, E> | undefined;
@@ -27,48 +28,48 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
   // derived values
   const activeConditionCount = filter?.allConditionsForDisplay.length ?? 0;
   const hasAnyConditions = activeConditionCount > 0;
-  const isFilterRowVisible = filter?.isVisible ?? false;
   const hasUpdates = filter?.canUpdateView === true && filter?.hasChanges === true;
-  const showFilterRowChangesPill = hasUpdates || hasAnyConditions === true;
-  const showAddFilterButton = !hasAnyConditions && !isFilterRowVisible && !hasUpdates;
+  const isActive = hasUpdates || hasAnyConditions;
 
-  const handleToggleFilter = () => {
-    if (!filter) {
-      console.error("Filters toggle error - filter instance not available");
-      return;
-    }
-    filter.toggleVisibility();
-  };
-
-  // Show the add filter button when there are no active conditions, the filter row is hidden, and no unsaved changes exist
-  if (filter && showAddFilterButton) {
+  if (!filter) {
     return (
       <Tooltip label={t("common.filters")} side="bottom">
         <span className="inline-flex">
-          <AddFilterButton
-            filter={filter}
-            buttonConfig={{
-              variant: "secondary",
-              size: "md",
-              label: null,
-            }}
-            onFilterSelect={() => filter?.toggleVisibility(true)}
-          />
+          <FilterToggleButton size="md" active={false} disabled aria-label={t("common.filters")} />
         </span>
       </Tooltip>
     );
   }
 
+  const handleFilterSelect = (
+    property: P,
+    operator: TSupportedOperators,
+    isNegation: boolean,
+    value?: SingleOrArray<TFilterValue>
+  ) => {
+    filter.addCondition(
+      LOGICAL_OPERATOR.AND,
+      {
+        property,
+        operator,
+        value,
+      },
+      isNegation
+    );
+    filter.toggleVisibility(true);
+  };
+
   return (
     <Tooltip label={t("common.filters")} side="bottom">
       <span className="inline-flex">
-        <FilterToggleButton
-          size="md"
-          active={showFilterRowChangesPill}
-          count={activeConditionCount}
-          onClick={handleToggleFilter}
-          aria-label={t("common.filters")}
-          aria-pressed={isFilterRowVisible}
+        <AddFilterDropdown
+          filter={filter}
+          align="end"
+          keepOpenOnMultiSelect
+          syncWithApplied
+          triggerAriaLabel={t("common.filters")}
+          handleFilterSelect={handleFilterSelect}
+          customButton={<FilterToggleButton size="md" active={isActive} count={activeConditionCount} renderAsSpan />}
         />
       </span>
     </Tooltip>

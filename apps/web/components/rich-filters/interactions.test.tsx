@@ -221,7 +221,7 @@ it("searches static option values across fields in one step without triggering a
   fireEvent.click(await screen.findByRole("button", { name: "优先级: 紧急" }));
   expect(select).toHaveBeenCalledExactlyOnceWith("priority", "in", false, ["urgent"]);
 });
-it("keeps multi-select drill-in open to toggle multiple values in one session", async () => {
+it("keeps multi-select hover flyout open and syncs checkmarks and counts with applied conditions", async () => {
   const { filter, changed } = instance();
   filter.configManager.registerAll([
     {
@@ -248,6 +248,7 @@ it("keeps multi-select drill-in open to toggle multiple values in one session", 
     <AddFilterDropdown
       filter={filter}
       keepOpenOnMultiSelect
+      syncWithApplied
       handleFilterSelect={(property, operator, isNegation, value) =>
         filter.addCondition(LOGICAL_OPERATOR.AND, { property, operator, value }, isNegation)
       }
@@ -255,9 +256,12 @@ it("keeps multi-select drill-in open to toggle multiple values in one session", 
     />
   );
   fireEvent.click(screen.getByRole("button", { name: "筛选" }));
-  fireEvent.click(await screen.findByRole("button", { name: "优先级" }));
+  fireEvent.keyDown(await screen.findByRole("button", { name: "优先级" }), { key: "ArrowRight" });
   fireEvent.click(await screen.findByRole("button", { name: "紧急" }));
-  // Popover stays open so the second value can be toggled without reopening
+  // Flyout stays open so the second value can be toggled and checked without reopening
   fireEvent.click(await screen.findByRole("button", { name: "高" }));
   expect(changed).toHaveBeenLastCalledWith({ priority__in: "urgent,high" });
+  // Toggling an already selected value off removes it cleanly in sync with the chip below
+  fireEvent.click(await screen.findByRole("button", { name: "紧急" }));
+  expect(changed).toHaveBeenLastCalledWith({ priority__in: "high" });
 });
