@@ -1,7 +1,9 @@
 import {
   createContext,
+  memo,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -36,7 +38,16 @@ export function LayoutTransitionContent({ children }: { children: ReactNode }) {
   return children;
 }
 
-const SKELETON_VISIBLE_THRESHOLD_MS = 150;
+const SKELETON_VISIBLE_THRESHOLD_MS = 40;
+const EXIT_ANIMATION_FALLBACK_MS = 220;
+const ENTER_ANIMATION_FALLBACK_MS = 320;
+
+const LayoutSlot = memo(
+  function LayoutSlot({ renderLayout }: { visibleLayout: string; frozen: boolean; renderLayout: () => ReactNode }) {
+    return <>{renderLayout()}</>;
+  },
+  (prev, next) => next.frozen && prev.visibleLayout === next.visibleLayout
+);
 
 /** Finish the outgoing view before mounting the latest requested layout. */
 export function LayoutTransition<T extends string>({
@@ -64,6 +75,18 @@ export function LayoutTransition<T extends string>({
   }, [visibleLayout, onLayoutCommit]);
   const [readyLayout, setReadyLayout] = useState<T | undefined>(animateInitial ? undefined : layout);
   const enteredLayout = useRef<T | undefined>(animateInitial ? undefined : layout);
+  const commitOutgoingExit = useCallback(() => {
+    lastCommittedRef.current = layout;
+    onLayoutCommit?.(layout);
+    loadingStartedAtRef.current = performance.now();
+    setReadyLayout(undefined);
+    setVisibleLayout(layout);
+    setEntering(true);
+  }, [layout, onLayoutCommit]);
+  const settleIncomingEnter = useCallback(() => {
+    enteredLayout.current = visibleLayout;
+    setEntering(false);
+  }, [visibleLayout]);
   const reportReady = useCallback(
     (ready: boolean) => {
       if (ready) {
@@ -100,6 +123,20 @@ export function LayoutTransition<T extends string>({
         : isEntering
           ? "enter"
           : "idle";
+
+  // Guard against dropped/throttled CSS animationend events so exit/enter never stall.
+  useEffect(() => {
+    if (phase === "exit") {
+      const timer = window.setTimeout(commitOutgoingExit, EXIT_ANIMATION_FALLBACK_MS);
+      return () => window.clearTimeout(timer);
+    }
+    if (phase === "enter") {
+      const timer = window.setTimeout(settleIncomingEnter, ENTER_ANIMATION_FALLBACK_MS);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [phase, commitOutgoingExit, settleIncomingEnter]);
+
   return (
     <div
       className="project-layout-transition h-full min-h-0 w-full"
@@ -107,20 +144,18 @@ export function LayoutTransition<T extends string>({
       onAnimationEnd={(event) => {
         if (event.target !== event.currentTarget) return;
         if (phase === "exit" && event.animationName === "project-layout-out") {
-          lastCommittedRef.current = layout;
-          onLayoutCommit?.(layout);
-          loadingStartedAtRef.current = performance.now();
-          setReadyLayout(undefined);
-          setVisibleLayout(layout);
-          setEntering(true);
+          commitOutgoingExit();
         } else if (phase === "enter" && event.animationName === "project-layout-in") {
-          enteredLayout.current = visibleLayout;
-          setEntering(false);
+          settleIncomingEnter();
         }
       }}
     >
       <LayoutReadyContext.Provider key={visibleLayout} value={readyContext}>
-        {children(visibleLayout)}
+        <LayoutSlot
+          visibleLayout={visibleLayout}
+          frozen={phase === "exit"}
+          renderLayout={() => children(visibleLayout)}
+        />
       </LayoutReadyContext.Provider>
     </div>
   );

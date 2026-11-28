@@ -241,6 +241,14 @@ body {
     plane-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 290ms infinite;
 }
 
+/* During an explicit layout mode switch the outgoing view already faded out, so
+ * reveal the incoming layout's matching skeleton promptly instead of holding a white gap. */
+[data-project-transition="loading"] .skeleton-delayed {
+  animation:
+    plane-skeleton-reveal 120ms ease-out 40ms both,
+    plane-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 160ms infinite;
+}
+
 .skeleton-exit {
   animation: plane-skeleton-exit 150ms ease-out forwards;
 }
@@ -253,6 +261,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .skeleton-delayed {
     animation: plane-skeleton-reveal 1ms step-end 150ms both;
+  }
+
+  [data-project-transition="loading"] .skeleton-delayed {
+    animation: plane-skeleton-reveal 1ms step-end 40ms both;
   }
 
   .skeleton-exit {

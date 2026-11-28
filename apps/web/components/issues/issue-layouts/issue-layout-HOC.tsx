@@ -69,8 +69,34 @@ interface Props {
   layout: EIssueLayoutTypes;
 }
 
-const SKELETON_REVEAL_DELAY_MS = 150;
+const SKELETON_REVEAL_DELAY_MS = 40;
 const SKELETON_EXIT_DURATION_MS = 180;
+
+// Left-side list properties (key, priority, state) and conditional badge counts don't occupy
+// fixed right-side pill slots on every row; exclude them so ListLayoutLoader matches real rows.
+const RIGHT_SIDE_LIST_PROPERTIES = new Set([
+  "start_date",
+  "due_date",
+  "assignee",
+  "labels",
+  "estimate",
+  "cycle",
+  "module",
+  "created_on",
+  "updated_on",
+]);
+
+function countSkeletonProperties(
+  layout: EIssueLayoutTypes,
+  displayProperties: IIssueDisplayProperties | undefined
+): number | undefined {
+  if (!displayProperties) return undefined;
+  const entries = Object.entries(displayProperties);
+  if (layout === EIssueLayoutTypes.LIST) {
+    return entries.filter(([key, enabled]) => enabled && RIGHT_SIDE_LIST_PROPERTIES.has(key)).length;
+  }
+  return entries.filter(([key, enabled]) => key !== "key" && enabled).length;
+}
 
 export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   const { layout } = props;
@@ -86,9 +112,7 @@ export const IssueLayoutHOC = observer(function IssueLayoutHOC(props: Props) {
   useLayoutTransitionReady(!loading);
 
   const filters = issuesFilter?.issueFilters;
-  const propertyCount = filters?.displayProperties
-    ? Object.entries(filters.displayProperties).filter(([key, enabled]) => key !== "key" && enabled).length
-    : undefined;
+  const propertyCount = countSkeletonProperties(layout, filters?.displayProperties);
   const loaderProps: IssueLayoutLoaderProps = {
     layout,
     grouped: filters?.displayFilters?.group_by != null,
