@@ -43,20 +43,22 @@ it("translates comparison operators and date comparisons, including a language s
   expect(getOperatorLabel("in")).toBe("is any of");
   expect(getDateOperatorLabel("range")).toBe("between");
 });
-it("shows a tooltip on the active filter trigger and still toggles the filter row", async () => {
-  const toggleVisibility = vi.fn();
+it("shows a tooltip on the active filter trigger and displays the active filter count", async () => {
   const filter = {
+    allConditions: [{ id: "one", property: "priority", operator: "in", value: ["urgent"] }],
     allConditionsForDisplay: [{ id: "one" }],
-    isVisible: false,
-    toggleVisibility,
+    configManager: { filterConfigs: new Map(), allAvailableConfigs: [] },
+    isVisible: true,
+    canClearFilters: true,
+    addCondition: vi.fn(),
+    toggleVisibility: vi.fn(),
+    clearFilters: vi.fn(async () => {}),
   } as unknown as IFilterInstance<TFilterProperty, TExternalFilter>;
   render(<FiltersToggle filter={filter} />);
   const button = screen.getByRole("button", { name: "筛选" });
+  expect(button.querySelector("[data-filter-count]")?.textContent).toBe("1");
   hover(button);
   expect((await screen.findByRole("tooltip")).textContent).toBe("筛选");
-  fireEvent.click(button);
-  expect(toggleVisibility).toHaveBeenCalledOnce();
-  expect(button.getAttribute("aria-pressed")).toBe("false");
 });
 it("preserves member names, missing-selection counts, and removal controls inside a condition", () => {
   render(

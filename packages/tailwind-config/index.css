@@ -200,3 +200,75 @@ body {
     transition-property: opacity, transform, translate, rotate, scale;
   }
 }
+
+/* ---------- Delayed skeleton reveal & seamless exit ----------
+ * Keep page-level skeletons invisible for the first 150ms so fast API responses
+ * and cached route transitions move straight to content without flashing gray
+ * placeholders. Slower loads (>150ms) fade in smoothly and then pulse; once real
+ * content arrives, `.skeleton-exit` dissolves the skeleton directly over content
+ * so the viewport never flashes blank white between skeleton and content. */
+@keyframes plane-skeleton-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes plane-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes plane-skeleton-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.skeleton-delayed {
+  animation:
+    plane-skeleton-reveal 140ms ease-out 150ms both,
+    plane-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 290ms infinite;
+}
+
+/* During an explicit layout mode switch the outgoing view already faded out, so
+ * reveal the incoming layout's matching skeleton promptly instead of holding a white gap. */
+[data-project-transition="loading"] .skeleton-delayed {
+  animation:
+    plane-skeleton-reveal 120ms ease-out 40ms both,
+    plane-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 160ms infinite;
+}
+
+.skeleton-exit {
+  animation: plane-skeleton-exit 150ms ease-out forwards;
+}
+
+[data-skeleton-exit] .skeleton-delayed {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-delayed {
+    animation: plane-skeleton-reveal 1ms step-end 150ms both;
+  }
+
+  [data-project-transition="loading"] .skeleton-delayed {
+    animation: plane-skeleton-reveal 1ms step-end 40ms both;
+  }
+
+  .skeleton-exit {
+    animation: none;
+    opacity: 0;
+  }
+}

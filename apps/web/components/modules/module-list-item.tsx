@@ -76,15 +76,15 @@ export const ModuleListItem = observer(function ModuleListItem(props: Props) {
       fullRowLink
       itemClassName="lg:min-w-0 lg:flex-1"
       titleClassName="lg:whitespace-normal lg:break-words"
-      leftElementClassName="lg:overflow-visible"
+      leftElementClassName="gap-2.5 lg:overflow-visible"
       actionItemContainerClassName="gap-2 lg:gap-3"
       title={moduleDetails?.name ?? ""}
       itemLink={`/${workspaceSlug?.toString()}/projects/${moduleDetails.project_id}/modules/${moduleDetails.id}`}
       onItemClick={handleItemClick}
       prependTitleElement={
-        <>
+        <span className="flex shrink-0 items-center gap-2.5">
           <ModuleIdentity id={moduleDetails.id} name={moduleDetails.name} className="size-6 text-10" />
-          <div className="relative size-[30px]">
+          <div className="relative size-[30px] shrink-0">
             <div className="absolute inset-0 flex scale-150 items-center justify-center">
               <CircularProgress
                 value={progress}
@@ -107,7 +107,7 @@ export const ModuleListItem = observer(function ModuleListItem(props: Props) {
               )}
             </div>
           </div>
-        </>
+        </span>
       }
       actionableItems={<ModuleListItemAction moduleId={moduleId} moduleDetails={moduleDetails} parentRef={parentRef} />}
       quickActionElement={

@@ -8,7 +8,7 @@ import { range } from "lodash-es";
 
 export function CycleModuleListLayoutLoader() {
   return (
-    <div className="h-full overflow-y-auto motion-safe:animate-pulse">
+    <div className="skeleton-delayed h-full overflow-y-auto">
       <div className="flex h-full w-full justify-between">
         <div className="flex h-full w-full flex-col overflow-y-auto">
           {range(5).map((i) => (

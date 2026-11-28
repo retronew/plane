@@ -293,8 +293,9 @@ export class ModulesStore implements IModuleStore {
    * @returns IModule[]
    */
   fetchModules = async (workspaceSlug: string, projectId: string) => {
+    const isInitialLoad = !this.fetchedMap[projectId];
     try {
-      this.loader = true;
+      if (isInitialLoad) this.loader = true;
       await this.moduleService.getModules(workspaceSlug, projectId).then((response) => {
         runInAction(() => {
           response.forEach((module) => {
@@ -318,8 +319,9 @@ export class ModulesStore implements IModuleStore {
    * @returns IModule[]
    */
   fetchModulesSlim = async (workspaceSlug: string, projectId: string) => {
+    const isInitialLoad = !this.fetchedMap[projectId];
     try {
-      this.loader = true;
+      if (isInitialLoad) this.loader = true;
       await this.moduleService.getWorkspaceModules(workspaceSlug).then((response) => {
         const projectModules = response.filter((module) => module.project_id === projectId);
         runInAction(() => {

@@ -152,12 +152,24 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection({
 
 export function ModuleFiltersDropdown(props: Props & { isFiltersApplied?: boolean }) {
   const { t } = useTranslation();
+  const activeCount =
+    Object.values(props.filters ?? {}).reduce(
+      (total, value) => total + (Array.isArray(value) ? value.length : value ? 1 : 0),
+      0
+    ) + (props.displayFilters?.favorites ? 1 : 0);
   return (
     <Popover.Root>
       <Tooltip label={t("common.filters")} side="bottom">
         <span className="inline-flex">
           <Popover.Trigger
-            render={<FilterToggleButton size="md" active={!!props.isFiltersApplied} aria-label={t("common.filters")} />}
+            render={
+              <FilterToggleButton
+                size="md"
+                active={!!props.isFiltersApplied}
+                count={activeCount}
+                aria-label={t("common.filters")}
+              />
+            }
           />
         </span>
       </Tooltip>

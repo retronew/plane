@@ -103,3 +103,29 @@ it("starts directly in idle on initial mount when animateInitial is false, then 
   finish(root, "project-layout-in");
   expect(root.getAttribute("data-project-transition")).toBe("idle");
 });
+
+it("skips the opacity-0 enter reset when a loading skeleton was already visible", () => {
+  let now = 1000;
+  const nowSpy = vi.spyOn(performance, "now").mockImplementation(() => now);
+  try {
+    const draw = (layout: string, ready: boolean) => (
+      <LayoutTransition layout={layout} waitForReady animateInitial={false}>
+        {(shown) => <Content layout={shown} ready={ready} />}
+      </LayoutTransition>
+    );
+    const { container, rerender } = render(draw("list", true));
+    const root = container.firstElementChild!;
+
+    rerender(draw("kanban", false));
+    finish(root, "project-layout-out");
+    expect(root.getAttribute("data-project-transition")).toBe("loading");
+
+    // Loading lasts longer than the skeleton reveal delay (150ms)
+    now += 300;
+    rerender(draw("kanban", true));
+    expect(screen.getByText("Content kanban")).toBeTruthy();
+    expect(root.getAttribute("data-project-transition")).toBe("idle");
+  } finally {
+    nowSpy.mockRestore();
+  }
+});

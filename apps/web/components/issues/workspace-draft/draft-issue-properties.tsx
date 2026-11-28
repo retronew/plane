@@ -39,6 +39,7 @@ export interface IIssueProperties {
     | ((projectId: string | null, issueId: string, data: Partial<TWorkspaceDraftIssue>) => Promise<void>)
     | undefined;
   className: string;
+  hideInlineLeftProperties?: boolean;
 }
 
 const handleEventPropagation = (e: React.MouseEvent) => {
@@ -62,7 +63,7 @@ const getDefaultLabelOptions = (labelIds: string[] | undefined, labelMap: Record
   }) || [];
 
 export const DraftIssueProperties = observer(function DraftIssueProperties(props: IIssueProperties) {
-  const { issue, updateIssue, className } = props;
+  const { issue, updateIssue, className, hideInlineLeftProperties = false } = props;
   const { t } = useTranslation();
   // store hooks
   const { getProjectById } = useProject();
@@ -157,23 +158,27 @@ export const DraftIssueProperties = observer(function DraftIssueProperties(props
   return (
     <div className={className}>
       {/* basic properties */}
-      {/* state */}
-      <div role="presentation" onClick={handleEventPropagation}>
-        <StateSelect
-          issueTypeId={issue.type_id}
-          isForWorkItemCreation
-          value={issue.state_id}
-          onChange={handleState}
-          projectId={issue.project_id}
-          variant="pill-sm"
-          tooltip
-        />
-      </div>
+      {!hideInlineLeftProperties && (
+        <>
+          {/* state */}
+          <div role="presentation" onClick={handleEventPropagation}>
+            <StateSelect
+              issueTypeId={issue.type_id}
+              isForWorkItemCreation
+              value={issue.state_id}
+              onChange={handleState}
+              projectId={issue.project_id}
+              variant="pill-sm"
+              tooltip
+            />
+          </div>
 
-      {/* priority */}
-      <div role="presentation" onClick={handleEventPropagation}>
-        <PrioritySelect value={issue?.priority} onChange={handlePriority} variant="pill-sm" tooltip />
-      </div>
+          {/* priority */}
+          <div role="presentation" onClick={handleEventPropagation}>
+            <PrioritySelect value={issue?.priority} onChange={handlePriority} variant="pill-sm" tooltip />
+          </div>
+        </>
+      )}
 
       {/* label */}
 

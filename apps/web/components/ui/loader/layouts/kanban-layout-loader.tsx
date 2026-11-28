@@ -65,7 +65,7 @@ export function KanbanLayoutLoader({ displayProperties }: CardProps) {
   return (
     <div
       aria-hidden="true"
-      className="horizontal-scrollbar pointer-events-none scrollbar-md h-full overflow-x-auto overflow-y-hidden bg-surface-1"
+      className="horizontal-scrollbar skeleton-delayed pointer-events-none scrollbar-md h-full overflow-x-auto overflow-y-hidden bg-surface-1"
       inert
     >
       <ContentWrapper className="h-full w-max! min-w-full flex-row gap-4 overflow-hidden p-4!">

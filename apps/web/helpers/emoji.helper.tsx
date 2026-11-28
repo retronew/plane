@@ -21,7 +21,10 @@ export const renderEmoji = (
 
   if (typeof emoji === "object")
     return (
-      <span style={{ fontSize: "16px", color: emoji.color }} className="material-symbols-rounded">
+      <span
+        style={{ fontSize: "16px", color: emoji.color }}
+        className="material-symbols-rounded inline-flex size-4 shrink-0 items-center justify-center overflow-hidden leading-none"
+      >
         {emoji.name}
       </span>
     );

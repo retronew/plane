@@ -25,9 +25,11 @@ import { EIssuesStoreType } from "@plane/types";
 import { handleIssueQueryParamsByLayout } from "@plane/utils";
 import type { IBaseIssueFilterStore } from "../helpers/issue-filter-helper.store";
 import { IssueFilterHelperStore } from "../helpers/issue-filter-helper.store";
+import { createDebouncedFilterSync } from "../helpers/debounced-filter-sync";
 // helpers
 // types
 import type { IIssueRootStore } from "../root.store";
+import { writeCachedIssueLayout } from "@/lib/layout-cache";
 import { ProjectService } from "@/services/project";
 // constants
 // services
@@ -173,6 +175,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       set(this.filters, [projectId, "displayProperties"], displayProperties);
       set(this.filters, [projectId, "kanbanFilters"], kanbanFilters);
     });
+    writeCachedIssueLayout("project", workspaceSlug, projectId, displayFilters.layout);
   };
 
   fetchFilters = async (workspaceSlug: string, projectId: string) => {
@@ -182,6 +185,9 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     );
     this.hydrateFromUserProperties(workspaceSlug, projectId, _filters);
   };
+
+  // debounced sync for rapid multi-select filter changes
+  private filterSync = createDebouncedFilterSync();
 
   /**
    * NOTE: This method is designed as a fallback function for the work item filter store.
@@ -198,9 +204,15 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
         set(this.filters, [projectId, "richFilters"], filters);
       });
 
-      this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
-      await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
-        rich_filters: filters,
+      const isClearing = !filters || Object.keys(filters).length === 0;
+      await this.filterSync.schedule(projectId, {
+        immediate: isClearing,
+        fetch: () =>
+          this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation"),
+        persist: () =>
+          this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
+            rich_filters: filters,
+          }),
       });
     } catch (error) {
       console.log("error while updating rich filters", error);
@@ -256,11 +268,13 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
             });
           });
 
-          if (previousDisplayFilters.layout !== _filters.displayFilters.layout) {
+          const layoutChanged = previousDisplayFilters.layout !== _filters.displayFilters.layout;
+          if (layoutChanged) {
             this.rootIssueStore.projectIssues.clear(true); // clear issues for local store when some filters like layout changes
+            writeCachedIssueLayout("project", workspaceSlug, projectId, _filters.displayFilters.layout);
           }
 
-          if (this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
+          if (!layoutChanged && this.getShouldReFetchIssues(previousDisplayFilters, _filters.displayFilters)) {
             this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
           }
 

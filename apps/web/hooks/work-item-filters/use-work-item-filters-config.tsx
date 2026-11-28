@@ -466,9 +466,8 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [t]
   );
 
-  return {
-    areAllConfigsInitialized,
-    configs: [
+  const configs = useMemo(
+    () => [
       ...textConfigs,
       stateFilterConfig,
       stateGroupFilterConfig,
@@ -487,7 +486,29 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       createdByFilterConfig,
       subscriberFilterConfig,
     ],
-    configMap: {
+    [
+      textConfigs,
+      stateFilterConfig,
+      stateGroupFilterConfig,
+      stateDurationFilterConfig,
+      assigneeFilterConfig,
+      priorityFilterConfig,
+      projectFilterConfig,
+      excludedProjectFilterConfig,
+      mentionFilterConfig,
+      labelFilterConfig,
+      workspaceRelationConfigs,
+      startDateFilterConfig,
+      targetDateFilterConfig,
+      createdAtFilterConfig,
+      updatedAtFilterConfig,
+      createdByFilterConfig,
+      subscriberFilterConfig,
+    ]
+  );
+
+  const configMap = useMemo(
+    () => ({
       project_id: projectFilterConfig,
       excluded_project_id: excludedProjectFilterConfig,
       state_group: stateGroupFilterConfig,
@@ -507,8 +528,38 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       target_date: targetDateFilterConfig,
       created_at: createdAtFilterConfig,
       updated_at: updatedAtFilterConfig,
-    },
-    isFilterEnabled,
-    members: members ?? [],
-  };
+    }),
+    [
+      projectFilterConfig,
+      excludedProjectFilterConfig,
+      stateGroupFilterConfig,
+      stateDurationFilterConfig,
+      stateFilterConfig,
+      labelFilterConfig,
+      workspaceRelationConfigs,
+      textConfigs,
+      assigneeFilterConfig,
+      mentionFilterConfig,
+      createdByFilterConfig,
+      subscriberFilterConfig,
+      priorityFilterConfig,
+      startDateFilterConfig,
+      targetDateFilterConfig,
+      createdAtFilterConfig,
+      updatedAtFilterConfig,
+    ]
+  );
+
+  const resolvedMembers = useMemo(() => members ?? [], [members]);
+
+  return useMemo(
+    () => ({
+      areAllConfigsInitialized,
+      configs,
+      configMap,
+      isFilterEnabled,
+      members: resolvedMembers,
+    }),
+    [areAllConfigsInitialized, configs, configMap, isFilterEnabled, resolvedMembers]
+  );
 };

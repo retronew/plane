@@ -69,7 +69,7 @@ const MemberProjectActiveCycle = observer(function MemberProjectActiveCycle({
   } = useSWR(
     ["project-active-cycle-history", workspaceSlug, projectId, cycleId],
     () => cycleService.workspaceActiveCyclesProgressPro(workspaceSlug, projectId, cycleId),
-    { refreshInterval: 60_000, revalidateOnFocus: true }
+    { refreshInterval: 60_000, revalidateOnFocus: false }
   );
 
   if (detailsError || projectError || historyError) {

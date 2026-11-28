@@ -26,5 +26,7 @@ describe("loading status semantics", () => {
       expect(status.tagName).toBe("OUTPUT");
       expect(status.classList.contains("block")).toBe(true);
     }
+    expect(statuses[0]?.classList.contains("skeleton-delayed")).toBe(true);
+    expect(statuses[1]?.classList.contains("skeleton-delayed")).toBe(true);
   });
 });

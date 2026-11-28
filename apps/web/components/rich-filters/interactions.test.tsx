@@ -173,3 +173,95 @@ it("supports static option arrays as well as async loaders", async () => {
   });
   expect(setOptions).toHaveBeenCalledExactlyOnceWith([{ id: "one", value: "one", label: "一" }]);
 });
+it("searches static option values across fields in one step without triggering async loaders", async () => {
+  const { filter } = instance();
+  const asyncLoader = vi.fn(async () => [{ id: "l1", value: "l1", label: "后端" }]);
+  filter.configManager.registerAll([
+    {
+      id: "priority",
+      label: "优先级",
+      isEnabled: true,
+      supportedOperatorConfigsMap: new Map([
+        [
+          "in",
+          {
+            type: FILTER_FIELD_TYPE.MULTI_SELECT,
+            isOperatorEnabled: true,
+            singleValueOperator: "exact",
+            getOptions: [
+              { id: "urgent", value: "urgent", label: "紧急" },
+              { id: "high", value: "high", label: "高" },
+            ],
+          },
+        ],
+      ]),
+    },
+    {
+      id: "label_id",
+      label: "标签",
+      isEnabled: true,
+      supportedOperatorConfigsMap: new Map([
+        [
+          "in",
+          {
+            type: FILTER_FIELD_TYPE.MULTI_SELECT,
+            isOperatorEnabled: true,
+            singleValueOperator: "exact",
+            getOptions: asyncLoader,
+          },
+        ],
+      ]),
+    },
+  ]);
+  const select = vi.fn();
+  render(<AddFilterDropdown filter={filter} handleFilterSelect={select} customButton="筛选" />);
+  fireEvent.click(screen.getByRole("button", { name: "筛选" }));
+  fireEvent.change(await screen.findByRole("textbox", { name: "搜索" }), { target: { value: "紧急" } });
+  expect(asyncLoader).not.toHaveBeenCalled();
+  fireEvent.click(await screen.findByRole("button", { name: "优先级: 紧急" }));
+  expect(select).toHaveBeenCalledExactlyOnceWith("priority", "in", false, ["urgent"]);
+});
+it("keeps multi-select hover flyout open and syncs checkmarks and counts with applied conditions", async () => {
+  const { filter, changed } = instance();
+  filter.configManager.registerAll([
+    {
+      id: "priority",
+      label: "优先级",
+      isEnabled: true,
+      supportedOperatorConfigsMap: new Map([
+        [
+          "in",
+          {
+            type: FILTER_FIELD_TYPE.MULTI_SELECT,
+            isOperatorEnabled: true,
+            singleValueOperator: "exact",
+            getOptions: [
+              { id: "urgent", value: "urgent", label: "紧急" },
+              { id: "high", value: "high", label: "高" },
+            ],
+          },
+        ],
+      ]),
+    },
+  ]);
+  render(
+    <AddFilterDropdown
+      filter={filter}
+      keepOpenOnMultiSelect
+      syncWithApplied
+      handleFilterSelect={(property, operator, isNegation, value) =>
+        filter.addCondition(LOGICAL_OPERATOR.AND, { property, operator, value }, isNegation)
+      }
+      customButton="筛选"
+    />
+  );
+  fireEvent.click(screen.getByRole("button", { name: "筛选" }));
+  fireEvent.keyDown(await screen.findByRole("button", { name: "优先级" }), { key: "ArrowRight" });
+  fireEvent.click(await screen.findByRole("button", { name: "紧急" }));
+  // Flyout stays open so the second value can be toggled and checked without reopening
+  fireEvent.click(await screen.findByRole("button", { name: "高" }));
+  expect(changed).toHaveBeenLastCalledWith({ priority__in: "urgent,high" });
+  // Toggling an already selected value off removes it cleanly in sync with the chip below
+  fireEvent.click(await screen.findByRole("button", { name: "紧急" }));
+  expect(changed).toHaveBeenLastCalledWith({ priority__in: "high" });
+});

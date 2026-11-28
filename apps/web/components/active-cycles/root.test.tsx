@@ -23,6 +23,7 @@ vi.mock("@/services/cycle.service", () => ({
 }));
 vi.mock("@plane/blocks/empty-state", () => ({
   EmptyStateDetailed: ({ title }: { title: string }) => <div>{title}</div>,
+  preloadDetailedAsset: vi.fn(),
 }));
 vi.mock("./cycle-card", () => ({
   WorkspaceCycleCard: ({ cycle, workspaceSlug }: { cycle: typeof cycleFixture; workspaceSlug: string }) => (

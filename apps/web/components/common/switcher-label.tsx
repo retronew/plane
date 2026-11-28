@@ -28,12 +28,12 @@ export function SwitcherIcon({ logo_props, logo_url, LabelIcon, size = 12, type 
       <img
         src={getFileURL(logo_url)}
         alt="logo"
-        className="rounded-xs object-cover"
+        className="shrink-0 rounded-xs object-cover"
         style={{ height: size, width: size }}
       />
     );
   }
-  return <LabelIcon height={size} width={size} />;
+  return <LabelIcon className="shrink-0" height={size} width={size} />;
 }
 
 type TSwitcherLabelProps = {

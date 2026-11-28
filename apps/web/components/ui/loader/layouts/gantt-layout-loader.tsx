@@ -19,7 +19,7 @@ export function GanttLayoutListItemLoader() {
 
 export function GanttLayoutLoader() {
   return (
-    <div className="flex h-full flex-col overflow-x-auto motion-safe:animate-pulse">
+    <div className="skeleton-delayed flex h-full flex-col overflow-x-auto">
       <div className="flex min-h-11 w-full items-center gap-3 border-b border-subtle px-4">
         <div className="h-6 w-20 rounded-sm bg-layer-3" />
         <div className="ml-auto flex items-center gap-2">

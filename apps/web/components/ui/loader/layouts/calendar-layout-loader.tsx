@@ -31,7 +31,7 @@ export function CalendarLayoutLoader({
 }) {
   const columns = showWeekends ? 7 : 5;
   return (
-    <div className="h-full w-full animate-pulse overflow-y-auto bg-surface-1">
+    <div className="skeleton-delayed h-full w-full overflow-y-auto bg-surface-1">
       <span
         className={`relative grid ${showWeekends ? "grid-cols-7" : "grid-cols-5"} divide-x-[0.5px] divide-subtle-1 text-13 font-medium`}
       >

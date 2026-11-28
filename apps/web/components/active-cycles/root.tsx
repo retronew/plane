@@ -1,9 +1,10 @@
+import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { isAxiosError } from "axios";
 import useSWRInfinite from "swr/infinite";
 import { Button } from "@makeplane/propel/components/button";
-import { EmptyStateDetailed } from "@plane/blocks/empty-state";
+import { EmptyStateDetailed, preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import type { IWorkspaceActiveCyclesResponse } from "@plane/types";
@@ -31,6 +32,9 @@ const getLoadingMore = (isValidating: boolean, data: IWorkspaceActiveCyclesRespo
   isValidating || (!!data && size > data.length);
 
 export const WorkspaceActiveCycles = observer(function WorkspaceActiveCycles() {
+  useEffect(() => {
+    preloadDetailedAsset("cycle");
+  }, []);
   const { workspaceSlug: slug } = useParams();
   const workspaceSlug = slug?.toString() ?? "";
   const { t } = useTranslation();
@@ -45,7 +49,7 @@ export const WorkspaceActiveCycles = observer(function WorkspaceActiveCycles() {
       getActiveCyclesKey(workspaceSlug, allowed),
       ([, workspace, cursor]: readonly [string, string, string]) =>
         cycleService.workspaceActiveCycles(workspace, cursor, PAGE_SIZE),
-      { shouldRetryOnError: false, revalidateOnFocus: true }
+      { shouldRetryOnError: false, revalidateOnFocus: false }
     );
   const denied = isDenied(allowed, error);
   const cycles = [...new Map((data ?? []).flatMap((page) => page.results).map((cycle) => [cycle.id, cycle])).values()];

@@ -427,8 +427,9 @@ export class CycleStore implements ICycleStore {
    * @returns
    */
   fetchAllCycles = async (workspaceSlug: string, projectId: string) => {
+    const isInitialLoad = !this.fetchedMap[projectId];
     try {
-      this.loader = true;
+      if (isInitialLoad) this.loader = true;
       await this.cycleService.getCyclesWithParams(workspaceSlug, projectId).then((response) => {
         runInAction(() => {
           response.forEach((cycle) => {

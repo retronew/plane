@@ -4,12 +4,13 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { EmptyStateDetailed } from "@plane/blocks/empty-state";
+import { EmptyStateDetailed, preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { EUserProjectRoles } from "@plane/types";
 // components
 import { ListLayout } from "@/components/core/list";
@@ -22,6 +23,9 @@ import { useUserPermissions } from "@/hooks/store/user";
 import { ProjectViewListItem } from "./view-list-item";
 
 export const ProjectViewsList = observer(function ProjectViewsList() {
+  useEffect(() => {
+    preloadDetailedAsset("view");
+  }, []);
   const { projectId } = useParams();
   // plane hooks
   const { t } = useTranslation();

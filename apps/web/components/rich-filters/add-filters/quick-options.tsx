@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { TickOutline } from "@makeplane/propel/icons";
 import { MenuRow, MenuSearchInput } from "@plane/blocks/select";
 import { useTranslation } from "@plane/i18n";
 import type { IFilterOption, TFilterValue, TSupportedFilterFieldConfigs } from "@plane/types";
@@ -12,9 +13,13 @@ import type { IFilterOption, TFilterValue, TSupportedFilterFieldConfigs } from "
 /** Mounted by the shared hover flyout, so async sources are never fetched on menu render. */
 export function QuickFilterOptions({
   config,
+  selectedValues,
+  isMultiSelect = false,
   onSelect,
 }: {
   config: TSupportedFilterFieldConfigs;
+  selectedValues?: Set<string>;
+  isMultiSelect?: boolean;
   onSelect: (value: TFilterValue) => void;
 }) {
   const { t } = useTranslation();
@@ -68,25 +73,38 @@ export function QuickFilterOptions({
         ) : visible.length === 0 ? (
           <p className="px-2 py-2 text-body-xs-regular text-tertiary">{t("common.search.no_matching_results")}</p>
         ) : (
-          visible.map((option) => (
-            <MenuRow
-              key={option.id}
-              disabled={option.disabled}
-              render={<button type="button" disabled={option.disabled} aria-label={option.label} />}
-              onClick={() => onSelect(option.value)}
-              className="h-8 text-body-xs-regular text-primary"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                {option.icon && (
-                  <span className="inline-flex size-4 shrink-0 items-center justify-center leading-none">
-                    {option.icon}
-                  </span>
-                )}
-                <span className="truncate">{option.label}</span>
-              </span>
-              {option.description && <span className="ml-2 max-w-20 truncate text-tertiary">{option.description}</span>}
-            </MenuRow>
-          ))
+          visible.map((option) => {
+            const isSelected = Boolean(selectedValues?.has(String(option.value)));
+            return (
+              <MenuRow
+                key={option.id}
+                disabled={option.disabled}
+                render={
+                  <button
+                    type="button"
+                    disabled={option.disabled}
+                    aria-label={option.label}
+                    aria-pressed={isMultiSelect ? isSelected : undefined}
+                  />
+                }
+                onClick={() => onSelect(option.value)}
+                className="h-8 text-body-xs-regular text-primary"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  {option.icon && (
+                    <span className="inline-flex size-4 shrink-0 items-center justify-center leading-none">
+                      {option.icon}
+                    </span>
+                  )}
+                  <span className="truncate">{option.label}</span>
+                </span>
+                <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                  {option.description && <span className="max-w-20 truncate text-tertiary">{option.description}</span>}
+                  {isSelected && <TickOutline className="size-3.5 text-accent-primary" />}
+                </span>
+              </MenuRow>
+            );
+          })
         )}
       </div>
     </div>

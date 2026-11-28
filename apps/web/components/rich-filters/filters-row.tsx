@@ -91,6 +91,15 @@ const FiltersRowActions = observer(function FiltersRowActions<K extends TFilterP
   const hasAvailableOperations =
     !disabledAllOperations && (filter.canClearFilters || filter.canSaveView || filter.canUpdateView);
 
+  const handleClearAll = () => {
+    void Promise.resolve(filter.clearFilters()).then(() => {
+      if (variant === "header" && !filter.canUpdateView) {
+        filter.toggleVisibility(false);
+      }
+      return undefined;
+    });
+  };
+
   return (
     <div
       data-filter-actions
@@ -106,7 +115,7 @@ const FiltersRowActions = observer(function FiltersRowActions<K extends TFilterP
               size="md"
               stretch="auto"
               label={filter.clearFilterOptions?.label ?? translate("web.clear_all")}
-              onClick={filter.clearFilters}
+              onClick={handleClearAll}
             />
           </ElementTransition>
           <ElementTransition show={filter.canSaveView}>
@@ -135,7 +144,8 @@ const FiltersRowActions = observer(function FiltersRowActions<K extends TFilterP
           </ElementTransition>
         </>
       )}
-      {variant === "header" && (
+      {/* Only show standalone fold/close when editing is disabled (read-only view has no Clear all action). */}
+      {variant === "header" && disabledAllOperations && (
         <Tooltip label={translate("close")}>
           <IconButton
             variant="ghost"
@@ -209,9 +219,12 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
     }
   }, [filter]);
 
+  const shouldShowRow =
+    variant === "modal" ? filter.isVisible : filter.isVisible && (hasAnyConditions || filter.canUpdateView);
+
   if (!filter.configManager.areConfigsReady && !hasAnyConditions) {
     return (
-      <RowTransition show={filter.isVisible}>
+      <RowTransition show={shouldShowRow}>
         <Loader>
           <Loader.Item height="44px" width="100%" className={cn({ "rounded-none": variant === "header" })} />
         </Loader>
@@ -232,7 +245,7 @@ export const FiltersRow = observer(function FiltersRow<K extends TFilterProperty
   );
 
   return (
-    <RowTransition show={filter.isVisible}>
+    <RowTransition show={shouldShowRow}>
       {variant === "modal" ? (
         mainContent
       ) : (

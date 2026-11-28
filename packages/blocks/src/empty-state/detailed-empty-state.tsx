@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { EmptyStateActionButton } from "./action-button";
 import { cn } from "@plane/utils";
 import type { Align } from "../utils/placement";
-import { getDetailedAsset } from "./assets/asset-registry";
+import { getDetailedAsset, getDetailedAssetDimensions } from "./assets/asset-registry";
 import type { CompactAssetType, DetailedAssetType } from "./assets/asset-types";
 import type { ActionButton } from "./types";
 
@@ -40,6 +40,19 @@ export function EmptyStateDetailed({
 }: EmptyStateDetailedProps) {
   // Determine which asset to use: assetKey takes precedence, fallback to custom asset
   const resolvedAsset = assetKey ? getDetailedAsset(assetKey as DetailedAssetType, assetClassName) : asset;
+  const assetDimensions = assetKey ? getDetailedAssetDimensions(assetKey as DetailedAssetType) : undefined;
+  // Cap width at max-w-40 (160px) while preserving aspect ratio.
+  const cappedDimensions = assetDimensions
+    ? assetDimensions.width > 160
+      ? { width: 160, height: Math.round((assetDimensions.height * 160) / assetDimensions.width) }
+      : assetDimensions
+    : undefined;
+  const hasExplicitHeight = Boolean(assetClassName && /\b(size-|h-(?!auto\b))/.test(assetClassName));
+  const fallbackStyle = cappedDimensions
+    ? assetClassName
+      ? { aspectRatio: `${cappedDimensions.width} / ${cappedDimensions.height}` }
+      : cappedDimensions
+    : undefined;
 
   return (
     <div className={cn("flex size-full items-center justify-center", rootClassName)}>
@@ -53,8 +66,22 @@ export function EmptyStateDetailed({
         )}
       >
         {resolvedAsset && (
-          <div className="flex max-w-40 items-center">
-            <Suspense fallback={null}>{resolvedAsset}</Suspense>
+          <div
+            className="flex max-w-40 shrink-0 items-center justify-center"
+            style={cappedDimensions && !hasExplicitHeight ? { minHeight: cappedDimensions.height } : undefined}
+          >
+            <Suspense
+              fallback={
+                <div
+                  aria-hidden="true"
+                  data-empty-state-placeholder=""
+                  className={cn("shrink-0", assetClassName ?? (!cappedDimensions ? "size-40" : undefined))}
+                  style={fallbackStyle}
+                />
+              }
+            >
+              {resolvedAsset}
+            </Suspense>
           </div>
         )}
 

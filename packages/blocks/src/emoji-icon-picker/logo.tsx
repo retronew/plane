@@ -10,11 +10,11 @@
 import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { getIconBackgroundStyle } from "./icon-background";
-import useFontFaceObserver from "use-font-face-observer";
 // types
 import type { Logo as LogoType } from "../types/logo";
 // local imports
 import { getEmojiSize, stringToEmoji } from "./helper";
+import { useMaterialSymbolsFontLoaded } from "./use-material-font";
 
 type LucideIconItem = { name: string; element: ComponentType<{ style?: CSSProperties }> };
 let cachedLucideIcons: LucideIconItem[] | null = null;
@@ -47,7 +47,19 @@ function LazyLucideGlyph({ name, color, size }: { name: string; color?: string; 
   }, [icons]);
 
   const lucideIcon = icons?.find((item) => item.name === name);
-  if (!lucideIcon) return null;
+  if (!lucideIcon) {
+    if (!icons) {
+      return (
+        <span
+          aria-hidden="true"
+          data-logo-placeholder=""
+          className="inline-block shrink-0 rounded-xs bg-layer-1 motion-safe:animate-pulse"
+          style={{ height: size, width: size }}
+        />
+      );
+    }
+    return null;
+  }
 
   const LucideIconElement = lucideIcon.element;
   return <LucideIconElement style={{ color, height: size, width: size }} />;
@@ -111,6 +123,8 @@ function renderIconLogo({
         width: size,
         height: size,
         flexShrink: 0,
+        overflow: "hidden",
+        whiteSpace: "nowrap",
         lineHeight: 1,
         fontSize: glyphSize,
         color,
@@ -123,17 +137,17 @@ function renderIconLogo({
 }
 
 export function Logo({ logo, size = 16, background = true, type = "material" }: LogoProps) {
-  const isMaterialSymbolsFontLoaded = useFontFaceObserver([
-    {
-      family: "Material Symbols Rounded",
-      style: "normal",
-      weight: "normal",
-      stretch: "condensed",
-    },
-  ]);
+  const isMaterialSymbolsFontLoaded = useMaterialSymbolsFontLoaded();
 
-  // Reusable loading skeleton
-  const loadingSkeleton = <span style={{ height: size, width: size }} className="rounded-sm bg-layer-1" />;
+  // Fixed-box placeholder: inline-block + shrink-0 reserves exact size x size so adjacent text never shifts.
+  const loadingSkeleton = (
+    <span
+      aria-hidden="true"
+      data-logo-placeholder=""
+      style={{ height: size, width: size, borderRadius: Math.max(3, size * 0.2) }}
+      className="inline-block shrink-0 rounded-sm bg-layer-1 motion-safe:animate-pulse"
+    />
+  );
 
   // Early returns for loading/empty states
   if (!logo || !logo.in_use) return loadingSkeleton;
@@ -147,7 +161,7 @@ export function Logo({ logo, size = 16, background = true, type = "material" }: 
   if (in_use === "emoji") {
     return (
       <span
-        className="flex items-center justify-center"
+        className="inline-flex shrink-0 items-center justify-center overflow-hidden"
         style={{
           fontSize: `${getEmojiSize(size)}rem`,
           lineHeight: `${getEmojiSize(size)}rem`,
@@ -173,5 +187,5 @@ export function Logo({ logo, size = 16, background = true, type = "material" }: 
     });
   }
 
-  return null;
+  return loadingSkeleton;
 }

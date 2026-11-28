@@ -158,6 +158,19 @@
   pointer-events: none;
 }
 
+/* Reserve a fixed square box for icon-font ligatures before glyph shaping completes */
+.material-symbols-rounded {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  flex-shrink: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .bprogress .bar {
   background: linear-gradient(
     90deg,

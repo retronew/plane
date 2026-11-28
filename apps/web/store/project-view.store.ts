@@ -164,8 +164,9 @@ export class ProjectViewStore implements IProjectViewStore {
    * @returns Promise<IProjectView[]>
    */
   fetchViews = async (workspaceSlug: string, projectId: string) => {
+    const isInitialLoad = !this.fetchedMap[projectId];
     try {
-      this.loader = true;
+      if (isInitialLoad) this.loader = true;
       await this.viewService.getViews(workspaceSlug, projectId).then((response) => {
         runInAction(() => {
           response.forEach((view) => {

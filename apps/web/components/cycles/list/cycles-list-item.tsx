@@ -142,6 +142,7 @@ export const CyclesListItem = observer(function CyclesListItem(props: TCyclesLis
         className
       )}
       itemClassName="min-w-0"
+      leftElementClassName={disclosure?.expanded ? "gap-3" : "gap-2.5"}
       actionItemContainerClassName={isActive ? "gap-3" : undefined}
       prependTitleElement={
         isActive ? (

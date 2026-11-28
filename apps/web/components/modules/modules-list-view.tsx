@@ -4,12 +4,13 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useParams, useSearchParams } from "next/navigation";
 // components
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import { EmptyStateDetailed } from "@plane/blocks/empty-state";
+import { EmptyStateDetailed, preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { EUserProjectRoles } from "@plane/types";
 import type { TModuleLayoutOptions } from "@plane/types";
 import { ContentWrapper, Row, ERowVariant } from "@plane/blocks/layout";
@@ -81,6 +82,9 @@ function ModulesLayoutView({
 }
 
 export const ModulesListView = observer(function ModulesListView() {
+  useEffect(() => {
+    preloadDetailedAsset("module");
+  }, []);
   // router
   const { workspaceSlug, projectId } = useParams();
   const searchParams = useSearchParams();

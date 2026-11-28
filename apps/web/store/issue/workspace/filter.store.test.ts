@@ -5,11 +5,12 @@ import type { IIssueRootStore } from "../root.store";
 import { WorkspaceIssuesFilter } from "./filter.store";
 
 const refetch = vi.fn();
+const clearIssues = vi.fn();
 function makeFilter(viewId = "all-issues") {
   const root = {
     globalViewId: viewId,
     currentUserId: "current-user",
-    workspaceIssues: { fetchIssuesWithExistingPagination: refetch },
+    workspaceIssues: { fetchIssuesWithExistingPagination: refetch, clear: clearIssues },
   } as unknown as IIssueRootStore;
   const filter = new WorkspaceIssuesFilter(root);
   filter.filters[viewId] = {
@@ -40,6 +41,7 @@ it("switches to kanban with shared state categories and sends grouping, sorting 
   );
   expect(params).toMatchObject({ group_by: "state__group", order_by: "-created_at", sub_issue: false, per_page: "30" });
   expect(JSON.parse(params.filters as string)).toEqual({ priority__in: "high" });
+  expect(clearIssues).toHaveBeenCalledWith(true);
   expect(refetch).not.toHaveBeenCalled();
   expect(filter.handleIssuesLocalFilters.set).toHaveBeenCalled();
 });

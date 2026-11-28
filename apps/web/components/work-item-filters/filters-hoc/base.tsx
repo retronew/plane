@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
 import { v4 as uuidv4 } from "uuid";
 // plane imports
@@ -74,6 +74,16 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
     ...entityConfigProps,
   });
 
+  // Keep latest updateFilters in a ref so inline `.bind(...)` callbacks never re-initialize the filter instance.
+  const updateFiltersRef = useRef(updateFilters);
+  useEffect(() => {
+    updateFiltersRef.current = updateFilters;
+  }, [updateFilters]);
+  const stableUpdateFilters = useCallback(
+    (expression: TWorkItemFilterExpression) => updateFiltersRef.current?.(expression),
+    []
+  );
+
   // Read the registered filter reactively; mutations happen after commit so sibling
   // MobX observers (e.g. WorkItemFiltersToggle) never update during render.
   const workItemLayoutFilter = getFilter(entityType, workItemEntityID);
@@ -83,7 +93,7 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
       entityType,
       entityId: workItemEntityID,
       initialExpression: initialUserFilters,
-      onExpressionChange: updateFilters,
+      onExpressionChange: stableUpdateFilters,
       expressionOptions: {
         saveViewOptions,
         updateViewOptions,
@@ -96,7 +106,7 @@ const WorkItemFilterRoot = observer(function WorkItemFilterRoot(props: TWorkItem
     initialUserFilters,
     saveViewOptions,
     showOnMount,
-    updateFilters,
+    stableUpdateFilters,
     updateViewOptions,
     workItemEntityID,
   ]);

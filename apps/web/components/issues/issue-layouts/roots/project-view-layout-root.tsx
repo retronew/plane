@@ -17,6 +17,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
+import { readCachedIssueLayout } from "@/lib/layout-cache";
 // local imports
 import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
@@ -56,7 +57,8 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
   // derived values
   const projectView = viewId ? getViewById(viewId) : undefined;
   const workItemFilters = viewId ? issuesFilter?.getIssueFilters(viewId) : undefined;
-  const activeLayout = workItemFilters?.displayFilters?.layout;
+  const cachedLayout = readCachedIssueLayout("project-view", workspaceSlug, viewId);
+  const activeLayout = workItemFilters?.displayFilters?.layout ?? projectView?.display_filters?.layout ?? cachedLayout;
   const initialWorkItemFilters = projectView
     ? {
         displayFilters: workItemFilters?.displayFilters,
@@ -85,7 +87,21 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
   );
 
   if (!workspaceSlug || !projectId || !viewId || !workItemFilters) {
-    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+    const fallbackDisplayFilters = projectView?.display_filters;
+    const fallbackDisplayProperties = projectView?.display_properties;
+    const propertyCount = fallbackDisplayProperties
+      ? Object.entries(fallbackDisplayProperties).filter(([key, enabled]) => key !== "key" && enabled).length
+      : undefined;
+    return (
+      <IssueLayoutLoader
+        layout={activeLayout ?? EIssueLayoutTypes.LIST}
+        grouped={fallbackDisplayFilters?.group_by != null}
+        displayProperties={fallbackDisplayProperties}
+        propertyCount={propertyCount}
+        showWeekends={fallbackDisplayFilters?.calendar?.show_weekends}
+        calendarLayout={fallbackDisplayFilters?.calendar?.layout}
+      />
+    );
   }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.PROJECT_VIEW}>
