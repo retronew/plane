@@ -51,7 +51,7 @@ export const IssueDetailWidgetCollapsibles = observer(function IssueDetailWidget
     (!!attachmentUploads && attachmentUploads.length > 0 && !hideWidgets?.includes("attachments"));
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-3">
       {shouldRenderSubIssues && (
         <SubIssuesCollapsible
           workspaceSlug={workspaceSlug}
