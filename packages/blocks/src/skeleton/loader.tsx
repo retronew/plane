@@ -14,7 +14,7 @@ type Props = {
 };
 
 function Loader({ children, className = "" }: Props) {
-  return <output className={cn("block animate-pulse motion-reduce:animate-none", className)}>{children}</output>;
+  return <output className={cn("skeleton-delayed block", className)}>{children}</output>;
 }
 
 type ItemProps = {

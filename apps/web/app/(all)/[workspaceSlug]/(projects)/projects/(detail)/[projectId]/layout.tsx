@@ -4,10 +4,12 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 import { Outlet } from "react-router";
 // plane imports
+import { preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { Header, Row } from "@plane/blocks/layout";
 import { cn } from "@plane/utils";
 // components
@@ -48,6 +50,24 @@ function ProjectLayout({ params }: Route.ComponentProps) {
   const { sidebarCollapsed } = useAppTheme();
   // preferences
   const { preferences: projectPreferences } = useProjectNavigationPreferences();
+
+  // Warm the route's empty-state SVG while ProjectAuthWrapper loads so empty pages render in a single frame.
+  useEffect(() => {
+    if (/\/cycles\/?$/.test(pathname)) {
+      preloadDetailedAsset("cycle");
+      preloadDetailedAsset("archived-cycle");
+    } else if (/\/modules\/?$/.test(pathname)) {
+      preloadDetailedAsset("module");
+    } else if (/\/views\/?$/.test(pathname)) {
+      preloadDetailedAsset("view");
+    } else if (/\/issues\/?$/.test(pathname)) {
+      preloadDetailedAsset("work-item");
+    } else if (/\/pages\/?$/.test(pathname)) {
+      preloadDetailedAsset("page");
+    } else if (/\/intake\/?$/.test(pathname)) {
+      preloadDetailedAsset("intake");
+    }
+  }, [pathname]);
 
   return (
     <>

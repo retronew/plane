@@ -13,6 +13,7 @@ import useSWR from "swr";
 // ui
 import { LogOutOutline } from "@makeplane/propel/icons";
 import { Button as ButtonElement } from "@makeplane/propel/elements/button";
+import { preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { PlaneLogo } from "@plane/blocks/icons";
 import { setToast } from "@plane/blocks/toast";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
@@ -44,6 +45,8 @@ interface IWorkspaceAuthWrapper {
 type TWorkspaceSlug = string | string[] | undefined;
 
 const SWR_OPTIONS = { revalidateIfStale: false, revalidateOnFocus: false };
+const CORE_EMPTY_STATE_ASSETS = ["cycle", "archived-cycle", "module", "view", "work-item", "draft"] as const;
+let hasPreloadedCoreEmptyStates = false;
 
 const getSlugString = (workspaceSlug: TWorkspaceSlug): string | null => {
   if (!workspaceSlug) return null;
@@ -199,6 +202,36 @@ export const WorkspaceAuthWrapper = observer(function WorkspaceAuthWrapper(props
       hydrateWorkspaceBootstrap(rootStore, slug, cached, false);
     }
   }, [rootStore, currentUser?.id, slug]);
+
+  // Preload current route's empty-state illustration immediately and warm core navigation SVGs during idle time
+  useEffect(() => {
+    if (pathname.includes("/cycles") || pathname.includes("/active-cycles")) {
+      preloadDetailedAsset("cycle");
+      preloadDetailedAsset("archived-cycle");
+    } else if (pathname.includes("/modules")) {
+      preloadDetailedAsset("module");
+    } else if (pathname.includes("/views") || pathname.includes("/workspace-views")) {
+      preloadDetailedAsset("view");
+    } else if (pathname.includes("/drafts")) {
+      preloadDetailedAsset("draft");
+    } else if (pathname.includes("/issues")) {
+      preloadDetailedAsset("work-item");
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (hasPreloadedCoreEmptyStates || typeof window === "undefined") return;
+    const warm = () => {
+      hasPreloadedCoreEmptyStates = true;
+      for (const key of CORE_EMPTY_STATE_ASSETS) preloadDetailedAsset(key);
+    };
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(warm, 800);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Single aggregated workspace bootstrap (stable key avoids re-running all 9 endpoints on Home <-> Projects navigation)
   const { isLoading: isWorkspaceBootstrapLoading } = useSWR(

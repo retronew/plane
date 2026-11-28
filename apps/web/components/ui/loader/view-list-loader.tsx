@@ -8,7 +8,7 @@ import { range } from "lodash-es";
 
 export function ViewListLoader() {
   return (
-    <div className="flex h-full w-full flex-col motion-safe:animate-pulse">
+    <div className="skeleton-delayed flex h-full w-full flex-col">
       {range(8).map((i) => (
         <div key={i} className="border-b border-subtle">
           <div className="relative flex min-h-[52px] w-full items-center justify-between px-4 py-3">

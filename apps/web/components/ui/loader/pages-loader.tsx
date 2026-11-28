@@ -8,7 +8,7 @@ import { range } from "lodash-es";
 
 export function PagesLoader() {
   return (
-    <div className="flex h-full flex-col space-y-5 overflow-hidden p-6 motion-safe:animate-pulse">
+    <div className="skeleton-delayed flex h-full flex-col space-y-5 overflow-hidden p-6">
       <div className="flex justify-between gap-4">
         <div className="h-6 w-28 rounded-sm bg-layer-3" />
       </div>

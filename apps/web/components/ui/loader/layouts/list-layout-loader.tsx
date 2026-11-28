@@ -73,7 +73,7 @@ function ListSection({
 
 export function ListLayoutLoader({ grouped = true, propertyCount }: { grouped?: boolean; propertyCount?: number }) {
   return (
-    <div className="flex size-full flex-col overflow-hidden bg-surface-1 motion-safe:animate-pulse">
+    <div className="skeleton-delayed flex size-full flex-col overflow-hidden bg-surface-1">
       {(grouped ? [6, 4, 2] : [12]).map((itemCount) => (
         <ListSection key={itemCount} itemCount={itemCount} grouped={grouped} propertyCount={propertyCount} />
       ))}

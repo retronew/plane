@@ -20,7 +20,7 @@ function SkeletonRoot({ children, className = "", ariaLabel }: SkeletonProps) {
   return (
     <output
       data-slot="skeleton"
-      className={cn("block animate-pulse motion-reduce:animate-none", className)}
+      className={cn("skeleton-delayed block", className)}
       aria-label={ariaLabel ?? t("web.ui.loading_content")}
     >
       {children}

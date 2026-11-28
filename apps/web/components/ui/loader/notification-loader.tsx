@@ -8,7 +8,7 @@ import { range } from "lodash-es";
 
 export function NotificationsLoader() {
   return (
-    <div className="divide-y divide-subtle overflow-hidden motion-safe:animate-pulse">
+    <div className="skeleton-delayed divide-y divide-subtle overflow-hidden">
       {range(6).map((i) => (
         <div key={i} className="flex w-full items-center gap-3.5 p-3.5">
           <div className="size-10 shrink-0 rounded-full bg-layer-3" />

@@ -200,3 +200,38 @@ body {
     transition-property: opacity, transform, translate, rotate, scale;
   }
 }
+
+/* ---------- Delayed skeleton reveal ----------
+ * Keep page-level skeletons invisible for the first 200ms so fast API responses
+ * and cached route transitions move straight to content without flashing gray
+ * placeholders. Slower loads (>200ms) fade in smoothly and then pulse. */
+@keyframes plane-skeleton-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes plane-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton-delayed {
+  animation:
+    plane-skeleton-reveal 160ms ease-out 200ms both,
+    plane-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 360ms infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-delayed {
+    animation: plane-skeleton-reveal 1ms step-end 200ms both;
+  }
+}
