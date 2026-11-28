@@ -5,6 +5,7 @@ import { IssueLinksActionButton } from "./quick-action-button";
 
 const mocks = vi.hoisted(() => ({ toggleIssueLinkModal: vi.fn() }));
 vi.mock("mobx-react", () => ({ observer: (component: unknown) => component }));
+vi.mock("@plane/i18n", () => ({ translate: (key: string) => key }));
 vi.mock("@/hooks/store/use-issue-detail", () => ({
   useIssueDetail: () => ({ toggleIssueLinkModal: mocks.toggleIssueLinkModal }),
 }));
@@ -41,4 +42,11 @@ it("renders the supplied customButton directly without nesting buttons", () => {
   );
   fireEvent.click(screen.getByRole("button", { name: "Add link" }));
   expect(mocks.toggleIssueLinkModal).toHaveBeenCalledTimes(1);
+});
+
+it("renders an accessible trailing IconButton when no customButton is passed", () => {
+  render(<IssueLinksActionButton issueServiceType={EIssueServiceType.ISSUES} />);
+  const button = screen.getByRole("button", { name: "issue.add.link" });
+  fireEvent.click(button);
+  expect(mocks.toggleIssueLinkModal).toHaveBeenCalledExactlyOnceWith(true);
 });

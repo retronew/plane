@@ -7,7 +7,7 @@ import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
 
 import { observer } from "mobx-react";
 
-import { useTranslation } from "@plane/i18n";
+import { useTranslation, translate } from "@plane/i18n";
 import { DeleteOutline, EditOutline, LinkOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 import { Copy } from "lucide-react";
 import { setToast } from "@plane/blocks/toast";
@@ -18,10 +18,12 @@ import { EIssueServiceType } from "@plane/types";
 import { Icon } from "@makeplane/propel/components/icon";
 import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { calculateTimeAgo, copyTextToClipboard } from "@plane/utils";
-// helpers
+import { calculateTimeAgo, copyTextToClipboard, renderFormattedDate } from "@plane/utils";
+// components
+import { ButtonAvatars } from "@/components/dropdowns/member/avatar";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useMember } from "@/hooks/store/use-member";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import type { TLinkOperationsModal } from "./create-update-link-modal";
 
@@ -32,11 +34,20 @@ type TIssueLinkItem = {
   issueServiceType?: TIssueServiceType;
 };
 
+const getLinkHostname = (url: string): string | undefined => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return undefined;
+  }
+};
+
 export const IssueLinkItem = observer(function IssueLinkItem(props: TIssueLinkItem) {
   // props
   const { linkId, linkOperations, isNotAllowed, issueServiceType = EIssueServiceType.ISSUES } = props;
   // hooks
   const { t } = useTranslation();
+  const { getUserDetails } = useMember();
   const {
     toggleIssueLinkModal: toggleIssueLinkModalStore,
     setIssueLinkData,
@@ -46,50 +57,75 @@ export const IssueLinkItem = observer(function IssueLinkItem(props: TIssueLinkIt
   const linkDetail = getLinkById(linkId);
   if (!linkDetail) return <></>;
 
-  // const Icon = getIconForLink(linkDetail.url);
   const faviconUrl: string | undefined = linkDetail.metadata?.favicon;
-  const linkTitle: string | undefined = linkDetail.metadata?.title;
+  const metadataTitle: string | undefined = linkDetail.metadata?.title;
+  const customTitle = linkDetail.title?.trim();
+  const displayTitle = customTitle || linkDetail.url;
+  const secondaryMeta =
+    (metadataTitle?.trim() && metadataTitle.trim() !== displayTitle ? metadataTitle.trim() : undefined) ||
+    (customTitle ? getLinkHostname(linkDetail.url) : undefined) ||
+    calculateTimeAgo(linkDetail.created_at);
+  const creatorId = linkDetail.created_by_id ?? (linkDetail as { created_by?: string }).created_by;
+  const creator = creatorId ? getUserDetails(creatorId) : undefined;
+  const creatorName = creator?.display_name || creator?.first_name || "";
 
   const toggleIssueLinkModal = (modalToggle: boolean) => {
     toggleIssueLinkModalStore(modalToggle);
     setIssueLinkData(linkDetail);
   };
+
   return (
-    <>
-      <div
-        key={linkId}
-        className="group 3xl:col-span-2 col-span-12 flex h-10 flex-shrink-0 items-center justify-between gap-3 rounded-sm border-[0.5px] border-subtle bg-surface-2 px-3 hover:bg-layer-1 lg:col-span-6 xl:col-span-4 2xl:col-span-3"
+    <div
+      key={linkId}
+      className="group flex h-11 w-full min-w-0 items-center justify-between gap-3 px-3 hover:bg-surface-2"
+    >
+      <a
+        href={linkDetail.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex min-w-0 flex-1 items-center gap-3 text-13"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <div className="flex size-[18px] shrink-0 items-center justify-center">
           {faviconUrl ? (
-            <img src={faviconUrl} alt="favicon" className="size-4 flex-shrink-0" />
+            <img src={faviconUrl} alt="" className="size-[18px] rounded-xs object-contain" />
           ) : (
-            <LinkOutline className="size-4 flex-shrink-0 text-tertiary group-hover:text-primary" />
+            <LinkOutline className="size-[18px] text-tertiary group-hover:text-primary" />
           )}
-          <Tooltip label={linkDetail.url} layout="stacked" disabled={isMobile}>
-            <a
-              href={linkDetail.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-0 flex-1 cursor-pointer items-center text-body-xs-regular"
-            >
-              <span className="w-0 flex-1 truncate">
-                {linkDetail.title && linkDetail.title !== "" ? linkDetail.title : linkDetail.url}
-                {linkTitle && linkTitle !== "" && (
-                  <span className="text-caption-sm-regular text-placeholder"> {linkTitle}</span>
-                )}
-              </span>
-            </a>
-          </Tooltip>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-1">
-          <p className="group-hover-text-secondary p-1 align-bottom text-caption-sm-regular leading-5 text-placeholder">
-            {calculateTimeAgo(linkDetail.created_at)}
-          </p>
-          <button
+        <Tooltip label={linkDetail.url} layout="stacked" disabled={isMobile}>
+          <p className="truncate font-medium text-secondary">{displayTitle}</p>
+        </Tooltip>
+        {secondaryMeta && (
+          <>
+            <span className="size-1.5 shrink-0 rounded-full bg-layer-3" />
+            <span className="shrink-0 truncate text-placeholder">{secondaryMeta}</span>
+          </>
+        )}
+      </a>
+
+      <div className="flex shrink-0 items-center gap-3">
+        {creatorId && (
+          <Tooltip
+            label={`${translate("web.added")} ${renderFormattedDate(linkDetail.created_at) ?? calculateTimeAgo(linkDetail.created_at)}${creatorName ? ` · ${creatorName}` : ""}`}
+            layout="stacked"
+            disabled={isMobile}
+          >
+            <div className="flex items-center justify-center">
+              <ButtonAvatars showTooltip userIds={creatorId} />
+            </div>
+          </Tooltip>
+        )}
+
+        <div className="flex shrink-0 items-center gap-1">
+          <IconButton
+            variant="ghost"
+            size="sm"
             type="button"
             aria-label={t("common.actions.copy_link")}
-            onClick={() => {
+            icon={<Copy className="size-3.5 stroke-[1.5]" />}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               void copyTextToClipboard(linkDetail.url);
               setToast({
                 type: "success",
@@ -97,10 +133,7 @@ export const IssueLinkItem = observer(function IssueLinkItem(props: TIssueLinkIt
                 message: t("common.link_copied_to_clipboard"),
               });
             }}
-            className="relative grid cursor-pointer place-items-center rounded-sm p-1 text-placeholder outline-none group-hover:text-secondary hover:bg-layer-1"
-          >
-            <Copy className="h-3.5 w-3.5 stroke-[1.5]" />
-          </button>
+          />
           <Menu>
             {/* Icon-only trigger, so it needs an explicit accessible name. */}
             <MenuTrigger
@@ -133,6 +166,6 @@ export const IssueLinkItem = observer(function IssueLinkItem(props: TIssueLinkIt
           </Menu>
         </div>
       </div>
-    </>
+    </div>
   );
 });

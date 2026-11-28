@@ -72,7 +72,7 @@ export const IssueAttachmentsListItem = observer(function IssueAttachmentsListIt
             <Tooltip label={`${fileName}.${fileExtension}`} layout="stacked" disabled={isMobile}>
               <p className="truncate font-medium text-secondary">{`${fileName}.${fileExtension}`}</p>
             </Tooltip>
-            <span className="flex size-1.5 rounded-full bg-layer-1" />
+            <span className="flex size-1.5 shrink-0 rounded-full bg-layer-3" />
             <span className="shrink-0 text-placeholder">{convertBytesToSize(attachment.attributes.size)}</span>
           </div>
 

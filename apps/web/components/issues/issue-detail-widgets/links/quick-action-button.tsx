@@ -7,7 +7,10 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { AddOutline } from "@makeplane/propel/icons";
+import { Icon } from "@makeplane/propel/components/icon";
+import { IconButton } from "@makeplane/propel/components/icon-button";
 // plane imports
+import { translate } from "@plane/i18n";
 import type { TIssueServiceType } from "@plane/types";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -45,8 +48,14 @@ export const IssueLinksActionButton = observer(function IssueLinksActionButton(p
   }
 
   return (
-    <button type="button" onClick={handleOnClick} disabled={disabled}>
-      <AddOutline className="h-4 w-4" />
-    </button>
+    <IconButton
+      variant="ghost"
+      size="sm"
+      icon={<Icon icon={AddOutline} />}
+      onClick={handleOnClick}
+      type="button"
+      aria-label={translate("issue.add.link")}
+      disabled={disabled}
+    />
   );
 });

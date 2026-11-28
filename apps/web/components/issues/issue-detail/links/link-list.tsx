@@ -35,7 +35,7 @@ export const LinkList = observer(function LinkList(props: TLinkList) {
   if (!issueLinks) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col">
       {issueLinks.map((linkId) => (
         <IssueLinkItem
           key={linkId}
