@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 import { calculateTotalFilters } from "@plane/utils";
 import { CyclesList } from "@/components/cycles/list";
+import { ActiveCyclesLoader } from "@/components/ui/loader/active-cycles-loader";
 import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useCycleFilter } from "@/hooks/store/use-cycle-filter";
@@ -24,7 +25,9 @@ export const CyclesView = observer(function CyclesView({ workspaceSlug, projectI
   const cycleStore = useCycle();
   const { searchQuery, currentProjectFilters } = useCycleFilter();
   const cycleIds = getFilteredCycleIdsForTab(cycleStore, projectId, tab);
-  if (cycleStore.loader || !cycleIds) return <CycleModuleListLayoutLoader />;
+  if (cycleStore.loader || !cycleIds) {
+    return tab === "active" ? <ActiveCyclesLoader count={1} /> : <CycleModuleListLayoutLoader />;
+  }
   if (!cycleIds.length)
     return (
       <CycleTabEmptyState

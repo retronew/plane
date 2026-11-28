@@ -12,6 +12,7 @@ import useSWR from "swr";
 import { ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@plane/constants";
 import { EIssuesStoreType } from "@plane/types";
 // components
+import { ListLayoutLoader } from "@/components/ui/loader/layouts/list-layout-loader";
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 // hooks
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
@@ -41,7 +42,7 @@ export const ArchivedIssueLayoutRoot = observer(function ArchivedIssueLayoutRoot
     { revalidateIfStale: false, revalidateOnFocus: false }
   );
 
-  if (!workspaceSlug || !projectId || !workItemFilters) return <></>;
+  if (!workspaceSlug || !projectId || !workItemFilters) return <ListLayoutLoader />;
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.ARCHIVED}>
       <ProjectLevelWorkItemFiltersHOC

@@ -2,8 +2,7 @@
   animation: project-layout-out 120ms cubic-bezier(0.4, 0, 1, 1) both;
   pointer-events: none;
 }
-.project-layout-transition[data-project-transition="enter"],
-.project-layout-transition[data-project-transition="idle"] {
+.project-layout-transition[data-project-transition="enter"] {
   animation: project-layout-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes project-layout-out {
@@ -21,6 +20,9 @@
     opacity: 1;
     transform: none;
   }
+}
+[data-project-loader] [aria-hidden="true"].bg-layer-1 {
+  background-color: var(--bg-layer-3);
 }
 @media (prefers-reduced-motion: reduce) {
   .project-layout-transition {

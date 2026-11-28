@@ -10,6 +10,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { Switch } from "@makeplane/propel/components/switch";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useUserPermissions } from "@/hooks/store/user";
@@ -239,7 +240,15 @@ function TemplateEditorView({
             <Button stretch="auto" size="md" variant="secondary" label={t("common.retry")} onClick={onRetry} />
           </div>
         ) : templateId && !existing ? (
-          <p aria-busy="true">{t("loading")}</p>
+          <Loader className="space-y-5">
+            <Loader.Item width="100%" height="40px" />
+            <Loader.Item width="100%" height="120px" />
+            <div className="grid grid-cols-2 gap-4">
+              <Loader.Item width="100%" height="40px" />
+              <Loader.Item width="100%" height="40px" />
+            </div>
+            <Loader.Item width="120px" height="36px" />
+          </Loader>
         ) : (
           <TemplateForm
             kind={kind}

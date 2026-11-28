@@ -16,6 +16,7 @@ import { Menu, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { DeleteOutline, EditOutline, ReactionOutline } from "@makeplane/propel/icons";
 import { ActionMenuContent } from "@plane/blocks/common";
 import { ConfirmDialog } from "@plane/blocks/dialog";
+import { Loader } from "@plane/blocks/skeleton";
 import { stringToEmoji } from "@plane/blocks/emoji-icon-picker";
 import { EmojiReactionGroup, EmojiReactionPicker } from "@plane/blocks/emoji-reaction";
 import type { EmojiReactionType } from "@plane/blocks/emoji-reaction";
@@ -439,7 +440,20 @@ function UpdateCommentsPanel({
     <div id={discussionId} hidden={!expanded}>
       {expanded && (
         <div className="flex flex-col gap-4 border-t border-subtle-1 px-4 py-3">
-          {isLoading && !error && <output className="text-caption-sm-regular text-tertiary">{t("loading")}</output>}
+          {isLoading && !error && (
+            <Loader className="space-y-3 py-1">
+              {Array.from({ length: 2 }).map((_, index) => (
+                // oxlint-disable-next-line react/no-array-index-key
+                <div key={index} className="flex items-start gap-2.5">
+                  <Loader.Item width="24px" height="24px" className="shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <Loader.Item width="60%" height="13px" />
+                    <Loader.Item width="40%" height="11px" />
+                  </div>
+                </div>
+              ))}
+            </Loader>
+          )}
           {Boolean(error) && (
             <div role="alert" className="flex items-center gap-2 text-caption-sm-regular text-danger-primary">
               <span>{t(`${key}.comments_load_error`)}</span>

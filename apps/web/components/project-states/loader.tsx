@@ -8,7 +8,7 @@ import { Loader } from "@plane/blocks/skeleton";
 
 export function ProjectStateLoader() {
   return (
-    <Loader className="space-y-5 md:w-2/3">
+    <Loader className="w-full space-y-5">
       <Loader.Item height="40px" />
       <Loader.Item height="40px" />
       <Loader.Item height="40px" />

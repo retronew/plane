@@ -20,7 +20,7 @@ function SkeletonRoot({ children, className = "", ariaLabel }: SkeletonProps) {
   return (
     <output
       data-slot="skeleton"
-      className={cn("block animate-pulse", className)}
+      className={cn("block animate-pulse motion-reduce:animate-none", className)}
       aria-label={ariaLabel ?? t("web.ui.loading_content")}
     >
       {children}
@@ -35,7 +35,7 @@ type ItemProps = {
 };
 
 function SkeletonItem({ height = "auto", width = "auto", className = "" }: ItemProps) {
-  return <div data-slot="skeleton-item" className={cn("rounded-md bg-layer-1", className)} style={{ height, width }} />;
+  return <div data-slot="skeleton-item" className={cn("rounded-md bg-layer-3", className)} style={{ height, width }} />;
 }
 
 const Skeleton = Object.assign(SkeletonRoot, { Item: SkeletonItem });

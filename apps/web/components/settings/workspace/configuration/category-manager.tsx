@@ -8,6 +8,7 @@ import type { IState, TStateGroups } from "@plane/types";
 import { StateForm } from "@/components/project-states/create-update/form";
 import { StateGroupPanel } from "@/components/project-states/group-panel";
 import { ActionMenuContent as MenuContent } from "@plane/blocks/common";
+import { Loader } from "@plane/blocks/skeleton";
 import { CategoryColorPicker } from "./category-color-picker";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { useParams } from "react-router";
@@ -340,7 +341,11 @@ function CategoryManagerView({
           <Button stretch="auto" size="md" variant="secondary" label={t("common.retry")} onClick={onRetry} />
         </div>
       ) : !data ? (
-        <p aria-busy="true">{t("loading")}</p>
+        <Loader className="space-y-2 py-2">
+          <Loader.Item width="100%" height="36px" />
+          <Loader.Item width="100%" height="36px" />
+          <Loader.Item width="80%" height="36px" />
+        </Loader>
       ) : (
         <CategoryList
           data={data}

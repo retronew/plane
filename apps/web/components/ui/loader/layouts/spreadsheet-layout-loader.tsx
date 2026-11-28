@@ -16,8 +16,8 @@ export function SpreadsheetIssueRowLoader(props: { columnCount: number }) {
         className="sticky left-0 z-[10] h-11 min-w-[512px] items-center border-r border-b border-subtle bg-surface-1"
       >
         <Row className="flex h-full items-center gap-3">
-          <span className="h-3 w-16 animate-pulse rounded-lg bg-layer-1" />
-          <span className={`h-3.5 w-52 animate-pulse rounded-lg bg-layer-1`} />
+          <div className="h-3 w-16 rounded-md bg-layer-3" />
+          <div className="h-3.5 w-52 rounded-md bg-layer-3" />
         </Row>
       </td>
       {range(props.columnCount).map((colIndex) => (
@@ -27,7 +27,7 @@ export function SpreadsheetIssueRowLoader(props: { columnCount: number }) {
           className="h-11 w-full min-w-[144px] border-r border-b border-subtle"
         >
           <div className="flex items-center justify-center gap-3 px-3">
-            <span className="h-6 w-20 animate-pulse rounded-lg bg-layer-1" />
+            <div className="h-5 w-20 rounded-md bg-layer-3" />
           </div>
         </td>
       ))}
@@ -38,19 +38,23 @@ export function SpreadsheetIssueRowLoader(props: { columnCount: number }) {
 export function SpreadsheetLayoutLoader({ columnCount = 5 }: { columnCount?: number }) {
   return (
     <div className="horizontal-scroll-enable h-full w-full overflow-y-auto">
-      <table className="w-full border-separate border-spacing-0">
+      <table className="w-full border-separate border-spacing-0 motion-safe:animate-pulse">
         <thead>
           <tr>
             <th
               aria-label={translate("common.loading")}
-              className="h-11 min-w-[512px] animate-pulse border-r border-b border-subtle bg-surface-2"
-            />
+              className="h-11 min-w-[512px] border-r border-b border-subtle bg-surface-2 px-4 text-left"
+            >
+              <div className="h-3.5 w-28 rounded-sm bg-layer-3" />
+            </th>
             {range(columnCount).map((index) => (
               <th
                 aria-label={translate("common.loading")}
                 key={index}
-                className="h-11 w-full min-w-[144px] animate-pulse border-r border-b border-subtle bg-surface-2"
-              />
+                className="h-11 w-full min-w-[144px] border-r border-b border-subtle bg-surface-2 px-3"
+              >
+                <div className="mx-auto h-3.5 w-16 rounded-sm bg-layer-3" />
+              </th>
             ))}
           </tr>
         </thead>

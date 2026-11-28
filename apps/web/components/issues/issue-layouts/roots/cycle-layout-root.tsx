@@ -22,6 +22,7 @@ import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { IssueLayoutLoader } from "../issue-layout-HOC";
 import { IssuePeekOverview } from "../../peek-overview";
 import { CycleCalendarLayout } from "../calendar/roots/cycle-root";
 import { BaseGanttRoot } from "../gantt";
@@ -92,7 +93,9 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
   const cycleDetails = cycleId ? getCycleById(cycleId) : undefined;
   const { cycleStatus, isCompletedCycle, canTransferIssues, hasProgressSnapshot } = getCycleDerivedState(cycleDetails);
 
-  if (!workspaceSlug || !projectId || !cycleId || !workItemFilters) return <></>;
+  if (!workspaceSlug || !projectId || !cycleId || !workItemFilters) {
+    return <IssueLayoutLoader layout={activeLayout ?? EIssueLayoutTypes.LIST} />;
+  }
   return (
     <IssuesStoreContext.Provider value={EIssuesStoreType.CYCLE}>
       <ProjectLevelWorkItemFiltersHOC

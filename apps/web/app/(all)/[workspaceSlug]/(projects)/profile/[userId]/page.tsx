@@ -44,7 +44,7 @@ export default function ProfileOverviewPage({ params }: Route.ComponentProps) {
       <PageHead title={t("profile.page_label")} />
       <ContentWrapper className="space-y-6">
         <ProfileStats userProfile={userProfile} />
-        <ProfileWorkload stateDistribution={stateDistribution} />
+        <ProfileWorkload stateDistribution={stateDistribution} loading={!userProfile} />
         <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
           <ProfilePriorityDistribution userProfile={userProfile} />
           <ProfileStateDistribution stateDistribution={stateDistribution} userProfile={userProfile} />

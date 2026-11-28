@@ -15,9 +15,9 @@ type TWorkspaceDraftIssuesLoader = {
 export function WorkspaceDraftIssuesLoader(props: TWorkspaceDraftIssuesLoader) {
   const { items = 14 } = props;
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full motion-safe:animate-pulse">
       {range(items).map((index) => (
-        <ListLoaderItemRow key={index} />
+        <ListLoaderItemRow key={index} index={index} shouldAnimate={false} />
       ))}
     </div>
   );

@@ -5,15 +5,16 @@
  */
 
 import { range } from "lodash-es";
-import { getRandomLength } from "../utils";
+
+const ROW_WIDTHS = ["w-52", "w-72", "w-64", "w-80", "w-56"];
 
 export function ActivitySettingsLoader() {
   return (
-    <div className="flex animate-pulse flex-col gap-3">
+    <div className="flex flex-col gap-3 motion-safe:animate-pulse">
       {range(10).map((i) => (
-        <div key={i} className="relative flex h-12 items-center gap-2 border-b border-subtle">
-          <span className="h-6 w-6 rounded-sm bg-layer-1" />
-          <span className={`h-6 w-${getRandomLength(["52", "72", "96"])} rounded-sm bg-layer-1`} />
+        <div key={i} className="relative flex h-12 items-center gap-3 border-b border-subtle">
+          <div className="size-6 shrink-0 rounded-full bg-layer-3" />
+          <div className={`h-4 ${ROW_WIDTHS[i % ROW_WIDTHS.length]} max-w-[75%] rounded-sm bg-layer-3`} />
         </div>
       ))}
     </div>

@@ -14,7 +14,7 @@ type Props = {
 };
 
 function Loader({ children, className = "" }: Props) {
-  return <output className={cn("block animate-pulse", className)}>{children}</output>;
+  return <output className={cn("block animate-pulse motion-reduce:animate-none", className)}>{children}</output>;
 }
 
 type ItemProps = {
@@ -24,7 +24,7 @@ type ItemProps = {
 };
 
 function Item({ height = "auto", width = "auto", className = "" }: ItemProps) {
-  return <div className={cn("rounded-md bg-layer-1", className)} style={{ height: height, width: width }} />;
+  return <div className={cn("rounded-md bg-layer-3", className)} style={{ height: height, width: width }} />;
 }
 
 Loader.Item = Item;

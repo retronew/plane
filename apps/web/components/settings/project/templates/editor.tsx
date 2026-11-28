@@ -5,6 +5,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { TemplatesOutline } from "@makeplane/propel/icons";
 import { Button } from "@makeplane/propel/components/button";
 import { InputField } from "@makeplane/propel/components/input-field";
+import { Loader } from "@plane/blocks/skeleton";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { useUserPermissions } from "@/hooks/store/user";
@@ -78,7 +79,18 @@ function TemplateEditorContent(props: {
         )}
       </div>
     );
-  if (state === "loading") return <p aria-busy="true">{t("loading")}</p>;
+  if (state === "loading")
+    return (
+      <Loader className="space-y-5">
+        <Loader.Item width="100%" height="40px" />
+        <Loader.Item width="100%" height="120px" />
+        <div className="grid grid-cols-2 gap-4">
+          <Loader.Item width="100%" height="40px" />
+          <Loader.Item width="100%" height="40px" />
+        </div>
+        <Loader.Item width="120px" height="36px" />
+      </Loader>
+    );
 
   return (
     <ProjectTemplateForm

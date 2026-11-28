@@ -43,3 +43,13 @@ it("shows a matching skeleton after 180ms, then enters data and resets the delay
   act(() => vi.advanceTimersByTime(180));
   expect(screen.getByText("Skeleton")).toBeTruthy();
 });
+it("does not replay fade-in animation when mounted with already-loaded data", () => {
+  const { container } = render(
+    <AsyncContent loading={false} skeleton={<p>Skeleton</p>}>
+      <p>Cached data</p>
+    </AsyncContent>
+  );
+  const readyWrapper = screen.getByText("Cached data").parentElement;
+  expect(container.firstElementChild?.getAttribute("data-async-content")).toBe("ready");
+  expect(readyWrapper?.className).toBe("");
+});

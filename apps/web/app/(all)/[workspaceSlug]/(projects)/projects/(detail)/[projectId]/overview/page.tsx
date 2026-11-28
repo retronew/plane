@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { useTranslation } from "@plane/i18n";
-import { LogoSpinner } from "@/components/common/logo-spinner";
+import { ProjectOverviewSkeleton } from "@/components/common/loaders/project-overview-skeleton";
 import { PageHead } from "@/components/core/page-title";
 import { ProjectOverviewContent } from "@/components/project/overview/content";
 import { ProjectOverviewContext } from "@/components/project/overview/context";
@@ -34,9 +34,7 @@ function ProjectOverviewPage({ params }: Route.ComponentProps) {
       <>
         <PageHead title={pageTitle} />
         {loader === "init-loader" ? (
-          <output aria-label={t("loading")} className="grid h-full w-full place-items-center">
-            <LogoSpinner />
-          </output>
+          <ProjectOverviewSkeleton />
         ) : (
           <div className="grid h-full w-full place-items-center">
             <EmptyStateDetailed

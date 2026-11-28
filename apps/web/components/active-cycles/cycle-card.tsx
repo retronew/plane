@@ -8,6 +8,7 @@ import { Logo } from "@plane/blocks/emoji-icon-picker";
 import { useTranslation } from "@plane/i18n";
 import type { TCyclePlotType, TWorkspaceActiveCycle } from "@plane/types";
 import { getProgress } from "@plane/utils";
+import { ChartLoader } from "@/components/analytics/loaders";
 import { CYCLE_CHART_COLORS, workspaceCycleChartData } from "./chart-data";
 import type { CycleChartSeries } from "./cycle-chart";
 import { CycleProgressIcon } from "./cycle-progress-icon";
@@ -333,7 +334,7 @@ export function WorkspaceCycleCard({
               {t("workspace_cycles.for")} <span className="text-secondary">{t("sidebar.work_items")}</span>
             </span>
           </div>
-          <Suspense fallback={<div className="h-full w-full" />}>
+          <Suspense fallback={<ChartLoader height={256} />}>
             <WorkspaceCycleChart cycle={cycle} burnup={burnup} hidden={hidden} />
           </Suspense>
         </div>

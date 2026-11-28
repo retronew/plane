@@ -14,7 +14,7 @@ import { ENotificationLoader, ENotificationQueryParamType } from "@plane/constan
 import { useTranslation } from "@plane/i18n";
 import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 // components
-import { LogoSpinner } from "@/components/common/logo-spinner";
+import { IssueDetailSkeleton } from "@/components/common/loaders/issue-detail-skeleton";
 // hooks
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
 import { useNotification } from "@/hooks/store/notifications/use-notification";
@@ -51,12 +51,7 @@ function SelectedNotificationContent({
 }) {
   if (digest) return <DailyDigestNotification digest={digest} onBack={onClose} />;
   if (!isIntake || !workspaceSlug || !projectId || !issueId) return children;
-  if (loading)
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <LogoSpinner />
-      </div>
-    );
+  if (loading) return <IssueDetailSkeleton />;
   return (
     <InboxContentRoot
       setIsMobileSidebar={() => {}}

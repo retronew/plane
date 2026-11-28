@@ -198,7 +198,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
           </Collapsible>
         </>
 
-        {isAuthorizedUser && joinedProjects?.length === 0 && (
+        {isAuthorizedUser && loader !== "init-loader" && joinedProjects?.length === 0 && (
           <button
             type="button"
             className={cn(SIDEBAR_ROW_CLASS_NAME, "w-full text-secondary")}

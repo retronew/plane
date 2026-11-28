@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 // plane imports
 import { ENotificationLoader, ENotificationQueryParamType } from "@plane/constants";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 // components
 import { NotificationItem } from "@/components/workspace-notifications/sidebar/notification-card/item";
@@ -44,9 +45,18 @@ export const NotificationCardListRoot = observer(function NotificationCardListRo
       {paginationInfo && paginationInfo?.next_page_results && (
         <>
           {loader === ENotificationLoader.PAGINATION_LOADER ? (
-            <div className="flex items-center justify-center py-4 text-13 font-medium">
-              <div className="text-accent-secondary">{t("loading")}...</div>
-            </div>
+            <Loader className="space-y-3 p-3">
+              {Array.from({ length: 2 }).map((_, index) => (
+                // oxlint-disable-next-line react/no-array-index-key
+                <div key={index} className="flex items-center gap-3">
+                  <Loader.Item width="36px" height="36px" className="shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <Loader.Item width="70%" height="14px" />
+                    <Loader.Item width="45%" height="12px" />
+                  </div>
+                </div>
+              ))}
+            </Loader>
           ) : (
             <button
               type="button"

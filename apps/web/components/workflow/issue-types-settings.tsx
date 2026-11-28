@@ -9,6 +9,7 @@ import { Badge } from "@makeplane/propel/components/badge";
 import { Tabs, Tab, TabsList, TabsPanel } from "@makeplane/propel/components/tabs";
 import { TypesLogo } from "./types-logo";
 import { useTranslation } from "@plane/i18n";
+import { Loader } from "@plane/blocks/skeleton";
 import { setToast } from "@plane/blocks/toast";
 import type { TProjectIssueHierarchy, TProjectIssueType, TWorkflowImpact, TWorkflowImpactRequest } from "@plane/types";
 import { SettingsContentWrapper } from "@/components/settings/content-wrapper";
@@ -162,7 +163,14 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
           />
         </div>
       );
-    if (!types) return <p className="py-6 text-body-xs-regular text-secondary">{t("loading")}</p>;
+    if (!types)
+      return (
+        <Loader className="space-y-3 py-6">
+          <Loader.Item width="100%" height="48px" />
+          <Loader.Item width="100%" height="48px" />
+          <Loader.Item width="100%" height="48px" />
+        </Loader>
+      );
     if (typeId && !selected) return <p className="py-6 text-body-xs-regular text-secondary">{t(`${key}.not_found`)}</p>;
     if (typeId || tab === "properties")
       return (
@@ -203,7 +211,11 @@ export const IssueTypesSettings = observer(function IssueTypesSettings() {
           }}
         />
       ) : (
-        <p>{t("loading")}</p>
+        <Loader className="space-y-3 py-6">
+          <Loader.Item width="220px" height="20px" />
+          <Loader.Item width="100%" height="56px" />
+          <Loader.Item width="100%" height="56px" />
+        </Loader>
       );
     return (
       <TypesList

@@ -9,6 +9,7 @@ import React from "react";
 import { CHART_SERIES_COLORS } from "@plane/constants";
 // plane imports
 import type { TModuleCompletionChartDistribution } from "@plane/types";
+import { ChartLoader } from "@/components/analytics/loaders";
 import { StatisticsNote } from "@/components/analytics/statistics-note";
 import { progressChartData } from "./progress-data";
 import { translate } from "@plane/i18n";
@@ -31,7 +32,7 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
   return (
     <div className={`flex w-full flex-col justify-center ${className}`}>
       <StatisticsNote kind="reconstructed" />
-      <React.Suspense fallback={<div className="h-full w-full" />}>
+      <React.Suspense fallback={<ChartLoader height={256} />}>
         <AreaChart
           data={chartData}
           areas={[

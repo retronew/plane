@@ -16,6 +16,7 @@ import { ProfileIssuesKanBanLayout } from "@/components/issues/issue-layouts/kan
 import { ProfileIssuesListLayout } from "@/components/issues/issue-layouts/list/roots/profile-issues-root";
 import { ProfileIssuesCalendarLayout } from "@/components/issues/issue-layouts/calendar/roots/profile-issues-root";
 import { ProfileIssuesSpreadsheetLayout } from "@/components/issues/issue-layouts/spreadsheet/roots/profile-issues-root";
+import { ListLayoutLoader } from "@/components/ui/loader/layouts/list-layout-loader";
 import { useWorkspaceIssueProperties } from "@/hooks/use-workspace-issue-properties";
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
@@ -77,7 +78,9 @@ export const ProfileIssuesPage = observer(function ProfileIssuesPage(props: Prop
                   <ProfileIssuesCalendarLayout />
                 ) : activeLayout === "spreadsheet" ? (
                   <ProfileIssuesSpreadsheetLayout />
-                ) : null}
+                ) : (
+                  <ListLayoutLoader />
+                )}
               </div>
             </div>
             {/* peek overview */}

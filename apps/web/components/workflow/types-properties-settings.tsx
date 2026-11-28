@@ -9,6 +9,7 @@ import {
   MergeOutline,
 } from "@makeplane/propel/icons";
 import { EmptyStateDetailed, getCompactAsset } from "@plane/blocks/empty-state";
+import { Loader } from "@plane/blocks/skeleton";
 import { Button } from "@makeplane/propel/components/button";
 import { Badge } from "@makeplane/propel/components/badge";
 import { IconButton } from "@makeplane/propel/components/icon-button";
@@ -650,7 +651,6 @@ function PropertiesContent({
   search: string;
   onRetry: () => void;
 }) {
-  const { t } = useTranslation();
   const label = usePropertyLabel();
   const { properties } = tableProps;
   return (
@@ -661,7 +661,12 @@ function PropertiesContent({
           <Button stretch="auto" size="sm" variant="secondary" label={label("retry")} onClick={onRetry} />
         </div>
       ) : isLoading ? (
-        <p className="py-6 text-13 text-tertiary">{t("loading")}</p>
+        <Loader className="space-y-3 py-4">
+          <Loader.Item width="100%" height="44px" />
+          <Loader.Item width="100%" height="44px" />
+          <Loader.Item width="100%" height="44px" />
+          <Loader.Item width="100%" height="44px" />
+        </Loader>
       ) : !properties.length ? (
         <div className="flex items-center justify-center rounded-lg border border-subtle bg-surface-1 py-10">
           <EmptyStateDetailed

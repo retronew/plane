@@ -26,7 +26,7 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
   const router = useAppRouter();
   const { workspaceSlug, projectId, cycleId } = params;
   // store hooks
-  const { getCycleById, loader } = useCycle();
+  const { getCycleById, loader, fetchedMap } = useCycle();
   const { getProjectById } = useProject();
   // hooks
   const { setValue, storedValue } = useLocalStorage("cycle_sidebar_collapsed", false);
@@ -45,7 +45,7 @@ function CycleDetailPage({ params }: Route.ComponentProps) {
   return (
     <>
       <PageHead title={pageTitle} />
-      {!cycle && !loader ? (
+      {!cycle && !loader && fetchedMap[projectId] ? (
         <EmptyState
           image={emptyCycle}
           title={translate("web.cycle_does_not_exist")}

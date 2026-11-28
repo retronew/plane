@@ -84,9 +84,9 @@ export function ProjectOverviewProgress({ workspaceSlug, projectId }: { workspac
       {error ? (
         <AnalyticsRequestError onRetry={() => void mutate()} />
       ) : isLoading || !data ? (
-        <output aria-label={t("loading")} className="block space-y-4" aria-busy="true">
-          <span className="block h-3.5 animate-pulse rounded bg-layer-2" />
-          <span className="block h-12 animate-pulse rounded bg-layer-2" />
+        <output aria-label={t("loading")} className="block space-y-4 motion-safe:animate-pulse" aria-busy="true">
+          <span className="block h-3.5 rounded bg-layer-3" />
+          <span className="block h-12 rounded bg-layer-3" />
           <span className="sr-only">{t("loading")}</span>
         </output>
       ) : (

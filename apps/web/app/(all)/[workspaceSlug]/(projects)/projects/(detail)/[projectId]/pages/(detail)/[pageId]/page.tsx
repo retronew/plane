@@ -15,11 +15,11 @@ import { EFileAssetType } from "@plane/types";
 // plane ui
 // plane utils
 // components
-import { LogoSpinner } from "@/components/common/logo-spinner";
 import { PageHead } from "@/components/core/page-title";
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import type { TPageRootConfig, TPageRootHandlers } from "@/components/pages/editor/page-root";
 import { PageRoot } from "@/components/pages/editor/page-root";
+import { PageContentLoader } from "@/components/pages/loaders/page-content-loader";
 // hooks
 import { useEditorConfig } from "@/hooks/editor";
 import { useEditorAsset } from "@/hooks/store/use-editor-asset";
@@ -151,12 +151,7 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
     }
   }, [page?.deleted_at, page?.id, router, pageRootHandlers]);
 
-  if ((!page || !id) && !pageDetailsError)
-    return (
-      <div className="grid size-full place-items-center">
-        <LogoSpinner />
-      </div>
-    );
+  if ((!page || !id) && !pageDetailsError) return <PageContentLoader showToolbar />;
 
   if (pageDetailsError || !canCurrentUserAccessPage)
     return (

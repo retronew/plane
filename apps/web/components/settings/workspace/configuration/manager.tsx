@@ -8,6 +8,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { Menu, MenuTrigger, MenuItem } from "@makeplane/propel/components/menu";
 import { ConfirmDialog } from "@plane/blocks/dialog";
 import { EmptyStateCompact } from "@plane/blocks/empty-state";
+import { Loader } from "@plane/blocks/skeleton";
 import { useTranslation } from "@plane/i18n";
 import { SettingsHeading } from "@/components/settings/heading";
 import { WorkspaceProjectIcon } from "../sidebar/item-icon";
@@ -42,7 +43,21 @@ function TemplateList({
         <Button stretch="auto" size="md" variant="secondary" label={t("common.retry")} onClick={onRetry} />
       </div>
     );
-  if (!templates) return <p aria-busy="true">{t("loading")}</p>;
+  if (!templates)
+    return (
+      <Loader className="divide-y divide-subtle overflow-hidden rounded-lg border border-subtle bg-surface-1">
+        {Array.from({ length: 4 }).map((_, index) => (
+          // oxlint-disable-next-line react/no-array-index-key
+          <div key={index} className="flex items-center justify-between gap-4 px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <Loader.Item width="20px" height="20px" className="shrink-0" />
+              <Loader.Item width="180px" height="16px" />
+            </div>
+            <Loader.Item width="24px" height="24px" />
+          </div>
+        ))}
+      </Loader>
+    );
   if (!templates.length)
     return (
       <EmptyStateCompact
