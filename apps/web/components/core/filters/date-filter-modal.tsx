@@ -62,9 +62,17 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
   };
 
   const date1 = getDate(values.date1);
-  const date2 = getDate(values.date1);
+  const date2 = getDate(values.date2);
 
   const isInvalid = values.filterType === "range" && date1 && date2 ? date1 > date2 : false;
+
+  const applyQuickPreset = (daysOffsetStart: number, daysOffsetEnd: number) => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysOffsetStart);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysOffsetEnd);
+    onSelect([`${renderFormattedPayloadDate(start)};after`, `${renderFormattedPayloadDate(end)};before`]);
+    handleClose();
+  };
 
   return (
     <Dialog
@@ -87,6 +95,40 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
           <DialogMain>
             <DialogBody tabIndex={0}>
               <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    stretch="auto"
+                    type="button"
+                    label={t("common.today")}
+                    onClick={() => applyQuickPreset(0, 0)}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    stretch="auto"
+                    type="button"
+                    label={t("common.1_week_from_now")}
+                    onClick={() => applyQuickPreset(0, 7)}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    stretch="auto"
+                    type="button"
+                    label={t("common.2_weeks_from_now")}
+                    onClick={() => applyQuickPreset(0, 14)}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    stretch="auto"
+                    type="button"
+                    label={t("common.1_month_from_now")}
+                    onClick={() => applyQuickPreset(0, 30)}
+                  />
+                </div>
                 <div className="flex w-full justify-between">
                   <Controller
                     control={control}
@@ -114,7 +156,7 @@ export function DateFilterModal({ title, handleClose, isOpen, onSelect }: Props)
                           }}
                           mode="single"
                           showOutsideDays
-                          disabled={date2Value ? [{ after: date2Value }] : undefined}
+                          disabled={values.filterType === "range" && date2Value ? [{ after: date2Value }] : undefined}
                         />
                       );
                     }}

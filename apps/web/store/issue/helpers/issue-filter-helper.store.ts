@@ -217,7 +217,7 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
           filter.viewId === viewId &&
           filter.userId === userId
       );
-      if (!currentFilterIndex && currentFilterIndex.length < 0) return undefined;
+      if (currentFilterIndex < 0) return undefined;
 
       return storageFilters[currentFilterIndex]?.filters || {};
     },

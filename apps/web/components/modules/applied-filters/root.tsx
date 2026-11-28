@@ -5,6 +5,7 @@
  */
 
 import { useTranslation } from "@plane/i18n";
+import { Button } from "@makeplane/propel/components/button";
 import { CloseOutline } from "@makeplane/propel/icons";
 import type { TModuleDisplayFilters, TModuleFilters } from "@plane/types";
 // components
@@ -26,12 +27,9 @@ type Props = {
 const MEMBERS_FILTERS = new Set(["lead", "members"]);
 const DATE_FILTERS = new Set(["start_date", "target_date"]);
 
-/**
- * Container chrome for a group of filter chips plus their remove buttons (the legacy `Tag`
- * outline), shared by the "Clear all" control so it reads as one more chip in the row.
- */
+/** Compact bordered container for one filter group's label, chips and remove button. */
 const FILTER_GROUP_CLASSNAME =
-  "my-auto flex min-h-9 cursor-pointer flex-wrap items-center gap-1.5 rounded-md border border-subtle p-1.5 text-11 text-tertiary capitalize hover:text-secondary";
+  "my-auto flex min-h-7 flex-wrap items-center gap-1.5 rounded-md border border-subtle bg-surface-1 px-2 py-1 text-11 text-tertiary";
 
 export function ModuleAppliedFiltersList(props: Props) {
   const {
@@ -137,12 +135,13 @@ export function ModuleAppliedFiltersList(props: Props) {
           </div>
         )}
         {isEditingAllowed && (
-          <button type="button" onClick={handleClearAllFilters}>
-            <span className={FILTER_GROUP_CLASSNAME}>
-              {t("common.clear_all")}
-              <CloseOutline height={12} width={12} />
-            </span>
-          </button>
+          <Button
+            variant="secondary"
+            size="sm"
+            stretch="auto"
+            label={t("common.clear_all")}
+            onClick={handleClearAllFilters}
+          />
         )}
       </div>
     </Header>

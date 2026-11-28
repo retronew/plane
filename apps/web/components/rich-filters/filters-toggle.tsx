@@ -25,7 +25,8 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
   // plane hooks
   const { t } = useTranslation();
   // derived values
-  const hasAnyConditions = (filter?.allConditionsForDisplay.length ?? 0) > 0;
+  const activeConditionCount = filter?.allConditionsForDisplay.length ?? 0;
+  const hasAnyConditions = activeConditionCount > 0;
   const isFilterRowVisible = filter?.isVisible ?? false;
   const hasUpdates = filter?.canUpdateView === true && filter?.hasChanges === true;
   const showFilterRowChangesPill = hasUpdates || hasAnyConditions === true;
@@ -64,6 +65,7 @@ export const FiltersToggle = observer(function FiltersToggle<P extends TFilterPr
         <FilterToggleButton
           size="md"
           active={showFilterRowChangesPill}
+          count={activeConditionCount}
           onClick={handleToggleFilter}
           aria-label={t("common.filters")}
           aria-pressed={isFilterRowVisible}

@@ -25,6 +25,7 @@ import { handleIssueQueryParamsByLayout } from "@plane/utils";
 import { IssueFiltersService } from "@/services/issue_filter.service";
 import type { IBaseIssueFilterStore } from "../helpers/issue-filter-helper.store";
 import { IssueFilterHelperStore } from "../helpers/issue-filter-helper.store";
+import { createDebouncedFilterSync } from "../helpers/debounced-filter-sync";
 // helpers
 // types
 import type { IIssueRootStore } from "../root.store";
@@ -177,6 +178,9 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
     });
   };
 
+  // debounced sync for rapid multi-select filter changes
+  private filterSync = createDebouncedFilterSync();
+
   /**
    * NOTE: This method is designed as a fallback function for the work item filter store.
    * Only use this method directly when initializing filter instances.
@@ -193,14 +197,20 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
         set(this.filters, [moduleId, "richFilters"], filters);
       });
 
-      this.rootIssueStore.moduleIssues.fetchIssuesWithExistingPagination(
-        workspaceSlug,
-        projectId,
-        "mutation",
-        moduleId
-      );
-      await this.issueFilterService.patchModuleIssueFilters(workspaceSlug, projectId, moduleId, {
-        rich_filters: filters,
+      const isClearing = !filters || Object.keys(filters).length === 0;
+      await this.filterSync.schedule(moduleId, {
+        immediate: isClearing,
+        fetch: () =>
+          this.rootIssueStore.moduleIssues.fetchIssuesWithExistingPagination(
+            workspaceSlug,
+            projectId,
+            "mutation",
+            moduleId
+          ),
+        persist: () =>
+          this.issueFilterService.patchModuleIssueFilters(workspaceSlug, projectId, moduleId, {
+            rich_filters: filters,
+          }),
       });
     } catch (error) {
       console.log("error while updating rich filters", error);

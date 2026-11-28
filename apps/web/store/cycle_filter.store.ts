@@ -98,7 +98,7 @@ export class CycleFilterStore implements ICycleFilterStore {
   get currentProjectArchivedFilters() {
     const projectId = this.rootStore.router.projectId;
     if (!projectId) return;
-    return this.filters[projectId].archived;
+    return this.filters[projectId]?.archived;
   }
 
   /**
@@ -117,7 +117,7 @@ export class CycleFilterStore implements ICycleFilterStore {
    * @description get archived filters of a project by projectId
    * @param {string} projectId
    */
-  getArchivedFiltersByProjectId = computedFn((projectId: string) => this.filters[projectId].archived);
+  getArchivedFiltersByProjectId = computedFn((projectId: string) => this.filters[projectId]?.archived);
 
   /**
    * @description initialize display filters and filters of a project

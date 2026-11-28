@@ -96,29 +96,40 @@ export const FilterItem = observer(function FilterItem<P extends TFilterProperty
         tooltipContent={typeof filterConfig.tooltipContent === "string" ? filterConfig.tooltipContent : undefined}
       />
 
-      {/* Operator section */}
-      <div className={cn("flex", COMMON_FILTER_ITEM_BORDER_CLASSNAME)}>
-        <Select<(typeof operatorOptions)[number]>
-          getValues={() => operatorOptions}
-          value={operatorOptions.find((option) => option.value === condition.operator) ?? null}
-          onChange={(operator) => handleOperatorChange(operator as TAllAvailableOperatorsForDisplay)}
-          disabled={isOperatorSelectionDisabled}
-          getOptionValue={(option) => option.value}
-          getOptionLabel={(option) => option.label}
-          pinSelected={false}
-          placeholder={filterConfig.label}
+      {/* Operator section: render lightweight static text when only one operator is available */}
+      {isOperatorSelectionDisabled ? (
+        <span
+          className={cn(
+            "flex h-full items-center px-2 text-body-xs-regular text-tertiary select-none",
+            COMMON_FILTER_ITEM_BORDER_CLASSNAME
+          )}
         >
-          {/* A flat segment of the filter chip: no chevron and no own radius, so it sits flush between
-              the property and value segments like the legacy custom button did. */}
-          <Select.Trigger
-            variant="select-ghost-md"
-            appendIcon={null}
-            className="h-full min-h-0 rounded-none text-body-xs-regular text-secondary"
+          {filterConfig.getLabelForOperator(selectedOperatorOption)}
+        </span>
+      ) : (
+        <div className={cn("flex", COMMON_FILTER_ITEM_BORDER_CLASSNAME)}>
+          <Select<(typeof operatorOptions)[number]>
+            getValues={() => operatorOptions}
+            value={operatorOptions.find((option) => option.value === condition.operator) ?? null}
+            onChange={(operator) => handleOperatorChange(operator as TAllAvailableOperatorsForDisplay)}
+            disabled={isOperatorSelectionDisabled}
+            getOptionValue={(option) => option.value}
+            getOptionLabel={(option) => option.label}
+            pinSelected={false}
+            placeholder={filterConfig.label}
           >
-            {filterConfig.getLabelForOperator(selectedOperatorOption)}
-          </Select.Trigger>
-        </Select>
-      </div>
+            {/* A flat segment of the filter chip: no chevron and no own radius, so it sits flush between
+                the property and value segments like the legacy custom button did. */}
+            <Select.Trigger
+              variant="select-ghost-md"
+              appendIcon={null}
+              className="h-full min-h-0 rounded-none text-body-xs-regular text-secondary"
+            >
+              {filterConfig.getLabelForOperator(selectedOperatorOption)}
+            </Select.Trigger>
+          </Select>
+        </div>
+      )}
 
       {/* Value section */}
       {selectedOperatorFieldConfig && (

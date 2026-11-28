@@ -25,6 +25,7 @@ import { EIssuesStoreType } from "@plane/types";
 import { handleIssueQueryParamsByLayout } from "@plane/utils";
 import type { IBaseIssueFilterStore } from "../helpers/issue-filter-helper.store";
 import { IssueFilterHelperStore } from "../helpers/issue-filter-helper.store";
+import { createDebouncedFilterSync } from "../helpers/debounced-filter-sync";
 // helpers
 // types
 import type { IIssueRootStore } from "../root.store";
@@ -183,6 +184,9 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     this.hydrateFromUserProperties(workspaceSlug, projectId, _filters);
   };
 
+  // debounced sync for rapid multi-select filter changes
+  private filterSync = createDebouncedFilterSync();
+
   /**
    * NOTE: This method is designed as a fallback function for the work item filter store.
    * Only use this method directly when initializing filter instances.
@@ -198,9 +202,15 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
         set(this.filters, [projectId, "richFilters"], filters);
       });
 
-      this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
-      await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
-        rich_filters: filters,
+      const isClearing = !filters || Object.keys(filters).length === 0;
+      await this.filterSync.schedule(projectId, {
+        immediate: isClearing,
+        fetch: () =>
+          this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation"),
+        persist: () =>
+          this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
+            rich_filters: filters,
+          }),
       });
     } catch (error) {
       console.log("error while updating rich filters", error);

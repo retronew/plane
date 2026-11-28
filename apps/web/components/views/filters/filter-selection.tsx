@@ -155,14 +155,20 @@ const ViewFiltersSelection = observer(function ViewFiltersSelection({
 
 export function ViewFiltersDropdown(props: Props) {
   const { t } = useTranslation();
-  const active = Object.values(props.filters.filters ?? {}).some((value) =>
-    Array.isArray(value) ? value.length > 0 : !!value
+  const activeCount = Object.values(props.filters.filters ?? {}).reduce(
+    (total, value) => total + (Array.isArray(value) ? value.length : value ? 1 : 0),
+    0
   );
+  const active = activeCount > 0;
   return (
     <Popover.Root>
       <Tooltip label={t("common.filters")} side="bottom">
         <span className="inline-flex">
-          <Popover.Trigger render={<FilterToggleButton size="md" active={active} aria-label={t("common.filters")} />} />
+          <Popover.Trigger
+            render={
+              <FilterToggleButton size="md" active={active} count={activeCount} aria-label={t("common.filters")} />
+            }
+          />
         </span>
       </Tooltip>
       <Popover.Portal>
