@@ -14,10 +14,13 @@ import type {
 } from "./asset-types";
 
 type IllustrationComponent = React.ComponentType<{ className?: string }>;
-type LazyIllustration = React.LazyExoticComponent<IllustrationComponent>;
+type LazyIllustration = React.LazyExoticComponent<IllustrationComponent> & {
+  preload: () => void;
+};
 
 /**
- * Wraps a named-export illustration module in a `React.lazy` boundary.
+ * Wraps a named-export illustration module in a `React.lazy` boundary with an idempotent
+ * `.preload()` trigger so routes can warm their empty-state SVG chunk while API data loads.
  *
  * Each illustration is heavy (full inline SVG markup), and the registries below reference ~50 of
  * them. Importing the registry statically would pull every illustration into whichever chunk an
@@ -28,19 +31,30 @@ type LazyIllustration = React.LazyExoticComponent<IllustrationComponent>;
 const lazyIllustration = (
   loader: () => Promise<Record<string, IllustrationComponent>>,
   exportName: string
-): LazyIllustration =>
-  React.lazy(async () => {
-    const module = await loader();
-    const Illustration = module?.[exportName];
-    // A missing module or export means the illustration chunk resolved to nothing (stale deploy,
-    // blocked request). These assets are purely decorative, so degrade to rendering nothing rather
-    // than letting React.lazy reject and tear down the empty state — and the page — around it.
-    if (!Illustration) {
-      console.error(`[EmptyState] Illustration "${exportName}" failed to resolve from its chunk.`);
-      return { default: (() => null) as IllustrationComponent };
+): LazyIllustration => {
+  let pending: Promise<{ default: IllustrationComponent }> | null = null;
+  const load = () => {
+    if (!pending) {
+      pending = loader().then((module) => {
+        const Illustration = module?.[exportName];
+        // A missing module or export means the illustration chunk resolved to nothing (stale deploy,
+        // blocked request). These assets are purely decorative, so degrade to rendering nothing rather
+        // than letting React.lazy reject and tear down the empty state — and the page — around it.
+        if (!Illustration) {
+          console.error(`[EmptyState] Illustration "${exportName}" failed to resolve from its chunk.`);
+          return { default: (() => null) as IllustrationComponent };
+        }
+        return { default: Illustration };
+      });
     }
-    return { default: Illustration };
-  });
+    return pending;
+  };
+  const Component = React.lazy(load) as LazyIllustration;
+  Component.preload = () => {
+    void load().catch(() => undefined);
+  };
+  return Component;
+};
 
 // Horizontal Stack Asset Registry
 export const HORIZONTAL_STACK_ASSETS: Record<HorizontalStackAssetType, LazyIllustration> = {
@@ -233,6 +247,19 @@ export const getDetailedAssetDimensions = (assetKey?: DetailedAssetType): AssetD
     ILLUSTRATION_DIMENSIONS[assetKey as IllustrationAssetType] ??
     DEFAULT_DETAILED_DIMENSIONS
   );
+};
+
+export const preloadCompactAsset = (assetKey: CompactAssetType): void => {
+  const AssetComponent =
+    HORIZONTAL_STACK_ASSETS[assetKey as HorizontalStackAssetType] ||
+    ILLUSTRATION_ASSETS[assetKey as IllustrationAssetType];
+  AssetComponent?.preload();
+};
+
+export const preloadDetailedAsset = (assetKey: DetailedAssetType): void => {
+  const AssetComponent =
+    VERTICAL_STACK_ASSETS[assetKey as VerticalStackAssetType] || ILLUSTRATION_ASSETS[assetKey as IllustrationAssetType];
+  AssetComponent?.preload();
 };
 
 // Helper functions to get assets

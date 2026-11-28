@@ -16,8 +16,8 @@ import { TabNavigationRoot } from "@/components/navigation/tab-navigation-root";
 import { PageContentLoader } from "@/components/pages/loaders/page-content-loader";
 import { PageLoader } from "@/components/pages/loaders/page-loader";
 import { AppSidebarToggleButton } from "@/components/sidebar/sidebar-toggle-button";
+import { ActiveCyclesLoader } from "@/components/ui/loader/active-cycles-loader";
 import { CycleModuleBoardLayoutLoader } from "@/components/ui/loader/cycle-module-board-loader";
-import { CycleModuleListLayoutLoader } from "@/components/ui/loader/cycle-module-list-loader";
 import { ListLayoutLoader } from "@/components/ui/loader/layouts/list-layout-loader";
 import { InboxLayoutLoader } from "@/components/ui/loader/layouts/project-inbox/inbox-layout-loader";
 import { ViewListLoader } from "@/components/ui/loader/view-list-loader";
@@ -31,7 +31,7 @@ import type { Route } from "./+types/layout";
 
 function getProjectRouteLoadingFallback(pathname: string) {
   if (/\/overview\/?$/.test(pathname)) return <ProjectOverviewSkeleton />;
-  if (/\/cycles\/?$/.test(pathname)) return <CycleModuleListLayoutLoader />;
+  if (/\/cycles\/?$/.test(pathname)) return <ActiveCyclesLoader count={1} />;
   if (/\/modules\/?$/.test(pathname)) return <CycleModuleBoardLayoutLoader />;
   if (/\/views\/?$/.test(pathname)) return <ViewListLoader />;
   if (/\/pages\/[^/]+\/?$/.test(pathname)) return <PageContentLoader showToolbar />;

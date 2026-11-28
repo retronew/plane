@@ -4,7 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect } from "react";
 import { observer } from "mobx-react";
+import { preloadDetailedAsset } from "@plane/blocks/empty-state";
 import { calculateTotalFilters } from "@plane/utils";
 import { CyclesList } from "@/components/cycles/list";
 import { ActiveCyclesLoader } from "@/components/ui/loader/active-cycles-loader";
@@ -25,6 +27,10 @@ export const CyclesView = observer(function CyclesView({ workspaceSlug, projectI
   const cycleStore = useCycle();
   const { searchQuery, currentProjectFilters } = useCycleFilter();
   const cycleIds = getFilteredCycleIdsForTab(cycleStore, projectId, tab);
+
+  useEffect(() => {
+    preloadDetailedAsset(tab === "completed" ? "archived-cycle" : "cycle");
+  }, [tab]);
   if (cycleStore.loader || !cycleIds) {
     return tab === "active" ? <ActiveCyclesLoader count={1} /> : <CycleModuleListLayoutLoader />;
   }

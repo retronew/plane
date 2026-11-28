@@ -65,10 +65,7 @@ export function EmptyStateCompact({
                 <div
                   aria-hidden="true"
                   data-empty-state-placeholder=""
-                  className={cn(
-                    "shrink-0 rounded-xl bg-layer-1/70 motion-safe:animate-pulse",
-                    assetClassName ?? (!assetDimensions ? "size-20" : undefined)
-                  )}
+                  className={cn("shrink-0", assetClassName ?? (!assetDimensions ? "size-20" : undefined))}
                   style={fallbackStyle}
                 />
               }

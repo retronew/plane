@@ -75,10 +75,7 @@ export function EmptyStateDetailed({
                 <div
                   aria-hidden="true"
                   data-empty-state-placeholder=""
-                  className={cn(
-                    "shrink-0 rounded-2xl bg-layer-1/70 motion-safe:animate-pulse",
-                    assetClassName ?? (!cappedDimensions ? "size-40" : undefined)
-                  )}
+                  className={cn("shrink-0", assetClassName ?? (!cappedDimensions ? "size-40" : undefined))}
                   style={fallbackStyle}
                 />
               }
