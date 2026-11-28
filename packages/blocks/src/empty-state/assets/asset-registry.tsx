@@ -142,6 +142,99 @@ export const ILLUSTRATION_ASSETS: Record<IllustrationAssetType, LazyIllustration
   search: lazyIllustration(() => import("./illustration/search"), "SearchIllustration"),
 };
 
+export type AssetDimensions = {
+  width: number;
+  height: number;
+};
+
+const HORIZONTAL_STACK_DIMENSIONS: Record<HorizontalStackAssetType, AssetDimensions> = {
+  "ai-agents": { width: 72, height: 81 },
+  "ai-skills": { width: 72, height: 81 },
+  "custom-properties": { width: 72, height: 81 },
+  customer: { width: 81, height: 91 },
+  estimate: { width: 81, height: 92 },
+  export: { width: 71, height: 80 },
+  "group-syncing": { width: 69, height: 78 },
+  intake: { width: 71, height: 80 },
+  label: { width: 81, height: 92 },
+  link: { width: 51, height: 58 },
+  members: { width: 71, height: 80 },
+  memory: { width: 72, height: 81 },
+  note: { width: 51, height: 58 },
+  page: { width: 71, height: 80 },
+  priority: { width: 71, height: 80 },
+  project: { width: 102, height: 115 },
+  "runner-functions": { width: 72, height: 80 },
+  "runner-scripts": { width: 72, height: 80 },
+  script: { width: 72, height: 81 },
+  "search-compact": { width: 72, height: 81 },
+  settings: { width: 71, height: 80 },
+  "state-square": { width: 70, height: 79 },
+  state: { width: 72, height: 81 },
+  template: { width: 81, height: 92 },
+  token: { width: 81, height: 92 },
+  unknown: { width: 71, height: 80 },
+  update: { width: 72, height: 81 },
+  webhook: { width: 81, height: 91 },
+  "work-item": { width: 71, height: 80 },
+  workflow: { width: 72, height: 81 },
+  worklog: { width: 81, height: 91 },
+};
+
+const VERTICAL_STACK_DIMENSIONS: Record<VerticalStackAssetType, AssetDimensions> = {
+  "archived-cycle": { width: 161, height: 174 },
+  "archived-module": { width: 161, height: 182 },
+  "archived-work-item": { width: 161, height: 176 },
+  changelog: { width: 162, height: 172 },
+  customer: { width: 162, height: 171 },
+  cycle: { width: 160, height: 165 },
+  dashboard: { width: 160, height: 164 },
+  draft: { width: 162, height: 175 },
+  "error-404": { width: 161, height: 173 },
+  inbox: { width: 151, height: 167 },
+  initiative: { width: 162, height: 171 },
+  intake: { width: 150, height: 171 },
+  "invalid-link": { width: 161, height: 151 },
+  milestone: { width: 155, height: 164 },
+  module: { width: 162, height: 168 },
+  "no-access": { width: 161, height: 169 },
+  page: { width: 162, height: 177 },
+  project: { width: 160, height: 143 },
+  property: { width: 161, height: 169 },
+  "server-error": { width: 162, height: 184 },
+  stickies: { width: 160, height: 186 },
+  teamspace: { width: 162, height: 188 },
+  view: { width: 162, height: 163 },
+  "work-item": { width: 162, height: 180 },
+  workflow: { width: 227, height: 240 },
+};
+
+const ILLUSTRATION_DIMENSIONS: Record<IllustrationAssetType, AssetDimensions> = {
+  inbox: { width: 100, height: 92 },
+  search: { width: 161, height: 168 },
+};
+
+const DEFAULT_COMPACT_DIMENSIONS: AssetDimensions = { width: 72, height: 81 };
+const DEFAULT_DETAILED_DIMENSIONS: AssetDimensions = { width: 160, height: 168 };
+
+export const getCompactAssetDimensions = (assetKey?: CompactAssetType): AssetDimensions => {
+  if (!assetKey) return DEFAULT_COMPACT_DIMENSIONS;
+  return (
+    HORIZONTAL_STACK_DIMENSIONS[assetKey as HorizontalStackAssetType] ??
+    ILLUSTRATION_DIMENSIONS[assetKey as IllustrationAssetType] ??
+    DEFAULT_COMPACT_DIMENSIONS
+  );
+};
+
+export const getDetailedAssetDimensions = (assetKey?: DetailedAssetType): AssetDimensions => {
+  if (!assetKey) return DEFAULT_DETAILED_DIMENSIONS;
+  return (
+    VERTICAL_STACK_DIMENSIONS[assetKey as VerticalStackAssetType] ??
+    ILLUSTRATION_DIMENSIONS[assetKey as IllustrationAssetType] ??
+    DEFAULT_DETAILED_DIMENSIONS
+  );
+};
+
 // Helper functions to get assets
 export const getCompactAsset = (assetKey: CompactAssetType, className?: string): React.ReactNode => {
   const AssetComponent =

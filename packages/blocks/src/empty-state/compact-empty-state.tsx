@@ -8,7 +8,7 @@ import React, { Suspense } from "react";
 import { EmptyStateActionButton } from "./action-button";
 import { cn } from "@plane/utils";
 import type { Align } from "../utils/placement";
-import { getCompactAsset } from "./assets/asset-registry";
+import { getCompactAsset, getCompactAssetDimensions } from "./assets/asset-registry";
 import type { CompactAssetType, DetailedAssetType } from "./assets/asset-types";
 import type { ActionButton } from "./types";
 
@@ -39,6 +39,8 @@ export function EmptyStateCompact({
 }: EmptyStateCompactProps) {
   // Determine which asset to use: assetKey takes precedence, fallback to custom asset
   const resolvedAsset = assetKey ? getCompactAsset(assetKey as CompactAssetType, assetClassName) : asset;
+  const assetDimensions = assetKey ? getCompactAssetDimensions(assetKey as CompactAssetType) : undefined;
+  const reservedDimensions = assetDimensions && !assetClassName ? assetDimensions : undefined;
 
   const rootAlignClasses = align === "center" ? "items-center" : "items-start";
   const containerAlignClasses = align === "center" ? "items-center text-center" : "items-start text-left";
@@ -49,8 +51,25 @@ export function EmptyStateCompact({
         className={cn("flex size-full max-w-[25rem] flex-col justify-center gap-3", containerAlignClasses, className)}
       >
         {resolvedAsset && (
-          <div className="flex max-w-40 items-center">
-            <Suspense fallback={null}>{resolvedAsset}</Suspense>
+          <div
+            className="flex max-w-40 shrink-0 items-center justify-center"
+            style={reservedDimensions ? { minHeight: reservedDimensions.height } : undefined}
+          >
+            <Suspense
+              fallback={
+                <div
+                  aria-hidden="true"
+                  data-empty-state-placeholder=""
+                  className={cn(
+                    "shrink-0 rounded-xl bg-layer-1/70 motion-safe:animate-pulse",
+                    assetClassName ?? (!reservedDimensions ? "size-20" : undefined)
+                  )}
+                  style={reservedDimensions}
+                />
+              }
+            >
+              {resolvedAsset}
+            </Suspense>
           </div>
         )}
 

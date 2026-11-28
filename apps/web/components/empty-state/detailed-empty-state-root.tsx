@@ -103,7 +103,11 @@ export const DetailedEmptyState = observer(function DetailedEmptyState(props: Pr
           {description && <p className="text-13">{description}</p>}
         </div>
 
-        {assetPath && <img src={assetPath} alt={title} className="h-auto w-full" loading="lazy" />}
+        {assetPath && (
+          <div className="aspect-[16/9] w-full overflow-hidden rounded-lg bg-layer-1/40">
+            <img src={assetPath} alt={title} className="size-full object-contain" loading="eager" />
+          </div>
+        )}
 
         {hasButtons && (
           <div className="relative flex w-full flex-shrink-0 items-center justify-center gap-2">

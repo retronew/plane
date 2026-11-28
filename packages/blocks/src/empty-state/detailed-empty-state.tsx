@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { EmptyStateActionButton } from "./action-button";
 import { cn } from "@plane/utils";
 import type { Align } from "../utils/placement";
-import { getDetailedAsset } from "./assets/asset-registry";
+import { getDetailedAsset, getDetailedAssetDimensions } from "./assets/asset-registry";
 import type { CompactAssetType, DetailedAssetType } from "./assets/asset-types";
 import type { ActionButton } from "./types";
 
@@ -40,6 +40,14 @@ export function EmptyStateDetailed({
 }: EmptyStateDetailedProps) {
   // Determine which asset to use: assetKey takes precedence, fallback to custom asset
   const resolvedAsset = assetKey ? getDetailedAsset(assetKey as DetailedAssetType, assetClassName) : asset;
+  const assetDimensions = assetKey ? getDetailedAssetDimensions(assetKey as DetailedAssetType) : undefined;
+  // Cap width at max-w-40 (160px) while preserving aspect ratio when no explicit assetClassName overrides sizing.
+  const reservedDimensions =
+    assetDimensions && !assetClassName
+      ? assetDimensions.width > 160
+        ? { width: 160, height: Math.round((assetDimensions.height * 160) / assetDimensions.width) }
+        : assetDimensions
+      : undefined;
 
   return (
     <div className={cn("flex size-full items-center justify-center", rootClassName)}>
@@ -53,8 +61,25 @@ export function EmptyStateDetailed({
         )}
       >
         {resolvedAsset && (
-          <div className="flex max-w-40 items-center">
-            <Suspense fallback={null}>{resolvedAsset}</Suspense>
+          <div
+            className="flex max-w-40 shrink-0 items-center justify-center"
+            style={reservedDimensions ? { minHeight: reservedDimensions.height } : undefined}
+          >
+            <Suspense
+              fallback={
+                <div
+                  aria-hidden="true"
+                  data-empty-state-placeholder=""
+                  className={cn(
+                    "shrink-0 rounded-2xl bg-layer-1/70 motion-safe:animate-pulse",
+                    assetClassName ?? (!reservedDimensions ? "size-40" : undefined)
+                  )}
+                  style={reservedDimensions}
+                />
+              }
+            >
+              {resolvedAsset}
+            </Suspense>
           </div>
         )}
 
