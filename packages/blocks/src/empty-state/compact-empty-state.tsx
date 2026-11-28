@@ -40,7 +40,12 @@ export function EmptyStateCompact({
   // Determine which asset to use: assetKey takes precedence, fallback to custom asset
   const resolvedAsset = assetKey ? getCompactAsset(assetKey as CompactAssetType, assetClassName) : asset;
   const assetDimensions = assetKey ? getCompactAssetDimensions(assetKey as CompactAssetType) : undefined;
-  const reservedDimensions = assetDimensions && !assetClassName ? assetDimensions : undefined;
+  const hasExplicitHeight = Boolean(assetClassName && /\b(size-|h-(?!auto\b))/.test(assetClassName));
+  const fallbackStyle = assetDimensions
+    ? assetClassName
+      ? { aspectRatio: `${assetDimensions.width} / ${assetDimensions.height}` }
+      : assetDimensions
+    : undefined;
 
   const rootAlignClasses = align === "center" ? "items-center" : "items-start";
   const containerAlignClasses = align === "center" ? "items-center text-center" : "items-start text-left";
@@ -53,7 +58,7 @@ export function EmptyStateCompact({
         {resolvedAsset && (
           <div
             className="flex max-w-40 shrink-0 items-center justify-center"
-            style={reservedDimensions ? { minHeight: reservedDimensions.height } : undefined}
+            style={assetDimensions && !hasExplicitHeight ? { minHeight: assetDimensions.height } : undefined}
           >
             <Suspense
               fallback={
@@ -62,9 +67,9 @@ export function EmptyStateCompact({
                   data-empty-state-placeholder=""
                   className={cn(
                     "shrink-0 rounded-xl bg-layer-1/70 motion-safe:animate-pulse",
-                    assetClassName ?? (!reservedDimensions ? "size-20" : undefined)
+                    assetClassName ?? (!assetDimensions ? "size-20" : undefined)
                   )}
-                  style={reservedDimensions}
+                  style={fallbackStyle}
                 />
               }
             >

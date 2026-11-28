@@ -41,13 +41,18 @@ export function EmptyStateDetailed({
   // Determine which asset to use: assetKey takes precedence, fallback to custom asset
   const resolvedAsset = assetKey ? getDetailedAsset(assetKey as DetailedAssetType, assetClassName) : asset;
   const assetDimensions = assetKey ? getDetailedAssetDimensions(assetKey as DetailedAssetType) : undefined;
-  // Cap width at max-w-40 (160px) while preserving aspect ratio when no explicit assetClassName overrides sizing.
-  const reservedDimensions =
-    assetDimensions && !assetClassName
-      ? assetDimensions.width > 160
-        ? { width: 160, height: Math.round((assetDimensions.height * 160) / assetDimensions.width) }
-        : assetDimensions
-      : undefined;
+  // Cap width at max-w-40 (160px) while preserving aspect ratio.
+  const cappedDimensions = assetDimensions
+    ? assetDimensions.width > 160
+      ? { width: 160, height: Math.round((assetDimensions.height * 160) / assetDimensions.width) }
+      : assetDimensions
+    : undefined;
+  const hasExplicitHeight = Boolean(assetClassName && /\b(size-|h-(?!auto\b))/.test(assetClassName));
+  const fallbackStyle = cappedDimensions
+    ? assetClassName
+      ? { aspectRatio: `${cappedDimensions.width} / ${cappedDimensions.height}` }
+      : cappedDimensions
+    : undefined;
 
   return (
     <div className={cn("flex size-full items-center justify-center", rootClassName)}>
@@ -63,7 +68,7 @@ export function EmptyStateDetailed({
         {resolvedAsset && (
           <div
             className="flex max-w-40 shrink-0 items-center justify-center"
-            style={reservedDimensions ? { minHeight: reservedDimensions.height } : undefined}
+            style={cappedDimensions && !hasExplicitHeight ? { minHeight: cappedDimensions.height } : undefined}
           >
             <Suspense
               fallback={
@@ -72,9 +77,9 @@ export function EmptyStateDetailed({
                   data-empty-state-placeholder=""
                   className={cn(
                     "shrink-0 rounded-2xl bg-layer-1/70 motion-safe:animate-pulse",
-                    assetClassName ?? (!reservedDimensions ? "size-40" : undefined)
+                    assetClassName ?? (!cappedDimensions ? "size-40" : undefined)
                   )}
-                  style={reservedDimensions}
+                  style={fallbackStyle}
                 />
               }
             >

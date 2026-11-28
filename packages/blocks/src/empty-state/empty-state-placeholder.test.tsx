@@ -30,6 +30,15 @@ describe("EmptyState illustration placeholder reservation", () => {
     expect(wrapper?.style.minHeight).toBe("165px");
   });
 
+  it("preserves reserved minHeight even when caller passes h-auto w-40 assetClassName", () => {
+    const { container } = render(
+      <EmptyStateDetailed assetKey="cycle" assetClassName="h-auto w-40" title="No active cycles" />
+    );
+
+    const wrapper = container.querySelector<HTMLElement>("[style*='min-height']");
+    expect(wrapper?.style.minHeight).toBe("165px");
+  });
+
   it("reserves exact dimensions for EmptyStateCompact while the lazy illustration chunk loads", () => {
     const { container } = render(<EmptyStateCompact assetKey="members" title="No assignee" />);
 
