@@ -6,8 +6,8 @@ import { matchesIconSearch } from "../search";
  * See the LICENSE file for details.
  */
 
-import useFontFaceObserver from "use-font-face-observer";
 import { MATERIAL_ICONS_LIST } from "../material-icons";
+import { useMaterialSymbolsFontLoaded } from "../use-material-font";
 
 type MaterialIconListProps = {
   onChange: (value: { name: string; color: string }) => void;
@@ -21,14 +21,7 @@ export function MaterialIconList(props: MaterialIconListProps) {
 
   const filteredArray = MATERIAL_ICONS_LIST.filter((icon) => matchesIconSearch(icon.name, query));
 
-  const isMaterialSymbolsFontLoaded = useFontFaceObserver([
-    {
-      family: `Material Symbols Rounded`,
-      style: `normal`,
-      weight: `normal`,
-      stretch: `condensed`,
-    },
-  ]);
+  const isMaterialSymbolsFontLoaded = useMaterialSymbolsFontLoaded();
 
   return (
     <>
@@ -52,11 +45,17 @@ export function MaterialIconList(props: MaterialIconListProps) {
           }}
         >
           {isMaterialSymbolsFontLoaded ? (
-            <span style={{ color: activeColor }} className="material-symbols-rounded text-18! leading-none!">
+            <span
+              style={{ color: activeColor }}
+              className="material-symbols-rounded inline-flex size-[18px] shrink-0 items-center justify-center overflow-hidden text-18! leading-none!"
+            >
               {icon.name}
             </span>
           ) : (
-            <span className="size-5 animate-pulse rounded-sm bg-layer-1" />
+            <span
+              aria-hidden="true"
+              className="inline-block size-5 shrink-0 rounded-sm bg-layer-1 motion-safe:animate-pulse"
+            />
           )}
         </button>
       ))}
