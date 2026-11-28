@@ -83,26 +83,24 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
   const query = searchQuery.trim().toLowerCase();
   const visibleConfigs = baseConfigs.filter((config) => config.label.toLowerCase().includes(query));
 
-  // Build lookup of active conditions & selected values per property for two-way sync with chips below.
-  const activeStateByProperty = useMemo(() => {
-    const map = new Map<P, { count: number; selectedValues: Set<string> }>();
-    for (const condition of filter.allConditions) {
-      const entry = map.get(condition.property) ?? { count: 0, selectedValues: new Set<string>() };
-      if (Array.isArray(condition.value)) {
-        for (const item of condition.value) {
-          if (item !== null && item !== undefined && String(item) !== "") {
-            entry.selectedValues.add(String(item));
-          }
+  // Build lookup of active conditions & selected values per property directly in render so MobX observer
+  // tracks in-place condition.value mutations (e.g. toggling 2nd/3rd values in multi-select flyouts).
+  const activeStateByProperty = new Map<P, { count: number; selectedValues: Set<string> }>();
+  for (const condition of filter.allConditionsForDisplay) {
+    const entry = activeStateByProperty.get(condition.property) ?? { count: 0, selectedValues: new Set<string>() };
+    if (Array.isArray(condition.value)) {
+      for (const item of condition.value) {
+        if (item !== null && item !== undefined && String(item) !== "") {
+          entry.selectedValues.add(String(item));
         }
-        entry.count = entry.selectedValues.size;
-      } else if (hasValidValue(condition.value)) {
-        entry.selectedValues.add(String(condition.value));
-        entry.count += 1;
       }
-      map.set(condition.property, entry);
+      entry.count = entry.selectedValues.size;
+    } else if (hasValidValue(condition.value)) {
+      entry.selectedValues.add(String(condition.value));
+      entry.count += 1;
     }
-    return map;
-  }, [filter.allConditions]);
+    activeStateByProperty.set(condition.property, entry);
+  }
 
   // Cross-field value matches: only scans synchronous option arrays so async loaders remain strictly lazy.
   const crossFieldMatches = useMemo<TCrossFieldMatch<P>[]>(() => {
